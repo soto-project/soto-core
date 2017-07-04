@@ -89,8 +89,10 @@ public struct AWSClient {
         if let _region = givenRegion {
             region = _region
         }
-        else if let partitionEndpoint = partitionEndpoint {
-            region = Region(rawValue: partitionEndpoint) ?? .useast1
+        else if let partitionEndpoint = partitionEndpoint, let reg = Region(rawValue: partitionEndpoint) {
+            region = reg
+        } else if let defaultRegion = ProcessInfo.processInfo.environment["AWS_DEFAULT_REGION"], let reg = Region(rawValue: defaultRegion) {
+            region = reg
         } else {
             region = .useast1
         }

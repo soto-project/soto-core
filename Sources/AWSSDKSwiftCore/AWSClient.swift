@@ -196,7 +196,7 @@ extension AWSClient {
         let prorsumRequest: Request
         switch request.httpMethod {
         case "GET":
-            switch serviceProtocol {
+            switch serviceProtocol.type {
             case .restjson:
                 prorsumRequest = try createProrsumRequestWithSignedHeader(request)
                 
@@ -242,7 +242,7 @@ extension AWSClient {
                 path = path+separator+queryParams.asStringForURL
             }
             
-            switch serviceProtocol {
+            switch serviceProtocol.type {
             case .json, .restjson:
                 if let payload = ctx.Shape.payload, let payloadBody = mirror.getAttribute(forKey: payload.toSwiftVariableCase()) {
                     body = Body(anyValue: payloadBody)
@@ -299,6 +299,7 @@ extension AWSClient {
         return AWSRequest(
             region: self.signer.region,
             url: URL(string:  "\(endpoint)\(path)")!,
+            serviceProtocol: serviceProtocol,
             service: signer.service,
             amzTarget: amzTarget,
             operation: operationName,
@@ -318,7 +319,7 @@ extension AWSClient {
         let data = response.body.asData()
         
         if !data.isEmpty {
-            switch serviceProtocol {
+            switch serviceProtocol.type {
             case .json, .restjson:
                 if let cType = response.contentType, cType.subtype.contains("hal+json") {
                     let representation = try Representation.from(json: data)
@@ -400,7 +401,7 @@ extension AWSClient {
             var code: String?
             var message: String?
             
-            switch serviceProtocol {
+            switch serviceProtocol.type {
             case .query:
                 guard let dict = bodyDict["ErrorResponse"] as? [String: Any] else {
                     break

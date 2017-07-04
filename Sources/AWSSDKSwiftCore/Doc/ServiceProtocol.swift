@@ -8,7 +8,7 @@
 
 import Foundation
 
-public enum ServiceProtocol {
+public enum ServiceProtocolType {
     case json
     case restjson
     case restxml
@@ -16,7 +16,7 @@ public enum ServiceProtocol {
     case other(String)
 }
 
-extension ServiceProtocol {
+extension ServiceProtocolType {
     public init(rawValue: String) {
         switch rawValue {
         case "json":
@@ -46,4 +46,53 @@ extension ServiceProtocol {
             return value
         }
     }
+}
+
+public struct ServiceProtocol {
+    public struct Version {
+        public var major: Int
+        public var minor: Int
+        
+        public init(major: Int, minor: Int) {
+            self.major = major
+            self.minor = minor
+        }
+    }
+    
+    public let type: ServiceProtocolType
+    public let version: Version?
+    
+    public init(type: ServiceProtocolType, version: Version? = nil) {
+        self.type = type
+        self.version = version
+    }
+}
+
+extension ServiceProtocol.Version {
+    public var stringValue: String {
+        return "\(major).\(minor)"
+    }
+    
+    public var hashValue: Int {
+        return major ^ minor
+    }
+}
+
+extension ServiceProtocol {
+    public init(name: String, version: Version? = nil) {
+        self.type = ServiceProtocolType(rawValue: name)
+        self.version = version
+    }
+    
+    var contentTypeString: String {
+        var contentSubTypeStr = "x-amz-\(type.rawValue)"
+        if let version = self.version {
+            contentSubTypeStr += "-\(version.stringValue)"
+        }
+        return "application/\(contentSubTypeStr)"
+    }
+}
+
+public func == (lhs: ServiceProtocol, rhs: ServiceProtocol) -> Bool {
+    return lhs.contentTypeString == lhs.contentTypeString
 }

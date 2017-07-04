@@ -61,6 +61,7 @@ extension Request.Method {
 public struct AWSRequest {
     public let region: Region
     public var url: URL
+    public let serviceProtocol: ServiceProtocol
     public let service: String
     public let amzTarget: String?
     public let operation: String
@@ -69,9 +70,10 @@ public struct AWSRequest {
     public var body: Body
     public let middlewares: [AWSRequestMiddleware]
     
-    public init(region: Region = .useast1, url: URL, service: String, amzTarget: String? = nil, operation: String, httpMethod: String, httpHeaders: [String: Any?] = [:], body: Body = .empty, middlewares: [AWSRequestMiddleware] = []) {
+    public init(region: Region = .useast1, url: URL, serviceProtocol: ServiceProtocol, service: String, amzTarget: String? = nil, operation: String, httpMethod: String, httpHeaders: [String: Any?] = [:], body: Body = .empty, middlewares: [AWSRequestMiddleware] = []) {
         self.region = region
         self.url = url
+        self.serviceProtocol = serviceProtocol
         self.service = service
         self.amzTarget = amzTarget
         self.operation = operation
@@ -101,8 +103,11 @@ public struct AWSRequest {
             headers["x-amz-target"] = "\(target).\(awsRequest.operation)"
         }
         
-        if awsRequest.body.isJSON() {
-            headers["Content-Type"] = "application/x-amz-json-1.1"
+        switch serviceProtocol.type {
+        case .json, .restjson:
+            headers["Content-Type"] = serviceProtocol.contentTypeString
+        default:
+            break
         }
         
         if awsRequest.httpMethod.lowercased() != "get" && headers["content-type"] == nil {

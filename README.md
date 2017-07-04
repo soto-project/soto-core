@@ -10,7 +10,7 @@ import PackageDescription
 let package = Package(
     name: "MyAWSApp",
     dependencies: [
-        .Package(url: "https://github.com/noppoMan/aws-sdk-swift-core", majorVersion: 0, minor: 1)
+        .Package(url: "https://github.com/noppoMan/aws-sdk-swift-core", majorVersion: 0, minor: 2)
     ]
 )
 ```

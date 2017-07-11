@@ -253,7 +253,7 @@ extension AWSClient {
                 }
                 
             case .query:
-                var dict = try ctx.input.serializeToDictionary()
+                var dict = try ctx.input.serializeToFlatDictionary()
                 dict["Action"] = operationName
                 dict["Version"] = apiVersion
                 

@@ -179,6 +179,14 @@ extension AWSClient {
             headers[key.description] = value
         }
         
+        if self.signer.credentials.isEmpty() {
+            do {
+                signer.credentials = try MetaDataService().getCredential()
+            } catch {
+                // should not be crash
+            }
+        }
+        
         let signedHeaders = signer.signedHeaders(
             url: prorsumRequest.url,
             headers: headers,

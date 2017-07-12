@@ -12,7 +12,7 @@ import CLibreSSL
 extension Signers {
     public final class V4 {
         
-        public let credentials: CredentialProvider
+        public var credentials: CredentialProvider
         
         public let region: Region
         
@@ -107,6 +107,10 @@ extension Signers {
                 method: method,
                 bodyDigest: bodyDigest
             )
+            
+            if let token = self.credentials.sessionToken {
+                headersForSign["x-amz-security-token"] = token
+            }
             
             return headersForSign
         }

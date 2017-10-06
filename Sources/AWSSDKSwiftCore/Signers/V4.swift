@@ -170,8 +170,10 @@ extension Signers {
             let secretAccessKey = "AWS4\(self.credentials.secretAccessKey)"
             
             let secretBytes = Array(secretAccessKey.utf8)
-            let date = hmac(string: datetime.substring(to: datetime.index(datetime.startIndex, offsetBy: 8)), key: secretBytes)
-            
+            let date = hmac(
+                string: String(datetime.prefix(upTo: datetime.index(datetime.startIndex, offsetBy: 8))),
+                key: secretBytes
+            )
             let region = hmac(string: self.region.rawValue, key: date)
             let service = hmac(string: self.service, key: region)
             let credentials = hmac(string: identifier, key: service)
@@ -188,7 +190,7 @@ extension Signers {
         
         func credentialScope(_ datetime: String) -> String {
             return [
-                datetime.substring(to: datetime.index(datetime.startIndex, offsetBy: 8)),
+                String(datetime.prefix(upTo: datetime.index(datetime.startIndex, offsetBy: 8))),
                 region.rawValue,
                 service,
                 identifier

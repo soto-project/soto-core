@@ -46,11 +46,11 @@ let swiftReservedWords: [String] = [
 
 extension String {
     public func lowerFirst() -> String {
-        return String(self[self.startIndex]).lowercased() + self.substring(from: self.index(after: self.startIndex))
+        return String(self[startIndex]).lowercased() + self[index(after: startIndex)...]
     }
     
     public func upperFirst() -> String {
-        return String(self[self.startIndex]).uppercased() + self.substring(from: self.index(after: self.startIndex))
+        return String(self[self.startIndex]).uppercased() + self[index(after: startIndex)...]
     }
     
     public func toSwiftLabelCase() -> String {

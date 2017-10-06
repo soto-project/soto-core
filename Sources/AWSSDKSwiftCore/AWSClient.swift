@@ -461,6 +461,7 @@ extension AWSClient {
         switch responseBody {
         case .json(let dictionary):
             outputDict = dictionary
+            outputDict["StatusCode"] = Int32(response.statusCode)
             
         case .xml(let node):
             let str = XMLNodeSerializer(node: node).serializeToJSON()

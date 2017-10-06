@@ -12,28 +12,6 @@ private func dquote(_ str: String) -> String {
     return "\"\(str)\""
 }
 
-protocol NumericType {
-    static func +(lhs: Self, rhs: Self) -> Self
-    static func -(lhs: Self, rhs: Self) -> Self
-    static func *(lhs: Self, rhs: Self) -> Self
-    static func /(lhs: Self, rhs: Self) -> Self
-    static func %(lhs: Self, rhs: Self) -> Self
-    init(_ v: Int)
-}
-
-extension Double : NumericType { }
-extension Float  : NumericType { }
-extension Int    : NumericType { }
-extension Int8   : NumericType { }
-extension Int16  : NumericType { }
-extension Int32  : NumericType { }
-extension Int64  : NumericType { }
-extension UInt   : NumericType { }
-extension UInt8  : NumericType { }
-extension UInt16 : NumericType { }
-extension UInt32 : NumericType { }
-extension UInt64 : NumericType { }
-
 private func _serialize(value: Any) throws -> String {
     var s = ""
     switch value {
@@ -43,7 +21,46 @@ private func _serialize(value: Any) throws -> String {
     case let elements as [Any]:
         s += try _serialize(array: elements)
         
-    case let v as NumericType:
+    case let v as Int:
+        s += "\(v)"
+        
+    case let v as Int8:
+        s += "\(v)"
+        
+    case let v as Int16:
+        s += "\(v)"
+        
+    case let v as Int32:
+        s += "\(v)"
+        
+    case let v as Int64:
+        s += "\(v)"
+        
+    case let v as UInt:
+        s += "\(v)"
+        
+    case let v as UInt8:
+        s += "\(v)"
+        
+    case let v as UInt16:
+        s += "\(v)"
+        
+    case let v as UInt32:
+        s += "\(v)"
+        
+    case let v as UInt64:
+        s += "\(v)"
+        
+    case let v as Float:
+        s += "\(v)"
+        
+    case let v as Float64:
+        s += "\(v)"
+        
+    case let v as Float80:
+        s += "\(v)"
+        
+    case let v as Double:
         s += "\(v)"
         
     case let v as Bool:

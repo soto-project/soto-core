@@ -34,7 +34,8 @@ public struct Shape {
         if name.characters.count <= 6 {
             return false
         }
-        let suffix = name.substring(from: name.index(name.endIndex, offsetBy: -6))
+        
+        let suffix = String(name[name.index(name.endIndex, offsetBy: -6)...])
         return suffix.lowercased() == "output"
     }
 }

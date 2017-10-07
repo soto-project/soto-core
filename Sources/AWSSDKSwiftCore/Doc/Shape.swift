@@ -84,7 +84,7 @@ public enum Location {
     case header(locationName: String)
     case body(locationName: String)
     
-    var name: String {
+    public var name: String {
         switch self {
         case .uri(locationName: let name):
             return name

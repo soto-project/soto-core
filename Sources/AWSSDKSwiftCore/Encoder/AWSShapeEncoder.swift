@@ -1,20 +1,39 @@
 //
-//  XMLConvertible.swift
-//  AWSSDKSwift
+//  AWSShapeEncoder.swift
+//  AWSSDKSwiftCorePackageDescription
 //
-//  Created by Yuki Takei on 2017/05/20.
-//
+//  Created by Yuki Takei on 2017/10/07.
 //
 
 import Foundation
 
+func unwrap(any: Any) -> Any? {
+    let mi = Mirror(reflecting: any)
+    if mi.displayStyle != .optional {
+        return any
+    }
+    if mi.children.count == 0 { return nil }
+    let (_, some) = mi.children.first!
+    return some
+}
+
 public typealias XMLAttribute = [String: [String: String]] // ["elementName": ["key": "value", ...]]
 
-public protocol XMLNodeSerializable {}
+private let sharedJSONEncoder = JSONEncoder()
+private let sharedAWSShapeEncoder = AWSShapeEncoder()
 
-extension XMLNodeSerializable {
-    public func serializeToXMLNode(attributes: XMLAttribute = [:]) throws -> XMLNode {
-        let mirror = Mirror.init(reflecting: self)
+struct AWSShapeEncoder {
+    func encodeToJSONUTF8Data<Input: AWSShape>(_ input: Input) throws -> Data {
+        return try sharedJSONEncoder.encode(input)
+    }
+    
+    func encodeToXMLUTF8Data(_ input: AWSShape, attributes: XMLAttribute = [:]) throws -> Data {
+        let node = try encodeToXMLNode(input, attributes: attributes)
+        return XMLNodeSerializer(node: node).serializeToXML().data
+    }
+    
+    func encodeToXMLNode(_ input: AWSShape, attributes: XMLAttribute = [:]) throws -> XMLNode {
+        let mirror = Mirror(reflecting: input)
         let name = "\(mirror.subjectType)"
         let xmlNode = XMLNode(elementName: name.upperFirst())
         if let attr = attributes.filter({ $0.key == name }).first {
@@ -31,13 +50,13 @@ extension XMLNodeSerializable {
             }
             let node = XMLNode(elementName: label)
             switch value {
-            case let v as XMLNodeSerializable:
-                let cNode = try v.serializeToXMLNode()
+            case let v as AWSShape:
+                let cNode = try AWSShapeEncoder().encodeToXMLNode(v)
                 node.children.append(contentsOf: cNode.children)
                 
-            case let v as [XMLNodeSerializable]:
+            case let v as [AWSShape]:
                 for vv in v {
-                    let cNode = try vv.serializeToXMLNode()
+                    let cNode = try AWSShapeEncoder().encodeToXMLNode(vv)
                     node.children.append(contentsOf: cNode.children)
                 }
                 

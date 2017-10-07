@@ -116,7 +116,7 @@ extension AWSClient {
         try client.open()
         let response = try client.request(request)
         client.close()
-        
+
         return response
     }
 }
@@ -129,30 +129,29 @@ extension AWSClient {
             path: path,
             httpMethod:
             httpMethod,
-            context: InputContext(Shape: Input.self, input: input)
+            input: input
         )
         
         _ = try self.request(request)
     }
     
     public func send(operation operationName: String, path: String, httpMethod: String) throws {
-        let request = try createRequest(operation: operationName, path: path, httpMethod: httpMethod)
+        let request = createRequest(operation: operationName, path: path, httpMethod: httpMethod)
         _ = try self.request(request)
     }
     
     public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) throws -> Output {
-        let request = try createRequest(operation: operationName, path: path, httpMethod: httpMethod)
+        let request = createRequest(operation: operationName, path: path, httpMethod: httpMethod)
         return try validate(operation: operationName, response: try self.request(request))
     }
     
     public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input)
         throws -> Output {
-            
         let request = try createRequest(
             operation: operationName,
             path: path,
             httpMethod: httpMethod,
-            context: InputContext(Shape: Input.self, input: input)
+            input: input
         )
         return try validate(operation: operationName, response: try self.request(request))
     }
@@ -219,89 +218,104 @@ extension AWSClient {
         return try invoke(request: prorsumRequest)
     }
     
-    fileprivate func createRequest(operation operationName: String, path: String, httpMethod: String, context: InputContext? = nil) throws -> AWSRequest {
+    fileprivate func createRequest(operation operationName: String, path: String, httpMethod: String) -> AWSRequest {
+        return AWSRequest(
+            region: self.signer.region,
+            url: URL(string:  "\(endpoint)\(path)")!,
+            serviceProtocol: serviceProtocol,
+            service: signer.service,
+            amzTarget: amzTarget,
+            operation: operationName,
+            httpMethod: httpMethod,
+            httpHeaders: [:],
+            body: .empty,
+            middlewares: middlewares
+        )
+    }
+    
+    fileprivate func createRequest<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
         var headers: [String: String] = [:]
         var body: Body = .empty
         var path = path
         var queryParams = [URLQueryItem]()
         
-        if let ctx = context {
-            let mirror = Mirror(reflecting: ctx.input)
+        let mirror = Mirror(reflecting: input)
+        
+        for (key, value) in Input.headerParams {
+            if let attr = mirror.getAttribute(forKey: value.toSwiftVariableCase()) {
+                headers[key] = "\(attr)"
+            }
+        }
+        
+        for (key, value) in Input.queryParams {
+            if let attr = mirror.getAttribute(forKey: value.toSwiftVariableCase()) {
+                queryParams.append(URLQueryItem(name: key, value: "\(attr)"))
+            }
+        }
+        
+        for (key, value) in Input.pathParams {
+            if let attr = mirror.getAttribute(forKey: value.toSwiftVariableCase()) {
+                path = path.replacingOccurrences(of: "{\(key)}", with: "\(attr)").replacingOccurrences(of: "{\(key)+}", with: "\(attr)")
+            }
+        }
+        
+        if !queryParams.isEmpty {
+            let separator = path.contains("?") ? "&" : "?"
+            path = path+separator+queryParams.asStringForURL
+        }
+        
+        switch serviceProtocol.type {
+        case .json, .restjson:
+            if let payload = Input.payloadPath, let payloadBody = mirror.getAttribute(forKey: payload.toSwiftVariableCase()) {
+                body = Body(anyValue: payloadBody)
+                headers.removeValue(forKey: payload.toSwiftVariableCase())
+            } else {
+                body = .json(try AWSShapeEncoder().encodeToJSONUTF8Data(input))
+            }
             
-            for (key, value) in ctx.Shape.headerParams {
-                if let attr = mirror.getAttribute(forKey: value.toSwiftVariableCase()) {
-                    headers[key] = "\(attr)"
+        case .query:
+            let data = try AWSShapeEncoder().encodeToJSONUTF8Data(input)
+            var dict = try JSONSerializer().serializeToFlatDictionary(data)
+            dict["Action"] = operationName
+            dict["Version"] = apiVersion
+            
+            var queryItems = [String]()
+            let keys = Array(dict.keys).sorted {$0.localizedCompare($1) == ComparisonResult.orderedAscending }
+            
+            for key in keys {
+                if let value = dict[key] {
+                    queryItems.append("\(key)=\(value)")
                 }
             }
             
-            for (key, value) in ctx.Shape.queryParams {
-                if let attr = mirror.getAttribute(forKey: value.toSwiftVariableCase()) {
-                    queryParams.append(URLQueryItem(name: key, value: "\(attr)"))
-                }
+            let params = queryItems.joined(separator: "&").percentEncoded(allowing: Characters.uriAWSQueryAllowed)
+            
+            if path.contains("?") {
+                path += "&" + params
+            } else {
+                path += "?" + params
             }
             
-            for (key, value) in ctx.Shape.pathParams {
-                if let attr = mirror.getAttribute(forKey: value.toSwiftVariableCase()) {
-                    path = path.replacingOccurrences(of: "{\(key)}", with: "\(attr)").replacingOccurrences(of: "{\(key)+}", with: "\(attr)")
-                }
+            body = .text(params)
+            
+        case .restxml:
+            if let payload = Input.payloadPath, let payloadBody = mirror.getAttribute(forKey: payload.toSwiftVariableCase()) {
+                body = Body(anyValue: payloadBody)
+                headers.removeValue(forKey: payload.toSwiftVariableCase())
+            } else {
+                body = .xml(try AWSShapeEncoder().encodeToXMLNode(input))
             }
             
-            if !queryParams.isEmpty {
-                let separator = path.contains("?") ? "&" : "?"
-                path = path+separator+queryParams.asStringForURL
-            }
-            
-            switch serviceProtocol.type {
-            case .json, .restjson:
-                if let payload = ctx.Shape.payload, let payloadBody = mirror.getAttribute(forKey: payload.toSwiftVariableCase()) {
-                    body = Body(anyValue: payloadBody)
-                    headers.removeValue(forKey: payload.toSwiftVariableCase())
-                } else {
-                    body = .json(try ctx.input.serializeToDictionary())
-                }
-                
-            case .query:
-                var dict = try ctx.input.serializeToFlatDictionary()
-                dict["Action"] = operationName
-                dict["Version"] = apiVersion
-                
-                var queryItems = [String]()
-                let keys = Array(dict.keys).sorted {$0.localizedCompare($1) == ComparisonResult.orderedAscending }
-                
-                for key in keys {
-                    if let value = dict[key] {
-                        queryItems.append("\(key)=\(value)")
-                    }
-                }
-                
-                let params = queryItems.joined(separator: "&").percentEncoded(allowing: Characters.uriAWSQueryAllowed)
-                
-                if path.contains("?") {
-                    path += "&" + params
-                } else {
-                    path += "?" + params
-                }
-                
-                body = .text(params)
-                
-            case .restxml:
-                if let payload = ctx.Shape.payload, let payloadBody = mirror.getAttribute(forKey: payload.toSwiftVariableCase()) {
-                    body = Body(anyValue: payloadBody)
-                    headers.removeValue(forKey: payload.toSwiftVariableCase())
-                } else {
-                    body = .xml(try ctx.input.serializeToXMLNode())
-                }
-                
-            case .other(let proto):
-                switch proto.lowercased() {
-                case "ec2":
-                    var params = try ctx.input.serializeToDictionary()
-                    params["Action"] = operationName
-                    params["Version"] = apiVersion
-                    body = .text(params.map({ "\($0.key)=\($0.value)" }).joined(separator: "&"))
-                default:
-                    break
-                }
+        case .other(let proto):
+            switch proto.lowercased() {
+            case "ec2":
+                let data = try AWSShapeEncoder().encodeToJSONUTF8Data(input)
+                var params = try JSONSerializer().serializeToDictionary(data)
+                params["Action"] = operationName
+                params["Version"] = apiVersion
+                body = .text(params.map({ "\($0.key)=\($0.value)" }).joined(separator: "&"))
+            default:
+                break
             }
         }
         
@@ -322,8 +336,61 @@ extension AWSClient {
 
 // response validator
 extension AWSClient {
-    // TODO Rafactor me. too long method
     fileprivate func validate<Output: AWSShape>(operation operationName: String, response: Prorsum.Response) throws -> Output {
+        let (data, responseBody) = try validateBody(for: response, members: Output.members)
+        var responseHeaders: [String: String] = [:]
+        for (key, value) in response.headers {
+            responseHeaders[key.description] = value
+        }
+        
+        guard (200..<300).contains(response.statusCode) else {
+            throw createError(for: response, withComputedBody: responseBody, withRawData: data)
+        }
+        
+        var outputDict: [String: Any] = [:]
+        switch responseBody {
+        case .json(let data):
+            outputDict = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] ?? [:]
+            
+        case .xml(let node):
+            let str = XMLNodeSerializer(node: node).serializeToJSON()
+            outputDict = try JSONSerialization.jsonObject(with: str.data(using: .utf8)!, options: []) as? [String: Any] ?? [:]
+            
+            if let childOutputDict = outputDict[operationName+"Response"] as? [String: Any] {
+                outputDict = childOutputDict
+                if let childOutputDict = outputDict[operationName+"Result"] as? [String: Any] {
+                    outputDict = childOutputDict
+                }
+            } else {
+                if let key = outputDict.keys.first, let dict = outputDict[key] as? [String: Any] {
+                    outputDict = dict
+                }
+            }
+            
+        case .buffer(let data):
+            if let payload = Output.payloadPath {
+                outputDict[payload] = data
+            }
+            
+        case .text(let text):
+            if let payload = Output.payloadPath {
+                outputDict[payload] = text
+            }
+            
+        default:
+            break
+        }
+        
+        for (key, value) in response.headers {
+            if let param = Output.headerParams.filter({ $0.key.lowercased() == key.description.lowercased() }).first {
+                outputDict[param.key] = value
+            }
+        }
+        
+        return try DictionaryDecoder().decode(Output.self, from: outputDict)
+    }
+    
+    private func validateBody(for response: Prorsum.Response, members: [AWSShapeMember]) throws -> (Data, Body) {
         var responseBody: Body = .empty
         let data = response.body.asData()
         
@@ -338,7 +405,7 @@ extension AWSClient {
                             continue
                         }
                         
-                        guard let hint = Output.parsingHints.filter({ $0.location?.name == rel }).first else {
+                        guard let hint = members.filter({ $0.location?.name == rel }).first else {
                             continue
                         }
                         
@@ -376,12 +443,10 @@ extension AWSClient {
                             dictionary[rel] = representations.map({ $0.properties }).first ?? [:]
                         }
                     }
-                    responseBody = .json(dictionary)
+                    responseBody = .json(try JSONSerialization.data(withJSONObject: dictionary, options: []))
                     
                 } else {
-                    if let dictionary = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
-                        responseBody = .json(dictionary)
-                    }
+                    responseBody = .json(data)
                 }
                 
             case .restxml, .query:
@@ -400,103 +465,64 @@ extension AWSClient {
             }
         }
         
-        var responseHeaders: [String: String] = [:]
-        for (key, value) in response.headers {
-            responseHeaders[key.description] = value
+        return (data, responseBody)
+    }
+    
+    private func createError(for response: Response, withComputedBody body: Body, withRawData data: Data) -> Error {
+        let bodyDict: [String: Any]
+        if let dict = try? body.asDictionary() {
+            bodyDict = dict ?? [:]
+        } else {
+            bodyDict = [:]
         }
         
-        guard (200..<300).contains(response.statusCode) else {
-            var bodyDict = try responseBody.asDictionary() ?? [:]
-            var code: String?
-            var message: String?
-            
-            switch serviceProtocol.type {
-            case .query:
-                guard let dict = bodyDict["ErrorResponse"] as? [String: Any] else {
-                    break
-                }
-                let errorDict = dict["Error"] as? [String: Any]
-                code = errorDict?["Code"] as? String
-                message = errorDict?["Message"] as? String
-                
-            case .restxml:
-                let errorDict = bodyDict["Error"] as? [String: Any]
-                code = errorDict?["Code"] as? String
-                message = errorDict?["Message"] as? String
-                
-            case .restjson:
-                code = response.headers["x-amzn-ErrorType"]
-                message = bodyDict.filter({ $0.key.lowercased() == "message" }).first?.value as? String
-                
-            case .json:
-                code = bodyDict["__type"] as? String
-                message = bodyDict.filter({ $0.key.lowercased() == "message" }).first?.value as? String
-                
-            default:
+        var code: String?
+        var message: String?
+        
+        switch serviceProtocol.type {
+        case .query:
+            guard let dict = bodyDict["ErrorResponse"] as? [String: Any] else {
                 break
             }
+            let errorDict = dict["Error"] as? [String: Any]
+            code = errorDict?["Code"] as? String
+            message = errorDict?["Message"] as? String
             
-            if let errorCode = code {
-                for errorType in possibleErrorTypes {
-                    if let error = errorType.init(errorCode: errorCode, message: message) {
-                        throw error
-                    }
-                }
-                
-                if let error = AWSClientError(errorCode: errorCode, message: message) {
-                    throw error
-                }
-                
-                if let error = AWSServerError(errorCode: errorCode, message: message) {
-                    throw error
-                }
-                
-                throw AWSResponseError(errorCode: errorCode, message: message)
-            }
+        case .restxml:
+            let errorDict = bodyDict["Error"] as? [String: Any]
+            code = errorDict?["Code"] as? String
+            message = errorDict?["Message"] as? String
             
-            throw AWSError(message: message ?? "Unhandled Error", rawBody: String(data: data, encoding: .utf8) ?? "")
-        }
-        
-        var outputDict: [String: Any] = [:]
-        switch responseBody {
-        case .json(let dictionary):
-            outputDict = dictionary
+        case .restjson:
+            code = response.headers["x-amzn-ErrorType"]
+            message = bodyDict.filter({ $0.key.lowercased() == "message" }).first?.value as? String
             
-        case .xml(let node):
-            let str = XMLNodeSerializer(node: node).serializeToJSON()
-            outputDict = try JSONSerialization.jsonObject(with: str.data(using: .utf8)!, options: []) as? [String: Any] ?? [:]
-            
-            if let childOutputDict = outputDict[operationName+"Response"] as? [String: Any] {
-                outputDict = childOutputDict
-                if let childOutputDict = outputDict[operationName+"Result"] as? [String: Any] {
-                    outputDict = childOutputDict
-                }
-            } else {
-                if let key = outputDict.keys.first, let dict = outputDict[key] as? [String: Any] {
-                    outputDict = dict
-                }
-            }
-            
-        case .buffer(let data):
-            if let payload = Output.payload {
-                outputDict[payload] = data
-            }
-            
-        case .text(let text):
-            if let payload = Output.payload {
-                outputDict[payload] = text
-            }
+        case .json:
+            code = bodyDict["__type"] as? String
+            message = bodyDict.filter({ $0.key.lowercased() == "message" }).first?.value as? String
             
         default:
             break
         }
         
-        for (key, value) in response.headers {
-            if let param = Output.headerParams.filter({ $0.key.lowercased() == key.description.lowercased() }).first {
-                outputDict[param.key] = value
+        if let errorCode = code {
+            for errorType in possibleErrorTypes {
+                if let error = errorType.init(errorCode: errorCode, message: message) {
+                    return error
+                }
             }
+            
+            if let error = AWSClientError(errorCode: errorCode, message: message) {
+                return error
+            }
+            
+            if let error = AWSServerError(errorCode: errorCode, message: message) {
+                return error
+            }
+            
+            return AWSResponseError(errorCode: errorCode, message: message)
         }
         
-        return try Output(dictionary: outputDict)
+        return AWSError(message: message ?? "Unhandled Error", rawBody: String(data: data, encoding: .utf8) ?? "")
     }
 }

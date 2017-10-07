@@ -6,21 +6,28 @@
 //
 //
 
-public protocol AWSShape: DictionaryConvertible, XMLNodeSerializable {
-    static var payload: String? { get }
+import Foundation
+
+public protocol AWSShape: Codable {
+    static var payloadPath: String? { get }
+    static var members: [AWSShapeMember] { get }
 }
 
 extension AWSShape {
+    public static var payloadPath: String? {
+        return nil
+    }
+    
+    public static var members: [AWSShapeMember] {
+        return []
+    }
+    
     public static var pathParams: [String: String] {
         var params: [String: String] = [:]
-        parsingHints.forEach {
-            if let location = $0.location {
-                switch location {
-                case .uri(locationName: let name):
-                    params[name] = $0.label
-                default:
-                    break
-                }
+        for member in members {
+            guard let location = member.location else { continue }
+            if case .uri(let name) = location {
+                params[name] = member.label
             }
         }
         return params
@@ -28,14 +35,10 @@ extension AWSShape {
     
     public static var headerParams: [String: String] {
         var params: [String: String] = [:]
-        parsingHints.forEach {
-            if let location = $0.location {
-                switch location {
-                case .header(locationName: let name):
-                    params[name] = $0.label
-                default:
-                    break
-                }
+        for member in members {
+            guard let location = member.location else { continue }
+            if case .header(let name) = location {
+                params[name] = member.label
             }
         }
         return params
@@ -43,14 +46,10 @@ extension AWSShape {
     
     public static var queryParams: [String: String] {
         var params: [String: String] = [:]
-        parsingHints.forEach {
-            if let location = $0.location {
-                switch location {
-                case .querystring(locationName: let name):
-                    params[name] = $0.label
-                default:
-                    break
-                }
+        for member in members {
+            guard let location = member.location else { continue }
+            if case .querystring(let name) = location {
+                params[name] = member.label
             }
         }
         return params

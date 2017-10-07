@@ -2,7 +2,8 @@ import XCTest
 @testable import AWSSDKSwiftCoreTests
 
 XCTMain([
-     testCase(SerializableTests.allTests),
+     testCase(SerializersTests.allTests),
      testCase(SignersV4TestsTests.allTests),
-     testCase(XML2ParserTests.allTests)
+     testCase(XML2ParserTests.allTests),
+     testCase(DictionaryDecoderTests.allTests)
 ])

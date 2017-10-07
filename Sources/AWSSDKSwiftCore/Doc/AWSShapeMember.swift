@@ -8,8 +8,8 @@
 
 import Foundation
 
-public struct AWSShapeProperty {
-    public indirect enum PropertyType {
+public struct AWSShapeMember {
+    public indirect enum Shape {
         case structure
         case `enum`
         case map
@@ -28,13 +28,13 @@ public struct AWSShapeProperty {
     public let label: String
     public let location: Location?
     public let required: Bool
-    public let type: PropertyType
+    public let type: Shape
     
     var pathForLocation: String {
         return location?.name ?? label
     }
     
-    public init(label: String, location: Location? = nil, required: Bool, type: PropertyType) {
+    public init(label: String, location: Location? = nil, required: Bool, type: Shape) {
         self.label = label
         self.location = location
         self.required = required

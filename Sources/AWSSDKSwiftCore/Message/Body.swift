@@ -13,7 +13,7 @@ public enum Body {
     case buffer(Data)
     case stream(InputStream) // currenty unsupported
     case multipart(Data) // currenty unsupported
-    case json([String: Any])
+    case json(Data)
     case xml(XMLNode)
     case empty
 }
@@ -59,8 +59,8 @@ extension Body {
     public func asDictionary() throws -> [String: Any]? {
         switch self {
             
-        case .json(let jsonDictionary):
-            return jsonDictionary
+        case .json(let data):
+            return try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
             
         case .xml(let node):
             let json = XMLNodeSerializer(node: node).serializeToJSON()
@@ -82,11 +82,11 @@ extension Body {
         case .buffer(let data):
             return data
             
-        case .json(let jsonDictionary):
-            if jsonDictionary.isEmpty {
+        case .json(let data):
+            if data.isEmpty {
                 return nil
             } else {
-                return try JSONSerializer.serialize(jsonDictionary)
+                return data
             }
             
         case .xml(let node):

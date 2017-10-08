@@ -8,7 +8,6 @@
 // See https://swift.org/LICENSE.txt for license information
 // See https://swift.org/CONTRIBUTORS.txt for the list of Swift project authors
 //
-
 import Foundation
 
 //===----------------------------------------------------------------------===//
@@ -968,111 +967,155 @@ extension _DictionaryDecoder {
     fileprivate func unbox(_ value: Any, as type: Int.Type) throws -> Int? {
         guard !(value is NSNull) else { return nil }
         
-        guard let number = value as? Int else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
+        if let number = value as? Int {
+            return number
         }
         
-        return number
+        throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
     }
     
     fileprivate func unbox(_ value: Any, as type: Int8.Type) throws -> Int8? {
         guard !(value is NSNull) else { return nil }
         
-        guard let number = value as? Int8 else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
+        if let number = value as? Int8 {
+            return number
         }
         
-        return number
+        if let number = value as? Int {
+            return Int8(number)
+        }
+        
+        throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
     }
     
     fileprivate func unbox(_ value: Any, as type: Int16.Type) throws -> Int16? {
         guard !(value is NSNull) else { return nil }
         
-        guard let number = value as? Int16 else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
+        if let number = value as? Int16 {
+            return number
         }
         
-        return number
+        if let number = value as? Int {
+            return Int16(number)
+        }
+        
+        throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
     }
     
     fileprivate func unbox(_ value: Any, as type: Int32.Type) throws -> Int32? {
         guard !(value is NSNull) else { return nil }
         
-        guard let number = value as? Int32 else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
+        if let number = value as? Int32 {
+            return number
         }
         
-        return number
+        if let number = value as? Int {
+            return Int32(number)
+        }
+        
+        throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
     }
     
     fileprivate func unbox(_ value: Any, as type: Int64.Type) throws -> Int64? {
         guard !(value is NSNull) else { return nil }
         
-        guard let number = value as? Int64 else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
+        if let number = value as? Int64 {
+            return number
         }
         
-        return number
+        if let number = value as? Int {
+            return Int64(number)
+        }
+        
+        throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
     }
     
     fileprivate func unbox(_ value: Any, as type: UInt.Type) throws -> UInt? {
         guard !(value is NSNull) else { return nil }
         
-        guard let number = value as? UInt else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
+        if let number = value as? UInt {
+            return number
         }
         
-        return number
+        if let number = value as? Int, number > 0 {
+            return UInt(number)
+        }
+        
+        throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
     }
     
     fileprivate func unbox(_ value: Any, as type: UInt8.Type) throws -> UInt8? {
         guard !(value is NSNull) else { return nil }
         
-        guard let number = value as? UInt8 else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
+        if let number = value as? UInt8 {
+            return number
         }
         
-        return number
+        if let number = value as? Int, number > 0 {
+            return UInt8(number)
+        }
+        
+        throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
     }
     
     fileprivate func unbox(_ value: Any, as type: UInt16.Type) throws -> UInt16? {
         guard !(value is NSNull) else { return nil }
         
-        guard let number = value as? UInt16 else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
+        if let number = value as? UInt16 {
+            return number
         }
         
-        return number
+        if let number = value as? Int, number > 0 {
+            return UInt16(number)
+        }
+        
+        throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
     }
     
     fileprivate func unbox(_ value: Any, as type: UInt32.Type) throws -> UInt32? {
         guard !(value is NSNull) else { return nil }
         
-        guard let number = value as? UInt32 else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
+        if let number = value as? UInt32 {
+            return number
         }
         
-        return number
+        if let number = value as? Int, number > 0 {
+            return UInt32(number)
+        }
+        
+        throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
     }
     
     fileprivate func unbox(_ value: Any, as type: UInt64.Type) throws -> UInt64? {
         guard !(value is NSNull) else { return nil }
         
-        guard let number = value as? UInt64 else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
+        if let number = value as? UInt64 {
+            return number
         }
         
-        return number
+        if let number = value as? UInt {
+            return UInt64(number)
+        }
+        
+        if let number = value as? Int, number > 0 {
+            return UInt64(number)
+        }
+        
+        throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
     }
     
     fileprivate func unbox(_ value: Any, as type: Float.Type) throws -> Float? {
         guard !(value is NSNull) else { return nil }
         
-        guard let number = value as? Float else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
+        if let number = value as? Float {
+            return number
         }
         
-        return number
+        if let number = value as? Double {
+            return Float(number)
+        }
+        
+        throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
     }
     
     fileprivate func unbox(_ value: Any, as type: Double.Type) throws -> Double? {

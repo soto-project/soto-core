@@ -50,8 +50,8 @@ class DictionaryDecoderTests: XCTestCase {
                     "uint16": UInt16.max,
                     "uint32": UInt32.max,
                     "uint64": UInt64.max,
-                    "double": 2.0,
-                    "float": 3.0,
+                    "double": Double.greatestFiniteMagnitude,
+                    "float": Float.greatestFiniteMagnitude,
                     "string": "hello",
                     "data": "hello".data(using: .utf8)!,
                     "bool": true,
@@ -73,8 +73,8 @@ class DictionaryDecoderTests: XCTestCase {
             XCTAssertEqual(a.b.uint16, 65535)
             XCTAssertEqual(a.b.uint32, 4294967295)
             XCTAssertEqual(a.b.uint64, 18446744073709551615)
-            XCTAssertEqual(a.b.double, 2.0)
-            XCTAssertEqual(a.b.float, 3.0)
+            XCTAssertEqual(a.b.double, 1.7976931348623157E+308)
+            XCTAssertEqual(a.b.float, 3.40282347E+38)
             XCTAssertEqual(a.b.string, "hello")
             XCTAssertEqual(a.b.data, "hello".data(using: .utf8))
             XCTAssertEqual(a.b.bool, true)

@@ -1115,17 +1115,25 @@ extension _DictionaryDecoder {
             return Float(number)
         }
         
+        if let number = value as? Int {
+            return Float(number)
+        }
+        
         throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
     }
     
     fileprivate func unbox(_ value: Any, as type: Double.Type) throws -> Double? {
         guard !(value is NSNull) else { return nil }
         
-        guard let number = value as? Double else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
+        if let number = value as? Double {
+            return number
         }
         
-        return number
+        if let number = value as? Int {
+            return Double(number)
+        }
+        
+        throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
     }
     
     fileprivate func unbox(_ value: Any, as type: String.Type) throws -> String? {

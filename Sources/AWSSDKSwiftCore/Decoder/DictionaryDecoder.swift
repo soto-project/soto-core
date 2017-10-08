@@ -152,10 +152,7 @@ fileprivate class _DictionaryDecoder : Decoder {
                                                                     debugDescription: "Cannot get unkeyed decoding container -- found null value instead."))
         }
         
-        guard let topContainer = self.storage.topContainer as? [Any] else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: [Any].self, reality: self.storage.topContainer)
-        }
-        
+        let topContainer = self.storage.topContainer as? [Any] ?? [self.storage.topContainer]
         return _DictionaryUnkeyedDecodingContainer(referencing: self, wrapping: topContainer)
     }
     
@@ -1303,3 +1300,4 @@ internal extension DecodingError {
         }
     }
 }
+

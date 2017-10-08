@@ -5,5 +5,6 @@ XCTMain([
      testCase(SerializersTests.allTests),
      testCase(SignersV4TestsTests.allTests),
      testCase(XML2ParserTests.allTests),
-     testCase(DictionaryDecoderTests.allTests)
+     testCase(DictionaryDecoderTests.allTests),
+     testCase(TimeStampTests.allTests)
 ])

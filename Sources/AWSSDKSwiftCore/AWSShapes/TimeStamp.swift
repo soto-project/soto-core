@@ -7,6 +7,9 @@
 
 import Foundation
 
+/**
+ A TimeStamp Type that can be initialized from various formated value that express timestamp such as EPOC Time, Datetime String, Swift.Date instance.
+*/
 public struct TimeStamp {
     public let intValue: Int?
     
@@ -16,6 +19,7 @@ public struct TimeStamp {
     
     public let dateValue: Date?
     
+    /// Initialize from Epoc Time
     public init(_ value: Int) {
         intValue = value
         doubleValue = nil
@@ -23,13 +27,7 @@ public struct TimeStamp {
         dateValue = nil
     }
     
-    public init(_ value: String) {
-        intValue = nil
-        doubleValue = nil
-        stringValue = value
-        dateValue = nil
-    }
-    
+    /// Initialize from Epoc Time with millisec
     public init(_ value: Double) {
         intValue = nil
         doubleValue = value
@@ -37,6 +35,16 @@ public struct TimeStamp {
         dateValue = nil
     }
     
+    /// Initialize from every Datetime Strings without validation.
+    /// Ex. yyyy-MM-dd HH:mm:ss
+    public init(_ value: String) {
+        intValue = nil
+        doubleValue = nil
+        stringValue = value
+        dateValue = nil
+    }
+    
+    /// Initialize from Swift.Date instance
     public init(_ value: Date) {
         intValue = nil
         doubleValue = nil

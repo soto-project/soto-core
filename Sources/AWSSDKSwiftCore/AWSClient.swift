@@ -337,7 +337,8 @@ extension AWSClient {
 // response validator
 extension AWSClient {
     fileprivate func validate<Output: AWSShape>(operation operationName: String, response: Prorsum.Response) throws -> Output {
-        let (data, responseBody) = try validateBody(for: response, members: Output.members)
+        let (data, responseBody) = try validateBody(for: response, payloadPath: Output.payloadPath, members: Output.members)
+        
         var responseHeaders: [String: String] = [:]
         for (key, value) in response.headers {
             responseHeaders[key.description] = value
@@ -390,78 +391,84 @@ extension AWSClient {
         return try DictionaryDecoder().decode(Output.self, from: outputDict)
     }
     
-    private func validateBody(for response: Prorsum.Response, members: [AWSShapeMember]) throws -> (Data, Body) {
+    private func validateBody(for response: Prorsum.Response, payloadPath: String?, members: [AWSShapeMember]) throws -> (Data, Body) {
         var responseBody: Body = .empty
         let data = response.body.asData()
         
-        if !data.isEmpty {
-            switch serviceProtocol.type {
-            case .json, .restjson:
-                if let cType = response.contentType, cType.subtype.contains("hal+json") {
-                    let representation = try Representation.from(json: data)
-                    var dictionary = representation.properties
-                    for rel in representation.rels {
-                        guard let representations = try Representation.from(json: data).representations(for: rel) else {
-                            continue
-                        }
-                        
-                        guard let hint = members.filter({ $0.location?.name == rel }).first else {
-                            continue
-                        }
-                        
-                        switch hint.type {
-                        case .list:
-                            let properties : [[String: Any]] = try representations.map({
-                                var props = $0.properties
-                                var linkMap: [String: [Link]] = [:]
-                                
-                                for link in $0.links {
-                                    let key = link.rel.camelCased(separator: ":")
-                                    if linkMap[key] == nil {
-                                        linkMap[key] = []
-                                    }
-                                    linkMap[key]?.append(link)
-                                }
-                                
-                                for (key, links) in linkMap {
-                                    var dict: [String: Any] = [:]
-                                    for link in links {
-                                        guard let name = link.name else { continue }
-                                        guard let url = URL(string: endpoint+link.href) else { continue }
-                                        let res = try invoke(request: prorsumRequestWithSignedHeader(Request(method: .get, url: url)))
-                                        let representaion = try Representation().from(json: res.body.asData())
-                                        dict[name] = representaion.properties
-                                    }
-                                    props[key] = dict
-                                }
-                                
-                                return props
-                            })
-                            dictionary[rel] = properties
-                            
-                        default:
-                            dictionary[rel] = representations.map({ $0.properties }).first ?? [:]
-                        }
+        if data.isEmpty {
+            return (data, responseBody)
+        }
+        
+        if payloadPath != nil {
+            return (data, .buffer(data))
+        }
+        
+        switch serviceProtocol.type {
+        case .json, .restjson:
+            if let cType = response.contentType, cType.subtype.contains("hal+json") {
+                let representation = try Representation.from(json: data)
+                var dictionary = representation.properties
+                for rel in representation.rels {
+                    guard let representations = try Representation.from(json: data).representations(for: rel) else {
+                        continue
                     }
-                    responseBody = .json(try JSONSerialization.data(withJSONObject: dictionary, options: []))
                     
-                } else {
-                    responseBody = .json(data)
+                    guard let hint = members.filter({ $0.location?.name == rel }).first else {
+                        continue
+                    }
+                    
+                    switch hint.type {
+                    case .list:
+                        let properties : [[String: Any]] = try representations.map({
+                            var props = $0.properties
+                            var linkMap: [String: [Link]] = [:]
+                            
+                            for link in $0.links {
+                                let key = link.rel.camelCased(separator: ":")
+                                if linkMap[key] == nil {
+                                    linkMap[key] = []
+                                }
+                                linkMap[key]?.append(link)
+                            }
+                            
+                            for (key, links) in linkMap {
+                                var dict: [String: Any] = [:]
+                                for link in links {
+                                    guard let name = link.name else { continue }
+                                    guard let url = URL(string: endpoint+link.href) else { continue }
+                                    let res = try invoke(request: prorsumRequestWithSignedHeader(Request(method: .get, url: url)))
+                                    let representaion = try Representation().from(json: res.body.asData())
+                                    dict[name] = representaion.properties
+                                }
+                                props[key] = dict
+                            }
+                            
+                            return props
+                        })
+                        dictionary[rel] = properties
+                        
+                    default:
+                        dictionary[rel] = representations.map({ $0.properties }).first ?? [:]
+                    }
                 }
+                responseBody = .json(try JSONSerialization.data(withJSONObject: dictionary, options: []))
                 
-            case .restxml, .query:
+            } else {
+                responseBody = .json(data)
+            }
+            
+        case .restxml, .query:
+            let xmlNode = try XML2Parser(data: data).parse()
+            responseBody = .xml(xmlNode)
+            
+        case .other(let proto):
+            switch proto.lowercased() {
+            case "ec2":
                 let xmlNode = try XML2Parser(data: data).parse()
                 responseBody = .xml(xmlNode)
                 
-            case .other(let proto):
-                switch proto.lowercased() {
-                case "ec2":
-                    let xmlNode = try XML2Parser(data: data).parse()
-                    responseBody = .xml(xmlNode)
-                    
-                default:
-                    responseBody = .buffer(data)
-                }
+            default:
+                responseBody = .buffer(data)
             }
         }
         

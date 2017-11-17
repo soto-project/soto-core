@@ -9,12 +9,14 @@
 import Foundation
 
 public enum XML2ParserError: Error {
-    case unknownError
+    case failedToParse(Data)
 }
 
 public class XML2Parser: NSObject, XMLParserDelegate {
     
     private let parser: XMLParser
+    
+    private let data: Data
     
     private var error: Error?
     
@@ -27,6 +29,7 @@ public class XML2Parser: NSObject, XMLParserDelegate {
     private var currentNodeIsArray = false
     
     public init(data: Data) {
+        self.data = data
         self.parser = XMLParser(data: data)
         super.init()
         self.parser.delegate = self
@@ -37,7 +40,7 @@ public class XML2Parser: NSObject, XMLParserDelegate {
         if let nodeTree = nodeTree {
             return nodeTree
         }
-        throw XML2ParserError.unknownError
+        throw XML2ParserError.failedToParse(data)
     }
     
     public func parser(_ parser: XMLParser, foundCharacters string: String) {

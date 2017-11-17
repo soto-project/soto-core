@@ -9,7 +9,31 @@
 import Foundation
 
 private func dquote(_ str: String) -> String {
+    if str.isEmpty {
+        return ""
+    }
+    
+    if str.first == "\"" && str.last == "\"" {
+        return str
+    }
+    
     return "\"\(str)\""
+}
+
+private func formatAsJSONValue(_ str: String) -> String {
+    if let number = Double(str) {
+        if number.truncatingRemainder(dividingBy: 1) == 0 {
+            return Int(number).description
+        } else {
+            return number.description
+        }
+    } else if ["false", "true"].contains(where: { $0 == str.lowercased() }) {
+        return str
+    } else if str == "null" {
+        return str
+    } else {
+        return dquote(str)
+    }
 }
 
 public class XMLNodeSerializer {
@@ -63,12 +87,12 @@ public class XMLNodeSerializer {
                 jsonStr += dquote(node.elementName) + ":"
                 
                 if node.hasArrayValue() {
-                    jsonStr += "[" +  node.values.map({ dquote($0) }).joined(separator: ",") + "]"
+                    jsonStr += "[" +  node.values.map({ formatAsJSONValue($0) }).joined(separator: ",") + "]"
                     if nodeTree.count-index > 1 { jsonStr+="," }
                 }
                 
                 if node.hasSingleValue() {
-                    jsonStr += dquote(node.values[0])
+                    jsonStr += formatAsJSONValue(node.values[0])
                     if nodeTree.count-index > 1 { jsonStr+="," }
                 }
                 
@@ -89,7 +113,7 @@ public class XMLNodeSerializer {
                         if nodes.isStructedArray() {
                             jsonStr += (nodes.map({ "{" + _serialize(nodeTree: $0.children) + "}"  }).joined(separator: ","))
                         } else {
-                            jsonStr += nodes.flatMap({ $0.values }).map({ dquote($0) }).joined(separator: ",")
+                            jsonStr += nodes.flatMap({ $0.values }).map({ formatAsJSONValue($0) }).joined(separator: ",")
                         }
                         jsonStr += "]"
                         if newChildren.count > 0 { jsonStr += "," }

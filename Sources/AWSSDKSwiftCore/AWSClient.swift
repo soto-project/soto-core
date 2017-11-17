@@ -383,8 +383,12 @@ extension AWSClient {
         }
         
         for (key, value) in response.headers {
-            if let param = Output.headerParams.filter({ $0.key.lowercased() == key.description.lowercased() }).first {
-                outputDict[param.key] = value
+            if let index = Output.headerParams.index(where: { $0.key.lowercased() == key.description.lowercased() }) {
+                if let number = Double(value) {
+                    outputDict[Output.headerParams[index].key] = number.truncatingRemainder(dividingBy: 1) == 0 ? Int(number) : number
+                } else {
+                    outputDict[Output.headerParams[index].key] = value
+                }
             }
         }
         

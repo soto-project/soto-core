@@ -337,7 +337,7 @@ extension AWSClient {
 // response validator
 extension AWSClient {
     fileprivate func validate<Output: AWSShape>(operation operationName: String, response: Prorsum.Response) throws -> Output {
-        let (data, responseBody) = try validateBody(for: response, payloadPath: Output.payloadPath, members: Output.members)
+        let (data, responseBody) = try validateBody(for: response, payloadPath: Output.payloadPath, members: Output._members)
         
         var responseHeaders: [String: String] = [:]
         for (key, value) in response.headers {

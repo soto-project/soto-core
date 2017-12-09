@@ -10,7 +10,7 @@ import Foundation
 
 public protocol AWSShape: Codable {
     static var payloadPath: String? { get }
-    static var members: [AWSShapeMember] { get }
+    static var _members: [AWSShapeMember] { get }
 }
 
 extension AWSShape {
@@ -18,13 +18,13 @@ extension AWSShape {
         return nil
     }
     
-    public static var members: [AWSShapeMember] {
+    public static var _members: [AWSShapeMember] {
         return []
     }
     
     public static var pathParams: [String: String] {
         var params: [String: String] = [:]
-        for member in members {
+        for member in _members {
             guard let location = member.location else { continue }
             if case .uri(let name) = location {
                 params[name] = member.label
@@ -35,7 +35,7 @@ extension AWSShape {
     
     public static var headerParams: [String: String] {
         var params: [String: String] = [:]
-        for member in members {
+        for member in _members {
             guard let location = member.location else { continue }
             if case .header(let name) = location {
                 params[name] = member.label
@@ -46,7 +46,7 @@ extension AWSShape {
     
     public static var queryParams: [String: String] {
         var params: [String: String] = [:]
-        for member in members {
+        for member in _members {
             guard let location = member.location else { continue }
             if case .querystring(let name) = location {
                 params[name] = member.label

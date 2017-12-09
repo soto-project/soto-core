@@ -54,7 +54,10 @@ extension String {
     }
     
     public func toSwiftLabelCase() -> String {
-        return self.replacingOccurrences(of: "-", with: "_").camelCased().lowerFirst()
+        if allLetterIsUppercasedAlnum() {
+            return self.lowercased()
+        }
+        return self.replacingOccurrences(of: "-", with: "_").camelCased()
     }
     
     public func reservedwordEscaped() -> String {
@@ -69,7 +72,14 @@ extension String {
     }
     
     public func toSwiftClassCase() -> String {
-        return self.replacingOccurrences(of: "-", with: "_").replacingOccurrences(of: ".", with: "").camelCased().upperFirst()
+        if self == "Type" {
+            return "`\(self)`"
+        }
+        
+        return self.replacingOccurrences(of: "-", with: "_")
+            .replacingOccurrences(of: ".", with: "")
+            .camelCased()
+            .upperFirst()
     }
     
     public func camelCased(separator: String = "_") -> String {
@@ -78,7 +88,19 @@ extension String {
         items.enumerated().forEach {
             camelCase += 0 == $0 ? $1 : $1.capitalized
         }
-        return camelCase
+        return camelCase.lowerFirst()
+    }
+    
+    private func allLetterIsUppercasedAlnum() -> Bool {
+        for character in self {
+            guard let ascii = character.unicodeScalars.first?.value else {
+                return false
+            }
+            if !(0x30..<0x39).contains(ascii) && !(0x41..<0x5a).contains(ascii) {
+                return false
+            }
+        }
+        return true
     }
     
     public func tagStriped() -> String {

@@ -32,6 +32,11 @@ public struct InputContext {
 }
 
 public struct AWSClient {
+    
+    public enum RequestError: Error {
+        case invalidURL(String)
+    }
+    
     let signer: Signers.V4
     
     let apiVersion: String
@@ -116,7 +121,7 @@ extension AWSClient {
         try client.open()
         let response = try client.request(request)
         client.close()
-
+        
         return response
     }
 }
@@ -239,6 +244,7 @@ extension AWSClient {
         var path = path
         var queryParams = [URLQueryItem]()
         
+        // TODO should replace with Encodable
         let mirror = Mirror(reflecting: input)
         
         for (key, value) in Input.headerParams {
@@ -319,9 +325,13 @@ extension AWSClient {
             }
         }
         
+        guard let url = URL(string:  "\(endpoint)\(path)") else {
+            throw RequestError.invalidURL("\(endpoint)\(path)")
+        }
+        
         return AWSRequest(
             region: self.signer.region,
-            url: URL(string:  "\(endpoint)\(path)")!,
+            url: url,
             serviceProtocol: serviceProtocol,
             service: signer.service,
             amzTarget: amzTarget,
@@ -537,3 +547,16 @@ extension AWSClient {
         return AWSError(message: message ?? "Unhandled Error", rawBody: String(data: data, encoding: .utf8) ?? "")
     }
 }
+
+extension AWSClient.RequestError: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .invalidURL(let urlString):
+            return """
+            The request url \(urlString) is invalid format.
+            This error is internals. So please make a issue on https://github.com/noppoMan/aws-sdk-swift/issues to solve it.
+            """
+        }
+    }
+}
+

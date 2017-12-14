@@ -347,15 +347,25 @@ extension AWSClient {
 // response validator
 extension AWSClient {
     fileprivate func validate<Output: AWSShape>(operation operationName: String, response: Prorsum.Response) throws -> Output {
-        let (data, responseBody) = try validateBody(for: response, payloadPath: Output.payloadPath, members: Output._members)
+        
+        guard (200..<300).contains(response.statusCode) else {
+            let responseBody = try validateBody(
+                for: response,
+                payloadPath: nil,
+                members: Output._members
+            )
+            throw createError(for: response, withComputedBody: responseBody, withRawData: response.body.asData())
+        }
+        
+        let responseBody = try validateBody(
+            for: response,
+            payloadPath: Output.payloadPath,
+            members: Output._members
+        )
         
         var responseHeaders: [String: String] = [:]
         for (key, value) in response.headers {
             responseHeaders[key.description] = value
-        }
-        
-        guard (200..<300).contains(response.statusCode) else {
-            throw createError(for: response, withComputedBody: responseBody, withRawData: data)
         }
         
         var outputDict: [String: Any] = [:]
@@ -405,16 +415,16 @@ extension AWSClient {
         return try DictionaryDecoder().decode(Output.self, from: outputDict)
     }
     
-    private func validateBody(for response: Prorsum.Response, payloadPath: String?, members: [AWSShapeMember]) throws -> (Data, Body) {
+    private func validateBody(for response: Prorsum.Response, payloadPath: String?, members: [AWSShapeMember]) throws -> Body {
         var responseBody: Body = .empty
         let data = response.body.asData()
         
         if data.isEmpty {
-            return (data, responseBody)
+            return responseBody
         }
         
         if payloadPath != nil {
-            return (data, .buffer(data))
+            return .buffer(data)
         }
         
         switch serviceProtocol.type {
@@ -486,7 +496,7 @@ extension AWSClient {
             }
         }
         
-        return (data, responseBody)
+        return responseBody
     }
     
     private func createError(for response: Response, withComputedBody body: Body, withRawData data: Data) -> Error {
@@ -512,7 +522,9 @@ extension AWSClient {
         case .restxml:
             let errorDict = bodyDict["Error"] as? [String: Any]
             code = errorDict?["Code"] as? String
-            message = errorDict?["Message"] as? String
+            message = errorDict?.filter({ $0.key != "Code" })
+                .map({ "\($0.key): \($0.value)"})
+                .joined(separator: ", ")
             
         case .restjson:
             code = response.headers["x-amzn-ErrorType"]

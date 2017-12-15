@@ -212,10 +212,18 @@ extension Signers {
         }
         
         func canonicalRequest(url: URL, headers: [String: String], method: String, bodyDigest: String) -> String {
+            
+            let queryParam = url.queryItems.map({ item in
+                if let value = item.value {
+                    return "\(item.name)=\(value)"
+                }
+                return "\(item.name)="
+            }).joined(separator: "\n")
+            
             return [
                 method,
                 url.path,
-                url.query ?? "",
+                queryParam,
                 "\(canonicalHeaders(headers))\n",
                 signedHeaders(headers),
                 bodyDigest

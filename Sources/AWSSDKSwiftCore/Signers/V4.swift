@@ -47,44 +47,6 @@ extension Signers {
             self.service = service
         }
         
-        public func signedURL(url: URL, date: Date = Date(), expires: Int = 86400) -> URL {
-            let datetime = V4.timestamp(date)
-            let headers = ["Host": url.hostWithPort!]
-            let bodyDigest = hexEncodedBodyHash(Data())
-            
-            var queries = [
-                URLQueryItem(name: "X-Amz-Algorithm", value: algorithm),
-                URLQueryItem(name: "X-Amz-Credential", value: credential(datetime).replacingOccurrences(of: "/", with: "%2F")),
-                URLQueryItem(name: "X-Amz-Date", value: datetime),
-                URLQueryItem(name: "X-Amz-Expires", value: "\(expires)"),
-                URLQueryItem(name: "X-Amz-SignedHeaders", value: "host"),
-            ]
-            
-            url.query?.components(separatedBy: "&").forEach {
-                var q = $0.components(separatedBy: "=")
-                if q.count == 2 {
-                    queries.append(URLQueryItem(name: q[0], value: q[1]))
-                } else {
-                    queries.append(URLQueryItem(name: q[0], value: nil))
-                }
-            }
-            
-            
-            queries = queries.sorted { $0.name.localizedCompare($1.name) == ComparisonResult.orderedAscending }
-            
-            let url = URL(string: url.absoluteString.components(separatedBy: "?")[0]+"?"+queries.asStringForURL)!
-            
-            let sig = signature(
-                url: url,
-                headers: headers,
-                datetime: datetime,
-                method: "GET",
-                bodyDigest: bodyDigest
-            )
-            
-            return URL(string: url.absoluteString+"&X-Amz-Signature="+sig)!
-        }
-        
         public func signedHeaders(url: URL, headers: [String: String], method: String, date: Date = Date(), bodyData: Data) -> [String: String] {
             let datetime = V4.timestamp(date)
             let bodyDigest = hexEncodedBodyHash(bodyData)
@@ -212,10 +174,18 @@ extension Signers {
         }
         
         func canonicalRequest(url: URL, headers: [String: String], method: String, bodyDigest: String) -> String {
+            
+            let queryParam = url.queryItems.map({ item in
+                if let value = item.value {
+                    return "\(item.name)=\(value)"
+                }
+                return "\(item.name)="
+            }).joined(separator: "\n")
+            
             return [
                 method,
                 url.path,
-                url.query ?? "",
+                queryParam,
                 "\(canonicalHeaders(headers))\n",
                 signedHeaders(headers),
                 bodyDigest

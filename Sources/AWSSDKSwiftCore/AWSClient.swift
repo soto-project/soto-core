@@ -164,13 +164,6 @@ extension AWSClient {
 
 // request creator
 extension AWSClient {
-    func createProrsumRequestWithSignedURL(_ request: AWSRequest) throws -> Request {
-        var prorsumRequest = try request.toProrsumRequest()
-        prorsumRequest.url = signer.signedURL(url: prorsumRequest.url)
-        prorsumRequest.headers["Host"] = prorsumRequest.url.hostWithPort!
-        return prorsumRequest
-    }
-    
     func createProrsumRequestWithSignedHeader(_ request: AWSRequest) throws -> Request {
         return try prorsumRequestWithSignedHeader(request.toProrsumRequest())
     }
@@ -206,20 +199,7 @@ extension AWSClient {
     }
     
     func request(_ request: AWSRequest) throws -> Prorsum.Response {
-        let prorsumRequest: Request
-        switch request.httpMethod {
-        case "GET":
-            switch serviceProtocol.type {
-            case .restjson:
-                prorsumRequest = try createProrsumRequestWithSignedHeader(request)
-                
-            default:
-                prorsumRequest = try createProrsumRequestWithSignedURL(request)
-            }
-        default:
-            prorsumRequest = try createProrsumRequestWithSignedHeader(request)
-        }
-        
+        let prorsumRequest = try createProrsumRequestWithSignedHeader(request)
         return try invoke(request: prorsumRequest)
     }
     

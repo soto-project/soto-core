@@ -2,15 +2,6 @@
   "object": {
     "pins": [
       {
-        "package": "CHTTPParser",
-        "repositoryURL": "https://github.com/Zewo/CHTTPParser.git",
-        "state": {
-          "branch": null,
-          "revision": "88306ab33bb316b2eedd39c90f4be8f4ebf65a11",
-          "version": "0.14.0"
-        }
-      },
-      {
         "package": "CLibreSSL",
         "repositoryURL": "https://github.com/vapor/clibressl.git",
         "state": {
@@ -33,8 +24,17 @@
         "repositoryURL": "https://github.com/noppoMan/Prorsum.git",
         "state": {
           "branch": null,
-          "revision": "6f2558056fb887a84331c5da7d6ac4211bc16187",
-          "version": "0.1.16"
+          "revision": "aab1cf5a01c1f936267fc6c55ac1bd7853767277",
+          "version": "0.3.1"
+        }
+      },
+      {
+        "package": "ProrsumNet",
+        "repositoryURL": "https://github.com/noppoman/ProrsumNet.git",
+        "state": {
+          "branch": null,
+          "revision": "941e0c65df620467130e9eb2496a3c1275c1d307",
+          "version": "0.1.3"
         }
       }
     ]

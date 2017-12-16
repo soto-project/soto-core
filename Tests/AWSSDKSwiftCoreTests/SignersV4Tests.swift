@@ -19,7 +19,8 @@ class SignersV4TestsTests: XCTestCase {
             ("testStringToSign", testStringToSign),
             ("testCanonicalRequest", testCanonicalRequest),
             ("testSignature", testSignature),
-            ("testSignedHeadersForS3", testSignedHeadersForS3)
+            ("testSignedHeadersForS3", testSignedHeadersForS3),
+            ("testSignedQuery", testSignedQuery)
         ]
     }
     
@@ -120,6 +121,15 @@ class SignersV4TestsTests: XCTestCase {
         XCTAssertEqual(headers["x-amz-content-sha256"], "UNSIGNED-PAYLOAD")
         XCTAssertEqual(headers["x-amz-date"], "20170101T000000Z")
         XCTAssertEqual(headers["Authorization"], "AWS4-HMAC-SHA256 Credential=key/20170101/ap-northeast-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=dcd1b4bbe822227213a38c745eb511a7a017c2709e34af88838a1c8d659ec57a")
+    }
+    
+    func testSignedQuery() {
+        let sign = Signers.V4(credentials: credential, region: .apnortheast1, service: "s3")
+        let host = "\(sign.service)-\(sign.region).amazon.com"
+        let url = URL(string: "https://\(host)")!
+        let signedURL = sign.signedURL(url: url, date: requestDate)
+        
+        XCTAssertEqual(signedURL.absoluteString, "https://s3-apnortheast1.amazon.com?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=key%2F20170101%2Fap-northeast-1%2Fs3%2Faws4_request&X-Amz-Date=20170101T000000Z&X-Amz-Expires=86400&X-Amz-SignedHeaders=host&X-Amz-Signature=c3c920a3b89cb39b01ef6f99228e4cfae5fc8a4ab5de9c5b4ad96e9b05ee0f61")
     }
 }
 

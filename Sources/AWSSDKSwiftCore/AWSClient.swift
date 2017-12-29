@@ -183,7 +183,7 @@ extension AWSClient {
             headers[key.description] = value
         }
         
-        if self.signer.credentials.isEmpty() {
+        if self.signer.credentials.isEmpty() || self.signer.credentials.nearExpiration() {
             do {
                 signer.credentials = try MetaDataService().getCredential()
             } catch {

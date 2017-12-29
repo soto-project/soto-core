@@ -19,7 +19,7 @@ extension CredentialProvider {
     public func isEmpty() -> Bool {
         return self.accessKeyId.isEmpty || self.secretAccessKey.isEmpty
     }
-    
+
     public func nearExpiration() -> Bool {
       if let expiration = self.expiration {
         // are we within 5 minutes of expiration?
@@ -38,7 +38,7 @@ public struct SharedCredential: CredentialProvider {
     public let secretAccessKey: String
     public let sessionToken: String?
     public let expiration: Date? = nil
-        
+
     public init(filename: String = "~/.aws/credentials", profile: String = "default") throws {
         fatalError("Umimplemented")
         //let content = try String(contentsOfFile: filename)

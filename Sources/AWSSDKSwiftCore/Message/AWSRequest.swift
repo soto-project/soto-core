@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import Prorsum
+// import Prorsum
 
 public protocol AWSRequestMiddleware {
     func chain(request: AWSRequest) throws -> AWSRequest

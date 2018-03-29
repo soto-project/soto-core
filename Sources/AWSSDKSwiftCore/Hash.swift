@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import CLibreSSL
+// import CLibreSSL
 
 public func sha256(_ string: String) -> [UInt8] {
     var bytes = Array(string.utf8)

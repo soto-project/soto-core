@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import Prorsum
+// import Prorsum
 
 enum MetaDataServiceError: Error {
     case missingRequiredParam(String)

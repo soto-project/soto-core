@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import CLibreSSL
 
 extension Signers {
     public final class V4 {

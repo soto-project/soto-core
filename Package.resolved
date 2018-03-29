@@ -2,48 +2,30 @@
   "object": {
     "pins": [
       {
-        "package": "CHTTPParser",
-        "repositoryURL": "https://github.com/Zewo/CHTTPParser.git",
-        "state": {
-          "branch": null,
-          "revision": "88306ab33bb316b2eedd39c90f4be8f4ebf65a11",
-          "version": "0.14.0"
-        }
-      },
-      {
-        "package": "CLibreSSL",
-        "repositoryURL": "https://github.com/vapor/clibressl.git",
-        "state": {
-          "branch": null,
-          "revision": "23ddb296981d17a8ee6c7418742a40cad5d2f9d0",
-          "version": "1.0.0"
-        }
-      },
-      {
         "package": "HypertextApplicationLanguage",
-        "repositoryURL": "https://github.com/noppoMan/HypertextApplicationLanguage.git",
+        "repositoryURL": "https://github.com/Yasumoto/HypertextApplicationLanguage.git",
         "state": {
           "branch": null,
-          "revision": "e6216c13fd510e31e70e6f409936f1a656db1f33",
-          "version": "1.0.1"
+          "revision": "d26c292a99423be527af17582359c853cf72be5e",
+          "version": "1.1.0"
         }
       },
       {
-        "package": "Prorsum",
-        "repositoryURL": "https://github.com/noppoMan/Prorsum.git",
+        "package": "swift-nio",
+        "repositoryURL": "https://github.com/apple/swift-nio.git",
         "state": {
           "branch": null,
-          "revision": "b278e88142a3b5a87feabc44b6522dabfcda8f99",
-          "version": "0.3.3"
+          "revision": "a0b7f646fba61402da384b3202f54c27debb5e13",
+          "version": "1.3.1"
         }
       },
       {
-        "package": "ProrsumNet",
-        "repositoryURL": "https://github.com/noppoman/ProrsumNet.git",
+        "package": "swift-nio-zlib-support",
+        "repositoryURL": "https://github.com/apple/swift-nio-zlib-support.git",
         "state": {
           "branch": null,
-          "revision": "941e0c65df620467130e9eb2496a3c1275c1d307",
-          "version": "0.1.3"
+          "revision": "37760e9a52030bb9011972c5213c3350fa9d41fd",
+          "version": "1.0.0"
         }
       }
     ]

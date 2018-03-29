@@ -1,4 +1,4 @@
-// swift-tools-version:4.0
+// swift-tools-version:4.1
 import PackageDescription
 
 let package = Package(
@@ -7,11 +7,11 @@ let package = Package(
         .library(name: "AWSSDKSwiftCore", targets: ["AWSSDKSwiftCore"])
     ],
     dependencies: [
-        .package(url: "https://github.com/noppoMan/Prorsum.git", .upToNextMajor(from: "0.3.3")),
-        .package(url: "https://github.com/noppoMan/HypertextApplicationLanguage.git", .upToNextMajor(from: "1.0.0"))
+        .package(url: "https://github.com/apple/swift-nio.git", from: "1.0.0"),
+        .package(url: "https://github.com/Yasumoto/HypertextApplicationLanguage.git", .upToNextMajor(from: "1.1.0"))
     ],
     targets: [
-        .target(name: "AWSSDKSwiftCore", dependencies: ["Prorsum", "HypertextApplicationLanguage"]),
+        .target(name: "AWSSDKSwiftCore", dependencies: ["NIO", "HypertextApplicationLanguage"]),
         .testTarget(name: "AWSSDKSwiftCoreTests", dependencies: ["AWSSDKSwiftCore"])
     ]
 )

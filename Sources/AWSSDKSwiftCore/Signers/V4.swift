@@ -63,14 +63,14 @@ extension Signers {
             url.query?.components(separatedBy: "&").forEach {
                 var q = $0.components(separatedBy: "=")
                 if q.count == 2 {
-                    queries.append(URLQueryItem(name: q[0], value: q[1]))
+                    queries.append(URLQueryItem(name: q[0], value: q[1].addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)))
                 } else {
                     queries.append(URLQueryItem(name: q[0], value: nil))
                 }
             }
             
             
-            queries = queries.sorted { $0.name.localizedCompare($1.name) == ComparisonResult.orderedAscending }
+            queries = queries.sorted { a, b in a.name < b.name }
             
             let url = URL(string: url.absoluteString.components(separatedBy: "?")[0]+"?"+queries.asStringForURL)!
             
@@ -156,7 +156,7 @@ extension Signers {
         
         func canonicalHeaders(_ headers: [String: String]) -> String {
             var list = [String]()
-            let keys = Array(headers.keys).sorted {$0.localizedCompare($1) == ComparisonResult.orderedAscending }
+            let keys = Array(headers.keys).sorted()
             
             for key in keys {
                 if key.caseInsensitiveCompare("authorization") != ComparisonResult.orderedSame {

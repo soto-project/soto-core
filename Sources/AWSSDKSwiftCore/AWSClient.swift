@@ -409,6 +409,8 @@ extension AWSClient {
             if let index = Output.headerParams.index(where: { $0.key.lowercased() == key.description.lowercased() }) {
                 if let number = Double(value) {
                     outputDict[Output.headerParams[index].key] = number.truncatingRemainder(dividingBy: 1) == 0 ? Int(number) : number
+                } else if let boolean = Bool(value) {
+                    outputDict[Output.headerParams[index].key] = boolean
                 } else {
                     outputDict[Output.headerParams[index].key] = value
                 }

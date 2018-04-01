@@ -261,13 +261,16 @@ extension AWSClient {
         
         for (key, value) in Input.pathParams {
             if let attr = mirror.getAttribute(forKey: value.toSwiftVariableCase()) {
-                path = path.replacingOccurrences(of: "{\(key)}", with: "\(attr)").replacingOccurrences(of: "{\(key)+}", with: "\(attr)")
+                path = path
+                    .replacingOccurrences(of: "{\(key)}", with: "\(attr)")
+                    // percent-encode key which is part of the path
+                    .replacingOccurrences(of: "{\(key)+}", with: "\(attr)".addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)!)
             }
         }
         
         if !queryParams.isEmpty {
             let separator = path.contains("?") ? "&" : "?"
-            path = path+separator+queryParams.asStringForURL
+            path = path + separator + queryParams.asStringForURL
         }
         
         switch serviceProtocol.type {

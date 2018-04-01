@@ -214,7 +214,7 @@ extension Signers {
         func canonicalRequest(url: URL, headers: [String: String], method: String, bodyDigest: String) -> String {
             return [
                 method,
-                url.path,
+                url.path.percentEncoded(allowing: .uriPathAllowed),
                 url.query ?? "",
                 "\(canonicalHeaders(headers))\n",
                 signedHeaders(headers),

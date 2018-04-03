@@ -8,7 +8,7 @@ let package = Package(
         Target(name: "AWSSDKSwiftCore")
     ],
     dependencies: [
-        .Package(url: "https://github.com/noppoMan/Prorsum.git", majorVersion: 0, minor: 1),
+        .Package(url: "https://github.com/Maaimusic/Prorsum.gi", majorVersion: 0, minor: 1),
         .Package(url: "https://github.com/noppoMan/HypertextApplicationLanguage.git", majorVersion: 1)
     ]
 )

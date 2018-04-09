@@ -16,24 +16,26 @@ class MetaDataServiceTests: XCTestCase {
         ("testMetaDataServiceForInstanceProfileCredentials", testMetaDataServiceForInstanceProfileCredentials)
       ]
   }
-  
+
   override func tearDown() {
-    MetaDataService.container_credentials_uri = nil
+    MetaDataService.containerCredentialsUri = nil
   }
 
   func testMetaDataServiceForECSCredentials() {
-    MetaDataService.container_credentials_uri = "/v2/credentials/5275a487-9ff6-49b7-b50c-b64850f99999"
-  
+    MetaDataService.containerCredentialsUri = "/v2/credentials/5275a487-9ff6-49b7-b50c-b64850f99999"
+
     do {
-       let body: [String: Any] = ["RoleArn" : "arn:aws:iam::111222333444:role/mytask",
-                                  "AccessKeyId" : "ABCDEABCJOXYK7TPHCHTRKAA",
-                                  "SecretAccessKey" : "X+9PUEvV/xS2a7xQTg",
-                                  "Token" : "XYZ123dzENH//////////",
-                                  "Expiration" : "2017-12-30T13:22:39Z"]
-  
-       let metadata = try MetaDataService.MetaData(dictionary: body)
-       XCTAssertEqual(metadata.credential.accessKeyId, "ABCDEABCJOXYK7TPHCHTRKAA")
-  
+       let body: [String: String] = ["RoleArn" : "arn:aws:iam::111222333444:role/mytask",
+                                     "AccessKeyId" : "ABCDEABCJOXYK7TPHCHTRKAA",
+                                     "SecretAccessKey" : "X+9PUEvV/xS2a7xQTg",
+                                     "Token" : "XYZ123dzENH//////////",
+                                     "Expiration" : "2017-12-30T13:22:39Z"]
+
+       let encodedData = try JSONEncoder().encode(body)
+       let metaData = try JSONDecoder().decode(MetaDataService.MetaData.self, from: encodedData)
+
+       XCTAssertEqual(metaData.credential.accessKeyId, "ABCDEABCJOXYK7TPHCHTRKAA")
+
        let url = try MetaDataService.serviceHost.url()
        guard let host = url.host else {
          XCTFail("Error: host should not be nil")
@@ -46,20 +48,22 @@ class MetaDataServiceTests: XCTestCase {
         return
     }
   }
-  
-  func testMetaDataServiceForInstanceProfileCredentials() { 
-    do {
-       let body: [String: Any] = ["Code" : "Success",
-                                  "LastUpdated" : "2018-01-05T05:25:41Z",
-                                  "Type" : "AWS-HMAC",
-                                  "AccessKeyId" : "XYZABCJOXYK7TPHCHTRKAA",
-                                  "SecretAccessKey" : "X+9PUEvV/xS2a7xQTg",
-                                  "Token" : "XYZ123dzENH//////////",
-                                  "Expiration" : "2017-12-30T13:22:39Z"]
 
-       let metadata = try MetaDataService.MetaData(dictionary: body)
-       XCTAssertEqual(metadata.credential.accessKeyId, "XYZABCJOXYK7TPHCHTRKAA")
-       
+  func testMetaDataServiceForInstanceProfileCredentials() {
+    do {
+       let body: [String: String] = ["Code" : "Success",
+                                     "LastUpdated" : "2018-01-05T05:25:41Z",
+                                     "Type" : "AWS-HMAC",
+                                     "AccessKeyId" : "XYZABCJOXYK7TPHCHTRKAA",
+                                     "SecretAccessKey" : "X+9PUEvV/xS2a7xQTg",
+                                     "Token" : "XYZ123dzENH//////////",
+                                     "Expiration" : "2017-12-30T13:22:39Z"]
+
+       let encodedData = try JSONEncoder().encode(body)
+       let metaData = try JSONDecoder().decode(MetaDataService.MetaData.self, from: encodedData)
+
+       XCTAssertEqual(metaData.credential.accessKeyId, "XYZABCJOXYK7TPHCHTRKAA")
+
        let baseURLString = MetaDataService.serviceHost.baseURLString
        XCTAssertEqual(baseURLString, "http://169.254.169.254/latest/meta-data/iam/security-credentials/")
     } catch {

@@ -7,7 +7,7 @@
 //
 
 import Foundation
-// import CLibreSSL
+import CNIOOpenSSL
 
 func hmac(string: String, key: [UInt8]) -> [UInt8] {
     var context = HMAC_CTX()

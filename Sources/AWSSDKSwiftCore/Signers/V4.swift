@@ -226,6 +226,6 @@ extension Signers {
 
 extension Collection where Iterator.Element == URLQueryItem {
     var asStringForURL: String {
-        return self.flatMap({ "\($0.name)=\($0.value ?? "")" }).joined(separator: "&")
+        return self.compactMap({ "\($0.name)=\($0.value ?? "")" }).joined(separator: "&")
     }
 }

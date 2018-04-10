@@ -12,7 +12,7 @@ let package = Package(
         .package(url: "https://github.com/Yasumoto/HypertextApplicationLanguage.git", .upToNextMajor(from: "1.1.0"))
     ],
     targets: [
-        .target(name: "AWSSDKSwiftCore", dependencies: ["NIO", "HypertextApplicationLanguage"]),
+        .target(name: "AWSSDKSwiftCore", dependencies: ["NIO", "NIOOpenSSL", "HypertextApplicationLanguage"]),
         .testTarget(name: "AWSSDKSwiftCoreTests", dependencies: ["AWSSDKSwiftCore"])
     ]
 )

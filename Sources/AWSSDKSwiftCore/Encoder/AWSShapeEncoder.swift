@@ -27,9 +27,9 @@ struct AWSShapeEncoder {
         return try sharedJSONEncoder.encode(input)
     }
     
-    func encodeToXMLUTF8Data(_ input: AWSShape, attributes: XMLAttribute = [:]) throws -> Data {
+    func encodeToXMLUTF8Data(_ input: AWSShape, attributes: XMLAttribute = [:]) throws -> Data? {
         let node = try encodeToXMLNode(input, attributes: attributes)
-        return XMLNodeSerializer(node: node).serializeToXML().data
+        return XMLNodeSerializer(node: node).serializeToXML().data(using: .utf8, allowLossyConversion: false)
     }
     
     func encodeToXMLNode(_ input: AWSShape, attributes: XMLAttribute = [:]) throws -> XMLNode {

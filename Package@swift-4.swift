@@ -7,12 +7,12 @@ let package = Package(
         .library(name: "AWSSDKSwiftCore", targets: ["AWSSDKSwiftCore"])
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-nio.git", from: "1.3.0"),
-        .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-nio.git", from: "1.5.0"),
+        .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "1.0.1"),
         .package(url: "https://github.com/Yasumoto/HypertextApplicationLanguage.git", .upToNextMajor(from: "1.1.0"))
     ],
     targets: [
-        .target(name: "AWSSDKSwiftCore", dependencies: ["NIO", "NIOOpenSSL", "HypertextApplicationLanguage"]),
+        .target(name: "AWSSDKSwiftCore", dependencies: ["HypertextApplicationLanguage", "NIO", "NIOHTTP1", "NIOOpenSSL"]),
         .testTarget(name: "AWSSDKSwiftCoreTests", dependencies: ["AWSSDKSwiftCore"])
     ]
 )

@@ -7,7 +7,8 @@
 //
 
 import Foundation
-// import Prorsum
+import NIO
+import NIOTLS
 
 public protocol AWSRequestMiddleware {
     func chain(request: AWSRequest) throws -> AWSRequest
@@ -113,7 +114,7 @@ public struct AWSRequest {
         if awsRequest.httpMethod.lowercased() != "get" && headers["content-type"] == nil {
             headers["Content-Type"] = "application/octet-stream"
         }
-        
+
         return Request(
             method: Request.Method(rawValue: awsRequest.httpMethod),
             url: awsRequest.url,

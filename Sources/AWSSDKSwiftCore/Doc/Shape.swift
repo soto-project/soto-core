@@ -31,7 +31,7 @@ public struct Shape {
     }
     
     public var isOutputType: Bool {
-        if name.characters.count <= 6 {
+        if name.count <= 6 {
             return false
         }
         

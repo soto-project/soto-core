@@ -9,6 +9,7 @@
 import Foundation
 import NIO
 import NIOTLS
+import NIOHTTP1
 
 public protocol AWSRequestMiddleware {
     func chain(request: AWSRequest) throws -> AWSRequest
@@ -26,36 +27,6 @@ extension URL {
             host+=":\(port)"
         }
         return host
-    }
-}
-
-extension Request.Method {
-    init(rawValue: String) {
-        switch rawValue.lowercased() {
-        case "get":
-            self = .get
-        case "post":
-            self = .post
-        case "put":
-            self = .put
-        case "patch":
-            self = .patch
-        case "delete":
-            self = .delete
-        case "head":
-            self = .head
-        default:
-            self = .other(method: rawValue)
-        }
-    }
-    
-    var rawValue: String {
-        switch self {
-        case .other(method: let method):
-            return method.uppercased()
-        default:
-            return "\(self)".uppercased()
-        }
     }
 }
 
@@ -88,13 +59,13 @@ public struct AWSRequest {
         httpHeaders[field] = value
     }
     
-    func toProrsumRequest() throws -> Prorsum.Request {
+    func toProrsumRequest() throws -> HTTPRequestHead {
         var awsRequest = self
         for middleware in middlewares {
             awsRequest = try middleware.chain(request: awsRequest)
         }
         
-        var headers: Headers = [:]
+        var headers: [String:String] = [:]
         for (key, value) in awsRequest.httpHeaders {
             guard let value = value else { continue }
             headers[key] = "\(value)"

@@ -7,7 +7,8 @@
 //
 
 import Foundation
-// import Prorsum
+import NIO
+import NIOHTTP1
 
 enum MetaDataServiceError: Error {
     case missingRequiredParam(String)
@@ -64,46 +65,14 @@ struct MetaDataService {
         }
     }
 
-    private static func request(url: URL, timeout: TimeInterval) throws -> Response {
+    private static func request(url: URL, timeout: TimeInterval) throws -> HTTPResponse {
 
-        let chan = Channel<(Response?, Error?)>.make(capacity: 1)
-        go {
-            do {
-                let client = try HTTPClient(url: url)
-                try client.open()
-                let response = try client.request()
-                try chan.send((response, nil))
-            } catch {
-                do { try chan.send((nil, error)) } catch {}
-            }
+        /*let handler = QueueHandler<HTTPResponse, HTTPRequest>(on: worker) { error in
+            ERROR("HTTPClient: \(error)")
+        }*/
+        return bootstrap.connect(host: hostname, port: port ?? scheme.defaultPort).map(to: HTTPClient.self) { channel in
+            return .init(handler: handler, channel: channel)
         }
-
-        var response: Response?
-        var error: Error?
-        let endAt = Date().addingTimeInterval(timeout)
-
-        forSelect { done in
-            when(chan) { res, err in
-                response = res
-                error = err
-                chan.close()
-                done()
-            }
-
-            otherwise {
-                if Date() > endAt {
-                    error = MetaDataServiceError.connectionTimeout
-                    chan.close()
-                    done()
-                }
-            }
-        }
-
-        if let e = error {
-            throw e
-        }
-
-        return response!
     }
 
     struct MetaData: Codable {

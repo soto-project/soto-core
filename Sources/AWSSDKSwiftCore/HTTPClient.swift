@@ -14,6 +14,11 @@ import NIOHTTP1
 import NIOOpenSSL
 import Foundation
 
+public struct HTTPResponse {
+    let head: HTTPResponseHead
+    let body: Data
+}
+
 private enum HTTPClientState {
     /// Waiting to parse the next response.
     case ready
@@ -67,13 +72,13 @@ public enum HTTPClientError: Error {
 
 private class HTTPClientResponsePartHandler: ChannelInboundHandler {
     typealias InboundIn = HTTPClientResponsePart
-    typealias OutboundOut = (HTTPResponseHead, Data)
+    typealias OutboundOut = HTTPResponse
 
     private var receiveds: [HTTPClientResponsePart] = []
     private var state: HTTPClientState = .ready
-    private var promise: EventLoopPromise<(HTTPResponseHead, Data)>
+    private var promise: EventLoopPromise<HTTPResponse>
 
-    public init(promise: EventLoopPromise<(HTTPResponseHead, Data)>) {
+    public init(promise: EventLoopPromise<HTTPResponse>) {
         self.promise = promise
     }
 
@@ -107,7 +112,7 @@ private class HTTPClientResponsePartHandler: ChannelInboundHandler {
             switch state {
             case .ready: promise.fail(error: HTTPClientError.malformedHead)
             case .parsingBody(let head, let data):
-                let res = (head, data ?? Data())
+                let res = HTTPResponse(head: head, body: data ?? Data())
                 if ctx.channel.isActive {
                     ctx.fireChannelRead(wrapOutboundOut(res))
                 }
@@ -132,7 +137,7 @@ public final class HTTPClient {
     public func connect(
         method: HTTPMethod = .GET,
         uri: String = "/"
-        ) throws -> EventLoopFuture<(HTTPResponseHead, Data)> {
+        ) throws -> EventLoopFuture<HTTPResponse> {
 
         var head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: method, uri: uri)
         head.headers.add(name: "Host", value: hostname)
@@ -150,7 +155,7 @@ public final class HTTPClient {
                 print("Unable to setup TLS: \(error)")
             }
         }
-        let response: EventLoopPromise<(HTTPResponseHead, Data)> = eventGroup.next().newPromise()
+        let response: EventLoopPromise<HTTPResponse> = eventGroup.next().newPromise()
 
         _ = ClientBootstrap(group: eventGroup)
             .channelInitializer { channel in

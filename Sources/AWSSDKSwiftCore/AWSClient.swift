@@ -115,7 +115,7 @@ public struct AWSClient {
 
 // invoker
 extension AWSClient {
-    fileprivate func invoke(request: Request) throws -> Response {
+    fileprivate func invoke(request: Request) throws -> HTTPResponse {
         // TODO implement Keep-alive
         let client = try HTTPClient(url: request.url)
         try client.open()

@@ -56,9 +56,9 @@ struct MetaDataService {
 
         func getRoleName() throws -> String {
             let response = try MetaDataService.request(url: URL(string: baseURLString)!, timeout: 2)
-            switch response.statusCode {
-            case 200:
-                return String(data: response.body.asData(), encoding: .utf8) ?? ""
+            switch response.head.status {
+            case .ok:
+                return String(data: response.body, encoding: .utf8) ?? ""
             default:
                 throw MetaDataServiceError.couldNotGetInstanceRoleName
             }
@@ -67,12 +67,8 @@ struct MetaDataService {
 
     private static func request(url: URL, timeout: TimeInterval) throws -> HTTPResponse {
 
-        /*let handler = QueueHandler<HTTPResponse, HTTPRequest>(on: worker) { error in
-            ERROR("HTTPClient: \(error)")
-        }*/
-        return bootstrap.connect(host: hostname, port: port ?? scheme.defaultPort).map(to: HTTPClient.self) { channel in
-            return .init(handler: handler, channel: channel)
-        }
+        let client = HTTPClient.init(hostname: url.absoluteString, port: 80)
+        return try client.connect().wait()
     }
 
     struct MetaData: Codable {
@@ -109,7 +105,7 @@ struct MetaDataService {
 
     func getCredential() throws -> Credential {
         let response = try MetaDataService.request(url: MetaDataService.serviceHost.url(), timeout: 2)
-        let metaData = try JSONDecoder().decode(MetaDataService.MetaData.self, from: response.body.asData())
+        let metaData = try JSONDecoder().decode(MetaDataService.MetaData.self, from: response.body)
         return metaData.credential
     }
 }

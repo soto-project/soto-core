@@ -9,6 +9,7 @@
 import Foundation
 import Dispatch
 import NIO
+import NIOHTTP1
 import HypertextApplicationLanguage
 
 extension String {
@@ -202,7 +203,7 @@ extension AWSClient {
             switch nioRequest.head.method {
             case .GET: return "GET"
             case .POST: return "POST"
-            default: return "POST"
+            default: return "GET"
             }
         }()
         let signedHeaders = signer.signedHeaders(
@@ -308,15 +309,16 @@ extension AWSClient {
                 }
             }
             
-            let params = queryItems.joined(separator: "&").percentEncoded(allowing: String.uriAWSQueryAllowed)
+            if let params = queryItems.joined(separator: "&").addingPercentEncoding(withAllowedCharacters: CharacterSet(charactersIn: String.uriAWSQueryAllowed.joined())) {
             
-            if path.contains("?") {
-                path += "&" + params
-            } else {
-                path += "?" + params
+                if path.contains("?") {
+                    path += "&" + params
+                } else {
+                    path += "?" + params
+                }
+            
+                body = .text(params)
             }
-            
-            body = .text(params)
             
         case .restxml:
             if let payload = Input.payloadPath, let payloadBody = mirror.getAttribute(forKey: payload.toSwiftVariableCase()) {
@@ -474,8 +476,9 @@ extension AWSClient {
                                 for link in links {
                                     guard let name = link.name else { continue }
                                     guard let url = URL(string: endpoint+link.href) else { continue }
-                                    let res = try invoke(request: nioRequestWithSignedHeader(Request(method: .get, url: url)))
-                                    let representaion = try Representation().from(json: res.body.asData())
+                                    let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: url.absoluteString)
+                                    let res = try invoke(request: nioRequestWithSignedHeader(Request(head: head, body: Data())))
+                                    let representaion = try Representation().from(json: res.body)
                                     dict[name] = representaion.properties
                                 }
                                 props[key] = dict

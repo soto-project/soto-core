@@ -16,7 +16,7 @@ import Foundation
 
 public struct Request {
     var head: HTTPRequestHead
-    let body: Data
+    var body: Data = Data()
 }
 
 public struct Response {

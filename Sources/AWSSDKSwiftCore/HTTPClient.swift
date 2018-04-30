@@ -22,6 +22,10 @@ public struct Request {
 public struct Response {
     let head: HTTPResponseHead
     let body: Data
+    
+    public func contentType() -> String? {
+        return head.headers.filter { $0.name.lowercased() == "content-type" }.first?.value
+    }
 }
 
 private enum HTTPClientState {

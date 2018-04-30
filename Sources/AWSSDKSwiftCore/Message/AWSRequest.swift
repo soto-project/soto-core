@@ -59,7 +59,7 @@ public struct AWSRequest {
         httpHeaders[field] = value
     }
     
-    func toNIORequest() throws -> HTTPRequest {
+    func toNIORequest() throws -> Request {
         var awsRequest = self
         for middleware in middlewares {
             awsRequest = try middleware.chain(request: awsRequest)
@@ -89,7 +89,7 @@ public struct AWSRequest {
         let generatedHeaders = headers.map { ($0, $1) }
         head.headers = HTTPHeaders(generatedHeaders)
         
-        return HTTPRequest(head: head, body: try awsRequest.body.asData() ?? Data())
+        return Request(head: head, body: try awsRequest.body.asData() ?? Data())
     }
     
     func toURLRequest() throws -> URLRequest {

@@ -168,22 +168,22 @@ extension AWSClient {
 
 // request creator
 extension AWSClient {
-    func createNIORequestWithSignedURL(_ request: AWSRequest) throws -> HTTPRequest {
+    func createNIORequestWithSignedURL(_ request: AWSRequest) throws -> Request {
         var nioRequest = try request.toNIORequest()
         nioRequest.head.uri = signer.signedURL(url: URL(nioRequest.head.uri))
-        nioRequest.head.headers.replaceOrAdd(name: "Host", value: nioRequest.uri.hostWithPort!)
+        nioRequest.head.headers.replaceOrAdd(name: "Host", value: nioRequest.head.uri)
         return nioRequest
     }
     
-    func createProrsumRequestWithSignedHeader(_ request: AWSRequest) throws -> Request {
-        return try prorsumRequestWithSignedHeader(request.toProrsumRequest())
+    func createNIORequestWithSignedHeader(_ request: AWSRequest) throws -> Request {
+        return try nioRequestWithSignedHeader(request.toNIORequest())
     }
     
-    func prorsumRequestWithSignedHeader(_ prorsumRequest: Request) throws -> Request {
-        var prorsumRequest = prorsumRequest
+    func nioRequestWithSignedHeader(_ nioRequest: Request) throws -> Request {
+        var nioRequest = nioRequest
         // TODO avoid copying
         var headers: [String: String] = [:]
-        for (key, value) in prorsumRequest.headers {
+        for (key, value) in nioRequest.head.headers {
             headers[key.description] = value
         }
         
@@ -196,35 +196,35 @@ extension AWSClient {
         }
         
         let signedHeaders = signer.signedHeaders(
-            url: prorsumRequest.url,
+            url: nioRequest.head.uri,
             headers: headers,
-            method: prorsumRequest.method.rawValue,
-            bodyData: prorsumRequest.body.asData()
+            method: nioRequest.method.rawValue,
+            bodyData: nioRequest.body.asData()
         )
         
         for (key, value) in signedHeaders {
-            prorsumRequest.headers[key] = value
+            nioRequest.headers[key] = value
         }
         
-        return prorsumRequest
+        return nioRequest
     }
     
-    func request(_ request: AWSRequest) throws -> Prorsum.Response {
-        let prorsumRequest: Request
+    func request(_ request: AWSRequest) throws -> Response {
+        let nioRequest: Request
         switch request.httpMethod {
         case "GET":
             switch serviceProtocol.type {
             case .restjson:
-                prorsumRequest = try createProrsumRequestWithSignedHeader(request)
+                nioRequest = try createNIORequestWithSignedHeader(request)
                 
             default:
-                prorsumRequest = try createProrsumRequestWithSignedURL(request)
+                nioRequest = try createNIORequestWithSignedURL(request)
             }
         default:
-            prorsumRequest = try createProrsumRequestWithSignedHeader(request)
+            nioRequest = try createNIORequestWithSignedHeader(request)
         }
         
-        return try invoke(request: prorsumRequest)
+        return try invoke(request: nioRequest)
     }
     
     fileprivate func createRequest(operation operationName: String, path: String, httpMethod: String) -> AWSRequest {
@@ -350,15 +350,15 @@ extension AWSClient {
 
 // response validator
 extension AWSClient {
-    fileprivate func validate<Output: AWSShape>(operation operationName: String, response: Prorsum.Response) throws -> Output {
+    fileprivate func validate<Output: AWSShape>(operation operationName: String, response: Response) throws -> Output {
         
-        guard (200..<300).contains(response.statusCode) else {
+        guard (200..<300).contains(response.head.status.code) else {
             let responseBody = try validateBody(
                 for: response,
                 payloadPath: nil,
                 members: Output._members
             )
-            throw createError(for: response, withComputedBody: responseBody, withRawData: response.body.asData())
+            throw createError(for: response, withComputedBody: responseBody, withRawData: response.body)
         }
         
         let responseBody = try validateBody(
@@ -368,7 +368,7 @@ extension AWSClient {
         )
         
         var responseHeaders: [String: String] = [:]
-        for (key, value) in response.headers {
+        for (key, value) in response.head.headers {
             responseHeaders[key.description] = value
         }
         
@@ -406,7 +406,7 @@ extension AWSClient {
             break
         }
         
-        for (key, value) in response.headers {
+        for (key, value) in response.head.headers {
             if let index = Output.headerParams.index(where: { $0.key.lowercased() == key.description.lowercased() }) {
                 if let number = Double(value) {
                     outputDict[Output.headerParams[index].key] = number.truncatingRemainder(dividingBy: 1) == 0 ? Int(number) : number
@@ -419,9 +419,9 @@ extension AWSClient {
         return try DictionaryDecoder().decode(Output.self, from: outputDict)
     }
     
-    private func validateBody(for response: Prorsum.Response, payloadPath: String?, members: [AWSShapeMember]) throws -> Body {
+    private func validateBody(for response: Response, payloadPath: String?, members: [AWSShapeMember]) throws -> Body {
         var responseBody: Body = .empty
-        let data = response.body.asData()
+        let data = response.body
         
         if data.isEmpty {
             return responseBody
@@ -433,7 +433,7 @@ extension AWSClient {
         
         switch serviceProtocol.type {
         case .json, .restjson:
-            if let cType = response.contentType, cType.subtype.contains("hal+json") {
+            if let cType = response.contentType(), cType.contains("hal+json") {
                 let representation = try Representation.from(json: data)
                 var dictionary = representation.properties
                 for rel in representation.rels {
@@ -464,7 +464,7 @@ extension AWSClient {
                                 for link in links {
                                     guard let name = link.name else { continue }
                                     guard let url = URL(string: endpoint+link.href) else { continue }
-                                    let res = try invoke(request: prorsumRequestWithSignedHeader(Request(method: .get, url: url)))
+                                    let res = try invoke(request: nioRequestWithSignedHeader(Request(method: .get, url: url)))
                                     let representaion = try Representation().from(json: res.body.asData())
                                     dict[name] = representaion.properties
                                 }

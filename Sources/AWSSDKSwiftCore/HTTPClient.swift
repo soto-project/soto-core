@@ -148,8 +148,6 @@ public final class HTTPClient {
         body: Data = Data()
         ) throws -> EventLoopFuture<Response> {
         var head = head
-        head.headers.add(name: "Host", value: hostname)
-        head.headers.add(name: "Accept", value: "*/*")
         head.headers.add(name: "User-Agent", value: "AWS SDK Swift Core")
 
         var preHandlers = [ChannelHandler]()

@@ -14,7 +14,12 @@ import NIOHTTP1
 import NIOOpenSSL
 import Foundation
 
-public struct HTTPResponse {
+public struct Request {
+    var head: HTTPRequestHead
+    let body: Data
+}
+
+public struct Response {
     let head: HTTPResponseHead
     let body: Data
 }
@@ -70,15 +75,15 @@ public enum HTTPClientError: Error {
     case malformedHead, malformedBody, error(Error)
 }
 
-private class HTTPClientResponsePartHandler: ChannelInboundHandler {
+private class HTTPClientResponseHandler: ChannelInboundHandler {
     typealias InboundIn = HTTPClientResponsePart
-    typealias OutboundOut = HTTPResponse
+    typealias OutboundOut = Response
 
     private var receiveds: [HTTPClientResponsePart] = []
     private var state: HTTPClientState = .ready
-    private var promise: EventLoopPromise<HTTPResponse>
+    private var promise: EventLoopPromise<Response>
 
-    public init(promise: EventLoopPromise<HTTPResponse>) {
+    public init(promise: EventLoopPromise<Response>) {
         self.promise = promise
     }
 
@@ -112,7 +117,7 @@ private class HTTPClientResponsePartHandler: ChannelInboundHandler {
             switch state {
             case .ready: promise.fail(error: HTTPClientError.malformedHead)
             case .parsingBody(let head, let data):
-                let res = HTTPResponse(head: head, body: data ?? Data())
+                let res = Response(head: head, body: data ?? Data())
                 if ctx.channel.isActive {
                     ctx.fireChannelRead(wrapOutboundOut(res))
                 }
@@ -135,11 +140,10 @@ public final class HTTPClient {
     }
 
     public func connect(
-        method: HTTPMethod = .GET,
-        uri: String = "/"
-        ) throws -> EventLoopFuture<HTTPResponse> {
-
-        var head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: method, uri: uri)
+        head: HTTPRequestHead = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: "/"),
+        body: Data = Data()
+        ) throws -> EventLoopFuture<Response> {
+        var head = head
         head.headers.add(name: "Host", value: hostname)
         head.headers.add(name: "Accept", value: "*/*")
         head.headers.add(name: "User-Agent", value: "AWS SDK Swift Core")
@@ -155,11 +159,11 @@ public final class HTTPClient {
                 print("Unable to setup TLS: \(error)")
             }
         }
-        let response: EventLoopPromise<HTTPResponse> = eventGroup.next().newPromise()
+        let response: EventLoopPromise<Response> = eventGroup.next().newPromise()
 
         _ = ClientBootstrap(group: eventGroup)
             .channelInitializer { channel in
-                let accumulation = HTTPClientResponsePartHandler(promise: response)
+                let accumulation = HTTPClientResponseHandler(promise: response)
                 let results = preHandlers.map { channel.pipeline.add(handler: $0) }
                 return EventLoopFuture<Void>.andAll(results, eventLoop: channel.eventLoop).then {
                     channel.pipeline.addHTTPClientHandlers().then {
@@ -173,5 +177,9 @@ public final class HTTPClient {
                 return channel.writeAndFlush(NIOAny(HTTPClientRequestPart.end(nil)))
         }
         return response.futureResult
+    }
+    
+    public func close(_ callback: @escaping (Error?) -> Void) {
+        eventGroup.shutdownGracefully(callback)
     }
 }

@@ -115,12 +115,16 @@ public struct AWSClient {
 
 // invoker
 extension AWSClient {
-    fileprivate func invoke(request: Request) throws -> HTTPResponse {
+    fileprivate func invoke(request: Request) throws -> Response {
         // TODO implement Keep-alive
-        let client = try HTTPClient(url: request.url)
-        try client.open()
-        let response = try client.request(request)
-        client.close()
+        let client = HTTPClient(hostname: request.head.uri)
+        let future = try client.connect()
+        let response = try future.wait()
+        client.close { error in
+            if let error = error {
+                print("Error closing connection: \(error)")
+            }
+        }
         
         return response
     }
@@ -164,11 +168,11 @@ extension AWSClient {
 
 // request creator
 extension AWSClient {
-    func createProrsumRequestWithSignedURL(_ request: AWSRequest) throws -> Request {
-        var prorsumRequest = try request.toProrsumRequest()
-        prorsumRequest.url = signer.signedURL(url: prorsumRequest.url)
-        prorsumRequest.headers["Host"] = prorsumRequest.url.hostWithPort!
-        return prorsumRequest
+    func createNIORequestWithSignedURL(_ request: AWSRequest) throws -> HTTPRequest {
+        var nioRequest = try request.toNIORequest()
+        nioRequest.head.uri = signer.signedURL(url: URL(nioRequest.head.uri))
+        nioRequest.head.headers.replaceOrAdd(name: "Host", value: nioRequest.uri.hostWithPort!)
+        return nioRequest
     }
     
     func createProrsumRequestWithSignedHeader(_ request: AWSRequest) throws -> Request {
@@ -527,7 +531,7 @@ extension AWSClient {
                 .joined(separator: ", ")
             
         case .restjson:
-            code = response.headers["x-amzn-ErrorType"]
+            code = response.head.headers.filter( { $0.name == "x-amzn-ErrorType"}).first?.value
             message = bodyDict.filter({ $0.key.lowercased() == "message" }).first?.value as? String
             
         case .json:

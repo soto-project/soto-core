@@ -65,9 +65,8 @@ struct MetaDataService {
         }
     }
 
-    private static func request(url: URL, timeout: TimeInterval) throws -> HTTPResponse {
-
-        let client = HTTPClient.init(hostname: url.absoluteString, port: 80)
+    private static func request(url: URL, timeout: TimeInterval) throws -> Response {
+        let client = HTTPClient(hostname: url.absoluteString, port: 80)
         return try client.connect().wait()
     }
 

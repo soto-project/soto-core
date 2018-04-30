@@ -59,7 +59,7 @@ public struct AWSRequest {
         httpHeaders[field] = value
     }
     
-    func toProrsumRequest() throws -> HTTPRequestHead {
+    func toNIORequest() throws -> HTTPRequest {
         var awsRequest = self
         for middleware in middlewares {
             awsRequest = try middleware.chain(request: awsRequest)
@@ -85,13 +85,11 @@ public struct AWSRequest {
         if awsRequest.httpMethod.lowercased() != "get" && headers["content-type"] == nil {
             headers["Content-Type"] = "application/octet-stream"
         }
-
-        return Request(
-            method: Request.Method(rawValue: awsRequest.httpMethod),
-            url: awsRequest.url,
-            headers: headers,
-            body: try awsRequest.body.asData() ?? Data()
-        )
+        var head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: HTTPMethod.RAW(value: awsRequest.httpMethod) , uri: awsRequest.url.absoluteString)
+        let generatedHeaders = headers.map { ($0, $1) }
+        head.headers = HTTPHeaders(generatedHeaders)
+        
+        return HTTPRequest(head: head, body: try awsRequest.body.asData() ?? Data())
     }
     
     func toURLRequest() throws -> URLRequest {

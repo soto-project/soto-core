@@ -170,8 +170,12 @@ extension AWSClient {
 extension AWSClient {
     func createNIORequestWithSignedURL(_ request: AWSRequest) throws -> Request {
         var nioRequest = try request.toNIORequest()
-        nioRequest.head.uri = signer.signedURL(url: URL(nioRequest.head.uri))
-        nioRequest.head.headers.replaceOrAdd(name: "Host", value: nioRequest.head.uri)
+        let head = nioRequest.head
+        if let previousURL = URL(string: head.uri) {
+            let signedURI = signer.signedURL(url: previousURL)
+            nioRequest.head.uri = signedURI.absoluteString
+            nioRequest.head.headers.replaceOrAdd(name: "Host", value: nioRequest.head.uri)
+        }
         return nioRequest
     }
     
@@ -194,16 +198,22 @@ extension AWSClient {
                 // should not be crash
             }
         }
-        
+        let method = { () -> String in
+            switch nioRequest.head.method {
+            case .GET: return "GET"
+            case .POST: return "POST"
+            default: return "POST"
+            }
+        }()
         let signedHeaders = signer.signedHeaders(
-            url: nioRequest.head.uri,
+            url: URL(string: nioRequest.head.uri)!,
             headers: headers,
-            method: nioRequest.method.rawValue,
-            bodyData: nioRequest.body.asData()
+            method: method,
+            bodyData: nioRequest.body
         )
         
         for (key, value) in signedHeaders {
-            nioRequest.headers[key] = value
+            nioRequest.head.headers.replaceOrAdd(name: key, value: value)
         }
         
         return nioRequest
@@ -415,7 +425,7 @@ extension AWSClient {
                 }
             }
         }
-        
+
         return try DictionaryDecoder().decode(Output.self, from: outputDict)
     }
     

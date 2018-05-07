@@ -132,8 +132,9 @@ extension AWSClient {
             throw RequestError.invalidURL("\(url)")
         }
         let client = HTTPClient(hostname: hostname, port: port)
-        let future = try client.connect()
+        let future = try client.connect(body: request.body)
         let response = try future.wait()
+
         client.close { error in
             if let error = error {
                 print("Error closing connection: \(error)")

@@ -66,7 +66,17 @@ struct MetaDataService {
     }
 
     private static func request(url: URL, timeout: TimeInterval) throws -> Response {
-        let client = HTTPClient(hostname: url.absoluteString, port: 80)
+        guard let scheme = url.scheme else {
+            throw MetaDataServiceError.couldNotGetInstanceRoleName
+        }
+        var port: Int {
+            let isSecure = scheme == "https" || scheme == "wss"
+            return isSecure ? 443 : Int(url.port ?? 80)
+        }
+        guard let hostname = url.host else {
+            throw MetaDataServiceError.couldNotGetInstanceRoleName
+        }
+        let client = HTTPClient(hostname: hostname, port: port)
         return try client.connect().wait()
     }
 

@@ -4,7 +4,6 @@ import PackageDescription
 let package = Package(
     name: "AWSSDKSwiftCore",
     products: [
-        .executable(name: "tester", targets: ["AWSSDKSwiftCore"]),
         .library(name: "AWSSDKSwiftCore", targets: ["AWSSDKSwiftCore"])
     ],
     dependencies: [

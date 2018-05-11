@@ -16,19 +16,6 @@ extension String {
     public static let uriAWSQueryAllowed: [String] = ["&", "\'", "(", ")", "-", ".", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "=", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "_", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
 }
 
-/*
- TODO(jmsmith): fixup
-extension Prorsum.Body {
-    func asData() -> Data {
-        switch self {
-        case .buffer(let data):
-            return data
-        default:
-            return Data()
-        }
-    }
-}*/
-
 public struct InputContext {
     let Shape: AWSShape.Type
     let input: AWSShape
@@ -121,18 +108,9 @@ extension AWSClient {
         guard let url = URL(string: request.head.uri) else {
             throw RequestError.invalidURL("\(request.head.uri)")
         }
-        guard let scheme = url.scheme else {
-            throw RequestError.invalidURL("\(url)")
-        }
-        var port: Int {
-            let isSecure = scheme == "https" || scheme == "wss"
-            return isSecure ? 443 : Int(url.port ?? 80)
-        }
-        guard let hostname = url.host else {
-            throw RequestError.invalidURL("\(url)")
-        }
-        let client = HTTPClient(hostname: hostname, port: port)
-        let future = try client.connect(body: request.body)
+
+        let client = try HTTPClient(url: url)
+        let future = try client.connect(method: request.head.method, headers: request.head.headers, body: request.body)
         let response = try future.wait()
 
         client.close { error in
@@ -151,8 +129,7 @@ extension AWSClient {
         let request = try createRequest(
             operation: operationName,
             path: path,
-            httpMethod:
-            httpMethod,
+            httpMethod: httpMethod,
             input: input
         )
 
@@ -186,10 +163,10 @@ extension AWSClient {
     func createNIORequestWithSignedURL(_ request: AWSRequest) throws -> Request {
         var nioRequest = try request.toNIORequest()
         let head = nioRequest.head
-        if let previousURL = URL(string: head.uri) {
-            let signedURI = signer.signedURL(url: previousURL)
+        if let unsignedUrl = URL(string: head.uri) {
+            let signedURI = signer.signedURL(url: unsignedUrl)
             nioRequest.head.uri = signedURI.absoluteString
-            nioRequest.head.headers.replaceOrAdd(name: "Host", value: nioRequest.head.uri)
+            nioRequest.head.headers.replaceOrAdd(name: "Host", value: unsignedUrl.hostWithPort!)
         }
         return nioRequest
     }
@@ -215,8 +192,8 @@ extension AWSClient {
         }
         let method = { () -> String in
             switch nioRequest.head.method {
-            case .GET: return "GET"
-            case .POST: return "POST"
+            case HTTPMethod.RAW(value: "GET"): return "GET"
+            case HTTPMethod.RAW(value: "POST"): return "POST"
             default: return "GET"
             }
         }()

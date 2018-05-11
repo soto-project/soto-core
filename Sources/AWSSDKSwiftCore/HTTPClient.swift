@@ -22,7 +22,7 @@ public struct Request {
 public struct Response {
     let head: HTTPResponseHead
     let body: Data
-    
+
     public func contentType() -> String? {
         return head.headers.filter { $0.name.lowercased() == "content-type" }.first?.value
     }
@@ -76,7 +76,7 @@ extension ByteBuffer {
 }
 
 public enum HTTPClientError: Error {
-    case malformedHead, malformedBody, error(Error)
+    case malformedHead, malformedBody, malformedURL, error(Error)
 }
 
 private class HTTPClientResponseHandler: ChannelInboundHandler {
@@ -133,22 +133,45 @@ private class HTTPClientResponseHandler: ChannelInboundHandler {
 }
 
 public final class HTTPClient {
+    private let url: URL
     private let hostname: String
     private let port: Int
     private let eventGroup: EventLoopGroup
 
-    public init(hostname: String, port: Int = 80, eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numThreads: System.coreCount)) {
+    public init(url: URL,
+                eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numThreads: System.coreCount)) throws {
+        guard let scheme = url.scheme else {
+            throw HTTPClientError.malformedURL
+        }
+        var port: Int {
+            let isSecure = scheme == "https" || scheme == "wss"
+            return isSecure ? 443 : Int(url.port ?? 80)
+        }
+        guard let hostname = url.host else {
+            throw HTTPClientError.malformedURL
+        }
+        self.url = url
         self.hostname = hostname
         self.port = port
         self.eventGroup = eventGroup
     }
 
     public func connect(
-        head: HTTPRequestHead = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: "/"),
+        method: HTTPMethod = .GET,
+        headers: HTTPHeaders = HTTPHeaders(),
         body: Data = Data()
         ) throws -> EventLoopFuture<Response> {
-        var head = head
+
+        var head = HTTPRequestHead(
+                     version: HTTPVersion(major: 1, minor: 1),
+                     method: method,
+                     uri: url.absoluteString)
+        head.headers = headers
+        head.headers.replaceOrAdd(name: "Host", value: url.hostWithPort!)
         head.headers.add(name: "User-Agent", value: "AWS SDK Swift Core")
+        head.headers.add(name: "Accept", value: "*/*")
+        head.headers.add(name: "Content-Length", value: body.count.description)
+        head.headers.add(name: "Connection", value: "Close")
 
         var preHandlers = [ChannelHandler]()
         if (port == 443) {
@@ -177,11 +200,14 @@ public final class HTTPClient {
             .connect(host: hostname, port: port)
             .then { channel -> EventLoopFuture<Void> in
                 channel.write(NIOAny(HTTPClientRequestPart.head(head)), promise: nil)
+                var buffer = ByteBufferAllocator().buffer(capacity: body.count)
+                buffer.write(bytes: body)
+                channel.write(NIOAny(HTTPClientRequestPart.body(.byteBuffer(buffer))), promise: nil)
                 return channel.writeAndFlush(NIOAny(HTTPClientRequestPart.end(nil)))
         }
         return response.futureResult
     }
-    
+
     public func close(_ callback: @escaping (Error?) -> Void) {
         eventGroup.shutdownGracefully(callback)
     }

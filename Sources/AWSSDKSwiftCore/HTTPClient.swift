@@ -168,10 +168,10 @@ public final class HTTPClient {
                      uri: url.absoluteString)
         head.headers = headers
         head.headers.replaceOrAdd(name: "Host", value: url.hostWithPort!)
-        head.headers.add(name: "User-Agent", value: "AWS SDK Swift Core")
-        head.headers.add(name: "Accept", value: "*/*")
-        head.headers.add(name: "Content-Length", value: body.count.description)
-        head.headers.add(name: "Connection", value: "Close")
+        head.headers.replaceOrAdd(name: "User-Agent", value: "AWS SDK Swift Core")
+        head.headers.replaceOrAdd(name: "Accept", value: "*/*")
+        head.headers.replaceOrAdd(name: "Content-Length", value: body.count.description)
+        head.headers.replaceOrAdd(name: "Connection", value: "Close")
 
         var preHandlers = [ChannelHandler]()
         if (port == 443) {

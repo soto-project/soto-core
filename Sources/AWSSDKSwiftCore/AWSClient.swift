@@ -111,6 +111,8 @@ extension AWSClient {
 
         let client = try HTTPClient(url: url)
         let future = try client.connect(method: request.head.method, headers: request.head.headers, body: request.body)
+
+        //TODO(jmca) don't block
         let response = try future.wait()
 
         client.close { error in

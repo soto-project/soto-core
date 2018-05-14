@@ -103,14 +103,9 @@ public struct AWSClient {
 
 // invoker
 extension AWSClient {
-    fileprivate func invoke(request: Request) throws -> Response {
-        // TODO implement Keep-alive
-        guard let url = URL(string: request.head.uri) else {
-            throw RequestError.invalidURL("\(request.head.uri)")
-        }
-
-        let client = try HTTPClient(url: url)
-        let future = try client.connect(method: request.head.method, headers: request.head.headers, body: request.body)
+    fileprivate func invoke(_ nioRequest: Request) throws -> Response {
+        let client = HTTPClient(hostname: nioRequest.head.headers["Host"].first!, port: 443)
+        let future = try client.connect(nioRequest)
 
         //TODO(jmca) don't block
         let response = try future.wait()
@@ -123,40 +118,58 @@ extension AWSClient {
 
         return response
     }
+
+    //TODO(jmca) learn how to map response to validate and return
+    // a future of generic Output: AWSShape
+    fileprivate func invokeAsync(_ nioRequest: Request) throws -> EventLoopFuture<Response>{
+        let client = HTTPClient(hostname: nioRequest.head.headers["Host"].first!, port: 443)
+        let future = try client.connect(nioRequest)
+        future.whenComplete {
+          client.close { error in
+              if let error = error {
+                  print("Error closing connection: \(error)")
+              }
+          }
+        }
+        return future
+    }
 }
 
 // public facing apis
 extension AWSClient {
     public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws {
-        let request = try createRequest(
+        let awsRequest = try createAWSRequest(
             operation: operationName,
             path: path,
             httpMethod: httpMethod,
             input: input
         )
-
-        _ = try self.request(request)
+        let nioRequest = try createNioRequest(awsRequest)
+        _ = try self.invoke(nioRequest)
     }
 
     public func send(operation operationName: String, path: String, httpMethod: String) throws {
-        let request = createRequest(operation: operationName, path: path, httpMethod: httpMethod)
-        _ = try self.request(request)
+        let awsRequest = createAWSRequest(operation: operationName, path: path, httpMethod: httpMethod)
+        let nioRequest = try createNioRequest(awsRequest)
+        _ = try self.invoke(nioRequest)
     }
 
     public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) throws -> Output {
-        let request = createRequest(operation: operationName, path: path, httpMethod: httpMethod)
-        return try validate(operation: operationName, response: try self.request(request))
+        let awsRequest = createAWSRequest(operation: operationName, path: path, httpMethod: httpMethod)
+        let nioRequest = try createNioRequest(awsRequest)
+        return try validate(operation: operationName, response: try self.invoke(nioRequest))
     }
 
     public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input)
         throws -> Output {
-        let request = try createRequest(
+        let awsRequest = try createAWSRequest(
             operation: operationName,
             path: path,
             httpMethod: httpMethod,
             input: input
         )
-        return try validate(operation: operationName, response: try self.request(request))
+        let nioRequest = try createNioRequest(awsRequest)
+        return try validate(operation: operationName, response: try self.invoke(nioRequest))
     }
 }
 
@@ -174,10 +187,10 @@ extension AWSClient {
     }
 
     func createNIORequestWithSignedHeader(_ request: AWSRequest) throws -> Request {
-        return try nioRequestWithSignedHeader(request.toNIORequest())
+        return try nioRequestWithSignedHeader(request.toNIORequest(), url: request.url)
     }
 
-    func nioRequestWithSignedHeader(_ nioRequest: Request) throws -> Request {
+    func nioRequestWithSignedHeader(_ nioRequest: Request, url: URL) throws -> Request {
         var nioRequest = nioRequest
         // TODO avoid copying
         var headers: [String: String] = [:]
@@ -199,8 +212,9 @@ extension AWSClient {
             default: return "GET"
             }
         }()
+
         let signedHeaders = signer.signedHeaders(
-            url: URL(string: nioRequest.head.uri)!,
+            url: url,
             headers: headers,
             method: method,
             bodyData: nioRequest.body
@@ -213,7 +227,7 @@ extension AWSClient {
         return nioRequest
     }
 
-    func request(_ request: AWSRequest) throws -> Response {
+    func createNioRequest(_ request: AWSRequest) throws -> Request {
         let nioRequest: Request
         switch request.httpMethod {
         case "GET":
@@ -227,11 +241,10 @@ extension AWSClient {
         default:
             nioRequest = try createNIORequestWithSignedHeader(request)
         }
-
-        return try invoke(request: nioRequest)
+        return nioRequest
     }
 
-    fileprivate func createRequest(operation operationName: String, path: String, httpMethod: String) -> AWSRequest {
+    fileprivate func createAWSRequest(operation operationName: String, path: String, httpMethod: String) -> AWSRequest {
         return AWSRequest(
             region: self.signer.region,
             url: URL(string:  "\(endpoint)\(path)")!,
@@ -246,7 +259,7 @@ extension AWSClient {
         )
     }
 
-    fileprivate func createRequest<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
+    fileprivate func createAWSRequest<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
         var headers: [String: String] = [:]
         var body: Body = .empty
         var path = path
@@ -469,8 +482,8 @@ extension AWSClient {
                                 for link in links {
                                     guard let name = link.name else { continue }
                                     guard let url = URL(string: endpoint+link.href) else { continue }
-                                    let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: url.absoluteString)
-                                    let res = try invoke(request: nioRequestWithSignedHeader(Request(head: head, body: Data())))
+                                    let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: link.href)
+                                    let res = try invoke(nioRequestWithSignedHeader(Request(head: head, body: Data()), url: url))
                                     let representaion = try Representation().from(json: res.body)
                                     dict[name] = representaion.properties
                                 }

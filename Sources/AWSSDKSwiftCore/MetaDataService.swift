@@ -66,8 +66,14 @@ struct MetaDataService {
     }
 
     private static func request(url: URL, timeout: TimeInterval) throws -> Response {
-        let client = try HTTPClient(url: url)
-        return try client.connect().wait()
+        let client = HTTPClient(hostname: url.host!, port: 80)
+        let head = HTTPRequestHead(
+                     version: HTTPVersion(major: 1, minor: 1),
+                     method: .GET,
+                     uri: url.path
+                   )
+        let request = Request(head: head, body: Data())
+        return try client.connect(request).wait()
     }
 
     struct MetaData: Codable {

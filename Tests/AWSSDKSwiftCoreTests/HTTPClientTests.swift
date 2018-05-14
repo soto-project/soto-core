@@ -49,10 +49,22 @@ class HTTPClientTests: XCTestCase {
       }
     }
 
+    func testInitWithHostAndPort() {
+        let url = URL(string: "https://kinesis.us-west-2.amazonaws.com/")!
+        _ = HTTPClient(hostname: url.host!, port: 443)
+    }
+
     func testConnectSimpleGet() {
       do {
-          let client = try HTTPClient(url: URL(string: "https://kinesis.us-west-2.amazonaws.com/")!)
-          let future = try client.connect()
+          let url = URL(string: "https://kinesis.us-west-2.amazonaws.com/")!
+          let client = HTTPClient(hostname: url.host!, port: 443)
+          let head = HTTPRequestHead(
+                       version: HTTPVersion(major: 1, minor: 1),
+                       method: .GET,
+                       uri: url.path
+                     )
+          let request = Request(head: head, body: Data())
+          let future = try client.connect(request)
           future.whenSuccess { response in }
           future.whenFailure { error in }
           future.whenComplete { }
@@ -69,11 +81,15 @@ class HTTPClientTests: XCTestCase {
 
     func testConnectGet() {
       do {
-          let client = try HTTPClient(url: URL(string: "https://kinesis.us-west-2.amazonaws.com/")!)
-          let future = try client.connect(
-            method: .GET,
-            headers: HTTPHeaders()
-          )
+          let url = URL(string: "https://kinesis.us-west-2.amazonaws.com/")!
+          let client = HTTPClient(hostname: url.host!, port: 443)
+          let head = HTTPRequestHead(
+                       version: HTTPVersion(major: 1, minor: 1),
+                       method: .GET,
+                       uri: url.path
+                     )
+          let request = Request(head: head, body: Data())
+          let future = try client.connect(request)
           future.whenSuccess { response in }
           future.whenFailure { error in }
           future.whenComplete { }
@@ -90,14 +106,15 @@ class HTTPClientTests: XCTestCase {
 
     func testConnectPost() {
       do {
-          let client = try HTTPClient(
-              url: URL(string: "https://kinesis.us-west-2.amazonaws.com/")!
-          )
-          let future = try client.connect(
-              method: .POST,
-              headers: HTTPHeaders(),
-              body: Data()
-          )
+          let url = URL(string: "https://kinesis.us-west-2.amazonaws.com/")!
+          let client = HTTPClient(hostname: url.host!, port: 443)
+          let head = HTTPRequestHead(
+                       version: HTTPVersion(major: 1, minor: 1),
+                       method: .GET,
+                       uri: url.path
+                     )
+          let request = Request(head: head, body: Data())
+          let future = try client.connect(request)
           future.whenSuccess { response in }
           future.whenFailure { error in }
           future.whenComplete { }

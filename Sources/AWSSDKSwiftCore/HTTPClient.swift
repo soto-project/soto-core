@@ -133,7 +133,6 @@ private class HTTPClientResponseHandler: ChannelInboundHandler {
 }
 
 public final class HTTPClient {
-    private let url: URL
     private let hostname: String
     private let port: Int
     private let eventGroup: EventLoopGroup
@@ -143,34 +142,36 @@ public final class HTTPClient {
         guard let scheme = url.scheme else {
             throw HTTPClientError.malformedURL
         }
+        guard let hostname = url.host else {
+            throw HTTPClientError.malformedURL
+        }
         var port: Int {
             let isSecure = scheme == "https" || scheme == "wss"
             return isSecure ? 443 : Int(url.port ?? 80)
         }
-        guard let hostname = url.host else {
-            throw HTTPClientError.malformedURL
-        }
-        self.url = url
         self.hostname = hostname
         self.port = port
         self.eventGroup = eventGroup
     }
 
-    public func connect(
-        method: HTTPMethod = .GET,
-        headers: HTTPHeaders = HTTPHeaders(),
-        body: Data = Data()
-        ) throws -> EventLoopFuture<Response> {
+    public init(hostname: String,
+                port: Int,
+                eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numThreads: System.coreCount)) {
+        self.hostname = hostname
+        self.port = port
+        self.eventGroup = eventGroup
+    }
 
-        var head = HTTPRequestHead(
-                     version: HTTPVersion(major: 1, minor: 1),
-                     method: method,
-                     uri: url.absoluteString)
-        head.headers = headers
-        head.headers.replaceOrAdd(name: "Host", value: url.hostWithPort!)
+    public func connect(_ request: Request) throws -> EventLoopFuture<Response> {
+        var head = request.head
+        let body = request.body
+
+        head.headers.replaceOrAdd(name: "Host", value: hostname)
         head.headers.replaceOrAdd(name: "User-Agent", value: "AWS SDK Swift Core")
         head.headers.replaceOrAdd(name: "Accept", value: "*/*")
         head.headers.replaceOrAdd(name: "Content-Length", value: body.count.description)
+
+        // TODO implement Keep-alive
         head.headers.replaceOrAdd(name: "Connection", value: "Close")
 
         var preHandlers = [ChannelHandler]()

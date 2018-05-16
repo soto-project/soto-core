@@ -207,8 +207,12 @@ extension AWSClient {
         }
         let method = { () -> String in
             switch nioRequest.head.method {
+            case HTTPMethod.RAW(value: "HEAD"): return "HEAD"
             case HTTPMethod.RAW(value: "GET"): return "GET"
             case HTTPMethod.RAW(value: "POST"): return "POST"
+            case HTTPMethod.RAW(value: "PUT"): return "PUT"
+            case HTTPMethod.RAW(value: "PATCH"): return "PATCH"
+            case HTTPMethod.RAW(value: "DELETE"): return "DELETE"
             default: return "GET"
             }
         }()

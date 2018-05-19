@@ -286,13 +286,16 @@ extension AWSClient {
 
         for (key, value) in Input.pathParams {
             if let attr = mirror.getAttribute(forKey: value.toSwiftVariableCase()) {
-                path = path.replacingOccurrences(of: "{\(key)}", with: "\(attr)").replacingOccurrences(of: "{\(key)+}", with: "\(attr)")
+                path = path
+                    .replacingOccurrences(of: "{\(key)}", with: "\(attr)")
+                    // percent-encode key which is part of the path
+                    .replacingOccurrences(of: "{\(key)+}", with: "\(attr)".addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)!)
             }
         }
 
         if !queryParams.isEmpty {
             let separator = path.contains("?") ? "&" : "?"
-            path = path+separator+queryParams.asStringForURL
+            path = path + separator + queryParams.asStringForURL
         }
 
         switch serviceProtocol.type {
@@ -432,6 +435,8 @@ extension AWSClient {
             if let index = Output.headerParams.index(where: { $0.key.lowercased() == key.description.lowercased() }) {
                 if let number = Double(value) {
                     outputDict[Output.headerParams[index].key] = number.truncatingRemainder(dividingBy: 1) == 0 ? Int(number) : number
+                } else if let boolean = Bool(value) {
+                    outputDict[Output.headerParams[index].key] = boolean
                 } else {
                     outputDict[Output.headerParams[index].key] = value
                 }

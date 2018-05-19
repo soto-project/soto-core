@@ -92,7 +92,8 @@ class SignersV4Tests: XCTestCase {
     func testCanonicalRequest() {
         let (sign, url, httpHeaders) = ec2Signer()
         let bodyDigest = sha256("hello").hexdigest()
-        let canonicalRequest = sign.canonicalRequest(url: url, headers: httpHeaders, method: "PUT", bodyDigest: bodyDigest)
+
+        let canonicalRequest = sign.canonicalRequest(url: URLComponents(url: url, resolvingAgainstBaseURL: true)!, headers: httpHeaders, method: "PUT", bodyDigest: bodyDigest)
 
         let splited = canonicalRequest.components(separatedBy: "\n")
         XCTAssertEqual(splited[0], "PUT")

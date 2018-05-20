@@ -232,7 +232,7 @@ extension Signers {
             "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
         ]
 
-        private static let awsUriAllowedUTF8: Set<UTF8.CodeUnit> = Set<UTF8.CodeUnit>(awsUriAllowed.map { $0.utf8.first! })
+        private static let awsUriAllowedUTF8: Set<UTF8.CodeUnit> = Set<UTF8.CodeUnit>(awsUriAllowed.map { $0.utf8[$0.startIndex] })
 
         /// Encode URI according to https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html
         class func awsUriEncode(_ str: String, encodeSlash: Bool = true) -> String {
@@ -245,7 +245,7 @@ extension Signers {
                     result.append(encodeSlash ? "%2F" : charStr)
                 } else {
                     result.append("%")
-                    result.append(String(format:"%2X", char))
+                    result.append(String(format:"%02X", char))
                 }
             }
             return result

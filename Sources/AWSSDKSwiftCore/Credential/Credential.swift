@@ -15,25 +15,25 @@ public protocol CredentialProvider {
     var expiration: Date? { get }
 }
 
-extension CredentialProvider {      
+extension CredentialProvider {
     public func isEmpty() -> Bool {
         return self.accessKeyId.isEmpty || self.secretAccessKey.isEmpty
     }
 
     public func nearExpiration() -> Bool {
-      if let expiration = self.expiration {
-        // are we within 5 minutes of expiration?
-        return Date().addingTimeInterval(5.0 * 60.0) > expiration
-      } else {
-        return false
-      }
+        if let expiration = self.expiration {
+            // are we within 5 minutes of expiration?
+            return Date().addingTimeInterval(5.0 * 60.0) > expiration
+        } else {
+            return false
+        }
     }
 }
 
 public struct SharedCredential: CredentialProvider {
-    
+
     static var `default`: Credential?
-    
+
     public let accessKeyId: String
     public let secretAccessKey: String
     public let sessionToken: String?
@@ -50,7 +50,7 @@ public struct Credential: CredentialProvider {
     public let secretAccessKey: String
     public let sessionToken: String?
     public let expiration: Date?
-    
+
     public init(accessKeyId: String, secretAccessKey: String, sessionToken: String? = nil, expiration: Date? = nil) {
         self.accessKeyId = accessKeyId
         self.secretAccessKey = secretAccessKey
@@ -64,7 +64,7 @@ struct EnvironementCredential: CredentialProvider {
     let secretAccessKey: String
     let sessionToken: String?
     let expiration: Date? = nil
-    
+
     init?() {
         guard let accessKeyId = ProcessInfo.processInfo.environment["AWS_ACCESS_KEY_ID"] else {
             return nil
@@ -77,4 +77,3 @@ struct EnvironementCredential: CredentialProvider {
         self.sessionToken = ProcessInfo.processInfo.environment["AWS_SESSION_TOKEN"]
     }
 }
-

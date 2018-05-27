@@ -24,9 +24,9 @@ struct MetaDataService {
     static var serviceHost: MetaDataServiceHost {
       get {
         if containerCredentialsUri != nil {
-          return .ecsCredentials(containerCredentialsUri!)
+            return .ecsCredentials(containerCredentialsUri!)
         } else {
-          return .instanceProfileCredentials(instanceMetadataUri)
+            return .instanceProfileCredentials(instanceMetadataUri)
         }
       }
     }
@@ -38,20 +38,20 @@ struct MetaDataService {
         var baseURLString: String {
             switch self {
               case .ecsCredentials(let containerCredentialsUri):
-                return "http://169.254.170.2\(containerCredentialsUri)"
+                  return "http://169.254.170.2\(containerCredentialsUri)"
               case .instanceProfileCredentials(let instanceMetadataUri):
-                return "http://169.254.169.254\(instanceMetadataUri)"
+                  return "http://169.254.169.254\(instanceMetadataUri)"
             }
         }
 
         func url() throws -> URL {
-          switch self {
-          case .ecsCredentials:
-            return URL(string: baseURLString)!
-          case .instanceProfileCredentials:
-            let roleName = try getRoleName()
-            return URL(string: "\(baseURLString)/\(roleName)")!
-          }
+            switch self {
+            case .ecsCredentials:
+                return URL(string: baseURLString)!
+            case .instanceProfileCredentials:
+                let roleName = try getRoleName()
+                return URL(string: "\(baseURLString)/\(roleName)")!
+            }
         }
 
         func getRoleName() throws -> String {
@@ -73,7 +73,14 @@ struct MetaDataService {
                      uri: url.path
                    )
         let request = Request(head: head, body: Data())
-        return try client.connect(request).wait()
+        let future = try client.connect(request)
+        let response = try future.wait()
+        client.close { error in
+            if let error = error {
+                print("Error closing connection: \(error)")
+            }
+        }
+        return response
     }
 
     struct MetaData: Codable {
@@ -97,14 +104,14 @@ struct MetaDataService {
         }
 
         enum CodingKeys: String, CodingKey {
-          case accessKeyId = "AccessKeyId"
-          case secretAccessKey = "SecretAccessKey"
-          case token = "Token"
-          case expiration = "Expiration"
-          case code = "Code"
-          case lastUpdated = "LastUpdated"
-          case type = "Type"
-          case roleArn = "RoleArn"
+            case accessKeyId = "AccessKeyId"
+            case secretAccessKey = "SecretAccessKey"
+            case token = "Token"
+            case expiration = "Expiration"
+            case code = "Code"
+            case lastUpdated = "LastUpdated"
+            case type = "Type"
+            case roleArn = "RoleArn"
         }
     }
 
@@ -123,33 +130,33 @@ extension MetaDataService.MetaData {
     switch MetaDataService.serviceHost {
 
     case .ecsCredentials:
-      self.code = nil
-      self.lastUpdated = nil
-      self.type = nil
+        self.code = nil
+        self.lastUpdated = nil
+        self.type = nil
 
-      guard let roleArn = try? values.decode(String.self, forKey: .roleArn) else {
-          throw MetaDataServiceError.missingRequiredParam("RoleArn")
-      }
-      self.roleArn = roleArn
+        guard let roleArn = try? values.decode(String.self, forKey: .roleArn) else {
+            throw MetaDataServiceError.missingRequiredParam("RoleArn")
+        }
+        self.roleArn = roleArn
 
     case .instanceProfileCredentials:
-      self.roleArn = nil
+        self.roleArn = nil
 
-      guard let code = try? values.decode(String.self, forKey: .code) else {
-          throw MetaDataServiceError.missingRequiredParam("Code")
-      }
+        guard let code = try? values.decode(String.self, forKey: .code) else {
+            throw MetaDataServiceError.missingRequiredParam("Code")
+        }
 
-      guard let lastUpdated = try? values.decode(String.self, forKey: .lastUpdated) else {
-          throw MetaDataServiceError.missingRequiredParam("LastUpdated")
-      }
+        guard let lastUpdated = try? values.decode(String.self, forKey: .lastUpdated) else {
+            throw MetaDataServiceError.missingRequiredParam("LastUpdated")
+        }
 
-      guard let type = try? values.decode(String.self, forKey: .type) else {
-          throw MetaDataServiceError.missingRequiredParam("Type")
-      }
+        guard let type = try? values.decode(String.self, forKey: .type) else {
+            throw MetaDataServiceError.missingRequiredParam("Type")
+        }
 
-      self.code = code
-      self.lastUpdated = lastUpdated
-      self.type = type
+        self.code = code
+        self.lastUpdated = lastUpdated
+        self.type = type
     }
 
     guard let accessKeyId = try? values.decode(String.self, forKey: .accessKeyId) else {
@@ -176,7 +183,7 @@ extension MetaDataService.MetaData {
     dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
     dateFormatter.timeZone = TimeZone(identifier: "UTC")
     guard let date = dateFormatter.date(from: expiration) else {
-       fatalError("ERROR: Date conversion failed due to mismatched format.")
+        fatalError("ERROR: Date conversion failed due to mismatched format.")
     }
     self.expiration = date
   }

@@ -65,7 +65,13 @@ struct MetaDataService {
         }
     }
 
-    private static func request(url: URL, timeout: TimeInterval) throws -> Response {
+    public static func getCredential() throws -> Credential {
+        let response = try request(url: serviceHost.url(), timeout: 2)
+        let metaData = try JSONDecoder().decode(MetaData.self, from: response.body)
+        return metaData.credential
+    }
+
+    static func request(url: URL, timeout: TimeInterval) throws -> Response {
         let client = HTTPClient(hostname: url.host!, port: 80)
         let head = HTTPRequestHead(
                      version: HTTPVersion(major: 1, minor: 1),
@@ -115,11 +121,6 @@ struct MetaDataService {
         }
     }
 
-    func getCredential() throws -> Credential {
-        let response = try MetaDataService.request(url: MetaDataService.serviceHost.url(), timeout: 2)
-        let metaData = try JSONDecoder().decode(MetaDataService.MetaData.self, from: response.body)
-        return metaData.credential
-    }
 }
 
 extension MetaDataService.MetaData {

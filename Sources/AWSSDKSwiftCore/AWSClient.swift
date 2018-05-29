@@ -64,16 +64,16 @@ public struct AWSClient {
     }
 
     public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSRequestMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil) {
-        let cred: CredentialProvider
-        if let scred = SharedCredential.default {
-            cred = scred
+        let credential: CredentialProvider
+        if let scredential = SharedCredential.default {
+            credential = scredential
         } else {
             if let accessKey = accessKeyId, let secretKey = secretAccessKey {
-                cred = Credential(accessKeyId: accessKey, secretAccessKey: secretKey)
-            } else if let ecred = EnvironementCredential() {
-                cred = ecred
+                credential = Credential(accessKeyId: accessKey, secretAccessKey: secretKey)
+            } else if let ecredential = EnvironementCredential() {
+                credential = ecredential
             } else {
-                cred = Credential(accessKeyId: "", secretAccessKey: "")
+                credential = Credential(accessKeyId: "", secretAccessKey: "")
             }
         }
 
@@ -89,7 +89,7 @@ public struct AWSClient {
             region = .useast1
         }
 
-        self.signer = Signers.V4(credentials: cred, region: region, service: service)
+        self.signer = Signers.V4(credential: credential, region: region, service: service)
         self.apiVersion = apiVersion
         self._endpoint = endpoint
         self.amzTarget = amzTarget
@@ -198,13 +198,6 @@ extension AWSClient {
             headers[key.description] = value
         }
 
-        if self.signer.credentials.isEmpty() || self.signer.credentials.nearExpiration() {
-            do {
-                signer.credentials = try MetaDataService().getCredential()
-            } catch {
-                // should not be crash
-            }
-        }
         let method = { () -> String in
             switch nioRequest.head.method {
             case HTTPMethod.RAW(value: "HEAD"): return "HEAD"

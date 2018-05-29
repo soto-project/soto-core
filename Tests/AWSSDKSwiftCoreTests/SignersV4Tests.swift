@@ -15,7 +15,7 @@ class SignersV4Tests: XCTestCase {
         return [
             ("testHexEncodedBodyHash", testHexEncodedBodyHash),
             ("testSignedHeaders", testSignedHeaders),
-            ("testCredential", testCredential),
+            ("testCredentialForSignatureWithScope", testCredentialForSignatureWithScope),
             ("testStringToSign", testStringToSign),
             ("testCanonicalRequest", testCanonicalRequest),
             ("testSignature", testSignature),
@@ -42,7 +42,7 @@ class SignersV4Tests: XCTestCase {
     }
 
     func ec2Signer() -> (Signers.V4, URL, [String: String]) {
-        let sign = Signers.V4(credentials: credential, region: .apnortheast1, service: "ec2")
+        let sign = Signers.V4(credential: credential, region: .apnortheast1, service: "ec2")
         let host = "\(sign.service).\(sign.region).amazon.com"
         let url = URL(string: "https://\(host)/foo?query=foobar")!
         let headers: [String: String] = ["Host": host]
@@ -51,15 +51,28 @@ class SignersV4Tests: XCTestCase {
 
     func testHexEncodedBodyHash() {
         let helloDigest = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
-        let ec2sign = Signers.V4(credentials: credential, region: .apnortheast1, service: "ec2")
+        let ec2sign = Signers.V4(credential: credential, region: .apnortheast1, service: "ec2")
         XCTAssertEqual(ec2sign.hexEncodedBodyHash("hello".data(using: .utf8)!), helloDigest)
 
-        let s3sign = Signers.V4(credentials: credential, region: .apnortheast1, service: "s3")
+        let s3sign = Signers.V4(credential: credential, region: .apnortheast1, service: "s3")
         // if body data is empty, should return `UNSIGNED-PAYLOAD`
         XCTAssertEqual(s3sign.hexEncodedBodyHash(Data()), "UNSIGNED-PAYLOAD")
 
         // if body data is not empty, should return body digest
         XCTAssertEqual(s3sign.hexEncodedBodyHash("hello".data(using: .utf8)!), helloDigest)
+    }
+
+    func testGetCredential() {
+      let signer = Signers.V4(credential: credential, region: .apnortheast1, service: "ec2")
+      let credentialForSignature = signer.getCredential()
+      XCTAssertEqual(credentialForSignature.accessKeyId, "key")
+      XCTAssertEqual(credentialForSignature.secretAccessKey, "secret")
+
+      let instanceCredential1 = Credential(accessKeyId: "key", secretAccessKey: "secret", expiration: Date().addingTimeInterval(10.0 * 60.0))
+      let signerOnInstance1 = Signers.V4(credential: instanceCredential1, region: .apnortheast1, service: "ec2")
+      let credentialForsignerOnInstance1 = signerOnInstance1.getCredential()
+      XCTAssertEqual(credentialForsignerOnInstance1.accessKeyId, "key")
+      XCTAssertEqual(credentialForsignerOnInstance1.secretAccessKey, "secret")
     }
 
     func testSignedHeaders() {
@@ -73,9 +86,9 @@ class SignersV4Tests: XCTestCase {
         XCTAssertEqual(headers["Authorization"], "AWS4-HMAC-SHA256 Credential=key/20170101/ap-northeast-1/ec2/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=7c6c37e1cbfd7f7594a55dfbc25c49e1ada0b4898f4add6160f6346f40936015")
     }
 
-    func testCredential() {
+    func testCredentialForSignatureWithScope() {
         let (sign, _, _) = ec2Signer()
-        XCTAssertEqual(sign.credential(timestamp), "key/20170101/ap-northeast-1/ec2/aws4_request")
+        XCTAssertEqual(sign.credentialForSignatureWithScope(credential, timestamp), "key/20170101/ap-northeast-1/ec2/aws4_request")
     }
 
     func testStringToSign() {
@@ -108,12 +121,12 @@ class SignersV4Tests: XCTestCase {
     func testSignature() {
         let (sign, url, httpHeaders) = ec2Signer()
         let bodyDigest = sha256("hello").hexdigest()
-        let signature = sign.signature(url: url, headers: httpHeaders, datetime: timestamp, method: "PUT", bodyDigest: bodyDigest)
+        let signature = sign.signature(url: url, headers: httpHeaders, datetime: timestamp, method: "PUT", bodyDigest: bodyDigest, credentialForSignature: credential)
         XCTAssertEqual(signature, "4a2fc55d5e517133a8dae28752f36851e77f291221095ee9fb4cfcff8ac63dd9")
     }
 
     func testSignedHeadersForS3() {
-        let sign = Signers.V4(credentials: credential, region: .apnortheast1, service: "s3")
+        let sign = Signers.V4(credential: credential, region: .apnortheast1, service: "s3")
         let host = "\(sign.service)-\(sign.region).amazon.com"
         let url = URL(string: "https://\(host)")!
         let headers = sign.signedHeaders(url: url, headers: [:], method: "PUT", date: requestDate, bodyData: Data())
@@ -125,7 +138,7 @@ class SignersV4Tests: XCTestCase {
     }
 
     func testSignedQuery() {
-        let sign = Signers.V4(credentials: credential, region: .apnortheast1, service: "s3")
+        let sign = Signers.V4(credential: credential, region: .apnortheast1, service: "s3")
         let host = "\(sign.service)-\(sign.region).amazon.com"
         let url = URL(string: "https://\(host)")!
         let signedURL = sign.signedURL(url: url, date: requestDate)

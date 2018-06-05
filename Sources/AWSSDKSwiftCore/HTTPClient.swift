@@ -138,7 +138,7 @@ public final class HTTPClient {
     private let eventGroup: EventLoopGroup
 
     public init(url: URL,
-                eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numThreads: System.coreCount)) throws {
+                eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)) throws {
         guard let scheme = url.scheme else {
             throw HTTPClientError.malformedURL
         }
@@ -156,7 +156,7 @@ public final class HTTPClient {
 
     public init(hostname: String,
                 port: Int,
-                eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numThreads: System.coreCount)) {
+                eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)) {
         self.hostname = hostname
         self.port = port
         self.eventGroup = eventGroup

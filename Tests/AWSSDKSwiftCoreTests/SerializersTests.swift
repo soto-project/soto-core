@@ -70,6 +70,16 @@ class SerializersTests: XCTestCase {
         XCTAssertEqual(dict.count, jsonObect.count)
     }
     
+    func testLowercasedBoolean() {
+        let node = try! XML2Parser(data: "<A>True</A>".data).parse()
+        let str = XMLNodeSerializer(node: node).serializeToJSON()
+        XCTAssertEqual(str, "{\"A\":true}")
+
+        let outputDict = try! JSONSerialization.jsonObject(with: str.data(using: .utf8)!, options: []) as? [String: Any] ?? [:]
+        XCTAssertEqual(outputDict["A"] as? Bool, true)
+        XCTAssertEqual(outputDict.count, 1)
+    }
+
     func testSerializeToFlatDictionary() {
         let data = try! JSONEncoder().encode(A())
         let dict = try! JSONSerializer().serializeToFlatDictionary(data)
@@ -85,6 +95,7 @@ class SerializersTests: XCTestCase {
         return [
             ("testSerializeToXML", testSerializeToXML),
             ("testSerializeToDictionaryAndJSON", testSerializeToDictionaryAndJSON),
+            ("testLowercasedBoolean", testLowercasedBoolean),
             ("testSerializeToFlatDictionary", testSerializeToFlatDictionary)
         ]
     }

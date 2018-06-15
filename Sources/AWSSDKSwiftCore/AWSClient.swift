@@ -187,10 +187,10 @@ extension AWSClient {
     }
 
     func createNIORequestWithSignedHeader(_ request: AWSRequest) throws -> Request {
-        return try nioRequestWithSignedHeader(request.toNIORequest(), url: request.url)
+        return try nioRequestWithSignedHeader(request.toNIORequest())
     }
 
-    func nioRequestWithSignedHeader(_ nioRequest: Request, url: URL) throws -> Request {
+    func nioRequestWithSignedHeader(_ nioRequest: Request) throws -> Request {
         var nioRequest = nioRequest
         // TODO avoid copying
         var headers: [String: String] = [:]
@@ -209,6 +209,10 @@ extension AWSClient {
             default: return "GET"
             }
         }()
+        
+        guard let url = URL(string: nioRequest.head.uri) else {
+            fatalError("nioRequest.head.uri is invalid.")
+        }
 
         let signedHeaders = signer.signedHeaders(
             url: url,
@@ -483,9 +487,8 @@ extension AWSClient {
                                 var dict: [String: Any] = [:]
                                 for link in links {
                                     guard let name = link.name else { continue }
-                                    guard let url = URL(string: endpoint+link.href) else { continue }
-                                    let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: link.href)
-                                    let res = try invoke(nioRequestWithSignedHeader(Request(head: head, body: Data()), url: url))
+                                    let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: endpoint + link.href)
+                                    let res = try invoke(nioRequestWithSignedHeader(Request(head: head, body: Data())))
                                     let representaion = try Representation().from(json: res.body)
                                     dict[name] = representaion.properties
                                 }

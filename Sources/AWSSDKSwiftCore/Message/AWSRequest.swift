@@ -86,12 +86,7 @@ public struct AWSRequest {
             headers["Content-Type"] = "application/octet-stream"
         }
 
-        var uri = !awsRequest.url.path.isEmpty ? awsRequest.url.path : "/"
-        if let query = awsRequest.url.query {
-            uri += "?\(query)"
-        }
-
-        var head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: HTTPMethod.RAW(value: awsRequest.httpMethod), uri: uri)
+        var head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: HTTPMethod.RAW(value: awsRequest.httpMethod), uri: awsRequest.url.absoluteString)
         let generatedHeaders = headers.map { ($0, $1) }
         head.headers = HTTPHeaders(generatedHeaders)
 

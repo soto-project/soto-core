@@ -28,7 +28,7 @@ private func formatAsJSONValue(_ str: String) -> String {
             return number.description
         }
     } else if ["false", "true"].contains(where: { $0 == str.lowercased() }) {
-        return str
+        return str.lowercased()
     } else if str == "null" {
         return str
     } else {

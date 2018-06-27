@@ -36,13 +36,19 @@ class MetaDataServiceTests: XCTestCase {
 
        XCTAssertEqual(metaData.credential.accessKeyId, "ABCDEABCJOXYK7TPHCHTRKAA")
 
-       let url = try MetaDataService.serviceHost.url()
-       guard let host = url.host else {
-         XCTFail("Error: host should not be nil")
-         return
+       let host = MetaDataService.serviceProvider.host
+       XCTAssertEqual(host , "169.254.170.2")
+
+       let baseURLString = MetaDataService.serviceProvider.baseURLString
+       XCTAssertEqual(baseURLString, "http://169.254.170.2/v2/credentials/5275a487-9ff6-49b7-b50c-b64850f99999")
+
+       do {
+           let uri = try MetaDataService.serviceProvider.uri()
+           XCTAssertEqual(uri, "/v2/credentials/5275a487-9ff6-49b7-b50c-b64850f99999")
+       } catch {
+           XCTFail("\(error)")
+           return
        }
-       XCTAssertEqual(host, "169.254.170.2")
-       XCTAssertEqual(url.path, "/v2/credentials/5275a487-9ff6-49b7-b50c-b64850f99999")
     } catch {
         XCTFail("\(error)")
         return
@@ -64,7 +70,10 @@ class MetaDataServiceTests: XCTestCase {
 
        XCTAssertEqual(metaData.credential.accessKeyId, "XYZABCJOXYK7TPHCHTRKAA")
 
-       let baseURLString = MetaDataService.serviceHost.baseURLString
+       let host = MetaDataService.serviceProvider.host
+       XCTAssertEqual(host, "169.254.169.254")
+
+       let baseURLString = MetaDataService.serviceProvider.baseURLString
        XCTAssertEqual(baseURLString, "http://169.254.169.254/latest/meta-data/iam/security-credentials/")
     } catch {
         XCTFail("\(error)")

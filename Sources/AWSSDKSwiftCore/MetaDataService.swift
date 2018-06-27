@@ -21,7 +21,7 @@ struct MetaDataService {
     static var containerCredentialsUri = ProcessInfo.processInfo.environment["AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"]
     static let instanceMetadataUri = "/latest/meta-data/iam/security-credentials/"
 
-    static var serviceHost: MetaDataServiceHost {
+    static var serviceProvider: MetaDataServiceProvider {
       get {
         if containerCredentialsUri != nil {
             return .ecsCredentials(containerCredentialsUri!)
@@ -31,52 +31,58 @@ struct MetaDataService {
       }
     }
 
-    enum MetaDataServiceHost {
+    enum MetaDataServiceProvider {
         case ecsCredentials(String)
         case instanceProfileCredentials(String)
+
+        var host: String {
+            switch self {
+              case .ecsCredentials:
+                  return "169.254.170.2"
+              case .instanceProfileCredentials:
+                  return "169.254.169.254"
+            }
+        }
 
         var baseURLString: String {
             switch self {
               case .ecsCredentials(let containerCredentialsUri):
-                  return "http://169.254.170.2\(containerCredentialsUri)"
+                  return "http://\(host)\(containerCredentialsUri)"
               case .instanceProfileCredentials(let instanceMetadataUri):
-                  return "http://169.254.169.254\(instanceMetadataUri)"
+                  return "http://\(host)\(instanceMetadataUri)"
             }
         }
 
-        func url() throws -> URL {
+        func uri() throws -> String {
             switch self {
-            case .ecsCredentials:
-                return URL(string: baseURLString)!
+            case .ecsCredentials(let containerCredentialsUri):
+                return containerCredentialsUri
             case .instanceProfileCredentials:
-                let roleName = try getRoleName()
-                return URL(string: "\(baseURLString)/\(roleName)")!
-            }
-        }
-
-        func getRoleName() throws -> String {
-            let response = try MetaDataService.request(url: URL(string: baseURLString)!, timeout: 2)
-            switch response.head.status {
-            case .ok:
-                return String(data: response.body, encoding: .utf8) ?? ""
-            default:
-                throw MetaDataServiceError.couldNotGetInstanceRoleName
+                // instance service expects absoluteString as uri...
+                let response = try MetaDataService.request(host: host, uri: baseURLString, timeout: 2)
+                switch response.head.status {
+                case .ok:
+                    let roleName = String(data: response.body, encoding: .utf8) ?? ""
+                    return "\(baseURLString)/\(roleName)"
+                default:
+                    throw MetaDataServiceError.couldNotGetInstanceRoleName
+                }
             }
         }
     }
 
     public static func getCredential() throws -> Credential {
-        let response = try request(url: serviceHost.url(), timeout: 2)
+        let response = try request(host: serviceProvider.host, uri: serviceProvider.uri(), timeout: 2)
         let metaData = try JSONDecoder().decode(MetaData.self, from: response.body)
         return metaData.credential
     }
 
-    static func request(url: URL, timeout: TimeInterval) throws -> Response {
-        let client = HTTPClient(hostname: url.host!, port: 80)
+    static func request(host: String, uri: String, timeout: TimeInterval) throws -> Response {
+        let client = HTTPClient(hostname: host, port: 80)
         let head = HTTPRequestHead(
                      version: HTTPVersion(major: 1, minor: 1),
                      method: .GET,
-                     uri: url.path
+                     uri: uri
                    )
         let request = Request(head: head, body: Data())
         let future = try client.connect(request)
@@ -128,7 +134,7 @@ extension MetaDataService.MetaData {
 
     let values = try decoder.container(keyedBy: CodingKeys.self)
 
-    switch MetaDataService.serviceHost {
+    switch MetaDataService.serviceProvider {
 
     case .ecsCredentials:
         self.code = nil

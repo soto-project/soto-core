@@ -1,4 +1,4 @@
-struct AutoscalingResponseModule {
+struct AutoscalingResponseModel {
     static let describeAutoscalingGroups = """
     {
       "DescribeAutoScalingGroupsResponse" : {

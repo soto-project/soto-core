@@ -346,6 +346,43 @@ extension AWSClient {
 
 // response validator
 extension AWSClient {
+    func removeMembersList(in list: [Any]) -> [Any] {
+        var newList = [Any]()
+        for child in list {
+            if let childDict = child as? [String: Any] {
+                newList.append(removeMembersKeys(in: childDict))
+            } else {
+                newList.append(child)
+            }
+        }
+        return newList
+    }
+
+    // This algorithm isn't correctly recursive, since it only
+    // unpacks the dict so far before stopping
+    func removeMembersKeys(in dict: [String: Any]) -> [String: Any] {
+        var outputDict = dict
+        for key in dict.keys {
+            if let childDict = dict[key] as? [String: Any] {
+                if childDict.keys.contains("Member") {
+                    if let childMembersDict = childDict["Member"] as? [String: Any] {
+                        outputDict[key] = removeMembersKeys(in: childMembersDict)
+                    } else {
+                        if let childList = childDict["Member"] as? [Any] {
+                            outputDict[key] = removeMembersList(in: childList)
+                        } else {
+                            outputDict[key] = childDict["Member"]
+                        }
+                    }
+                } else {
+                    outputDict[key] = removeMembersKeys(in: childDict)
+                }
+            } else if let childList = dict[key] as? [Any] {
+                outputDict[key] = removeMembersList(in: childList)
+            }
+        }
+        return outputDict
+    }
 
     func restructureResponse(_ payload: String, operationName: String) throws -> [String: Any] {
         var outputDict = try JSONSerialization.jsonObject(with: payload.data(using: .utf8)!, options: []) as? [String: Any] ?? [:]
@@ -360,7 +397,7 @@ extension AWSClient {
                 outputDict = dict
             }
         }
-        return outputDict
+        return removeMembersKeys(in: outputDict)
     }
 
     fileprivate func validate<Output: AWSShape>(operation operationName: String, response: Prorsum.Response) throws -> Output {

@@ -7,7 +7,7 @@ let package = Package(
         .library(name: "AWSSDKSwiftCore", targets: ["AWSSDKSwiftCore"])
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-nio.git", from: "1.5.1"),
+        .package(url: "https://github.com/apple/swift-nio.git", from: "1.8.0"),
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "1.1.0"),
         .package(url: "https://github.com/Yasumoto/HypertextApplicationLanguage.git", .upToNextMajor(from: "1.1.0"))
     ],

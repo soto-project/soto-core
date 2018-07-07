@@ -18,13 +18,6 @@ struct AutoscalingResponseModel {
                   },
                   {
                     "PropagateAtLaunch" : true,
-                    "Value" : false,
-                    "ResourceType" : "auto-scaling-group",
-                    "ResourceId" : "fake-asg",
-                    "Key" : "DedicatedInstance"
-                  },
-                  {
-                    "PropagateAtLaunch" : true,
                     "Value" : "fake-launch-configuration",
                     "ResourceType" : "auto-scaling-group",
                     "ResourceId" : "fake-asg",

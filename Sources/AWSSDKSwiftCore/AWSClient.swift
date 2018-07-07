@@ -358,8 +358,7 @@ extension AWSClient {
         return newList
     }
 
-    // This algorithm isn't correctly recursive, since it only
-    // unpacks the dict so far before stopping
+    // AWS responses sometimes return a list as `{"Members": [A, B, C]}` instead of just [A, B, C]. We don't want to present that to callers as members[], so we're going to loop through all dicts and lists to remove the extra "Members" key when present, and just flatten the list
     func removeMembersKeys(in dict: [String: Any]) -> [String: Any] {
         var outputDict = dict
         for key in dict.keys {

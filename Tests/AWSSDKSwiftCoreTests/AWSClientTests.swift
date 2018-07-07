@@ -12,7 +12,9 @@ import XCTest
 class AWSClientTests: XCTestCase {
     static var allTests : [(String, (AWSClientTests) -> () throws -> Void)] {
         return [
+            ("testRemoveMembersKeysNoMembers", testRemoveMembersKeysNoMembers),
             ("testRemoveMembersKeys", testRemoveMembersKeys),
+            ("testRemoveMembersKeysNested", testRemoveMembersKeysNested),
             ("testJSONMemberParsing", testJSONMemberParsing),
             ("testNestedJSONMemberParsing", testNestedJSONMemberParsing),
         ]

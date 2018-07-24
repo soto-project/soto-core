@@ -8,6 +8,7 @@
 
 import Foundation
 import CLibreSSL
+import ProrsumNet
 
 extension Signers {
     public final class V4 {
@@ -63,14 +64,14 @@ extension Signers {
             url.query?.components(separatedBy: "&").forEach {
                 var q = $0.components(separatedBy: "=")
                 if q.count == 2 {
-                    queries.append(URLQueryItem(name: q[0], value: q[1]))
+                    queries.append(URLQueryItem(name: q[0], value: q[1].addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)))
                 } else {
                     queries.append(URLQueryItem(name: q[0], value: nil))
                 }
             }
             
             
-            queries = queries.sorted { $0.name.localizedCompare($1.name) == ComparisonResult.orderedAscending }
+            queries = queries.sorted { a, b in a.name < b.name }
             
             let url = URL(string: url.absoluteString.components(separatedBy: "?")[0]+"?"+queries.asStringForURL)!
             
@@ -156,7 +157,7 @@ extension Signers {
         
         func canonicalHeaders(_ headers: [String: String]) -> String {
             var list = [String]()
-            let keys = Array(headers.keys).sorted {$0.localizedCompare($1) == ComparisonResult.orderedAscending }
+            let keys = Array(headers.keys).sorted()
             
             for key in keys {
                 if key.caseInsensitiveCompare("authorization") != ComparisonResult.orderedSame {
@@ -198,8 +199,12 @@ extension Signers {
         }
         
         func stringToSign(url: URL, headers: [String: String], datetime: String, method: String, bodyDigest: String) -> String {
-            
-            let canonicalRequestString = canonicalRequest(url: url, headers: headers, method: method, bodyDigest: bodyDigest)
+            let canonicalRequestString = canonicalRequest(
+                url: URLComponents(url: url, resolvingAgainstBaseURL: true)!,
+                headers: headers,
+                method: method,
+                bodyDigest: bodyDigest
+            )
             
             var canonicalRequestBytes = Array(canonicalRequestString.utf8)
             
@@ -211,15 +216,41 @@ extension Signers {
             ].joined(separator: "\n")
         }
         
-        func canonicalRequest(url: URL, headers: [String: String], method: String, bodyDigest: String) -> String {
+        func canonicalRequest(url: URLComponents, headers: [String: String], method: String, bodyDigest: String) -> String {
             return [
                 method,
-                url.path,
-                url.query ?? "",
+                V4.awsUriEncode(url.path, encodeSlash: false),
+                url.percentEncodedQuery ?? "",
                 "\(canonicalHeaders(headers))\n",
                 signedHeaders(headers),
                 bodyDigest
             ].joined(separator: "\n")
+        }
+        
+        private static let awsUriAllowed: Characters = [
+            "_", "-", "~", ".",
+            "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+            "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
+            "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
+        ]
+        
+        private static let awsUriAllowedUTF8: Set<UTF8.CodeUnit> = awsUriAllowed.utf8()
+        
+        /// Encode URI according to https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html
+        class func awsUriEncode(_ str: String, encodeSlash: Bool = true) -> String {
+            var result = ""
+            for char in str.utf8 {
+                let charStr = String(UnicodeScalar(char))
+                if awsUriAllowedUTF8.contains(char) {
+                    result.append(charStr)
+                } else if charStr == "/" {
+                    result.append(encodeSlash ? "%2F" : charStr)
+                } else {
+                    result.append("%")
+                    result.append(char.hexadecimal())
+                }
+            }
+            return result
         }
     }
 }

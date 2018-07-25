@@ -21,11 +21,11 @@
       },
       {
         "package": "HypertextApplicationLanguage",
-        "repositoryURL": "https://github.com/noppoMan/HypertextApplicationLanguage.git",
+        "repositoryURL": "https://github.com/Yasumoto/HypertextApplicationLanguage.git",
         "state": {
-          "branch": null,
-          "revision": "e6216c13fd510e31e70e6f409936f1a656db1f33",
-          "version": "1.0.1"
+          "branch": "master",
+          "revision": "2302002502fe573494577cc6e8df686e385519f8",
+          "version": null
         }
       },
       {

@@ -105,7 +105,7 @@ public class XMLNodeSerializer {
                     let arrayNodes = grouped.filter({ $0.value.count > 1 })
                     let keys = arrayNodes.map({ $0.key })
 
-                    if let memberNode = node.children.first, memberNode.elementName == "Member" {
+                    if let memberNode = node.children.first, memberNode.elementName.lowerFirst() == "member" {
                         _processNodeWithMember(node, memberNode, &jsonStr, arrayNodes, keys)
                     } else {
                         _processNodeWithChildren(node, &jsonStr, arrayNodes, keys)

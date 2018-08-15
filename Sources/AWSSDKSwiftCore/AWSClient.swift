@@ -311,7 +311,7 @@ extension AWSClient {
             dict["Version"] = apiVersion
 
             var queryItems = [String]()
-            let keys = Array(dict.keys).sorted {$0.localizedCompare($1) == ComparisonResult.orderedAscending }
+            let keys = Array(dict.keys).sorted()
 
             for key in keys {
                 if let value = dict[key] {

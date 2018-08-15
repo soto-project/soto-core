@@ -209,7 +209,7 @@ extension AWSClient {
             default: return "GET"
             }
         }()
-        
+
         guard let url = URL(string: nioRequest.head.uri) else {
             fatalError("nioRequest.head.uri is invalid.")
         }

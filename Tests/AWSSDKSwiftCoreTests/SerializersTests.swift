@@ -40,17 +40,28 @@ class SerializersTests: XCTestCase {
         let value = "world"
     }
 
+    struct E: AWSShape {
+      public static var members: [AWSShapeMember] = [
+          AWSShapeMember(label: "Member", required: true, type: .list),
+      ]
+
+      let Member = ["memberKey": "memberValue", "memberKey2": "memberValue2"]
+    }
+
     struct A: AWSShape {
         public static var members: [AWSShapeMember] = [
             AWSShapeMember(label: "structure", required: true, type: .structure),
             AWSShapeMember(label: "structures", required: false, type: .list),
-            AWSShapeMember(label: "array", required: true, type: .list)
+            AWSShapeMember(label: "array", required: true, type: .list),
+            AWSShapeMember(label: "member", required: true, type: .list)
         ]
 
         let structure = B()
         let dList: [D] = [D()]
         let cList: [C] = [C()]
         let array: [String] = ["foo", "bar"]
+        let structureWithMember = E()
+        let structureWithMembers: [E] = [E(), E()]
     }
 
     func testSerializeToXML() {
@@ -58,8 +69,15 @@ class SerializersTests: XCTestCase {
         XCTAssertEqual(node.attributes["url"], "https://example.com")
 
         let xml = XMLNodeSerializer(node: node).serializeToXML()
-        let expected = "<A url=\"https://example.com\"><Structure><A>1</A><B>1</B><B>2</B><C><key>value</key></C></Structure><DList><Value>world</Value></DList><CList><Value>hello</Value></CList><Array>foo</Array><Array>bar</Array></A>"
-        XCTAssertEqual(xml, expected)
+
+        let valid1 = "<A url=\"https://example.com\"><Structure><A>1</A><B>1</B><B>2</B><C><key>value</key></C></Structure><DList><Value>world</Value></DList><CList><Value>hello</Value></CList><Array>foo</Array><Array>bar</Array><StructureWithMember><Member><memberKey2>memberValue2</memberKey2><memberKey>memberValue</memberKey></Member></StructureWithMember><StructureWithMembers><Member><memberKey2>memberValue2</memberKey2><memberKey>memberValue</memberKey></Member><Member><memberKey2>memberValue2</memberKey2><memberKey>memberValue</memberKey></Member></StructureWithMembers></A>"
+
+        // order of the StructureWithMember dictionary does not matter
+        let valid2 = "<A url=\"https://example.com\"><Structure><A>1</A><B>1</B><B>2</B><C><key>value</key></C></Structure><DList><Value>world</Value></DList><CList><Value>hello</Value></CList><Array>foo</Array><Array>bar</Array><StructureWithMember><Member><memberKey>memberValue</memberKey><memberKey2>memberValue2</memberKey2></Member></StructureWithMember><StructureWithMembers><Member><memberKey>memberValue</memberKey><memberKey2>memberValue2</memberKey2></Member><Member><memberKey>memberValue</memberKey><memberKey2>memberValue2</memberKey2></Member></StructureWithMembers></A>"
+
+        let validSerialized = [valid1,valid2]
+
+        XCTAssert(validSerialized.contains(xml))
     }
 
     func testSerializeToDictionaryAndJSON() {
@@ -69,6 +87,30 @@ class SerializersTests: XCTestCase {
         let dict = try! JSONSerializer().serializeToDictionary(json_data)
         let jsonObect = try! JSONSerialization.jsonObject(with: json_data, options: []) as! [String: Any]
         XCTAssertEqual(dict.count, jsonObect.count)
+
+        // Member scalar
+        let fromDict = dict["A"]! as! [String: Any]
+        let swmFromDict = fromDict["StructureWithMember"] as! [String: String]
+        XCTAssertEqual(swmFromDict["memberKey"], "memberValue")
+
+        let fromJson = jsonObect["A"]! as! [String: Any]
+        let swmFromJson = fromJson["StructureWithMember"] as! [String: String]
+        XCTAssertEqual(swmFromJson["memberKey"], "memberValue")
+
+        // Member list
+        let swmsFromDict = fromDict["StructureWithMembers"] as! [Any]
+        let swmFirstFromDict = swmsFromDict.first! as! [String: String]
+        XCTAssertEqual(swmFirstFromDict["memberKey"], "memberValue")
+
+        let swmSecondFromDict = swmsFromDict.last! as! [String: String]
+        XCTAssertEqual(swmSecondFromDict["memberKey2"], "memberValue2")
+
+        let swmsFromJson = fromJson["StructureWithMembers"] as! [Any]
+        let swmFirstFromJson = swmsFromJson.first! as! [String: String]
+        XCTAssertEqual(swmFirstFromJson["memberKey"], "memberValue")
+
+        let swmSecondFromJson = swmsFromJson.last! as! [String: String]
+        XCTAssertEqual(swmSecondFromJson["memberKey2"], "memberValue2")
     }
 
     func testLowercasedBoolean() {
@@ -85,7 +127,7 @@ class SerializersTests: XCTestCase {
         let data = try! JSONEncoder().encode(A())
         let dict = try! JSONSerializer().serializeToFlatDictionary(data)
 
-        XCTAssertEqual(dict.count, 8)
+        XCTAssertEqual(dict.count, 12)
         XCTAssertEqual(dict["structure.a"] as? String, "1")
         XCTAssertEqual(dict["structure.c.key"] as? String, "value")
         XCTAssertEqual(dict["array.member.1"] as? String, "foo")

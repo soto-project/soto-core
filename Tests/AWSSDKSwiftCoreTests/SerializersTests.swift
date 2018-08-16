@@ -83,9 +83,9 @@ class SerializersTests: XCTestCase {
     func testSerializeToDictionaryAndJSON() {
         let node = try! AWSShapeEncoder().encodeToXMLNode(A())
         let json = XMLNodeSerializer(node: node).serializeToJSON()
-
-        let dict = try! JSONSerializer().serializeToDictionary(json.data)
-        let jsonObect = try! JSONSerialization.jsonObject(with: json.data, options: []) as! [String: Any]
+        let json_data = json.data(using: .utf8)!
+        let dict = try! JSONSerializer().serializeToDictionary(json_data)
+        let jsonObect = try! JSONSerialization.jsonObject(with: json_data, options: []) as! [String: Any]
         XCTAssertEqual(dict.count, jsonObect.count)
 
         // Member scalar
@@ -114,7 +114,7 @@ class SerializersTests: XCTestCase {
     }
 
     func testLowercasedBoolean() {
-        let node = try! XML2Parser(data: "<A>True</A>".data).parse()
+        let node = try! XML2Parser(data: "<A>True</A>".data(using: .utf8)!).parse()
         let str = XMLNodeSerializer(node: node).serializeToJSON()
         XCTAssertEqual(str, "{\"A\":true}")
 

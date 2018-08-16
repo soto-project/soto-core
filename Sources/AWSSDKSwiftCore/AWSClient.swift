@@ -8,22 +8,12 @@
 
 import Foundation
 import Dispatch
-import Prorsum
+import NIO
+import NIOHTTP1
 import HypertextApplicationLanguage
 
-extension Characters {
-    public static let uriAWSQueryAllowed: Characters = ["&", "\'", "(", ")", "-", ".", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "=", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "_", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
-}
-
-extension Prorsum.Body {
-    func asData() -> Data {
-        switch self {
-        case .buffer(let data):
-            return data
-        default:
-            return Data()
-        }
-    }
+extension String {
+    public static let uriAWSQueryAllowed: [String] = ["&", "\'", "(", ")", "-", ".", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "=", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "_", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
 }
 
 public struct InputContext {
@@ -46,8 +36,6 @@ public struct AWSClient {
     let _endpoint: String?
 
     let serviceProtocol: ServiceProtocol
-
-    private var cond = Cond()
 
     let serviceEndpoints: [String: String]
 
@@ -76,16 +64,16 @@ public struct AWSClient {
     }
 
     public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSRequestMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil) {
-        let cred: CredentialProvider
-        if let scred = SharedCredential.default {
-            cred = scred
+        let credential: CredentialProvider
+        if let scredential = SharedCredential.default {
+            credential = scredential
         } else {
             if let accessKey = accessKeyId, let secretKey = secretAccessKey {
-                cred = Credential(accessKeyId: accessKey, secretAccessKey: secretKey)
-            } else if let ecred = EnvironementCredential() {
-                cred = ecred
+                credential = Credential(accessKeyId: accessKey, secretAccessKey: secretKey)
+            } else if let ecredential = EnvironementCredential() {
+                credential = ecredential
             } else {
-                cred = Credential(accessKeyId: "", secretAccessKey: "")
+                credential = Credential(accessKeyId: "", secretAccessKey: "")
             }
         }
 
@@ -101,7 +89,7 @@ public struct AWSClient {
             region = .useast1
         }
 
-        self.signer = Signers.V4(credentials: cred, region: region, service: service)
+        self.signer = Signers.V4(credential: credential, region: region, service: service)
         self.apiVersion = apiVersion
         self._endpoint = endpoint
         self.amzTarget = amzTarget
@@ -115,115 +103,149 @@ public struct AWSClient {
 
 // invoker
 extension AWSClient {
-    fileprivate func invoke(request: Request) throws -> Response {
-        // TODO implement Keep-alive
-        let client = try HTTPClient(url: request.url)
-        try client.open()
-        let response = try client.request(request)
-        client.close()
+    fileprivate func invoke(_ nioRequest: Request) throws -> Response {
+        let client = HTTPClient(hostname: nioRequest.head.headers["Host"].first!, port: 443)
+        let future = try client.connect(nioRequest)
+
+        //TODO(jmca) don't block
+        let response = try future.wait()
+
+        client.close { error in
+            if let error = error {
+                print("Error closing connection: \(error)")
+            }
+        }
 
         return response
+    }
+
+    //TODO(jmca) learn how to map response to validate and return
+    // a future of generic Output: AWSShape
+    fileprivate func invokeAsync(_ nioRequest: Request) throws -> EventLoopFuture<Response>{
+        let client = HTTPClient(hostname: nioRequest.head.headers["Host"].first!, port: 443)
+        let future = try client.connect(nioRequest)
+        future.whenComplete {
+          client.close { error in
+              if let error = error {
+                  print("Error closing connection: \(error)")
+              }
+          }
+        }
+        return future
     }
 }
 
 // public facing apis
 extension AWSClient {
     public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws {
-        let request = try createRequest(
-            operation: operationName,
-            path: path,
-            httpMethod:
-            httpMethod,
-            input: input
-        )
-
-        _ = try self.request(request)
-    }
-
-    public func send(operation operationName: String, path: String, httpMethod: String) throws {
-        let request = createRequest(operation: operationName, path: path, httpMethod: httpMethod)
-        _ = try self.request(request)
-    }
-
-    public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) throws -> Output {
-        let request = createRequest(operation: operationName, path: path, httpMethod: httpMethod)
-        return try validate(operation: operationName, response: try self.request(request))
-    }
-
-    public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input)
-        throws -> Output {
-        let request = try createRequest(
+        let awsRequest = try createAWSRequest(
             operation: operationName,
             path: path,
             httpMethod: httpMethod,
             input: input
         )
-        return try validate(operation: operationName, response: try self.request(request))
+        let nioRequest = try createNioRequest(awsRequest)
+        _ = try self.invoke(nioRequest)
+    }
+
+    public func send(operation operationName: String, path: String, httpMethod: String) throws {
+        let awsRequest = createAWSRequest(operation: operationName, path: path, httpMethod: httpMethod)
+        let nioRequest = try createNioRequest(awsRequest)
+        _ = try self.invoke(nioRequest)
+    }
+
+    public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) throws -> Output {
+        let awsRequest = createAWSRequest(operation: operationName, path: path, httpMethod: httpMethod)
+        let nioRequest = try createNioRequest(awsRequest)
+        return try validate(operation: operationName, response: try self.invoke(nioRequest))
+    }
+
+    public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input)
+        throws -> Output {
+        let awsRequest = try createAWSRequest(
+            operation: operationName,
+            path: path,
+            httpMethod: httpMethod,
+            input: input
+        )
+        let nioRequest = try createNioRequest(awsRequest)
+        return try validate(operation: operationName, response: try self.invoke(nioRequest))
     }
 }
 
 // request creator
 extension AWSClient {
-    func createProrsumRequestWithSignedURL(_ request: AWSRequest) throws -> Request {
-        var prorsumRequest = try request.toProrsumRequest()
-        prorsumRequest.url = signer.signedURL(url: prorsumRequest.url)
-        prorsumRequest.headers["Host"] = prorsumRequest.url.hostWithPort!
-        return prorsumRequest
+    func createNIORequestWithSignedURL(_ request: AWSRequest) throws -> Request {
+        var nioRequest = try request.toNIORequest()
+        let head = nioRequest.head
+        if let unsignedUrl = URL(string: head.uri) {
+            let signedURI = signer.signedURL(url: unsignedUrl)
+            nioRequest.head.uri = signedURI.absoluteString
+            nioRequest.head.headers.replaceOrAdd(name: "Host", value: unsignedUrl.hostWithPort!)
+        }
+        return nioRequest
     }
 
-    func createProrsumRequestWithSignedHeader(_ request: AWSRequest) throws -> Request {
-        return try prorsumRequestWithSignedHeader(request.toProrsumRequest())
+    func createNIORequestWithSignedHeader(_ request: AWSRequest) throws -> Request {
+        return try nioRequestWithSignedHeader(request.toNIORequest())
     }
 
-    func prorsumRequestWithSignedHeader(_ prorsumRequest: Request) throws -> Request {
-        var prorsumRequest = prorsumRequest
+    func nioRequestWithSignedHeader(_ nioRequest: Request) throws -> Request {
+        var nioRequest = nioRequest
         // TODO avoid copying
         var headers: [String: String] = [:]
-        for (key, value) in prorsumRequest.headers {
+        for (key, value) in nioRequest.head.headers {
             headers[key.description] = value
         }
 
-        if self.signer.credentials.isEmpty() || self.signer.credentials.nearExpiration() {
-            do {
-                signer.credentials = try MetaDataService().getCredential()
-            } catch {
-                // should not be crash
+        let method = { () -> String in
+            switch nioRequest.head.method {
+            case HTTPMethod.RAW(value: "HEAD"): return "HEAD"
+            case HTTPMethod.RAW(value: "GET"): return "GET"
+            case HTTPMethod.RAW(value: "POST"): return "POST"
+            case HTTPMethod.RAW(value: "PUT"): return "PUT"
+            case HTTPMethod.RAW(value: "PATCH"): return "PATCH"
+            case HTTPMethod.RAW(value: "DELETE"): return "DELETE"
+            default: return "GET"
             }
+        }()
+
+        guard let url = URL(string: nioRequest.head.uri) else {
+            fatalError("nioRequest.head.uri is invalid.")
         }
 
         let signedHeaders = signer.signedHeaders(
-            url: prorsumRequest.url,
+            url: url,
             headers: headers,
-            method: prorsumRequest.method.rawValue,
-            bodyData: prorsumRequest.body.asData()
+            method: method,
+            bodyData: nioRequest.body
         )
 
         for (key, value) in signedHeaders {
-            prorsumRequest.headers[key] = value
+            nioRequest.head.headers.replaceOrAdd(name: key, value: value)
         }
 
-        return prorsumRequest
+        return nioRequest
     }
 
-    func request(_ request: AWSRequest) throws -> Prorsum.Response {
-        let prorsumRequest: Request
+    func createNioRequest(_ request: AWSRequest) throws -> Request {
+        let nioRequest: Request
         switch request.httpMethod {
         case "GET":
             switch serviceProtocol.type {
             case .restjson:
-                prorsumRequest = try createProrsumRequestWithSignedHeader(request)
+                nioRequest = try createNIORequestWithSignedHeader(request)
 
             default:
-                prorsumRequest = try createProrsumRequestWithSignedURL(request)
+                nioRequest = try createNIORequestWithSignedURL(request)
             }
         default:
-            prorsumRequest = try createProrsumRequestWithSignedHeader(request)
+            nioRequest = try createNIORequestWithSignedHeader(request)
         }
-
-        return try invoke(request: prorsumRequest)
+        return nioRequest
     }
 
-    fileprivate func createRequest(operation operationName: String, path: String, httpMethod: String) -> AWSRequest {
+    fileprivate func createAWSRequest(operation operationName: String, path: String, httpMethod: String) -> AWSRequest {
         return AWSRequest(
             region: self.signer.region,
             url: URL(string:  "\(endpoint)\(path)")!,
@@ -238,7 +260,7 @@ extension AWSClient {
         )
     }
 
-    fileprivate func createRequest<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
+    fileprivate func createAWSRequest<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
         var headers: [String: String] = [:]
         var body: Body = .empty
         var path = path
@@ -261,13 +283,16 @@ extension AWSClient {
 
         for (key, value) in Input.pathParams {
             if let attr = mirror.getAttribute(forKey: value.toSwiftVariableCase()) {
-                path = path.replacingOccurrences(of: "{\(key)}", with: "\(attr)").replacingOccurrences(of: "{\(key)+}", with: "\(attr)")
+                path = path
+                    .replacingOccurrences(of: "{\(key)}", with: "\(attr)")
+                    // percent-encode key which is part of the path
+                    .replacingOccurrences(of: "{\(key)+}", with: "\(attr)".addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)!)
             }
         }
 
         if !queryParams.isEmpty {
             let separator = path.contains("?") ? "&" : "?"
-            path = path+separator+queryParams.asStringForURL
+            path = path + separator + queryParams.asStringForURL
         }
 
         switch serviceProtocol.type {
@@ -286,7 +311,7 @@ extension AWSClient {
             dict["Version"] = apiVersion
 
             var queryItems = [String]()
-            let keys = Array(dict.keys).sorted {$0.localizedCompare($1) == ComparisonResult.orderedAscending }
+            let keys = Array(dict.keys).sorted()
 
             for key in keys {
                 if let value = dict[key] {
@@ -294,15 +319,16 @@ extension AWSClient {
                 }
             }
 
-            let params = queryItems.joined(separator: "&").percentEncoded(allowing: Characters.uriAWSQueryAllowed)
+            if let params = queryItems.joined(separator: "&").addingPercentEncoding(withAllowedCharacters: CharacterSet(charactersIn: String.uriAWSQueryAllowed.joined())) {
 
-            if path.contains("?") {
-                path += "&" + params
-            } else {
-                path += "?" + params
+                if path.contains("?") {
+                    path += "&" + params
+                } else {
+                    path += "?" + params
+                }
+
+                body = .text(params)
             }
-
-            body = .text(params)
 
         case .restxml:
             if let payload = Input.payloadPath, let payloadBody = mirror.getAttribute(forKey: payload.toSwiftVariableCase()) {
@@ -346,15 +372,15 @@ extension AWSClient {
 
 // response validator
 extension AWSClient {
-    fileprivate func validate<Output: AWSShape>(operation operationName: String, response: Prorsum.Response) throws -> Output {
+    fileprivate func validate<Output: AWSShape>(operation operationName: String, response: Response) throws -> Output {
 
-        guard (200..<300).contains(response.statusCode) else {
+        guard (200..<300).contains(response.head.status.code) else {
             let responseBody = try validateBody(
                 for: response,
                 payloadPath: nil,
                 members: Output._members
             )
-            throw createError(for: response, withComputedBody: responseBody, withRawData: response.body.asData())
+            throw createError(for: response, withComputedBody: responseBody, withRawData: response.body)
         }
 
         let responseBody = try validateBody(
@@ -364,7 +390,7 @@ extension AWSClient {
         )
 
         var responseHeaders: [String: String] = [:]
-        for (key, value) in response.headers {
+        for (key, value) in response.head.headers {
             responseHeaders[key.description] = value
         }
 
@@ -402,10 +428,12 @@ extension AWSClient {
             break
         }
 
-        for (key, value) in response.headers {
+        for (key, value) in response.head.headers {
             if let index = Output.headerParams.index(where: { $0.key.lowercased() == key.description.lowercased() }) {
                 if let number = Double(value) {
                     outputDict[Output.headerParams[index].key] = number.truncatingRemainder(dividingBy: 1) == 0 ? Int(number) : number
+                } else if let boolean = Bool(value) {
+                    outputDict[Output.headerParams[index].key] = boolean
                 } else {
                     outputDict[Output.headerParams[index].key] = value
                 }
@@ -415,9 +443,9 @@ extension AWSClient {
         return try DictionaryDecoder().decode(Output.self, from: outputDict)
     }
 
-    private func validateBody(for response: Prorsum.Response, payloadPath: String?, members: [AWSShapeMember]) throws -> Body {
+    private func validateBody(for response: Response, payloadPath: String?, members: [AWSShapeMember]) throws -> Body {
         var responseBody: Body = .empty
-        let data = response.body.asData()
+        let data = response.body
 
         if data.isEmpty {
             return responseBody
@@ -429,7 +457,7 @@ extension AWSClient {
 
         switch serviceProtocol.type {
         case .json, .restjson:
-            if let cType = response.contentType, cType.subtype.contains("hal+json") {
+            if let cType = response.contentType(), cType.contains("hal+json") {
                 let representation = try Representation.from(json: data)
                 var dictionary = representation.properties
                 for rel in representation.rels {
@@ -459,9 +487,9 @@ extension AWSClient {
                                 var dict: [String: Any] = [:]
                                 for link in links {
                                     guard let name = link.name else { continue }
-                                    guard let url = URL(string: endpoint+link.href) else { continue }
-                                    let res = try invoke(request: prorsumRequestWithSignedHeader(Request(method: .get, url: url)))
-                                    let representaion = try Representation().from(json: res.body.asData())
+                                    let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: endpoint + link.href)
+                                    let res = try invoke(nioRequestWithSignedHeader(Request(head: head, body: Data())))
+                                    let representaion = try Representation().from(json: res.body)
                                     dict[name] = representaion.properties
                                 }
                                 props[key] = dict
@@ -527,7 +555,7 @@ extension AWSClient {
                 .joined(separator: ", ")
 
         case .restjson:
-            code = response.headers["x-amzn-ErrorType"]
+            code = response.head.headers.filter( { $0.name == "x-amzn-ErrorType"}).first?.value
             message = bodyDict.filter({ $0.key.lowercased() == "message" }).first?.value as? String
 
         case .json:
@@ -566,7 +594,7 @@ extension AWSClient.RequestError: CustomStringConvertible {
         case .invalidURL(let urlString):
             return """
             The request url \(urlString) is invalid format.
-            This error is internals. So please make a issue on https://github.com/noppoMan/aws-sdk-swift/issues to solve it.
+            This error is internal. So please make a issue on https://github.com/noppoMan/aws-sdk-swift/issues to solve it.
             """
         }
     }

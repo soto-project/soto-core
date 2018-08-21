@@ -186,12 +186,22 @@ extension MetaDataService.MetaData {
     self.secretAccessKey = secretAccessKey
     self.token = token
 
-    let dateFormatter = DateFormatter()
-    dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
-    dateFormatter.timeZone = TimeZone(identifier: "UTC")
-    guard let date = dateFormatter.date(from: expiration) else {
-        fatalError("ERROR: Date conversion failed due to mismatched format.")
+    // ISO8601DateFormatter and DateFormatter inherit from Formatter, which does not have the methods we need.
+    if #available(OSX 10.12, *) {
+        let dateFormatter = ISO8601DateFormatter()
+        guard let date = dateFormatter.date(from: expiration) else {
+            fatalError("ERROR: Date conversion failed due to mismatched format.")
+        }
+        self.expiration = date
+    } else {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
+        dateFormatter.timeZone = TimeZone(identifier: "UTC")
+        guard let date = dateFormatter.date(from: expiration) else {
+            fatalError("ERROR: Date conversion failed due to mismatched format.")
+        }
+        self.expiration = date
     }
-    self.expiration = date
+
   }
 }

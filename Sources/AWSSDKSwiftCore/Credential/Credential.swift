@@ -31,6 +31,24 @@ extension CredentialProvider {
     }
 }
 
+/// Protocol for parsing AWS credential configs
+protocol SharedCredentialsConfigParser {
+    /// Parse a specified file
+    ///
+    /// - Parameter filename: The path to the file
+    /// - Returns: A dictionary of dictionaries where the key is each profile
+    /// and the value is the fields and values within that profile
+    /// - Throws: If the file cannot be parsed
+    func parse(filename: String) throws -> [String: [String:String]]
+}
+
+/// An implementation of SharedCredentialsConfigParser that uses INIParser
+class IniConfigParser: SharedCredentialsConfigParser {
+    func parse(filename: String) throws -> [String : [String : String]] {
+        return try INIParser(filename).sections
+    }
+}
+
 public struct SharedCredential: CredentialProvider {
 
     /// Errors occurring when initializing a SharedCredential
@@ -38,7 +56,7 @@ public struct SharedCredential: CredentialProvider {
     /// - missingProfile: If the profile requested was not found
     /// - missingAccessKeyId: If the access key ID was not found
     /// - missingSecretAccessKey: If the secret access key was not found
-    public enum SharedCredentialError: Error {
+    public enum SharedCredentialError: Error, Equatable {
         case missingProfile(String)
         case missingAccessKeyId
         case missingSecretAccessKey
@@ -49,10 +67,19 @@ public struct SharedCredential: CredentialProvider {
     public let sessionToken: String?
     public let expiration: Date? = nil
 
-    public init(filename: String = "~/.aws/credentials", profile: String = "default") throws {
+    public init(filename: String = "~/.aws/credentials",
+                profile: String = "default") throws {
+        try self.init(
+            filename: filename,
+            profile: profile,
+            parser: IniConfigParser()
+        )
+    }
+
+    init(filename: String, profile: String, parser: SharedCredentialsConfigParser) throws {
         // Expand tilde before parsing the file
         let filename = NSString(string: filename).expandingTildeInPath
-        let contents = try INIParser(filename).sections
+        let contents = try parser.parse(filename: filename)
         guard let config = contents[profile] else {
             throw SharedCredentialError.missingProfile(profile)
         }

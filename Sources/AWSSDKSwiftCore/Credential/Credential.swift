@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import INIParser
 
 public protocol CredentialProvider {
     var accessKeyId: String { get }
@@ -32,7 +33,16 @@ extension CredentialProvider {
 
 public struct SharedCredential: CredentialProvider {
 
-    static var `default`: Credential?
+    /// Errors occurring when initializing a SharedCredential
+    ///
+    /// - missingProfile: If the profile requested was not found
+    /// - missingAccessKeyId: If the access key ID was not found
+    /// - missingSecretAccessKey: If the secret access key was not found
+    public enum SharedCredentialError: Error {
+        case missingProfile(String)
+        case missingAccessKeyId
+        case missingSecretAccessKey
+    }
 
     public let accessKeyId: String
     public let secretAccessKey: String
@@ -40,8 +50,21 @@ public struct SharedCredential: CredentialProvider {
     public let expiration: Date? = nil
 
     public init(filename: String = "~/.aws/credentials", profile: String = "default") throws {
-        fatalError("Umimplemented")
-        //let content = try String(contentsOfFile: filename)
+        // Expand tilde before parsing the file
+        let filename = NSString(string: filename).expandingTildeInPath
+        let contents = try INIParser(filename).sections
+        guard let config = contents[profile] else {
+            throw SharedCredentialError.missingProfile(profile)
+        }
+        guard let accessKeyId = config["aws_access_key_id"] else {
+            throw SharedCredentialError.missingAccessKeyId
+        }
+        self.accessKeyId = accessKeyId
+        guard let secretAccessKey = config["aws_secret_access_key"] else {
+            throw SharedCredentialError.missingSecretAccessKey
+        }
+        self.secretAccessKey = secretAccessKey
+        self.sessionToken = config["aws_session_token"]
     }
 }
 

@@ -51,9 +51,11 @@ class SerializersTests: XCTestCase {
     struct A: AWSShape {
         public static var members: [AWSShapeMember] = [
             AWSShapeMember(label: "structure", required: true, type: .structure),
-            AWSShapeMember(label: "structures", required: false, type: .list),
+            AWSShapeMember(label: "dList", required: true, type: .list),
+            AWSShapeMember(label: "cList", required: true, type: .list),
             AWSShapeMember(label: "array", required: true, type: .list),
-            AWSShapeMember(label: "member", required: true, type: .list)
+            AWSShapeMember(label: "structureWithMember", required: true, type: .structure),
+            AWSShapeMember(label: "structureWithMembers", required: false, type: .list),
         ]
 
         let structure = B()

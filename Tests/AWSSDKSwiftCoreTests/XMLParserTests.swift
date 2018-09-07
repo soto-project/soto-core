@@ -14,6 +14,7 @@ class XML2ParserTests: XCTestCase {
     static var allTests : [(String, (XML2ParserTests) -> () throws -> Void)] {
         return [
             ("testparse", testparse),
+            ("testParseStringList", testParseStringList),
             ("testSerializeJSON", testSerializeJSON)
         ]
     }
@@ -32,6 +33,23 @@ class XML2ParserTests: XCTestCase {
         XCTAssertEqual(node.children.first!.children.flatMap({ $0.values }), ["aaaaa", "bbbbb", "foobar"])
         XCTAssertEqual(node.children.last!.elementName, "CanonicalRequest")
     }
+
+    func testParseStringList() {
+        let data = """
+                   <BackendServerDescriptions>
+                     <member><InstancePort>80</InstancePort>
+                             <PolicyNames><member>TFEnableProxyProtocol</member></PolicyNames></member>
+                     <member><InstancePort>443</InstancePort>
+                             <PolicyNames><member>TFEnableProxyProtocol</member></PolicyNames></member>
+                   </BackendServerDescriptions>
+                   """.data(using: .utf8)!
+        let parser = XML2Parser(data: data)
+        let node = try! parser.parse()
+        let jsonString = XMLNodeSerializer(node: node).serializeToJSON()
+        XCTAssertEqual(jsonString, """
+{"BackendServerDescriptions":[{"InstancePort":80,"PolicyNames":["TFEnableProxyProtocol"]},{"InstancePort":443,"PolicyNames":["TFEnableProxyProtocol"]}]}
+""")
+    }
     
     func testSerializeJSON() {
         let parser = XML2Parser(data: dataSourceXML)
@@ -41,5 +59,6 @@ class XML2ParserTests: XCTestCase {
         let error = jsonDict["Error"] as! [String: Any]
         XCTAssertEqual(error["Code"] as! String, "SignatureDoesNotMatch")
     }
+
 }
 

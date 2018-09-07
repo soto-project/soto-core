@@ -35,7 +35,14 @@ class XML2ParserTests: XCTestCase {
     }
 
     func testParseStringList() {
-        let data = "<BackendServerDescriptions>\n          <member>\n            <InstancePort>80</InstancePort>\n            <PolicyNames>\n              <member>TFEnableProxyProtocol</member>\n            </PolicyNames>\n          </member>\n          <member>\n            <InstancePort>443</InstancePort>\n            <PolicyNames>\n              <member>TFEnableProxyProtocol</member>\n            </PolicyNames>\n          </member>\n        </BackendServerDescriptions>".data(using: .utf8)!
+        let data = """
+                   <BackendServerDescriptions>
+                     <member><InstancePort>80</InstancePort>
+                             <PolicyNames><member>TFEnableProxyProtocol</member></PolicyNames></member>
+                     <member><InstancePort>443</InstancePort>
+                             <PolicyNames><member>TFEnableProxyProtocol</member></PolicyNames></member>
+                   </BackendServerDescriptions>
+                   """.data(using: .utf8)!
         let parser = XML2Parser(data: data)
         let node = try! parser.parse()
         let jsonString = XMLNodeSerializer(node: node).serializeToJSON()

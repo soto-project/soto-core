@@ -122,10 +122,16 @@ public class XMLNodeSerializer {
             let memberChildren: [XMLNode]
 
             if arrayNodes.isEmpty {
-                jsonStr += "{"
-                memberChildren = memberNode.children.filter({ !keys.contains($0.elementName) })
-                jsonStr += _serialize(nodeTree: memberChildren)
-                jsonStr += "}"
+                if memberNode.children.isEmpty {
+                    jsonStr += "["
+                    jsonStr.append(contentsOf: memberNode.values.flatMap(formatAsJSONValue))
+                    jsonStr += "]"
+                } else {
+                    jsonStr += "{"
+                    memberChildren = memberNode.children.filter({ !keys.contains($0.elementName) })
+                    jsonStr += _serialize(nodeTree: memberChildren)
+                    jsonStr += "}"
+                }
             } else {
                 memberChildren = node.children.filter({ !keys.contains($0.elementName) })
                 for (_, nodes) in arrayNodes {

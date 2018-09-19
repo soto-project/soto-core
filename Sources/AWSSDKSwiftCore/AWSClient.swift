@@ -315,12 +315,12 @@ extension AWSClient {
 
             for key in keys {
                 if let value = dict[key] {
-                    queryItems.append("\(key)=\(value)")
+                    let stringValue = "\(value)"
+                    queryItems.append("\(key)=\(stringValue.replacingOccurrences(of: "=", with: "%3D"))")
                 }
             }
 
             if let params = queryItems.joined(separator: "&").addingPercentEncoding(withAllowedCharacters: CharacterSet(charactersIn: String.uriAWSQueryAllowed.joined())) {
-
                 if path.contains("?") {
                     path += "&" + params
                 } else {

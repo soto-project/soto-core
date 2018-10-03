@@ -11,6 +11,15 @@
         }
       },
       {
+        "package": "INIParser",
+        "repositoryURL": "https://github.com/PerfectlySoft/Perfect-INIParser.git",
+        "state": {
+          "branch": null,
+          "revision": "0952aac9ca54324ff25191569fd9c48eec424772",
+          "version": "3.0.2"
+        }
+      },
+      {
         "package": "swift-nio",
         "repositoryURL": "https://github.com/apple/swift-nio.git",
         "state": {

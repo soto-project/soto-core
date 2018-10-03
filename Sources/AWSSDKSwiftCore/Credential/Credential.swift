@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import INIParser
 
 public protocol CredentialProvider {
     var accessKeyId: String { get }
@@ -30,18 +31,67 @@ extension CredentialProvider {
     }
 }
 
+/// Protocol for parsing AWS credential configs
+protocol SharedCredentialsConfigParser {
+    /// Parse a specified file
+    ///
+    /// - Parameter filename: The path to the file
+    /// - Returns: A dictionary of dictionaries where the key is each profile
+    /// and the value is the fields and values within that profile
+    /// - Throws: If the file cannot be parsed
+    func parse(filename: String) throws -> [String: [String:String]]
+}
+
+/// An implementation of SharedCredentialsConfigParser that uses INIParser
+class IniConfigParser: SharedCredentialsConfigParser {
+    func parse(filename: String) throws -> [String : [String : String]] {
+        return try INIParser(filename).sections
+    }
+}
+
 public struct SharedCredential: CredentialProvider {
 
-    static var `default`: Credential?
+    /// Errors occurring when initializing a SharedCredential
+    ///
+    /// - missingProfile: If the profile requested was not found
+    /// - missingAccessKeyId: If the access key ID was not found
+    /// - missingSecretAccessKey: If the secret access key was not found
+    public enum SharedCredentialError: Error, Equatable {
+        case missingProfile(String)
+        case missingAccessKeyId
+        case missingSecretAccessKey
+    }
 
     public let accessKeyId: String
     public let secretAccessKey: String
     public let sessionToken: String?
     public let expiration: Date? = nil
 
-    public init(filename: String = "~/.aws/credentials", profile: String = "default") throws {
-        fatalError("Umimplemented")
-        //let content = try String(contentsOfFile: filename)
+    public init(filename: String = "~/.aws/credentials",
+                profile: String = "default") throws {
+        try self.init(
+            filename: filename,
+            profile: profile,
+            parser: IniConfigParser()
+        )
+    }
+
+    init(filename: String, profile: String, parser: SharedCredentialsConfigParser) throws {
+        // Expand tilde before parsing the file
+        let filename = NSString(string: filename).expandingTildeInPath
+        let contents = try parser.parse(filename: filename)
+        guard let config = contents[profile] else {
+            throw SharedCredentialError.missingProfile(profile)
+        }
+        guard let accessKeyId = config["aws_access_key_id"] else {
+            throw SharedCredentialError.missingAccessKeyId
+        }
+        self.accessKeyId = accessKeyId
+        guard let secretAccessKey = config["aws_secret_access_key"] else {
+            throw SharedCredentialError.missingSecretAccessKey
+        }
+        self.secretAccessKey = secretAccessKey
+        self.sessionToken = config["aws_session_token"]
     }
 }
 

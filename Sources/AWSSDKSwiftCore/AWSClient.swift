@@ -65,7 +65,7 @@ public struct AWSClient {
 
     public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSRequestMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil) {
         let credential: CredentialProvider
-        if let scredential = SharedCredential.default {
+        if let scredential = try? SharedCredential() {
             credential = scredential
         } else {
             if let accessKey = accessKeyId, let secretKey = secretAccessKey {

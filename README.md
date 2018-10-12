@@ -19,7 +19,7 @@ let package = Package(
     targets: [
         .target(
             name: "MyAWSTool",
-            dependencies: ["Cloudfront", "Elasticloadbalancing", "Elasticloadbalancingv2",  "Iam"]),
+            dependencies: ["CloudFront", "ELB", "ELBV2",  "IAM"]),
         .testTarget(
             name: "MyAWSToolTests",
             dependencies: ["MyAWSTool"]),

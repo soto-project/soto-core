@@ -11,4 +11,4 @@ install:
 
 script:
   - swift build
-  - swift test
+  - swift test -Xswiftc -DDEBUG

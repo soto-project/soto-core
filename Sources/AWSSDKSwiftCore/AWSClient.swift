@@ -262,9 +262,17 @@ extension AWSClient {
 
     fileprivate func createAWSRequest<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
         var headers: [String: String] = [:]
-        var body: Body = .empty
         var path = path
-        var queryParams = [URLQueryItem]()
+        var urlComponents = URLComponents()
+        var body: Body = .empty
+        var queryParams: [String: Any] = [:]
+
+        guard let ep = URL(string: "\(endpoint)") else {
+            throw RequestError.invalidURL("\(endpoint)")
+        }
+
+        urlComponents.scheme = ep.scheme
+        urlComponents.host = ep.host
 
         // TODO should replace with Encodable
         let mirror = Mirror(reflecting: input)
@@ -277,7 +285,7 @@ extension AWSClient {
 
         for (key, value) in Input.queryParams {
             if let attr = mirror.getAttribute(forKey: value.toSwiftVariableCase()) {
-                queryParams.append(URLQueryItem(name: key, value: "\(attr)"))
+                queryParams[key] = "\(attr)"
             }
         }
 
@@ -288,11 +296,6 @@ extension AWSClient {
                     // percent-encode key which is part of the path
                     .replacingOccurrences(of: "{\(key)+}", with: "\(attr)".addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)!)
             }
-        }
-
-        if !queryParams.isEmpty {
-            let separator = path.contains("?") ? "&" : "?"
-            path = path + separator + queryParams.asStringForURL
         }
 
         switch serviceProtocol.type {
@@ -307,28 +310,15 @@ extension AWSClient {
         case .query:
             let data = try AWSShapeEncoder().encodeToJSONUTF8Data(input)
             var dict = try JSONSerializer().serializeToFlatDictionary(data)
+
             dict["Action"] = operationName
             dict["Version"] = apiVersion
 
-            var queryItems = [String]()
-            let keys = Array(dict.keys).sorted()
-
-            for key in keys {
-                if let value = dict[key] {
-                    let stringValue = "\(value)"
-                    queryItems.append("\(key)=\(stringValue.replacingOccurrences(of: "=", with: "%3D"))")
-                }
+            if let urlEncodedQueryParams = urlEncodeQueryParams(fromDictionary: dict) {
+                body = .text(urlEncodedQueryParams)
             }
 
-            if let params = queryItems.joined(separator: "&").addingPercentEncoding(withAllowedCharacters: CharacterSet(charactersIn: String.uriAWSQueryAllowed.joined())) {
-                if path.contains("?") {
-                    path += "&" + params
-                } else {
-                    path += "?" + params
-                }
-
-                body = .text(params)
-            }
+            queryParams = queryParams.merging(dict) { $1 }
 
         case .restxml:
             if let payload = Input.payloadPath, let payloadBody = mirror.getAttribute(forKey: payload.toSwiftVariableCase()) {
@@ -351,7 +341,10 @@ extension AWSClient {
             }
         }
 
-        guard let url = URL(string:  "\(endpoint)\(path)") else {
+        urlComponents.path = path
+        urlComponents.queryItems = urlQueryItems(fromDictionary: queryParams)
+
+        guard let url = urlComponents.url else {
             throw RequestError.invalidURL("\(endpoint)\(path)")
         }
 
@@ -368,7 +361,37 @@ extension AWSClient {
             middlewares: middlewares
         )
     }
+
+    fileprivate func urlEncodeQueryParams(fromDictionary dict: [String:Any]) -> String? {
+        var components = URLComponents()
+        components.queryItems = urlQueryItems(fromDictionary: dict)
+        if components.queryItems != nil, let url = components.url {
+            return url.query
+        }
+        return nil
+    }
+
+    fileprivate func urlQueryItems(fromDictionary dict: [String:Any]) -> [URLQueryItem]? {
+        var queryItems: [URLQueryItem] = []
+        let keys = Array(dict.keys).sorted()
+
+        for key in keys {
+            if let value = dict[key] {
+                queryItems.append(URLQueryItem(name: key, value: String(describing: value)))
+            }
+        }
+        return queryItems.isEmpty ? nil : queryItems
+    }
 }
+
+// debug request creator
+#if DEBUG
+extension AWSClient {
+    func debugCreateAWSRequest<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
+        return try createAWSRequest(operation: operationName, path: path, httpMethod: httpMethod, input: input)
+    }
+}
+#endif
 
 // response validator
 extension AWSClient {

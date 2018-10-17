@@ -314,11 +314,14 @@ extension AWSClient {
             dict["Action"] = operationName
             dict["Version"] = apiVersion
 
-            if let urlEncodedQueryParams = urlEncodeQueryParams(fromDictionary: dict) {
-                body = .text(urlEncodedQueryParams)
+            switch httpMethod {
+            case "GET":
+                queryParams = queryParams.merging(dict) { $1 }
+            default:
+                if let urlEncodedQueryParams = urlEncodeQueryParams(fromDictionary: dict) {
+                    body = .text(urlEncodedQueryParams)
+                }
             }
-
-            queryParams = queryParams.merging(dict) { $1 }
 
         case .restxml:
             if let payload = Input.payloadPath, let payloadBody = mirror.getAttribute(forKey: payload.toSwiftVariableCase()) {

@@ -42,7 +42,7 @@ class AWSClientTests: XCTestCase {
                 httpMethod: "POST",
                 input: input
             )
-            XCTAssertEqual(awsRequest.url.absoluteString, "\(sesClient.endpoint)/?Action=SendEmail&Version=2013-12-01&value=%3Chtml%3E%3Cbody%3E%3Ca%20href%3D%22https://redsox.com%22%3ETest%3C/a%3E%3C/body%3E%3C/html%3E")
+            XCTAssertEqual(awsRequest.url.absoluteString, "\(sesClient.endpoint)/")
             XCTAssertEqual(String(describing: awsRequest.body), "text(\"Action=SendEmail&Version=2013-12-01&value=%3Chtml%3E%3Cbody%3E%3Ca%20href%3D%22https://redsox.com%22%3ETest%3C/a%3E%3C/body%3E%3C/html%3E\")")
         } catch {
             XCTFail(error.localizedDescription)

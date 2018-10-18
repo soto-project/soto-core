@@ -20,7 +20,8 @@ let package = Package(
                 "NIO",
                 "NIOHTTP1",
                 "NIOOpenSSL",
-                "INIParser",
+                "NIOFoundationCompat",
+                "INIParser"
             ]),
         .testTarget(name: "AWSSDKSwiftCoreTests", dependencies: ["AWSSDKSwiftCore"])
     ]

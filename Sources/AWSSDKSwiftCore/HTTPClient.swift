@@ -12,6 +12,7 @@
 import NIO
 import NIOHTTP1
 import NIOOpenSSL
+import NIOFoundationCompat
 import Foundation
 
 public struct Request {
@@ -33,46 +34,6 @@ private enum HTTPClientState {
     case ready
     /// Currently parsing the response's body.
     case parsingBody(HTTPResponseHead, Data?)
-}
-
-extension ByteBuffer {
-    // MARK: Data APIs
-
-    /// Return `length` bytes starting at `index` and return the result as `Data`. This will not change the reader index.
-    ///
-    /// - parameters:
-    ///     - index: The starting index of the bytes of interest into the `ByteBuffer`
-    ///     - length: The number of bytes of interest
-    /// - returns: A `Data` value containing the bytes of interest or `nil` if the `ByteBuffer` doesn't contain those bytes.
-    public func getData(at index: Int, length: Int) -> Data? {
-        precondition(length >= 0, "length must not be negative")
-        precondition(index >= 0, "index must not be negative")
-        guard index <= self.capacity - length else {
-            return nil
-        }
-        return self.withVeryUnsafeBytesWithStorageManagement { ptr, storageRef in
-            _ = storageRef.retain()
-            return Data(bytesNoCopy: UnsafeMutableRawPointer(mutating: ptr.baseAddress!.advanced(by: index)),
-                        count: Int(length),
-                        deallocator: .custom { _, _ in storageRef.release() })
-        }
-    }
-
-    /// Read `length` bytes off this `ByteBuffer`, move the reader index forward by `length` bytes and return the result
-    /// as `Data`.
-    ///
-    /// - parameters:
-    ///     - length: The number of bytes to be read from this `ByteBuffer`.
-    /// - returns: A `Data` value containing `length` bytes or `nil` if there aren't at least `length` bytes readable.
-    public mutating func readData(length: Int) -> Data? {
-        precondition(length >= 0, "length must not be negative")
-        guard self.readableBytes >= length else {
-            return nil
-        }
-        let data = self.getData(at: self.readerIndex, length: length)! /* must work, enough readable bytes */
-        self.moveReaderIndex(forwardBy: length)
-        return data
-    }
 }
 
 public enum HTTPClientError: Error {

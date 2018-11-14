@@ -78,6 +78,13 @@ public struct AWSRequest {
         switch serviceProtocol.type {
         case .json, .restjson:
             headers["Content-Type"] = serviceProtocol.contentTypeString
+        case .query:
+            switch awsRequest.httpMethod {
+            case "POST":
+                headers["Content-Type"] = "application/x-www-form-urlencoded"
+            default:
+                break
+            }
         default:
             break
         }

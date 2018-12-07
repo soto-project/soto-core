@@ -41,7 +41,8 @@ let swiftReservedWords: [String] = [
     "is",
     "do",
     "try",
-    "type"
+    "type",
+    "repeat"
 ]
 
 extension String {

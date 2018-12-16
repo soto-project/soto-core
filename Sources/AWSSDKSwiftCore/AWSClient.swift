@@ -107,7 +107,8 @@ extension AWSClient {
         let client = HTTPClient(hostname: nioRequest.head.headers["Host"].first!, port: 443)
         let future = try client.connect(nioRequest)
 
-        //TODO(jmca) don't block
+        // calling wait from main thread throws a precondition error in Nio
+        // Wrap in a DispatchQueue when calling this method
         let response = try future.wait()
 
         client.close { error in
@@ -119,18 +120,18 @@ extension AWSClient {
         return response
     }
 
-    //TODO(jmca) learn how to map response to validate and return
-    // a future of generic Output: AWSShape
     fileprivate func invokeAsync(_ nioRequest: Request) throws -> EventLoopFuture<Response>{
         let client = HTTPClient(hostname: nioRequest.head.headers["Host"].first!, port: 443)
         let future = try client.connect(nioRequest)
+
         future.whenComplete {
-          client.close { error in
-              if let error = error {
-                  print("Error closing connection: \(error)")
-              }
-          }
+            client.close { error in
+                if let error = error {
+                    print("Error closing connection: \(error)")
+                }
+            }
         }
+
         return future
     }
 }
@@ -170,6 +171,59 @@ extension AWSClient {
         )
         let nioRequest = try createNioRequest(awsRequest)
         return try validate(operation: operationName, response: try self.invoke(nioRequest))
+    }
+
+    public func sendAsync<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws {
+        let awsRequest = try createAWSRequest(
+            operation: operationName,
+            path: path,
+            httpMethod: httpMethod,
+            input: input
+        )
+        let nioRequest = try createNioRequest(awsRequest)
+        _ = try self.invokeAsync(nioRequest)
+    }
+
+    public func sendAsync(operation operationName: String, path: String, httpMethod: String) throws {
+        let awsRequest = createAWSRequest(operation: operationName, path: path, httpMethod: httpMethod)
+        let nioRequest = try createNioRequest(awsRequest)
+        _ = try self.invokeAsync(nioRequest)
+    }
+
+    public func sendAsync<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) throws -> EventLoopFuture<Output> {
+        let awsRequest = createAWSRequest(operation: operationName, path: path, httpMethod: httpMethod)
+        let nioRequest = try createNioRequest(awsRequest)
+        let future = try self.invokeAsync(nioRequest)
+
+        return future.map { response -> Output in
+            do {
+                let output: Output = try self.validate(operation: operationName, response: response)
+                return output
+            } catch {
+                return error as! Output
+            }
+        }
+    }
+
+    public func sendAsync<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input)
+        throws -> EventLoopFuture<Output> {
+            let awsRequest = try createAWSRequest(
+                operation: operationName,
+                path: path,
+                httpMethod: httpMethod,
+                input: input
+            )
+            let nioRequest = try createNioRequest(awsRequest)
+            let future = try self.invokeAsync(nioRequest)
+
+            return future.map { response -> Output in
+                do {
+                    let output: Output = try self.validate(operation: operationName, response: response)
+                    return output
+                } catch {
+                    return error as! Output
+                }
+            }
     }
 }
 

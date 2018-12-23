@@ -103,28 +103,11 @@ public struct AWSClient {
 
 // invoker
 extension AWSClient {
-    fileprivate func invoke(_ nioRequest: Request) throws -> Response {
+    fileprivate func invoke(_ nioRequest: Request) -> EventLoopFuture<Response>{
         let client = HTTPClient(hostname: nioRequest.head.headers["Host"].first!, port: 443)
-        let future = try client.connect(nioRequest)
+        let futureResponse = client.connect(nioRequest)
 
-        // calling wait from main thread throws a precondition error in Nio
-        // Wrap in a DispatchQueue when calling this method
-        let response = try future.wait()
-
-        client.close { error in
-            if let error = error {
-                print("Error closing connection: \(error)")
-            }
-        }
-
-        return response
-    }
-
-    fileprivate func invokeAsync(_ nioRequest: Request) throws -> EventLoopFuture<Response>{
-        let client = HTTPClient(hostname: nioRequest.head.headers["Host"].first!, port: 443)
-        let future = try client.connect(nioRequest)
-
-        future.whenComplete {
+        futureResponse.whenComplete {
             client.close { error in
                 if let error = error {
                     print("Error closing connection: \(error)")
@@ -132,7 +115,7 @@ extension AWSClient {
             }
         }
 
-        return future
+        return futureResponse
     }
 }
 
@@ -145,67 +128,29 @@ extension AWSClient {
             httpMethod: httpMethod,
             input: input
         )
-        let nioRequest = try createNioRequest(awsRequest)
-        _ = try self.invoke(nioRequest)
+        try createNioRequest(awsRequest).whenSuccess { nioRequest in
+            _ = self.invoke(nioRequest)
+        }
     }
 
     public func send(operation operationName: String, path: String, httpMethod: String) throws {
         let awsRequest = createAWSRequest(operation: operationName, path: path, httpMethod: httpMethod)
-        let nioRequest = try createNioRequest(awsRequest)
-        _ = try self.invoke(nioRequest)
-    }
-
-    public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) throws -> Output {
-        let awsRequest = createAWSRequest(operation: operationName, path: path, httpMethod: httpMethod)
-        let nioRequest = try createNioRequest(awsRequest)
-        return try validate(operation: operationName, response: try self.invoke(nioRequest))
-    }
-
-    public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input)
-        throws -> Output {
-        let awsRequest = try createAWSRequest(
-            operation: operationName,
-            path: path,
-            httpMethod: httpMethod,
-            input: input
-        )
-        let nioRequest = try createNioRequest(awsRequest)
-        return try validate(operation: operationName, response: try self.invoke(nioRequest))
-    }
-
-    public func sendAsync<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws {
-        let awsRequest = try createAWSRequest(
-            operation: operationName,
-            path: path,
-            httpMethod: httpMethod,
-            input: input
-        )
-        let nioRequest = try createNioRequest(awsRequest)
-        _ = try self.invokeAsync(nioRequest)
-    }
-
-    public func sendAsync(operation operationName: String, path: String, httpMethod: String) throws {
-        let awsRequest = createAWSRequest(operation: operationName, path: path, httpMethod: httpMethod)
-        let nioRequest = try createNioRequest(awsRequest)
-        _ = try self.invokeAsync(nioRequest)
-    }
-
-    public func sendAsync<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) throws -> EventLoopFuture<Output> {
-        let awsRequest = createAWSRequest(operation: operationName, path: path, httpMethod: httpMethod)
-        let nioRequest = try createNioRequest(awsRequest)
-        let future = try self.invokeAsync(nioRequest)
-
-        return future.map { response -> Output in
-            do {
-                let output: Output = try self.validate(operation: operationName, response: response)
-                return output
-            } catch {
-                return error as! Output
-            }
+        try createNioRequest(awsRequest).whenSuccess { nioRequest in
+            _ = self.invoke(nioRequest)
         }
     }
 
-    public func sendAsync<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input)
+    public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) throws -> EventLoopFuture<Output> {
+        let awsRequest = createAWSRequest(operation: operationName, path: path, httpMethod: httpMethod)
+
+        return try createNioRequest(awsRequest).then { nioRequest -> EventLoopFuture<Response> in
+            return self.invoke(nioRequest)
+        }.thenThrowing { response -> Output in
+            try self.validate(operation: operationName, response: response)
+        }
+    }
+
+    public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input)
         throws -> EventLoopFuture<Output> {
             let awsRequest = try createAWSRequest(
                 operation: operationName,
@@ -213,16 +158,11 @@ extension AWSClient {
                 httpMethod: httpMethod,
                 input: input
             )
-            let nioRequest = try createNioRequest(awsRequest)
-            let future = try self.invokeAsync(nioRequest)
 
-            return future.map { response -> Output in
-                do {
-                    let output: Output = try self.validate(operation: operationName, response: response)
-                    return output
-                } catch {
-                    return error as! Output
-                }
+            return try createNioRequest(awsRequest).then { nioRequest -> EventLoopFuture<Response> in
+                return self.invoke(nioRequest)
+            }.thenThrowing { response -> Output in
+                try self.validate(operation: operationName, response: response)
             }
     }
 }
@@ -282,21 +222,36 @@ extension AWSClient {
         return nioRequest
     }
 
-    func createNioRequest(_ request: AWSRequest) throws -> Request {
-        let nioRequest: Request
-        switch request.httpMethod {
-        case "GET":
-            switch serviceProtocol.type {
-            case .restjson:
-                nioRequest = try createNIORequestWithSignedHeader(request)
+    func createNioRequest(_ request: AWSRequest) throws -> EventLoopFuture<Request> {
+        let eventGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+        let promise: EventLoopPromise<Request> = eventGroup.next().newPromise()
+        let queue = DispatchQueue(
+            label: "nioRequest",
+            qos: .utility,
+            attributes: .concurrent,
+            autoreleaseFrequency: .workItem
+        )
 
-            default:
-                nioRequest = try createNIORequestWithSignedURL(request)
+        queue.async {
+            do {
+                switch request.httpMethod {
+                case "GET":
+                    switch self.serviceProtocol.type {
+                    case .restjson:
+                        promise.succeed(result: try self.createNIORequestWithSignedHeader(request))
+                    default:
+                        promise.succeed(result: try self.createNIORequestWithSignedURL(request))
+                    }
+                default:
+                    promise.succeed(result: try self.createNIORequestWithSignedHeader(request))
+                }
+            } catch {
+                // should not fail
             }
-        default:
-            nioRequest = try createNIORequestWithSignedHeader(request)
+
         }
-        return nioRequest
+
+        return promise.futureResult
     }
 
     fileprivate func createAWSRequest(operation operationName: String, path: String, httpMethod: String) -> AWSRequest {
@@ -568,7 +523,7 @@ extension AWSClient {
                                 for link in links {
                                     guard let name = link.name else { continue }
                                     let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: endpoint + link.href)
-                                    let res = try invoke(nioRequestWithSignedHeader(Request(head: head, body: Data())))
+                                    let res = try invoke(nioRequestWithSignedHeader(Request(head: head, body: Data()))).wait()
                                     let representaion = try Representation().from(json: res.body)
                                     dict[name] = representaion.properties
                                 }

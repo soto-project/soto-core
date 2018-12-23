@@ -85,8 +85,7 @@ struct MetaDataService {
                      uri: uri
                    )
         let request = Request(head: head, body: Data())
-        let future = try client.connect(request)
-        let response = try future.wait()
+        let response = try client.connect(request).wait()
         client.close { error in
             if let error = error {
                 print("Error closing connection: \(error)")

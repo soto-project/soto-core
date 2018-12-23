@@ -123,7 +123,7 @@ public final class HTTPClient {
         self.eventGroup = eventGroup
     }
 
-    public func connect(_ request: Request) throws -> EventLoopFuture<Response> {
+    public func connect(_ request: Request) -> EventLoopFuture<Response> {
         var head = request.head
         let body = request.body
 

@@ -63,6 +63,9 @@ public struct AWSClient {
         return "\(signer.service).\(signer.region.rawValue).amazonaws.com"
     }
 
+    static let eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+    static let dispatchQueue: DispatchQueue = DispatchQueue(label: "AWSClient", qos: .utility, attributes: .concurrent)
+
     public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSRequestMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil) {
         let credential: CredentialProvider
         if let scredential = try? SharedCredential() {
@@ -223,16 +226,9 @@ extension AWSClient {
     }
 
     func createNioRequest(_ request: AWSRequest) throws -> EventLoopFuture<Request> {
-        let eventGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
-        let promise: EventLoopPromise<Request> = eventGroup.next().newPromise()
-        let queue = DispatchQueue(
-            label: "nioRequest",
-            qos: .utility,
-            attributes: .concurrent,
-            autoreleaseFrequency: .workItem
-        )
+        let promise: EventLoopPromise<Request> = AWSClient.eventGroup.next().newPromise()
 
-        queue.async {
+        AWSClient.dispatchQueue.async {
             do {
                 switch request.httpMethod {
                 case "GET":

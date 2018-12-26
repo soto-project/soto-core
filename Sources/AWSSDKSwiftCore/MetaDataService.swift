@@ -85,6 +85,8 @@ struct MetaDataService {
                      uri: uri
                    )
         let request = Request(head: head, body: Data())
+        // connect and wait here since getCredential is only
+        // called when creating a NioRwquest on an eventLoop
         let response = try client.connect(request).wait()
         client.close { error in
             if let error = error {

@@ -149,6 +149,7 @@ public final class HTTPClient {
         let response: EventLoopPromise<Response> = eventGroup.next().newPromise()
 
         _ = ClientBootstrap(group: eventGroup)
+            .connectTimeout(TimeAmount.seconds(5))
             .channelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: 1)
             .channelInitializer { channel in
                 let accumulation = HTTPClientResponseHandler(promise: response)

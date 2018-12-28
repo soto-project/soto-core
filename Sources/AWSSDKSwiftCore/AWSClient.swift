@@ -16,6 +16,9 @@ extension String {
     public static let uriAWSQueryAllowed: [String] = ["&", "\'", "(", ")", "-", ".", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "=", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "_", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
 }
 
+/// Convenience shorthand for `EventLoopFuture`.
+public typealias Future = EventLoopFuture
+
 public struct InputContext {
     let Shape: AWSShape.Type
     let input: AWSShape
@@ -104,7 +107,7 @@ public struct AWSClient {
 
 // invoker
 extension AWSClient {
-    fileprivate func invoke(_ nioRequest: Request) -> EventLoopFuture<Response>{
+    fileprivate func invoke(_ nioRequest: Request) -> Future<Response>{
         let client = HTTPClient(hostname: nioRequest.head.headers["Host"].first!, port: 443)
         let futureResponse = client.connect(nioRequest)
 
@@ -157,12 +160,12 @@ extension AWSClient {
           }
     }
 
-    public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) throws -> EventLoopFuture<Output> {
+    public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) throws -> Future<Output> {
         let awsRequest = createAWSRequest(operation: operationName, path: path, httpMethod: httpMethod)
         let eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
 
         return eventGroup.next().submit({ try self.createNioRequest(awsRequest) })
-            .then { nioRequest -> EventLoopFuture<Response> in
+            .then { nioRequest -> Future<Response> in
                 return self.invoke(nioRequest)
             }.thenThrowing { response -> Output in
                 eventGroup.shutdownGracefully({ error in
@@ -175,7 +178,7 @@ extension AWSClient {
     }
 
     public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input)
-        throws -> EventLoopFuture<Output> {
+        throws -> Future<Output> {
             let awsRequest = try createAWSRequest(
                 operation: operationName,
                 path: path,
@@ -185,7 +188,7 @@ extension AWSClient {
             let eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
 
             return eventGroup.next().submit({ try self.createNioRequest(awsRequest) })
-                .then { nioRequest -> EventLoopFuture<Response> in
+                .then { nioRequest -> Future<Response> in
                     return self.invoke(nioRequest)
                 }.thenThrowing { response -> Output in
                     eventGroup.shutdownGracefully({ error in

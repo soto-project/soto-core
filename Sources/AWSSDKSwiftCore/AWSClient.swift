@@ -146,7 +146,7 @@ extension AWSClient {
     }
 
     public func send(operation operationName: String, path: String, httpMethod: String) throws {
-        let awsRequest = createAWSRequest(operation: operationName, path: path, httpMethod: httpMethod)
+        let awsRequest = try createAWSRequest(operation: operationName, path: path, httpMethod: httpMethod)
         let eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
 
         eventGroup.next().submit({ try self.createNioRequest(awsRequest) })
@@ -161,7 +161,7 @@ extension AWSClient {
     }
 
     public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) throws -> Future<Output> {
-        let awsRequest = createAWSRequest(operation: operationName, path: path, httpMethod: httpMethod)
+        let awsRequest = try createAWSRequest(operation: operationName, path: path, httpMethod: httpMethod)
         let eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
 
         return eventGroup.next().submit({ try self.createNioRequest(awsRequest) })
@@ -206,12 +206,15 @@ extension AWSClient {
 extension AWSClient {
     fileprivate func createNIORequestWithSignedURL(_ awsRequest: AWSRequest) throws -> Request {
         var nioRequest = try awsRequest.toNIORequest()
-        let head = nioRequest.head
-        if let unsignedUrl = URL(string: head.uri) {
-            let signedURI = signer.signedURL(url: unsignedUrl)
-            nioRequest.head.uri = signedURI.absoluteString
-            nioRequest.head.headers.replaceOrAdd(name: "Host", value: unsignedUrl.hostWithPort!)
+
+        guard let unsignedUrl = URL(string: nioRequest.head.uri), let hostWithPort = unsignedUrl.hostWithPort else {
+            fatalError("nioRequest.head.uri is invalid.")
         }
+
+        let signedURI = signer.signedURL(url: unsignedUrl)
+        nioRequest.head.uri = signedURI.absoluteString
+        nioRequest.head.headers.replaceOrAdd(name: "Host", value: hostWithPort)
+
         return nioRequest
     }
 
@@ -239,7 +242,7 @@ extension AWSClient {
             }
         }()
 
-        guard let url = URL(string: nioRequest.head.uri) else {
+        guard let url = URL(string: nioRequest.head.uri), let _ = url.hostWithPort else {
             fatalError("nioRequest.head.uri is invalid.")
         }
 
@@ -271,10 +274,15 @@ extension AWSClient {
         }
     }
 
-    fileprivate func createAWSRequest(operation operationName: String, path: String, httpMethod: String) -> AWSRequest {
+    fileprivate func createAWSRequest(operation operationName: String, path: String, httpMethod: String) throws -> AWSRequest {
+
+        guard let url = URL(string: "\(endpoint)\(path)"), let _ = url.hostWithPort else {
+            throw RequestError.invalidURL("\(endpoint)\(path) must specify url host and scheme")
+        }
+
         return AWSRequest(
             region: self.signer.region,
-            url: URL(string:  "\(endpoint)\(path)")!,
+            url: url,
             serviceProtocol: serviceProtocol,
             service: signer.service,
             amzTarget: amzTarget,
@@ -293,12 +301,12 @@ extension AWSClient {
         var body: Body = .empty
         var queryParams: [String: Any] = [:]
 
-        guard let ep = URL(string: "\(endpoint)") else {
-            throw RequestError.invalidURL("\(endpoint)")
+        guard let baseURL = URL(string: "\(endpoint)"), let _ = baseURL.hostWithPort else {
+            throw RequestError.invalidURL("\(endpoint) must specify url host and scheme")
         }
 
-        urlComponents.scheme = ep.scheme
-        urlComponents.host = ep.host
+        urlComponents.host = baseURL.host
+        urlComponents.scheme = baseURL.scheme
 
         // TODO should replace with Encodable
         let mirror = Mirror(reflecting: input)

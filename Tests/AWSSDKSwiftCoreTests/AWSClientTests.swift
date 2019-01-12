@@ -108,6 +108,34 @@ class AWSClientTests: XCTestCase {
         } catch {
             XCTFail(error.localizedDescription)
         }
+
+        let s3Client = AWSClient(
+            accessKeyId: "foo",
+            secretAccessKey: "bar",
+            region: nil,
+            service: "s3",
+            serviceProtocol: ServiceProtocol(type: .restxml),
+            apiVersion: "2006-03-01",
+            endpoint: nil,
+            serviceEndpoints: ["us-west-2": "s3.us-west-2.amazonaws.com", "eu-west-1": "s3.eu-west-1.amazonaws.com", "us-east-1": "s3.amazonaws.com", "ap-northeast-1": "s3.ap-northeast-1.amazonaws.com", "s3-external-1": "s3-external-1.amazonaws.com", "ap-southeast-2": "s3.ap-southeast-2.amazonaws.com", "sa-east-1": "s3.sa-east-1.amazonaws.com", "ap-southeast-1": "s3.ap-southeast-1.amazonaws.com", "us-west-1": "s3.us-west-1.amazonaws.com"],
+            partitionEndpoint: "us-east-1",
+            middlewares: [],
+            possibleErrorTypes: [S3ErrorType.self]
+        )
+
+        do {
+            let awsRequest = try s3Client.debugCreateAWSRequest(
+                operation: "ListObjectsV2",
+                path: "/Bucket?list-type=2",
+                httpMethod: "GET",
+                input: input
+            )
+
+            XCTAssertEqual(awsRequest.url.absoluteString, "https://s3.amazonaws.com/Bucket?list-type=2")
+            _ = try awsRequest.toNIORequest()
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
     }
 
     func testCreateNIORequest() {
@@ -189,4 +217,24 @@ extension SESErrorType {
             return nil
         }
     }
+}
+
+/// Error enum for S3
+public enum S3ErrorType: AWSErrorType {
+    case noSuchKey(message: String?)
+}
+
+extension S3ErrorType {
+  public init?(errorCode: String, message: String?){
+      var errorCode = errorCode
+      if let index = errorCode.index(of: "#") {
+          errorCode = String(errorCode[errorCode.index(index, offsetBy: 1)...])
+      }
+      switch errorCode {
+      case "NoSuchKey":
+          self = .noSuchKey(message: message)
+      default:
+          return nil
+      }
+  }
 }

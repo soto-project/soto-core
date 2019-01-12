@@ -344,7 +344,18 @@ extension AWSClient {
             }
         }
 
-        urlComponents.path = path
+        guard let parsedPath = URLComponents(string: path) else {
+            throw RequestError.invalidURL("\(endpoint)\(path)")
+        }
+
+        urlComponents.path = parsedPath.path
+
+        if let pathQueryItems = parsedPath.queryItems {
+            for item in pathQueryItems {
+                queryParams[item.name] = item.value
+            }
+        }
+        
         urlComponents.queryItems = urlQueryItems(fromDictionary: queryParams)
 
         guard let url = urlComponents.url else {

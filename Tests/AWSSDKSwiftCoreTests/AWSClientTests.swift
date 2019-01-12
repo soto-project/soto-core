@@ -128,7 +128,7 @@ class AWSClientTests: XCTestCase {
                 operation: "ListObjectsV2",
                 path: "/Bucket?list-type=2",
                 httpMethod: "GET",
-                input: input
+                input: input1
             )
 
             XCTAssertEqual(awsRequest.url.absoluteString, "https://s3.amazonaws.com/Bucket?list-type=2")

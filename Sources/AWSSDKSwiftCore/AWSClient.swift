@@ -301,7 +301,15 @@ extension AWSClient {
         switch serviceProtocol.type {
         case .json, .restjson:
             if let payload = Input.payloadPath, let payloadBody = mirror.getAttribute(forKey: payload.toSwiftVariableCase()) {
-                body = Body(anyValue: payloadBody)
+                switch payloadBody {
+                case is AWSShape:
+                    let inputBody: Body = .json(try AWSShapeEncoder().encodeToJSONUTF8Data(input))
+                    if let inputDict = try inputBody.asDictionary(), let payloadDict = inputDict[payload] {
+                        body = .json(try JSONSerialization.data(withJSONObject: payloadDict))
+                    }
+                default:
+                    body = Body(anyValue: payloadBody)
+                }
                 headers.removeValue(forKey: payload.toSwiftVariableCase())
             } else {
                 body = .json(try AWSShapeEncoder().encodeToJSONUTF8Data(input))
@@ -325,7 +333,12 @@ extension AWSClient {
 
         case .restxml:
             if let payload = Input.payloadPath, let payloadBody = mirror.getAttribute(forKey: payload.toSwiftVariableCase()) {
-                body = Body(anyValue: payloadBody)
+                switch payloadBody {
+                case let pb as AWSShape:
+                    body = .xml(try AWSShapeEncoder().encodeToXMLNode(pb))
+                default:
+                    body = Body(anyValue: payloadBody)
+                }
                 headers.removeValue(forKey: payload.toSwiftVariableCase())
             } else {
                 body = .xml(try AWSShapeEncoder().encodeToXMLNode(input))
@@ -355,7 +368,7 @@ extension AWSClient {
                 queryParams[item.name] = item.value
             }
         }
-        
+
         urlComponents.queryItems = urlQueryItems(fromDictionary: queryParams)
 
         guard let url = urlComponents.url else {

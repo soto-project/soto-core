@@ -28,6 +28,16 @@ public func sha256(_ data: Data) -> [UInt8] {
     }
 }
 
+public func sha256(_ bytes1: inout [UInt8], _ bytes2: inout [UInt8]) -> [UInt8] {
+    var hash = [UInt8](repeating: 0, count: Int(SHA256_DIGEST_LENGTH))
+    var context = SHA256_CTX()
+    SHA256_Init(&context)
+    SHA256_Update(&context, &bytes1, bytes1.count)
+    SHA256_Update(&context, &bytes2, bytes2.count)
+    SHA256_Final(&hash, &context)
+    return hash
+}
+
 public func md5(_ data: Data) -> [UInt8] {
     return data.withUnsafeBytes {(bytes: UnsafePointer<UInt8>) in
         var hash = [UInt8](repeating: 0, count: Int(MD5_DIGEST_LENGTH))

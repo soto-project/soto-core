@@ -67,10 +67,10 @@ public struct AWSClient {
         let credential: CredentialProvider
         if let accessKey = accessKeyId, let secretKey = secretAccessKey {
             credential = Credential(accessKeyId: accessKey, secretAccessKey: secretKey)
-        } else if let scredential = try? SharedCredential() {
-                credential = scredential
         } else if let ecredential = EnvironementCredential() {
             credential = ecredential
+        } else if let scredential = try? SharedCredential() {
+            credential = scredential
         } else {
             credential = Credential(accessKeyId: "", secretAccessKey: "")
         }

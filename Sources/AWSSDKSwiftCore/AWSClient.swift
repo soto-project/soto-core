@@ -490,7 +490,12 @@ extension AWSClient {
             }
         }
 
-        return try DictionaryDecoder().decode(Output.self, from: outputDict)
+        switch responseBody {
+        case .xml:
+            return try UntypedDictionaryDecoder().decode(Output.self, from: outputDict)
+        default:
+            return try DictionaryDecoder().decode(Output.self, from: outputDict)
+        }
     }
 
     private func validateBody(for response: Response, payloadPath: String?, members: [AWSShapeMember]) throws -> Body {

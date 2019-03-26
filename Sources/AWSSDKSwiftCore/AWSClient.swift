@@ -316,8 +316,7 @@ extension AWSClient {
             }
 
         case .query:
-            let data = try AWSShapeEncoder().encodeToJSONUTF8Data(input)
-            var dict = try JSONSerializer().serializeToFlatDictionary(data)
+            var dict = AWSShapeEncoder().encodeToQueryDictionary(input)
 
             dict["Action"] = operationName
             dict["Version"] = apiVersion

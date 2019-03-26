@@ -359,16 +359,20 @@ extension AWSClient {
         guard let parsedPath = URLComponents(string: path) else {
             throw RequestError.invalidURL("\(endpoint)\(path)")
         }
-
         urlComponents.path = parsedPath.path
 
+        // construct query array
+        var queryItems = urlQueryItems(fromDictionary: queryParams) ?? []
+        
+        // add new queries to query item array. These need to be added to the queryItems list instead of the queryParams dictionary as added nil items to a dictionary doesn't add a value.
         if let pathQueryItems = parsedPath.queryItems {
             for item in pathQueryItems {
-                queryParams[item.name] = item.value
+                queryItems.append(URLQueryItem(name:item.name, value:item.value))
             }
         }
 
-        urlComponents.queryItems = urlQueryItems(fromDictionary: queryParams)
+        // only set queryItems if there exist any
+        urlComponents.queryItems = queryItems.count == 0 ? nil : queryItems
 
         guard let url = urlComponents.url else {
             throw RequestError.invalidURL("\(endpoint)\(path)")
@@ -404,6 +408,8 @@ extension AWSClient {
         for key in keys {
             if let value = dict[key] {
                 queryItems.append(URLQueryItem(name: key, value: String(describing: value)))
+            } else {
+                queryItems.append(URLQueryItem(name: key, value: nil))
             }
         }
         return queryItems.isEmpty ? nil : queryItems

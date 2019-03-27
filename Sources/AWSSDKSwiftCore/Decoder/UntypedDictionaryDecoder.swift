@@ -132,9 +132,8 @@ fileprivate class _UntypedDictionaryDecoder : Decoder {
     // MARK: - Decoder Methods
     public func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> {
         guard !(self.storage.topContainer is NSNull) else {
-            throw DecodingError.valueNotFound(KeyedDecodingContainer<Key>.self,
-                                              DecodingError.Context(codingPath: self.codingPath,
-                                                                    debugDescription: "Cannot get keyed decoding container -- found null value instead."))
+            let container = _DictionaryKeyedDecodingContainer<Key>(referencing: self, wrapping: [:])
+            return KeyedDecodingContainer(container)
         }
         
         guard let topContainer = self.storage.topContainer as? [String : Any] else {
@@ -147,9 +146,7 @@ fileprivate class _UntypedDictionaryDecoder : Decoder {
     
     public func unkeyedContainer() throws -> UnkeyedDecodingContainer {
         guard !(self.storage.topContainer is NSNull) else {
-            throw DecodingError.valueNotFound(UnkeyedDecodingContainer.self,
-                                              DecodingError.Context(codingPath: self.codingPath,
-                                                                    debugDescription: "Cannot get unkeyed decoding container -- found null value instead."))
+            return _DictionaryUnkeyedDecodingContainer(referencing: self, wrapping: [])
         }
         
         let topContainer = self.storage.topContainer as? [Any] ?? [self.storage.topContainer]

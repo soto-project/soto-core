@@ -79,9 +79,6 @@ public class XML2Parser: NSObject, XMLParserDelegate {
     
     public func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
         if let currentElementName = currentNode?.elementName, currentElementName.lowercased() == elementName.lowercased() {
-            if currentNode?.children.count == 0, currentNode?.values.count == 0 {
-                currentNode?.values.append("null")
-            }
             currentNode = currentNode?.parent
         }
         lastElementName = elementName.upperFirst()

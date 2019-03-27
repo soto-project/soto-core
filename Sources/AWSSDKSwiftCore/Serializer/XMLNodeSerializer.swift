@@ -57,6 +57,8 @@ public class XMLNodeSerializer {
                     xmlStr += "<\(node.elementName)\(attr)>"
                     _serialize(nodeTree: node.children)
                     xmlStr += "</\(node.elementName)>"
+                } else if node.hasNoValue() {
+                    xmlStr += "<\(node.elementName)\(attr)/>"
                 }
             }
         }
@@ -106,6 +108,8 @@ public class XMLNodeSerializer {
                 } else {
                     _processNodeWithChildren(node, &jsonStr, arrayNodes, keys)
                 }
+            } else if node.hasNoValue() {
+                jsonStr += "null"
             }
             return jsonStr
         }

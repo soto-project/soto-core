@@ -21,19 +21,7 @@ private func dquote(_ str: String) -> String {
 }
 
 private func formatAsJSONValue(_ str: String) -> String {
-    /*if let number = Double(str) {
-        if number.truncatingRemainder(dividingBy: 1) == 0 {
-            return Int(number).description
-        } else {
-            return number.description
-        }
-    } else if ["false", "true"].contains(where: { $0 == str.lowercased() }) {
-        return str.lowercased()
-    } else if str == "null" {
-        return str
-    } else {*/
-        return dquote(str)
-//    }
+    return dquote(str)
 }
 
 public class XMLNodeSerializer {

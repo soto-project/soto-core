@@ -483,7 +483,7 @@ extension AWSClient {
 
         for (key, value) in response.head.headers {
             let headerParams = Output.headerParams
-            if let index = headerParams.firstIndex(where: { $0.key.lowercased() == key.description.lowercased() }) {
+            if let index = headerParams.index(where: { $0.key.lowercased() == key.description.lowercased() }) {
                 if let number = Double(value) {
                     outputDict[headerParams[index].key] = number.truncatingRemainder(dividingBy: 1) == 0 ? Int(number) : number
                 } else if let boolean = Bool(value) {

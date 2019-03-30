@@ -482,13 +482,14 @@ extension AWSClient {
         }
 
         for (key, value) in response.head.headers {
-            if let index = Output.headerParams.index(where: { $0.key.lowercased() == key.description.lowercased() }) {
+            let headerParams = Output.headerParams
+            if let index = headerParams.firstIndex(where: { $0.key.lowercased() == key.description.lowercased() }) {
                 if let number = Double(value) {
-                    outputDict[Output.headerParams[index].key] = number.truncatingRemainder(dividingBy: 1) == 0 ? Int(number) : number
+                    outputDict[headerParams[index].key] = number.truncatingRemainder(dividingBy: 1) == 0 ? Int(number) : number
                 } else if let boolean = Bool(value) {
-                    outputDict[Output.headerParams[index].key] = boolean
+                    outputDict[headerParams[index].key] = boolean
                 } else {
-                    outputDict[Output.headerParams[index].key] = value
+                    outputDict[headerParams[index].key] = value
                 }
             }
         }

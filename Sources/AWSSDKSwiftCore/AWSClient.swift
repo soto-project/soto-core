@@ -65,14 +65,16 @@ public struct AWSClient {
 
     public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSRequestMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil) {
         let credential: CredentialProvider
-        if let accessKey = accessKeyId, let secretKey = secretAccessKey {
-            credential = Credential(accessKeyId: accessKey, secretAccessKey: secretKey)
-        } else if let ecredential = EnvironementCredential() {
-            credential = ecredential
-        } else if let scredential = try? SharedCredential() {
+        if let scredential = try? SharedCredential() {
             credential = scredential
         } else {
-            credential = Credential(accessKeyId: "", secretAccessKey: "")
+            if let accessKey = accessKeyId, let secretKey = secretAccessKey {
+                credential = Credential(accessKeyId: accessKey, secretAccessKey: secretKey)
+            } else if let ecredential = EnvironementCredential() {
+                credential = ecredential
+            } else {
+                credential = Credential(accessKeyId: "", secretAccessKey: "")
+            }
         }
 
         let region: Region
@@ -123,11 +125,11 @@ extension AWSClient {
         let client = HTTPClient(hostname: nioRequest.head.headers["Host"].first!, port: 443)
         let future = try client.connect(nioRequest)
         future.whenComplete {
-          client.close { error in
-              if let error = error {
-                  print("Error closing connection: \(error)")
-              }
-          }
+            client.close { error in
+                if let error = error {
+                    print("Error closing connection: \(error)")
+                }
+            }
         }
         return future
     }
@@ -143,31 +145,36 @@ extension AWSClient {
             input: input
         )
         let nioRequest = try createNioRequest(awsRequest)
-        _ = try self.invoke(nioRequest)
+        _ = try self.invokeAsync(nioRequest)
     }
 
     public func send(operation operationName: String, path: String, httpMethod: String) throws {
         let awsRequest = createAWSRequest(operation: operationName, path: path, httpMethod: httpMethod)
         let nioRequest = try createNioRequest(awsRequest)
-        _ = try self.invoke(nioRequest)
+        _ = try self.invokeAsync(nioRequest)
     }
 
-    public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) throws -> Output {
+    public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) throws -> EventLoopFuture<Output> {
         let awsRequest = createAWSRequest(operation: operationName, path: path, httpMethod: httpMethod)
         let nioRequest = try createNioRequest(awsRequest)
-        return try validate(operation: operationName, response: try self.invoke(nioRequest))
+        return try self.invokeAsync(nioRequest).thenThrowing { (response: Response) in
+            return try self.validate(operation: operationName, response: response)
+        }
     }
 
     public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input)
-        throws -> Output {
-        let awsRequest = try createAWSRequest(
-            operation: operationName,
-            path: path,
-            httpMethod: httpMethod,
-            input: input
-        )
-        let nioRequest = try createNioRequest(awsRequest)
-        return try validate(operation: operationName, response: try self.invoke(nioRequest))
+        throws -> EventLoopFuture<Output> {
+            let awsRequest = try createAWSRequest(
+                operation: operationName,
+                path: path,
+                httpMethod: httpMethod,
+                input: input
+            )
+            let nioRequest = try createNioRequest(awsRequest)
+            
+            return try self.invokeAsync(nioRequest).thenThrowing { (response: Response) in
+                return try self.validate(operation: operationName, response: response)
+            }
     }
 }
 

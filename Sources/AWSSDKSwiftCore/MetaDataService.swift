@@ -56,10 +56,10 @@ struct MetaDataService {
         func uri() throws -> Future<String> {
             switch self {
             case .ecsCredentials(let containerCredentialsUri):
-                return AWSClient.eventGroup.next().newSucceededFuture(result: containerCredentialsUri)
+                return AWSClient.eventGroup.next().makeSucceededFuture(containerCredentialsUri)
             case .instanceProfileCredentials:
                 // instance service expects absoluteString as uri...
-                return MetaDataService.request(host: host, uri: baseURLString, timeout: 2).thenThrowing{ response in
+                return MetaDataService.request(host: host, uri: baseURLString, timeout: 2).flatMapThrowing{ response in
                     switch response.head.status {
                     case .ok:
                         let roleName = String(data: response.body, encoding: .utf8) ?? ""
@@ -76,7 +76,7 @@ struct MetaDataService {
     public static func getCredential() throws -> Future<CredentialProvider> {
         let futurUri = try serviceProvider.uri()
 
-        return futurUri.then{ uri -> Future<Response> in
+        return futurUri.flatMap { uri -> Future<Response> in
             return request(host: serviceProvider.host, uri: uri, timeout: 2)
         }.map{ credentialResponse -> CredentialProvider in
             do {
@@ -98,7 +98,7 @@ struct MetaDataService {
         let request = Request(head: head, body: Data())
         let futureResponse = client.connect(request)
 
-        futureResponse.whenComplete {
+        futureResponse.whenComplete { _ in
             client.close { error in
                 if let error = error {
                     print("Error closing connection: \(error)")

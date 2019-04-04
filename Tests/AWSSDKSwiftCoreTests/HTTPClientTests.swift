@@ -66,7 +66,7 @@ class HTTPClientTests: XCTestCase {
         let future = client.connect(request)
         future.whenSuccess { response in }
         future.whenFailure { error in }
-        future.whenComplete { }
+        future.whenComplete { _ in }
 
         do {
             _ = try HTTPClient(url: URL(string: "http://169.254.169.254/latest/meta-data/iam/security-credentials/")!)
@@ -88,7 +88,7 @@ class HTTPClientTests: XCTestCase {
         let future = client.connect(request)
         future.whenSuccess { response in }
         future.whenFailure { error in }
-        future.whenComplete { }
+        future.whenComplete { _ in }
 
         do {
             _ = try HTTPClient(url: URL(string: "http://169.254.169.254/latest/meta-data/iam/security-credentials/")!)
@@ -109,7 +109,7 @@ class HTTPClientTests: XCTestCase {
         let future = client.connect(request)
         future.whenSuccess { response in }
         future.whenFailure { error in }
-        future.whenComplete { }
+        future.whenComplete { _ in }
 
         do {
             _ = try HTTPClient(url: URL(string: "http://169.254.169.254/latest/meta-data/iam/security-credentials/")!)

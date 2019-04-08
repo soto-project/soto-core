@@ -68,16 +68,14 @@ public struct AWSClient {
 
     public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSRequestMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil) {
         let credential: CredentialProvider
-        if let scredential = try? SharedCredential() {
+        if let accessKey = accessKeyId, let secretKey = secretAccessKey {
+            credential = Credential(accessKeyId: accessKey, secretAccessKey: secretKey)
+        } else if let ecredential = EnvironementCredential() {
+            credential = ecredential
+        } else if let scredential = try? SharedCredential() {
             credential = scredential
         } else {
-            if let accessKey = accessKeyId, let secretKey = secretAccessKey {
-                credential = Credential(accessKeyId: accessKey, secretAccessKey: secretKey)
-            } else if let ecredential = EnvironementCredential() {
-                credential = ecredential
-            } else {
-                credential = Credential(accessKeyId: "", secretAccessKey: "")
-            }
+            credential = Credential(accessKeyId: "", secretAccessKey: "")
         }
 
         let region: Region
@@ -335,7 +333,15 @@ extension AWSClient {
         switch serviceProtocol.type {
         case .json, .restjson:
             if let payload = Input.payloadPath, let payloadBody = mirror.getAttribute(forKey: payload.toSwiftVariableCase()) {
-                body = Body(anyValue: payloadBody)
+                switch payloadBody {
+                case is AWSShape:
+                    let inputBody: Body = .json(try AWSShapeEncoder().encodeToJSONUTF8Data(input))
+                    if let inputDict = try inputBody.asDictionary(), let payloadDict = inputDict[payload] {
+                        body = .json(try JSONSerialization.data(withJSONObject: payloadDict))
+                    }
+                default:
+                    body = Body(anyValue: payloadBody)
+                }
                 headers.removeValue(forKey: payload.toSwiftVariableCase())
             } else {
                 body = .json(try AWSShapeEncoder().encodeToJSONUTF8Data(input))
@@ -359,7 +365,12 @@ extension AWSClient {
 
         case .restxml:
             if let payload = Input.payloadPath, let payloadBody = mirror.getAttribute(forKey: payload.toSwiftVariableCase()) {
-                body = Body(anyValue: payloadBody)
+                switch payloadBody {
+                case let pb as AWSShape:
+                    body = .xml(try AWSShapeEncoder().encodeToXMLNode(pb))
+                default:
+                    body = Body(anyValue: payloadBody)
+                }
                 headers.removeValue(forKey: payload.toSwiftVariableCase())
             } else {
                 body = .xml(try AWSShapeEncoder().encodeToXMLNode(input))
@@ -389,7 +400,7 @@ extension AWSClient {
                 queryParams[item.name] = item.value
             }
         }
-        
+
         urlComponents.queryItems = urlQueryItems(fromDictionary: queryParams)
 
         guard let url = urlComponents.url else {

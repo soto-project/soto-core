@@ -28,11 +28,34 @@ class AWSClientTests: XCTestCase {
     }
 
     struct E: AWSShape {
-      public static var members: [AWSShapeMember] = [
-          AWSShapeMember(label: "Member", required: true, type: .list),
-      ]
+        public static var members: [AWSShapeMember] = [
+            AWSShapeMember(label: "Member", required: true, type: .list),
+        ]
 
-      let Member = ["memberKey": "memberValue", "memberKey2": "memberValue2"]
+        let Member = ["memberKey": "memberValue", "memberKey2": "memberValue2"]
+
+        private enum CodingKeys: String, CodingKey {
+            case Member = "Member"
+        }
+    }
+
+    struct F: AWSShape {
+        public static let payloadPath: String? = "fooParams"
+
+        public static var members: [AWSShapeMember] = [
+            AWSShapeMember(label: "Member", required: true, type: .list),
+            AWSShapeMember(label: "fooParams", required: false, type: .structure),
+        ]
+
+        public let fooParams: E?
+
+        public init(fooParams: E? = nil) {
+            self.fooParams = fooParams
+        }
+
+        private enum CodingKeys: String, CodingKey {
+            case fooParams = "fooParams"
+        }
     }
 
     func testCreateAWSRequest() {
@@ -64,7 +87,7 @@ class AWSClientTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
 
-        let input2 = E()
+        var input2 = E()
 
         let kinesisClient = AWSClient(
             accessKeyId: "foo",
@@ -133,6 +156,55 @@ class AWSClientTests: XCTestCase {
 
             XCTAssertEqual(awsRequest.url.absoluteString, "https://s3.amazonaws.com/Bucket?list-type=2")
             _ = try awsRequest.toNIORequest()
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+
+        // encode Shape with payloadPath
+        //
+        input2 = E()
+        let input3 = F(fooParams: input2)
+
+        // encode for restxml
+        //
+        do {
+            let awsRequest = try s3Client.debugCreateAWSRequest(
+                operation: "payloadPath",
+                path: "/Bucket?list-type=2",
+                httpMethod: "POST",
+                input: input3
+            )
+
+            XCTAssertNotNil(awsRequest.body)
+            if let xmlData = try awsRequest.body.asData() {
+                let xmlNode = try XML2Parser(data: xmlData).parse()
+                let json = XMLNodeSerializer(node: xmlNode).serializeToJSON()
+                let json_data = json.data(using: .utf8)!
+                let dict = try! JSONSerializer().serializeToDictionary(json_data)
+                let fromJson = dict["E"]! as! [String: String]
+                XCTAssertEqual(fromJson["MemberKey"], "memberValue")
+            }
+            _ = try awsRequest.toNIORequest()
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+
+        // encode for json
+        //
+        do {
+            let awsRequest = try kinesisClient.debugCreateAWSRequest(
+                operation: "PutRecord",
+                path: "/",
+                httpMethod: "POST",
+                input: input3
+            )
+            XCTAssertNotNil(awsRequest.body)
+            if let jsonData = try awsRequest.body.asData() {
+                let jsonBody = try! JSONSerialization.jsonObject(with: jsonData, options: .allowFragments) as! [String:Any]
+                let fromJson = jsonBody["Member"]! as! [String: String]
+                XCTAssertEqual(fromJson["memberKey"], "memberValue")
+            }
+
         } catch {
             XCTFail(error.localizedDescription)
         }

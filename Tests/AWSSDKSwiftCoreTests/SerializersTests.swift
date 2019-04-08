@@ -72,14 +72,35 @@ class SerializersTests: XCTestCase {
 
         let xml = XMLNodeSerializer(node: node).serializeToXML()
 
-        let valid1 = "<A url=\"https://example.com\"><Structure><A>1</A><B>1</B><B>2</B><C><key>value</key></C></Structure><DList><Value>world</Value></DList><CList><Value>hello</Value></CList><Array>foo</Array><Array>bar</Array><StructureWithMember><Member><memberKey2>memberValue2</memberKey2><memberKey>memberValue</memberKey></Member></StructureWithMember><StructureWithMembers><Member><memberKey2>memberValue2</memberKey2><memberKey>memberValue</memberKey></Member><Member><memberKey2>memberValue2</memberKey2><memberKey>memberValue</memberKey></Member></StructureWithMembers></A>"
-
         // order of the StructureWithMember dictionary does not matter
-        let valid2 = "<A url=\"https://example.com\"><Structure><A>1</A><B>1</B><B>2</B><C><key>value</key></C></Structure><DList><Value>world</Value></DList><CList><Value>hello</Value></CList><Array>foo</Array><Array>bar</Array><StructureWithMember><Member><memberKey>memberValue</memberKey><memberKey2>memberValue2</memberKey2></Member></StructureWithMember><StructureWithMembers><Member><memberKey>memberValue</memberKey><memberKey2>memberValue2</memberKey2></Member><Member><memberKey>memberValue</memberKey><memberKey2>memberValue2</memberKey2></Member></StructureWithMembers></A>"
+        //
+        let valid1 = "<memberKey>memberValue</memberKey><memberKey2>memberValue2</memberKey2>"
+        let valid2 = "<memberKey2>memberValue2</memberKey2><memberKey>memberValue</memberKey>"
 
-        let validSerialized = [valid1,valid2]
+        let validMatrix = [
+            [valid1, valid1, valid1],
+            [valid1, valid1, valid2],
+            [valid1, valid2, valid1],
+            [valid1, valid2, valid2],
+            [valid2, valid1, valid1],
+            [valid2, valid1, valid2],
+            [valid2, valid2, valid1],
+            [valid2, valid2, valid2]
+        ]
+
+        var validSerialized: [String] = []
+
+        for el in validMatrix {
+            let memberXMLString = memberXML(el[0], el[1], el[2])
+            let valid = "<A url=\"https://example.com\"><Structure><A>1</A><B>1</B><B>2</B><C><key>value</key></C></Structure><DList><Value>world</Value></DList><CList><Value>hello</Value></CList><Array>foo</Array><Array>bar</Array>\(memberXMLString)</A>"
+            validSerialized.append(valid)
+        }
 
         XCTAssert(validSerialized.contains(xml))
+    }
+
+    fileprivate func memberXML(_ s1: String, _ s2: String, _ s3: String) -> String {
+        return "<StructureWithMember><Member>\(s1)</Member></StructureWithMember><StructureWithMembers><Member>\(s2)</Member><Member>\(s3)</Member></StructureWithMembers>"
     }
 
     func testSerializeToDictionaryAndJSON() {

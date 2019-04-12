@@ -66,16 +66,20 @@ public struct AWSClient {
         return "\(signer.service).\(signer.region.rawValue).amazonaws.com"
     }
 
+    public var credential: CredentialProvider
+
+    public static let eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+
     public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSRequestMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil) {
-        let credential: CredentialProvider
+        //let credential: CredentialProvider
         if let accessKey = accessKeyId, let secretKey = secretAccessKey {
-            credential = Credential(accessKeyId: accessKey, secretAccessKey: secretKey)
+            self.credential = Credential(accessKeyId: accessKey, secretAccessKey: secretKey)
         } else if let ecredential = EnvironementCredential() {
-            credential = ecredential
+            self.credential = ecredential
         } else if let scredential = try? SharedCredential() {
-            credential = scredential
+            self.credential = scredential
         } else {
-            credential = Credential(accessKeyId: "", secretAccessKey: "")
+            self.credential = Credential(accessKeyId: "", secretAccessKey: "")
         }
 
         let region: Region
@@ -90,7 +94,7 @@ public struct AWSClient {
             region = .useast1
         }
 
-        self.signer = Signers.V4(credential: credential, region: region, service: service)
+        self.signer = Signers.V4(region: region, service: service)
         self.apiVersion = apiVersion
         self._endpoint = endpoint
         self.amzTarget = amzTarget
@@ -124,76 +128,64 @@ extension AWSClient {
 // public facing apis
 extension AWSClient {
     public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws {
-        let awsRequest = try createAWSRequest(
-            operation: operationName,
-            path: path,
-            httpMethod: httpMethod,
-            input: input
-        )
-        let eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
 
-        eventGroup.next().submit({ try self.createNioRequest(awsRequest) })
-            .whenSuccess { nioRequest in
-                eventGroup.shutdownGracefully({ error in
-                    if let error = error {
-                        print("Error: \(error)")
-                    }
-                })
+        return getCredential().thenThrowing { credential in
+                let awsRequest = try self.createAWSRequest(
+                    operation: operationName,
+                    path: path,
+                    httpMethod: httpMethod,
+                    input: input
+                )
+                return try self.createNioRequest(awsRequest, credential)
+            }.whenSuccess { nioRequest in
                 _ = self.invoke(nioRequest)
           }
     }
 
     public func send(operation operationName: String, path: String, httpMethod: String) throws {
-        let awsRequest = try createAWSRequest(operation: operationName, path: path, httpMethod: httpMethod)
-        let eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
 
-        eventGroup.next().submit({ try self.createNioRequest(awsRequest) })
-            .whenSuccess { nioRequest in
-                eventGroup.shutdownGracefully({ error in
-                    if let error = error {
-                        print("Error: \(error)")
-                    }
-                })
+        return getCredential().thenThrowing { credential in
+                let awsRequest = try self.createAWSRequest(
+                    operation: operationName,
+                    path: path,
+                    httpMethod: httpMethod
+                )
+                return try self.createNioRequest(awsRequest, credential)
+            }.whenSuccess { nioRequest in
                 _ = self.invoke(nioRequest)
           }
     }
 
     public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) throws -> Future<Output> {
-        let awsRequest = try createAWSRequest(operation: operationName, path: path, httpMethod: httpMethod)
-        let eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
 
-        return eventGroup.next().submit({ try self.createNioRequest(awsRequest) })
-            .then { nioRequest -> Future<Response> in
+        return getCredential().thenThrowing { credential in
+                let awsRequest = try self.createAWSRequest(
+                    operation: operationName,
+                    path: path,
+                    httpMethod: httpMethod
+                )
+                return try self.createNioRequest(awsRequest, credential)
+            }.then { nioRequest in
                 return self.invoke(nioRequest)
-            }.thenThrowing { response -> Output in
-                eventGroup.shutdownGracefully({ error in
-                    if let error = error {
-                        print("Error: \(error)")
-                    }
-                })
+            }.thenThrowing { response in
                 return try self.validate(operation: operationName, response: response)
             }
     }
 
     public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input)
         throws -> Future<Output> {
-            let awsRequest = try createAWSRequest(
-                operation: operationName,
-                path: path,
-                httpMethod: httpMethod,
-                input: input
-            )
-            let eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
 
-            return eventGroup.next().submit({ try self.createNioRequest(awsRequest) })
-                .then { nioRequest -> Future<Response> in
+            return getCredential().thenThrowing { credential in
+                    let awsRequest = try self.createAWSRequest(
+                        operation: operationName,
+                        path: path,
+                        httpMethod: httpMethod,
+                        input: input
+                    )
+                    return try self.createNioRequest(awsRequest, credential)
+                }.then { nioRequest in
                     return self.invoke(nioRequest)
-                }.thenThrowing { response -> Output in
-                    eventGroup.shutdownGracefully({ error in
-                        if let error = error {
-                            print("Error: \(error)")
-                        }
-                    })
+                }.thenThrowing { response in
                     return try self.validate(operation: operationName, response: response)
                 }
     }
@@ -202,25 +194,38 @@ extension AWSClient {
 
 // request creator
 extension AWSClient {
-    fileprivate func createNIORequestWithSignedURL(_ awsRequest: AWSRequest) throws -> Request {
+
+    fileprivate func getCredential() -> Future<CredentialProvider> {
+        //let futureCredential: Future<CredentialProvider>
+        if credential.isEmpty() || credential.nearExpiration() {
+            do {
+                return try MetaDataService.getCredential()
+            } catch {
+                // should not be crash
+            }
+        }
+        return AWSClient.eventGroup.next().newSucceededFuture(result: credential)
+    }
+
+    fileprivate func createNIORequestWithSignedURL(_ awsRequest: AWSRequest, _ credential: CredentialProvider) throws -> Request {
         var nioRequest = try awsRequest.toNIORequest()
 
         guard let unsignedUrl = URL(string: nioRequest.head.uri), let hostWithPort = unsignedUrl.hostWithPort else {
             fatalError("nioRequest.head.uri is invalid.")
         }
 
-        let signedURI = signer.signedURL(url: unsignedUrl)
+        let signedURI = signer.signedURL(url: unsignedUrl, credentialForSignature: credential)
         nioRequest.head.uri = signedURI.absoluteString
         nioRequest.head.headers.replaceOrAdd(name: "Host", value: hostWithPort)
 
         return nioRequest
     }
 
-    fileprivate func createNIORequestWithSignedHeader(_ awsRequest: AWSRequest) throws -> Request {
-        return try nioRequestWithSignedHeader(awsRequest.toNIORequest())
+    fileprivate func createNIORequestWithSignedHeader(_ awsRequest: AWSRequest, _ credential: CredentialProvider) throws -> Request {
+        return try nioRequestWithSignedHeader(awsRequest.toNIORequest(), credential)
     }
 
-    fileprivate func nioRequestWithSignedHeader(_ nioRequest: Request) throws -> Request {
+    fileprivate func nioRequestWithSignedHeader(_ nioRequest: Request, _ credential: CredentialProvider) throws -> Request {
         var nioRequest = nioRequest
         // TODO avoid copying
         var headers: [String: String] = [:]
@@ -248,7 +253,8 @@ extension AWSClient {
             url: url,
             headers: headers,
             method: method,
-            bodyData: nioRequest.body
+            bodyData: nioRequest.body,
+            credentialForSignature: credential
         )
 
         for (key, value) in signedHeaders {
@@ -258,17 +264,17 @@ extension AWSClient {
         return nioRequest
     }
 
-    func createNioRequest(_ awsRequest: AWSRequest) throws -> Request {
+    func createNioRequest(_ awsRequest: AWSRequest, _ credential: CredentialProvider) throws -> Request {
         switch awsRequest.httpMethod {
         case "GET":
             switch self.serviceProtocol.type {
             case .restjson:
-                return try createNIORequestWithSignedHeader(awsRequest)
+                return try createNIORequestWithSignedHeader(awsRequest, credential)
             default:
-                return try createNIORequestWithSignedURL(awsRequest)
+                return try createNIORequestWithSignedURL(awsRequest, credential)
             }
         default:
-            return try createNIORequestWithSignedHeader(awsRequest)
+            return try createNIORequestWithSignedHeader(awsRequest, credential)
         }
     }
 
@@ -446,6 +452,11 @@ extension AWSClient {
 // debug request creator
 #if DEBUG
 extension AWSClient {
+
+    func debugGetCredential() -> Future<CredentialProvider> {
+        return getCredential()
+    }
+
     func debugCreateAWSRequest<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
         return try createAWSRequest(operation: operationName, path: path, httpMethod: httpMethod, input: input)
     }
@@ -570,11 +581,16 @@ extension AWSClient {
                                 for link in links {
                                     guard let name = link.name else { continue }
                                     let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: endpoint + link.href)
-                                    // invoke and wait here since validateBody is only called
-                                    // when analyzing a response on an eventLoop
-                                    let res = try invoke(nioRequestWithSignedHeader(Request(head: head, body: Data()))).wait()
-                                    let representaion = try Representation().from(json: res.body)
-                                    dict[name] = representaion.properties
+                                    let nioRequest = try nioRequestWithSignedHeader(Request(head: head, body: Data()), credential)
+                                    //
+                                    // this is a hack to wait...
+                                    ///
+                                    while dict[name] == nil {
+                                        _ = invoke(nioRequest).thenThrowing{ res in
+                                            let representaion = try Representation().from(json: res.body)
+                                            dict[name] = representaion.properties
+                                        }
+                                    }
                                 }
                                 props[key] = dict
                             }

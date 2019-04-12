@@ -11,8 +11,6 @@ import Foundation
 extension Signers {
     public final class V4 {
 
-        public var credential: CredentialProvider
-
         public let region: Region
 
         public let service: String
@@ -40,17 +38,15 @@ extension Signers {
             return sha256(data).hexdigest()
         }
 
-        public init(credential: CredentialProvider, region: Region, service: String) {
-            self.credential = credential
+        public init(region: Region, service: String) {
             self.region = region
             self.service = service
         }
 
-        public func signedURL(url: URL, date: Date = Date(), expires: Int = 86400) -> URL {
+        public func signedURL(url: URL, date: Date = Date(), expires: Int = 86400, credentialForSignature: CredentialProvider) -> URL {
             let datetime = V4.timestamp(date)
             let headers = ["Host": url.hostWithPort!]
             let bodyDigest = hexEncodedBodyHash(Data())
-            let credentialForSignature = getCredential()
 
             var queries = [
                 URLQueryItem(name: "X-Amz-Algorithm", value: algorithm),
@@ -85,10 +81,9 @@ extension Signers {
             return URL(string: url.absoluteString+"&X-Amz-Signature="+sig)!
         }
 
-        public func signedHeaders(url: URL, headers: [String: String], method: String, date: Date = Date(), bodyData: Data) -> [String: String] {
+        public func signedHeaders(url: URL, headers: [String: String], method: String, date: Date = Date(), bodyData: Data, credentialForSignature: CredentialProvider) -> [String: String] {
             let datetime = V4.timestamp(date)
             let bodyDigest = hexEncodedBodyHash(bodyData)
-            let credentialForSignature = getCredential()
 
             var headersForSign = [
                 "x-amz-content-sha256": hexEncodedBodyHash(bodyData),
@@ -123,17 +118,6 @@ extension Signers {
             formatter.timeZone = TimeZone(abbreviation: "UTC")
             formatter.locale = Locale(identifier: "en_US_POSIX")
             return formatter.string(from: date)
-        }
-
-        func getCredential() -> CredentialProvider {
-            if credential.isEmpty() || credential.nearExpiration() {
-                do {
-                    self.credential = try MetaDataService.getCredential()
-                } catch {
-                    // should not be crash
-                }
-            }
-            return credential
         }
 
         func authorization(url: URL, headers: [String: String], datetime: String, method: String, bodyDigest: String, credentialForSignature: CredentialProvider) -> String {
@@ -266,7 +250,6 @@ extension Signers {
         }
     }
 }
-
 
 extension Collection where Iterator.Element == URLQueryItem {
     var asStringForURL: String {

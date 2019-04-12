@@ -58,6 +58,31 @@ class AWSClientTests: XCTestCase {
         }
     }
 
+
+    func testGetCredential() {
+        let sesClient = AWSClient(
+            accessKeyId: "key",
+            secretAccessKey: "secret",
+            region: nil,
+            service: "email",
+            serviceProtocol: ServiceProtocol(type: .query),
+            apiVersion: "2013-12-01",
+            middlewares: [],
+            possibleErrorTypes: [SESErrorType.self]
+        )
+
+        XCTAssertEqual(sesClient.credential.accessKeyId, "key")
+        XCTAssertEqual(sesClient.credential.secretAccessKey, "secret")
+
+        do {
+            let credentialForSignature = try sesClient.debugGetCredential().wait()
+            XCTAssertEqual(credentialForSignature.accessKeyId, "key")
+            XCTAssertEqual(credentialForSignature.secretAccessKey, "secret")
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+
     func testCreateAWSRequest() {
         let input1 = C()
 
@@ -233,7 +258,7 @@ class AWSClientTests: XCTestCase {
                 input: input2
             )
 
-            let nioRequest = try kinesisClient.createNioRequest(awsRequest)
+            let nioRequest = try kinesisClient.createNioRequest(awsRequest, Credential(accessKeyId: "foo", secretAccessKey: "bar"))
             if let host = nioRequest.head.headers.first(where: { $0.name == "Host" }) {
                 XCTAssertEqual(host.value, "kinesis.us-east-1.amazonaws.com")
             }

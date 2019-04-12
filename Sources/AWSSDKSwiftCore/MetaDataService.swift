@@ -53,31 +53,42 @@ struct MetaDataService {
             }
         }
 
-        func uri() throws -> String {
+        func uri() throws -> Future<String> {
             switch self {
             case .ecsCredentials(let containerCredentialsUri):
-                return containerCredentialsUri
+                return AWSClient.eventGroup.next().newSucceededFuture(result: containerCredentialsUri)
             case .instanceProfileCredentials:
                 // instance service expects absoluteString as uri...
-                let response = try MetaDataService.request(host: host, uri: baseURLString, timeout: 2)
-                switch response.head.status {
-                case .ok:
-                    let roleName = String(data: response.body, encoding: .utf8) ?? ""
-                    return "\(baseURLString)/\(roleName)"
-                default:
-                    throw MetaDataServiceError.couldNotGetInstanceRoleName
+                return MetaDataService.request(host: host, uri: baseURLString, timeout: 2).thenThrowing{ response in
+                    switch response.head.status {
+                    case .ok:
+                        let roleName = String(data: response.body, encoding: .utf8) ?? ""
+                        return "\(self.baseURLString)/\(roleName)"
+                    default:
+                        throw MetaDataServiceError.couldNotGetInstanceRoleName
+                    }
+
                 }
             }
         }
     }
 
-    public static func getCredential() throws -> Credential {
-        let response = try request(host: serviceProvider.host, uri: serviceProvider.uri(), timeout: 2)
-        let metaData = try JSONDecoder().decode(MetaData.self, from: response.body)
-        return metaData.credential
+    public static func getCredential() throws -> Future<CredentialProvider> {
+        let futurUri = try serviceProvider.uri()
+
+        return futurUri.then{ uri -> Future<Response> in
+            return request(host: serviceProvider.host, uri: uri, timeout: 2)
+        }.map{ credentialResponse -> CredentialProvider in
+            do {
+                let metaData = try JSONDecoder().decode(MetaData.self, from: credentialResponse.body)
+                return metaData.credential
+            } catch {
+                return Credential(accessKeyId: "", secretAccessKey: "")
+            }
+        }
     }
 
-    static func request(host: String, uri: String, timeout: TimeInterval) throws -> Response {
+    static func request(host: String, uri: String, timeout: TimeInterval) -> Future<Response> {
         let client = HTTPClient(hostname: host, port: 80)
         let head = HTTPRequestHead(
                      version: HTTPVersion(major: 1, minor: 1),
@@ -85,15 +96,14 @@ struct MetaDataService {
                      uri: uri
                    )
         let request = Request(head: head, body: Data())
-        // connect and wait here since getCredential is only
-        // called when creating a NioRwquest on an eventLoop
-        let response = try client.connect(request).wait()
+        let futureResponse = client.connect(request)
+
         client.close { error in
             if let error = error {
                 print("Error closing connection: \(error)")
             }
         }
-        return response
+        return futureResponse
     }
 
     struct MetaData: Codable {

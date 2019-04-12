@@ -98,11 +98,14 @@ struct MetaDataService {
         let request = Request(head: head, body: Data())
         let futureResponse = client.connect(request)
 
-        client.close { error in
-            if let error = error {
-                print("Error closing connection: \(error)")
+        futureResponse.whenComplete {
+            client.close { error in
+                if let error = error {
+                    print("Error closing connection: \(error)")
+                }
             }
         }
+
         return futureResponse
     }
 

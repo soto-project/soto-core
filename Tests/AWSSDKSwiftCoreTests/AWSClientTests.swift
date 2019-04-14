@@ -262,7 +262,7 @@ public enum KinesisErrorType: AWSErrorType {
 extension KinesisErrorType {
     public init?(errorCode: String, message: String?){
         var errorCode = errorCode
-        if let index = errorCode.index(of: "#") {
+        if let index = errorCode.firstIndex(of: "#") {
             errorCode = String(errorCode[errorCode.index(index, offsetBy: 1)...])
         }
         switch errorCode {
@@ -282,7 +282,7 @@ public enum SESErrorType: AWSErrorType {
 extension SESErrorType {
     public init?(errorCode: String, message: String?){
         var errorCode = errorCode
-        if let index = errorCode.index(of: "#") {
+        if let index = errorCode.firstIndex(of: "#") {
             errorCode = String(errorCode[errorCode.index(index, offsetBy: 1)...])
         }
         switch errorCode {
@@ -302,7 +302,7 @@ public enum S3ErrorType: AWSErrorType {
 extension S3ErrorType {
   public init?(errorCode: String, message: String?){
       var errorCode = errorCode
-      if let index = errorCode.index(of: "#") {
+      if let index = errorCode.firstIndex(of: "#") {
           errorCode = String(errorCode[errorCode.index(index, offsetBy: 1)...])
       }
       switch errorCode {

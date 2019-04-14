@@ -67,7 +67,7 @@ class HTTPClientTests: XCTestCase {
           let future = try client.connect(request)
           future.whenSuccess { response in }
           future.whenFailure { error in }
-          future.whenComplete { }
+          future.whenComplete { _ in }
       } catch {
           XCTFail("Should not throw error")
       }
@@ -92,7 +92,7 @@ class HTTPClientTests: XCTestCase {
           let future = try client.connect(request)
           future.whenSuccess { response in }
           future.whenFailure { error in }
-          future.whenComplete { }
+          future.whenComplete { _ in }
       } catch {
           XCTFail("Should not throw error")
       }
@@ -117,7 +117,7 @@ class HTTPClientTests: XCTestCase {
           let future = try client.connect(request)
           future.whenSuccess { response in }
           future.whenFailure { error in }
-          future.whenComplete { }
+          future.whenComplete { _ in }
       } catch {
         XCTFail("Should not throw error")
       }

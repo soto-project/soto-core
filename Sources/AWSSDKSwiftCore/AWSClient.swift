@@ -122,7 +122,7 @@ extension AWSClient {
     fileprivate func invokeAsync(_ nioRequest: Request) throws -> EventLoopFuture<Response>{
         let client = HTTPClient(hostname: nioRequest.head.headers["Host"].first!, port: 443)
         let future = try client.connect(nioRequest)
-        future.whenComplete {
+        future.whenComplete { _ in
           client.close { error in
               if let error = error {
                   print("Error closing connection: \(error)")
@@ -593,7 +593,7 @@ extension AWSClient {
     private func createError(for response: Response, withComputedBody body: Body, withRawData data: Data) -> Error {
         let bodyDict: [String: Any]
         if let dict = try? body.asDictionary() {
-            bodyDict = dict ?? [:]
+            bodyDict = dict 
         } else {
             bodyDict = [:]
         }

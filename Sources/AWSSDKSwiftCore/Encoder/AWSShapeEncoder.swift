@@ -83,4 +83,55 @@ struct AWSShapeEncoder {
 
         return xmlNode
     }
+    
+    func encodeToQueryDictionary(_ input: AWSShape) -> [String : Any] {
+        var dictionary : [String : Any] = [:]
+        
+        func encodeToFlatDictionary(_ input: AWSShape, name: String? = nil) {
+            let mirror = Mirror(reflecting: input)
+            
+            for el in mirror.children {
+                guard let label = el.label?.upperFirst() else { continue }
+                guard let value = unwrap(any: el.value) else { continue }
+                let fullLabel = name != nil ? "\(name!).\(label)" : label
+                
+//                let node = XMLNode(elementName: label)
+                switch value {
+                case let v as AWSShape:
+                    encodeToFlatDictionary(v, name:fullLabel)
+                    
+                case let v as [AWSShape]:
+                    for iterator in v.enumerated() {
+                        encodeToFlatDictionary(iterator.element, name: "\(fullLabel).member.\(iterator.offset+1)")
+                    }
+                    
+                case let v as [AnyHashable : AWSShape]:
+                    for iterator in v.enumerated() {
+                        dictionary["\(fullLabel).entry.\(iterator.offset+1).key"] = iterator.element.key
+                        encodeToFlatDictionary(iterator.element.value, name: "\(fullLabel).entry.\(iterator.offset+1).value")
+                    }
+                    
+                default:
+                    switch value {
+                    case let v as [Any]:
+                        for iterator in v.enumerated() {
+                            dictionary["\(fullLabel).member.\(iterator.offset+1)"] = value
+                        }
+                        
+                    case let v as [AnyHashable: Any]:
+                        for iterator in v.enumerated() {
+                            dictionary["\(fullLabel).entry.\(iterator.offset+1).key"] = iterator.element.key
+                            dictionary["\(fullLabel).entry.\(iterator.offset+1).value"] = iterator.element.value
+                        }
+                    default:
+                        dictionary[fullLabel] = value
+                    }
+                }
+                
+            }
+        }
+        encodeToFlatDictionary(input)
+        
+        return dictionary
+    }
 }

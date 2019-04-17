@@ -314,8 +314,7 @@ extension AWSClient {
             }
 
         case .query:
-            let data = try AWSShapeEncoder().encodeToJSONUTF8Data(input)
-            var dict = try JSONSerializer().serializeToFlatDictionary(data)
+            var dict = AWSShapeEncoder().encodeToQueryDictionary(input)
 
             dict["Action"] = operationName
             dict["Version"] = apiVersion
@@ -358,16 +357,20 @@ extension AWSClient {
         guard let parsedPath = URLComponents(string: path) else {
             throw RequestError.invalidURL("\(endpoint)\(path)")
         }
-
         urlComponents.path = parsedPath.path
 
+        // construct query array
+        var queryItems = urlQueryItems(fromDictionary: queryParams) ?? []
+        
+        // add new queries to query item array. These need to be added to the queryItems list instead of the queryParams dictionary as added nil items to a dictionary doesn't add a value.
         if let pathQueryItems = parsedPath.queryItems {
             for item in pathQueryItems {
-                queryParams[item.name] = item.value
+                queryItems.append(URLQueryItem(name:item.name, value:item.value))
             }
         }
 
-        urlComponents.queryItems = urlQueryItems(fromDictionary: queryParams)
+        // only set queryItems if there exist any
+        urlComponents.queryItems = queryItems.count == 0 ? nil : queryItems
 
         guard let url = urlComponents.url else {
             throw RequestError.invalidURL("\(endpoint)\(path)")
@@ -403,6 +406,8 @@ extension AWSClient {
         for key in keys {
             if let value = dict[key] {
                 queryItems.append(URLQueryItem(name: key, value: String(describing: value)))
+            } else {
+                queryItems.append(URLQueryItem(name: key, value: nil))
             }
         }
         return queryItems.isEmpty ? nil : queryItems
@@ -477,18 +482,24 @@ extension AWSClient {
         }
 
         for (key, value) in response.head.headers {
-            if let index = Output.headerParams.index(where: { $0.key.lowercased() == key.description.lowercased() }) {
+            let headerParams = Output.headerParams
+            if let index = headerParams.index(where: { $0.key.lowercased() == key.description.lowercased() }) {
                 if let number = Double(value) {
-                    outputDict[Output.headerParams[index].key] = number.truncatingRemainder(dividingBy: 1) == 0 ? Int(number) : number
+                    outputDict[headerParams[index].key] = number.truncatingRemainder(dividingBy: 1) == 0 ? Int(number) : number
                 } else if let boolean = Bool(value) {
-                    outputDict[Output.headerParams[index].key] = boolean
+                    outputDict[headerParams[index].key] = boolean
                 } else {
-                    outputDict[Output.headerParams[index].key] = value
+                    outputDict[headerParams[index].key] = value
                 }
             }
         }
 
-        return try DictionaryDecoder().decode(Output.self, from: outputDict)
+        switch responseBody {
+        case .xml:
+            return try UntypedDictionaryDecoder().decode(Output.self, from: outputDict)
+        default:
+            return try DictionaryDecoder().decode(Output.self, from: outputDict)
+        }
     }
 
     private func validateBody(for response: Response, payloadPath: String?, members: [AWSShapeMember]) throws -> Body {

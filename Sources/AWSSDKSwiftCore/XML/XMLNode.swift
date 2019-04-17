@@ -17,6 +17,10 @@ public class XMLNode {
         return values.count == 0
     }
     
+    func hasNoValue() -> Bool {
+        return values.count == 0
+    }
+    
     func hasSingleValue() -> Bool {
         return values.count == 1
     }

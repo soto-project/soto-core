@@ -115,7 +115,7 @@ struct AWSShapeEncoder {
                     switch value {
                     case let v as [Any]:
                         for iterator in v.enumerated() {
-                            dictionary["\(fullLabel).member.\(iterator.offset+1)"] = value
+                            dictionary["\(fullLabel).member.\(iterator.offset+1)"] = iterator.element
                         }
                         
                     case let v as [AnyHashable: Any]:

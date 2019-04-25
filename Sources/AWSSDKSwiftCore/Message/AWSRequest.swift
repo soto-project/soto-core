@@ -30,6 +30,20 @@ extension URL {
     }
 }
 
+extension HTTPRequestHead {
+    var hostWithPort: String? {
+        return URL(string: uri)?.hostWithPort
+    }
+    
+    var host: String? {
+        return URL(string: uri)?.host
+    }
+    
+    var port: Int? {
+        return URL(string: uri)?.port
+    }
+}
+
 public struct AWSRequest {
     public let region: Region
     public var url: URL

@@ -16,6 +16,8 @@ extension Signers {
         public let region: Region
 
         public let service: String
+        
+        public let endpoint: String?
 
         let identifier = "aws4_request"
 
@@ -40,10 +42,11 @@ extension Signers {
             return sha256(data).hexdigest()
         }
 
-        public init(credential: CredentialProvider, region: Region, service: String) {
+        public init(credential: CredentialProvider, region: Region, service: String, endpoint: String?) {
             self.credential = credential
             self.region = region
             self.service = service
+            self.endpoint = endpoint
         }
 
         public func signedURL(url: URL, date: Date = Date(), expires: Int = 86400) -> URL {
@@ -126,7 +129,7 @@ extension Signers {
         }
 
         func getCredential() -> CredentialProvider {
-            if credential.isEmpty() || credential.nearExpiration() {
+            if endpoint == nil && (credential.isEmpty() || credential.nearExpiration()) {
                 do {
                     self.credential = try MetaDataService.getCredential()
                 } catch {

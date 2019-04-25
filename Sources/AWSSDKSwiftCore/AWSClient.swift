@@ -87,7 +87,7 @@ public struct AWSClient {
             region = .useast1
         }
 
-        self.signer = Signers.V4(credential: credential, region: region, service: service)
+        self.signer = Signers.V4(credential: credential, region: region, service: service, endpoint: endpoint)
         self.apiVersion = apiVersion
         self._endpoint = endpoint
         self.amzTarget = amzTarget
@@ -98,11 +98,10 @@ public struct AWSClient {
         self.possibleErrorTypes = possibleErrorTypes ?? []
     }
 }
-
 // invoker
 extension AWSClient {
     fileprivate func invoke(_ nioRequest: Request) throws -> Response {
-        let client = HTTPClient(hostname: nioRequest.head.headers["Host"].first!, port: 443)
+        let client = createHTTPClient(for: nioRequest)
         let future = try client.connect(nioRequest)
 
         //TODO(jmca) don't block
@@ -120,7 +119,7 @@ extension AWSClient {
     //TODO(jmca) learn how to map response to validate and return
     // a future of generic Output: AWSShape
     fileprivate func invokeAsync(_ nioRequest: Request) throws -> EventLoopFuture<Response>{
-        let client = HTTPClient(hostname: nioRequest.head.headers["Host"].first!, port: 443)
+        let client = createHTTPClient(for: nioRequest)
         let future = try client.connect(nioRequest)
         future.whenComplete {
           client.close { error in
@@ -130,6 +129,16 @@ extension AWSClient {
           }
         }
         return future
+    }
+    
+    private func createHTTPClient(for nioRequest: Request) -> HTTPClient {
+        let client: HTTPClient
+        if let _ = self._endpoint {
+            client = HTTPClient(hostname: nioRequest.head.host!, port: nioRequest.head.port ?? 443)
+        } else {
+            client = HTTPClient(hostname: nioRequest.head.hostWithPort!, port: 443)
+        }
+        return client
     }
 }
 
@@ -271,6 +280,7 @@ extension AWSClient {
 
         urlComponents.scheme = ep.scheme
         urlComponents.host = ep.host
+        urlComponents.port = ep.port
 
         // TODO should replace with Encodable
         let mirror = Mirror(reflecting: input)

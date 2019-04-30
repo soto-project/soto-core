@@ -349,8 +349,6 @@ extension AWSClient {
                     body = Body(anyValue: payloadBody)
                 }
                 headers.removeValue(forKey: payload.toSwiftVariableCase())
-            } else {
-                body = .xml(try AWSShapeEncoder().encodeToXMLNode(input))
             }
 
         case .other(let proto):

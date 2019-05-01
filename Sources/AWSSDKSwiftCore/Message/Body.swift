@@ -15,6 +15,7 @@ public enum Body {
     case multipart(Data) // currenty unsupported
     case json(Data)
     case xml(XMLNode)
+    case xml2(XMLElement)
     case empty
 }
 
@@ -40,7 +41,7 @@ extension Body {
     
     public func isXML() -> Bool {
         switch self {
-        case .xml(_):
+        case .xml(_), .xml2(_):
             return true
         default:
             return false
@@ -91,6 +92,9 @@ extension Body {
             
         case .xml(let node):
             return XMLNodeSerializer(node: node).serializeToXML().data(using: .utf8)
+            
+        case .xml2(let node):
+            return node.xmlString.data(using: .utf8)
             
         case .multipart(_):
             return nil

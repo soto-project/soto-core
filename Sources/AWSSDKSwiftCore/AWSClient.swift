@@ -130,7 +130,7 @@ extension AWSClient {
         }
         return future
     }
-    
+
     private func createHTTPClient(for nioRequest: Request) -> HTTPClient {
         let client: HTTPClient
         if let _ = self._endpoint {
@@ -335,8 +335,12 @@ extension AWSClient {
         case .restxml:
             if let payload = Input.payloadPath, let payloadBody = mirror.getAttribute(forKey: payload.toSwiftVariableCase()) {
                 switch payloadBody {
-                case let pb as AWSShape:
-                    body = .xml(try AWSShapeEncoder().encodeToXMLNode(pb))
+                case is AWSShape:
+                    let node = try XMLEncoder().encode(input)
+                    // cannot use payload path to find XmlElement as it may have a different. Need to translate this to the tag used in the Encoder
+                    guard let member = Input._members.first(where: {$0.label == payload}) else { throw AWSClientError.unsupportedOperation(message: "The shape is requesting a payload that does not exist")}
+                    guard let element = node.elements(forName: member.location?.name ?? member.label).first else { throw AWSClientError.missingParameter(message: "Payload is missing")}
+                    body = .xml2(element)
                 default:
                     body = Body(anyValue: payloadBody)
                 }

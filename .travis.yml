@@ -15,3 +15,5 @@ matrix:
         - swift build
         - swift test -Xswiftc -DDEBUG
 
+after_success:
+  - bash <(curl -s https://codecov.io/bash)

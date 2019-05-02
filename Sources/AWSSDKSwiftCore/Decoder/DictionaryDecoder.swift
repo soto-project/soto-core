@@ -1252,7 +1252,7 @@ fileprivate extension EncodingError {
     /// - parameter value: The value that was invalid to encode.
     /// - parameter path: The path of `CodingKey`s taken to encode this value.
     /// - returns: An `EncodingError` with the appropriate path and debug description.
-    fileprivate static func _invalidFloatingPointValue<T : FloatingPoint>(_ value: T, at codingPath: [CodingKey]) -> EncodingError {
+    static func _invalidFloatingPointValue<T : FloatingPoint>(_ value: T, at codingPath: [CodingKey]) -> EncodingError {
         let valueDescription: String
         if value == T.infinity {
             valueDescription = "\(T.self).infinity"
@@ -1274,7 +1274,7 @@ internal extension DecodingError {
     /// - parameter expectation: The type expected to be encountered.
     /// - parameter reality: The value that was encountered instead of the expected type.
     /// - returns: A `DecodingError` with the appropriate path and debug description.
-    internal static func _typeMismatch(at path: [CodingKey], expectation: Any.Type, reality: Any) -> DecodingError {
+    static func _typeMismatch(at path: [CodingKey], expectation: Any.Type, reality: Any) -> DecodingError {
         let description = "Expected to decode \(expectation) but found \(_typeDescription(of: reality)) instead."
         return .typeMismatch(expectation, Context(codingPath: path, debugDescription: description))
     }

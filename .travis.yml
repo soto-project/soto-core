@@ -1,14 +1,13 @@
-os:
-  - linux
-  - osx
+os: osx
 language: generic
-sudo: required
-dist: trusty
-osx_image: xcode9.4
+osx_image: xcode10.2
+services:
+    docker
 
-install:
-  - source Scripts/install-swift.sh
+before_install:
+  - docker pull swift:4.2
 
 script:
   - swift build
   - swift test -Xswiftc -DDEBUG
+  - docker run -v "$(pwd):/root/aws-sdk-swift-core" swift:4.2 /bin/sh -c "cd /root/aws-sdk-swift-core && swift build && swift test -Xswiftc -DDEBUG"

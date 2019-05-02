@@ -35,7 +35,6 @@ class _XMLEncoder : Encoder {
         }
         
         func encodeNil(forKey key: Key) throws {
-            fatalError()
         }
         
         func encode(_ value: Bool, forKey key: Key) throws {
@@ -155,71 +154,83 @@ class _XMLEncoder : Encoder {
             self.count = 0
         }
         
+        func encode(_ value: Bool) throws {
+            let element = XMLElement(name: referencing.name, stringValue: value.description)
+            referencing.elements.append(element)
+        }
+        
+        func encodeNil() throws {
+        }
+        
         func encode(_ value: String) throws {
-            fatalError()
+            let element = XMLElement(name: referencing.name, stringValue: value)
+            referencing.elements.append(element)
         }
         
         func encode(_ value: Double) throws {
-            fatalError()
+            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value: value).description)
+            referencing.elements.append(element)
         }
         
         func encode(_ value: Float) throws {
-            fatalError()
+            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value: value).description)
+            referencing.elements.append(element)
         }
         
         func encode(_ value: Int) throws {
-            fatalError()
+            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value: value).description)
+            referencing.elements.append(element)
         }
         
         func encode(_ value: Int8) throws {
-            fatalError()
+            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value: value).description)
+            referencing.elements.append(element)
         }
         
         func encode(_ value: Int16) throws {
-            fatalError()
+            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value: value).description)
+            referencing.elements.append(element)
         }
         
         func encode(_ value: Int32) throws {
-            fatalError()
+            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value: value).description)
+            referencing.elements.append(element)
         }
         
         func encode(_ value: Int64) throws {
-            fatalError()
+            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value: value).description)
+            referencing.elements.append(element)
         }
         
         func encode(_ value: UInt) throws {
-            fatalError()
+            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value: value).description)
+            referencing.elements.append(element)
         }
         
         func encode(_ value: UInt8) throws {
-            fatalError()
+            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value: value).description)
+            referencing.elements.append(element)
         }
         
         func encode(_ value: UInt16) throws {
-            fatalError()
+            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value: value).description)
+            referencing.elements.append(element)
         }
         
         func encode(_ value: UInt32) throws {
-            fatalError()
+            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value: value).description)
+            referencing.elements.append(element)
         }
         
         func encode(_ value: UInt64) throws {
-            fatalError()
+            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value: value).description)
+            referencing.elements.append(element)
         }
         
         func encode<T>(_ value: T) throws where T : Encodable {
             let encoder = _XMLEncoder(referencing.name)
             try value.encode(to: encoder)
             referencing.elements.append(contentsOf:encoder.elements)
-        }
-        
-        func encode(_ value: Bool) throws {
-            fatalError()
-        }
-        
-        func encodeNil() throws {
-            fatalError()
-
         }
         
         func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
@@ -237,8 +248,6 @@ class _XMLEncoder : Encoder {
     }
     
     func singleValueContainer() -> SingleValueEncodingContainer {
-        //let element = XMLElement(name: name)
-        //elements.append(element)
         return SVEC(self)
     }
     
@@ -327,9 +336,7 @@ class _XMLEncoder : Encoder {
         func encode<T>(_ value: T) throws where T : Encodable {
             let encoder = _XMLEncoder(referencing.name)
             try value.encode(to: encoder)
-            for child in encoder.elements {
-                referencing.elements.append(child)
-            }
+            referencing.elements.append(contentsOf: encoder.elements)
         }
     }
 }

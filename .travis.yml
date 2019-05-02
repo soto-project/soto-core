@@ -1,3 +1,5 @@
+language: generic
+
 matrix:
   include:
     - os: linux
@@ -9,6 +11,7 @@ matrix:
     - os: osx
       osx_image: xcode10.2
       script:
+        - brew install libressl
         - swift build
         - swift test -Xswiftc -DDEBUG
 

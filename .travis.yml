@@ -13,7 +13,7 @@ matrix:
       script:
         - brew install libressl
         - swift build
-        - swift test -Xswiftc -DDEBUG
+        - swift test --enable-code-coverage -Xswiftc -DDEBUG
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)

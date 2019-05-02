@@ -2,10 +2,13 @@
 
 <div>
     <a href="https://swift.org">
-        <img src="http://img.shields.io/badge/swift-4.2-brightgreen.svg" alt="Swift 4.2">
+        <img src="http://img.shields.io/badge/swift-4.2-brightgreen.svg" alt="Swift 4.2" />
     </a>
     <a href="https://travis-ci.org/swift-aws/aws-sdk-swift-core">
-        <img src="https://travis-ci.org/swift-aws/aws-sdk-swift-core.svg?branch=master">
+        <img src="https://travis-ci.org/swift-aws/aws-sdk-swift-core.svg?branch=master" alt="Travis Build" />
+    </a>
+    <a href="https://codecov.io/gh/swift-aws/aws-sdk-swift-core">
+      <img src="https://codecov.io/gh/swift-aws/aws-sdk-swift-core/branch/master/graph/badge.svg" alt="Codecov Result" />
     </a>
 </div>
 

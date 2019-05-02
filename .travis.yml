@@ -16,4 +16,4 @@ matrix:
         - swift test --parallel --enable-code-coverage -Xswiftc -DDEBUG
 
 after_success:
-  - bash <(curl -s https://codecov.io/bash) -f .build/debug/codecov
+  - bash <(curl -s https://codecov.io/bash) -f .build/debug/codecov/AWSSDKSwiftCore.json

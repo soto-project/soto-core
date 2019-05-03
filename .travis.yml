@@ -18,5 +18,5 @@ matrix:
         - swift package generate-xcodeproj
         - xcodebuild -scheme AWSSDKSwiftCore-Package -derivedDataPath .build/xcode -enableCodeCoverage YES build test
       after_success:
-        - bash <(curl -s https://codecov.io/bash)
+        - bash <(curl -s https://codecov.io/bash) -f ./.build/xcode/Logs/Test/Run-AWSSDKSwiftCore-Package-*/2_Test/action.xccovreport
 

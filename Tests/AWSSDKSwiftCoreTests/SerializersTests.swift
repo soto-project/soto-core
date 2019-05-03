@@ -96,7 +96,7 @@ class SerializersTests: XCTestCase {
             validSerialized.append(valid)
         }
 
-        XCTAssert(validSerialized.contains(xml))
+        XCTAssertTrue(validSerialized.contains(xml))
     }
 
     fileprivate func memberXML(_ s1: String, _ s2: String, _ s3: String) -> String {

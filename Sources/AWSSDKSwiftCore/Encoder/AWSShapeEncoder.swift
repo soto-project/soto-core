@@ -28,7 +28,7 @@ struct AWSShapeEncoder {
     }
 
     public func encodeToXMLNode<Input: AWSShape>(_ input: Input, overrideName: String? = nil) throws -> XMLElement {
-        return try XMLEncoder().encode(input, name: overrideName)
+        return try AWSXMLEncoder().encode(input, name: overrideName)
     }
     /*
         let mirror = Mirror(reflecting: input)

@@ -1,10 +1,10 @@
 import Foundation
 
-public class XmlDecoder {
+public class AWSXMLDecoder {
     public init() {}
 
     public func decode<T : Decodable>(_ type: T.Type, from xml: XMLElement) throws -> T {
-        let decoder = _XmlDecoder(xml)
+        let decoder = _AWSXMLDecoder(xml)
         let value = try T(from: decoder)
         return value
     }
@@ -16,7 +16,7 @@ extension XMLElement {
     }
 }
 
-public class _XmlDecoder : Decoder {
+class _AWSXMLDecoder : Decoder {
     public var codingPath: [CodingKey] = []
     public var userInfo: [CodingUserInfoKey : Any] = [:]
     let elements : [XMLElement]
@@ -175,7 +175,7 @@ public class _XmlDecoder : Decoder {
 
         func decode<T>(_ type: T.Type, forKey key: Key) throws -> T where T : Decodable {
             let elements = try children(for: key)
-            let decoder = _XmlDecoder(elements: elements)
+            let decoder = _AWSXMLDecoder(elements: elements)
             return try T(from: decoder)
         }
 
@@ -290,7 +290,7 @@ public class _XmlDecoder : Decoder {
         }
 
         mutating func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
-            let decoder = _XmlDecoder(elements[currentIndex])
+            let decoder = _AWSXMLDecoder(elements[currentIndex])
             let decoded = try T(from: decoder)
             currentIndex += 1
             return decoded
@@ -388,7 +388,7 @@ public class _XmlDecoder : Decoder {
         }
 
         func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
-            let decoder = _XmlDecoder(element)
+            let decoder = _AWSXMLDecoder(element)
             return try T(from: decoder)
         }
 

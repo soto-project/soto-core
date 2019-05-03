@@ -1,16 +1,16 @@
 import Foundation
 
-public class XMLEncoder {
+public class AWSXMLEncoder {
     public init() {}
     
     open func encode<T : Encodable>(_ value: T, name: String? = nil) throws -> XMLElement {
-        let encoder = _XMLEncoder(name ?? "\(type(of: value))")
+        let encoder = _AWSXMLEncoder(name ?? "\(type(of: value))")
         try value.encode(to: encoder)
         return encoder.elements[0]
     }
 }
 
-class _XMLEncoder : Encoder {
+class _AWSXMLEncoder : Encoder {
     let name : String
     var elements : [XMLElement] = []
     var codingPath: [CodingKey] = []
@@ -113,7 +113,7 @@ class _XMLEncoder : Encoder {
         }
         
         func encode<T>(_ value: T, forKey key: Key) throws where T : Encodable {
-            let encoder = _XMLEncoder(key.stringValue)
+            let encoder = _AWSXMLEncoder(key.stringValue)
             try value.encode(to: encoder)
             for child in encoder.elements {
                 element.addChild(child)
@@ -145,11 +145,11 @@ class _XMLEncoder : Encoder {
     
     class UKEC : UnkeyedEncodingContainer {
         
-        var referencing : _XMLEncoder
+        var referencing : _AWSXMLEncoder
         var codingPath: [CodingKey] = []
         var count : Int
 
-        init(_ encoder: _XMLEncoder) {
+        init(_ encoder: _AWSXMLEncoder) {
             self.referencing = encoder
             self.count = 0
         }
@@ -228,7 +228,7 @@ class _XMLEncoder : Encoder {
         }
         
         func encode<T>(_ value: T) throws where T : Encodable {
-            let encoder = _XMLEncoder(referencing.name)
+            let encoder = _AWSXMLEncoder(referencing.name)
             try value.encode(to: encoder)
             referencing.elements.append(contentsOf:encoder.elements)
         }
@@ -252,10 +252,10 @@ class _XMLEncoder : Encoder {
     }
     
     class SVEC : SingleValueEncodingContainer {
-        let referencing : _XMLEncoder
+        let referencing : _AWSXMLEncoder
         var codingPath: [CodingKey] = []
         
-        init(_ encoder : _XMLEncoder) {
+        init(_ encoder : _AWSXMLEncoder) {
             self.referencing = encoder
         }
         
@@ -334,7 +334,7 @@ class _XMLEncoder : Encoder {
         }
         
         func encode<T>(_ value: T) throws where T : Encodable {
-            let encoder = _XMLEncoder(referencing.name)
+            let encoder = _AWSXMLEncoder(referencing.name)
             try value.encode(to: encoder)
             referencing.elements.append(contentsOf: encoder.elements)
         }

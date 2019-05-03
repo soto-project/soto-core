@@ -336,7 +336,7 @@ extension AWSClient {
             if let payload = Input.payloadPath, let payloadBody = mirror.getAttribute(forKey: payload.toSwiftVariableCase()) {
                 switch payloadBody {
                 case is AWSShape:
-                    let node = try XMLEncoder().encode(input)
+                    let node = try AWSXMLEncoder().encode(input)
                     // cannot use payload path to find XmlElement as it may have a different. Need to translate this to the tag used in the Encoder
                     guard let member = Input._members.first(where: {$0.label == payload}) else { throw AWSClientError.unsupportedOperation(message: "The shape is requesting a payload that does not exist")}
                     guard let element = node.elements(forName: member.location?.name ?? member.label).first else { throw AWSClientError.missingParameter(message: "Payload is missing")}
@@ -464,20 +464,12 @@ extension AWSClient {
         case .json(let data):
             outputDict = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] ?? [:]
 
-        case .xml(let node):
-            let str = XMLNodeSerializer(node: node).serializeToJSON()
-            outputDict = try JSONSerialization.jsonObject(with: str.data(using: .utf8)!, options: []) as? [String: Any] ?? [:]
-
-            if let childOutputDict = outputDict[operationName+"Response"] as? [String: Any] {
-                outputDict = childOutputDict
-                if let childOutputDict = outputDict[operationName+"Result"] as? [String: Any] {
-                    outputDict = childOutputDict
-                }
-            } else {
-                if let key = outputDict.keys.first, let dict = outputDict[key] as? [String: Any] {
-                    outputDict = dict
-                }
+        case .xml2(let node):
+            var outputNode = node
+            if let child = node.children?.first as? XMLElement, (node.name == operationName + "Result" || node.name == operationName + "Response") {
+                outputNode = child
             }
+            return try AWSXMLDecoder().decode(Output.self, from: outputNode)
 
         case .buffer(let data):
             if let payload = Output.payloadPath {
@@ -506,12 +498,7 @@ extension AWSClient {
             }
         }
 
-        switch responseBody {
-        case .xml:
-            return try UntypedDictionaryDecoder().decode(Output.self, from: outputDict)
-        default:
-            return try DictionaryDecoder().decode(Output.self, from: outputDict)
-        }
+        return try DictionaryDecoder().decode(Output.self, from: outputDict)
     }
 
     private func validateBody(for response: Response, payloadPath: String?, members: [AWSShapeMember]) throws -> Body {
@@ -581,14 +568,18 @@ extension AWSClient {
             }
 
         case .restxml, .query:
-            let xmlNode = try XML2Parser(data: data).parse()
-            responseBody = .xml(xmlNode)
+            let xmlDocument = try XMLDocument(data: data)
+            if let element = xmlDocument.rootElement() {
+                responseBody = .xml2(element)
+            }
 
         case .other(let proto):
             switch proto.lowercased() {
             case "ec2":
-                let xmlNode = try XML2Parser(data: data).parse()
-                responseBody = .xml(xmlNode)
+                let xmlDocument = try XMLDocument(data: data)
+                if let element = xmlDocument.rootElement() {
+                    responseBody = .xml2(element)
+                }
 
             default:
                 responseBody = .buffer(data)
@@ -611,19 +602,17 @@ extension AWSClient {
 
         switch serviceProtocol.type {
         case .query:
-            guard let dict = bodyDict["ErrorResponse"] as? [String: Any] else {
-                break
-            }
-            let errorDict = dict["Error"] as? [String: Any]
-            code = errorDict?["Code"] as? String
-            message = errorDict?["Message"] as? String
+            guard let xmlDocument = try? XMLDocument(data: data) else { break }
+            guard let element = xmlDocument.rootElement() else { break }
+            guard let error = element.elements(forName: "Error").first else { break }
+            code = error.elements(forName: "Code").first?.stringValue
+            message = error.elements(forName: "Message").first?.stringValue
 
         case .restxml:
-            let errorDict = bodyDict["Error"] as? [String: Any]
-            code = errorDict?["Code"] as? String
-            message = errorDict?.filter({ $0.key != "Code" })
-                .map({ "\($0.key): \($0.value)"})
-                .joined(separator: ", ")
+            guard let xmlDocument = try? XMLDocument(data: data) else { break }
+            guard let element = xmlDocument.rootElement() else { break }
+            code = element.elements(forName: "Code").first?.stringValue
+            message = element.children?.filter({$0.name != "Code"}).map({"\($0.name!): \($0.stringValue!)"}).joined(separator: ", ")
 
         case .restjson:
             code = response.head.headers.filter( { $0.name == "x-amzn-ErrorType"}).first?.value

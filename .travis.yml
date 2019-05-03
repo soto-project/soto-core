@@ -18,5 +18,5 @@ matrix:
         - swift package generate-xcodeproj
         - xcodebuild -scheme AWSSDKSwiftCore-Package -enableCodeCoverage YES build test
       after_success:
-        - bash <(curl -s https://codecov.io/bash)
+        - bash <(curl -s https://codecov.io/bash) -J 'AWSSDKSwiftCore'
 

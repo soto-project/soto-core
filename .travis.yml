@@ -1,4 +1,4 @@
-language: generic
+language: swift
 
 matrix:
   include:
@@ -13,7 +13,9 @@ matrix:
       script:
         - brew install libressl
         - swift build
-        - swift test --parallel --enable-code-coverage -Xswiftc -DDEBUG
+        - swift test --parallel -Xswiftc -DDEBUG
+        - swift package generate-xcodeproj
+        - xcodebuild -scheme AWSSDKSwiftCore -derivedDataPath .build/xcode -enableCodeCoverage YES build test
 
 after_success:
-  - bash <(curl -s https://codecov.io/bash) -f .build/debug/codecov/AWSSDKSwiftCore.json
+  - bash <(curl -s https://codecov.io/bash)

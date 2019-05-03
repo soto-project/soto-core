@@ -82,7 +82,9 @@ class SerializersTests: XCTestCase {
         let valid6 = "<A url=\"https://example.com\"><Structure><A>1</A><B>1</B><B>2</B><C><key>value</key></C></Structure><DList><Value>world</Value></DList><CList><Value>hello</Value></CList><Array>foo</Array><Array>bar</Array><StructureWithMember><Member><memberKey>memberValue</memberKey><memberKey2>memberValue2</memberKey2></Member></StructureWithMember><StructureWithMembers><Member><memberKey2>memberValue2</memberKey2><memberKey>memberValue</memberKey></Member><Member><memberKey2>memberValue2</memberKey2><memberKey>memberValue</memberKey></Member></StructureWithMembers></A>"
         let valid7 = "<A url=\"https://example.com\"><Structure><A>1</A><B>1</B><B>2</B><C><key>value</key></C></Structure><DList><Value>world</Value></DList><CList><Value>hello</Value></CList><Array>foo</Array><Array>bar</Array><StructureWithMember><Member><memberKey2>memberValue2</memberKey2><memberKey>memberValue</memberKey></Member></StructureWithMember><StructureWithMembers><Member><memberKey>memberValue</memberKey><memberKey2>memberValue2</memberKey2></Member><Member><memberKey>memberValue</memberKey><memberKey2>memberValue2</memberKey2></Member></StructureWithMembers></A>"
 
-        let validSerialized = [valid1, valid2, valid3, valid4, valid5, valid6, valid7]
+        let valid8 = "<A url=\"https://example.com\"><Structure><A>1</A><B>1</B><B>2</B><C><key>value</key></C></Structure><DList><Value>world</Value></DList><CList><Value>hello</Value></CList><Array>foo</Array><Array>bar</Array><StructureWithMember><Member><memberKey>memberValue</memberKey><memberKey2>memberValue2</memberKey2></Member></StructureWithMember><StructureWithMembers><Member><memberKey>memberValue</memberKey><memberKey2>memberValue2</memberKey2></Member><Member><memberKey2>memberValue2</memberKey2><memberKey>memberValue</memberKey></Member></StructureWithMembers></A>"
+
+        let validSerialized = [valid1, valid2, valid3, valid4, valid5, valid6, valid7, valid8]
 
         XCTAssertTrue(validSerialized.contains(xml))
     }

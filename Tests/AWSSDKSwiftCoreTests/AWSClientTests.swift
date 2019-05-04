@@ -30,7 +30,7 @@ class AWSClientTests: XCTestCase {
             AWSShapeMember(label: "Member", required: true, type: .list),
         ]
 
-        let Member = ["memberKey": "memberValue", "memberKey2": "memberValue2"]
+        let Member = ["memberKey": "memberValue", "memberKey2" : "memberValue2"]
 
         private enum CodingKeys: String, CodingKey {
             case Member = "Member"
@@ -57,19 +57,63 @@ class AWSClientTests: XCTestCase {
 
     }
 
+    struct G: AWSShape {
+        public static let payloadPath: String? = "data"
+
+        public static var members: [AWSShapeMember] = [
+            AWSShapeMember(label: "data", required: true, type: .blob)
+        ]
+
+        public let data: Data
+
+        public init(data: Data) {
+            self.data = data
+        }
+
+        private enum CodingKeys: String, CodingKey {
+        case data = "data"
+        }
+    }
+
+    let sesClient = AWSClient(
+        accessKeyId: "foo",
+        secretAccessKey: "bar",
+        region: nil,
+        service: "email",
+        serviceProtocol: ServiceProtocol(type: .query),
+        apiVersion: "2013-12-01",
+        middlewares: [],
+        possibleErrorTypes: [SESErrorType.self]
+    )
+
+    let kinesisClient = AWSClient(
+        accessKeyId: "foo",
+        secretAccessKey: "bar",
+        region: nil,
+        amzTarget: "Kinesis_20131202",
+        service: "kinesis",
+        serviceProtocol: ServiceProtocol(type: .json, version: ServiceProtocol.Version(major: 1, minor: 1)),
+        apiVersion: "2013-12-02",
+        middlewares: [],
+        possibleErrorTypes: [KinesisErrorType.self]
+    )
+
+    let s3Client = AWSClient(
+        accessKeyId: "foo",
+        secretAccessKey: "bar",
+        region: nil,
+        service: "s3",
+        serviceProtocol: ServiceProtocol(type: .restxml),
+        apiVersion: "2006-03-01",
+        endpoint: nil,
+        serviceEndpoints: ["us-west-2": "s3.us-west-2.amazonaws.com", "eu-west-1": "s3.eu-west-1.amazonaws.com", "us-east-1": "s3.amazonaws.com", "ap-northeast-1": "s3.ap-northeast-1.amazonaws.com", "s3-external-1": "s3-external-1.amazonaws.com", "ap-southeast-2": "s3.ap-southeast-2.amazonaws.com", "sa-east-1": "s3.sa-east-1.amazonaws.com", "ap-southeast-1": "s3.ap-southeast-1.amazonaws.com", "us-west-1": "s3.us-west-1.amazonaws.com"],
+        partitionEndpoint: "us-east-1",
+        middlewares: [],
+        possibleErrorTypes: [S3ErrorType.self]
+    )
+
     func testCreateAWSRequest() {
         let input = C()
-
-        let sesClient = AWSClient(
-            accessKeyId: "foo",
-            secretAccessKey: "bar",
-            region: nil,
-            service: "email",
-            serviceProtocol: ServiceProtocol(type: .query),
-            apiVersion: "2013-12-01",
-            middlewares: [],
-            possibleErrorTypes: [SESErrorType.self]
-        )
 
         do {
             let awsRequest = try sesClient.debugCreateAWSRequest(
@@ -86,18 +130,6 @@ class AWSClientTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
 
-        let kinesisClient = AWSClient(
-            accessKeyId: "foo",
-            secretAccessKey: "bar",
-            region: nil,
-            amzTarget: "Kinesis_20131202",
-            service: "kinesis",
-            serviceProtocol: ServiceProtocol(type: .json, version: ServiceProtocol.Version(major: 1, minor: 1)),
-            apiVersion: "2013-12-02",
-            middlewares: [],
-            possibleErrorTypes: [KinesisErrorType.self]
-        )
-
         do {
             let awsRequest = try kinesisClient.debugCreateAWSRequest(
                 operation: "PutRecord",
@@ -111,20 +143,6 @@ class AWSClientTests: XCTestCase {
         } catch {
             XCTFail(error.localizedDescription)
         }
-
-        let s3Client = AWSClient(
-            accessKeyId: "foo",
-            secretAccessKey: "bar",
-            region: nil,
-            service: "s3",
-            serviceProtocol: ServiceProtocol(type: .restxml),
-            apiVersion: "2006-03-01",
-            endpoint: nil,
-            serviceEndpoints: ["us-west-2": "s3.us-west-2.amazonaws.com", "eu-west-1": "s3.eu-west-1.amazonaws.com", "us-east-1": "s3.amazonaws.com", "ap-northeast-1": "s3.ap-northeast-1.amazonaws.com", "s3-external-1": "s3-external-1.amazonaws.com", "ap-southeast-2": "s3.ap-southeast-2.amazonaws.com", "sa-east-1": "s3.sa-east-1.amazonaws.com", "ap-southeast-1": "s3.ap-southeast-1.amazonaws.com", "us-west-1": "s3.us-west-1.amazonaws.com"],
-            partitionEndpoint: "us-east-1",
-            middlewares: [],
-            possibleErrorTypes: [S3ErrorType.self]
-        )
 
         do {
             let awsRequest = try s3Client.debugCreateAWSRequest(
@@ -190,9 +208,48 @@ class AWSClientTests: XCTestCase {
         }
     }
 
+    func testAWSRequestSigning() {
+        // don't use an input that contains a dictionary as we cannot guarantee the order the elements are output
+        let input = G(data: "Testing, testing, 1,2,1,2".data(using:.utf8)!)
+        let authorization = "AWS4-HMAC-SHA256 Credential=foo/19700101/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=14aa24501193b5d1febe4af614654b42851b833144490fcab3d8e0eb6c81d270"
+
+        do {
+            let awsRequest = try s3Client.debugCreateAWSRequest(
+                operation: "PutBucketTagging",
+                path: "/Bucket?tagging",
+                httpMethod: "PUT",
+                input: input
+            )
+            let nioRequest = try awsRequest.toNIORequest()
+
+            let url = URL(string: nioRequest.head.uri)
+            XCTAssertNotNil(url)
+
+            var headers: [String: String] = [:]
+            for (key, value) in nioRequest.head.headers {
+                headers[key.description] = value
+            }
+            let signedHeaders = s3Client.signer.signedHeaders(
+                url:url!,
+                headers: headers,
+                method:"PUT",
+                date:Date(timeIntervalSince1970: 0),
+                bodyData:nioRequest.body
+            )
+            let signature = signedHeaders["Authorization"]
+
+            XCTAssertNotNil(signature)
+            XCTAssertEqual(signature!, authorization)
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+
+    }
+
     static var allTests : [(String, (AWSClientTests) -> () throws -> Void)] {
         return [
-            ("testCreateAWSRequest", testCreateAWSRequest)
+            ("testCreateAWSRequest", testCreateAWSRequest),
+            ("testAWSRequestSigning", testAWSRequestSigning)
         ]
     }
 }

@@ -365,7 +365,11 @@ extension AWSClient {
         // add new queries to query item array. These need to be added to the queryItems list instead of the queryParams dictionary as added nil items to a dictionary doesn't add a value.
         if let pathQueryItems = parsedPath.queryItems {
             for item in pathQueryItems {
-                queryItems.append(URLQueryItem(name:item.name, value:item.value))
+                if let value = item.value {
+                    queryItems.append(URLQueryItem(name:item.name, value:value))
+                } else {
+                    queryItems.append(URLQueryItem(name:item.name, value:""))
+                }
             }
         }
 
@@ -407,7 +411,7 @@ extension AWSClient {
             if let value = dict[key] {
                 queryItems.append(URLQueryItem(name: key, value: String(describing: value)))
             } else {
-                queryItems.append(URLQueryItem(name: key, value: nil))
+                queryItems.append(URLQueryItem(name: key, value: ""))
             }
         }
         return queryItems.isEmpty ? nil : queryItems

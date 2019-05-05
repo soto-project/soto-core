@@ -12,130 +12,164 @@ import XCTest
 
 class SerializersTests: XCTestCase {
 
-    struct B: AWSShape {
-        public static var members: [AWSShapeMember] = [
-            AWSShapeMember(label: "a", required: true, type: .string),
-            AWSShapeMember(label: "b", required: false, type: .list),
-            AWSShapeMember(label: "c", required: true, type: .list)
-        ]
+    struct Numbers : AWSShape {
+        enum IntEnum : Int, Codable {
+            case first
+            case second
+            case third
+        }
+        let integer : Int
+        let float : Float
+        let double : Double
+        let intEnum : IntEnum
 
-        let a = "1"
-        let b = [1, 2]
-        let c = ["key": "value"]
+        private enum CodingKeys : String, CodingKey {
+            case integer = "i"
+            case float = "s"
+            case double = "d"
+            case intEnum = "enum"
+        }
     }
 
-    struct C: AWSShape {
-        public static var members: [AWSShapeMember] = [
-            AWSShapeMember(label: "value", required: true, type: .string)
-        ]
-
-        let value = "hello"
+    struct StringShape : AWSShape {
+        enum StringEnum : String, Codable {
+            case first="first"
+            case second="second"
+            case third="third"
+            case fourth="fourth"
+        }
+        let string : String
+        let optionalString : String?
+        let stringEnum : StringEnum
     }
 
-    struct D: AWSShape {
-        public static var members: [AWSShapeMember] = [
-            AWSShapeMember(label: "value", required: true, type: .string)
-        ]
-
-        let value = "world"
+    struct Arrays : AWSShape {
+        let arrayOfNatives : [Int]
+        let arrayOfShapes : [Numbers]
     }
 
-    struct E: AWSShape {
-      public static var members: [AWSShapeMember] = [
-          AWSShapeMember(label: "Member", required: true, type: .list),
-      ]
-
-      let Member = ["memberKey": "memberValue", "memberKey2": "memberValue2"]
+    struct Dictionaries : AWSShape {
+        let dictionaryOfNatives : [String:Int]
+        let dictionaryOfShapes : [String:StringShape]
     }
 
-    struct A: AWSShape {
-        public static var members: [AWSShapeMember] = [
-            AWSShapeMember(label: "structure", required: true, type: .structure),
-            AWSShapeMember(label: "dList", required: true, type: .list),
-            AWSShapeMember(label: "cList", required: true, type: .list),
-            AWSShapeMember(label: "array", required: true, type: .list),
-            AWSShapeMember(label: "structureWithMember", required: true, type: .structure),
-            AWSShapeMember(label: "structureWithMembers", required: false, type: .list),
-        ]
+    struct Shape : AWSShape {
+        let numbers : Numbers
+        let stringShape : StringShape
+        let arrays : Arrays
 
-        let structure = B()
-        let dList: [D] = [D()]
-        let cList: [C] = [C()]
-        let array: [String] = ["foo", "bar"]
-        let structureWithMember = E()
-        let structureWithMembers: [E] = [E(), E()]
+        private enum CodingKeys : String, CodingKey {
+            case numbers = "Numbers"
+            case stringShape = "Strings"
+            case arrays = "Arrays"
+        }
+    }
+
+    struct ShapeWithDictionaries : AWSShape {
+        let shape : Shape
+        let dicationaries : Dictionaries
+
+        private enum CodingKeys : String, CodingKey {
+            case shape = "s"
+            case dicationaries = "d"
+        }
+    }
+
+    var testShape : Shape {
+        return Shape(numbers: Numbers(integer: 45, float: 3.4, double: 7.89234, intEnum: .second),
+                              stringShape: StringShape(string: "String1", optionalString: "String2", stringEnum: .third),
+                              arrays: Arrays(arrayOfNatives: [34,1,4098], arrayOfShapes: [Numbers(integer: 1, float: 1.2, double: 1.4, intEnum: .first), Numbers(integer: 3, float: 2.01, double: 1.01, intEnum: .third)]))
+    }
+
+    var testShapeWithDictionaries : ShapeWithDictionaries {
+        return ShapeWithDictionaries(shape: testShape, dicationaries: Dictionaries(dictionaryOfNatives: ["first":1, "second":2, "third":3],
+                                                                                          dictionaryOfShapes: ["strings":StringShape(string:"one", optionalString: "two", stringEnum: .third),
+                                                                                                               "strings2":StringShape(string:"cat", optionalString: nil, stringEnum: .fourth)]))
     }
 
     func testSerializeToXML() {
-        let node = try! AWSShapeEncoder().encodeToXMLNode(A(), attributes: ["A": ["url": "https://example.com"]])
-        XCTAssertEqual(node.attributes["url"], "https://example.com")
+        let shape = testShape
+        let node = try! AWSXMLEncoder().encode(shape)
 
-        let xml = XMLNodeSerializer(node: node).serializeToXML()
+        let xml = node.xmlString
+        let xmlToTest = "<Shape><Numbers><i>45</i><s>3.4</s><d>7.89234</d><enum>1</enum></Numbers><Strings><string>String1</string><optionalString>String2</optionalString><stringEnum>third</stringEnum></Strings><Arrays><arrayOfNatives>34</arrayOfNatives><arrayOfNatives>1</arrayOfNatives><arrayOfNatives>4098</arrayOfNatives><arrayOfShapes><i>1</i><s>1.2</s><d>1.4</d><enum>0</enum></arrayOfShapes><arrayOfShapes><i>3</i><s>2.01</s><d>1.01</d><enum>2</enum></arrayOfShapes></Arrays></Shape>"
 
-        let valid1 = "<A url=\"https://example.com\"><Structure><A>1</A><B>1</B><B>2</B><C><key>value</key></C></Structure><DList><Value>world</Value></DList><CList><Value>hello</Value></CList><Array>foo</Array><Array>bar</Array><StructureWithMember><Member><memberKey2>memberValue2</memberKey2><memberKey>memberValue</memberKey></Member></StructureWithMember><StructureWithMembers><Member><memberKey2>memberValue2</memberKey2><memberKey>memberValue</memberKey></Member><Member><memberKey2>memberValue2</memberKey2><memberKey>memberValue</memberKey></Member></StructureWithMembers></A>"
+        XCTAssertEqual(xmlToTest, xml)
+    }
 
-        // The order of the StructureWithMember dictionary does not matter.
-        let valid2 = "<A url=\"https://example.com\"><Structure><A>1</A><B>1</B><B>2</B><C><key>value</key></C></Structure><DList><Value>world</Value></DList><CList><Value>hello</Value></CList><Array>foo</Array><Array>bar</Array><StructureWithMember><Member><memberKey>memberValue</memberKey><memberKey2>memberValue2</memberKey2></Member></StructureWithMember><StructureWithMembers><Member><memberKey>memberValue</memberKey><memberKey2>memberValue2</memberKey2></Member><Member><memberKey>memberValue</memberKey><memberKey2>memberValue2</memberKey2></Member></StructureWithMembers></A>"
-        let valid3 = "<A url=\"https://example.com\"><Structure><A>1</A><B>1</B><B>2</B><C><key>value</key></C></Structure><DList><Value>world</Value></DList><CList><Value>hello</Value></CList><Array>foo</Array><Array>bar</Array><StructureWithMember><Member><memberKey2>memberValue2</memberKey2><memberKey>memberValue</memberKey></Member></StructureWithMember><StructureWithMembers><Member><memberKey>memberValue</memberKey><memberKey2>memberValue2</memberKey2></Member><Member><memberKey2>memberValue2</memberKey2><memberKey>memberValue</memberKey></Member></StructureWithMembers></A>"
-        let valid4 = "<A url=\"https://example.com\"><Structure><A>1</A><B>1</B><B>2</B><C><key>value</key></C></Structure><DList><Value>world</Value></DList><CList><Value>hello</Value></CList><Array>foo</Array><Array>bar</Array><StructureWithMember><Member><memberKey>memberValue</memberKey><memberKey2>memberValue2</memberKey2></Member></StructureWithMember><StructureWithMembers><Member><memberKey2>memberValue2</memberKey2><memberKey>memberValue</memberKey></Member><Member><memberKey>memberValue</memberKey><memberKey2>memberValue2</memberKey2></Member></StructureWithMembers></A>"
-        let valid5 = "<A url=\"https://example.com\"><Structure><A>1</A><B>1</B><B>2</B><C><key>value</key></C></Structure><DList><Value>world</Value></DList><CList><Value>hello</Value></CList><Array>foo</Array><Array>bar</Array><StructureWithMember><Member><memberKey2>memberValue2</memberKey2><memberKey>memberValue</memberKey></Member></StructureWithMember><StructureWithMembers><Member><memberKey2>memberValue2</memberKey2><memberKey>memberValue</memberKey></Member><Member><memberKey>memberValue</memberKey><memberKey2>memberValue2</memberKey2></Member></StructureWithMembers></A>"
-        let valid6 = "<A url=\"https://example.com\"><Structure><A>1</A><B>1</B><B>2</B><C><key>value</key></C></Structure><DList><Value>world</Value></DList><CList><Value>hello</Value></CList><Array>foo</Array><Array>bar</Array><StructureWithMember><Member><memberKey>memberValue</memberKey><memberKey2>memberValue2</memberKey2></Member></StructureWithMember><StructureWithMembers><Member><memberKey2>memberValue2</memberKey2><memberKey>memberValue</memberKey></Member><Member><memberKey2>memberValue2</memberKey2><memberKey>memberValue</memberKey></Member></StructureWithMembers></A>"
-        let valid7 = "<A url=\"https://example.com\"><Structure><A>1</A><B>1</B><B>2</B><C><key>value</key></C></Structure><DList><Value>world</Value></DList><CList><Value>hello</Value></CList><Array>foo</Array><Array>bar</Array><StructureWithMember><Member><memberKey2>memberValue2</memberKey2><memberKey>memberValue</memberKey></Member></StructureWithMember><StructureWithMembers><Member><memberKey>memberValue</memberKey><memberKey2>memberValue2</memberKey2></Member><Member><memberKey>memberValue</memberKey><memberKey2>memberValue2</memberKey2></Member></StructureWithMembers></A>"
+    func testEncodeDecodeXML() {
+        do {
+            let xml = try AWSXMLEncoder().encode(testShape)
+            let testShape2 = try AWSXMLDecoder().decode(Shape.self, from:xml)
+            let xml2 = try AWSXMLEncoder().encode(testShape2)
 
-        let valid8 = "<A url=\"https://example.com\"><Structure><A>1</A><B>1</B><B>2</B><C><key>value</key></C></Structure><DList><Value>world</Value></DList><CList><Value>hello</Value></CList><Array>foo</Array><Array>bar</Array><StructureWithMember><Member><memberKey>memberValue</memberKey><memberKey2>memberValue2</memberKey2></Member></StructureWithMember><StructureWithMembers><Member><memberKey>memberValue</memberKey><memberKey2>memberValue2</memberKey2></Member><Member><memberKey2>memberValue2</memberKey2><memberKey>memberValue</memberKey></Member></StructureWithMembers></A>"
+            XCTAssertEqual(xml.xmlString, xml2.xmlString)
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
 
-        let validSerialized = [valid1, valid2, valid3, valid4, valid5, valid6, valid7, valid8]
+    func testEncodeDecodeDictionariesXML() {
+        do {
+            let xml = try AWSXMLEncoder().encode(testShapeWithDictionaries)
+            let testShape2 = try AWSXMLDecoder().decode(ShapeWithDictionaries.self, from:xml)
 
-        XCTAssertTrue(validSerialized.contains(xml))
+            XCTAssertEqual(testShape2.dicationaries.dictionaryOfNatives["second"], 2)
+            XCTAssertEqual(testShape2.dicationaries.dictionaryOfShapes["strings2"]?.stringEnum, .fourth)
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+
+    func testEncodeQueryDictionary() {
+        let queryDict = AWSShapeEncoder().encodeToQueryDictionary(testShapeWithDictionaries)
+
+        // can't test dictionaries as we cannot guarantee member order
+
+        XCTAssertEqual(queryDict["Shape.Arrays.ArrayOfShapes.member.2.Double"] as? Double, 1.01)
+        XCTAssertEqual(queryDict["Shape.Numbers.IntEnum"] as? (Numbers.IntEnum), .second)
+        XCTAssertEqual(queryDict["Shape.Arrays.ArrayOfNatives.member.2"] as? Int, 1)
+        XCTAssertEqual(queryDict["Shape.StringShape.String"] as? String, "String1")
     }
 
     func testSerializeToDictionaryAndJSON() {
-        let node = try! AWSShapeEncoder().encodeToXMLNode(A())
-        let json = XMLNodeSerializer(node: node).serializeToJSON()
-        let json_data = json.data(using: .utf8)!
-        let dict = try! JSONSerializer().serializeToDictionary(json_data)
-        let jsonObect = try! JSONSerialization.jsonObject(with: json_data, options: []) as! [String: Any]
-        XCTAssertEqual(dict.count, jsonObect.count)
+        let json = try! AWSShapeEncoder().encodeToJSONUTF8Data(testShapeWithDictionaries)
+        let dict = try! JSONSerializer().serializeToDictionary(json)
+
+        let dict2 = dict["s"] as? [String:Any]
 
         // Member scalar
-        let fromDict = dict["A"]! as! [String: Any]
-        let swmFromDict = fromDict["StructureWithMember"] as! [String: String]
-        XCTAssertEqual(swmFromDict["memberKey"], "memberValue")
+        let stringsDict = dict2?["Strings"]! as? [String: Any]
+        let string = stringsDict?["string"] as? String
+        XCTAssertEqual(string, "String1")
 
-        let fromJson = jsonObect["A"]! as! [String: Any]
-        let swmFromJson = fromJson["StructureWithMember"] as! [String: String]
-        XCTAssertEqual(swmFromJson["memberKey"], "memberValue")
+        // array member
+        let arrayDict = dict2?["Arrays"] as? [String: Any]
+        let nativeArray = arrayDict?["arrayOfNatives"] as? [Any]
+        let value = nativeArray?[2] as? Int
+        XCTAssertEqual(value, 4098)
 
-        // Member list
-        let swmsFromDict = fromDict["StructureWithMembers"] as! [Any]
-        let swmFirstFromDict = swmsFromDict.first! as! [String: String]
-        XCTAssertEqual(swmFirstFromDict["memberKey"], "memberValue")
+        // dicationary member
+        let dictionaryDict = dict["d"] as? [String: Any]
+        let dictionaryOfShapes = dictionaryDict?["dictionaryOfShapes"] as? [String:Any]
+        let stringsDict2 = dictionaryOfShapes?["strings"] as? [String:Any]
+        let stringEnum = stringsDict2?["stringEnum"] as? String
+        XCTAssertEqual(stringEnum, "third")
 
-        let swmSecondFromDict = swmsFromDict.last! as! [String: String]
-        XCTAssertEqual(swmSecondFromDict["memberKey2"], "memberValue2")
-
-        let swmsFromJson = fromJson["StructureWithMembers"] as! [Any]
-        let swmFirstFromJson = swmsFromJson.first! as! [String: String]
-        XCTAssertEqual(swmFirstFromJson["memberKey"], "memberValue")
-
-        let swmSecondFromJson = swmsFromJson.last! as! [String: String]
-        XCTAssertEqual(swmSecondFromJson["memberKey2"], "memberValue2")
+        do {
+            let shape2 = try DictionaryDecoder().decode(ShapeWithDictionaries.self, from: dict)
+            XCTAssertEqual(shape2.shape.numbers.intEnum, .second)
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
     }
-
-    // not a valid test
-    func testLowercasedBoolean() {/*
-        let node = try! XML2Parser(data: "<A>True</A>".data(using: .utf8)!).parse()
-        let str = XMLNodeSerializer(node: node).serializeToJSON()
-        XCTAssertEqual(str, "{\"A\":true}")
-
-        let outputDict = try! JSONSerialization.jsonObject(with: str.data(using: .utf8)!, options: []) as? [String: Any] ?? [:]
-        XCTAssertEqual(outputDict["A"] as? Bool, true)
-        XCTAssertEqual(outputDict.count, 1)
-    */}
 
     static var allTests : [(String, (SerializersTests) -> () throws -> Void)] {
         return [
             ("testSerializeToXML", testSerializeToXML),
+            ("testEncodeDecodeXML", testEncodeDecodeXML),
+            ("testEncodeDecodeDictionariesXML", testEncodeDecodeDictionariesXML),
+            ("testEncodeQueryDictionary", testEncodeQueryDictionary),
             ("testSerializeToDictionaryAndJSON", testSerializeToDictionaryAndJSON)
         ]
     }

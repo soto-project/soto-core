@@ -133,23 +133,10 @@ class SerializersTests: XCTestCase {
         XCTAssertEqual(outputDict.count, 1)
     */}
 
-    func testSerializeToFlatDictionary() {
-        let data = try! JSONEncoder().encode(A())
-        let dict = try! JSONSerializer().serializeToFlatDictionary(data)
-
-        XCTAssertEqual(dict.count, 12)
-        XCTAssertEqual(dict["structure.a"] as? String, "1")
-        XCTAssertEqual(dict["structure.c.key"] as? String, "value")
-        XCTAssertEqual(dict["array.member.1"] as? String, "foo")
-        XCTAssertEqual(dict["array.member.2"] as? String, "bar")
-    }
-
     static var allTests : [(String, (SerializersTests) -> () throws -> Void)] {
         return [
             ("testSerializeToXML", testSerializeToXML),
-            ("testSerializeToDictionaryAndJSON", testSerializeToDictionaryAndJSON),
-//            ("testLowercasedBoolean", testLowercasedBoolean),
-            ("testSerializeToFlatDictionary", testSerializeToFlatDictionary)
+            ("testSerializeToDictionaryAndJSON", testSerializeToDictionaryAndJSON)
         ]
     }
 }

@@ -340,7 +340,7 @@ extension AWSClient {
                     // cannot use payload path to find XmlElement as it may have a different. Need to translate this to the tag used in the Encoder
                     guard let member = Input._members.first(where: {$0.label == payload}) else { throw AWSClientError.unsupportedOperation(message: "The shape is requesting a payload that does not exist")}
                     guard let element = node.elements(forName: member.location?.name ?? member.label).first else { throw AWSClientError.missingParameter(message: "Payload is missing")}
-                    body = .xml2(element)
+                    body = .xml(element)
                 default:
                     body = Body(anyValue: payloadBody)
                 }
@@ -465,7 +465,7 @@ extension AWSClient {
         case .json(let data):
             outputDict = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] ?? [:]
 
-        case .xml2(let node):
+        case .xml(let node):
             var outputNode = node
             if let child = node.children?.first as? XMLElement, (node.name == operationName + "Result" || node.name == operationName + "Response") {
                 outputNode = child
@@ -571,7 +571,7 @@ extension AWSClient {
         case .restxml, .query:
             let xmlDocument = try XMLDocument(data: data)
             if let element = xmlDocument.rootElement() {
-                responseBody = .xml2(element)
+                responseBody = .xml(element)
             }
 
         case .other(let proto):
@@ -579,7 +579,7 @@ extension AWSClient {
             case "ec2":
                 let xmlDocument = try XMLDocument(data: data)
                 if let element = xmlDocument.rootElement() {
-                    responseBody = .xml2(element)
+                    responseBody = .xml(element)
                 }
 
             default:

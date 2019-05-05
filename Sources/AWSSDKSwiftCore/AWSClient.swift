@@ -352,11 +352,12 @@ extension AWSClient {
         case .other(let proto):
             switch proto.lowercased() {
             case "ec2":
-                let data = try AWSShapeEncoder().encodeToJSONUTF8Data(input)
-                var params = try JSONSerializer().serializeToDictionary(data)
+                var params = AWSShapeEncoder().encodeToQueryDictionary(input)
                 params["Action"] = operationName
                 params["Version"] = apiVersion
-                body = .text(params.map({ "\($0.key)=\($0.value)" }).joined(separator: "&"))
+                if let urlEncodedQueryParams = urlEncodeQueryParams(fromDictionary: params) {
+                    body = .text(urlEncodedQueryParams)
+                }
             default:
                 break
             }

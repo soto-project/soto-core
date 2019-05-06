@@ -305,7 +305,7 @@ extension AWSClient {
             if let payload = Input.payloadPath, let payloadBody = mirror.getAttribute(forKey: payload.toSwiftVariableCase()) {
                 switch payloadBody {
                 case is AWSShape:
-                    let inputBody: Body = .json(try AWSShapeEncoder().encodeToJSONUTF8Data(input))
+                    let inputBody: Body = .json(try AWSShapeEncoder().json(input))
                     if let inputDict = try inputBody.asDictionary(), let payloadDict = inputDict[payload] {
                         body = .json(try JSONSerialization.data(withJSONObject: payloadDict))
                     }
@@ -314,11 +314,11 @@ extension AWSClient {
                 }
                 headers.removeValue(forKey: payload.toSwiftVariableCase())
             } else {
-                body = .json(try AWSShapeEncoder().encodeToJSONUTF8Data(input))
+                body = .json(try AWSShapeEncoder().json(input))
             }
 
         case .query:
-            var dict = AWSShapeEncoder().encodeToQueryDictionary(input)
+            var dict = AWSShapeEncoder().query(input)
 
             dict["Action"] = operationName
             dict["Version"] = apiVersion
@@ -336,7 +336,7 @@ extension AWSClient {
             if let payload = Input.payloadPath, let payloadBody = mirror.getAttribute(forKey: payload.toSwiftVariableCase()) {
                 switch payloadBody {
                 case is AWSShape:
-                    let node = try AWSXMLEncoder().encode(input)
+                    let node = try AWSShapeEncoder().xml(input)
                     // cannot use payload path to find XmlElement as it may have a different. Need to translate this to the tag used in the Encoder
                     guard let member = Input._members.first(where: {$0.label == payload}) else { throw AWSClientError.unsupportedOperation(message: "The shape is requesting a payload that does not exist")}
                     guard let element = node.elements(forName: member.location?.name ?? member.label).first else { throw AWSClientError.missingParameter(message: "Payload is missing")}
@@ -352,7 +352,7 @@ extension AWSClient {
         case .other(let proto):
             switch proto.lowercased() {
             case "ec2":
-                var params = AWSShapeEncoder().encodeToQueryDictionary(input)
+                var params = AWSShapeEncoder().query(input)
                 params["Action"] = operationName
                 params["Version"] = apiVersion
                 if let urlEncodedQueryParams = urlEncodeQueryParams(fromDictionary: params) {

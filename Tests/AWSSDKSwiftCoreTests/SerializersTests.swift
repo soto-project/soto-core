@@ -122,7 +122,7 @@ class SerializersTests: XCTestCase {
     }
 
     func testEncodeQueryDictionary() {
-        let queryDict = AWSShapeEncoder().encodeToQueryDictionary(testShapeWithDictionaries)
+        let queryDict = AWSShapeEncoder().query(testShapeWithDictionaries)
 
         // can't test dictionaries as we cannot guarantee member order
 
@@ -133,7 +133,7 @@ class SerializersTests: XCTestCase {
     }
 
     func testSerializeToDictionaryAndJSON() {
-        let json = try! AWSShapeEncoder().encodeToJSONUTF8Data(testShapeWithDictionaries)
+        let json = try! AWSShapeEncoder().json(testShapeWithDictionaries)
         let dict = try! JSONSerializer().serializeToDictionary(json)
 
         let dict2 = dict["s"] as? [String:Any]

@@ -50,6 +50,8 @@ public struct StructureShape {
     }
 }
 
+public typealias XMLAttribute = [String: [String: String]] // ["elementName": ["key": "value", ...]]
+
 public struct XMLNamespace {
     public let locationName: String
     public let attributeMap: [String: Any]

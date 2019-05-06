@@ -17,72 +17,19 @@ func unwrap(any: Any) -> Any? {
     return some
 }
 
-public typealias XMLAttribute = [String: [String: String]] // ["elementName": ["key": "value", ...]]
+public struct AWSShapeEncoder {
+    public init() {}
 
-private let sharedJSONEncoder = JSONEncoder()
-private let sharedAWSShapeEncoder = AWSShapeEncoder()
-
-struct AWSShapeEncoder {
-    func encodeToJSONUTF8Data<Input: AWSShape>(_ input: Input) throws -> Data {
-        return try sharedJSONEncoder.encode(input)
+    func json<Input: AWSShape>(_ input: Input) throws -> Data {
+        return try JSONEncoder().encode(input)
     }
 
-    public func encodeToXMLNode<Input: AWSShape>(_ input: Input, overrideName: String? = nil) throws -> XMLElement {
+    public func xml<Input: AWSShape>(_ input: Input, overrideName: String? = nil) throws -> XMLElement {
         return try AWSXMLEncoder().encode(input, name: overrideName)
     }
-    /*
-        let mirror = Mirror(reflecting: input)
-        let name = "\(mirror.subjectType)"
-        let xmlNode = XMLNode(elementName: name.upperFirst())
-        if let attr = attributes.filter({ $0.key == name }).first {
-            xmlNode.attributes = attr.value
-        }
 
-        for el in mirror.children {
-            guard let label = el.label?.upperFirst() else {
-                continue
-            }
-
-            guard let value = unwrap(any: el.value) else {
-                continue
-            }
-            let node = XMLNode(elementName: label)
-            switch value {
-            case let v as AWSShape:
-                let cNode = try AWSShapeEncoder().encodeToXMLNode(v)
-                node.children.append(contentsOf: cNode.children)
-
-            case let v as [AWSShape]:
-                for vv in v {
-                    let cNode = try AWSShapeEncoder().encodeToXMLNode(vv)
-                    node.children.append(contentsOf: cNode.children)
-                }
-
-            default:
-                switch value {
-                case let v as [Any]:
-                    for vv in v {
-                        node.values.append("\(vv)")
-                    }
-
-                case let v as [AnyHashable: Any]:
-                    for (key, value) in v {
-                        let cNode = XMLNode(elementName: "\(key)")
-                        cNode.values.append("\(value)")
-                        node.children.append(cNode)
-                    }
-                default:
-                    node.values.append("\(value)")
-                }
-            }
-
-            xmlNode.children.append(node)
-        }
-
-        return xmlNode
-    }*/
-
-    func encodeToQueryDictionary(_ input: AWSShape) -> [String : Any] {
+    /// Encode shape into query keys and values
+    func query(_ input: AWSShape) -> [String : Any] {
         var dictionary : [String : Any] = [:]
 
         func encodeToFlatDictionary(_ input: AWSShape, name: String? = nil) {

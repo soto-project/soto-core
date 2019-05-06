@@ -96,6 +96,9 @@ class _AWSXMLDecoder : Decoder {
                 guard let children = element.children?.compactMap({$0.name == key.stringValue ? ($0 as? XMLElement) : nil}) else {
                     throw DecodingError.keyNotFound(key, DecodingError.Context(codingPath: codingPath, debugDescription: "Key not found"))
                 }
+                guard children.count > 0 else {
+                    throw DecodingError.keyNotFound(key, DecodingError.Context(codingPath: codingPath, debugDescription: "Key not found"))
+                }
                 return children
             }
         }

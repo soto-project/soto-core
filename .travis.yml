@@ -16,7 +16,7 @@ matrix:
         - swift build
         - swift test --parallel -Xswiftc -DDEBUG
         - swift package generate-xcodeproj
-        - xcodebuild -scheme AWSSDKSwiftCore-Package -enableCodeCoverage YES build test
+        - xcodebuild -quiet -parallel-testing-enabled YES -scheme AWSSDKSwiftCore-Package -enableCodeCoverage YES build test
       after_success:
         - bash <(curl -s https://codecov.io/bash) -J 'AWSSDKSwiftCore'
 

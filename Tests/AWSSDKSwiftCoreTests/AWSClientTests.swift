@@ -126,6 +126,7 @@ class AWSClientTests: XCTestCase {
             XCTAssertEqual(String(describing: awsRequest.body), "text(\"Action=SendEmail&Value=%3Chtml%3E%3Cbody%3E%3Ca%20href%3D%22https://redsox.com%22%3ETest%3C/a%3E%3C/body%3E%3C/html%3E&Version=2013-12-01\")")
             let nioRequest = try awsRequest.toNIORequest()
             XCTAssertEqual(nioRequest.head.headers["Content-Type"][0], "application/x-www-form-urlencoded")
+            XCTAssertEqual(nioRequest.head.method, HTTPMethod.POST)
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -140,6 +141,7 @@ class AWSClientTests: XCTestCase {
             XCTAssertEqual(awsRequest.url.absoluteString, "\(kinesisClient.endpoint)/")
             let nioRequest = try awsRequest.toNIORequest()
             XCTAssertEqual(nioRequest.head.headers["Content-Type"][0], "application/x-amz-json-1.1")
+            XCTAssertEqual(nioRequest.head.method, HTTPMethod.POST)
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -153,7 +155,8 @@ class AWSClientTests: XCTestCase {
             )
 
             XCTAssertEqual(awsRequest.url.absoluteString, "https://s3.amazonaws.com/Bucket?list-type=2")
-            _ = try awsRequest.toNIORequest()
+            let nioRequest = try awsRequest.toNIORequest()
+            XCTAssertEqual(nioRequest.head.method, HTTPMethod.GET)
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -182,7 +185,8 @@ class AWSClientTests: XCTestCase {
                 let fromJson = dict["E"]! as! [String: String]
                 XCTAssertEqual(fromJson["MemberKey"], "memberValue")
             }
-            _ = try awsRequest.toNIORequest()
+            let nioRequest = try awsRequest.toNIORequest()
+            XCTAssertEqual(nioRequest.head.method, HTTPMethod.POST)
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -221,6 +225,7 @@ class AWSClientTests: XCTestCase {
                 input: input
             )
             let nioRequest = try awsRequest.toNIORequest()
+            XCTAssertEqual(nioRequest.head.method, HTTPMethod.PUT)
 
             let url = URL(string: nioRequest.head.uri)
             XCTAssertNotNil(url)
@@ -229,10 +234,11 @@ class AWSClientTests: XCTestCase {
             for (key, value) in nioRequest.head.headers {
                 headers[key.description] = value
             }
+            let method = "\(nioRequest.head.method)"
             let signedHeaders = s3Client.signer.signedHeaders(
                 url:url!,
                 headers: headers,
-                method:"PUT",
+                method: method,
                 date:Date(timeIntervalSince1970: 0),
                 bodyData:nioRequest.body
             )

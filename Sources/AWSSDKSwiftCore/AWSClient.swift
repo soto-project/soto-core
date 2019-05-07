@@ -192,7 +192,7 @@ extension AWSClient {
         var nioRequest = nioRequest
 
         guard let url = URL(string: nioRequest.head.uri), let _ = url.hostWithPort else {
-            fatalError("nioRequest.head.uri is invalid.")
+            throw RequestError.invalidURL("nioRequest.head.uri is invalid.")
         }
 
         // TODO avoid copying
@@ -201,6 +201,9 @@ extension AWSClient {
             headers[key.description] = value
         }
 
+        // We need to convert from the NIO type to a string
+        // when we sign the headers and attach the auth cookies
+        //
         let method = "\(nioRequest.head.method)"
 
         let signedHeaders = signer.signedHeaders(

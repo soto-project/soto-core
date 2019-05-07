@@ -17,16 +17,18 @@ extension XMLElement {
 }
 
 class _AWSXMLDecoder : Decoder {
-    public var codingPath: [CodingKey] = []
+    public var codingPath: [CodingKey]
     public var userInfo: [CodingUserInfoKey : Any] = [:]
     let elements : [XMLElement]
 
-    public init(_ element : XMLElement) {
+    public init(_ element : XMLElement, at codingPath: [CodingKey] = []) {
         self.elements = [element]
+        self.codingPath = codingPath
     }
 
-    init(elements : [XMLElement]) {
+    init(elements : [XMLElement], at codingPath: [CodingKey] ) {
         self.elements = elements
+        self.codingPath = codingPath
     }
 
     public func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
@@ -34,7 +36,7 @@ class _AWSXMLDecoder : Decoder {
     }
 
     struct KDC<Key: CodingKey> : KeyedDecodingContainerProtocol {
-        var codingPath: [CodingKey] = []
+        var codingPath: [CodingKey] { return decoder.codingPath }
         var allKeys: [Key] = []
         var allValueElements: [String : XMLElement] = [:]
         let element : XMLElement
@@ -181,8 +183,11 @@ class _AWSXMLDecoder : Decoder {
         }
 
         func decode<T>(_ type: T.Type, forKey key: Key) throws -> T where T : Decodable {
+            self.decoder.codingPath.append(key)
+            defer { self.decoder.codingPath.removeLast() }
+
             let elements = try children(for: key)
-            let decoder = _AWSXMLDecoder(elements: elements)
+            let decoder = _AWSXMLDecoder(elements: elements, at:codingPath)
             return try T(from: decoder)
         }
 
@@ -209,7 +214,7 @@ class _AWSXMLDecoder : Decoder {
     }
 
     struct UKDC : UnkeyedDecodingContainer {
-        var codingPath: [CodingKey] = []
+        var codingPath: [CodingKey] { return decoder.codingPath }
         var currentIndex: Int = 0
         let elements : [XMLElement]
         let decoder : _AWSXMLDecoder
@@ -321,7 +326,7 @@ class _AWSXMLDecoder : Decoder {
         }
 
         mutating func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
-            let decoder = _AWSXMLDecoder(elements[currentIndex])
+            let decoder = _AWSXMLDecoder(elements[currentIndex], at:codingPath)
             let decoded = try T(from: decoder)
             currentIndex += 1
             return decoded
@@ -347,7 +352,7 @@ class _AWSXMLDecoder : Decoder {
     }
 
     struct SVDC : SingleValueDecodingContainer {
-        var codingPath: [CodingKey] = []
+        var codingPath: [CodingKey] { return decoder.codingPath }
         let element : XMLElement
         let decoder : _AWSXMLDecoder
 
@@ -417,7 +422,7 @@ class _AWSXMLDecoder : Decoder {
         }
 
         func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
-            let decoder = _AWSXMLDecoder(element)
+            let decoder = _AWSXMLDecoder(element, at:codingPath)
             return try T(from: decoder)
         }
 

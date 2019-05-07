@@ -13,24 +13,27 @@ public class AWSXMLEncoder {
 class _AWSXMLEncoder : Encoder {
     let name : String
     var elements : [XMLElement] = []
-    var codingPath: [CodingKey] = []
+    var codingPath: [CodingKey]
     var userInfo: [CodingUserInfoKey : Any] = [:]
     
-    init(_ elementName : String) {
+    init(_ elementName : String, at codingPath: [CodingKey] = []) {
         self.name = elementName
+        self.codingPath = codingPath
     }
     
     func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {
         let element = XMLElement(name: name)
         elements.append(element)
-        return KeyedEncodingContainer(KEC(element))
+        return KeyedEncodingContainer(KEC(element, encoder:self))
     }
     
     struct KEC<Key: CodingKey> : KeyedEncodingContainerProtocol {
+        let referencing : _AWSXMLEncoder
         let element : XMLElement
-        var codingPath: [CodingKey] = []
+        var codingPath: [CodingKey] { return referencing.codingPath }
         
-        init(_ element : XMLElement) {
+        init(_ element : XMLElement, encoder: _AWSXMLEncoder) {
+            self.referencing = encoder
             self.element = element
         }
         
@@ -108,7 +111,10 @@ class _AWSXMLEncoder : Encoder {
         }
         
         func encode<T>(_ value: T, forKey key: Key) throws where T : Encodable {
-            let encoder = _AWSXMLEncoder(key.stringValue)
+            self.referencing.codingPath.append(key)
+            defer { self.referencing.codingPath.removeLast() }
+
+            let encoder = _AWSXMLEncoder(key.stringValue, at: codingPath)
             try value.encode(to: encoder)
             for child in encoder.elements {
                 element.addChild(child)
@@ -140,8 +146,8 @@ class _AWSXMLEncoder : Encoder {
     
     struct UKEC : UnkeyedEncodingContainer {
         
-        var referencing : _AWSXMLEncoder
-        var codingPath: [CodingKey] = []
+        let referencing : _AWSXMLEncoder
+        var codingPath: [CodingKey] { return referencing.codingPath }
         var count : Int
 
         init(_ encoder: _AWSXMLEncoder) {
@@ -223,7 +229,7 @@ class _AWSXMLEncoder : Encoder {
         }
         
         func encode<T>(_ value: T) throws where T : Encodable {
-            let encoder = _AWSXMLEncoder(referencing.name)
+            let encoder = _AWSXMLEncoder(referencing.name, at: codingPath)
             try value.encode(to: encoder)
             referencing.elements.append(contentsOf:encoder.elements)
         }
@@ -248,7 +254,7 @@ class _AWSXMLEncoder : Encoder {
     
     struct SVEC : SingleValueEncodingContainer {
         let referencing : _AWSXMLEncoder
-        var codingPath: [CodingKey] = []
+        var codingPath: [CodingKey] { return referencing.codingPath }
         
         init(_ encoder : _AWSXMLEncoder) {
             self.referencing = encoder
@@ -329,7 +335,7 @@ class _AWSXMLEncoder : Encoder {
         }
         
         func encode<T>(_ value: T) throws where T : Encodable {
-            let encoder = _AWSXMLEncoder(referencing.name)
+            let encoder = _AWSXMLEncoder(referencing.name, at: codingPath)
             try value.encode(to: encoder)
             referencing.elements.append(contentsOf: encoder.elements)
         }

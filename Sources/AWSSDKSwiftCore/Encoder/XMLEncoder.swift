@@ -26,7 +26,7 @@ class _AWSXMLEncoder : Encoder {
         return KeyedEncodingContainer(KEC(element))
     }
     
-    class KEC<Key: CodingKey> : KeyedEncodingContainerProtocol {
+    struct KEC<Key: CodingKey> : KeyedEncodingContainerProtocol {
         let element : XMLElement
         var codingPath: [CodingKey] = []
         
@@ -138,7 +138,7 @@ class _AWSXMLEncoder : Encoder {
         return UKEC(self)
     }
     
-    class UKEC : UnkeyedEncodingContainer {
+    struct UKEC : UnkeyedEncodingContainer {
         
         var referencing : _AWSXMLEncoder
         var codingPath: [CodingKey] = []
@@ -246,7 +246,7 @@ class _AWSXMLEncoder : Encoder {
         return SVEC(self)
     }
     
-    class SVEC : SingleValueEncodingContainer {
+    struct SVEC : SingleValueEncodingContainer {
         let referencing : _AWSXMLEncoder
         var codingPath: [CodingKey] = []
         

@@ -109,8 +109,8 @@ class SerializersTests: XCTestCase {
 
     func testDecodeExpandedContainers() {
         struct Shape : Codable {
-            let array = [3,2,1]
-            let dictionary = ["one":1, "two":2, "three":3]
+            let array : [Int]
+            let dictionary : [String: Int]
         }
         let xmldata = "<Shape><array><member>3</member><member>2</member><member>1</member></array><dictionary><entry><key>one</key><value>1</value></entry><entry><key>two</key><value>2</value></entry><entry><key>three</key><value>3</value></entry></dictionary></Shape>"
         do {

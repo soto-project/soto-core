@@ -83,7 +83,10 @@ extension Body {
             }
             
         case .xml(let node):
-            return node.xmlString.data(using: .utf8)
+            let xmlDocument = XMLDocument(rootElement: node)
+            xmlDocument.version = "1.0"
+            xmlDocument.characterEncoding = "UTF-8"
+            return xmlDocument.xmlData
             
         case .multipart(_):
             return nil

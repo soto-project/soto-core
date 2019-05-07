@@ -340,6 +340,10 @@ extension AWSClient {
                     // cannot use payload path to find XmlElement as it may have a different. Need to translate this to the tag used in the Encoder
                     guard let member = Input._members.first(where: {$0.label == payload}) else { throw AWSClientError.unsupportedOperation(message: "The shape is requesting a payload that does not exist")}
                     guard let element = node.elements(forName: member.location?.name ?? member.label).first else { throw AWSClientError.missingParameter(message: "Payload is missing")}
+                    // if member has a namespace apply it to the element
+                    if let namespace = member.xmlNamespace {
+                        element.addNamespace(XMLNode.namespace(withName: "", stringValue: namespace) as! XMLNode)
+                    }
                     body = .xml(element)
                 default:
                     body = Body(anyValue: payloadBody)

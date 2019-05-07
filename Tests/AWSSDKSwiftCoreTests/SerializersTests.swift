@@ -18,6 +18,7 @@ class SerializersTests: XCTestCase {
             case second
             case third
         }
+        let bool : Bool
         let integer : Int
         let float : Float
         let double : Double
@@ -28,6 +29,7 @@ class SerializersTests: XCTestCase {
         let uint64 : UInt64 = 90
 
         private enum CodingKeys : String, CodingKey {
+            case bool = "b"
             case integer = "i"
             case float = "s"
             case double = "d"
@@ -84,9 +86,9 @@ class SerializersTests: XCTestCase {
     }
 
     var testShape : Shape {
-        return Shape(numbers: Numbers(integer: 45, float: 3.4, double: 7.89234, intEnum: .second),
+        return Shape(numbers: Numbers(bool:true, integer: 45, float: 3.4, double: 7.89234, intEnum: .second),
                               stringShape: StringShape(string: "String1", optionalString: "String2", stringEnum: .third),
-                              arrays: Arrays(arrayOfNatives: [34,1,4098], arrayOfShapes: [Numbers(integer: 1, float: 1.2, double: 1.4, intEnum: .first), Numbers(integer: 3, float: 2.01, double: 1.01, intEnum: .third)]))
+                              arrays: Arrays(arrayOfNatives: [34,1,4098], arrayOfShapes: [Numbers(bool:false, integer: 1, float: 1.2, double: 1.4, intEnum: .first), Numbers(bool:true, integer: 3, float: 2.01, double: 1.01, intEnum: .third)]))
     }
 
     var testShapeWithDictionaries : ShapeWithDictionaries {
@@ -100,11 +102,32 @@ class SerializersTests: XCTestCase {
         let node = try! AWSXMLEncoder().encode(shape)
 
         let xml = node.xmlString
-        let xmlToTest = "<Shape><Numbers><i>45</i><s>3.4</s><d>7.89234</d><enum>1</enum><int8>4</int8><uint16>5</uint16><int32>7</int32><uint64>90</uint64></Numbers><Strings><string>String1</string><optionalString>String2</optionalString><stringEnum>third</stringEnum></Strings><Arrays><arrayOfNatives>34</arrayOfNatives><arrayOfNatives>1</arrayOfNatives><arrayOfNatives>4098</arrayOfNatives><arrayOfShapes><i>1</i><s>1.2</s><d>1.4</d><enum>0</enum><int8>4</int8><uint16>5</uint16><int32>7</int32><uint64>90</uint64></arrayOfShapes><arrayOfShapes><i>3</i><s>2.01</s><d>1.01</d><enum>2</enum><int8>4</int8><uint16>5</uint16><int32>7</int32><uint64>90</uint64></arrayOfShapes></Arrays></Shape>"
+        let xmlToTest = "<Shape><Numbers><b>true</b><i>45</i><s>3.4</s><d>7.89234</d><enum>1</enum><int8>4</int8><uint16>5</uint16><int32>7</int32><uint64>90</uint64></Numbers><Strings><string>String1</string><optionalString>String2</optionalString><stringEnum>third</stringEnum></Strings><Arrays><arrayOfNatives>34</arrayOfNatives><arrayOfNatives>1</arrayOfNatives><arrayOfNatives>4098</arrayOfNatives><arrayOfShapes><b>false</b><i>1</i><s>1.2</s><d>1.4</d><enum>0</enum><int8>4</int8><uint16>5</uint16><int32>7</int32><uint64>90</uint64></arrayOfShapes><arrayOfShapes><b>true</b><i>3</i><s>2.01</s><d>1.01</d><enum>2</enum><int8>4</int8><uint16>5</uint16><int32>7</int32><uint64>90</uint64></arrayOfShapes></Arrays></Shape>"
 
         XCTAssertEqual(xmlToTest, xml)
     }
 
+    func testDecodeExpandedContainers() {
+        struct Shape : Codable {
+            let array = [3,2,1]
+            let dictionary = ["one":1, "two":2, "three":3]
+        }
+        let xmldata = "<Shape><array><member>3</member><member>2</member><member>1</member></array><dictionary><entry><key>one</key><value>1</value></entry><entry><key>two</key><value>2</value></entry><entry><key>three</key><value>3</value></entry></dictionary></Shape>"
+        do {
+            let xmlDocument = try XMLDocument(data: xmldata.data(using: .utf8)!)
+            let rootElement = xmlDocument.rootElement()
+            
+            XCTAssertNotNil(rootElement)
+
+            let shape = try AWSXMLDecoder().decode(Shape.self, from: rootElement!)
+            
+            XCTAssertEqual(shape.array[0], 3)
+            XCTAssertEqual(shape.dictionary["two"], 2)
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+    
     func testEncodeDecodeXML() {
         do {
             let xml = try AWSXMLEncoder().encode(testShape)
@@ -175,6 +198,7 @@ class SerializersTests: XCTestCase {
     static var allTests : [(String, (SerializersTests) -> () throws -> Void)] {
         return [
             ("testSerializeToXML", testSerializeToXML),
+            ("testDecodeExpandedContainers", testDecodeExpandedContainers),
             ("testEncodeDecodeXML", testEncodeDecodeXML),
             ("testEncodeDecodeDictionariesXML", testEncodeDecodeDictionariesXML),
             ("testEncodeQueryDictionary", testEncodeQueryDictionary),

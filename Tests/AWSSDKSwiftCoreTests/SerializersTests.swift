@@ -22,12 +22,20 @@ class SerializersTests: XCTestCase {
         let float : Float
         let double : Double
         let intEnum : IntEnum
+        let int8 : Int8 = 4
+        let uint16 : UInt16 = 5
+        let int32 : Int32 = 7
+        let uint64 : UInt64 = 90
 
         private enum CodingKeys : String, CodingKey {
             case integer = "i"
             case float = "s"
             case double = "d"
             case intEnum = "enum"
+            case int8 = "int8"
+            case uint16 = "uint16"
+            case int32 = "int32"
+            case uint64 = "uint64"
         }
     }
 
@@ -92,7 +100,7 @@ class SerializersTests: XCTestCase {
         let node = try! AWSXMLEncoder().encode(shape)
 
         let xml = node.xmlString
-        let xmlToTest = "<Shape><Numbers><i>45</i><s>3.4</s><d>7.89234</d><enum>1</enum></Numbers><Strings><string>String1</string><optionalString>String2</optionalString><stringEnum>third</stringEnum></Strings><Arrays><arrayOfNatives>34</arrayOfNatives><arrayOfNatives>1</arrayOfNatives><arrayOfNatives>4098</arrayOfNatives><arrayOfShapes><i>1</i><s>1.2</s><d>1.4</d><enum>0</enum></arrayOfShapes><arrayOfShapes><i>3</i><s>2.01</s><d>1.01</d><enum>2</enum></arrayOfShapes></Arrays></Shape>"
+        let xmlToTest = "<Shape><Numbers><i>45</i><s>3.4</s><d>7.89234</d><enum>1</enum><int8>4</int8><uint16>5</uint16><int32>7</int32><uint64>90</uint64></Numbers><Strings><string>String1</string><optionalString>String2</optionalString><stringEnum>third</stringEnum></Strings><Arrays><arrayOfNatives>34</arrayOfNatives><arrayOfNatives>1</arrayOfNatives><arrayOfNatives>4098</arrayOfNatives><arrayOfShapes><i>1</i><s>1.2</s><d>1.4</d><enum>0</enum><int8>4</int8><uint16>5</uint16><int32>7</int32><uint64>90</uint64></arrayOfShapes><arrayOfShapes><i>3</i><s>2.01</s><d>1.01</d><enum>2</enum><int8>4</int8><uint16>5</uint16><int32>7</int32><uint64>90</uint64></arrayOfShapes></Arrays></Shape>"
 
         XCTAssertEqual(xmlToTest, xml)
     }

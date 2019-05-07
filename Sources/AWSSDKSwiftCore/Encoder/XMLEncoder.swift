@@ -107,11 +107,6 @@ class _AWSXMLEncoder : Encoder {
             element.addChild(childElement)
         }
         
-        func encode(_ value: Data, forKey key: Key) throws {
-            let childElement = XMLElement(name: key.stringValue, stringValue: value.base64EncodedString())
-            element.addChild(childElement)
-        }
-        
         func encode<T>(_ value: T, forKey key: Key) throws where T : Encodable {
             let encoder = _AWSXMLEncoder(key.stringValue)
             try value.encode(to: encoder)

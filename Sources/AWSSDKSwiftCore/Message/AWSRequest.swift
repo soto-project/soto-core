@@ -93,11 +93,34 @@ public struct AWSRequest {
             headers["Content-Type"] = "application/octet-stream"
         }
 
-        var head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: HTTPMethod.RAW(value: awsRequest.httpMethod), uri: awsRequest.url.absoluteString)
+        var head = HTTPRequestHead(
+          version: HTTPVersion(major: 1, minor: 1),
+          method: nioHTTPMethod(from: awsRequest.httpMethod),
+          uri: awsRequest.url.absoluteString
+        )
         let generatedHeaders = headers.map { ($0, $1) }
         head.headers = HTTPHeaders(generatedHeaders)
 
         return Request(head: head, body: try awsRequest.body.asData() ?? Data())
+    }
+
+    fileprivate func nioHTTPMethod(from: String) -> HTTPMethod {
+        switch from {
+        case "HEAD":
+            return .HEAD
+        case "GET":
+            return .GET
+        case "POST":
+            return .POST
+        case "PUT":
+            return .PUT
+        case "PATCH":
+            return .PATCH
+        case "DELETE":
+            return .DELETE
+        default:
+            return .GET
+        }
     }
 
     func toURLRequest() throws -> URLRequest {

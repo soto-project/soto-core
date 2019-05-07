@@ -36,7 +36,7 @@ class AWSClientTests: XCTestCase {
             AWSShapeMember(label: "Member", required: true, type: .list),
         ]
 
-        let Member = ["memberKey": "memberValue", "memberKey2": "memberValue2"]
+        let Member = ["memberKey": "memberValue", "memberKey2" : "memberValue2"]
 
         private enum CodingKeys: String, CodingKey {
             case Member = "Member"
@@ -87,19 +87,63 @@ class AWSClientTests: XCTestCase {
         }
     }
 
+    struct G: AWSShape {
+        public static let payloadPath: String? = "data"
+
+        public static var members: [AWSShapeMember] = [
+            AWSShapeMember(label: "data", required: true, type: .blob)
+        ]
+
+        public let data: Data
+
+        public init(data: Data) {
+            self.data = data
+        }
+
+        private enum CodingKeys: String, CodingKey {
+        case data = "data"
+        }
+    }
+
+    let sesClient = AWSClient(
+        accessKeyId: "foo",
+        secretAccessKey: "bar",
+        region: nil,
+        service: "email",
+        serviceProtocol: ServiceProtocol(type: .query),
+        apiVersion: "2013-12-01",
+        middlewares: [],
+        possibleErrorTypes: [SESErrorType.self]
+    )
+
+    let kinesisClient = AWSClient(
+        accessKeyId: "foo",
+        secretAccessKey: "bar",
+        region: nil,
+        amzTarget: "Kinesis_20131202",
+        service: "kinesis",
+        serviceProtocol: ServiceProtocol(type: .json, version: ServiceProtocol.Version(major: 1, minor: 1)),
+        apiVersion: "2013-12-02",
+        middlewares: [],
+        possibleErrorTypes: [KinesisErrorType.self]
+    )
+
+    let s3Client = AWSClient(
+        accessKeyId: "foo",
+        secretAccessKey: "bar",
+        region: nil,
+        service: "s3",
+        serviceProtocol: ServiceProtocol(type: .restxml),
+        apiVersion: "2006-03-01",
+        endpoint: nil,
+        serviceEndpoints: ["us-west-2": "s3.us-west-2.amazonaws.com", "eu-west-1": "s3.eu-west-1.amazonaws.com", "us-east-1": "s3.amazonaws.com", "ap-northeast-1": "s3.ap-northeast-1.amazonaws.com", "s3-external-1": "s3-external-1.amazonaws.com", "ap-southeast-2": "s3.ap-southeast-2.amazonaws.com", "sa-east-1": "s3.sa-east-1.amazonaws.com", "ap-southeast-1": "s3.ap-southeast-1.amazonaws.com", "us-west-1": "s3.us-west-1.amazonaws.com"],
+        partitionEndpoint: "us-east-1",
+        middlewares: [],
+        possibleErrorTypes: [S3ErrorType.self]
+    )
+
     func testCreateAWSRequest() {
         let input1 = C()
-
-        let sesClient = AWSClient(
-            accessKeyId: "foo",
-            secretAccessKey: "bar",
-            region: nil,
-            service: "email",
-            serviceProtocol: ServiceProtocol(type: .query),
-            apiVersion: "2013-12-01",
-            middlewares: [],
-            possibleErrorTypes: [SESErrorType.self]
-        )
 
         do {
             let awsRequest = try sesClient.debugCreateAWSRequest(
@@ -112,6 +156,7 @@ class AWSClientTests: XCTestCase {
             XCTAssertEqual(String(describing: awsRequest.body), "text(\"Action=SendEmail&Value=%3Chtml%3E%3Cbody%3E%3Ca%20href%3D%22https://redsox.com%22%3ETest%3C/a%3E%3C/body%3E%3C/html%3E&Version=2013-12-01\")")
             let nioRequest = try awsRequest.toNIORequest()
             XCTAssertEqual(nioRequest.head.headers["Content-Type"][0], "application/x-www-form-urlencoded")
+            XCTAssertEqual(nioRequest.head.method, HTTPMethod.POST)
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -157,23 +202,10 @@ class AWSClientTests: XCTestCase {
 
             let nioRequest = try awsRequest.toNIORequest()
             XCTAssertEqual(nioRequest.head.headers["Content-Type"][0], "application/x-amz-json-1.1")
+            XCTAssertEqual(nioRequest.head.method, HTTPMethod.POST)
         } catch {
             XCTFail(error.localizedDescription)
         }
-
-        let s3Client = AWSClient(
-            accessKeyId: "foo",
-            secretAccessKey: "bar",
-            region: nil,
-            service: "s3",
-            serviceProtocol: ServiceProtocol(type: .restxml),
-            apiVersion: "2006-03-01",
-            endpoint: nil,
-            serviceEndpoints: ["us-west-2": "s3.us-west-2.amazonaws.com", "eu-west-1": "s3.eu-west-1.amazonaws.com", "us-east-1": "s3.amazonaws.com", "ap-northeast-1": "s3.ap-northeast-1.amazonaws.com", "s3-external-1": "s3-external-1.amazonaws.com", "ap-southeast-2": "s3.ap-southeast-2.amazonaws.com", "sa-east-1": "s3.sa-east-1.amazonaws.com", "ap-southeast-1": "s3.ap-southeast-1.amazonaws.com", "us-west-1": "s3.us-west-1.amazonaws.com"],
-            partitionEndpoint: "us-east-1",
-            middlewares: [],
-            possibleErrorTypes: [S3ErrorType.self]
-        )
 
         do {
             let awsRequest = try s3Client.debugCreateAWSRequest(
@@ -184,7 +216,8 @@ class AWSClientTests: XCTestCase {
             )
 
             XCTAssertEqual(awsRequest.url.absoluteString, "https://s3.amazonaws.com/Bucket?list-type=2")
-            _ = try awsRequest.toNIORequest()
+            let nioRequest = try awsRequest.toNIORequest()
+            XCTAssertEqual(nioRequest.head.method, HTTPMethod.GET)
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -213,7 +246,8 @@ class AWSClientTests: XCTestCase {
                 let fromJson = dict["E"]! as! [String: String]
                 XCTAssertEqual(fromJson["MemberKey"], "memberValue")
             }
-            _ = try awsRequest.toNIORequest()
+            let nioRequest = try awsRequest.toNIORequest()
+            XCTAssertEqual(nioRequest.head.method, HTTPMethod.POST)
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -263,6 +297,7 @@ class AWSClientTests: XCTestCase {
             )
 
             let nioRequest = try kinesisClient.createNioRequest(awsRequest, Credential(accessKeyId: "foo", secretAccessKey: "bar"))
+            XCTAssertEqual(nioRequest.head.method, HTTPMethod.POST)
             if let host = nioRequest.head.headers.first(where: { $0.name == "Host" }) {
                 XCTAssertEqual(host.value, "kinesis.us-east-1.amazonaws.com")
             }

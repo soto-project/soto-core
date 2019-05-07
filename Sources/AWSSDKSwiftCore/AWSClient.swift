@@ -227,27 +227,21 @@ extension AWSClient {
 
     fileprivate func nioRequestWithSignedHeader(_ nioRequest: Request, _ credential: CredentialProvider) throws -> Request {
         var nioRequest = nioRequest
+
+        guard let url = URL(string: nioRequest.head.uri), let _ = url.hostWithPort else {
+            throw RequestError.invalidURL("nioRequest.head.uri is invalid.")
+        }
+
         // TODO avoid copying
         var headers: [String: String] = [:]
         for (key, value) in nioRequest.head.headers {
             headers[key.description] = value
         }
 
-        let method = { () -> String in
-            switch nioRequest.head.method {
-            case HTTPMethod.RAW(value: "HEAD"): return "HEAD"
-            case HTTPMethod.RAW(value: "GET"): return "GET"
-            case HTTPMethod.RAW(value: "POST"): return "POST"
-            case HTTPMethod.RAW(value: "PUT"): return "PUT"
-            case HTTPMethod.RAW(value: "PATCH"): return "PATCH"
-            case HTTPMethod.RAW(value: "DELETE"): return "DELETE"
-            default: return "GET"
-            }
-        }()
-
-        guard let url = URL(string: nioRequest.head.uri), let _ = url.hostWithPort else {
-            fatalError("nioRequest.head.uri is invalid.")
-        }
+        // We need to convert from the NIO type to a string
+        // when we sign the headers and attach the auth cookies
+        //
+        let method = "\(nioRequest.head.method)"
 
         let signedHeaders = signer.signedHeaders(
             url: url,
@@ -401,11 +395,15 @@ extension AWSClient {
 
         // construct query array
         var queryItems = urlQueryItems(fromDictionary: queryParams) ?? []
-        
+
         // add new queries to query item array. These need to be added to the queryItems list instead of the queryParams dictionary as added nil items to a dictionary doesn't add a value.
         if let pathQueryItems = parsedPath.queryItems {
             for item in pathQueryItems {
-                queryItems.append(URLQueryItem(name:item.name, value:item.value))
+                if let value = item.value {
+                    queryItems.append(URLQueryItem(name:item.name, value:value))
+                } else {
+                    queryItems.append(URLQueryItem(name:item.name, value:""))
+                }
             }
         }
 
@@ -447,7 +445,7 @@ extension AWSClient {
             if let value = dict[key] {
                 queryItems.append(URLQueryItem(name: key, value: String(describing: value)))
             } else {
-                queryItems.append(URLQueryItem(name: key, value: nil))
+                queryItems.append(URLQueryItem(name: key, value: ""))
             }
         }
         return queryItems.isEmpty ? nil : queryItems

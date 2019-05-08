@@ -39,6 +39,9 @@ class _AWSXMLDecoder : Decoder {
     }
 
     public func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
+        if elements.count == 0 {
+            throw DecodingError.keyNotFound(codingPath.last!, DecodingError.Context(codingPath: codingPath, debugDescription:"Failed to find key value in expanded dictionary. Should not get here"))
+        }
         return KeyedDecodingContainer(KDC(elements[0], decoder: self))
     }
 
@@ -105,9 +108,6 @@ class _AWSXMLDecoder : Decoder {
                 return [child]
             } else {
                 guard let children = element.children?.compactMap({$0.name == key.stringValue ? ($0 as? XMLElement) : nil}) else {
-                    throw DecodingError.keyNotFound(key, DecodingError.Context(codingPath: codingPath, debugDescription: "Key not found"))
-                }
-                guard children.count > 0 else {
                     throw DecodingError.keyNotFound(key, DecodingError.Context(codingPath: codingPath, debugDescription: "Key not found"))
                 }
                 return children
@@ -355,6 +355,9 @@ class _AWSXMLDecoder : Decoder {
     }
 
     public func singleValueContainer() throws -> SingleValueDecodingContainer {
+        if elements.count == 0 {
+            throw DecodingError.keyNotFound(codingPath.last!, DecodingError.Context(codingPath: codingPath, debugDescription:"Failed to find key value in expanded dictionary. Should not get here"))
+        }
         return SVDC(elements[0], decoder:self)
     }
 

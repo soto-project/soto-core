@@ -13,6 +13,19 @@ import XCTest
 class SerializersTests: XCTestCase {
 
     struct Numbers : AWSShape {
+        
+        init(bool:Bool, integer:Int, float:Float, double:Double, intEnum:IntEnum) {
+            self.bool = bool
+            self.integer = integer
+            self.float = float
+            self.double = double
+            self.intEnum = intEnum
+            self.int8 = 4
+            self.uint16 = 5
+            self.int32 = 7
+            self.uint64 = 90
+        }
+        
         enum IntEnum : Int, Codable {
             case first
             case second
@@ -23,10 +36,10 @@ class SerializersTests: XCTestCase {
         let float : Float
         let double : Double
         let intEnum : IntEnum
-        let int8 : Int8 = 4
-        let uint16 : UInt16 = 5
-        let int32 : Int32 = 7
-        let uint64 : UInt64 = 90
+        let int8 : Int8
+        let uint16 : UInt16
+        let int32 : Int32
+        let uint64 : UInt64
 
         private enum CodingKeys : String, CodingKey {
             case bool = "b"
@@ -61,6 +74,11 @@ class SerializersTests: XCTestCase {
     struct Dictionaries : AWSShape {
         let dictionaryOfNatives : [String:Int]
         let dictionaryOfShapes : [String:StringShape]
+
+        private enum CodingKeys : String, CodingKey {
+            case dictionaryOfNatives = "natives"
+            case dictionaryOfShapes = "shapes"
+        }
     }
 
     struct Shape : AWSShape {
@@ -77,11 +95,11 @@ class SerializersTests: XCTestCase {
 
     struct ShapeWithDictionaries : AWSShape {
         let shape : Shape
-        let dicationaries : Dictionaries
+        let dictionaries : Dictionaries
 
         private enum CodingKeys : String, CodingKey {
             case shape = "s"
-            case dicationaries = "d"
+            case dictionaries = "d"
         }
     }
 
@@ -92,7 +110,7 @@ class SerializersTests: XCTestCase {
     }
 
     var testShapeWithDictionaries : ShapeWithDictionaries {
-        return ShapeWithDictionaries(shape: testShape, dicationaries: Dictionaries(dictionaryOfNatives: ["first":1, "second":2, "third":3],
+        return ShapeWithDictionaries(shape: testShape, dictionaries: Dictionaries(dictionaryOfNatives: ["first":1, "second":2, "third":3],
                                                                                           dictionaryOfShapes: ["strings":StringShape(string:"one", optionalString: "two", stringEnum: .third),
                                                                                                                "strings2":StringShape(string:"cat", optionalString: nil, stringEnum: .fourth)]))
     }
@@ -107,6 +125,50 @@ class SerializersTests: XCTestCase {
         XCTAssertEqual(xmlToTest, xml)
     }
 
+    func testDecodeFail() {
+        let missingNative = "<Numbers><b>true</b><i>45</i><s>3.4</s><d>7.89234</d><enum>1</enum><int8>4</int8><uint16>5</uint16><int32>7</int32></Numbers>"
+        let missingEnum = "<Numbers><b>true</b><i>45</i><s>3.4</s><d>7.89234</d></Numbers>"
+        let wrongEnum = "<Strings><string>String1</string><optionalString>String2</optionalString><stringEnum>twenty</stringEnum></Strings>"
+        let missingShape = "<Shape><Numbers><b>true</b><i>45</i><s>3.4</s><d>7.89234</d><enum>1</enum><int8>4</int8><uint16>5</uint16><int32>7</int32><uint64>90</uint64></Numbers><Strings><string>String1</string><optionalString>String2</optionalString><stringEnum>third</stringEnum></Strings></Shape>"
+        let stringNotShape = "<Dictionaries><natives></natives><shapes><first>test</first></shapes></Dictionaries>"
+        let notANumber = "<Dictionaries><natives><test>notANumber</test></natives><shapes></shapes></Dictionaries>"
+
+        do {
+            var xmlDocument = try XMLDocument(data: missingNative.data(using: .utf8)!)
+            XCTAssertNotNil(xmlDocument.rootElement())
+            let result = try? AWSXMLDecoder().decode(Numbers.self, from: xmlDocument.rootElement()!)
+            XCTAssertNil(result)
+
+            xmlDocument = try XMLDocument(data: missingEnum.data(using: .utf8)!)
+            XCTAssertNotNil(xmlDocument.rootElement())
+            let result2 = try? AWSXMLDecoder().decode(Numbers.self, from: xmlDocument.rootElement()!)
+            XCTAssertNil(result2)
+
+            xmlDocument = try XMLDocument(data: wrongEnum.data(using: .utf8)!)
+            XCTAssertNotNil(xmlDocument.rootElement())
+            let result3 = try? AWSXMLDecoder().decode(StringShape.self, from: xmlDocument.rootElement()!)
+            XCTAssertNil(result3)
+
+            xmlDocument = try XMLDocument(data: missingShape.data(using: .utf8)!)
+            XCTAssertNotNil(xmlDocument.rootElement())
+            let result4 = try? AWSXMLDecoder().decode(Shape.self, from: xmlDocument.rootElement()!)
+            XCTAssertNil(result4)
+
+            xmlDocument = try XMLDocument(data: stringNotShape.data(using: .utf8)!)
+            XCTAssertNotNil(xmlDocument.rootElement())
+            let result5 = try? AWSXMLDecoder().decode(Dictionaries.self, from: xmlDocument.rootElement()!)
+            XCTAssertNil(result5)
+            
+            xmlDocument = try XMLDocument(data: notANumber.data(using: .utf8)!)
+            XCTAssertNotNil(xmlDocument.rootElement())
+            let result6 = try? AWSXMLDecoder().decode(Dictionaries.self, from: xmlDocument.rootElement()!)
+            XCTAssertNil(result6)
+            
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+    
     func testDecodeExpandedContainers() {
         struct Shape : Codable {
             let array : [Int]
@@ -145,8 +207,8 @@ class SerializersTests: XCTestCase {
             let xml = try AWSXMLEncoder().encode(testShapeWithDictionaries)
             let testShape2 = try AWSXMLDecoder().decode(ShapeWithDictionaries.self, from:xml)
 
-            XCTAssertEqual(testShape2.dicationaries.dictionaryOfNatives["second"], 2)
-            XCTAssertEqual(testShape2.dicationaries.dictionaryOfShapes["strings2"]?.stringEnum, .fourth)
+            XCTAssertEqual(testShape2.dictionaries.dictionaryOfNatives["second"], 2)
+            XCTAssertEqual(testShape2.dictionaries.dictionaryOfShapes["strings2"]?.stringEnum, .fourth)
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -182,7 +244,7 @@ class SerializersTests: XCTestCase {
 
         // dicationary member
         let dictionaryDict = dict["d"] as? [String: Any]
-        let dictionaryOfShapes = dictionaryDict?["dictionaryOfShapes"] as? [String:Any]
+        let dictionaryOfShapes = dictionaryDict?["shapes"] as? [String:Any]
         let stringsDict2 = dictionaryOfShapes?["strings"] as? [String:Any]
         let stringEnum = stringsDict2?["stringEnum"] as? String
         XCTAssertEqual(stringEnum, "third")
@@ -200,6 +262,7 @@ class SerializersTests: XCTestCase {
             ("testSerializeToXML", testSerializeToXML),
             ("testDecodeExpandedContainers", testDecodeExpandedContainers),
             ("testEncodeDecodeXML", testEncodeDecodeXML),
+            ("testDecodeFail", testDecodeFail),
             ("testEncodeDecodeDictionariesXML", testEncodeDecodeDictionariesXML),
             ("testEncodeQueryDictionary", testEncodeQueryDictionary),
             ("testSerializeToDictionaryAndJSON", testSerializeToDictionaryAndJSON)

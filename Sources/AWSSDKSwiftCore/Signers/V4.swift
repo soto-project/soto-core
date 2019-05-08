@@ -43,7 +43,7 @@ extension Signers {
             self.endpoint = endpoint
         }
 
-        // checkCredential should be called and the future resolved
+        // manageCredential should be called and the future resolved
         // prior to building signedURL or signedHeaders to ensure
         // latest credentials are retreived and set
         //

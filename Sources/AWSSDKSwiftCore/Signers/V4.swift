@@ -15,6 +15,8 @@ extension Signers {
 
         public let service: String
 
+        public let endpoint: String?
+
         let identifier = "aws4_request"
 
         let algorithm = "AWS4-HMAC-SHA256"
@@ -34,10 +36,11 @@ extension Signers {
         var credential: CredentialProvider
 
 
-        public init(region: Region, service: String, credential: CredentialProvider) {
+        public init(credential: CredentialProvider, region: Region, service: String, endpoint: String?) {
             self.region = region
             self.service = service
             self.credential = credential
+            self.endpoint = endpoint
         }
 
         // checkCredential should be called and the future resolved

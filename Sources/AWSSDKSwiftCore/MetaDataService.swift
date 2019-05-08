@@ -22,13 +22,13 @@ struct MetaDataService {
     static let instanceMetadataUri = "/latest/meta-data/iam/security-credentials/"
 
     static var serviceProvider: MetaDataServiceProvider {
-      get {
-        if containerCredentialsUri != nil {
-            return .ecsCredentials(containerCredentialsUri!)
-        } else {
-            return .instanceProfileCredentials(instanceMetadataUri)
+        get {
+          if containerCredentialsUri != nil {
+              return .ecsCredentials(containerCredentialsUri!)
+          } else {
+              return .instanceProfileCredentials(instanceMetadataUri)
+          }
         }
-      }
     }
 
     enum MetaDataServiceProvider {
@@ -144,78 +144,78 @@ struct MetaDataService {
 }
 
 extension MetaDataService.MetaData {
-  init(from decoder: Decoder) throws {
+    init(from decoder: Decoder) throws {
 
-    let values = try decoder.container(keyedBy: CodingKeys.self)
+      let values = try decoder.container(keyedBy: CodingKeys.self)
 
-    switch MetaDataService.serviceProvider {
+      switch MetaDataService.serviceProvider {
 
-    case .ecsCredentials:
-        self.code = nil
-        self.lastUpdated = nil
-        self.type = nil
+      case .ecsCredentials:
+          self.code = nil
+          self.lastUpdated = nil
+          self.type = nil
 
-        guard let roleArn = try? values.decode(String.self, forKey: .roleArn) else {
-            throw MetaDataServiceError.missingRequiredParam("RoleArn")
-        }
-        self.roleArn = roleArn
+          guard let roleArn = try? values.decode(String.self, forKey: .roleArn) else {
+              throw MetaDataServiceError.missingRequiredParam("RoleArn")
+          }
+          self.roleArn = roleArn
 
-    case .instanceProfileCredentials:
-        self.roleArn = nil
+      case .instanceProfileCredentials:
+          self.roleArn = nil
 
-        guard let code = try? values.decode(String.self, forKey: .code) else {
-            throw MetaDataServiceError.missingRequiredParam("Code")
-        }
+          guard let code = try? values.decode(String.self, forKey: .code) else {
+              throw MetaDataServiceError.missingRequiredParam("Code")
+          }
 
-        guard let lastUpdated = try? values.decode(String.self, forKey: .lastUpdated) else {
-            throw MetaDataServiceError.missingRequiredParam("LastUpdated")
-        }
+          guard let lastUpdated = try? values.decode(String.self, forKey: .lastUpdated) else {
+              throw MetaDataServiceError.missingRequiredParam("LastUpdated")
+          }
 
-        guard let type = try? values.decode(String.self, forKey: .type) else {
-            throw MetaDataServiceError.missingRequiredParam("Type")
-        }
+          guard let type = try? values.decode(String.self, forKey: .type) else {
+              throw MetaDataServiceError.missingRequiredParam("Type")
+          }
 
-        self.code = code
-        self.lastUpdated = lastUpdated
-        self.type = type
+          self.code = code
+          self.lastUpdated = lastUpdated
+          self.type = type
+      }
+
+      guard let accessKeyId = try? values.decode(String.self, forKey: .accessKeyId) else {
+          throw MetaDataServiceError.missingRequiredParam("AccessKeyId")
+      }
+
+      guard let secretAccessKey = try? values.decode(String.self, forKey: .secretAccessKey) else {
+          throw MetaDataServiceError.missingRequiredParam("SecretAccessKey")
+      }
+
+      guard let token = try? values.decode(String.self, forKey: .token) else {
+          throw MetaDataServiceError.missingRequiredParam("Token")
+      }
+
+      guard let expiration = try? values.decode(String.self, forKey: .expiration) else {
+          throw MetaDataServiceError.missingRequiredParam("Expiration")
+      }
+
+      self.accessKeyId = accessKeyId
+      self.secretAccessKey = secretAccessKey
+      self.token = token
+
+      // ISO8601DateFormatter and DateFormatter inherit from Formatter, which does not have the methods we need.
+      if #available(OSX 10.12, *) {
+          let dateFormatter = ISO8601DateFormatter()
+          guard let date = dateFormatter.date(from: expiration) else {
+              fatalError("ERROR: Date conversion failed due to mismatched format.")
+          }
+          self.expiration = date
+      } else {
+          let dateFormatter = DateFormatter()
+          dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
+          dateFormatter.timeZone = TimeZone(identifier: "UTC")
+          guard let date = dateFormatter.date(from: expiration) else {
+              fatalError("ERROR: Date conversion failed due to mismatched format.")
+          }
+          self.expiration = date
+      }
+
     }
-
-    guard let accessKeyId = try? values.decode(String.self, forKey: .accessKeyId) else {
-        throw MetaDataServiceError.missingRequiredParam("AccessKeyId")
-    }
-
-    guard let secretAccessKey = try? values.decode(String.self, forKey: .secretAccessKey) else {
-        throw MetaDataServiceError.missingRequiredParam("SecretAccessKey")
-    }
-
-    guard let token = try? values.decode(String.self, forKey: .token) else {
-        throw MetaDataServiceError.missingRequiredParam("Token")
-    }
-
-    guard let expiration = try? values.decode(String.self, forKey: .expiration) else {
-        throw MetaDataServiceError.missingRequiredParam("Expiration")
-    }
-
-    self.accessKeyId = accessKeyId
-    self.secretAccessKey = secretAccessKey
-    self.token = token
-
-    // ISO8601DateFormatter and DateFormatter inherit from Formatter, which does not have the methods we need.
-    if #available(OSX 10.12, *) {
-        let dateFormatter = ISO8601DateFormatter()
-        guard let date = dateFormatter.date(from: expiration) else {
-            fatalError("ERROR: Date conversion failed due to mismatched format.")
-        }
-        self.expiration = date
-    } else {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
-        dateFormatter.timeZone = TimeZone(identifier: "UTC")
-        guard let date = dateFormatter.date(from: expiration) else {
-            fatalError("ERROR: Date conversion failed due to mismatched format.")
-        }
-        self.expiration = date
-    }
-
-  }
 }

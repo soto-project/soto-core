@@ -66,20 +66,18 @@ public struct AWSClient {
         return "\(signer.service).\(signer.region.rawValue).amazonaws.com"
     }
 
-    public var credential: CredentialProvider
-
     public static let eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
 
     public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSRequestMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil) {
-        //let credential: CredentialProvider
+        let credential: CredentialProvider
         if let accessKey = accessKeyId, let secretKey = secretAccessKey {
-            self.credential = Credential(accessKeyId: accessKey, secretAccessKey: secretKey)
+            credential = Credential(accessKeyId: accessKey, secretAccessKey: secretKey)
         } else if let ecredential = EnvironementCredential() {
-            self.credential = ecredential
+            credential = ecredential
         } else if let scredential = try? SharedCredential() {
-            self.credential = scredential
+            credential = scredential
         } else {
-            self.credential = Credential(accessKeyId: "", secretAccessKey: "")
+            credential = Credential(accessKeyId: "", secretAccessKey: "")
         }
 
         let region: Region
@@ -94,7 +92,7 @@ public struct AWSClient {
             region = .useast1
         }
 
-        self.signer = Signers.V4(region: region, service: service)
+        self.signer = Signers.V4(region: region, service: service, credential: credential)
         self.apiVersion = apiVersion
         self._endpoint = endpoint
         self.amzTarget = amzTarget
@@ -129,14 +127,14 @@ extension AWSClient {
 extension AWSClient {
     public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws {
 
-        return getCredential().thenThrowing { credential in
+        return signer.manageCredential().thenThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
                     operation: operationName,
                     path: path,
                     httpMethod: httpMethod,
                     input: input
                 )
-                return try self.createNioRequest(awsRequest, credential)
+                return try self.createNioRequest(awsRequest)
             }.whenSuccess { nioRequest in
                 _ = self.invoke(nioRequest)
           }
@@ -144,13 +142,13 @@ extension AWSClient {
 
     public func send(operation operationName: String, path: String, httpMethod: String) throws {
 
-        return getCredential().thenThrowing { credential in
+        return signer.manageCredential().thenThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
                     operation: operationName,
                     path: path,
                     httpMethod: httpMethod
                 )
-                return try self.createNioRequest(awsRequest, credential)
+                return try self.createNioRequest(awsRequest)
             }.whenSuccess { nioRequest in
                 _ = self.invoke(nioRequest)
           }
@@ -158,13 +156,13 @@ extension AWSClient {
 
     public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) throws -> Future<Output> {
 
-        return getCredential().thenThrowing { credential in
+        return signer.manageCredential().thenThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
                     operation: operationName,
                     path: path,
                     httpMethod: httpMethod
                 )
-                return try self.createNioRequest(awsRequest, credential)
+                return try self.createNioRequest(awsRequest)
             }.then { nioRequest in
                 return self.invoke(nioRequest)
             }.thenThrowing { response in
@@ -175,14 +173,14 @@ extension AWSClient {
     public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input)
         throws -> Future<Output> {
 
-            return getCredential().thenThrowing { credential in
+            return signer.manageCredential().thenThrowing { _ in
                     let awsRequest = try self.createAWSRequest(
                         operation: operationName,
                         path: path,
                         httpMethod: httpMethod,
                         input: input
                     )
-                    return try self.createNioRequest(awsRequest, credential)
+                    return try self.createNioRequest(awsRequest)
                 }.then { nioRequest in
                     return self.invoke(nioRequest)
                 }.thenThrowing { response in
@@ -195,37 +193,25 @@ extension AWSClient {
 // request creator
 extension AWSClient {
 
-    fileprivate func getCredential() -> Future<CredentialProvider> {
-        //let futureCredential: Future<CredentialProvider>
-        if credential.isEmpty() || credential.nearExpiration() {
-            do {
-                return try MetaDataService.getCredential()
-            } catch {
-                // should not be crash
-            }
-        }
-        return AWSClient.eventGroup.next().newSucceededFuture(result: credential)
-    }
-
-    fileprivate func createNIORequestWithSignedURL(_ awsRequest: AWSRequest, _ credential: CredentialProvider) throws -> Request {
+    fileprivate func createNIORequestWithSignedURL(_ awsRequest: AWSRequest) throws -> Request {
         var nioRequest = try awsRequest.toNIORequest()
 
         guard let unsignedUrl = URL(string: nioRequest.head.uri), let hostWithPort = unsignedUrl.hostWithPort else {
             fatalError("nioRequest.head.uri is invalid.")
         }
 
-        let signedURI = signer.signedURL(url: unsignedUrl, credentialForSignature: credential)
+        let signedURI = signer.signedURL(url: unsignedUrl)
         nioRequest.head.uri = signedURI.absoluteString
         nioRequest.head.headers.replaceOrAdd(name: "Host", value: hostWithPort)
 
         return nioRequest
     }
 
-    fileprivate func createNIORequestWithSignedHeader(_ awsRequest: AWSRequest, _ credential: CredentialProvider) throws -> Request {
-        return try nioRequestWithSignedHeader(awsRequest.toNIORequest(), credential)
+    fileprivate func createNIORequestWithSignedHeader(_ awsRequest: AWSRequest) throws -> Request {
+        return try nioRequestWithSignedHeader(awsRequest.toNIORequest())
     }
 
-    fileprivate func nioRequestWithSignedHeader(_ nioRequest: Request, _ credential: CredentialProvider) throws -> Request {
+    fileprivate func nioRequestWithSignedHeader(_ nioRequest: Request) throws -> Request {
         var nioRequest = nioRequest
 
         guard let url = URL(string: nioRequest.head.uri), let _ = url.hostWithPort else {
@@ -247,8 +233,7 @@ extension AWSClient {
             url: url,
             headers: headers,
             method: method,
-            bodyData: nioRequest.body,
-            credentialForSignature: credential
+            bodyData: nioRequest.body
         )
 
         for (key, value) in signedHeaders {
@@ -258,17 +243,17 @@ extension AWSClient {
         return nioRequest
     }
 
-    func createNioRequest(_ awsRequest: AWSRequest, _ credential: CredentialProvider) throws -> Request {
+    func createNioRequest(_ awsRequest: AWSRequest) throws -> Request {
         switch awsRequest.httpMethod {
         case "GET":
             switch self.serviceProtocol.type {
             case .restjson:
-                return try createNIORequestWithSignedHeader(awsRequest, credential)
+                return try createNIORequestWithSignedHeader(awsRequest)
             default:
-                return try createNIORequestWithSignedURL(awsRequest, credential)
+                return try createNIORequestWithSignedURL(awsRequest)
             }
         default:
-            return try createNIORequestWithSignedHeader(awsRequest, credential)
+            return try createNIORequestWithSignedHeader(awsRequest)
         }
     }
 
@@ -456,10 +441,6 @@ extension AWSClient {
 #if DEBUG
 extension AWSClient {
 
-    func debugGetCredential() -> Future<CredentialProvider> {
-        return getCredential()
-    }
-
     func debugCreateAWSRequest<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
         return try createAWSRequest(operation: operationName, path: path, httpMethod: httpMethod, input: input)
     }
@@ -590,7 +571,7 @@ extension AWSClient {
                                 for link in links {
                                     guard let name = link.name else { continue }
                                     let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: endpoint + link.href)
-                                    let nioRequest = try nioRequestWithSignedHeader(Request(head: head, body: Data()), credential)
+                                    let nioRequest = try nioRequestWithSignedHeader(Request(head: head, body: Data()))
                                     //
                                     // this is a hack to wait...
                                     ///

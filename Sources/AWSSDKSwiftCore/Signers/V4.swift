@@ -31,6 +31,34 @@ extension Signers {
             ]
         }
 
+        var credential: CredentialProvider
+
+
+        public init(region: Region, service: String, credential: CredentialProvider) {
+            self.region = region
+            self.service = service
+            self.credential = credential
+        }
+
+        // checkCredential should be called and the future resolved
+        // prior to building signedURL or signedHeaders to ensure
+        // latest credentials are retreived and set
+        //
+        public func manageCredential() -> Future<CredentialProvider> {
+            if credential.isEmpty() || credential.nearExpiration() {
+                do {
+                    return try MetaDataService.getCredential().map { credential in
+                        self.credential = credential
+                        return credential
+                    }
+                } catch {
+                    // should not be crash
+                }
+            }
+
+            return AWSClient.eventGroup.next().newSucceededFuture(result: credential)
+        }
+
         func hexEncodedBodyHash(_ data: Data) -> String {
             if data.isEmpty && service == "s3" {
                 return "UNSIGNED-PAYLOAD"
@@ -38,15 +66,11 @@ extension Signers {
             return sha256(data).hexdigest()
         }
 
-        public init(region: Region, service: String) {
-            self.region = region
-            self.service = service
-        }
-
-        public func signedURL(url: URL, date: Date = Date(), expires: Int = 86400, credentialForSignature: CredentialProvider) -> URL {
+        public func signedURL(url: URL, date: Date = Date(), expires: Int = 86400) -> URL {
             let datetime = V4.timestamp(date)
             let headers = ["Host": url.hostWithPort!]
             let bodyDigest = hexEncodedBodyHash(Data())
+            let credentialForSignature = credential
 
             var queries = [
                 URLQueryItem(name: "X-Amz-Algorithm", value: algorithm),
@@ -81,9 +105,10 @@ extension Signers {
             return URL(string: url.absoluteString+"&X-Amz-Signature="+sig)!
         }
 
-        public func signedHeaders(url: URL, headers: [String: String], method: String, date: Date = Date(), bodyData: Data, credentialForSignature: CredentialProvider) -> [String: String] {
+        public func signedHeaders(url: URL, headers: [String: String], method: String, date: Date = Date(), bodyData: Data) -> [String: String] {
             let datetime = V4.timestamp(date)
             let bodyDigest = hexEncodedBodyHash(bodyData)
+            let credentialForSignature = credential
 
             var headersForSign = [
                 "x-amz-content-sha256": hexEncodedBodyHash(bodyData),

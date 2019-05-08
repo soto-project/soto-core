@@ -42,7 +42,7 @@ extension Signers {
             return sha256(data).hexdigest()
         }
 
-        public init(credential: CredentialProvider, region: Region, service: String, endpoint: String?) {
+        public init(credential: CredentialProvider, region: Region, service: String, endpoint: String? = nil) {
             self.credential = credential
             self.region = region
             self.service = service

@@ -1,3 +1,10 @@
+//
+//  XMLDecoder.swift
+//  AWSSDKSwift
+//
+//  Created by Adam Fowler on 2019/05/01.
+//
+//
 import Foundation
 
 public class AWSXMLEncoder {

@@ -29,17 +29,15 @@ public struct AWSShapeMember {
     public let location: Location?
     public let required: Bool
     public let type: Shape
-    public let xmlNamespace: String?
 
     var pathForLocation: String {
         return location?.name ?? label
     }
     
-    public init(label: String, location: Location? = nil, required: Bool, type: Shape, xmlNamespace: String? = nil) {
+    public init(label: String, location: Location? = nil, required: Bool, type: Shape) {
         self.label = label
         self.location = location
         self.required = required
         self.type = type
-        self.xmlNamespace = xmlNamespace
     }
 }

@@ -14,7 +14,7 @@ import XCTest
 class AWSClientTests: XCTestCase {
 
     struct C: AWSShape {
-        public static var members: [AWSShapeMember] = [
+        public static var _members: [AWSShapeMember] = [
             AWSShapeMember(label: "value", required: true, type: .string)
         ]
 
@@ -26,7 +26,7 @@ class AWSClientTests: XCTestCase {
     }
 
     struct E: AWSShape {
-        public static var members: [AWSShapeMember] = [
+        public static var _members: [AWSShapeMember] = [
             AWSShapeMember(label: "Member", required: true, type: .list),
         ]
 
@@ -40,7 +40,7 @@ class AWSClientTests: XCTestCase {
     struct F: AWSShape {
         public static let payloadPath: String? = "fooParams"
 
-        public static var members: [AWSShapeMember] = [
+        public static var _members: [AWSShapeMember] = [
             AWSShapeMember(label: "Member", required: true, type: .list),
             AWSShapeMember(label: "fooParams", required: false, type: .structure),
         ]
@@ -114,6 +114,8 @@ class AWSClientTests: XCTestCase {
 
     func testCreateAWSRequest() {
         let input = C()
+        let input2 = E()
+        let input3 = F(fooParams: input2)
 
         do {
             let awsRequest = try sesClient.debugCreateAWSRequest(
@@ -161,11 +163,6 @@ class AWSClientTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
 
-        // encode Shape with payloadPath
-        //
-        let input2 = E()
-        let input3 = F(fooParams: input2)
-
         // encode for restxml
         //
         do {
@@ -178,12 +175,10 @@ class AWSClientTests: XCTestCase {
 
             XCTAssertNotNil(awsRequest.body)
             if let xmlData = try awsRequest.body.asData() {
-                let xmlNode = try XML2Parser(data: xmlData).parse()
-                let json = XMLNodeSerializer(node: xmlNode).serializeToJSON()
-                let json_data = json.data(using: .utf8)!
-                let dict = try! JSONSerializer().serializeToDictionary(json_data)
-                let fromJson = dict["E"]! as! [String: String]
-                XCTAssertEqual(fromJson["MemberKey"], "memberValue")
+                let document = try XMLDocument(data:xmlData)
+                XCTAssertNotNil(document.rootElement())
+                let payload = try AWSXMLDecoder().decode(E.self, from: document.rootElement()!)
+                XCTAssertEqual(payload.Member["memberKey2"], "memberValue2")
             }
             let nioRequest = try awsRequest.toNIORequest()
             XCTAssertEqual(nioRequest.head.method, HTTPMethod.POST)

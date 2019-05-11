@@ -166,6 +166,9 @@ public final class HTTPClient {
                 buffer.write(bytes: body)
                 channel.write(NIOAny(HTTPClientRequestPart.body(.byteBuffer(buffer))), promise: nil)
                 return channel.writeAndFlush(NIOAny(HTTPClientRequestPart.end(nil)))
+            }
+            .whenFailure { error in
+                response.fail(error: error)
         }
         return response.futureResult
     }

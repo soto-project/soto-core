@@ -104,14 +104,16 @@ extension AWSClient {
         let client = createHTTPClient(for: nioRequest)
         let future = try client.connect(nioRequest)
 
-        //TODO(jmca) don't block
-        let response = try future.wait()
-
-        client.close { error in
-            if let error = error {
-                print("Error closing connection: \(error)")
+        future.whenComplete {
+            client.close { error in
+                if let error = error {
+                    print("Error closing connection: \(error)")
+                }
             }
         }
+
+        //TODO(jmca) don't block
+        let response = try future.wait()
 
         return response
     }

@@ -15,21 +15,21 @@ import NIOHTTP1
 import NIOSSL
 import Foundation
 
-public struct Request {
-    var head: HTTPRequestHead
-    var body: Data
-}
-
-public struct Response {
-    let head: HTTPResponseHead
-    let body: Data
-
-    public func contentType() -> String? {
-        return head.headers.filter { $0.name.lowercased() == "content-type" }.first?.value
-    }
-}
-
 public final class HTTPClient {
+    
+    public struct Request {
+        var head: HTTPRequestHead
+        var body: Data
+    }
+    
+    public struct Response {
+        let head: HTTPResponseHead
+        let body: Data
+        
+        public func contentType() -> String? {
+            return head.headers.filter { $0.name.lowercased() == "content-type" }.first?.value
+        }
+    }
     
     public enum ClientError: Error {
         case malformedHead

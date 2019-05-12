@@ -106,7 +106,7 @@ public struct AWSClient {
 }
 // invoker
 extension AWSClient {
-    fileprivate func invoke(_ nioRequest: Request) -> Future<Response>{
+    fileprivate func invoke(_ nioRequest: HTTPClient.Request) -> Future<HTTPClient.Response>{
         let client = createHTTPClient(for: nioRequest)
         let futureResponse = client.connect(nioRequest)
 
@@ -121,7 +121,7 @@ extension AWSClient {
         return futureResponse
     }
 
-    private func createHTTPClient(for nioRequest: Request) -> HTTPClient {
+    private func createHTTPClient(for nioRequest: HTTPClient.Request) -> HTTPClient {
         let client: HTTPClient
         if let _ = self._endpoint {
             client = HTTPClient(hostname: nioRequest.head.host!, port: nioRequest.head.port ?? 443)
@@ -202,7 +202,7 @@ extension AWSClient {
 // request creator
 extension AWSClient {
 
-    fileprivate func createNIORequestWithSignedURL(_ awsRequest: AWSRequest) throws -> Request {
+    fileprivate func createNIORequestWithSignedURL(_ awsRequest: AWSRequest) throws -> HTTPClient.Request {
         var nioRequest = try awsRequest.toNIORequest()
 
         guard let unsignedUrl = URL(string: nioRequest.head.uri), let hostWithPort = unsignedUrl.hostWithPort else {
@@ -216,11 +216,11 @@ extension AWSClient {
         return nioRequest
     }
 
-    fileprivate func createNIORequestWithSignedHeader(_ awsRequest: AWSRequest) throws -> Request {
+    fileprivate func createNIORequestWithSignedHeader(_ awsRequest: AWSRequest) throws -> HTTPClient.Request {
         return try nioRequestWithSignedHeader(awsRequest.toNIORequest())
     }
 
-    fileprivate func nioRequestWithSignedHeader(_ nioRequest: Request) throws -> Request {
+    fileprivate func nioRequestWithSignedHeader(_ nioRequest: HTTPClient.Request) throws -> HTTPClient.Request {
         var nioRequest = nioRequest
 
         guard let url = URL(string: nioRequest.head.uri), let _ = url.hostWithPort else {
@@ -252,7 +252,7 @@ extension AWSClient {
         return nioRequest
     }
 
-    func createNioRequest(_ awsRequest: AWSRequest) throws -> Request {
+    func createNioRequest(_ awsRequest: AWSRequest) throws -> HTTPClient.Request {
         switch awsRequest.httpMethod {
         case "GET", "HEAD":
             switch self.serviceProtocol.type {
@@ -457,7 +457,7 @@ extension AWSClient {
 
 // response validator
 extension AWSClient {
-    fileprivate func validate<Output: AWSShape>(operation operationName: String, response: Response) throws -> Output {
+    fileprivate func validate<Output: AWSShape>(operation operationName: String, response: HTTPClient.Response) throws -> Output {
 
         guard (200..<300).contains(response.head.status.code) else {
             let responseBody = try validateBody(
@@ -534,7 +534,7 @@ extension AWSClient {
         }
     }
 
-    private func validateBody(for response: Response, payloadPath: String?, members: [AWSShapeMember]) throws -> Body {
+    private func validateBody(for response: HTTPClient.Response, payloadPath: String?, members: [AWSShapeMember]) throws -> Body {
         var responseBody: Body = .empty
         let data = response.body
 
@@ -579,7 +579,7 @@ extension AWSClient {
                                 for link in links {
                                     guard let name = link.name else { continue }
                                     let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: endpoint + link.href)
-                                    let nioRequest = try nioRequestWithSignedHeader(Request(head: head, body: Data()))
+                                    let nioRequest = try nioRequestWithSignedHeader(HTTPClient.Request(head: head, body: Data()))
                                     //
                                     // this is a hack to wait...
                                     ///
@@ -625,7 +625,7 @@ extension AWSClient {
         return responseBody
     }
 
-    private func createError(for response: Response, withComputedBody body: Body, withRawData data: Data) -> Error {
+    private func createError(for response: HTTPClient.Response, withComputedBody body: Body, withRawData data: Data) -> Error {
         let bodyDict: [String: Any] = (try? body.asDictionary()) ?? [:]
 
         var code: String?

@@ -73,7 +73,7 @@ public struct AWSRequest {
         httpHeaders[field] = value
     }
 
-    func toNIORequest() throws -> Request {
+    func toNIORequest() throws -> HTTPClient.Request {
         var awsRequest = self
         for middleware in middlewares {
             awsRequest = try middleware.chain(request: awsRequest)
@@ -118,7 +118,7 @@ public struct AWSRequest {
         let generatedHeaders = headers.map { ($0, $1) }
         head.headers = HTTPHeaders(generatedHeaders)
 
-        return Request(head: head, body: try awsRequest.body.asData() ?? Data())
+        return HTTPClient.Request(head: head, body: try awsRequest.body.asData() ?? Data())
     }
 
     fileprivate func nioHTTPMethod(from: String) -> HTTPMethod {

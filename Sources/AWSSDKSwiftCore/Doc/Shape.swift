@@ -43,10 +43,12 @@ public struct Shape {
 public struct StructureShape {
     public let members: [Member]
     public let payload: String?
+    public let xmlNamespace: String?
     
-    public init(members: [Member], payload: String?){
+    public init(members: [Member], payload: String?, xmlNamespace: String? = nil){
         self.members = members
         self.payload = payload
+        self.xmlNamespace = xmlNamespace
     }
 }
 

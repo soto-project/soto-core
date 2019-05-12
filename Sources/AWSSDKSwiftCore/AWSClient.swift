@@ -548,7 +548,7 @@ extension AWSClient {
 
         switch serviceProtocol.type {
         case .json, .restjson:
-            if let cType = response.contentType(), cType.contains("hal+json") {
+            if let cType = response.head.headers["content-type"].first, cType.contains("hal+json") {
                 let representation = try Representation.from(json: data)
                 var dictionary = representation.properties
                 for rel in representation.rels {

@@ -25,10 +25,6 @@ public final class HTTPClient {
     public struct Response {
         let head: HTTPResponseHead
         let body: Data
-        
-        public func contentType() -> String? {
-            return head.headers.filter { $0.name.lowercased() == "content-type" }.first?.value
-        }
     }
     
     public enum ClientError: Error {

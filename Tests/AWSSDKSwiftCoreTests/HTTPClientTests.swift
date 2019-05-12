@@ -28,7 +28,7 @@ class HTTPClientTests: XCTestCase {
           _ = try HTTPClient(url: URL(string: "no_protocol.com")!)
           XCTFail("Should throw malformedURL error")
       } catch {
-        if case HTTPClientError.malformedURL = error {}
+        if case HTTPClient.ClientError.malformedURL = error {}
         else {
             XCTFail("Should throw malformedURL error")
         }
@@ -62,16 +62,16 @@ class HTTPClientTests: XCTestCase {
                      method: .GET,
                      uri: url.path
                    )
-        let request = Request(head: head, body: Data())
+        let request = HTTPClient.Request(head: head, body: Data())
         let future = client.connect(request)
         future.whenSuccess { response in }
         future.whenFailure { error in }
         future.whenComplete { _ in }
 
         do {
-            _ = try HTTPClient(url: URL(string: "http://169.254.169.254/latest/meta-data/iam/security-credentials/")!)
+            _ = try future.wait()
         } catch {
-            XCTFail("Should not throw malformedURL error")
+            XCTFail(error.localizedDescription)
         }
     }
 
@@ -84,16 +84,16 @@ class HTTPClientTests: XCTestCase {
                      method: .GET,
                      uri: url.path
                    )
-        let request = Request(head: head, body: Data())
+        let request = HTTPClient.Request(head: head, body: Data())
         let future = client.connect(request)
         future.whenSuccess { response in }
         future.whenFailure { error in }
         future.whenComplete { _ in }
 
         do {
-            _ = try HTTPClient(url: URL(string: "http://169.254.169.254/latest/meta-data/iam/security-credentials/")!)
+            _ = try future.wait()
         } catch {
-            XCTFail("Should not throw malformedURL error")
+            XCTFail(error.localizedDescription)
         }
     }
 
@@ -105,16 +105,16 @@ class HTTPClientTests: XCTestCase {
                      method: .GET,
                      uri: url.path
                    )
-        let request = Request(head: head, body: Data())
+        let request = HTTPClient.Request(head: head, body: Data())
         let future = client.connect(request)
         future.whenSuccess { response in }
         future.whenFailure { error in }
         future.whenComplete { _ in }
 
         do {
-            _ = try HTTPClient(url: URL(string: "http://169.254.169.254/latest/meta-data/iam/security-credentials/")!)
+            _ = try future.wait()
         } catch {
-            XCTFail("Should not throw malformedURL error")
+            XCTFail(error.localizedDescription)
         }
     }
 

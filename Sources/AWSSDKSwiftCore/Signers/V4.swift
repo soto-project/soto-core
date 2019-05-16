@@ -16,7 +16,7 @@ extension Signers {
         public let region: Region
 
         public let service: String
-        
+
         public let endpoint: String?
 
         let identifier = "aws4_request"
@@ -66,7 +66,7 @@ extension Signers {
             url.query?.components(separatedBy: "&").forEach {
                 var q = $0.components(separatedBy: "=")
                 if q.count == 2 {
-                    queries.append(URLQueryItem(name: q[0], value: q[1].addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)))
+                    queries.append(URLQueryItem(name: q[0], value: V4.awsUriEncode(q[1].removingPercentEncoding!)))
                 } else {
                     queries.append(URLQueryItem(name: q[0], value: nil))
                 }

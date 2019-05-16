@@ -80,8 +80,12 @@ extension Signers {
                 URLQueryItem(name: "X-Amz-Credential", value: credentialForSignatureWithScope(credentialForSignature, datetime).replacingOccurrences(of: "/", with: "%2F")),
                 URLQueryItem(name: "X-Amz-Date", value: datetime),
                 URLQueryItem(name: "X-Amz-Expires", value: "\(expires)"),
-                URLQueryItem(name: "X-Amz-SignedHeaders", value: "host"),
+                URLQueryItem(name: "X-Amz-SignedHeaders", value: "host")
             ]
+
+            if let token = credentialForSignature.sessionToken {
+                queries.append(URLQueryItem(name: "X-Amz-Security-Token", value: V4.awsUriEncode(token)))
+            }
 
             url.query?.components(separatedBy: "&").forEach {
                 var q = $0.components(separatedBy: "=")

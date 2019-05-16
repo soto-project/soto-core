@@ -684,7 +684,7 @@ extension AWSClient {
             return AWSResponseError(errorCode: errorCode, message: message)
         }
 
-        return AWSError(message: message ?? "Unhandled Error", rawBody: String(data: data, encoding: .utf8) ?? "")
+        return AWSError(message: message ?? "Unhandled Error. Response Code: \(response.head.status.code)", rawBody: String(data: data, encoding: .utf8) ?? "")
     }
 }
 

@@ -34,11 +34,11 @@ extension HTTPRequestHead {
     var hostWithPort: String? {
         return URL(string: uri)?.hostWithPort
     }
-    
+
     var host: String? {
         return URL(string: uri)?.host
     }
-    
+
     var port: Int? {
         return URL(string: uri)?.port
     }
@@ -103,8 +103,11 @@ public struct AWSRequest {
             break
         }
 
-        if awsRequest.httpMethod.lowercased() != "get" && headers["Content-Type"] == nil {
-            headers["Content-Type"] = "application/octet-stream"
+        switch awsRequest.httpMethod {
+        case "GET","HEAD":
+            break
+        default:
+            headers["Content-Type"] = headers["Content-Type"] ?? "application/octet-stream"
         }
 
         var head = HTTPRequestHead(

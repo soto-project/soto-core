@@ -215,6 +215,7 @@ class AWSClientTests: XCTestCase {
             XCTAssertEqual(awsRequest.url.absoluteString, "https://s3.amazonaws.com/Bucket?list-type=2")
             let nioRequest = try awsRequest.toNIORequest()
             XCTAssertEqual(nioRequest.head.method, HTTPMethod.GET)
+            XCTAssertEqual(nioRequest.body, Data())
         } catch {
             XCTFail(error.localizedDescription)
         }

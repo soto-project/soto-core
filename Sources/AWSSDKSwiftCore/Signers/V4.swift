@@ -69,7 +69,7 @@ extension Signers {
             return sha256(data).hexdigest()
         }
 
-        public func signedURL(url: URL, date: Date = Date(), expires: Int = 86400) -> URL {
+        public func signedURL(url: URL, method: String, date: Date = Date(), expires: Int = 86400) -> URL {
             let datetime = V4.timestamp(date)
             let headers = ["Host": url.hostWithPort!]
             let bodyDigest = hexEncodedBodyHash(Data())
@@ -104,7 +104,7 @@ extension Signers {
                 url: url,
                 headers: headers,
                 datetime: datetime,
-                method: "GET",
+                method: method,
                 bodyDigest: bodyDigest,
                 credentialForSignature: credentialForSignature
             )
@@ -118,7 +118,7 @@ extension Signers {
             let credentialForSignature = credential
 
             var headersForSign = [
-                "x-amz-content-sha256": hexEncodedBodyHash(bodyData),
+                "x-amz-content-sha256": bodyDigest,
                 "x-amz-date": datetime,
                 "Host": url.hostWithPort!,
             ]

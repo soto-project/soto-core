@@ -55,78 +55,67 @@ class HTTPClientTests: XCTestCase {
     }
 
     func testConnectSimpleGet() {
-      do {
-          let url = URL(string: "https://kinesis.us-west-2.amazonaws.com/")!
-          let client = HTTPClient(hostname: url.host!, port: 443)
-          let head = HTTPRequestHead(
-                       version: HTTPVersion(major: 1, minor: 1),
-                       method: .GET,
-                       uri: url.path
-                     )
-          let request = Request(head: head, body: Data())
-          let future = try client.connect(request)
-          future.whenSuccess { response in }
-          future.whenFailure { error in }
-          future.whenComplete { }
-      } catch {
-          XCTFail("Should not throw error")
-      }
+        let url = URL(string: "https://kinesis.us-west-2.amazonaws.com/")!
+        let client = HTTPClient(hostname: url.host!, port: 443)
+        let head = HTTPRequestHead(
+                     version: HTTPVersion(major: 1, minor: 1),
+                     method: .GET,
+                     uri: url.path
+                   )
+        let request = Request(head: head, body: Data())
+        let future = client.connect(request)
+        future.whenSuccess { response in }
+        future.whenFailure { error in }
+        future.whenComplete { }
 
-      do {
-          _ = try HTTPClient(url: URL(string: "http://169.254.169.254/latest/meta-data/iam/security-credentials/")!)
-      } catch {
-          XCTFail("Should not throw malformedURL error")
-      }
+        do {
+            _ = try HTTPClient(url: URL(string: "http://169.254.169.254/latest/meta-data/iam/security-credentials/")!)
+        } catch {
+            XCTFail("Should not throw malformedURL error")
+        }
     }
 
     func testConnectGet() {
-      do {
-          let url = URL(string: "https://kinesis.us-west-2.amazonaws.com/")!
-          let client = HTTPClient(hostname: url.host!, port: 443)
-          let head = HTTPRequestHead(
-                       version: HTTPVersion(major: 1, minor: 1),
-                       method: .GET,
-                       uri: url.path
-                     )
-          let request = Request(head: head, body: Data())
-          let future = try client.connect(request)
-          future.whenSuccess { response in }
-          future.whenFailure { error in }
-          future.whenComplete { }
-      } catch {
-          XCTFail("Should not throw error")
-      }
 
-      do {
-          _ = try HTTPClient(url: URL(string: "http://169.254.169.254/latest/meta-data/iam/security-credentials/")!)
-      } catch {
-          XCTFail("Should not throw malformedURL error")
-      }
+        let url = URL(string: "https://kinesis.us-west-2.amazonaws.com/")!
+        let client = HTTPClient(hostname: url.host!, port: 443)
+        let head = HTTPRequestHead(
+                     version: HTTPVersion(major: 1, minor: 1),
+                     method: .GET,
+                     uri: url.path
+                   )
+        let request = Request(head: head, body: Data())
+        let future = client.connect(request)
+        future.whenSuccess { response in }
+        future.whenFailure { error in }
+        future.whenComplete { }
+
+        do {
+            _ = try HTTPClient(url: URL(string: "http://169.254.169.254/latest/meta-data/iam/security-credentials/")!)
+        } catch {
+            XCTFail("Should not throw malformedURL error")
+        }
     }
 
     func testConnectPost() {
-      do {
-          let url = URL(string: "https://kinesis.us-west-2.amazonaws.com/")!
-          let client = HTTPClient(hostname: url.host!, port: 443)
-          let head = HTTPRequestHead(
-                       version: HTTPVersion(major: 1, minor: 1),
-                       method: .GET,
-                       uri: url.path
-                     )
-          let request = Request(head: head, body: Data())
-          let future = try client.connect(request)
-          future.whenSuccess { response in }
-          future.whenFailure { error in }
-          future.whenComplete { }
-      } catch {
-        XCTFail("Should not throw error")
-      }
+        let url = URL(string: "https://kinesis.us-west-2.amazonaws.com/")!
+        let client = HTTPClient(hostname: url.host!, port: 443)
+        let head = HTTPRequestHead(
+                     version: HTTPVersion(major: 1, minor: 1),
+                     method: .GET,
+                     uri: url.path
+                   )
+        let request = Request(head: head, body: Data())
+        let future = client.connect(request)
+        future.whenSuccess { response in }
+        future.whenFailure { error in }
+        future.whenComplete { }
 
-      do {
-          _ = try HTTPClient(url: URL(string: "http://169.254.169.254/latest/meta-data/iam/security-credentials/")!)
-      } catch {
-        XCTFail("Should not throw malformedURL error")
-      }
+        do {
+            _ = try HTTPClient(url: URL(string: "http://169.254.169.254/latest/meta-data/iam/security-credentials/")!)
+        } catch {
+            XCTFail("Should not throw malformedURL error")
+        }
     }
 
 

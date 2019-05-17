@@ -16,6 +16,9 @@ extension String {
     public static let uriAWSQueryAllowed: [String] = ["&", "\'", "(", ")", "-", ".", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "=", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "_", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
 }
 
+/// Convenience shorthand for `EventLoopFuture`.
+public typealias Future = EventLoopFuture
+
 public struct InputContext {
     let Shape: AWSShape.Type
     let input: AWSShape
@@ -63,6 +66,8 @@ public struct AWSClient {
         return "\(signer.service).\(signer.region.rawValue).amazonaws.com"
     }
 
+    public static let eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+
     public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSRequestMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil) {
         let credential: CredentialProvider
         if let accessKey = accessKeyId, let secretKey = secretAccessKey {
@@ -97,14 +102,15 @@ public struct AWSClient {
         self.middlewares = middlewares
         self.possibleErrorTypes = possibleErrorTypes ?? []
     }
+
 }
 // invoker
 extension AWSClient {
-    fileprivate func invoke(_ nioRequest: Request) throws -> Response {
+    fileprivate func invoke(_ nioRequest: Request) -> Future<Response>{
         let client = createHTTPClient(for: nioRequest)
-        let future = try client.connect(nioRequest)
+        let futureResponse = client.connect(nioRequest)
 
-        future.whenComplete {
+        futureResponse.whenComplete {
             client.close { error in
                 if let error = error {
                     print("Error closing connection: \(error)")
@@ -112,27 +118,9 @@ extension AWSClient {
             }
         }
 
-        //TODO(jmca) don't block
-        let response = try future.wait()
-
-        return response
+        return futureResponse
     }
 
-    //TODO(jmca) learn how to map response to validate and return
-    // a future of generic Output: AWSShape
-    fileprivate func invokeAsync(_ nioRequest: Request) throws -> EventLoopFuture<Response>{
-        let client = createHTTPClient(for: nioRequest)
-        let future = try client.connect(nioRequest)
-        future.whenComplete {
-          client.close { error in
-              if let error = error {
-                  print("Error closing connection: \(error)")
-              }
-          }
-        }
-        return future
-    }
-    
     private func createHTTPClient(for nioRequest: Request) -> HTTPClient {
         let client: HTTPClient
         if let _ = self._endpoint {
@@ -147,59 +135,92 @@ extension AWSClient {
 // public facing apis
 extension AWSClient {
     public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws {
-        let awsRequest = try createAWSRequest(
-            operation: operationName,
-            path: path,
-            httpMethod: httpMethod,
-            input: input
-        )
-        let nioRequest = try createNioRequest(awsRequest)
-        _ = try self.invoke(nioRequest)
+
+        return signer.manageCredential().thenThrowing { _ in
+                let awsRequest = try self.createAWSRequest(
+                    operation: operationName,
+                    path: path,
+                    httpMethod: httpMethod,
+                    input: input
+                )
+                return try self.createNioRequest(awsRequest)
+            }.whenSuccess { nioRequest in
+                _ = self.invoke(nioRequest)
+          }
     }
 
     public func send(operation operationName: String, path: String, httpMethod: String) throws {
-        let awsRequest = createAWSRequest(operation: operationName, path: path, httpMethod: httpMethod)
-        let nioRequest = try createNioRequest(awsRequest)
-        _ = try self.invoke(nioRequest)
+
+        return signer.manageCredential().thenThrowing { _ in
+                let awsRequest = try self.createAWSRequest(
+                    operation: operationName,
+                    path: path,
+                    httpMethod: httpMethod
+                )
+                return try self.createNioRequest(awsRequest)
+            }.whenSuccess { nioRequest in
+                _ = self.invoke(nioRequest)
+          }
     }
 
-    public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) throws -> Output {
-        let awsRequest = createAWSRequest(operation: operationName, path: path, httpMethod: httpMethod)
-        let nioRequest = try createNioRequest(awsRequest)
-        return try validate(operation: operationName, response: try self.invoke(nioRequest))
+    public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) throws -> Future<Output> {
+
+        return signer.manageCredential().thenThrowing { _ in
+                let awsRequest = try self.createAWSRequest(
+                    operation: operationName,
+                    path: path,
+                    httpMethod: httpMethod
+                )
+                return try self.createNioRequest(awsRequest)
+            }.then { nioRequest in
+                return self.invoke(nioRequest)
+            }.thenThrowing { response in
+                return try self.validate(operation: operationName, response: response)
+            }
     }
 
     public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input)
-        throws -> Output {
-        let awsRequest = try createAWSRequest(
-            operation: operationName,
-            path: path,
-            httpMethod: httpMethod,
-            input: input
-        )
-        let nioRequest = try createNioRequest(awsRequest)
-        return try validate(operation: operationName, response: try self.invoke(nioRequest))
+        throws -> Future<Output> {
+
+            return signer.manageCredential().thenThrowing { _ in
+                    let awsRequest = try self.createAWSRequest(
+                        operation: operationName,
+                        path: path,
+                        httpMethod: httpMethod,
+                        input: input
+                    )
+                    return try self.createNioRequest(awsRequest)
+                }.then { nioRequest in
+                    return self.invoke(nioRequest)
+                }.thenThrowing { response in
+                    return try self.validate(operation: operationName, response: response)
+                }
     }
+
 }
 
 // request creator
 extension AWSClient {
-    func createNIORequestWithSignedURL(_ request: AWSRequest) throws -> Request {
-        var nioRequest = try request.toNIORequest()
-        let head = nioRequest.head
-        if let unsignedUrl = URL(string: head.uri) {
-            let signedURI = signer.signedURL(url: unsignedUrl)
-            nioRequest.head.uri = signedURI.absoluteString
-            nioRequest.head.headers.replaceOrAdd(name: "Host", value: unsignedUrl.hostWithPort!)
+
+    fileprivate func createNIORequestWithSignedURL(_ awsRequest: AWSRequest) throws -> Request {
+        var nioRequest = try awsRequest.toNIORequest()
+
+        guard let unsignedUrl = URL(string: nioRequest.head.uri), let hostWithPort = unsignedUrl.hostWithPort else {
+            fatalError("nioRequest.head.uri is invalid.")
         }
+
+        let signedURI = signer.signedURL(url: unsignedUrl, method: awsRequest.httpMethod)
+        nioRequest.head.uri = signedURI.absoluteString
+        nioRequest.head.headers.replaceOrAdd(name: "Host", value: hostWithPort)
+
         return nioRequest
     }
 
-    func createNIORequestWithSignedHeader(_ request: AWSRequest) throws -> Request {
-        return try nioRequestWithSignedHeader(request.toNIORequest())
+    fileprivate func createNIORequestWithSignedHeader(_ awsRequest: AWSRequest) throws -> Request {
+        return try nioRequestWithSignedHeader(awsRequest.toNIORequest())
     }
 
-    func nioRequestWithSignedHeader(_ nioRequest: Request) throws -> Request {
+    fileprivate func nioRequestWithSignedHeader(_ nioRequest: Request) throws -> Request {
         var nioRequest = nioRequest
 
         guard let url = URL(string: nioRequest.head.uri), let _ = url.hostWithPort else {
@@ -231,27 +252,29 @@ extension AWSClient {
         return nioRequest
     }
 
-    func createNioRequest(_ request: AWSRequest) throws -> Request {
-        let nioRequest: Request
-        switch request.httpMethod {
-        case "GET":
-            switch serviceProtocol.type {
+    func createNioRequest(_ awsRequest: AWSRequest) throws -> Request {
+        switch awsRequest.httpMethod {
+        case "GET", "HEAD":
+            switch self.serviceProtocol.type {
             case .restjson:
-                nioRequest = try createNIORequestWithSignedHeader(request)
-
+                return try createNIORequestWithSignedHeader(awsRequest)
             default:
-                nioRequest = try createNIORequestWithSignedURL(request)
+                return try createNIORequestWithSignedURL(awsRequest)
             }
         default:
-            nioRequest = try createNIORequestWithSignedHeader(request)
+            return try createNIORequestWithSignedHeader(awsRequest)
         }
-        return nioRequest
     }
 
-    fileprivate func createAWSRequest(operation operationName: String, path: String, httpMethod: String) -> AWSRequest {
+    fileprivate func createAWSRequest(operation operationName: String, path: String, httpMethod: String) throws -> AWSRequest {
+
+        guard let url = URL(string: "\(endpoint)\(path)"), let _ = url.hostWithPort else {
+            throw RequestError.invalidURL("\(endpoint)\(path) must specify url host and scheme")
+        }
+
         return AWSRequest(
             region: self.signer.region,
-            url: URL(string:  "\(endpoint)\(path)")!,
+            url: url,
             serviceProtocol: serviceProtocol,
             service: signer.service,
             amzTarget: amzTarget,
@@ -270,13 +293,13 @@ extension AWSClient {
         var body: Body = .empty
         var queryParams: [String: Any] = [:]
 
-        guard let ep = URL(string: "\(endpoint)") else {
-            throw RequestError.invalidURL("\(endpoint)")
+        guard let baseURL = URL(string: "\(endpoint)"), let _ = baseURL.hostWithPort else {
+            throw RequestError.invalidURL("\(endpoint) must specify url host and scheme")
         }
 
-        urlComponents.scheme = ep.scheme
-        urlComponents.host = ep.host
-        urlComponents.port = ep.port
+        urlComponents.scheme = baseURL.scheme
+        urlComponents.host = baseURL.host
+        urlComponents.port = baseURL.port
 
         // TODO should replace with Encodable
         let mirror = Mirror(reflecting: input)
@@ -343,8 +366,6 @@ extension AWSClient {
                     body = Body(anyValue: payloadBody)
                 }
                 headers.removeValue(forKey: payload.toSwiftVariableCase())
-            } else {
-                body = .xml(try AWSShapeEncoder().encodeToXMLNode(input))
             }
 
         case .other(let proto):
@@ -427,6 +448,7 @@ extension AWSClient {
 // debug request creator
 #if DEBUG
 extension AWSClient {
+
     func debugCreateAWSRequest<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
         return try createAWSRequest(operation: operationName, path: path, httpMethod: httpMethod, input: input)
     }
@@ -557,9 +579,16 @@ extension AWSClient {
                                 for link in links {
                                     guard let name = link.name else { continue }
                                     let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: endpoint + link.href)
-                                    let res = try invoke(nioRequestWithSignedHeader(Request(head: head, body: Data())))
-                                    let representaion = try Representation().from(json: res.body)
-                                    dict[name] = representaion.properties
+                                    let nioRequest = try nioRequestWithSignedHeader(Request(head: head, body: Data()))
+                                    //
+                                    // this is a hack to wait...
+                                    ///
+                                    while dict[name] == nil {
+                                        _ = invoke(nioRequest).thenThrowing{ res in
+                                            let representaion = try Representation().from(json: res.body)
+                                            dict[name] = representaion.properties
+                                        }
+                                    }
                                 }
                                 props[key] = dict
                             }
@@ -653,7 +682,7 @@ extension AWSClient {
             return AWSResponseError(errorCode: errorCode, message: message)
         }
 
-        return AWSError(message: message ?? "Unhandled Error", rawBody: String(data: data, encoding: .utf8) ?? "")
+        return AWSError(message: message ?? "Unhandled Error. Response Code: \(response.head.status.code)", rawBody: String(data: data, encoding: .utf8) ?? "")
     }
 }
 

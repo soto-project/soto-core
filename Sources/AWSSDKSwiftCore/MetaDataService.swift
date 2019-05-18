@@ -22,13 +22,13 @@ struct MetaDataService {
     static let instanceMetadataUri = "/latest/meta-data/iam/security-credentials/"
 
     static var serviceProvider: MetaDataServiceProvider {
-      get {
-        if containerCredentialsUri != nil {
-            return .ecsCredentials(containerCredentialsUri!)
-        } else {
-            return .instanceProfileCredentials(instanceMetadataUri)
+        get {
+          if containerCredentialsUri != nil {
+              return .ecsCredentials(containerCredentialsUri!)
+          } else {
+              return .instanceProfileCredentials(instanceMetadataUri)
+          }
         }
-      }
     }
 
     enum MetaDataServiceProvider {
@@ -53,31 +53,42 @@ struct MetaDataService {
             }
         }
 
-        func uri() throws -> String {
+        func uri() throws -> Future<String> {
             switch self {
             case .ecsCredentials(let containerCredentialsUri):
-                return containerCredentialsUri
+                return AWSClient.eventGroup.next().newSucceededFuture(result: containerCredentialsUri)
             case .instanceProfileCredentials:
                 // instance service expects absoluteString as uri...
-                let response = try MetaDataService.request(host: host, uri: baseURLString, timeout: 2)
-                switch response.head.status {
-                case .ok:
-                    let roleName = String(data: response.body, encoding: .utf8) ?? ""
-                    return "\(baseURLString)/\(roleName)"
-                default:
-                    throw MetaDataServiceError.couldNotGetInstanceRoleName
+                return MetaDataService.request(host: host, uri: baseURLString, timeout: 2).thenThrowing{ response in
+                    switch response.head.status {
+                    case .ok:
+                        let roleName = String(data: response.body, encoding: .utf8) ?? ""
+                        return "\(self.baseURLString)/\(roleName)"
+                    default:
+                        throw MetaDataServiceError.couldNotGetInstanceRoleName
+                    }
+
                 }
             }
         }
     }
 
-    public static func getCredential() throws -> Credential {
-        let response = try request(host: serviceProvider.host, uri: serviceProvider.uri(), timeout: 2)
-        let metaData = try JSONDecoder().decode(MetaData.self, from: response.body)
-        return metaData.credential
+    public static func getCredential() throws -> Future<CredentialProvider> {
+        let futurUri = try serviceProvider.uri()
+
+        return futurUri.then{ uri -> Future<Response> in
+            return request(host: serviceProvider.host, uri: uri, timeout: 2)
+        }.map{ credentialResponse -> CredentialProvider in
+            do {
+                let metaData = try JSONDecoder().decode(MetaData.self, from: credentialResponse.body)
+                return metaData.credential
+            } catch {
+                return Credential(accessKeyId: "", secretAccessKey: "")
+            }
+        }
     }
 
-    static func request(host: String, uri: String, timeout: TimeInterval) throws -> Response {
+    static func request(host: String, uri: String, timeout: TimeInterval) -> Future<Response> {
         let client = HTTPClient(hostname: host, port: 80)
         let head = HTTPRequestHead(
                      version: HTTPVersion(major: 1, minor: 1),
@@ -85,14 +96,17 @@ struct MetaDataService {
                      uri: uri
                    )
         let request = Request(head: head, body: Data())
-        let future = try client.connect(request)
-        let response = try future.wait()
-        client.close { error in
-            if let error = error {
-                print("Error closing connection: \(error)")
+        let futureResponse = client.connect(request)
+
+        futureResponse.whenComplete {
+            client.close { error in
+                if let error = error {
+                    print("Error closing connection: \(error)")
+                }
             }
         }
-        return response
+
+        return futureResponse
     }
 
     struct MetaData: Codable {
@@ -130,78 +144,78 @@ struct MetaDataService {
 }
 
 extension MetaDataService.MetaData {
-  init(from decoder: Decoder) throws {
+    init(from decoder: Decoder) throws {
 
-    let values = try decoder.container(keyedBy: CodingKeys.self)
+      let values = try decoder.container(keyedBy: CodingKeys.self)
 
-    switch MetaDataService.serviceProvider {
+      switch MetaDataService.serviceProvider {
 
-    case .ecsCredentials:
-        self.code = nil
-        self.lastUpdated = nil
-        self.type = nil
+      case .ecsCredentials:
+          self.code = nil
+          self.lastUpdated = nil
+          self.type = nil
 
-        guard let roleArn = try? values.decode(String.self, forKey: .roleArn) else {
-            throw MetaDataServiceError.missingRequiredParam("RoleArn")
-        }
-        self.roleArn = roleArn
+          guard let roleArn = try? values.decode(String.self, forKey: .roleArn) else {
+              throw MetaDataServiceError.missingRequiredParam("RoleArn")
+          }
+          self.roleArn = roleArn
 
-    case .instanceProfileCredentials:
-        self.roleArn = nil
+      case .instanceProfileCredentials:
+          self.roleArn = nil
 
-        guard let code = try? values.decode(String.self, forKey: .code) else {
-            throw MetaDataServiceError.missingRequiredParam("Code")
-        }
+          guard let code = try? values.decode(String.self, forKey: .code) else {
+              throw MetaDataServiceError.missingRequiredParam("Code")
+          }
 
-        guard let lastUpdated = try? values.decode(String.self, forKey: .lastUpdated) else {
-            throw MetaDataServiceError.missingRequiredParam("LastUpdated")
-        }
+          guard let lastUpdated = try? values.decode(String.self, forKey: .lastUpdated) else {
+              throw MetaDataServiceError.missingRequiredParam("LastUpdated")
+          }
 
-        guard let type = try? values.decode(String.self, forKey: .type) else {
-            throw MetaDataServiceError.missingRequiredParam("Type")
-        }
+          guard let type = try? values.decode(String.self, forKey: .type) else {
+              throw MetaDataServiceError.missingRequiredParam("Type")
+          }
 
-        self.code = code
-        self.lastUpdated = lastUpdated
-        self.type = type
+          self.code = code
+          self.lastUpdated = lastUpdated
+          self.type = type
+      }
+
+      guard let accessKeyId = try? values.decode(String.self, forKey: .accessKeyId) else {
+          throw MetaDataServiceError.missingRequiredParam("AccessKeyId")
+      }
+
+      guard let secretAccessKey = try? values.decode(String.self, forKey: .secretAccessKey) else {
+          throw MetaDataServiceError.missingRequiredParam("SecretAccessKey")
+      }
+
+      guard let token = try? values.decode(String.self, forKey: .token) else {
+          throw MetaDataServiceError.missingRequiredParam("Token")
+      }
+
+      guard let expiration = try? values.decode(String.self, forKey: .expiration) else {
+          throw MetaDataServiceError.missingRequiredParam("Expiration")
+      }
+
+      self.accessKeyId = accessKeyId
+      self.secretAccessKey = secretAccessKey
+      self.token = token
+
+      // ISO8601DateFormatter and DateFormatter inherit from Formatter, which does not have the methods we need.
+      if #available(OSX 10.12, *) {
+          let dateFormatter = ISO8601DateFormatter()
+          guard let date = dateFormatter.date(from: expiration) else {
+              fatalError("ERROR: Date conversion failed due to mismatched format.")
+          }
+          self.expiration = date
+      } else {
+          let dateFormatter = DateFormatter()
+          dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
+          dateFormatter.timeZone = TimeZone(identifier: "UTC")
+          guard let date = dateFormatter.date(from: expiration) else {
+              fatalError("ERROR: Date conversion failed due to mismatched format.")
+          }
+          self.expiration = date
+      }
+
     }
-
-    guard let accessKeyId = try? values.decode(String.self, forKey: .accessKeyId) else {
-        throw MetaDataServiceError.missingRequiredParam("AccessKeyId")
-    }
-
-    guard let secretAccessKey = try? values.decode(String.self, forKey: .secretAccessKey) else {
-        throw MetaDataServiceError.missingRequiredParam("SecretAccessKey")
-    }
-
-    guard let token = try? values.decode(String.self, forKey: .token) else {
-        throw MetaDataServiceError.missingRequiredParam("Token")
-    }
-
-    guard let expiration = try? values.decode(String.self, forKey: .expiration) else {
-        throw MetaDataServiceError.missingRequiredParam("Expiration")
-    }
-
-    self.accessKeyId = accessKeyId
-    self.secretAccessKey = secretAccessKey
-    self.token = token
-
-    // ISO8601DateFormatter and DateFormatter inherit from Formatter, which does not have the methods we need.
-    if #available(OSX 10.12, *) {
-        let dateFormatter = ISO8601DateFormatter()
-        guard let date = dateFormatter.date(from: expiration) else {
-            fatalError("ERROR: Date conversion failed due to mismatched format.")
-        }
-        self.expiration = date
-    } else {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
-        dateFormatter.timeZone = TimeZone(identifier: "UTC")
-        guard let date = dateFormatter.date(from: expiration) else {
-            fatalError("ERROR: Date conversion failed due to mismatched format.")
-        }
-        self.expiration = date
-    }
-
-  }
 }

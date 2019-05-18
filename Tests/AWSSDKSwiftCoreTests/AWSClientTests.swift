@@ -13,6 +13,12 @@ import XCTest
 
 class AWSClientTests: XCTestCase {
 
+    static var allTests : [(String, (AWSClientTests) -> () throws -> Void)] {
+        return [
+            ("testCreateAWSRequest", testCreateAWSRequest)
+        ]
+    }
+
     struct C: AWSShape {
         public static var _members: [AWSShapeMember] = [
             AWSShapeMember(label: "value", required: true, type: .string)
@@ -54,7 +60,28 @@ class AWSClientTests: XCTestCase {
         private enum CodingKeys: String, CodingKey {
             case fooParams = "fooParams"
         }
+    }
 
+
+    func testGetCredential() {
+        let sesClient = AWSClient(
+            accessKeyId: "key",
+            secretAccessKey: "secret",
+            region: nil,
+            service: "email",
+            serviceProtocol: ServiceProtocol(type: .query),
+            apiVersion: "2013-12-01",
+            middlewares: [],
+            possibleErrorTypes: [SESErrorType.self]
+        )
+
+        do {
+            let credentialForSignature = try sesClient.signer.manageCredential().wait()
+            XCTAssertEqual(credentialForSignature.accessKeyId, "key")
+            XCTAssertEqual(credentialForSignature.secretAccessKey, "secret")
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
     }
 
     struct G: AWSShape {
@@ -113,7 +140,7 @@ class AWSClientTests: XCTestCase {
     )
 
     func testCreateAWSRequest() {
-        let input = C()
+        let input1 = C()
         let input2 = E()
         let input3 = F(fooParams: input2)
 
@@ -122,7 +149,7 @@ class AWSClientTests: XCTestCase {
                 operation: "SendEmail",
                 path: "/",
                 httpMethod: "POST",
-                input: input
+                input: input1
             )
             XCTAssertEqual(awsRequest.url.absoluteString, "\(sesClient.endpoint)/")
             XCTAssertEqual(String(describing: awsRequest.body), "text(\"Action=SendEmail&Value=%3Chtml%3E%3Cbody%3E%3Ca%20href%3D%22https://redsox.com%22%3ETest%3C/a%3E%3C/body%3E%3C/html%3E&Version=2013-12-01\")")
@@ -133,14 +160,45 @@ class AWSClientTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
 
+        var input2 = E()
+
+        let kinesisClient = AWSClient(
+            accessKeyId: "foo",
+            secretAccessKey: "bar",
+            region: nil,
+            amzTarget: "Kinesis_20131202",
+            service: "kinesis",
+            serviceProtocol: ServiceProtocol(type: .json, version: ServiceProtocol.Version(major: 1, minor: 1)),
+            apiVersion: "2013-12-02",
+            middlewares: [],
+            possibleErrorTypes: [KinesisErrorType.self]
+        )
+
         do {
             let awsRequest = try kinesisClient.debugCreateAWSRequest(
                 operation: "PutRecord",
                 path: "/",
                 httpMethod: "POST",
-                input: input
+                input: input2
             )
             XCTAssertEqual(awsRequest.url.absoluteString, "\(kinesisClient.endpoint)/")
+
+            if let bodyAsData = try awsRequest.body.asData(), let parsedBody = try JSONSerialization.jsonObject(with: bodyAsData, options: []) as? [String:Any] {
+                if let member = parsedBody["Member"] as? [String:Any] {
+                    if let memberKey = member["memberKey"] {
+                        XCTAssertEqual(String(describing: memberKey), "memberValue")
+                    } else {
+                        XCTFail("Cannot parse memberKey")
+                    }
+                    if let memberKey2 = member["memberKey2"] {
+                        XCTAssertEqual(String(describing: memberKey2), "memberValue2")
+                    } else {
+                      XCTFail("Cannot parse memberKey2")
+                    }
+                }
+
+            }
+
             let nioRequest = try awsRequest.toNIORequest()
             XCTAssertEqual(nioRequest.head.headers["Content-Type"][0], "application/x-amz-json-1.1")
             XCTAssertEqual(nioRequest.head.method, HTTPMethod.POST)
@@ -153,12 +211,13 @@ class AWSClientTests: XCTestCase {
                 operation: "ListObjectsV2",
                 path: "/Bucket?list-type=2",
                 httpMethod: "GET",
-                input: input
+                input: input1
             )
 
             XCTAssertEqual(awsRequest.url.absoluteString, "https://s3.amazonaws.com/Bucket?list-type=2")
             let nioRequest = try awsRequest.toNIORequest()
             XCTAssertEqual(nioRequest.head.method, HTTPMethod.GET)
+            XCTAssertEqual(nioRequest.body, Data())
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -207,52 +266,46 @@ class AWSClientTests: XCTestCase {
         }
     }
 
-    func testAWSRequestSigning() {
-        // don't use an input that contains a dictionary as we cannot guarantee the order the elements are output
-        let input = G(data: "Testing, testing, 1,2,1,2".data(using:.utf8)!)
-        let authorization = "AWS4-HMAC-SHA256 Credential=foo/19700101/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=14aa24501193b5d1febe4af614654b42851b833144490fcab3d8e0eb6c81d270"
+    func testCreateNIORequest() {
+        let input2 = E()
+
+        let kinesisClient = AWSClient(
+            accessKeyId: "foo",
+            secretAccessKey: "bar",
+            region: nil,
+            amzTarget: "Kinesis_20131202",
+            service: "kinesis",
+            serviceProtocol: ServiceProtocol(type: .json, version: ServiceProtocol.Version(major: 1, minor: 1)),
+            apiVersion: "2013-12-02",
+            middlewares: [],
+            possibleErrorTypes: [KinesisErrorType.self]
+        )
 
         do {
-            let awsRequest = try s3Client.debugCreateAWSRequest(
-                operation: "PutBucketTagging",
-                path: "/Bucket?tagging",
-                httpMethod: "PUT",
-                input: input
+            let awsRequest = try kinesisClient.debugCreateAWSRequest(
+                operation: "PutRecord",
+                path: "/",
+                httpMethod: "POST",
+                input: input2
             )
-            let nioRequest = try awsRequest.toNIORequest()
-            XCTAssertEqual(nioRequest.head.method, HTTPMethod.PUT)
 
-            let url = URL(string: nioRequest.head.uri)
-            XCTAssertNotNil(url)
-
-            var headers: [String: String] = [:]
-            for (key, value) in nioRequest.head.headers {
-                headers[key.description] = value
+            let nioRequest = try kinesisClient.createNioRequest(awsRequest)
+            XCTAssertEqual(nioRequest.head.method, HTTPMethod.POST)
+            if let host = nioRequest.head.headers.first(where: { $0.name == "Host" }) {
+                XCTAssertEqual(host.value, "kinesis.us-east-1.amazonaws.com")
             }
-            let method = "\(nioRequest.head.method)"
-            let signedHeaders = s3Client.signer.signedHeaders(
-                url:url!,
-                headers: headers,
-                method: method,
-                date:Date(timeIntervalSince1970: 0),
-                bodyData:nioRequest.body
-            )
-            let signature = signedHeaders["Authorization"]
+            if let contentType = nioRequest.head.headers.first(where: { $0.name == "Content-Type" }) {
+                XCTAssertEqual(contentType.value, "application/x-amz-json-1.1")
+            }
+            if let xAmzTarget = nioRequest.head.headers.first(where: { $0.name == "x-amz-target" }) {
+                XCTAssertEqual(xAmzTarget.value, "Kinesis_20131202.PutRecord")
+            }
 
-            XCTAssertNotNil(signature)
-            XCTAssertEqual(signature!, authorization)
         } catch {
             XCTFail(error.localizedDescription)
         }
-
     }
 
-    static var allTests : [(String, (AWSClientTests) -> () throws -> Void)] {
-        return [
-            ("testCreateAWSRequest", testCreateAWSRequest),
-            ("testAWSRequestSigning", testAWSRequestSigning)
-        ]
-    }
 }
 
 /// Error enum for Kinesis

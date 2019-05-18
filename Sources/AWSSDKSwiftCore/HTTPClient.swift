@@ -123,7 +123,7 @@ public final class HTTPClient {
         self.eventGroup = eventGroup
     }
 
-    public func connect(_ request: Request) throws -> EventLoopFuture<Response> {
+    public func connect(_ request: Request) -> EventLoopFuture<Response> {
         var head = request.head
         let body = request.body
 
@@ -149,6 +149,7 @@ public final class HTTPClient {
         let response: EventLoopPromise<Response> = eventGroup.next().newPromise()
 
         _ = ClientBootstrap(group: eventGroup)
+            .connectTimeout(TimeAmount.seconds(5))
             .channelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: 1)
             .channelInitializer { channel in
                 let accumulation = HTTPClientResponseHandler(promise: response)

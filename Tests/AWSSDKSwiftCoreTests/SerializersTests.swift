@@ -13,7 +13,7 @@ import XCTest
 class SerializersTests: XCTestCase {
 
     struct Numbers : AWSShape {
-        
+
         init(bool:Bool, integer:Int, float:Float, double:Double, intEnum:IntEnum) {
             self.bool = bool
             self.integer = integer
@@ -25,7 +25,7 @@ class SerializersTests: XCTestCase {
             self.int32 = 7
             self.uint64 = 90
         }
-        
+
         enum IntEnum : Int, Codable {
             case first
             case second
@@ -158,17 +158,17 @@ class SerializersTests: XCTestCase {
             XCTAssertNotNil(xmlDocument.rootElement())
             let result5 = try? AWSXMLDecoder().decode(Dictionaries.self, from: xmlDocument.rootElement()!)
             XCTAssertNil(result5)
-            
+
             xmlDocument = try XMLDocument(data: notANumber.data(using: .utf8)!)
             XCTAssertNotNil(xmlDocument.rootElement())
             let result6 = try? AWSXMLDecoder().decode(Dictionaries.self, from: xmlDocument.rootElement()!)
             XCTAssertNil(result6)
-            
+
         } catch {
             XCTFail(error.localizedDescription)
         }
     }
-    
+
     func testDecodeExpandedContainers() {
         struct Shape : Codable {
             let array : [Int]
@@ -178,18 +178,18 @@ class SerializersTests: XCTestCase {
         do {
             let xmlDocument = try XMLDocument(data: xmldata.data(using: .utf8)!)
             let rootElement = xmlDocument.rootElement()
-            
+
             XCTAssertNotNil(rootElement)
 
             let shape = try AWSXMLDecoder().decode(Shape.self, from: rootElement!)
-            
+
             XCTAssertEqual(shape.array[0], 3)
             XCTAssertEqual(shape.dictionary["two"], 2)
         } catch {
             XCTFail(error.localizedDescription)
         }
     }
-    
+
     func testEncodeDecodeXML() {
         do {
             let xml = try AWSXMLEncoder().encode(testShape)

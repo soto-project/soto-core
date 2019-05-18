@@ -515,7 +515,7 @@ extension AWSClient {
 
         for (key, value) in response.head.headers {
             let headerParams = Output.headerParams
-            if let index = headerParams.index(where: { $0.key.lowercased() == key.description.lowercased() }) {
+            if let index = headerParams.firstIndex(where: { $0.key.lowercased() == key.description.lowercased() }) {
                 if let number = Double(value) {
                     outputDict[headerParams[index].key] = number.truncatingRemainder(dividingBy: 1) == 0 ? Int(number) : number
                 } else if let boolean = Bool(value) {
@@ -626,12 +626,7 @@ extension AWSClient {
     }
 
     private func createError(for response: Response, withComputedBody body: Body, withRawData data: Data) -> Error {
-        let bodyDict: [String: Any]
-        if let dict = try? body.asDictionary() {
-            bodyDict = dict ?? [:]
-        } else {
-            bodyDict = [:]
-        }
+        let bodyDict: [String: Any] = (try? body.asDictionary()) ?? [:]
 
         var code: String?
         var message: String?

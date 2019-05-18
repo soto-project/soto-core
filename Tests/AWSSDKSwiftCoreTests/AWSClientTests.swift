@@ -160,8 +160,6 @@ class AWSClientTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
 
-        var input2 = E()
-
         let kinesisClient = AWSClient(
             accessKeyId: "foo",
             secretAccessKey: "bar",

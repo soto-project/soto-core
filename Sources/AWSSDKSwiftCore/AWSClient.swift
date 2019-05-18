@@ -106,7 +106,7 @@ public struct AWSClient {
 }
 // invoker
 extension AWSClient {
-    fileprivate func invoke(_ nioRequest: Request) -> Future<Response>{
+    fileprivate func invoke(_ nioRequest: Request) -> Future<Response> {
         let client = createHTTPClient(for: nioRequest)
         let futureResponse = client.connect(nioRequest)
 
@@ -134,7 +134,7 @@ extension AWSClient {
 
 // public facing apis
 extension AWSClient {
-    public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws {
+    public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> Future<Void> {
 
         return signer.manageCredential().thenThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
@@ -144,12 +144,14 @@ extension AWSClient {
                     input: input
                 )
                 return try self.createNioRequest(awsRequest)
-            }.whenSuccess { nioRequest in
-                _ = self.invoke(nioRequest)
-          }
+            }.then { nioRequest in
+                return self.invoke(nioRequest)
+            }.map { response in
+                return
+            }
     }
 
-    public func send(operation operationName: String, path: String, httpMethod: String) throws {
+    public func send(operation operationName: String, path: String, httpMethod: String) throws -> Future<Void> {
 
         return signer.manageCredential().thenThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
@@ -158,9 +160,11 @@ extension AWSClient {
                     httpMethod: httpMethod
                 )
                 return try self.createNioRequest(awsRequest)
-            }.whenSuccess { nioRequest in
-                _ = self.invoke(nioRequest)
-          }
+            }.then { nioRequest in
+                return self.invoke(nioRequest)
+            }.map { response in
+                return
+            }
     }
 
     public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) throws -> Future<Output> {

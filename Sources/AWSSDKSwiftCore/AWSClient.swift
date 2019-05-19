@@ -144,9 +144,9 @@ extension AWSClient {
                     input: input
                 )
                 return try self.createNioRequest(awsRequest)
-            }.then { nioRequest in
+            }.flatMap { nioRequest in
                 return self.invoke(nioRequest)
-            }.thenThrowing { response in
+            }.flatMapThrowing { response in
                 return try self.validateCode(response: response)
             }
     }
@@ -160,9 +160,9 @@ extension AWSClient {
                     httpMethod: httpMethod
                 )
                 return try self.createNioRequest(awsRequest)
-            }.then { nioRequest in
+            }.flatMap { nioRequest in
                 return self.invoke(nioRequest)
-            }.thenThrowing { response in
+            }.flatMapThrowing { response in
                 return try self.validateCode(response: response)
             }
     }

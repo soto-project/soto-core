@@ -146,8 +146,8 @@ extension AWSClient {
                 return try self.createNioRequest(awsRequest)
             }.then { nioRequest in
                 return self.invoke(nioRequest)
-            }.map { response in
-                return
+            }.thenThrowing { response in
+                return try self.validateCode(response: response)
             }
     }
 
@@ -162,8 +162,8 @@ extension AWSClient {
                 return try self.createNioRequest(awsRequest)
             }.then { nioRequest in
                 return self.invoke(nioRequest)
-            }.map { response in
-                return
+            }.thenThrowing { response in
+                return try self.validateCode(response: response)
             }
     }
 
@@ -461,16 +461,10 @@ extension AWSClient {
 
 // response validator
 extension AWSClient {
+
     fileprivate func validate<Output: AWSShape>(operation operationName: String, response: Response) throws -> Output {
 
-        guard (200..<300).contains(response.head.status.code) else {
-            let responseBody = try validateBody(
-                for: response,
-                payloadPath: nil,
-                members: Output._members
-            )
-            throw createError(for: response, withComputedBody: responseBody, withRawData: response.body)
-        }
+        try validateCode(response: response, members: Output._members)
 
         let responseBody = try validateBody(
             for: response,
@@ -535,6 +529,17 @@ extension AWSClient {
             return try UntypedDictionaryDecoder().decode(Output.self, from: outputDict)
         default:
             return try DictionaryDecoder().decode(Output.self, from: outputDict)
+        }
+    }
+
+    private func validateCode(response: Response, members: [AWSShapeMember] = []) throws {
+        guard (200..<300).contains(response.head.status.code) else {
+            let responseBody = try validateBody(
+                for: response,
+                payloadPath: nil,
+                members: members
+            )
+            throw createError(for: response, withComputedBody: responseBody, withRawData: response.body)
         }
     }
 
@@ -689,6 +694,17 @@ extension AWSClient {
         return AWSError(message: message ?? "Unhandled Error. Response Code: \(response.head.status.code)", rawBody: String(data: data, encoding: .utf8) ?? "")
     }
 }
+
+// debug request validator
+#if DEBUG
+extension AWSClient {
+
+    func debugValidateCode(response: Response) throws {
+        return try validateCode(response: response)
+    }
+}
+#endif
+
 
 extension AWSClient.RequestError: CustomStringConvertible {
     public var description: String {

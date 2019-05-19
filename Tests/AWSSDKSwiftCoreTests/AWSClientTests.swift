@@ -312,7 +312,7 @@ class AWSClientTests: XCTestCase {
     }
 
     func testValidateCode() {
-        let nioResponse = Response(
+        let nioResponse = HTTPClient.Response(
             head: HTTPResponseHead(
                 version: HTTPVersion(major: 1, minor: 1),
                 status: HTTPResponseStatus(statusCode: 200)
@@ -326,7 +326,7 @@ class AWSClientTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
 
-        let failNioResponse = Response(
+        let failNioResponse = HTTPClient.Response(
             head: HTTPResponseHead(
                 version: HTTPVersion(major: 1, minor: 1),
                 status: HTTPResponseStatus(statusCode: 403)

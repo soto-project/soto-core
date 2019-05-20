@@ -343,7 +343,10 @@ extension AWSClient {
                 }
                 headers.removeValue(forKey: payload.toSwiftVariableCase())
             } else {
-                body = .json(try AWSShapeEncoder().encodeToJSONUTF8Data(input))
+                // only include the body if there are members that are output in the body.
+                if Input.bodyParams.isEmpty == false {
+                    body = .json(try AWSShapeEncoder().encodeToJSONUTF8Data(input))
+                }
             }
 
         case .query:

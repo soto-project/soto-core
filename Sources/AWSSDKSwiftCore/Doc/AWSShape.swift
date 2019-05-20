@@ -54,4 +54,19 @@ extension AWSShape {
         }
         return params
     }
+    
+    public static var bodyParams: [String: String] {
+        var params: [String: String] = [:]
+        for member in _members {
+            if let location = member.location {
+                if case .body(let name) = location {
+                    params[name] = member.label
+                }
+            } else {
+                // members without a location are assumed to go in the body
+                params[member.label] = member.label
+            }
+        }
+        return params
+    }
 }

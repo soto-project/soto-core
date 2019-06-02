@@ -55,18 +55,16 @@ extension AWSShape {
         return params
     }
     
-    public static var bodyParams: [String: String] {
-        var params: [String: String] = [:]
+    public static var hasEncodableBody: Bool {
         for member in _members {
             if let location = member.location {
-                if case .body(let name) = location {
-                    params[name] = member.label
+                if case .body(_) = location {
+                    return true
                 }
             } else {
-                // members without a location are assumed to go in the body
-                params[member.label] = member.label
+                return true
             }
         }
-        return params
+        return false
     }
 }

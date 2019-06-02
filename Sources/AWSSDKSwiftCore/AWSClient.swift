@@ -344,7 +344,7 @@ extension AWSClient {
                 headers.removeValue(forKey: payload.toSwiftVariableCase())
             } else {
                 // only include the body if there are members that are output in the body.
-                if Input.bodyParams.isEmpty == false {
+                if Input.hasEncodableBody {
                     body = .json(try AWSShapeEncoder().encodeToJSONUTF8Data(input))
                 }
             }

@@ -304,6 +304,37 @@ class AWSClientTests: XCTestCase {
         }
     }
 
+    func testValidateCode() {
+        let nioResponse = Response(
+            head: HTTPResponseHead(
+                version: HTTPVersion(major: 1, minor: 1),
+                status: HTTPResponseStatus(statusCode: 200)
+            ),
+            body: Data()
+        )
+
+        do {
+            try s3Client.debugValidateCode(response: nioResponse)
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+
+        let failNioResponse = Response(
+            head: HTTPResponseHead(
+                version: HTTPVersion(major: 1, minor: 1),
+                status: HTTPResponseStatus(statusCode: 403)
+            ),
+            body: Data()
+        )
+
+        do {
+            try s3Client.debugValidateCode(response: failNioResponse)
+            XCTFail("call to validateCode should throw an error")
+        } catch {
+            XCTAssertTrue(true)
+        }
+    }
+
 }
 
 /// Error enum for Kinesis

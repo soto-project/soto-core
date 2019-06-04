@@ -106,7 +106,7 @@ public struct AWSClient {
 }
 // invoker
 extension AWSClient {
-    fileprivate func invoke(_ nioRequest: Request) -> Future<Response>{
+    fileprivate func invoke(_ nioRequest: Request) -> Future<Response> {
         let client = createHTTPClient(for: nioRequest)
         let futureResponse = client.connect(nioRequest)
 
@@ -134,7 +134,7 @@ extension AWSClient {
 
 // public facing apis
 extension AWSClient {
-    public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws {
+    public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> Future<Void> {
 
         return signer.manageCredential().thenThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
@@ -144,12 +144,14 @@ extension AWSClient {
                     input: input
                 )
                 return try self.createNioRequest(awsRequest)
-            }.whenSuccess { nioRequest in
-                _ = self.invoke(nioRequest)
-          }
+            }.then { nioRequest in
+                return self.invoke(nioRequest)
+            }.thenThrowing { response in
+                return try self.validateCode(response: response)
+            }
     }
 
-    public func send(operation operationName: String, path: String, httpMethod: String) throws {
+    public func send(operation operationName: String, path: String, httpMethod: String) throws -> Future<Void> {
 
         return signer.manageCredential().thenThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
@@ -158,9 +160,11 @@ extension AWSClient {
                     httpMethod: httpMethod
                 )
                 return try self.createNioRequest(awsRequest)
-            }.whenSuccess { nioRequest in
-                _ = self.invoke(nioRequest)
-          }
+            }.then { nioRequest in
+                return self.invoke(nioRequest)
+            }.thenThrowing { response in
+                return try self.validateCode(response: response)
+            }
     }
 
     public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) throws -> Future<Output> {
@@ -466,16 +470,10 @@ extension AWSClient {
 
 // response validator
 extension AWSClient {
+
     fileprivate func validate<Output: AWSShape>(operation operationName: String, response: Response) throws -> Output {
 
-        guard (200..<300).contains(response.head.status.code) else {
-            let responseBody = try validateBody(
-                for: response,
-                payloadPath: nil,
-                members: Output._members
-            )
-            throw createError(for: response, withComputedBody: responseBody, withRawData: response.body)
-        }
+        try validateCode(response: response, members: Output._members)
 
         let responseBody = try validateBody(
             for: response,
@@ -528,6 +526,17 @@ extension AWSClient {
         }
 
         return try DictionaryDecoder().decode(Output.self, from: outputDict)
+    }
+
+    private func validateCode(response: Response, members: [AWSShapeMember] = []) throws {
+        guard (200..<300).contains(response.head.status.code) else {
+            let responseBody = try validateBody(
+                for: response,
+                payloadPath: nil,
+                members: members
+            )
+            throw createError(for: response, withComputedBody: responseBody, withRawData: response.body)
+        }
     }
 
     private func validateBody(for response: Response, payloadPath: String?, members: [AWSShapeMember]) throws -> Body {
@@ -683,6 +692,17 @@ extension AWSClient {
         return AWSError(message: message ?? "Unhandled Error. Response Code: \(response.head.status.code)", rawBody: String(data: data, encoding: .utf8) ?? "")
     }
 }
+
+// debug request validator
+#if DEBUG
+extension AWSClient {
+
+    func debugValidateCode(response: Response) throws {
+        return try validateCode(response: response)
+    }
+}
+#endif
+
 
 extension AWSClient.RequestError: CustomStringConvertible {
     public var description: String {

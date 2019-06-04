@@ -384,7 +384,7 @@ extension AWSClient {
             } else {
                 // only include the body if there are members that are output in the body.
                 if Input.hasEncodableBody {
-                    body = .xml(try AWSShapeEncoder().encodeToXMLNode(input))
+                    body = .xml(try AWSShapeEncoder().xml(input))
                 }
             }
 

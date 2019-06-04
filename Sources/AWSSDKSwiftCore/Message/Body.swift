@@ -14,7 +14,7 @@ public enum Body {
     case stream(InputStream) // currenty unsupported
     case multipart(Data) // currenty unsupported
     case json(Data)
-    case xml(XMLNode)
+    case xml(XMLElement)
     case empty
 }
 
@@ -62,13 +62,6 @@ extension Body {
         case .json(let data):
             return try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
             
-        case .xml(let node):
-            let json = XMLNodeSerializer(node: node).serializeToJSON()
-            guard let dictionary = try JSONSerialization.jsonObject(with: json.data(using: .utf8)!, options: []) as? [String: Any] else {
-                return nil
-            }
-            
-            return dictionary
         default:
             return nil
         }
@@ -90,7 +83,10 @@ extension Body {
             }
             
         case .xml(let node):
-            return XMLNodeSerializer(node: node).serializeToXML().data(using: .utf8)
+            let xmlDocument = XMLDocument(rootElement: node)
+            xmlDocument.version = "1.0"
+            xmlDocument.characterEncoding = "UTF-8"
+            return xmlDocument.xmlData
             
         case .multipart(_):
             return nil

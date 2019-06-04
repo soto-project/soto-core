@@ -10,11 +10,16 @@ import Foundation
 
 public protocol AWSShape: Codable {
     static var payloadPath: String? { get }
+    static var _xmlNamespace: String? { get }
     static var _members: [AWSShapeMember] { get }
 }
 
 extension AWSShape {
     public static var payloadPath: String? {
+        return nil
+    }
+    
+    public static var _xmlNamespace: String? {
         return nil
     }
     

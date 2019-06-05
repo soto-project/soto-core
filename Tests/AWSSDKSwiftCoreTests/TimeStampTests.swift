@@ -28,7 +28,18 @@ class TimeStampTests: XCTestCase {
             XCTFail("\(error)")
         }
     }
-
+    
+    func testDecodeFromXML() {
+        do {
+            let xml = "<A><date>2017-01-01T00:01:00.000Z</date></A>"
+            let xmlElement = try XMLElement(xmlString: xml)
+            let a = try AWSXMLDecoder().decode(A.self, from: xmlElement)
+            XCTAssertEqual(a.date.stringValue, "2017-01-01T00:01:00.000Z")
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+    
     func testEncodeToJSON() {
         do {
             let a = A(date: TimeStamp("2019-05-01T00:00:00.001Z"))

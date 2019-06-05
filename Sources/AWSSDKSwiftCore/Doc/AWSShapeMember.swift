@@ -29,7 +29,7 @@ public struct AWSShapeMember {
     public let location: Location?
     public let required: Bool
     public let type: Shape
-    
+
     var pathForLocation: String {
         return location?.name ?? label
     }

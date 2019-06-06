@@ -13,6 +13,7 @@
 // based on JSONEncoder.swift from apple/swift as of Apr 18 2019
 // https://github.com/apple/swift/blob/2771eb520c4e3058058baf6bb3f6dba6184a17d3/stdlib/public/Darwin/Foundation/JSONEncoder.swift
 
+import CoreFoundation
 import Foundation
 
 /// A marker protocol used to determine whether a value is a `String`-keyed `Dictionary`
@@ -56,11 +57,6 @@ extension Dictionary : _DictionaryStringDictionaryDecodableMarker where Key == S
 //===----------------------------------------------------------------------===//
 
 /// `DictionaryEncoder` facilitates the encoding of `Encodable` values into a dictionary.
-// NOTE: older overlays had Foundation.DictionaryEncoder as the ObjC name.
-// The two must coexist, so it was renamed. The old name must not be
-// used in the new runtime. _TtC10Foundation13__DictionaryEncoder is the
-// mangled name for Foundation.__DictionaryEncoder.
-@_objcRuntimeName(_TtC10Foundation13__DictionaryEncoder)
 open class DictionaryEncoder {
     // MARK: Options
     
@@ -1040,11 +1036,6 @@ fileprivate class __DictionaryReferencingEncoder : __DictionaryEncoder {
 //===----------------------------------------------------------------------===//
 
 /// `DictionaryDecoder` facilitates the decoding of JSON into semantic `Decodable` types.
-// NOTE: older overlays had Foundation.DictionaryDecoder as the ObjC name.
-// The two must coexist, so it was renamed. The old name must not be
-// used in the new runtime. _TtC10Foundation13__DictionaryDecoder is the
-// mangled name for Foundation.__DictionaryDecoder.
-@_objcRuntimeName(_TtC10Foundation13__DictionaryDecoder)
 open class DictionaryDecoder {
     // MARK: Options
     
@@ -2125,19 +2116,8 @@ extension __DictionaryDecoder {
     fileprivate func unbox(_ value: Any, as type: Bool.Type) throws -> Bool? {
         guard !(value is NSNull) else { return nil }
         
-        if let number = value as? NSNumber {
-            // TODO: Add a flag to coerce non-boolean numbers into Bools?
-            if number === kCFBooleanTrue as NSNumber {
-                return true
-            } else if number === kCFBooleanFalse as NSNumber {
-                return false
-            }
-            
-            /* FIXME: If swift-corelibs-foundation doesn't change to use NSNumber, this code path will need to be included and tested:
-             } else if let bool = value as? Bool {
-             return bool
-             */
-            
+        if let bool = value as? Bool {
+            return bool
         }
         
         throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
@@ -2146,7 +2126,7 @@ extension __DictionaryDecoder {
     fileprivate func unbox(_ value: Any, as type: Int.Type) throws -> Int? {
         guard !(value is NSNull) else { return nil }
         
-        guard let number = value as? NSNumber, number !== kCFBooleanTrue, number !== kCFBooleanFalse else {
+        guard let number = value as? NSNumber else {
             throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
         }
         
@@ -2161,7 +2141,7 @@ extension __DictionaryDecoder {
     fileprivate func unbox(_ value: Any, as type: Int8.Type) throws -> Int8? {
         guard !(value is NSNull) else { return nil }
         
-        guard let number = value as? NSNumber, number !== kCFBooleanTrue, number !== kCFBooleanFalse else {
+        guard let number = value as? NSNumber else {
             throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
         }
         
@@ -2176,7 +2156,7 @@ extension __DictionaryDecoder {
     fileprivate func unbox(_ value: Any, as type: Int16.Type) throws -> Int16? {
         guard !(value is NSNull) else { return nil }
         
-        guard let number = value as? NSNumber, number !== kCFBooleanTrue, number !== kCFBooleanFalse else {
+        guard let number = value as? NSNumber else {
             throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
         }
         
@@ -2191,7 +2171,7 @@ extension __DictionaryDecoder {
     fileprivate func unbox(_ value: Any, as type: Int32.Type) throws -> Int32? {
         guard !(value is NSNull) else { return nil }
         
-        guard let number = value as? NSNumber, number !== kCFBooleanTrue, number !== kCFBooleanFalse else {
+        guard let number = value as? NSNumber else {
             throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
         }
         
@@ -2206,7 +2186,7 @@ extension __DictionaryDecoder {
     fileprivate func unbox(_ value: Any, as type: Int64.Type) throws -> Int64? {
         guard !(value is NSNull) else { return nil }
         
-        guard let number = value as? NSNumber, number !== kCFBooleanTrue, number !== kCFBooleanFalse else {
+        guard let number = value as? NSNumber else {
             throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
         }
         
@@ -2221,7 +2201,7 @@ extension __DictionaryDecoder {
     fileprivate func unbox(_ value: Any, as type: UInt.Type) throws -> UInt? {
         guard !(value is NSNull) else { return nil }
         
-        guard let number = value as? NSNumber, number !== kCFBooleanTrue, number !== kCFBooleanFalse else {
+        guard let number = value as? NSNumber else {
             throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
         }
         
@@ -2236,7 +2216,7 @@ extension __DictionaryDecoder {
     fileprivate func unbox(_ value: Any, as type: UInt8.Type) throws -> UInt8? {
         guard !(value is NSNull) else { return nil }
         
-        guard let number = value as? NSNumber, number !== kCFBooleanTrue, number !== kCFBooleanFalse else {
+        guard let number = value as? NSNumber else {
             throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
         }
         
@@ -2251,7 +2231,7 @@ extension __DictionaryDecoder {
     fileprivate func unbox(_ value: Any, as type: UInt16.Type) throws -> UInt16? {
         guard !(value is NSNull) else { return nil }
         
-        guard let number = value as? NSNumber, number !== kCFBooleanTrue, number !== kCFBooleanFalse else {
+        guard let number = value as? NSNumber else {
             throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
         }
         
@@ -2266,7 +2246,7 @@ extension __DictionaryDecoder {
     fileprivate func unbox(_ value: Any, as type: UInt32.Type) throws -> UInt32? {
         guard !(value is NSNull) else { return nil }
         
-        guard let number = value as? NSNumber, number !== kCFBooleanTrue, number !== kCFBooleanFalse else {
+        guard let number = value as? NSNumber else {
             throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
         }
         
@@ -2281,7 +2261,7 @@ extension __DictionaryDecoder {
     fileprivate func unbox(_ value: Any, as type: UInt64.Type) throws -> UInt64? {
         guard !(value is NSNull) else { return nil }
         
-        guard let number = value as? NSNumber, number !== kCFBooleanTrue, number !== kCFBooleanFalse else {
+        guard let number = value as? NSNumber else {
             throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
         }
         
@@ -2296,7 +2276,7 @@ extension __DictionaryDecoder {
     fileprivate func unbox(_ value: Any, as type: Float.Type) throws -> Float? {
         guard !(value is NSNull) else { return nil }
         
-        if let number = value as? NSNumber, number !== kCFBooleanTrue, number !== kCFBooleanFalse {
+        if let number = value as? NSNumber {
             // We are willing to return a Float by losing precision:
             // * If the original value was integral,
             //   * and the integral value was > Float.greatestFiniteMagnitude, we will fail
@@ -2342,7 +2322,7 @@ extension __DictionaryDecoder {
     fileprivate func unbox(_ value: Any, as type: Double.Type) throws -> Double? {
         guard !(value is NSNull) else { return nil }
         
-        if let number = value as? NSNumber, number !== kCFBooleanTrue, number !== kCFBooleanFalse {
+        if let number = value as? NSNumber {
             // We are always willing to return the number as a Double:
             // * If the original value was integral, it is guaranteed to fit in a Double; we are willing to lose precision past 2^53 if you encoded a UInt64 but requested a Double
             // * If it was a Float or Double, you will get back the precise value

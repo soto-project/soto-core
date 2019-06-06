@@ -9,6 +9,10 @@
 // See https://swift.org/CONTRIBUTORS.txt for the list of Swift project authors
 //
 //===----------------------------------------------------------------------===//
+
+// based on JSONEncoder.swift from apple/swift as of Apr 18 2019
+// https://github.com/apple/swift/blob/2771eb520c4e3058058baf6bb3f6dba6184a17d3/stdlib/public/Darwin/Foundation/JSONEncoder.swift
+
 import Foundation
 
 /// A marker protocol used to determine whether a value is a `String`-keyed `Dictionary`
@@ -110,6 +114,9 @@ open class DictionaryEncoder {
         /// Encoded the `Data` as a Base64-encoded string. This is the default strategy.
         case base64
         
+        /// don't encode. This is the default strategy.
+        case raw
+        
         /// Encode the `Data` as a custom value encoded by the given closure.
         ///
         /// If the closure fails to encode a value into the given encoder, the encoder will encode an empty automatic container in its place.
@@ -207,8 +214,8 @@ open class DictionaryEncoder {
     /// The strategy to use in encoding dates. Defaults to `.deferredToDate`.
     open var dateEncodingStrategy: DateEncodingStrategy = .deferredToDate
     
-    /// The strategy to use in encoding binary data. Defaults to `.base64`.
-    open var dataEncodingStrategy: DataEncodingStrategy = .base64
+    /// The strategy to use in encoding binary data. Defaults to `.raw`.
+    open var dataEncodingStrategy: DataEncodingStrategy = .raw
     
     /// The strategy to use in encoding non-conforming numbers. Defaults to `.throw`.
     open var nonConformingFloatEncodingStrategy: NonConformingFloatEncodingStrategy = .throw
@@ -851,6 +858,9 @@ extension __DictionaryEncoder {
         case .base64:
             return NSString(string: data.base64EncodedString())
             
+        case .raw:
+            return data as NSData
+            
         case .custom(let closure):
             let depth = self.storage.count
             do {
@@ -1065,8 +1075,11 @@ open class DictionaryDecoder {
         /// Defer to `Data` for decoding.
         case deferredToData
         
-        /// Decode the `Data` from a Base64-encoded string. This is the default strategy.
+        /// Decode the `Data` from a Base64-encoded string.
         case base64
+        
+        /// Don't decode. This is the default strategy.
+        case raw
         
         /// Decode the `Data` as a custom value decoded by the given closure.
         case custom((_ decoder: Decoder) throws -> Data)
@@ -1153,8 +1166,8 @@ open class DictionaryDecoder {
     /// The strategy to use in decoding dates. Defaults to `.deferredToDate`.
     open var dateDecodingStrategy: DateDecodingStrategy = .deferredToDate
     
-    /// The strategy to use in decoding binary data. Defaults to `.base64`.
-    open var dataDecodingStrategy: DataDecodingStrategy = .base64
+    /// The strategy to use in decoding binary data. Defaults to `.raw`.
+    open var dataDecodingStrategy: DataDecodingStrategy = .raw
     
     /// The strategy to use in decoding non-conforming numbers. Defaults to `.throw`.
     open var nonConformingFloatDecodingStrategy: NonConformingFloatDecodingStrategy = .throw
@@ -2431,6 +2444,13 @@ extension __DictionaryDecoder {
             
             guard let data = Data(base64Encoded: string) else {
                 throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Encountered Data is not valid Base64."))
+            }
+            
+            return data
+            
+        case .raw:
+            guard let data = value as? Data else {
+                throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
             }
             
             return data

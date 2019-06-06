@@ -53,7 +53,7 @@ class DictionaryDecoderTests: XCTestCase {
                     "double": Double.greatestFiniteMagnitude,
                     "float": Float.greatestFiniteMagnitude,
                     "string": "hello",
-                    "data": "hello".data(using: .utf8)!.base64EncodedString(),
+                    "data": "hello".data(using: .utf8)!,
                     "bool": true,
                     "optional": "hello"
                 ],
@@ -151,9 +151,7 @@ class DictionaryDecoderTests: XCTestCase {
             XCTAssertEqual(b!["double"] as? Double, 0.5)
             XCTAssertEqual(b!["float"] as? Float, 0.6)
             XCTAssertEqual(b!["string"] as? String, "string")
-            let base64 = b!["data"] as? String
-            XCTAssertNotNil(base64)
-            let data = Data(base64Encoded: base64!)
+            let data = b!["data"] as? Data
             XCTAssertNotNil(data)
             XCTAssertEqual(String(data: data!, encoding: .utf8), "hello")
             XCTAssertEqual(b!["optional"] as? String, "goodbye")

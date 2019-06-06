@@ -53,7 +53,7 @@ class DictionaryDecoderTests: XCTestCase {
                     "double": Double.greatestFiniteMagnitude,
                     "float": Float.greatestFiniteMagnitude,
                     "string": "hello",
-                    "data": "hello".data(using: .utf8)!,
+                    "data": "hello".data(using: .utf8)!.base64EncodedString(),
                     "bool": true,
                     "optional": "hello"
                 ],
@@ -113,10 +113,97 @@ class DictionaryDecoderTests: XCTestCase {
         }
     }
     
+    let a = A(b: B(int: 1,
+                   int8: 2,
+                   int16: 3,
+                   int32: 4,
+                   int64: 5,
+                   uint: 6,
+                   uint8: 7,
+                   uint16: 8,
+                   uint32: 9,
+                   uint64: 1234567890,
+                   double: 0.5,
+                   float: 0.6,
+                   string: "string",
+                   data: "hello".data(using: .utf8)!,
+                   bool: true,
+                   optional: "goodbye"),
+              dictionary: ["foo": "bar"],
+              array: ["a", "b", "c"])
+
+    func testEncode() {
+        do {
+            let encoded = try DictionaryEncoder().encode(a)
+            let b = encoded["b"] as? [String:Any]
+            
+            XCTAssertNotNil(b)
+            XCTAssertEqual(b!["int"] as? Int, 1)
+            XCTAssertEqual(b!["int8"] as? Int8, 2)
+            XCTAssertEqual(b!["int16"] as? Int16, 3)
+            XCTAssertEqual(b!["int32"] as? Int32, 4)
+            XCTAssertEqual(b!["int64"] as? Int64, 5)
+            XCTAssertEqual(b!["uint"] as? UInt, 6)
+            XCTAssertEqual(b!["uint8"] as? UInt8, 7)
+            XCTAssertEqual(b!["uint16"] as? UInt16, 8)
+            XCTAssertEqual(b!["uint32"] as? UInt32, 9)
+            XCTAssertEqual(b!["uint64"] as? UInt64, 1234567890)
+            XCTAssertEqual(b!["double"] as? Double, 0.5)
+            XCTAssertEqual(b!["float"] as? Float, 0.6)
+            XCTAssertEqual(b!["string"] as? String, "string")
+            let base64 = b!["data"] as? String
+            XCTAssertNotNil(base64)
+            let data = Data(base64Encoded: base64!)
+            XCTAssertNotNil(data)
+            XCTAssertEqual(String(data: data!, encoding: .utf8), "hello")
+            XCTAssertEqual(b!["optional"] as? String, "goodbye")
+            XCTAssertEqual(b!["bool"] as? Bool, true)
+            let dictionary = encoded["dictionary"] as? [String:Any]
+            XCTAssertNotNil(dictionary)
+            XCTAssertEqual(dictionary!["foo"] as? String, "bar")
+            let array = encoded["array"] as? [Any]
+            XCTAssertNotNil(array)
+            XCTAssertEqual(array![1] as? String, "b")
+
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+    
+    func testEncodeDecode() {
+        do {
+            let encoded = try DictionaryEncoder().encode(a)
+            let decoded = try DictionaryDecoder().decode(A.self, from: encoded)
+            
+            XCTAssertEqual(a.b.int, decoded.b.int)
+            XCTAssertEqual(a.b.int8, decoded.b.int8)
+            XCTAssertEqual(a.b.int16, decoded.b.int16)
+            XCTAssertEqual(a.b.int32, decoded.b.int32)
+            XCTAssertEqual(a.b.int64, decoded.b.int64)
+            XCTAssertEqual(a.b.uint, decoded.b.uint)
+            XCTAssertEqual(a.b.uint8, decoded.b.uint8)
+            XCTAssertEqual(a.b.uint16, decoded.b.uint16)
+            XCTAssertEqual(a.b.uint32, decoded.b.uint32)
+            XCTAssertEqual(a.b.uint64, decoded.b.uint64)
+            XCTAssertEqual(a.b.float, decoded.b.float)
+            XCTAssertEqual(a.b.double, decoded.b.double)
+            XCTAssertEqual(a.b.string, decoded.b.string)
+            XCTAssertEqual(a.b.optional, decoded.b.optional)
+            XCTAssertEqual(a.b.bool, decoded.b.bool)
+            XCTAssertEqual(a.dictionary, decoded.dictionary)
+            XCTAssertEqual(a.array, decoded.array)
+
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+    
     static var allTests : [(String, (DictionaryDecoderTests) -> () throws -> Void)] {
         return [
             ("testDecode", testDecode),
-            ("testDecodeFail", testDecodeFail)
+            ("testDecodeFail", testDecodeFail),
+            ("testEncode", testEncode),
+            ("testEncodeDecode", testEncodeDecode)
         ]
     }
 }

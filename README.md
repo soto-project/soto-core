@@ -29,7 +29,7 @@ import PackageDescription
 let package = Package(
     name: "MyAWSTool",
     dependencies: [
-        .package(url: "https://github.com/swift-aws/aws-sdk-swift", .upToNextMajor(from: "2.0.0")),
+        .package(url: "https://github.com/swift-aws/aws-sdk-swift", from: "3.0.0"),
     ],
     targets: [
         .target(

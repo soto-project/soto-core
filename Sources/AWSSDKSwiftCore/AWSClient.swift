@@ -334,7 +334,7 @@ extension AWSClient {
             if let payload = Input.payloadPath, let payloadBody = mirror.getAttribute(forKey: payload.toSwiftVariableCase()) {
                 switch payloadBody {
                 case is AWSShape:
-                    let inputBody: Body = .json(try AWSShapeEncoder().encodeToJSONUTF8Data(input))
+                    let inputBody: Body = .json(try AWSShapeEncoder().json(input))
                     if let inputDict = try inputBody.asDictionary(), let payloadDict = inputDict[payload] {
                         body = .json(try JSONSerialization.data(withJSONObject: payloadDict))
                     }
@@ -343,11 +343,11 @@ extension AWSClient {
                 }
                 headers.removeValue(forKey: payload.toSwiftVariableCase())
             } else {
-                body = .json(try AWSShapeEncoder().encodeToJSONUTF8Data(input))
+                body = .json(try AWSShapeEncoder().json(input))
             }
 
         case .query:
-            var dict = AWSShapeEncoder().encodeToQueryDictionary(input)
+            var dict = AWSShapeEncoder().query(input)
 
             dict["Action"] = operationName
             dict["Version"] = apiVersion
@@ -364,8 +364,16 @@ extension AWSClient {
         case .restxml:
             if let payload = Input.payloadPath, let payloadBody = mirror.getAttribute(forKey: payload.toSwiftVariableCase()) {
                 switch payloadBody {
-                case let pb as AWSShape:
-                    body = .xml(try AWSShapeEncoder().encodeToXMLNode(pb))
+                case is AWSShape:
+                    let node = try AWSShapeEncoder().xml(input)
+                    // cannot use payload path to find XmlElement as it may have a different. Need to translate this to the tag used in the Encoder
+                    guard let member = Input._members.first(where: {$0.label == payload}) else { throw AWSClientError.unsupportedOperation(message: "The shape is requesting a payload that does not exist")}
+                    guard let element = node.elements(forName: member.location?.name ?? member.label).first else { throw AWSClientError.missingParameter(message: "Payload is missing")}
+                    // if shape has an xml namespace apply it to the element
+                    if let xmlNamespace = Input._xmlNamespace {
+                        element.addNamespace(XMLNode.namespace(withName: "", stringValue: xmlNamespace) as! XMLNode)
+                    }
+                    body = .xml(element)
                 default:
                     body = Body(anyValue: payloadBody)
                 }
@@ -375,11 +383,12 @@ extension AWSClient {
         case .other(let proto):
             switch proto.lowercased() {
             case "ec2":
-                let data = try AWSShapeEncoder().encodeToJSONUTF8Data(input)
-                var params = try JSONSerializer().serializeToDictionary(data)
+                var params = AWSShapeEncoder().query(input)
                 params["Action"] = operationName
                 params["Version"] = apiVersion
-                body = .text(params.map({ "\($0.key)=\($0.value)" }).joined(separator: "&"))
+                if let urlEncodedQueryParams = urlEncodeQueryParams(fromDictionary: params) {
+                    body = .text(urlEncodedQueryParams)
+                }
             default:
                 break
             }
@@ -482,19 +491,11 @@ extension AWSClient {
             outputDict = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] ?? [:]
 
         case .xml(let node):
-            let str = XMLNodeSerializer(node: node).serializeToJSON()
-            outputDict = try JSONSerialization.jsonObject(with: str.data(using: .utf8)!, options: []) as? [String: Any] ?? [:]
-
-            if let childOutputDict = outputDict[operationName+"Response"] as? [String: Any] {
-                outputDict = childOutputDict
-                if let childOutputDict = outputDict[operationName+"Result"] as? [String: Any] {
-                    outputDict = childOutputDict
-                }
-            } else {
-                if let key = outputDict.keys.first, let dict = outputDict[key] as? [String: Any] {
-                    outputDict = dict
-                }
+            var outputNode = node
+            if let child = node.children?.first as? XMLElement, (node.name == operationName + "Response" && child.name == operationName + "Result") {
+                outputNode = child
             }
+            return try AWSXMLDecoder().decode(Output.self, from: outputNode)
 
         case .buffer(let data):
             if let payload = Output.payloadPath {
@@ -523,12 +524,7 @@ extension AWSClient {
             }
         }
 
-        switch responseBody {
-        case .xml:
-            return try UntypedDictionaryDecoder().decode(Output.self, from: outputDict)
-        default:
-            return try DictionaryDecoder().decode(Output.self, from: outputDict)
-        }
+        return try DictionaryDecoder().decode(Output.self, from: outputDict)
     }
 
     private func validateCode(response: HTTPClient.Response, members: [AWSShapeMember] = []) throws {
@@ -616,14 +612,18 @@ extension AWSClient {
             }
 
         case .restxml, .query:
-            let xmlNode = try XML2Parser(data: data).parse()
-            responseBody = .xml(xmlNode)
+            let xmlDocument = try XMLDocument(data: data)
+            if let element = xmlDocument.rootElement() {
+                responseBody = .xml(element)
+            }
 
         case .other(let proto):
             switch proto.lowercased() {
             case "ec2":
-                let xmlNode = try XML2Parser(data: data).parse()
-                responseBody = .xml(xmlNode)
+                let xmlDocument = try XMLDocument(data: data)
+                if let element = xmlDocument.rootElement() {
+                    responseBody = .xml(element)
+                }
 
             default:
                 responseBody = .buffer(data)
@@ -641,19 +641,17 @@ extension AWSClient {
 
         switch serviceProtocol.type {
         case .query:
-            guard let dict = bodyDict["ErrorResponse"] as? [String: Any] else {
-                break
-            }
-            let errorDict = dict["Error"] as? [String: Any]
-            code = errorDict?["Code"] as? String
-            message = errorDict?["Message"] as? String
+            guard let xmlDocument = try? XMLDocument(data: data) else { break }
+            guard let element = xmlDocument.rootElement() else { break }
+            guard let error = element.elements(forName: "Error").first else { break }
+            code = error.elements(forName: "Code").first?.stringValue
+            message = error.elements(forName: "Message").first?.stringValue
 
         case .restxml:
-            let errorDict = bodyDict["Error"] as? [String: Any]
-            code = errorDict?["Code"] as? String
-            message = errorDict?.filter({ $0.key != "Code" })
-                .map({ "\($0.key): \($0.value)"})
-                .joined(separator: ", ")
+            guard let xmlDocument = try? XMLDocument(data: data) else { break }
+            guard let element = xmlDocument.rootElement() else { break }
+            code = element.elements(forName: "Code").first?.stringValue
+            message = element.children?.filter({$0.name != "Code"}).map({"\($0.name!): \($0.stringValue!)"}).joined(separator: ", ")
 
         case .restjson:
             code = response.head.headers.filter( { $0.name == "x-amzn-ErrorType"}).first?.value

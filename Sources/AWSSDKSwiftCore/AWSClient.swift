@@ -334,8 +334,8 @@ extension AWSClient {
             if let payload = Input.payloadPath, let payloadBody = mirror.getAttribute(forKey: payload.toSwiftVariableCase()) {
                 switch payloadBody {
                 case is AWSShape:
-                    let inputBody: Body = .json(try AWSShapeEncoder().json(input))
-                    if let inputDict = try inputBody.asDictionary(), let payloadDict = inputDict[payload] {
+                    let inputDictionary = try AWSShapeEncoder().dictionary(input)
+                    if let payloadDict = inputDictionary[payload] {
                         body = .json(try JSONSerialization.data(withJSONObject: payloadDict))
                     }
                 default:

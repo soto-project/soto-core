@@ -343,7 +343,10 @@ extension AWSClient {
                 }
                 headers.removeValue(forKey: payload.toSwiftVariableCase())
             } else {
-                body = .json(try AWSShapeEncoder().json(input))
+                // only include the body if there are members that are output in the body.
+                if Input.hasEncodableBody {
+                    body = .json(try AWSShapeEncoder().json(input))
+                }
             }
 
         case .query:
@@ -378,6 +381,11 @@ extension AWSClient {
                     body = Body(anyValue: payloadBody)
                 }
                 headers.removeValue(forKey: payload.toSwiftVariableCase())
+            } else {
+                // only include the body if there are members that are output in the body.
+                if Input.hasEncodableBody {
+                    body = .xml(try AWSShapeEncoder().xml(input))
+                }
             }
 
         case .other(let proto):

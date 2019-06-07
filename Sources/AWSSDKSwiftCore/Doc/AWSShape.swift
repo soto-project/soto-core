@@ -59,4 +59,17 @@ extension AWSShape {
         }
         return params
     }
+    
+    public static var hasEncodableBody: Bool {
+        for member in _members {
+            if let location = member.location {
+                if case .body(_) = location {
+                    return true
+                }
+            } else {
+                return true
+            }
+        }
+        return false
+    }
 }

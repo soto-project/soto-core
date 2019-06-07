@@ -21,7 +21,7 @@ class AWSClientTests: XCTestCase {
 
     struct C: AWSShape {
         public static var _members: [AWSShapeMember] = [
-            AWSShapeMember(label: "value", required: true, type: .string)
+            AWSShapeMember(label: "value", location: .header(locationName: "value"), required: true, type: .string)
         ]
 
         let value = "<html><body><a href=\"https://redsox.com\">Test</a></body></html>"

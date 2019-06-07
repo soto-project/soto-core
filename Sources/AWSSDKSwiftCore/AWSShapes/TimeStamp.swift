@@ -48,6 +48,8 @@ extension TimeStamp: Codable {
         let container = try decoder.singleValueContainer()
         if let value = try? container.decode(String.self) {
             self.init(value)
+        } else if let value = try? container.decode(Date.self) {
+            self.init(value)
         } else {
             throw DecodingError.dataCorruptedError(in: container, debugDescription: "Expected string when decoding a Date")
         }

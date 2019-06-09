@@ -54,6 +54,7 @@ class TimeStampTests: XCTestCase {
     static var allTests : [(String, (TimeStampTests) -> () throws -> Void)] {
         return [
             ("testDecodeFromJSON", testDecodeFromJSON),
+            ("testDecodeFromXML", testDecodeFromXML),
             ("testEncodeToJSON", testEncodeToJSON),
         ]
     }

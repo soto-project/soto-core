@@ -189,7 +189,23 @@ class SerializersTests: XCTestCase {
         testDecodeEncode(type: Test.self, xml: xml)
     }
     
-
+    func testDateDecodeEncode() {
+        struct Test : Codable {
+            let date : Date
+        }
+        let xml = "<Test><date>24876876234.5</date></Test>"
+        testDecodeEncode(type: Test.self, xml: xml)
+    }
+    
+    func testDataDecodeEncode() {
+        struct Test : Codable {
+            let data : Data
+        }
+        let base64 = "Hello, world".data(using:.utf8)!.base64EncodedString()
+        let xml = "<Test><data>\(base64)</data></Test>"
+        testDecodeEncode(type: Test.self, xml: xml)
+    }
+    
     func testSerializeToXML() {
         let shape = testShape
         let node = try! AWSXMLEncoder().encode(shape)

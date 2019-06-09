@@ -115,6 +115,42 @@ class SerializersTests: XCTestCase {
                                                                                                                "strings2":StringShape(string:"cat", optionalString: nil, stringEnum: .fourth)]))
     }
 
+    /// helper test function to use throughout all the decode/encode tests
+    func testDecodeEncode<T : Codable>(type: T.Type, xml: String) {
+        do {
+            let xmlDocument = try XMLDocument(data: xml.data(using: .utf8)!)
+            let rootElement = xmlDocument.rootElement()
+            XCTAssertNotNil(rootElement)
+            let instance = try AWSXMLDecoder().decode(T.self, from: rootElement!)
+            let xmlElement = try AWSXMLEncoder().encode(instance)
+            XCTAssertEqual(xml, xmlElement.xmlString)
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+    
+    func testSimpleStructureDecodeEncode() {
+        struct Test : Codable {
+            let a : Int
+            let b : String
+        }
+        let xml = "<Test><a>5</a><b>Hello</b></Test>"
+        testDecodeEncode(type: Test.self, xml: xml)
+    }
+    
+    func testContainingStructureDecodeEncode() {
+        struct Test : Codable {
+            let a : Int
+            let b : String
+        }
+        struct Test2 : Codable {
+            let t : Test
+        }
+        let xml = "<Test2><t><a>5</a><b>Hello</b></t></Test2>"
+        testDecodeEncode(type: Test2.self, xml: xml)
+    }
+    
+    
     func testSerializeToXML() {
         let shape = testShape
         let node = try! AWSXMLEncoder().encode(shape)

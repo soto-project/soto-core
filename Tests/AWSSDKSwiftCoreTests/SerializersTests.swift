@@ -150,7 +150,46 @@ class SerializersTests: XCTestCase {
         testDecodeEncode(type: Test2.self, xml: xml)
     }
     
+    func testEnumDecodeEncode() {
+        struct Test : Codable {
+            enum TestEnum : String, Codable {
+                case first = "First"
+                case second = "Second"
+            }
+            let a : TestEnum
+        }
+        let xml = "<Test><a>Second</a></Test>"
+        testDecodeEncode(type: Test.self, xml: xml)
+    }
     
+    func testArrayDecodeEncode() {
+        struct Test : Codable {
+            let a : [Int]
+        }
+        let xml = "<Test><a>5</a><a>7</a></Test>"
+        testDecodeEncode(type: Test.self, xml: xml)
+    }
+    
+    func testArrayOfStructuresDecodeEncode() {
+        struct Test2 : Codable {
+            let b : String
+        }
+        struct Test : Codable {
+            let a : [Test2]
+        }
+        let xml = "<Test><a><b>Hello</b></a><a><b>Goodbye</b></a></Test>"
+        testDecodeEncode(type: Test.self, xml: xml)
+    }
+    
+    func testDictionaryDecodeEncode() {
+        struct Test : Codable {
+            let a : [String:Int]
+        }
+        let xml = "<Test><a><first>1</first></a></Test>"
+        testDecodeEncode(type: Test.self, xml: xml)
+    }
+    
+
     func testSerializeToXML() {
         let shape = testShape
         let node = try! AWSXMLEncoder().encode(shape)

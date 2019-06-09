@@ -225,6 +225,20 @@ class SerializersTests: XCTestCase {
         XCTAssertEqual(queryDict["Shape.StringShape.String"] as? String, "String1")
     }
 
+    func testXMLDataEncode() {
+        struct C : Codable {
+            let data : Data
+            let integer : Int
+        }
+        let c = C(data:"Hello, world".data(using:.utf8)!, integer:42)
+        do {
+            let xml = try AWSXMLEncoder().encode(c)
+            print(xml)
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+    
     func testSerializeToDictionaryAndJSON() {
         let json = try! AWSShapeEncoder().json(testShapeWithDictionaries)
         let dict = try! JSONSerializer().serializeToDictionary(json)

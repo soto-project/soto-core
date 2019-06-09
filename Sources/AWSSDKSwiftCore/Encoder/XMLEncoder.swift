@@ -11,36 +11,71 @@ public class AWSXMLEncoder {
     public init() {}
     
     open func encode<T : Encodable>(_ value: T, name: String? = nil) throws -> XMLElement {
-        let encoder = _AWSXMLEncoder(name ?? "\(type(of: value))")
+        let encoder = _AWSXMLEncoder(at: [_XMLKey(stringValue:name ?? "\(type(of: value))", intValue: nil)])
         try value.encode(to: encoder)
-        return encoder.elements[0]
+        
+        guard let element = encoder.element else { throw EncodingError.invalidValue(T.self, EncodingError.Context(codingPath: [], debugDescription: "Failed to create any XML elements"))}
+        return element
     }
 }
 
+struct _AWSXMLEncoderStorage {
+    /// the container stack
+    private var containers : [XMLElement] = []
+
+    /// initializes self with no containers
+    init() {}
+    
+    /// return the container at the top of the storage
+    var topContainer : XMLElement? { return containers.last }
+    
+    /// push a new container onto the storage
+    mutating func push(container: XMLElement) { containers.append(container) }
+    
+    /// pop a container from the storage
+    mutating func popContainer() { containers.removeLast() }
+}
+
 class _AWSXMLEncoder : Encoder {
-    let name : String
-    var elements : [XMLElement] = []
+    // MARK: Properties
+    
+    /// the encoder's storage
+    var storage : _AWSXMLEncoderStorage
+
+    /// the path to the current point in encoding
     var codingPath: [CodingKey]
+    
+    /// contextual user-provided information for use during encoding
     var userInfo: [CodingUserInfoKey : Any] = [:]
     
-    init(_ elementName : String, at codingPath: [CodingKey] = []) {
-        self.name = elementName
+    /// the top level key
+    var currentKey : String { return codingPath.last!.stringValue }
+    
+    /// the top level xml element
+    var element : XMLElement? { return storage.topContainer }
+
+    // MARK: - Initialization
+    init(at codingPath: [CodingKey] = []) {
         self.codingPath = codingPath
+        self.storage = _AWSXMLEncoderStorage()
     }
     
+    // MARK: - Encoder methods
+    
     func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {
-        let element = XMLElement(name: name)
-        elements.append(element)
-        return KeyedEncodingContainer(KEC(element, encoder:self))
+        let newElement = XMLElement(name: currentKey)
+        storage.topContainer?.addChild(newElement)
+        storage.push(container: newElement)
+        return KeyedEncodingContainer(KEC(newElement, encoder:self))
     }
     
     struct KEC<Key: CodingKey> : KeyedEncodingContainerProtocol {
-        let referencing : _AWSXMLEncoder
+        let encoder : _AWSXMLEncoder
         let element : XMLElement
-        var codingPath: [CodingKey] { return referencing.codingPath }
+        var codingPath: [CodingKey] { return encoder.codingPath }
         
         init(_ element : XMLElement, encoder: _AWSXMLEncoder) {
-            self.referencing = encoder
+            self.encoder = encoder
             self.element = element
         }
         
@@ -118,14 +153,12 @@ class _AWSXMLEncoder : Encoder {
         }
         
         func encode<T>(_ value: T, forKey key: Key) throws where T : Encodable {
-            self.referencing.codingPath.append(key)
-            defer { self.referencing.codingPath.removeLast() }
+            self.encoder.codingPath.append(key)
+            defer { self.encoder.codingPath.removeLast() }
 
-            let encoder = _AWSXMLEncoder(key.stringValue, at: codingPath)
             try value.encode(to: encoder)
-            for child in encoder.elements {
-                element.addChild(child)
-            }
+
+            encoder.storage.popContainer()
         }
         
         func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
@@ -148,97 +181,106 @@ class _AWSXMLEncoder : Encoder {
     }
     
     func unkeyedContainer() -> UnkeyedEncodingContainer {
-        return UKEC(self)
+        // Need to add support for non-flattened arrays here. Create an XML Element to contain them
+        var arrayElement = element
+        if arrayElement == nil {
+            arrayElement = XMLElement(name:currentKey)
+        }
+        storage.push(container: arrayElement!)
+        return UKEC(arrayElement!, referencing:self)
     }
     
     struct UKEC : UnkeyedEncodingContainer {
         
-        let referencing : _AWSXMLEncoder
-        var codingPath: [CodingKey] { return referencing.codingPath }
+        let encoder : _AWSXMLEncoder
+        let element : XMLElement
+        var codingPath: [CodingKey] { return encoder.codingPath }
         var count : Int
 
-        init(_ encoder: _AWSXMLEncoder) {
-            self.referencing = encoder
+        init(_ element : XMLElement, referencing encoder: _AWSXMLEncoder) {
+            self.element = element
+            self.encoder = encoder
             self.count = 0
         }
         
         func encode(_ value: Bool) throws {
-            let element = XMLElement(name: referencing.name, stringValue: value.description)
-            referencing.elements.append(element)
+            let childElement = XMLElement(name: encoder.currentKey, stringValue: value.description)
+            element.addChild(childElement)
         }
         
         func encodeNil() throws {
         }
         
         func encode(_ value: String) throws {
-            let element = XMLElement(name: referencing.name, stringValue: value)
-            referencing.elements.append(element)
+            let childElement = XMLElement(name: encoder.currentKey, stringValue: value)
+            element.addChild(childElement)
         }
         
         func encode(_ value: Double) throws {
-            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value: value).description)
-            referencing.elements.append(element)
+            let childElement = XMLElement(name: encoder.currentKey, stringValue: NSNumber(value: value).description)
+            element.addChild(childElement)
         }
         
         func encode(_ value: Float) throws {
-            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value: value).description)
-            referencing.elements.append(element)
+            let childElement = XMLElement(name: encoder.currentKey, stringValue: NSNumber(value: value).description)
+            element.addChild(childElement)
+
         }
         
         func encode(_ value: Int) throws {
-            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value: value).description)
-            referencing.elements.append(element)
+            let childElement = XMLElement(name: encoder.currentKey, stringValue: NSNumber(value: value).description)
+            element.addChild(childElement)
         }
         
         func encode(_ value: Int8) throws {
-            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value: value).description)
-            referencing.elements.append(element)
+            let childElement = XMLElement(name: encoder.currentKey, stringValue: NSNumber(value: value).description)
+            element.addChild(childElement)
         }
         
         func encode(_ value: Int16) throws {
-            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value: value).description)
-            referencing.elements.append(element)
+            let childElement = XMLElement(name: encoder.currentKey, stringValue: NSNumber(value: value).description)
+            element.addChild(childElement)
         }
         
         func encode(_ value: Int32) throws {
-            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value: value).description)
-            referencing.elements.append(element)
+            let childElement = XMLElement(name: encoder.currentKey, stringValue: NSNumber(value: value).description)
+            element.addChild(childElement)
+
         }
         
         func encode(_ value: Int64) throws {
-            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value: value).description)
-            referencing.elements.append(element)
+            let childElement = XMLElement(name: encoder.currentKey, stringValue: NSNumber(value: value).description)
+            element.addChild(childElement)
         }
         
         func encode(_ value: UInt) throws {
-            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value: value).description)
-            referencing.elements.append(element)
+            let childElement = XMLElement(name: encoder.currentKey, stringValue: NSNumber(value: value).description)
+            element.addChild(childElement)
         }
         
         func encode(_ value: UInt8) throws {
-            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value: value).description)
-            referencing.elements.append(element)
+            let childElement = XMLElement(name: encoder.currentKey, stringValue: NSNumber(value: value).description)
+            element.addChild(childElement)
         }
         
         func encode(_ value: UInt16) throws {
-            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value: value).description)
-            referencing.elements.append(element)
+            let childElement = XMLElement(name: encoder.currentKey, stringValue: NSNumber(value: value).description)
+            element.addChild(childElement)
         }
         
         func encode(_ value: UInt32) throws {
-            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value: value).description)
-            referencing.elements.append(element)
+            let childElement = XMLElement(name: encoder.currentKey, stringValue: NSNumber(value: value).description)
+            element.addChild(childElement)
         }
         
         func encode(_ value: UInt64) throws {
-            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value: value).description)
-            referencing.elements.append(element)
+            let childElement = XMLElement(name: encoder.currentKey, stringValue: NSNumber(value: value).description)
+            element.addChild(childElement)
         }
         
         func encode<T>(_ value: T) throws where T : Encodable {
-            let encoder = _AWSXMLEncoder(referencing.name, at: codingPath)
             try value.encode(to: encoder)
-            referencing.elements.append(contentsOf:encoder.elements)
+            encoder.storage.popContainer()
         }
         
         func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
@@ -256,95 +298,118 @@ class _AWSXMLEncoder : Encoder {
     }
     
     func singleValueContainer() -> SingleValueEncodingContainer {
-        return SVEC(self)
+        storage.push(container: element!)
+        return self
+    }
+
+}
+
+extension _AWSXMLEncoder : SingleValueEncodingContainer {
+    
+    func encodeNil() throws {
+        //            fatalError()
     }
     
-    struct SVEC : SingleValueEncodingContainer {
-        let referencing : _AWSXMLEncoder
-        var codingPath: [CodingKey] { return referencing.codingPath }
-        
-        init(_ encoder : _AWSXMLEncoder) {
-            self.referencing = encoder
-        }
-        
-        func encodeNil() throws {
-//            fatalError()
-        }
-        
-        func encode(_ value: Bool) throws {
-            let element = XMLElement(name: referencing.name, stringValue: value.description)
-            referencing.elements.append(element)
-        }
-        
-        func encode(_ value: String) throws {
-            let element = XMLElement(name: referencing.name, stringValue: value)
-            referencing.elements.append(element)
-        }
-        
-        func encode(_ value: Double) throws {
-            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value:value).description)
-            referencing.elements.append(element)
-        }
-        
-        func encode(_ value: Float) throws {
-            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value:value).description)
-            referencing.elements.append(element)
-        }
-        
-        func encode(_ value: Int) throws {
-            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value:value).description)
-            referencing.elements.append(element)
-        }
-        
-        func encode(_ value: Int8) throws {
-            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value:value).description)
-            referencing.elements.append(element)
-        }
-        
-        func encode(_ value: Int16) throws {
-            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value:value).description)
-            referencing.elements.append(element)
-        }
-        
-        func encode(_ value: Int32) throws {
-            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value:value).description)
-            referencing.elements.append(element)
-        }
-        
-        func encode(_ value: Int64) throws {
-            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value:value).description)
-            referencing.elements.append(element)
-        }
-        
-        func encode(_ value: UInt) throws {
-            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value:value).description)
-            referencing.elements.append(element)
-        }
-        
-        func encode(_ value: UInt8) throws {
-            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value:value).description)
-            referencing.elements.append(element)
-        }
-        
-        func encode(_ value: UInt16) throws {
-            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value:value).description)
-            referencing.elements.append(element)
-        }
-        
-        func encode(_ value: UInt32) throws {
-            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value:value).description)
-            referencing.elements.append(element)
-        }
-        
-        func encode(_ value: UInt64) throws {
-            let element = XMLElement(name: referencing.name, stringValue: NSNumber(value:value).description)
-            referencing.elements.append(element)
-        }
-        
-        func encode<T>(_ value: T) throws where T : Encodable {
-            let encoder = _AWSXMLEncoder(referencing.name, at: codingPath)
-            try value.encode(to: encoder)
-            referencing.elements.append(contentsOf: encoder.elements)
-        }
+    func encode(_ value: Bool) throws {
+        let childNode = XMLElement(name: currentKey, stringValue: value.description)
+        element?.addChild(childNode)
+    }
+    
+    func encode(_ value: String) throws {
+        let childNode = XMLElement(name: currentKey, stringValue: value)
+        element?.addChild(childNode)
+    }
+    
+    func encode(_ value: Double) throws {
+        let childNode = XMLElement(name: currentKey, stringValue: NSNumber(value:value).description)
+        element?.addChild(childNode)
+    }
+    
+    func encode(_ value: Float) throws {
+        let childNode = XMLElement(name: currentKey, stringValue: NSNumber(value:value).description)
+        element?.addChild(childNode)
+    }
+    
+    func encode(_ value: Int) throws {
+        let childNode = XMLElement(name: currentKey, stringValue: NSNumber(value:value).description)
+        element?.addChild(childNode)
+    }
+    
+    func encode(_ value: Int8) throws {
+        let childNode = XMLElement(name: currentKey, stringValue: NSNumber(value:value).description)
+        element?.addChild(childNode)
+    }
+    
+    func encode(_ value: Int16) throws {
+        let childNode = XMLElement(name: currentKey, stringValue: NSNumber(value:value).description)
+        element?.addChild(childNode)
+    }
+    
+    func encode(_ value: Int32) throws {
+        let childNode = XMLElement(name: currentKey, stringValue: NSNumber(value:value).description)
+        element?.addChild(childNode)
+    }
+    
+    func encode(_ value: Int64) throws {
+        let childNode = XMLElement(name: currentKey, stringValue: NSNumber(value:value).description)
+        element?.addChild(childNode)
+    }
+    
+    func encode(_ value: UInt) throws {
+        let childNode = XMLElement(name: currentKey, stringValue: NSNumber(value:value).description)
+        element?.addChild(childNode)
+    }
+    
+    func encode(_ value: UInt8) throws {
+        let childNode = XMLElement(name: currentKey, stringValue: NSNumber(value:value).description)
+        element?.addChild(childNode)
+    }
+    
+    func encode(_ value: UInt16) throws {
+        let childNode = XMLElement(name: currentKey, stringValue: NSNumber(value:value).description)
+        element?.addChild(childNode)
+    }
+    
+    func encode(_ value: UInt32) throws {
+        let childNode = XMLElement(name: currentKey, stringValue: NSNumber(value:value).description)
+        element?.addChild(childNode)
+    }
+    
+    func encode(_ value: UInt64) throws {
+        let childNode = XMLElement(name: currentKey, stringValue: NSNumber(value:value).description)
+        element?.addChild(childNode)
+    }
+    
+    func encode<T>(_ value: T) throws where T : Encodable {
+        try value.encode(to: self)
+        storage.popContainer()
     }
 }
+
+fileprivate struct _XMLKey : CodingKey {
+    public var stringValue: String
+    public var intValue: Int?
+    
+    public init?(stringValue: String) {
+        self.stringValue = stringValue
+        self.intValue = nil
+    }
+    
+    public init?(intValue: Int) {
+        self.stringValue = "\(intValue)"
+        self.intValue = intValue
+    }
+    
+    public init(stringValue: String, intValue: Int?) {
+        self.stringValue = stringValue
+        self.intValue = intValue
+    }
+    
+    fileprivate init(index: Int) {
+        self.stringValue = "Index \(index)"
+        self.intValue = index
+    }
+    
+    fileprivate static let `super` = _XMLKey(stringValue: "super")!
+}
+

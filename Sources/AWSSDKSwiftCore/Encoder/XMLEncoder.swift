@@ -7,7 +7,7 @@
 //
 import Foundation
 
-public class AWSXMLEncoder {
+public class XMLEncoder {
     
     /// The strategy to use for encoding `Date` values.
     public enum DateEncodingStrategy {
@@ -88,7 +88,7 @@ public class AWSXMLEncoder {
     
     open func encode<T : Encodable>(_ value: T, name: String? = nil) throws -> XMLElement {
         let rootName = name ?? "\(type(of: value))"
-        let encoder = _AWSXMLEncoder(options: options, codingPath: [_XMLKey(stringValue: rootName, intValue: nil)])
+        let encoder = _XMLEncoder(options: options, codingPath: [_XMLKey(stringValue: rootName, intValue: nil)])
         try value.encode(to: encoder)
         
         guard let element = encoder.element else { throw EncodingError.invalidValue(T.self, EncodingError.Context(codingPath: [], debugDescription: "Failed to create any XML elements"))}
@@ -96,7 +96,7 @@ public class AWSXMLEncoder {
     }
 }
 
-struct _AWSXMLEncoderStorage {
+struct _XMLEncoderStorage {
     /// the container stack
     private var containers : [XMLElement] = []
 
@@ -113,14 +113,14 @@ struct _AWSXMLEncoderStorage {
     @discardableResult mutating func popContainer() -> XMLElement { return containers.removeLast() }
 }
 
-class _AWSXMLEncoder : Encoder {
+class _XMLEncoder : Encoder {
     // MARK: Properties
     
     /// the encoder's storage
-    var storage : _AWSXMLEncoderStorage
+    var storage : _XMLEncoderStorage
 
     /// Options set on the top-level encoder.
-    fileprivate let options: AWSXMLEncoder._Options
+    fileprivate let options: XMLEncoder._Options
     
     /// the path to the current point in encoding
     var codingPath: [CodingKey]
@@ -135,8 +135,8 @@ class _AWSXMLEncoder : Encoder {
     var element : XMLElement? { return storage.topContainer }
 
     // MARK: - Initialization
-    fileprivate init(options: AWSXMLEncoder._Options, codingPath: [CodingKey] = []) {
-        self.storage = _AWSXMLEncoderStorage()
+    fileprivate init(options: XMLEncoder._Options, codingPath: [CodingKey] = []) {
+        self.storage = _XMLEncoderStorage()
         self.options = options
         self.codingPath = codingPath
     }
@@ -151,11 +151,11 @@ class _AWSXMLEncoder : Encoder {
     }
     
     struct KEC<Key: CodingKey> : KeyedEncodingContainerProtocol {
-        let encoder : _AWSXMLEncoder
+        let encoder : _XMLEncoder
         let element : XMLElement
         var codingPath: [CodingKey] { return encoder.codingPath }
         
-        init(_ element : XMLElement, referencing encoder: _AWSXMLEncoder) {
+        init(_ element : XMLElement, referencing encoder: _XMLEncoder) {
             self.encoder = encoder
             self.element = element
         }
@@ -263,11 +263,11 @@ class _AWSXMLEncoder : Encoder {
         }
         
         func superEncoder() -> Encoder {
-            return _AWSXMLReferencingEncoder(referencing: encoder, key: _XMLKey.super, wrapping: element)
+            return _XMLReferencingEncoder(referencing: encoder, key: _XMLKey.super, wrapping: element)
         }
         
         func superEncoder(forKey key: Key) -> Encoder {
-            return _AWSXMLReferencingEncoder(referencing: encoder, key: key, wrapping: element)
+            return _XMLReferencingEncoder(referencing: encoder, key: key, wrapping: element)
         }
         
         
@@ -285,12 +285,12 @@ class _AWSXMLEncoder : Encoder {
     
     struct UKEC : UnkeyedEncodingContainer {
         
-        let encoder : _AWSXMLEncoder
+        let encoder : _XMLEncoder
         let element : XMLElement
         var codingPath: [CodingKey] { return encoder.codingPath }
         var count : Int
 
-        init(_ element : XMLElement, referencing encoder: _AWSXMLEncoder) {
+        init(_ element : XMLElement, referencing encoder: _XMLEncoder) {
             self.element = element
             self.encoder = encoder
             self.count = 0
@@ -393,7 +393,7 @@ class _AWSXMLEncoder : Encoder {
         }
         
         func superEncoder() -> Encoder {
-            return _AWSXMLReferencingEncoder(referencing: encoder, key: _XMLKey.super, wrapping: element)
+            return _XMLReferencingEncoder(referencing: encoder, key: _XMLKey.super, wrapping: element)
         }
         
     }
@@ -405,7 +405,7 @@ class _AWSXMLEncoder : Encoder {
 
 }
 
-extension _AWSXMLEncoder : SingleValueEncodingContainer {
+extension _XMLEncoder : SingleValueEncodingContainer {
     
     func encodeNil() throws {
         //            fatalError()
@@ -486,7 +486,7 @@ extension _AWSXMLEncoder : SingleValueEncodingContainer {
     }
 }
 
-extension _AWSXMLEncoder {
+extension _XMLEncoder {
     /// Returns the given value boxed in a container appropriate for pushing onto the container stack.
     fileprivate func box(_ value: Bool)   -> String { return value.description }
     fileprivate func box(_ value: Int)    -> String { return NSNumber(value: value).description }
@@ -610,16 +610,16 @@ extension _AWSXMLEncoder {
     }
 }
 
-// MARK: - _AWSXMLReferencingEncoder
+// MARK: - _XMLReferencingEncoder
 
-/// _AWSXMLReferencingEncoder is a special subclass of _AWSXMLEncoder which has its own storage, but references the contents of a different encoder.
+/// _XMLReferencingEncoder is a special subclass of _XMLEncoder which has its own storage, but references the contents of a different encoder.
 /// It's used in superEncoder(), which returns a new encoder for encoding a superclass -- the lifetime of the encoder should not escape the scope it's created in, but it doesn't necessarily know when it's done being used (to write to the original container).
-fileprivate class _AWSXMLReferencingEncoder : _AWSXMLEncoder {
+fileprivate class _XMLReferencingEncoder : _XMLEncoder {
 
     // MARK: - Properties
     
     /// The encoder we're referencing.
-    fileprivate let encoder: _AWSXMLEncoder
+    fileprivate let encoder: _XMLEncoder
     
     /// The container reference itself.
     private let reference: XMLElement
@@ -627,7 +627,7 @@ fileprivate class _AWSXMLReferencingEncoder : _AWSXMLEncoder {
     // MARK: - Initialization
     
     /// Initializes `self` by referencing the given array container in the given encoder.
-    fileprivate init(referencing encoder: _AWSXMLEncoder, key: CodingKey, wrapping element: XMLElement) {
+    fileprivate init(referencing encoder: _XMLEncoder, key: CodingKey, wrapping element: XMLElement) {
         self.encoder = encoder
         self.reference = element
         super.init(options: encoder.options, codingPath: encoder.codingPath)

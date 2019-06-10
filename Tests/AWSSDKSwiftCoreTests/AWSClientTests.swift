@@ -234,7 +234,7 @@ class AWSClientTests: XCTestCase {
             if let xmlData = try awsRequest.body.asData() {
                 let document = try XMLDocument(data:xmlData)
                 XCTAssertNotNil(document.rootElement())
-                let payload = try AWSXMLDecoder().decode(E.self, from: document.rootElement()!)
+                let payload = try XMLDecoder().decode(E.self, from: document.rootElement()!)
                 XCTAssertEqual(payload.Member["memberKey2"], "memberValue2")
             }
             let nioRequest = try awsRequest.toNIORequest()

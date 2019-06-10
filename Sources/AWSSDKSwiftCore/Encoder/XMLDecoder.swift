@@ -7,7 +7,7 @@
 //
 import Foundation
 
-public class AWSXMLDecoder {
+public class XMLDecoder {
     
     /// The strategy to use for decoding `Date` values.
     public enum DateDecodingStrategy {
@@ -84,7 +84,7 @@ public class AWSXMLDecoder {
     public init() {}
 
     public func decode<T : Decodable>(_ type: T.Type, from xml: XMLElement) throws -> T {
-        let decoder = _AWSXMLDecoder(xml, options: self.options)
+        let decoder = _XMLDecoder(xml, options: self.options)
         let value = try T(from: decoder)
         return value
     }
@@ -96,7 +96,7 @@ extension XMLElement {
     }
 }
 
-struct _AWSXMLDecoderStorage {
+struct _XMLDecoderStorage {
     /// the container stack
     private var containers : [XMLElement] = []
     
@@ -113,13 +113,13 @@ struct _AWSXMLDecoderStorage {
     @discardableResult mutating func popContainer() -> XMLElement { return containers.removeLast() }
 }
 
-fileprivate class _AWSXMLDecoder : Decoder {
+fileprivate class _XMLDecoder : Decoder {
     
     /// The decoder's storage.
-    var storage : _AWSXMLDecoderStorage
+    var storage : _XMLDecoderStorage
     
     /// Options set on the top-level decoder.
-    let options: AWSXMLDecoder._Options
+    let options: XMLDecoder._Options
     
     /// The path to the current point in encoding.
     var codingPath: [CodingKey]
@@ -129,8 +129,8 @@ fileprivate class _AWSXMLDecoder : Decoder {
     
     var element : XMLElement { return storage.topContainer! }
 
-    public init(_ element : XMLElement, at codingPath: [CodingKey] = [], options: AWSXMLDecoder._Options) {
-        self.storage = _AWSXMLDecoderStorage()
+    public init(_ element : XMLElement, at codingPath: [CodingKey] = [], options: XMLDecoder._Options) {
+        self.storage = _XMLDecoderStorage()
         self.storage.push(container: element)
         self.codingPath = codingPath
         self.options = options
@@ -145,10 +145,10 @@ fileprivate class _AWSXMLDecoder : Decoder {
         var allKeys: [Key] = []
         var allValueElements: [String : XMLElement] = [:]
         let element : XMLElement
-        let decoder : _AWSXMLDecoder
+        let decoder : _XMLDecoder
         let expandedDictionary : Bool // are we decoding a dictionary of the form <entry><key></key><value></value></entry><entry>...
 
-        public init(_ element : XMLElement, decoder: _AWSXMLDecoder) {
+        public init(_ element : XMLElement, decoder: _XMLDecoder) {
             self.element = element
             self.decoder = decoder
             // is element a dictionary in the form <entry><key></key><value></value></entry><entry>...
@@ -302,7 +302,7 @@ fileprivate class _AWSXMLDecoder : Decoder {
             defer { self.decoder.codingPath.removeLast() }
             
             let child = try self.child(for: key)
-            return _AWSXMLDecoder(child, at: self.decoder.codingPath, options: self.decoder.options)
+            return _XMLDecoder(child, at: self.decoder.codingPath, options: self.decoder.options)
         }
         
        func superDecoder() throws -> Decoder {
@@ -323,9 +323,9 @@ fileprivate class _AWSXMLDecoder : Decoder {
         var codingPath: [CodingKey] { return decoder.codingPath }
         var currentIndex: Int = 0
         let elements : [XMLElement]
-        let decoder : _AWSXMLDecoder
+        let decoder : _XMLDecoder
 
-        init(_ element: XMLElement, decoder: _AWSXMLDecoder) {
+        init(_ element: XMLElement, decoder: _XMLDecoder) {
             // if XML strutured with parent element containing member elements
             let children = element.elements(forName: "member")
             if children.count == element.children?.count ?? 0 {
@@ -471,7 +471,7 @@ fileprivate class _AWSXMLDecoder : Decoder {
             let child = elements[currentIndex]
             currentIndex += 1
             
-            return _AWSXMLDecoder(child, at: self.decoder.codingPath, options: self.decoder.options)
+            return _XMLDecoder(child, at: self.decoder.codingPath, options: self.decoder.options)
         }
     }
 
@@ -482,9 +482,9 @@ fileprivate class _AWSXMLDecoder : Decoder {
     struct SVDC : SingleValueDecodingContainer {
         var codingPath: [CodingKey] { return decoder.codingPath }
         let element : XMLElement
-        let decoder : _AWSXMLDecoder
+        let decoder : _XMLDecoder
 
-        init(_ element : XMLElement, decoder: _AWSXMLDecoder) {
+        init(_ element : XMLElement, decoder: _XMLDecoder) {
             self.element = element
             self.decoder = decoder
         }

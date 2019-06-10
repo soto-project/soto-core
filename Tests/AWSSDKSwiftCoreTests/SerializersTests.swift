@@ -206,6 +206,14 @@ class SerializersTests: XCTestCase {
         testDecodeEncode(type: Test.self, xml: xml)
     }
     
+    func testUrlDecodeEncode() {
+        struct Test : Codable {
+            let url : URL
+        }
+        let xml = "<Test><url>https://docs.aws.amazon.com/</url></Test>"
+        testDecodeEncode(type: Test.self, xml: xml)
+    }
+    
     func testSerializeToXML() {
         let shape = testShape
         let node = try! AWSXMLEncoder().encode(shape)

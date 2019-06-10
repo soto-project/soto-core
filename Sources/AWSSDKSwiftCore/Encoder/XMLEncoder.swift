@@ -590,12 +590,19 @@ extension _AWSXMLEncoder {
         }
     }
     
+    func box(_ url: URL) throws {
+        let node = XMLElement(name:currentKey, stringValue: url.absoluteString)
+        element?.addChild(node)
+    }
+    
     func box(_ value: Encodable) throws {
         let type = Swift.type(of: value)
         if type == Date.self || type == NSDate.self {
             return try self.box((value as! Date))
         } else if type == Data.self || type == NSData.self {
             return try self.box((value as! Data))
+        } else if type == URL.self || type == NSURL.self {
+            return try self.box((value as! URL))
         } else {
             try value.encode(to: self)
             storage.popContainer()

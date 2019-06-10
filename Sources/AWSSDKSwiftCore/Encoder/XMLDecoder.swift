@@ -692,6 +692,14 @@ fileprivate class _AWSXMLDecoder : Decoder {
         }
     }
     
+    fileprivate func unbox(_ element : XMLElement, as type: URL.Type) throws -> URL {
+        let urlString = try self.unbox(element, as: String.self)
+        guard let url = URL(string: urlString) else {
+            throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: element.stringValue ?? "nil")
+        }
+        return url
+    }
+    
     func unbox<T>(_ element : XMLElement, as type: T.Type) throws -> T where T : Decodable {
         return try unbox_(element, as: T.self) as! T
     }
@@ -701,6 +709,8 @@ fileprivate class _AWSXMLDecoder : Decoder {
             return try self.unbox(element, as: Date.self)
         } else if type == Data.self || type == NSData.self {
             return try self.unbox(element, as: Data.self)
+        } else if type == URL.self || type == NSURL.self {
+            return try self.unbox(element, as: URL.self)
         } else {
             self.storage.push(container:element)
             defer { self.storage.popContainer() }

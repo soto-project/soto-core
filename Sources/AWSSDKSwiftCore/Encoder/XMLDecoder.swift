@@ -127,7 +127,7 @@ fileprivate class _AWSXMLDecoder : Decoder {
     /// Contextual user-provided information for use during encoding.
     public var userInfo: [CodingUserInfoKey : Any] { return self.options.userInfo }
     
-    var element : XMLElement? { return storage.topContainer }
+    var element : XMLElement { return storage.topContainer! }
 
     public init(_ element : XMLElement, at codingPath: [CodingKey] = [], options: AWSXMLDecoder._Options) {
         self.storage = _AWSXMLDecoderStorage()
@@ -137,7 +137,7 @@ fileprivate class _AWSXMLDecoder : Decoder {
     }
 
     public func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
-        return KeyedDecodingContainer(KDC(element!, decoder: self))
+        return KeyedDecodingContainer(KDC(element, decoder: self))
     }
 
     struct KDC<Key: CodingKey> : KeyedDecodingContainerProtocol {
@@ -297,11 +297,15 @@ fileprivate class _AWSXMLDecoder : Decoder {
     }
 
     public func unkeyedContainer() throws -> UnkeyedDecodingContainer {
-        // flattened array
-        let parent = element?.parent as! XMLElement
-        storage.popContainer()
-        storage.push(container: parent)
-        return UKDC(parent, decoder: self)
+        let children = element.elements(forName: "member")
+        if children.count == element.children?.count ?? 0 {
+            return UKDC(element, name: "member", decoder: self)
+        } else {
+            let parent = element.parent as! XMLElement
+            storage.popContainer()
+            storage.push(container: parent)
+            return UKDC(parent, name: codingPath.last!.stringValue, decoder: self)
+        }
     }
 
     struct UKDC : UnkeyedDecodingContainer {
@@ -310,8 +314,8 @@ fileprivate class _AWSXMLDecoder : Decoder {
         let elements : [XMLElement]
         let decoder : _AWSXMLDecoder
 
-        init(_ element: XMLElement, decoder: _AWSXMLDecoder) {
-            self.elements = element.elements(forName: decoder.codingPath.last!.stringValue)
+        init(_ element: XMLElement, name: String, decoder: _AWSXMLDecoder) {
+            self.elements = element.elements(forName: name)
             self.decoder = decoder
         }
 
@@ -433,7 +437,7 @@ fileprivate class _AWSXMLDecoder : Decoder {
     }
 
     public func singleValueContainer() throws -> SingleValueDecodingContainer {
-        return SVDC(element!, decoder:self)
+        return SVDC(element, decoder:self)
     }
 
     struct SVDC : SingleValueDecodingContainer {

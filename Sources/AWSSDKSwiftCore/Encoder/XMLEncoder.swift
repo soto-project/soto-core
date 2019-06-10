@@ -591,14 +591,12 @@ extension _AWSXMLEncoder {
     }
     
     func box(_ value: Encodable) throws {
-        switch value {
-        case is Data, is NSData:
-            try box(value as! Data)
-            
-        case is Date:
-            try box(value as! Date)
-            
-        default:
+        let type = Swift.type(of: value)
+        if type == Date.self || type == NSDate.self {
+            return try self.box((value as! Date))
+        } else if type == Data.self || type == NSData.self {
+            return try self.box((value as! Data))
+        } else {
             try value.encode(to: self)
             storage.popContainer()
         }

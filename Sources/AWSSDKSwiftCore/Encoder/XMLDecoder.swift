@@ -279,33 +279,44 @@ fileprivate class _AWSXMLDecoder : Decoder {
         }
 
         func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
-            fatalError()
+            self.decoder.codingPath.append(key)
+            defer { self.decoder.codingPath.removeLast() }
+            
+            let child = try self.child(for: key)
+            
+            let container = KDC<NestedKey>(child, decoder:self.decoder)
+            return KeyedDecodingContainer(container)
         }
 
         func nestedUnkeyedContainer(forKey key: Key) throws -> UnkeyedDecodingContainer {
-            fatalError()
+            self.decoder.codingPath.append(key)
+            defer { self.decoder.codingPath.removeLast() }
+            
+            let child = try self.child(for: key)
+            
+            return UKDC(child, decoder: self.decoder)
         }
 
-        func superDecoder() throws -> Decoder {
-            fatalError()
+        private func _superDecoder(forKey key: __owned CodingKey) throws -> Decoder {
+            self.decoder.codingPath.append(key)
+            defer { self.decoder.codingPath.removeLast() }
+            
+            let child = try self.child(for: key)
+            return _AWSXMLDecoder(child, at: self.decoder.codingPath, options: self.decoder.options)
+        }
+        
+       func superDecoder() throws -> Decoder {
+        return try _superDecoder(forKey: _XMLKey.super)
         }
 
         func superDecoder(forKey key: Key) throws -> Decoder {
-            fatalError()
+            return try _superDecoder(forKey: key)
         }
 
     }
 
     public func unkeyedContainer() throws -> UnkeyedDecodingContainer {
-        let children = element.elements(forName: "member")
-        if children.count == element.children?.count ?? 0 {
-            return UKDC(element, name: "member", decoder: self)
-        } else {
-            let parent = element.parent as! XMLElement
-            storage.popContainer()
-            storage.push(container: parent)
-            return UKDC(parent, name: codingPath.last!.stringValue, decoder: self)
-        }
+        return UKDC(element, decoder: self)
     }
 
     struct UKDC : UnkeyedDecodingContainer {
@@ -314,8 +325,19 @@ fileprivate class _AWSXMLDecoder : Decoder {
         let elements : [XMLElement]
         let decoder : _AWSXMLDecoder
 
-        init(_ element: XMLElement, name: String, decoder: _AWSXMLDecoder) {
-            self.elements = element.elements(forName: name)
+        init(_ element: XMLElement, decoder: _AWSXMLDecoder) {
+            // if XML strutured with parent element containing member elements
+            let children = element.elements(forName: "member")
+            if children.count == element.children?.count ?? 0 {
+                self.elements = element.elements(forName: "member")
+            // or is XML a series of member elements without a parent
+            } else {
+                let parent = element.parent as! XMLElement
+                decoder.storage.popContainer()
+                decoder.storage.push(container: parent)
+                self.elements = parent.elements(forName: decoder.codingPath.last!.stringValue)
+            }
+
             self.decoder = decoder
         }
 
@@ -422,18 +444,35 @@ fileprivate class _AWSXMLDecoder : Decoder {
         }
 
         mutating func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
-            fatalError()
+            self.decoder.codingPath.append(_XMLKey(index: currentIndex))
+            defer { self.decoder.codingPath.removeLast() }
+            
+            let child = elements[currentIndex]
+            currentIndex += 1
+            
+            let container = KDC<NestedKey>(child, decoder:self.decoder)
+            return KeyedDecodingContainer(container)
         }
 
         mutating func nestedUnkeyedContainer() throws -> UnkeyedDecodingContainer {
-            fatalError()
+            self.decoder.codingPath.append(_XMLKey(index: currentIndex))
+            defer { self.decoder.codingPath.removeLast() }
+            
+            let child = elements[currentIndex]
+            currentIndex += 1
+
+            return UKDC(child, decoder: self.decoder)
         }
 
         mutating func superDecoder() throws -> Decoder {
-            fatalError()
+            self.decoder.codingPath.append(_XMLKey(index: currentIndex))
+            defer { self.decoder.codingPath.removeLast() }
+            
+            let child = elements[currentIndex]
+            currentIndex += 1
+            
+            return _AWSXMLDecoder(child, at: self.decoder.codingPath, options: self.decoder.options)
         }
-
-
     }
 
     public func singleValueContainer() throws -> SingleValueDecodingContainer {

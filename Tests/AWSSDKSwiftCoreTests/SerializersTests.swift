@@ -115,9 +115,108 @@ class SerializersTests: XCTestCase {
                                                                                                                "strings2":StringShape(string:"cat", optionalString: nil, stringEnum: .fourth)]))
     }
 
+    /// helper test function to use throughout all the decode/encode tests
+    func testDecodeEncode<T : Codable>(type: T.Type, xml: String) {
+        do {
+            let xmlDocument = try XMLDocument(data: xml.data(using: .utf8)!)
+            let rootElement = xmlDocument.rootElement()
+            XCTAssertNotNil(rootElement)
+            let instance = try XMLDecoder().decode(T.self, from: rootElement!)
+            let xmlElement = try XMLEncoder().encode(instance)
+            XCTAssertEqual(xml, xmlElement.xmlString)
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+    
+    func testSimpleStructureDecodeEncode() {
+        struct Test : Codable {
+            let a : Int
+            let b : String
+        }
+        let xml = "<Test><a>5</a><b>Hello</b></Test>"
+        testDecodeEncode(type: Test.self, xml: xml)
+    }
+    
+    func testContainingStructureDecodeEncode() {
+        struct Test : Codable {
+            let a : Int
+            let b : String
+        }
+        struct Test2 : Codable {
+            let t : Test
+        }
+        let xml = "<Test2><t><a>5</a><b>Hello</b></t></Test2>"
+        testDecodeEncode(type: Test2.self, xml: xml)
+    }
+    
+    func testEnumDecodeEncode() {
+        struct Test : Codable {
+            enum TestEnum : String, Codable {
+                case first = "First"
+                case second = "Second"
+            }
+            let a : TestEnum
+        }
+        let xml = "<Test><a>Second</a></Test>"
+        testDecodeEncode(type: Test.self, xml: xml)
+    }
+    
+    func testArrayDecodeEncode() {
+        struct Test : Codable {
+            let a : [Int]
+        }
+        let xml = "<Test><a>5</a><a>7</a></Test>"
+        testDecodeEncode(type: Test.self, xml: xml)
+    }
+    
+    func testArrayOfStructuresDecodeEncode() {
+        struct Test2 : Codable {
+            let b : String
+        }
+        struct Test : Codable {
+            let a : [Test2]
+        }
+        let xml = "<Test><a><b>Hello</b></a><a><b>Goodbye</b></a></Test>"
+        testDecodeEncode(type: Test.self, xml: xml)
+    }
+    
+    func testDictionaryDecodeEncode() {
+        struct Test : Codable {
+            let a : [String:Int]
+        }
+        let xml = "<Test><a><first>1</first></a></Test>"
+        testDecodeEncode(type: Test.self, xml: xml)
+    }
+    
+    func testDateDecodeEncode() {
+        struct Test : Codable {
+            let date : Date
+        }
+        let xml = "<Test><date>24876876234.5</date></Test>"
+        testDecodeEncode(type: Test.self, xml: xml)
+    }
+    
+    func testDataDecodeEncode() {
+        struct Test : Codable {
+            let data : Data
+        }
+        let base64 = "Hello, world".data(using:.utf8)!.base64EncodedString()
+        let xml = "<Test><data>\(base64)</data></Test>"
+        testDecodeEncode(type: Test.self, xml: xml)
+    }
+    
+    func testUrlDecodeEncode() {
+        struct Test : Codable {
+            let url : URL
+        }
+        let xml = "<Test><url>https://docs.aws.amazon.com/</url></Test>"
+        testDecodeEncode(type: Test.self, xml: xml)
+    }
+    
     func testSerializeToXML() {
         let shape = testShape
-        let node = try! AWSXMLEncoder().encode(shape)
+        let node = try! XMLEncoder().encode(shape)
 
         let xml = node.xmlString
         let xmlToTest = "<Shape><Numbers><b>true</b><i>45</i><s>3.4</s><d>7.89234</d><enum>1</enum><int8>4</int8><uint16>5</uint16><int32>7</int32><uint64>90</uint64></Numbers><Strings><string>String1</string><optionalString>String2</optionalString><stringEnum>third</stringEnum></Strings><Arrays><arrayOfNatives>34</arrayOfNatives><arrayOfNatives>1</arrayOfNatives><arrayOfNatives>4098</arrayOfNatives><arrayOfShapes><b>false</b><i>1</i><s>1.2</s><d>1.4</d><enum>0</enum><int8>4</int8><uint16>5</uint16><int32>7</int32><uint64>90</uint64></arrayOfShapes><arrayOfShapes><b>true</b><i>3</i><s>2.01</s><d>1.01</d><enum>2</enum><int8>4</int8><uint16>5</uint16><int32>7</int32><uint64>90</uint64></arrayOfShapes></Arrays></Shape>"
@@ -136,32 +235,32 @@ class SerializersTests: XCTestCase {
         do {
             var xmlDocument = try XMLDocument(data: missingNative.data(using: .utf8)!)
             XCTAssertNotNil(xmlDocument.rootElement())
-            let result = try? AWSXMLDecoder().decode(Numbers.self, from: xmlDocument.rootElement()!)
+            let result = try? XMLDecoder().decode(Numbers.self, from: xmlDocument.rootElement()!)
             XCTAssertNil(result)
 
             xmlDocument = try XMLDocument(data: missingEnum.data(using: .utf8)!)
             XCTAssertNotNil(xmlDocument.rootElement())
-            let result2 = try? AWSXMLDecoder().decode(Numbers.self, from: xmlDocument.rootElement()!)
+            let result2 = try? XMLDecoder().decode(Numbers.self, from: xmlDocument.rootElement()!)
             XCTAssertNil(result2)
 
             xmlDocument = try XMLDocument(data: wrongEnum.data(using: .utf8)!)
             XCTAssertNotNil(xmlDocument.rootElement())
-            let result3 = try? AWSXMLDecoder().decode(StringShape.self, from: xmlDocument.rootElement()!)
+            let result3 = try? XMLDecoder().decode(StringShape.self, from: xmlDocument.rootElement()!)
             XCTAssertNil(result3)
 
             xmlDocument = try XMLDocument(data: missingShape.data(using: .utf8)!)
             XCTAssertNotNil(xmlDocument.rootElement())
-            let result4 = try? AWSXMLDecoder().decode(Shape.self, from: xmlDocument.rootElement()!)
+            let result4 = try? XMLDecoder().decode(Shape.self, from: xmlDocument.rootElement()!)
             XCTAssertNil(result4)
 
             xmlDocument = try XMLDocument(data: stringNotShape.data(using: .utf8)!)
             XCTAssertNotNil(xmlDocument.rootElement())
-            let result5 = try? AWSXMLDecoder().decode(Dictionaries.self, from: xmlDocument.rootElement()!)
+            let result5 = try? XMLDecoder().decode(Dictionaries.self, from: xmlDocument.rootElement()!)
             XCTAssertNil(result5)
 
             xmlDocument = try XMLDocument(data: notANumber.data(using: .utf8)!)
             XCTAssertNotNil(xmlDocument.rootElement())
-            let result6 = try? AWSXMLDecoder().decode(Dictionaries.self, from: xmlDocument.rootElement()!)
+            let result6 = try? XMLDecoder().decode(Dictionaries.self, from: xmlDocument.rootElement()!)
             XCTAssertNil(result6)
 
         } catch {
@@ -181,7 +280,7 @@ class SerializersTests: XCTestCase {
 
             XCTAssertNotNil(rootElement)
 
-            let shape = try AWSXMLDecoder().decode(Shape.self, from: rootElement!)
+            let shape = try XMLDecoder().decode(Shape.self, from: rootElement!)
 
             XCTAssertEqual(shape.array[0], 3)
             XCTAssertEqual(shape.dictionary["two"], 2)
@@ -192,9 +291,9 @@ class SerializersTests: XCTestCase {
 
     func testEncodeDecodeXML() {
         do {
-            let xml = try AWSXMLEncoder().encode(testShape)
-            let testShape2 = try AWSXMLDecoder().decode(Shape.self, from:xml)
-            let xml2 = try AWSXMLEncoder().encode(testShape2)
+            let xml = try XMLEncoder().encode(testShape)
+            let testShape2 = try XMLDecoder().decode(Shape.self, from:xml)
+            let xml2 = try XMLEncoder().encode(testShape2)
 
             XCTAssertEqual(xml.xmlString, xml2.xmlString)
         } catch {
@@ -204,8 +303,8 @@ class SerializersTests: XCTestCase {
 
     func testEncodeDecodeDictionariesXML() {
         do {
-            let xml = try AWSXMLEncoder().encode(testShapeWithDictionaries)
-            let testShape2 = try AWSXMLDecoder().decode(ShapeWithDictionaries.self, from:xml)
+            let xml = try XMLEncoder().encode(testShapeWithDictionaries)
+            let testShape2 = try XMLDecoder().decode(ShapeWithDictionaries.self, from:xml)
 
             XCTAssertEqual(testShape2.dictionaries.dictionaryOfNatives["second"], 2)
             XCTAssertEqual(testShape2.dictionaries.dictionaryOfShapes["strings2"]?.stringEnum, .fourth)
@@ -259,6 +358,15 @@ class SerializersTests: XCTestCase {
 
     static var allTests : [(String, (SerializersTests) -> () throws -> Void)] {
         return [
+            ("testSimpleStructureDecodeEncode", testSimpleStructureDecodeEncode),
+            ("testContainingStructureDecodeEncode", testContainingStructureDecodeEncode),
+            ("testEnumDecodeEncode", testEnumDecodeEncode),
+            ("testArrayDecodeEncode", testArrayDecodeEncode),
+            ("testArrayOfStructuresDecodeEncode", testArrayOfStructuresDecodeEncode),
+            ("testDictionaryDecodeEncode", testDictionaryDecodeEncode),
+            ("testDateDecodeEncode", testDateDecodeEncode),
+            ("testDataDecodeEncode", testDataDecodeEncode),
+            ("testUrlDecodeEncode", testUrlDecodeEncode),
             ("testSerializeToXML", testSerializeToXML),
             ("testDecodeExpandedContainers", testDecodeExpandedContainers),
             ("testEncodeDecodeXML", testEncodeDecodeXML),

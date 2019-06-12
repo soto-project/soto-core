@@ -67,11 +67,20 @@ class SerializersTests: XCTestCase {
     }
 
     struct Arrays : AWSShape {
+        public static var _members: [AWSShapeMember] = [
+            AWSShapeMember(label: "ArrayOfNatives", location: .body(locationName: "ArrayOfNatives"), required: true, type: .list, encoding: .array(element: "member")),
+            AWSShapeMember(label: "ArrayOfShapes", location: .body(locationName: "ArrayOfShapes"), required: true, type: .list)
+        ]
+        
         let arrayOfNatives : [Int]
         let arrayOfShapes : [Numbers]
     }
 
     struct Dictionaries : AWSShape {
+        public static var _members: [AWSShapeMember] = [
+            AWSShapeMember(label: "DictionaryOfNatives", location: .body(locationName: "Natives"), required: true, type: .list, encoding: .dictionary(element: "entry", key: "key", value: "value")),
+            AWSShapeMember(label: "DictionaryOfShapes", location: .body(locationName: "Shapes"), required: true, type: .list, encoding: .dictionary(element: nil, key: "key", value: "value"))
+        ]
         let dictionaryOfNatives : [String:Int]
         let dictionaryOfShapes : [String:StringShape]
 
@@ -313,17 +322,6 @@ class SerializersTests: XCTestCase {
         }
     }
 
-    func testEncodeQueryDictionary() {
-        let queryDict = AWSShapeEncoder().query(testShapeWithDictionaries)
-
-        // can't test dictionaries as we cannot guarantee member order
-
-        XCTAssertEqual(queryDict["Shape.Arrays.ArrayOfShapes.member.2.Double"] as? Double, 1.01)
-        XCTAssertEqual(queryDict["Shape.Numbers.IntEnum"] as? (Numbers.IntEnum), .second)
-        XCTAssertEqual(queryDict["Shape.Arrays.ArrayOfNatives.member.2"] as? Int, 1)
-        XCTAssertEqual(queryDict["Shape.StringShape.String"] as? String, "String1")
-    }
-
     func testSerializeToDictionaryAndJSON() {
         let json = try! AWSShapeEncoder().json(testShapeWithDictionaries)
         let dict = try! JSONSerializer().serializeToDictionary(json)
@@ -372,7 +370,6 @@ class SerializersTests: XCTestCase {
             ("testEncodeDecodeXML", testEncodeDecodeXML),
             ("testDecodeFail", testDecodeFail),
             ("testEncodeDecodeDictionariesXML", testEncodeDecodeDictionariesXML),
-            ("testEncodeQueryDictionary", testEncodeQueryDictionary),
             ("testSerializeToDictionaryAndJSON", testSerializeToDictionaryAndJSON)
         ]
     }

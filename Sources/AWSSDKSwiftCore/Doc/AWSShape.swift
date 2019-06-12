@@ -27,6 +27,10 @@ extension AWSShape {
         return []
     }
     
+    public static func getMember(named: String) -> AWSShapeMember? {
+        return _members.first {$0.label == named}
+    }
+    
     public static var pathParams: [String: String] {
         var params: [String: String] = [:]
         for member in _members {

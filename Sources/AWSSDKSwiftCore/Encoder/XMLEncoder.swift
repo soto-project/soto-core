@@ -619,7 +619,7 @@ extension _XMLEncoder {
         defer { self.containerCodingMapType = prevContainerCodingOwner }
         // set the current container coding map
         let containerCodingMap = value as? XMLContainerCodingMap
-        containerCodingMapType = containerCodingMap != nil ? type(of:containerCodingMap!) : nil
+        containerCodingMapType = containerCodingMap != nil ? Swift.type(of:containerCodingMap!) : nil
 
         let type = Swift.type(of: value)
         if type == Date.self || type == NSDate.self {

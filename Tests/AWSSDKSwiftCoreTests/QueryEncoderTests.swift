@@ -104,11 +104,11 @@ class QueryEncoderTests: XCTestCase {
     
     func testArrayEncodingEncode() {
         struct Test : AWSShape {
-            static let _members = [AWSShapeMember(label: "A", required: true, type: .list, encoding:.array(element:"item"))]
+            static let _members = [AWSShapeMember(label: "A", location:.body(locationName:"a"), required: true, type: .list, encoding:.array(element:"item"))]
             let a : [Int]
         }
         let test = Test(a:[9,8,7,6])
-        testQuery(test, query:"A.item.1=9&A.item.2=8&A.item.3=7&A.item.4=6")
+        testQuery(test, query:"a.item.1=9&a.item.2=8&a.item.3=7&a.item.4=6")
     }
     
     func testDictionaryEncodingEncode() {

@@ -8,7 +8,7 @@
 
 import Foundation
 
-public protocol AWSShape: Codable {
+public protocol AWSShape: Codable, XMLContainerCodingMap {
     static var payloadPath: String? { get }
     static var _xmlNamespace: String? { get }
     static var _members: [AWSShapeMember] { get }
@@ -29,6 +29,25 @@ extension AWSShape {
     
     public static func getMember(named: String) -> AWSShapeMember? {
         return _members.first {$0.label == named}
+    }
+    
+    public static func getMember(locationNamed: String) -> AWSShapeMember? {
+        return _members.first {
+            if let location = $0.location {
+                switch location {
+                case .body(let name):
+                    return name == locationNamed
+                case .uri(let name):
+                    return name == locationNamed
+                case .header(let name):
+                    return name == locationNamed
+                case .querystring(let name):
+                    return name == locationNamed
+                }
+            } else {
+                return $0.label == locationNamed
+            }
+        }
     }
     
     public static var pathParams: [String: String] {
@@ -75,5 +94,30 @@ extension AWSShape {
             }
         }
         return false
+    }
+    
+}
+
+/// extension to CollectionEncoding to produce the XML equivalent class
+extension CollectionEncoding {
+    var xmlEncoding : XMLContainerCoding {
+        switch self {
+        case .default:
+            return .default
+        case .array(let entry):
+            return .array(entry: entry)
+        case .dictionary(let entry, let key, let value):
+            return .dictionary(entry: entry, key: key, value: value)
+        }
+    }
+}
+
+/// extension to AWSShape that returns XML container encoding for members of it
+extension AWSShape {
+    static func getXMLContainerCoding(for key: CodingKey) -> XMLContainerCoding {
+        if let member = getMember(locationNamed: key.stringValue) {
+            return member.collectionEncoding.xmlEncoding
+        }
+        return .default
     }
 }

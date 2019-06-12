@@ -25,7 +25,7 @@ public struct AWSShapeEncoder {
     }
 
     public func xml<Input: AWSShape>(_ input: Input, overrideName: String? = nil) throws -> XMLElement {
-        return try AWSXMLEncoder().encode(input, name: overrideName)
+        return try XMLEncoder().encode(input, name: overrideName)
     }
 
     /// Encode shape into query keys and values

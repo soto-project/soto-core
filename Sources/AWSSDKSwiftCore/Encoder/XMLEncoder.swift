@@ -87,8 +87,11 @@ public class XMLEncoder {
     public init() {}
     
     open func encode<T : Encodable>(_ value: T, name: String? = nil) throws -> XMLElement {
+        // set the current container coding map
+        let containerCodingMap = value as? XMLContainerCodingMap
+        let containerCodingMapType = containerCodingMap != nil ? type(of:containerCodingMap!) : nil
         let rootName = name ?? "\(type(of: value))"
-        let encoder = _XMLEncoder(options: options, codingPath: [_XMLKey(stringValue: rootName, intValue: nil)])
+        let encoder = _XMLEncoder(options: options, codingPath: [_XMLKey(stringValue: rootName, intValue: nil)], containerCodingMapType: containerCodingMapType)
         try value.encode(to: encoder)
         
         guard let element = encoder.element else { throw EncodingError.invalidValue(T.self, EncodingError.Context(codingPath: [], debugDescription: "Failed to create any XML elements"))}
@@ -113,6 +116,7 @@ struct _XMLEncoderStorage {
     @discardableResult mutating func popContainer() -> XMLElement { return containers.removeLast() }
 }
 
+/// Internal XMLEncoder class. Does all the heavy lifting
 class _XMLEncoder : Encoder {
     // MARK: Properties
     
@@ -134,11 +138,18 @@ class _XMLEncoder : Encoder {
     /// the top level xml element
     var element : XMLElement? { return storage.topContainer }
 
+    /// the container coding map for the current element
+    var containerCodingMapType : XMLContainerCodingMap.Type?
+    
+    /// the container encoding for the current element
+    var containerCoding : XMLContainerCoding = .default
+    
     // MARK: - Initialization
-    fileprivate init(options: XMLEncoder._Options, codingPath: [CodingKey] = []) {
+    fileprivate init(options: XMLEncoder._Options, codingPath: [CodingKey] = [], containerCodingMapType: XMLContainerCodingMap.Type?) {
         self.storage = _XMLEncoderStorage()
         self.options = options
         self.codingPath = codingPath
+        self.containerCodingMapType = containerCodingMapType
     }
     
     // MARK: - Encoder methods
@@ -234,8 +245,15 @@ class _XMLEncoder : Encoder {
         }
         
         func encode<T>(_ value: T, forKey key: Key) throws where T : Encodable {
+            // store containerCoding to reset at the exit of thie function
+            let prevContainerCoding = encoder.containerCoding
+            defer { encoder.containerCoding = prevContainerCoding }
             self.encoder.codingPath.append(key)
             defer { self.encoder.codingPath.removeLast() }
+            
+            // set containerCoding
+            encoder.containerCoding = encoder.containerCodingMapType?.getXMLContainerCoding(for:key) ?? .default
+
             try encoder.box(value)
        }
         
@@ -596,6 +614,13 @@ extension _XMLEncoder {
     }
     
     func box(_ value: Encodable) throws {
+        // store previous container coding map to revert on function exit
+        let prevContainerCodingOwner = self.containerCodingMapType
+        defer { self.containerCodingMapType = prevContainerCodingOwner }
+        // set the current container coding map
+        let containerCodingMap = value as? XMLContainerCodingMap
+        containerCodingMapType = containerCodingMap != nil ? type(of:containerCodingMap!) : nil
+
         let type = Swift.type(of: value)
         if type == Date.self || type == NSDate.self {
             return try self.box((value as! Date))
@@ -630,7 +655,7 @@ fileprivate class _XMLReferencingEncoder : _XMLEncoder {
     fileprivate init(referencing encoder: _XMLEncoder, key: CodingKey, wrapping element: XMLElement) {
         self.encoder = encoder
         self.reference = element
-        super.init(options: encoder.options, codingPath: encoder.codingPath)
+        super.init(options: encoder.options, codingPath: encoder.codingPath, containerCodingMapType: encoder.containerCodingMapType)
         
         self.codingPath.append(key)
     }

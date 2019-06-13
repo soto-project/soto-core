@@ -51,7 +51,7 @@ public struct AWSShapeEncoder {
                 case let v as [AWSShape]:
                     var memberString = ""
                     if let encoding = member?.collectionEncoding {
-                        if case .array(let element) = encoding {
+                        if case .list(let element) = encoding {
                             memberString = "\(element)."
                         }
                     }
@@ -64,10 +64,17 @@ public struct AWSShapeEncoder {
                     var keyString = "key"
                     var valueString = "value"
                     if let encoding = member?.collectionEncoding {
-                        if case .dictionary(let entry, let key, let value) = encoding {
-                            entryString = entry != nil ? "\(entry!)." : ""
+                        switch encoding {
+                        case .flatMap(let key, let value):
+                            entryString = ""
                             keyString = "\(key)"
                             valueString = "\(value)"
+                        case .map(let entry, let key, let value):
+                            entryString = "\(entry!)."
+                            keyString = "\(key)"
+                            valueString = "\(value)"
+                        default:
+                            break
                         }
                     }
                     for iterator in v.enumerated() {
@@ -78,7 +85,7 @@ public struct AWSShapeEncoder {
                 case let v as [Any]:
                     var memberString = ""
                     if let encoding = member?.collectionEncoding {
-                        if case .array(let element) = encoding {
+                        if case .list(let element) = encoding {
                             memberString = "\(element)."
                         }
                     }
@@ -91,10 +98,17 @@ public struct AWSShapeEncoder {
                     var keyString = "key"
                     var valueString = "value"
                     if let encoding = member?.collectionEncoding {
-                        if case .dictionary(let entry, let key, let value) = encoding {
-                            entryString = entry != nil ? "\(entry!)." : ""
+                        switch encoding {
+                        case .flatMap(let key, let value):
+                            entryString = ""
                             keyString = "\(key)"
                             valueString = "\(value)"
+                        case .map(let entry, let key, let value):
+                            entryString = "\(entry!)."
+                            keyString = "\(key)"
+                            valueString = "\(value)"
+                        default:
+                            break
                         }
                     }
                     for iterator in v.enumerated() {

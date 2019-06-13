@@ -68,7 +68,7 @@ class SerializersTests: XCTestCase {
 
     struct Arrays : AWSShape {
         public static var _members: [AWSShapeMember] = [
-            AWSShapeMember(label: "ArrayOfNatives", location: .body(locationName: "ArrayOfNatives"), required: true, type: .list, encoding: .array(element: "member")),
+            AWSShapeMember(label: "ArrayOfNatives", location: .body(locationName: "ArrayOfNatives"), required: true, type: .list, encoding: .list(member: "member")),
             AWSShapeMember(label: "ArrayOfShapes", location: .body(locationName: "ArrayOfShapes"), required: true, type: .list)
         ]
         
@@ -78,8 +78,8 @@ class SerializersTests: XCTestCase {
 
     struct Dictionaries : AWSShape {
         public static var _members: [AWSShapeMember] = [
-            AWSShapeMember(label: "DictionaryOfNatives", location: .body(locationName: "Natives"), required: true, type: .list, encoding: .dictionary(element: "entry", key: "key", value: "value")),
-            AWSShapeMember(label: "DictionaryOfShapes", location: .body(locationName: "Shapes"), required: true, type: .list, encoding: .dictionary(element: nil, key: "key", value: "value"))
+            AWSShapeMember(label: "DictionaryOfNatives", location: .body(locationName: "Natives"), required: true, type: .list, encoding: .map(entry: "entry", key: "key", value: "value")),
+            AWSShapeMember(label: "DictionaryOfShapes", location: .body(locationName: "Shapes"), required: true, type: .list, encoding: .flatMap(key: "key", value: "value"))
         ]
         let dictionaryOfNatives : [String:Int]
         let dictionaryOfShapes : [String:StringShape]
@@ -295,8 +295,8 @@ class SerializersTests: XCTestCase {
     func testDecodeExpandedContainers() {
         struct Shape : AWSShape {
             static let _members = [
-                AWSShapeMember(label: "array", required: true, type: .list, encoding:.array(element: "member")),
-                AWSShapeMember(label: "dictionary", required: true, type: .map, encoding:.dictionary(element: "entry", key: "key", value: "value"))
+                AWSShapeMember(label: "array", required: true, type: .list, encoding:.list(member: "member")),
+                AWSShapeMember(label: "dictionary", required: true, type: .map, encoding:.map(entry: "entry", key: "key", value: "value"))
             ]
             let array : [Int]
             let dictionary : [String: Int]
@@ -310,7 +310,7 @@ class SerializersTests: XCTestCase {
 
     func testArrayEncodingDecode() {
         struct Shape : AWSShape {
-            static let _members = [AWSShapeMember(label: "array", required: true, type: .list, encoding:.array(element: "member"))]
+            static let _members = [AWSShapeMember(label: "array", required: true, type: .list, encoding:.list(member: "member"))]
             let array : [Int]
         }
         let xmldata = "<Shape><array><member>3</member><member>2</member><member>1</member></array></Shape>"
@@ -321,7 +321,7 @@ class SerializersTests: XCTestCase {
     
     func testDictionaryEncodingDecode() {
         struct Shape : AWSShape {
-            static let _members = [AWSShapeMember(label: "d", required: true, type: .map, encoding:.dictionary(element: nil, key: "key", value: "value"))]
+            static let _members = [AWSShapeMember(label: "d", required: true, type: .map, encoding:.flatMap(key: "key", value: "value"))]
             let d : [String:Int]
         }
         let xmldata = "<Shape><d><key>member</key><value>4</value><key>member2</key><value>5</value></d></Shape>"

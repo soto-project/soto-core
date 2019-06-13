@@ -104,9 +104,13 @@ extension CollectionEncoding {
         switch self {
         case .default:
             return .default
-        case .array(let entry):
+        case .flatList:
+            return .default
+        case .list(let entry):
             return .array(entry: entry)
-        case .dictionary(let entry, let key, let value):
+        case .flatMap(let key, let value):
+            return .dictionary(entry: nil, key: key, value: value)
+        case .map(let entry, let key, let value):
             return .dictionary(entry: entry, key: key, value: value)
         }
     }

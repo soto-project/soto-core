@@ -104,7 +104,7 @@ class QueryEncoderTests: XCTestCase {
     
     func testArrayEncodingEncode() {
         struct Test : AWSShape {
-            static let _members = [AWSShapeMember(label: "A", location:.body(locationName:"a"), required: true, type: .list, encoding:.array(element:"item"))]
+            static let _members = [AWSShapeMember(label: "A", location:.body(locationName:"a"), required: true, type: .list, encoding:.list(member:"item"))]
             let a : [Int]
         }
         let test = Test(a:[9,8,7,6])
@@ -113,7 +113,7 @@ class QueryEncoderTests: XCTestCase {
     
     func testDictionaryEncodingEncode() {
         struct Test : AWSShape {
-            static let _members = [AWSShapeMember(label: "A", required: true, type: .map, encoding:.dictionary(element: "item", key: "k", value: "v"))]
+            static let _members = [AWSShapeMember(label: "A", required: true, type: .map, encoding:.map(entry: "item", key: "k", value: "v"))]
             let a : [String:Int]
         }
         let test = Test(a:["first":1])
@@ -122,7 +122,7 @@ class QueryEncoderTests: XCTestCase {
     
     func testDictionaryEncodingEncode2() {
         struct Test : AWSShape {
-            static let _members = [AWSShapeMember(label: "A", required: true, type: .map, encoding:.dictionary(element: nil, key: "name", value: "entry"))]
+            static let _members = [AWSShapeMember(label: "A", required: true, type: .map, encoding:.flatMap(key: "name", value: "entry"))]
             let a : [String:Int]
         }
         let test = Test(a:["first":1])

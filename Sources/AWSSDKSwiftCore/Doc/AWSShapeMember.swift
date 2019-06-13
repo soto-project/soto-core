@@ -10,8 +10,10 @@ import Foundation
 
 public enum CollectionEncoding {
     case `default`
-    case array(element: String)
-    case dictionary(element: String?, key: String, value: String)
+    case flatList
+    case list(member: String)
+    case flatMap(key: String, value: String)
+    case map(entry: String?, key: String, value: String)
 }
 
 public struct AWSShapeMember {

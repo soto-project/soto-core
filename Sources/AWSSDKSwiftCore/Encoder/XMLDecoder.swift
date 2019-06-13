@@ -24,7 +24,7 @@ public protocol XMLContainerCodingMap {
     static func getXMLContainerCoding(for key: CodingKey) -> XMLContainerCoding
 }
 
-/// The main class for decoding Codable classes from XMLElements
+/// The wrapper class for decoding Codable classes from XMLElements
 public class XMLDecoder {
     
     /// The strategy to use for decoding `Date` values.
@@ -188,36 +188,30 @@ fileprivate class _XMLDecoder : Decoder {
             
             // based on the containerCoding, select the key and value XML elements
             switch decoder.containerCoding {
-            case .dictionary(let entryName, let keyName, let valueName):
+            case .dictionary(var entryName, let keyName, let valueName):
                 // if entry name is NULL, look for key and value xml elements directly below the container xml element
+                var element = element
+                
                 if entryName == nil {
-                    var key : Key? = nil
-                    for node in element.children ?? [] {
-                        guard let element = node as? XMLElement else { continue }
-                        if key == nil {
-                            guard element.name == keyName else { continue }
-                            key = Key(stringValue: element.stringValue ?? "")
-                        } else {
-                            guard element.name == valueName else { continue }
-                            allKeys.append(key!)
-                            allValueElements[key!.stringValue] = element
-                            key = nil
-                        }
+                    entryName = element.name!
+                    if let parent = element.parent as? XMLElement {
+                        decoder.storage.popContainer()
+                        decoder.storage.push(container: parent)
+                        element = parent
                     }
-                    // if entry name is not null look for entry elements directly below the container xml element and then key and value elements under the entry element
-                } else {
-                    let entries = element.elements(forName: entryName!)
-                    for entry in entries {
-                        if let keyElement = entry.elements(forName:keyName).first, let valueElement = entry.elements(forName:valueName).first {
-                            guard let keyString = keyElement.stringValue else { continue }
-                            if let key = Key(stringValue: keyString) {
-                                allKeys.append(key)
-                                // store value elements for later
-                                allValueElements[keyString] = valueElement
-                            }
+                }
+                let entries = element.elements(forName: entryName!)
+                for entry in entries {
+                    if let keyElement = entry.child(for: keyName), let valueElement = entry.child(for: valueName) {
+                        guard let keyString = keyElement.stringValue else { continue }
+                        if let key = Key(stringValue: keyString) {
+                            allKeys.append(key)
+                            // store value elements for later
+                            allValueElements[keyString] = valueElement
                         }
                     }
                 }
+
                 expandedDictionary = true
                 
             default:
@@ -421,10 +415,14 @@ fileprivate class _XMLDecoder : Decoder {
                 self.elements = elements
                 
             default:
-                let parent = element.parent as! XMLElement
-                decoder.storage.popContainer()
-                decoder.storage.push(container: parent)
-                self.elements = parent.elements(forName: decoder.codingPath.last!.stringValue)
+                if let parent = element.parent as? XMLElement {
+                    decoder.storage.popContainer()
+                    decoder.storage.push(container: parent)
+                    self.elements = parent.elements(forName: decoder.codingPath.last!.stringValue)
+                } else {
+                    self.elements = []
+                }
+                
             }
             self.decoder = decoder
         }

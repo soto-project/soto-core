@@ -23,7 +23,11 @@ public struct AWSShapeEncoder {
     func json<Input: AWSShape>(_ input: Input) throws -> Data {
         return try JSONEncoder().encode(input)
     }
-
+    
+    func dictionary<Input: AWSShape>(_ input: Input) throws -> [String:Any] {
+        return try DictionaryEncoder().encode(input)
+    }
+    
     public func xml<Input: AWSShape>(_ input: Input, overrideName: String? = nil) throws -> XMLElement {
         return try XMLEncoder().encode(input, name: overrideName)
     }

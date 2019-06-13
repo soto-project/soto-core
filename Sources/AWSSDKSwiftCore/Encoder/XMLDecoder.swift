@@ -189,25 +189,27 @@ fileprivate class _XMLDecoder : Decoder {
             // based on the containerCoding, select the key and value XML elements
             switch decoder.containerCoding {
             case .dictionary(var entryName, let keyName, let valueName):
-                // if entry name is NULL, look for key and value xml elements directly below the container xml element
                 var element = element
                 
+                // if entry name is NULL, set enclosing xml element to be the parent element and set the name to look for to be the name of the current element. Otherwise the code will look for xml elements named entryName under the current element
                 if entryName == nil {
-                    entryName = element.name!
+                    entryName = decoder.codingPath.last?.stringValue
                     if let parent = element.parent as? XMLElement {
                         decoder.storage.popContainer()
                         decoder.storage.push(container: parent)
                         element = parent
                     }
                 }
-                let entries = element.elements(forName: entryName!)
-                for entry in entries {
-                    if let keyElement = entry.child(for: keyName), let valueElement = entry.child(for: valueName) {
-                        guard let keyString = keyElement.stringValue else { continue }
-                        if let key = Key(stringValue: keyString) {
-                            allKeys.append(key)
-                            // store value elements for later
-                            allValueElements[keyString] = valueElement
+                if let entryName = entryName {
+                    let entries = element.elements(forName: entryName)
+                    for entry in entries {
+                        if let keyElement = entry.child(for: keyName), let valueElement = entry.child(for: valueName) {
+                            guard let keyString = keyElement.stringValue else { continue }
+                            if let key = Key(stringValue: keyString) {
+                                allKeys.append(key)
+                                // store value elements for later
+                                allValueElements[keyString] = valueElement
+                            }
                         }
                     }
                 }
@@ -392,7 +394,7 @@ fileprivate class _XMLDecoder : Decoder {
                 self.elements = element.elements(forName: member)
                 
             case .dictionary(let entry, let key, let value):
-                // dictionaries with non string keys are processed with an UnkeyedDecodingContainer. With elements alternating between key and value
+                // dictionaries with non string keys (eg enums) are processed with an UnkeyedDecodingContainer. With elements alternating between key and value
                 var elements : [XMLElement] = []
                 if let entry = entry {
                     for entryChild in element.elements(forName: entry) {

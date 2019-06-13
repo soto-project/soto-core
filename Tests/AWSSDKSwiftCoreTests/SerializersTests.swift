@@ -308,26 +308,81 @@ class SerializersTests: XCTestCase {
         }
     }
 
-    func testArrayEncodingDecode() {
+    func testArrayEncodingDecodeEncode() {
         struct Shape : AWSShape {
             static let _members = [AWSShapeMember(label: "array", required: true, type: .list, encoding:.list(member: "member"))]
             let array : [Int]
         }
         let xmldata = "<Shape><array><member>3</member><member>2</member><member>1</member></array></Shape>"
-        if let shape = testDecode(type: Shape.self, xml: xmldata) {
-            XCTAssertEqual(shape.array[1], 2)
-        }
+        testDecodeEncode(type: Shape.self, xml: xmldata)
     }
     
-    func testDictionaryEncodingDecode() {
+    func testArrayOfStructuresEncodingDecodeEncode() {
+        struct Shape2 : AWSShape {
+            let value : String
+        }
+        struct Shape : AWSShape {
+            static let _members = [AWSShapeMember(label: "array", required: true, type: .list, encoding:.list(member: "member"))]
+            let array : [Shape2]
+        }
+        let xmldata = "<Shape><array><member><value>test</value></member><member><value>test2</value></member><member><value>test3</value></member></array></Shape>"
+        testDecodeEncode(type: Shape.self, xml: xmldata)
+    }
+    
+    func testDictionaryEncodingDecodeEncode() {
+        struct Shape : AWSShape {
+            static let _members = [AWSShapeMember(label: "d", required: true, type: .map, encoding:.map(entry:"item", key: "key", value: "value"))]
+            let d : [String:Int]
+        }
+        let xmldata = "<Shape><d><item><key>member</key><value>4</value></item></d></Shape>"
+        testDecodeEncode(type: Shape.self, xml: xmldata)
+    }
+    
+    func testDictionaryOfStructuresEncodingDecodeEncode() {
+        struct Shape2 : AWSShape {
+            let float : Float
+        }
+        struct Shape : AWSShape {
+            static let _members = [AWSShapeMember(label: "d", required: true, type: .map, encoding:.map(entry:"item", key: "key", value: "value"))]
+            let d : [String:Shape2]
+        }
+        let xmldata = "<Shape><d><item><key>member</key><value><float>1.5</float></value></item></d></Shape>"
+        testDecodeEncode(type: Shape.self, xml: xmldata)
+    }
+    
+    func testFlatDictionaryEncodingDecodeEncode() {
         struct Shape : AWSShape {
             static let _members = [AWSShapeMember(label: "d", required: true, type: .map, encoding:.flatMap(key: "key", value: "value"))]
             let d : [String:Int]
         }
-        let xmldata = "<Shape><d><key>member</key><value>4</value><key>member2</key><value>5</value></d></Shape>"
-        if let shape = testDecode(type: Shape.self, xml: xmldata) {
-            XCTAssertEqual(shape.d["member2"], 5)
+        let xmldata = "<Shape><d><key>member</key><value>4</value></d></Shape>"
+        testDecodeEncode(type: Shape.self, xml: xmldata)
+    }
+    
+    func testEnumDictionaryEncodingDecodeEncode() {
+        enum KeyEnum : String, Codable {
+            case member = "member"
+            case member2 = "member2"
         }
+        struct Shape : AWSShape {
+            static let _members = [AWSShapeMember(label: "d", required: true, type: .map, encoding:.map(entry:"item", key: "key", value: "value"))]
+            let d : [KeyEnum:Int]
+        }
+        let xmldata = "<Shape><d><item><key>member</key><value>4</value></item></d></Shape>"
+        testDecodeEncode(type: Shape.self, xml: xmldata)
+    }
+    
+    func testEnumFlatDictionaryEncodingDecodeEncode() {
+        enum KeyEnum : String, Codable {
+            case member = "member"
+            case member2 = "member2"
+        }
+        struct Shape : AWSShape {
+            static let _members = [AWSShapeMember(label: "d", required: true, type: .map, encoding:.flatMap(key: "key", value: "value"))]
+            let d : [KeyEnum:Int]
+        }
+        let xmldata = "<Shape><d><key>member</key><value>4</value></d></Shape>"
+        testDecodeEncode(type: Shape.self, xml: xmldata)
     }
     
     func testEncodeDecodeXML() {
@@ -399,6 +454,14 @@ class SerializersTests: XCTestCase {
             ("testUrlDecodeEncode", testUrlDecodeEncode),
             ("testSerializeToXML", testSerializeToXML),
             ("testDecodeExpandedContainers", testDecodeExpandedContainers),
+            ("testArrayEncodingDecodeEncode", testArrayEncodingDecodeEncode),
+            ("testArrayOfStructuresEncodingDecodeEncode", testArrayOfStructuresEncodingDecodeEncode),
+            ("testDictionaryEncodingDecodeEncode", testDictionaryEncodingDecodeEncode),
+            ("testDictionaryOfStructuresEncodingDecodeEncode", testDictionaryOfStructuresEncodingDecodeEncode),
+            ("testFlatDictionaryEncodingDecodeEncode", testFlatDictionaryEncodingDecodeEncode),
+            ("testEnumDictionaryEncodingDecodeEncode", testEnumDictionaryEncodingDecodeEncode),
+            ("testEnumFlatDictionaryEncodingDecodeEncode", testEnumFlatDictionaryEncodingDecodeEncode),
+
             ("testEncodeDecodeXML", testEncodeDecodeXML),
             ("testDecodeFail", testDecodeFail),
             ("testEncodeDecodeDictionariesXML", testEncodeDecodeDictionariesXML),

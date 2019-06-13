@@ -7,6 +7,7 @@
 //
 import Foundation
 
+/// The wrapper class for encoding Codable classes to XMLElements
 public class XMLEncoder {
     
     /// The strategy to use for encoding `Date` values.
@@ -99,6 +100,7 @@ public class XMLEncoder {
     }
 }
 
+/// storage for XML Encoder. Stores a stack of XMLElements
 struct _XMLEncoderStorage {
     /// the container stack
     private var containers : [XMLElement] = []
@@ -155,10 +157,26 @@ class _XMLEncoder : Encoder {
     // MARK: - Encoder methods
     
     func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {
-        let newElement = XMLElement(name: currentKey)
-        storage.topContainer?.addChild(newElement)
-        storage.push(container: newElement)
-        return KeyedEncodingContainer(KEC(newElement, referencing:self))
+        var createEnclosingElement = true
+        switch containerCoding {
+        case .dictionary(let entry,_,_):
+            // if entry is nil don't create enclosing element
+            if entry == nil {
+                createEnclosingElement = false
+            }
+        default:
+            break
+        }
+        
+        if createEnclosingElement {
+            let newElement = XMLElement(name: currentKey)
+            storage.topContainer?.addChild(newElement)
+            storage.push(container: newElement)
+            return KeyedEncodingContainer(KEC(newElement, referencing:self))
+        } else {
+            storage.push(container: element!)
+            return KeyedEncodingContainer(KEC(element!, referencing:self))
+        }
     }
     
     struct KEC<Key: CodingKey> : KeyedEncodingContainerProtocol {
@@ -167,104 +185,140 @@ class _XMLEncoder : Encoder {
         var codingPath: [CodingKey] { return encoder.codingPath }
         
         init(_ element : XMLElement, referencing encoder: _XMLEncoder) {
-            self.encoder = encoder
             self.element = element
+            self.encoder = encoder
+        }
+        
+        /// returns the element to add value xml elements to and what to name those elements
+        func collectionElement(forKey key: Key) -> (element:XMLElement, key:String) {
+            // create enclosing xmlelement for dictionary entry, then create key and value xmlelements under that element
+            if case .dictionary(let entryName, let keyName, let valueName) = encoder.containerCoding {
+                let entryName = entryName ?? encoder.currentKey
+                let entryElement = XMLElement(name: entryName)
+                let keyElement = XMLElement(name: keyName, stringValue:key.stringValue)
+                entryElement.addChild(keyElement)
+                element.addChild(entryElement)
+                return (element:entryElement, key:valueName)
+            }
+            // return current element
+            return (element:element, key:key.stringValue)
         }
         
         func encodeNil(forKey key: Key) throws {
         }
         
         func encode(_ value: Bool, forKey key: Key) throws {
-            let childElement = XMLElement(name: key.stringValue, stringValue: encoder.box(value))
-            element.addChild(childElement)
+            let dict = collectionElement(forKey: key)
+            let childElement = XMLElement(name: dict.key, stringValue: encoder.box(value))
+            dict.element.addChild(childElement)
         }
         
         func encode(_ value: String, forKey key: Key) throws {
-            let childElement = XMLElement(name: key.stringValue, stringValue: encoder.box(value))
-            element.addChild(childElement)
+            let dict = collectionElement(forKey: key)
+            let childElement = XMLElement(name: dict.key, stringValue: encoder.box(value))
+            dict.element.addChild(childElement)
         }
         
         func encode(_ value: Int, forKey key: Key) throws {
-            let childElement = XMLElement(name: key.stringValue, stringValue: encoder.box(value))
-            element.addChild(childElement)
+            let dict = collectionElement(forKey: key)
+            let childElement = XMLElement(name: dict.key, stringValue: encoder.box(value))
+            dict.element.addChild(childElement)
         }
         
         func encode(_ value: Int8, forKey key: Key) throws {
-            let childElement = XMLElement(name: key.stringValue, stringValue: encoder.box(value))
-            element.addChild(childElement)
+            let dict = collectionElement(forKey: key)
+            let childElement = XMLElement(name: dict.key, stringValue: encoder.box(value))
+            dict.element.addChild(childElement)
         }
         
         func encode(_ value: Int16, forKey key: Key) throws {
-            let childElement = XMLElement(name: key.stringValue, stringValue: encoder.box(value))
-            element.addChild(childElement)
+            let dict = collectionElement(forKey: key)
+            let childElement = XMLElement(name: dict.key, stringValue: encoder.box(value))
+            dict.element.addChild(childElement)
         }
         
         func encode(_ value: Int32, forKey key: Key) throws {
-            let childElement = XMLElement(name: key.stringValue, stringValue: encoder.box(value))
-            element.addChild(childElement)
+            let dict = collectionElement(forKey: key)
+            let childElement = XMLElement(name: dict.key, stringValue: encoder.box(value))
+            dict.element.addChild(childElement)
         }
         
         func encode(_ value: Int64, forKey key: Key) throws {
-            let childElement = XMLElement(name: key.stringValue, stringValue: encoder.box(value))
-            element.addChild(childElement)
+            let dict = collectionElement(forKey: key)
+            let childElement = XMLElement(name: dict.key, stringValue: encoder.box(value))
+            dict.element.addChild(childElement)
         }
         
         func encode(_ value: UInt, forKey key: Key) throws {
-            let childElement = XMLElement(name: key.stringValue, stringValue: encoder.box(value))
-            element.addChild(childElement)
+            let dict = collectionElement(forKey: key)
+            let childElement = XMLElement(name: dict.key, stringValue: encoder.box(value))
+            dict.element.addChild(childElement)
         }
         
         func encode(_ value: UInt8, forKey key: Key) throws {
-            let childElement = XMLElement(name: key.stringValue, stringValue: encoder.box(value))
-            element.addChild(childElement)
+            let dict = collectionElement(forKey: key)
+            let childElement = XMLElement(name: dict.key, stringValue: encoder.box(value))
+            dict.element.addChild(childElement)
         }
         
         func encode(_ value: UInt16, forKey key: Key) throws {
-            let childElement = XMLElement(name: key.stringValue, stringValue: encoder.box(value))
-            element.addChild(childElement)
+            let dict = collectionElement(forKey: key)
+            let childElement = XMLElement(name: dict.key, stringValue: encoder.box(value))
+            dict.element.addChild(childElement)
         }
         
         func encode(_ value: UInt32, forKey key: Key) throws {
-            let childElement = XMLElement(name: key.stringValue, stringValue: encoder.box(value))
-            element.addChild(childElement)
+            let dict = collectionElement(forKey: key)
+            let childElement = XMLElement(name: dict.key, stringValue: encoder.box(value))
+            dict.element.addChild(childElement)
         }
         
         func encode(_ value: UInt64, forKey key: Key) throws {
-            let childElement = XMLElement(name: key.stringValue, stringValue: encoder.box(value))
-            element.addChild(childElement)
+            let dict = collectionElement(forKey: key)
+            let childElement = XMLElement(name: dict.key, stringValue: encoder.box(value))
+            dict.element.addChild(childElement)
         }
         
         func encode(_ value: Double, forKey key: Key) throws {
-            let childElement = try XMLElement(name: key.stringValue, stringValue: encoder.box(value))
-            element.addChild(childElement)
+            let dict = collectionElement(forKey: key)
+            let childElement = XMLElement(name: dict.key, stringValue: try encoder.box(value))
+            dict.element.addChild(childElement)
         }
         
         func encode(_ value: Float, forKey key: Key) throws {
-            let childElement = try XMLElement(name: key.stringValue, stringValue: encoder.box(value))
-            element.addChild(childElement)
+            let dict = collectionElement(forKey: key)
+            let childElement = XMLElement(name: dict.key, stringValue: try encoder.box(value))
+            dict.element.addChild(childElement)
         }
         
         func encode<T>(_ value: T, forKey key: Key) throws where T : Encodable {
             // store containerCoding to reset at the exit of thie function
             let prevContainerCoding = encoder.containerCoding
             defer { encoder.containerCoding = prevContainerCoding }
-            self.encoder.codingPath.append(key)
+            // get element to attach child elements, also what to name those elements
+            let dict = collectionElement(forKey: key)
+            self.encoder.codingPath.append(_XMLKey(stringValue: dict.key, intValue: nil))
             defer { self.encoder.codingPath.removeLast() }
-            
+            // if element returned from dictionaryElement is different, then replace the top of the storage stack
+            if element != dict.element {
+                self.encoder.storage.popContainer()
+                self.encoder.storage.push(container: dict.element)
+            }
+
             // set containerCoding
             encoder.containerCoding = encoder.containerCodingMapType?.getXMLContainerCoding(for:key) ?? .default
-
+            
             try encoder.box(value)
-       }
+        }
         
         func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
             self.encoder.codingPath.append(key)
             defer { self.encoder.codingPath.removeLast() }
-
+            
             let newElement = XMLElement(name: key.stringValue)
             encoder.storage.topContainer?.addChild(newElement)
             encoder.storage.push(container: newElement)
-
+            
             let container = KEC<NestedKey>(newElement, referencing: self.encoder)
             return KeyedEncodingContainer(container)
         }
@@ -287,18 +341,33 @@ class _XMLEncoder : Encoder {
         func superEncoder(forKey key: Key) -> Encoder {
             return _XMLReferencingEncoder(referencing: encoder, key: key, wrapping: element)
         }
-        
-        
     }
     
     func unkeyedContainer() -> UnkeyedEncodingContainer {
-        // Need to add support for non-flattened arrays here. Create an XML Element to contain them
-        var arrayElement = element
-        if arrayElement == nil {
-            arrayElement = XMLElement(name:currentKey)
+        var createEnclosingElement = false
+        switch self.containerCoding {
+        case .dictionary(let entry,_,_):
+            // if entry is nil don't create enclosing element
+            if entry != nil {
+                createEnclosingElement = true
+            }
+            
+        case .array(_):
+            createEnclosingElement = true
+            
+        default:
+            break
         }
-        storage.push(container: arrayElement!)
-        return UKEC(arrayElement!, referencing:self)
+        
+        if createEnclosingElement {
+            let newElement = XMLElement(name: self.currentKey)
+            self.storage.topContainer?.addChild(newElement)
+            self.storage.push(container: newElement)
+            return UKEC(newElement, referencing: self)
+        } else {
+            self.storage.push(container: element!)
+            return UKEC(element!, referencing: self)
+        }
     }
     
     struct UKEC : UnkeyedEncodingContainer {
@@ -314,98 +383,163 @@ class _XMLEncoder : Encoder {
             self.count = 0
         }
         
-        func encode(_ value: Bool) throws {
-            let childElement = XMLElement(name: encoder.currentKey, stringValue: encoder.box(value))
-            element.addChild(childElement)
+        /// returns the element to add value xml elements to, what to name those elements and whether we should pop the last element off the storage stack
+        func collectionElement() -> (element:XMLElement, key:String, popElement: Bool) {
+            switch encoder.containerCoding {
+            case .dictionary(let entryName, let keyName, let valueName):
+                // key element
+                if (count & 1 == 0) {
+                    // construct enclosing key element
+                    let entryName = entryName ?? encoder.currentKey
+                    let entryElement = XMLElement(name: entryName)
+                    element.addChild(entryElement)
+                    return (element:entryElement, key: keyName, popElement:false)
+                } else {
+                    return (element:element, key: valueName, popElement:true)
+                }
+                
+            case .array(let member):
+                return (element:element, key: member, popElement:false)
+                
+            default:
+                return (element:element, key: encoder.currentKey, popElement:false)
+            }
         }
         
-        func encodeNil() throws {
+        mutating func encode(_ value: Bool) throws {
+            let collection = collectionElement()
+            let childElement = XMLElement(name: collection.key, stringValue: encoder.box(value))
+            collection.element.addChild(childElement)
+            count += 1
         }
         
-        func encode(_ value: String) throws {
-            let childElement = XMLElement(name: encoder.currentKey, stringValue: encoder.box(value))
-            element.addChild(childElement)
+        mutating func encodeNil() throws {
+            count += 1
         }
         
-        func encode(_ value: Int) throws {
-            let childElement = XMLElement(name: encoder.currentKey, stringValue: encoder.box(value))
-            element.addChild(childElement)
+        mutating func encode(_ value: String) throws {
+            let collection = collectionElement()
+            let childElement = XMLElement(name: collection.key, stringValue: encoder.box(value))
+            collection.element.addChild(childElement)
+            count += 1
         }
         
-        func encode(_ value: Int8) throws {
-            let childElement = XMLElement(name: encoder.currentKey, stringValue: encoder.box(value))
-            element.addChild(childElement)
+        mutating func encode(_ value: Int) throws {
+            let collection = collectionElement()
+            let childElement = XMLElement(name: collection.key, stringValue: encoder.box(value))
+            collection.element.addChild(childElement)
+            count += 1
         }
         
-        func encode(_ value: Int16) throws {
-            let childElement = XMLElement(name: encoder.currentKey, stringValue: encoder.box(value))
-            element.addChild(childElement)
+        mutating func encode(_ value: Int8) throws {
+            let collection = collectionElement()
+            let childElement = XMLElement(name: collection.key, stringValue: encoder.box(value))
+            collection.element.addChild(childElement)
+            count += 1
         }
         
-        func encode(_ value: Int32) throws {
-            let childElement = XMLElement(name: encoder.currentKey, stringValue: encoder.box(value))
-            element.addChild(childElement)
-
+        mutating func encode(_ value: Int16) throws {
+            let collection = collectionElement()
+            let childElement = XMLElement(name: collection.key, stringValue: encoder.box(value))
+            collection.element.addChild(childElement)
+            count += 1
         }
         
-        func encode(_ value: Int64) throws {
-            let childElement = XMLElement(name: encoder.currentKey, stringValue: encoder.box(value))
-            element.addChild(childElement)
+        mutating func encode(_ value: Int32) throws {
+            let collection = collectionElement()
+            let childElement = XMLElement(name: collection.key, stringValue: encoder.box(value))
+            collection.element.addChild(childElement)
+            count += 1
         }
         
-        func encode(_ value: UInt) throws {
-            let childElement = XMLElement(name: encoder.currentKey, stringValue: encoder.box(value))
-            element.addChild(childElement)
+        mutating func encode(_ value: Int64) throws {
+            let collection = collectionElement()
+            let childElement = XMLElement(name: collection.key, stringValue: encoder.box(value))
+            collection.element.addChild(childElement)
+            count += 1
         }
         
-        func encode(_ value: UInt8) throws {
-            let childElement = XMLElement(name: encoder.currentKey, stringValue: encoder.box(value))
-            element.addChild(childElement)
+        mutating func encode(_ value: UInt) throws {
+            let collection = collectionElement()
+            let childElement = XMLElement(name: collection.key, stringValue: encoder.box(value))
+            collection.element.addChild(childElement)
+            count += 1
         }
         
-        func encode(_ value: UInt16) throws {
-            let childElement = XMLElement(name: encoder.currentKey, stringValue: encoder.box(value))
-            element.addChild(childElement)
+        mutating func encode(_ value: UInt8) throws {
+            let collection = collectionElement()
+            let childElement = XMLElement(name: collection.key, stringValue: encoder.box(value))
+            collection.element.addChild(childElement)
+            count += 1
         }
         
-        func encode(_ value: UInt32) throws {
-            let childElement = XMLElement(name: encoder.currentKey, stringValue: encoder.box(value))
-            element.addChild(childElement)
+        mutating func encode(_ value: UInt16) throws {
+            let collection = collectionElement()
+            let childElement = XMLElement(name: collection.key, stringValue: encoder.box(value))
+            collection.element.addChild(childElement)
+            count += 1
         }
         
-        func encode(_ value: UInt64) throws {
-            let childElement = XMLElement(name: encoder.currentKey, stringValue: encoder.box(value))
-            element.addChild(childElement)
+        mutating func encode(_ value: UInt32) throws {
+            let collection = collectionElement()
+            let childElement = XMLElement(name: collection.key, stringValue: encoder.box(value))
+            collection.element.addChild(childElement)
+            count += 1
         }
         
-        func encode(_ value: Double) throws {
-            let childElement = XMLElement(name: encoder.currentKey, stringValue: try encoder.box(value))
-            element.addChild(childElement)
+        mutating func encode(_ value: UInt64) throws {
+            let collection = collectionElement()
+            let childElement = XMLElement(name: collection.key, stringValue: encoder.box(value))
+            collection.element.addChild(childElement)
+            count += 1
         }
         
-        func encode(_ value: Float) throws {
-            let childElement = XMLElement(name: encoder.currentKey, stringValue: try encoder.box(value))
-            element.addChild(childElement)
+        mutating func encode(_ value: Double) throws {
+            let collection = collectionElement()
+            let childElement = XMLElement(name: collection.key, stringValue: try encoder.box(value))
+            collection.element.addChild(childElement)
+            count += 1
+        }
+        
+        mutating func encode(_ value: Float) throws {
+            let collection = collectionElement()
+            let childElement = XMLElement(name: collection.key, stringValue: try encoder.box(value))
+            collection.element.addChild(childElement)
+            count += 1
+        }
+        
+        mutating func encode<T>(_ value: T) throws where T : Encodable {
+            let collection = collectionElement()
+            self.encoder.codingPath.append(_XMLKey(stringValue: collection.key, intValue: nil))
+            defer { self.encoder.codingPath.removeLast() }
+            // if element returned from collectionElement is different, then replace the top of the storage stack
+            if element != collection.element {
+                self.encoder.storage.push(container: collection.element)
+            }
             
-        }
-        
-        func encode<T>(_ value: T) throws where T : Encodable {
             try encoder.box(value)
+            
+            if collection.popElement {
+                self.encoder.storage.popContainer()
+            }
+            count += 1
         }
         
-        func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
+        mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
             let newElement = XMLElement(name: encoder.currentKey)
             encoder.storage.topContainer?.addChild(newElement)
             encoder.storage.push(container: newElement)
+            count += 1
             
             let container = KEC<NestedKey>(newElement, referencing: self.encoder)
             return KeyedEncodingContainer(container)
         }
         
-        func nestedUnkeyedContainer() -> UnkeyedEncodingContainer {
+        mutating func nestedUnkeyedContainer() -> UnkeyedEncodingContainer {
             let newElement = XMLElement(name: encoder.currentKey)
             encoder.storage.topContainer?.addChild(newElement)
             encoder.storage.push(container: newElement)
+            count += 1
             
             return UKEC(newElement, referencing: self.encoder)
         }

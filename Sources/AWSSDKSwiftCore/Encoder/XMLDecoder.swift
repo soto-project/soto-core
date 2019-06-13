@@ -111,8 +111,12 @@ public class XMLDecoder {
 }
 
 extension XMLElement {
+    func child(for string: String) -> XMLElement? {
+        return (children ?? []).first(where: {$0.name == string}) as? XMLElement
+    }
+
     func child(for key: CodingKey) -> XMLElement? {
-        return (children ?? []).first(where: {$0.name == key.stringValue}) as? XMLElement
+        return child(for: key.stringValue)
     }
 }
 
@@ -390,7 +394,32 @@ fileprivate class _XMLDecoder : Decoder {
             // build array of elements based on the container coding
             switch decoder.containerCoding {
             case .array(let member):
+                // array is built from child xmlelements with name member
                 self.elements = element.elements(forName: member)
+                
+            case .dictionary(let entry, let key, let value):
+                // dictionaries with non string keys are processed with an UnkeyedDecodingContainer. With elements alternating between key and value
+                var elements : [XMLElement] = []
+                if let entry = entry {
+                    for entryChild in element.elements(forName: entry) {
+                        let keyElement = entryChild.child(for: key)
+                        let entryElement = entryChild.child(for: value)
+                        if keyElement != nil && entryElement != nil {
+                            elements.append(keyElement!)
+                            elements.append(entryElement!)
+                        }
+                    }
+                } else {
+                    for child in element.children ?? [] {
+                        if let childElement = child as? XMLElement {
+                            if childElement.name == key || childElement.name == value {
+                                elements.append(childElement)
+                            }
+                        }
+                    }
+                }
+                self.elements = elements
+                
             default:
                 let parent = element.parent as! XMLElement
                 decoder.storage.popContainer()

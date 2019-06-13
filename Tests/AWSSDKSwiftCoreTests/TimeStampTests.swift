@@ -15,98 +15,37 @@ class TimeStampTests: XCTestCase {
         let date: TimeStamp
     }
 
-    func testInitializer() {
-        do {
-            let now = Date().timeIntervalSince1970
-            let ts = TimeStamp(Double(now))
-            XCTAssertEqual(now, ts.doubleValue)
-        }
-
-        do {
-            let now = Date()
-            let ts = TimeStamp(now)
-            XCTAssertEqual(now, ts.dateValue)
-        }
-
-        do {
-            let now = "2017-01-01 00:00:00"
-            let ts = TimeStamp(now)
-            XCTAssertEqual(now, ts.stringValue)
-        }
-
-        do {
-            let now = Int(Date().timeIntervalSince1970)
-            let ts = TimeStamp(now)
-            XCTAssertEqual(now, ts.intValue)
-        }
-    }
-
     func testDecodeFromJSON() {
         do {
-            let json = "{\"date\": \"2017-01-01 00:00:00\"}"
-            let json_data = json.data(using: .utf8)!
-            let a = try JSONDecoder().decode(A.self, from: json_data)
-            XCTAssertEqual(a.date.stringValue, "2017-01-01 00:00:00")
-        } catch {
-            XCTFail("\(error)")
-        }
-
-        do {
-            let now = Date().timeIntervalSince1970
-            let json = "{\"date\": \(now)}"
-            let json_data = json.data(using: .utf8)!
-            _ = try JSONDecoder().decode(A.self, from: json_data)
-        } catch {
-            XCTFail("\(error)")
-        }
-
-        do {
-            let now = Int(Date().timeIntervalSince1970)
-            let json = "{\"date\": \(now)}"
-            let json_data = json.data(using: .utf8)!
-            let a = try JSONDecoder().decode(A.self, from: json_data)
-            XCTAssertEqual(a.date.intValue, now)
+            let json = "{\"date\": \"2017-01-01T00:00:00.000Z\"}"
+            if let json_data = json.data(using: .utf8) {
+                let a = try JSONDecoder().decode(A.self, from: json_data)
+                XCTAssertEqual(a.date.stringValue, "2017-01-01T00:00:00.000Z")
+            } else {
+                XCTFail("Failed to read JSON")
+            }
         } catch {
             XCTFail("\(error)")
         }
     }
-
+    
+    func testDecodeFromXML() {
+        do {
+            let xml = "<A><date>2017-01-01T00:01:00.000Z</date></A>"
+            let xmlElement = try XMLElement(xmlString: xml)
+            let a = try XMLDecoder().decode(A.self, from: xmlElement)
+            XCTAssertEqual(a.date.stringValue, "2017-01-01T00:01:00.000Z")
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+    
     func testEncodeToJSON() {
         do {
-            let a = A(date: "2017-01-01 00:00:00")
+            let a = A(date: TimeStamp("2019-05-01T00:00:00.001Z"))
             let data = try JSONEncoder().encode(a)
             let jsonString = String(data: data, encoding: .utf8)
-            XCTAssertEqual(jsonString, "{\"date\":\"2017-01-01 00:00:00\"}")
-        } catch {
-            XCTFail("\(error)")
-        }
-
-        do {
-            let now = Date().timeIntervalSince1970
-            let a = A(date: TimeStamp(now))
-            let data = try JSONEncoder().encode(a)
-            let jsonString = String(data: data, encoding: .utf8)
-            XCTAssertNotNil(jsonString)
-        } catch {
-            XCTFail("\(error)")
-        }
-
-        do {
-            let now = Int(Date().timeIntervalSince1970)
-            let a = A(date: TimeStamp(now))
-            let data = try JSONEncoder().encode(a)
-            let jsonString = String(data: data, encoding: .utf8)
-            XCTAssertEqual(jsonString, "{\"date\":\(now)}")
-        } catch {
-            XCTFail("\(error)")
-        }
-
-        do {
-            let now = Date()
-            let a = A(date: TimeStamp(now))
-            let data = try JSONEncoder().encode(a)
-            let jsonString = String(data: data, encoding: .utf8)
-            XCTAssertEqual(jsonString, "{\"date\":\"\(now)\"}")
+            XCTAssertEqual(jsonString, "{\"date\":\"2019-05-01T00:00:00.001Z\"}")
         } catch {
             XCTFail("\(error)")
         }
@@ -114,8 +53,8 @@ class TimeStampTests: XCTestCase {
 
     static var allTests : [(String, (TimeStampTests) -> () throws -> Void)] {
         return [
-            ("testInitializer", testInitializer),
             ("testDecodeFromJSON", testDecodeFromJSON),
+            ("testDecodeFromXML", testDecodeFromXML),
             ("testEncodeToJSON", testEncodeToJSON),
         ]
     }

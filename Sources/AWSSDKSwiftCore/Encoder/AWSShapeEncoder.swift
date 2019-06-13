@@ -74,7 +74,7 @@ public struct AWSShapeEncoder {
                             keyString = "\(key)"
                             valueString = "\(value)"
                         case .map(let entry, let key, let value):
-                            entryString = "\(entry!)."
+                            entryString = "\(entry)."
                             keyString = "\(key)"
                             valueString = "\(value)"
                         default:
@@ -108,7 +108,7 @@ public struct AWSShapeEncoder {
                             keyString = "\(key)"
                             valueString = "\(value)"
                         case .map(let entry, let key, let value):
-                            entryString = "\(entry!)."
+                            entryString = "\(entry)."
                             keyString = "\(key)"
                             valueString = "\(value)"
                         default:

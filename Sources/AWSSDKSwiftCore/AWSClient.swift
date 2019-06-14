@@ -442,13 +442,20 @@ extension AWSClient {
         )
     }
 
+    static let queryAllowedCharacters = CharacterSet(charactersIn:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/")
     fileprivate func urlEncodeQueryParams(fromDictionary dict: [String:Any]) -> String? {
-        var components = URLComponents()
-        components.queryItems = urlQueryItems(fromDictionary: dict)
-        if components.queryItems != nil, let url = components.url {
-            return url.query
+        guard dict.count > 0 else {return nil}
+        var query = ""
+        let keys = Array(dict.keys).sorted()
+
+        for iterator in keys.enumerated() {
+            let value = dict[iterator.element]
+            query += iterator.element + "=" + (String(describing: value ?? "").addingPercentEncoding(withAllowedCharacters: AWSClient.queryAllowedCharacters) ?? "")
+            if iterator.offset < dict.count - 1 {
+                query += "&"
+            }
         }
-        return nil
+        return query
     }
 
     fileprivate func urlQueryItems(fromDictionary dict: [String:Any]) -> [URLQueryItem]? {

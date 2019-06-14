@@ -20,11 +20,11 @@ func unwrap(any: Any) -> Any? {
 public struct AWSShapeEncoder {
     public init() {}
 
-    func json<Input: AWSShape>(_ input: Input) throws -> Data {
+    public func json<Input: AWSShape>(_ input: Input) throws -> Data {
         return try JSONEncoder().encode(input)
     }
     
-    func dictionary<Input: AWSShape>(_ input: Input) throws -> [String:Any] {
+    public func dictionary<Input: AWSShape>(_ input: Input) throws -> [String:Any] {
         return try DictionaryEncoder().encode(input)
     }
     
@@ -33,7 +33,7 @@ public struct AWSShapeEncoder {
     }
 
     /// Encode shape into query keys and values
-    func query(_ input: AWSShape) -> [String : Any] {
+    public func query(_ input: AWSShape) -> [String : Any] {
         var dictionary : [String : Any] = [:]
 
         func encodeToFlatDictionary(_ input: AWSShape, name: String? = nil) {

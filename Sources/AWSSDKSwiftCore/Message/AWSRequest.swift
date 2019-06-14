@@ -99,6 +99,10 @@ public struct AWSRequest {
             default:
                 break
             }
+        case .other(let service):
+            if service == "ec2" {
+                headers["Content-Type"] = "application/json"
+            }
         default:
             break
         }

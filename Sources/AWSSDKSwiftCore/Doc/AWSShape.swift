@@ -99,10 +99,10 @@ extension AWSShape {
 
 /// extension to CollectionEncoding to produce the XML equivalent class
 extension CollectionEncoding {
-    public var xmlEncoding : XMLContainerCoding {
+    public var xmlEncoding : XMLContainerCoding? {
         switch self {
         case .default:
-            return .default
+            return nil
         case .flatList:
             return .default
         case .list(let entry):
@@ -117,10 +117,10 @@ extension CollectionEncoding {
 
 /// extension to AWSShape that returns XML container encoding for members of it
 extension AWSShape {
-    public static func getXMLContainerCoding(for key: CodingKey) -> XMLContainerCoding {
+    public static func getXMLContainerCoding(for key: CodingKey) -> XMLContainerCoding? {
         if let member = getMember(locationNamed: key.stringValue) {
             return member.collectionEncoding.xmlEncoding
         }
-        return .default
+        return nil
     }
 }

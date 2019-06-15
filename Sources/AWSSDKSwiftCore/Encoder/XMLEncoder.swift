@@ -7,6 +7,23 @@
 //
 import Foundation
 
+/// A marker protocols used to determine whether a value is a `Dictionary` or an `Array`
+///
+/// NOTE: The architecture and environment check is due to a bug in the current (2018-08-08) Swift 4.2
+/// runtime when running on i386 simulator. The issue is tracked in https://bugs.swift.org/browse/SR-8276
+/// Making the protocol `internal` instead of `fileprivate` works around this issue.
+/// Once SR-8276 is fixed, this check can be removed and the protocol always be made fileprivate.
+#if arch(i386) || arch(arm)
+internal protocol _XMLDictionaryEncodableMarker { }
+internal protocol _XMLArrayEncodableMarker { }
+#else
+fileprivate protocol _XMLDictionaryEncodableMarker { }
+fileprivate protocol _XMLArrayEncodableMarker { }
+#endif
+
+extension Dictionary : _XMLDictionaryEncodableMarker where Value: Decodable { }
+extension Array : _XMLArrayEncodableMarker where Element: Decodable { }
+
 /// The wrapper class for encoding Codable classes to XMLElements
 public class XMLEncoder {
     
@@ -66,6 +83,12 @@ public class XMLEncoder {
     /// The strategy to use in encoding non-conforming numbers. Defaults to `.throw`.
     open var nonConformingFloatEncodingStrategy: NonConformingFloatEncodingStrategy = .throw
     
+    /// The strategy to use for encoding Arrays
+    open var arrayEncodingStrategy: XMLContainerCoding = .array(entry:nil)
+    
+    /// The strategy to use for encoding Dictionaries
+    open var dictionaryEncodingStrategy: XMLContainerCoding = .structure
+    
     /// Contextual user-provided information for use during encoding.
     open var userInfo: [CodingUserInfoKey : Any] = [:]
     
@@ -74,6 +97,8 @@ public class XMLEncoder {
         let dateEncodingStrategy: DateEncodingStrategy
         let dataEncodingStrategy: DataEncodingStrategy
         let nonConformingFloatEncodingStrategy: NonConformingFloatEncodingStrategy
+        let arrayEncodingStrategy: XMLContainerCoding
+        let dictionaryEncodingStrategy: XMLContainerCoding
         let userInfo: [CodingUserInfoKey : Any]
     }
     
@@ -82,6 +107,8 @@ public class XMLEncoder {
         return _Options(dateEncodingStrategy: dateEncodingStrategy,
                         dataEncodingStrategy: dataEncodingStrategy,
                         nonConformingFloatEncodingStrategy: nonConformingFloatEncodingStrategy,
+                        arrayEncodingStrategy: arrayEncodingStrategy,
+                        dictionaryEncodingStrategy: dictionaryEncodingStrategy,
                         userInfo: userInfo)
     }
     
@@ -306,7 +333,15 @@ class _XMLEncoder : Encoder {
             }
 
             // set containerCoding
-            encoder.containerCoding = encoder.containerCodingMapType?.getXMLContainerCoding(for:key) ?? .default
+            if let containerCoding = encoder.containerCodingMapType?.getXMLContainerCoding(for:key) {
+                encoder.containerCoding = containerCoding
+            } else if value is _XMLDictionaryEncodableMarker {
+                encoder.containerCoding = encoder.options.dictionaryEncodingStrategy
+            } else if value is _XMLArrayEncodableMarker {
+                encoder.containerCoding = encoder.options.arrayEncodingStrategy
+            } else {
+                encoder.containerCoding = .default
+            }
             
             try encoder.box(value)
         }
@@ -352,8 +387,10 @@ class _XMLEncoder : Encoder {
                 createEnclosingElement = true
             }
             
-        case .array(_):
-            createEnclosingElement = true
+        case .array(let member):
+            if member != nil {
+                createEnclosingElement = true
+            }
             
         default:
             break
@@ -399,7 +436,7 @@ class _XMLEncoder : Encoder {
                 }
                 
             case .array(let member):
-                return (element:element, key: member, popElement:false)
+                return (element:element, key: member ?? encoder.currentKey, popElement:false)
                 
             default:
                 return (element:element, key: encoder.currentKey, popElement:false)

@@ -335,8 +335,8 @@ extension AWSClient {
                 if let payloadBody = mirror.getAttribute(forKey: payload.toSwiftVariableCase()) {
                     switch payloadBody {
                     case is AWSShape:
-                        let inputBody: Body = .json(try AWSShapeEncoder().json(input))
-                        if let inputDict = try inputBody.asDictionary(), let payloadDict = inputDict[payload] {
+                        let inputDictionary = try AWSShapeEncoder().dictionary(input)
+                        if let payloadDict = inputDictionary[payload] {
                             body = .json(try JSONSerialization.data(withJSONObject: payloadDict))
                         }
                     default:
@@ -496,6 +496,8 @@ extension AWSClient {
             payloadPath: Output.payloadPath,
             members: Output._members
         )
+        
+        let decoder = DictionaryDecoder()
 
         var responseHeaders: [String: String] = [:]
         for (key, value) in response.head.headers {
@@ -506,6 +508,7 @@ extension AWSClient {
         switch responseBody {
         case .json(let data):
             outputDict = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] ?? [:]
+            decoder.dataDecodingStrategy = .base64
 
         case .xml(let node):
             var outputNode = node
@@ -541,7 +544,7 @@ extension AWSClient {
             }
         }
 
-        return try DictionaryDecoder().decode(Output.self, from: outputDict)
+        return try decoder.decode(Output.self, from: outputDict)
     }
 
     private func validateCode(response: Response, members: [AWSShapeMember] = []) throws {

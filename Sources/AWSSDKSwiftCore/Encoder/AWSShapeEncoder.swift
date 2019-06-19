@@ -54,7 +54,7 @@ public struct AWSShapeEncoder {
 
                 case let v as [AWSShape]:
                     var memberString = ""
-                    if let encoding = member?.collectionEncoding {
+                    if let encoding = member?.shapeEncoding {
                         if case .list(let element) = encoding {
                             memberString = "\(element)."
                         }
@@ -67,7 +67,7 @@ public struct AWSShapeEncoder {
                     var entryString = "entry."
                     var keyString = "key"
                     var valueString = "value"
-                    if let encoding = member?.collectionEncoding {
+                    if let encoding = member?.shapeEncoding {
                         switch encoding {
                         case .flatMap(let key, let value):
                             entryString = ""
@@ -88,7 +88,7 @@ public struct AWSShapeEncoder {
 
                 case let v as [Any]:
                     var memberString = ""
-                    if let encoding = member?.collectionEncoding {
+                    if let encoding = member?.shapeEncoding {
                         if case .list(let element) = encoding {
                             memberString = "\(element)."
                         }
@@ -101,7 +101,7 @@ public struct AWSShapeEncoder {
                     var entryString = "entry."
                     var keyString = "key"
                     var valueString = "value"
-                    if let encoding = member?.collectionEncoding {
+                    if let encoding = member?.shapeEncoding {
                         switch encoding {
                         case .flatMap(let key, let value):
                             entryString = ""

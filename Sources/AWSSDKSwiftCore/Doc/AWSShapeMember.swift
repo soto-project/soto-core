@@ -8,7 +8,7 @@
 
 import Foundation
 
-public enum CollectionEncoding {
+public enum ShapeEncoding {
     case `default`
     case flatList
     case list(member: String)
@@ -37,17 +37,17 @@ public struct AWSShapeMember {
     public let location: Location?
     public let required: Bool
     public let type: Shape
-    public let collectionEncoding: CollectionEncoding
+    public let shapeEncoding: ShapeEncoding
 
     var pathForLocation: String {
         return location?.name ?? label
     }
     
-    public init(label: String, location: Location? = nil, required: Bool, type: Shape, encoding: CollectionEncoding = .default) {
+    public init(label: String, location: Location? = nil, required: Bool, type: Shape, encoding: ShapeEncoding = .default) {
         self.label = label
         self.location = location
         self.required = required
         self.type = type
-        self.collectionEncoding = encoding
+        self.shapeEncoding = encoding
     }
 }

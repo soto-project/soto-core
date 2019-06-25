@@ -33,7 +33,7 @@ public struct AWSShapeEncoder {
     }
 
     /// Encode shape into query keys and values
-    public func query(_ input: AWSShape) -> [String : Any] {
+    public func query(_ input: AWSShape, flattenLists: Bool = false) -> [String : Any] {
         var dictionary : [String : Any] = [:]
 
         func encodeToFlatDictionary(_ input: AWSShape, name: String? = nil) {
@@ -55,7 +55,7 @@ public struct AWSShapeEncoder {
                 case let v as [AWSShape]:
                     var memberString = ""
                     if let encoding = member?.shapeEncoding {
-                        if case .list(let element) = encoding {
+                        if case .list(let element) = encoding, flattenLists == false {
                             memberString = "\(element)."
                         }
                     }
@@ -88,7 +88,7 @@ public struct AWSShapeEncoder {
 
                 case let v as [Any]:
                     var memberString = ""
-                    if let encoding = member?.shapeEncoding {
+                    if let encoding = member?.shapeEncoding, flattenLists == false {
                         if case .list(let element) = encoding {
                             memberString = "\(element)."
                         }

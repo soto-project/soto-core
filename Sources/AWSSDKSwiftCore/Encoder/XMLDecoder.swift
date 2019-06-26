@@ -248,7 +248,7 @@ fileprivate class _XMLDecoder : Decoder {
                 
             default:
                 // all elements directly under the container xml element are considered. THe key is the name of the element and the value is the text attached to the element
-                allKeys = element.children?.compactMap { (element: Foundation.XMLNode)->Key? in
+                allKeys = element.children?.compactMap { (element: XMLNode)->Key? in
                     if let name = element.name {
                         return Key(stringValue: name)
                     }

@@ -327,7 +327,7 @@ class _XMLEncoder : Encoder {
             self.encoder.codingPath.append(_XMLKey(stringValue: dict.key, intValue: nil))
             defer { self.encoder.codingPath.removeLast() }
             // if element returned from dictionaryElement is different, then replace the top of the storage stack
-            if element != dict.element {
+            if element !== dict.element {
                 self.encoder.storage.popContainer()
                 self.encoder.storage.push(container: dict.element)
             }
@@ -550,7 +550,7 @@ class _XMLEncoder : Encoder {
             self.encoder.codingPath.append(_XMLKey(stringValue: collection.key, intValue: nil))
             defer { self.encoder.codingPath.removeLast() }
             // if element returned from collectionElement is different, then replace the top of the storage stack
-            if element != collection.element {
+            if element !== collection.element {
                 self.encoder.storage.push(container: collection.element)
             }
             

@@ -127,7 +127,7 @@ class SerializersTests: XCTestCase {
     /// helper test function to use throughout all the decode/encode tests
     func testDecode<T : Codable>(type: T.Type, xml: String) -> T? {
         do {
-            let xmlDocument = try XMLDocument(data: xml.data(using: .utf8)!)
+            let xmlDocument = try XML.Document(data: xml.data(using: .utf8)!)
             let rootElement = xmlDocument.rootElement()
             XCTAssertNotNil(rootElement)
             return try XMLDecoder().decode(T.self, from: rootElement!)
@@ -142,7 +142,7 @@ class SerializersTests: XCTestCase {
     /// helper test function to use throughout all the decode/encode tests
     func testDecodeEncode<T : Codable>(type: T.Type, xml: String) {
         do {
-            let xmlDocument = try XMLDocument(data: xml.data(using: .utf8)!)
+            let xmlDocument = try XML.Document(data: xml.data(using: .utf8)!)
             let rootElement = xmlDocument.rootElement()
             XCTAssertNotNil(rootElement)
             let instance = try XMLDecoder().decode(T.self, from: rootElement!)
@@ -257,32 +257,32 @@ class SerializersTests: XCTestCase {
         let notANumber = "<Dictionaries><natives><test>notANumber</test></natives><shapes></shapes></Dictionaries>"
 
         do {
-            var xmlDocument = try XMLDocument(data: missingNative.data(using: .utf8)!)
+            var xmlDocument = try XML.Document(data: missingNative.data(using: .utf8)!)
             XCTAssertNotNil(xmlDocument.rootElement())
             let result = try? XMLDecoder().decode(Numbers.self, from: xmlDocument.rootElement()!)
             XCTAssertNil(result)
 
-            xmlDocument = try XMLDocument(data: missingEnum.data(using: .utf8)!)
+            xmlDocument = try XML.Document(data: missingEnum.data(using: .utf8)!)
             XCTAssertNotNil(xmlDocument.rootElement())
             let result2 = try? XMLDecoder().decode(Numbers.self, from: xmlDocument.rootElement()!)
             XCTAssertNil(result2)
 
-            xmlDocument = try XMLDocument(data: wrongEnum.data(using: .utf8)!)
+            xmlDocument = try XML.Document(data: wrongEnum.data(using: .utf8)!)
             XCTAssertNotNil(xmlDocument.rootElement())
             let result3 = try? XMLDecoder().decode(StringShape.self, from: xmlDocument.rootElement()!)
             XCTAssertNil(result3)
 
-            xmlDocument = try XMLDocument(data: missingShape.data(using: .utf8)!)
+            xmlDocument = try XML.Document(data: missingShape.data(using: .utf8)!)
             XCTAssertNotNil(xmlDocument.rootElement())
             let result4 = try? XMLDecoder().decode(Shape.self, from: xmlDocument.rootElement()!)
             XCTAssertNil(result4)
 
-            xmlDocument = try XMLDocument(data: stringNotShape.data(using: .utf8)!)
+            xmlDocument = try XML.Document(data: stringNotShape.data(using: .utf8)!)
             XCTAssertNotNil(xmlDocument.rootElement())
             let result5 = try? XMLDecoder().decode(Dictionaries.self, from: xmlDocument.rootElement()!)
             XCTAssertNil(result5)
 
-            xmlDocument = try XMLDocument(data: notANumber.data(using: .utf8)!)
+            xmlDocument = try XML.Document(data: notANumber.data(using: .utf8)!)
             XCTAssertNotNil(xmlDocument.rootElement())
             let result6 = try? XMLDecoder().decode(Dictionaries.self, from: xmlDocument.rootElement()!)
             XCTAssertNil(result6)

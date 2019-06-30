@@ -379,7 +379,7 @@ extension AWSClient {
                         guard let element = node.elements(forName: member.location?.name ?? member.label).first else { throw AWSClientError.missingParameter(message: "Payload is missing")}
                         // if shape has an xml namespace apply it to the element
                         if let xmlNamespace = Input._xmlNamespace {
-                            element.addNamespace(XMLNode.namespace(withName: "", stringValue: xmlNamespace) as! XMLNode)
+                            element.addNamespace(XML.Node.namespace(withName: "", stringValue: xmlNamespace) as! XML.Node)
                         }
                         body = .xml(element)
                     default:
@@ -519,7 +519,7 @@ extension AWSClient {
 
         case .xml(let node):
             var outputNode = node
-            if let child = node.children?.first as? XMLElement, (node.name == operationName + "Response" && child.name == operationName + "Result") {
+            if let child = node.children?.first as? XML.Element, (node.name == operationName + "Response" && child.name == operationName + "Result") {
                 outputNode = child
             }
             return try XMLDecoder().decode(Output.self, from: outputNode)
@@ -639,7 +639,7 @@ extension AWSClient {
             }
 
         case .restxml, .query:
-            let xmlDocument = try XMLDocument(data: data)
+            let xmlDocument = try XML.Document(data: data)
             if let element = xmlDocument.rootElement() {
                 responseBody = .xml(element)
             }
@@ -647,7 +647,7 @@ extension AWSClient {
         case .other(let proto):
             switch proto.lowercased() {
             case "ec2":
-                let xmlDocument = try XMLDocument(data: data)
+                let xmlDocument = try XML.Document(data: data)
                 if let element = xmlDocument.rootElement() {
                     responseBody = .xml(element)
                 }
@@ -673,14 +673,14 @@ extension AWSClient {
 
         switch serviceProtocol.type {
         case .query:
-            guard let xmlDocument = try? XMLDocument(data: data) else { break }
+            guard let xmlDocument = try? XML.Document(data: data) else { break }
             guard let element = xmlDocument.rootElement() else { break }
             guard let error = element.elements(forName: "Error").first else { break }
             code = error.elements(forName: "Code").first?.stringValue
             message = error.elements(forName: "Message").first?.stringValue
 
         case .restxml:
-            guard let xmlDocument = try? XMLDocument(data: data) else { break }
+            guard let xmlDocument = try? XML.Document(data: data) else { break }
             guard let element = xmlDocument.rootElement() else { break }
             code = element.elements(forName: "Code").first?.stringValue
             message = element.children?.filter({$0.name != "Code"}).map({"\($0.name!): \($0.stringValue!)"}).joined(separator: ", ")

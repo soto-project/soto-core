@@ -683,7 +683,7 @@ extension AWSClient {
             guard let xmlDocument = try? XML.Document(data: data) else { break }
             guard let element = xmlDocument.rootElement() else { break }
             code = element.elements(forName: "Code").first?.stringValue
-            message = element.children?.filter({$0.name != "Code"}).map({"\($0.name!): \($0.stringValue!)"}).joined(separator: ", ")
+            message = element.children(of:.element)?.filter({$0.name != "Code"}).map({"\($0.name!): \($0.stringValue!)"}).joined(separator: ", ")
 
         case .restjson:
             code = response.head.headers.filter( { $0.name == "x-amzn-ErrorType"}).first?.value

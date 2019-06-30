@@ -240,7 +240,7 @@ public class XML {
         public override var stringValue : String? {
             get {
                 let textNodes = children(of:.text)
-                let text = textNodes?.reduce("", { return $0 + ($1.stringValue ?? "")})
+                let text = textNodes?.reduce("", { return $0 + ($1.stringValue ?? "")}) ?? ""
                 return text
             }
             set(value) {

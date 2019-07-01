@@ -20,11 +20,11 @@ func unwrap(any: Any) -> Any? {
 public struct AWSShapeEncoder {
     public init() {}
 
-    func json<Input: AWSShape>(_ input: Input) throws -> Data {
+    public func json<Input: AWSShape>(_ input: Input) throws -> Data {
         return try JSONEncoder().encode(input)
     }
     
-    func dictionary<Input: AWSShape>(_ input: Input) throws -> [String:Any] {
+    public func dictionary<Input: AWSShape>(_ input: Input) throws -> [String:Any] {
         return try DictionaryEncoder().encode(input)
     }
     
@@ -33,50 +33,96 @@ public struct AWSShapeEncoder {
     }
 
     /// Encode shape into query keys and values
-    func query(_ input: AWSShape) -> [String : Any] {
+    public func query(_ input: AWSShape, flattenLists: Bool = false) -> [String : Any] {
         var dictionary : [String : Any] = [:]
 
         func encodeToFlatDictionary(_ input: AWSShape, name: String? = nil) {
             let mirror = Mirror(reflecting: input)
 
             for el in mirror.children {
-                guard let label = el.label?.upperFirst() else { continue }
+                guard var label = el.label?.upperFirst() else { continue }
                 guard let value = unwrap(any: el.value) else { continue }
+                let member = type(of:input).getMember(named: label)
+                if let location = member?.location, case .body(let locationName) = location {
+                    label = locationName
+                }
                 let fullLabel = name != nil ? "\(name!).\(label)" : label
 
-//                let node = XMLNode(elementName: label)
                 switch value {
                 case let v as AWSShape:
                     encodeToFlatDictionary(v, name:fullLabel)
 
                 case let v as [AWSShape]:
+                    var memberString = ""
+                    if let encoding = member?.shapeEncoding {
+                        if case .list(let element) = encoding, flattenLists == false {
+                            memberString = "\(element)."
+                        }
+                    }
                     for iterator in v.enumerated() {
-                        encodeToFlatDictionary(iterator.element, name: "\(fullLabel).member.\(iterator.offset+1)")
+                        encodeToFlatDictionary(iterator.element, name: "\(fullLabel).\(memberString)\(iterator.offset+1)")
                     }
 
                 case let v as [AnyHashable : AWSShape]:
+                    var entryString = "entry."
+                    var keyString = "key"
+                    var valueString = "value"
+                    if let encoding = member?.shapeEncoding {
+                        switch encoding {
+                        case .flatMap(let key, let value):
+                            entryString = ""
+                            keyString = "\(key)"
+                            valueString = "\(value)"
+                        case .map(let entry, let key, let value):
+                            entryString = "\(entry)."
+                            keyString = "\(key)"
+                            valueString = "\(value)"
+                        default:
+                            break
+                        }
+                    }
                     for iterator in v.enumerated() {
-                        dictionary["\(fullLabel).entry.\(iterator.offset+1).key"] = iterator.element.key
-                        encodeToFlatDictionary(iterator.element.value, name: "\(fullLabel).entry.\(iterator.offset+1).value")
+                        dictionary["\(fullLabel).\(entryString)\(iterator.offset+1).\(keyString)"] = iterator.element.key
+                        encodeToFlatDictionary(iterator.element.value, name: "\(fullLabel).\(entryString)\(iterator.offset+1).\(valueString)")
                     }
 
+                case let v as [Any]:
+                    var memberString = ""
+                    if let encoding = member?.shapeEncoding, flattenLists == false {
+                        if case .list(let element) = encoding {
+                            memberString = "\(element)."
+                        }
+                    }
+                    for iterator in v.enumerated() {
+                        dictionary["\(fullLabel).\(memberString)\(iterator.offset+1)"] = iterator.element
+                    }
+                    
+                case let v as [AnyHashable: Any]:
+                    var entryString = "entry."
+                    var keyString = "key"
+                    var valueString = "value"
+                    if let encoding = member?.shapeEncoding {
+                        switch encoding {
+                        case .flatMap(let key, let value):
+                            entryString = ""
+                            keyString = "\(key)"
+                            valueString = "\(value)"
+                        case .map(let entry, let key, let value):
+                            entryString = "\(entry)."
+                            keyString = "\(key)"
+                            valueString = "\(value)"
+                        default:
+                            break
+                        }
+                    }
+                    for iterator in v.enumerated() {
+                        dictionary["\(fullLabel).\(entryString)\(iterator.offset+1).\(keyString)"] = iterator.element.key
+                        dictionary["\(fullLabel).\(entryString)\(iterator.offset+1).\(valueString)"] = iterator.element.value
+                    }
+                
                 default:
-                    switch value {
-                    case let v as [Any]:
-                        for iterator in v.enumerated() {
-                            dictionary["\(fullLabel).member.\(iterator.offset+1)"] = iterator.element
-                        }
-
-                    case let v as [AnyHashable: Any]:
-                        for iterator in v.enumerated() {
-                            dictionary["\(fullLabel).entry.\(iterator.offset+1).key"] = iterator.element.key
-                            dictionary["\(fullLabel).entry.\(iterator.offset+1).value"] = iterator.element.value
-                        }
-                    default:
-                        dictionary[fullLabel] = value
-                    }
+                    dictionary[fullLabel] = value
                 }
-
             }
         }
         encodeToFlatDictionary(input)

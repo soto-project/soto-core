@@ -331,17 +331,21 @@ extension AWSClient {
 
         switch serviceProtocol.type {
         case .json, .restjson:
-            if let payload = Input.payloadPath, let payloadBody = mirror.getAttribute(forKey: payload.toSwiftVariableCase()) {
-                switch payloadBody {
-                case is AWSShape:
-                    let inputDictionary = try AWSShapeEncoder().dictionary(input)
-                    if let payloadDict = inputDictionary[payload] {
-                        body = .json(try JSONSerialization.data(withJSONObject: payloadDict))
+            if let payload = Input.payloadPath {
+                if let payloadBody = mirror.getAttribute(forKey: payload.toSwiftVariableCase()) {
+                    switch payloadBody {
+                    case is AWSShape:
+                        let inputDictionary = try AWSShapeEncoder().dictionary(input)
+                        if let payloadDict = inputDictionary[payload] {
+                            body = .json(try JSONSerialization.data(withJSONObject: payloadDict))
+                        }
+                    default:
+                        body = Body(anyValue: payloadBody)
                     }
-                default:
-                    body = Body(anyValue: payloadBody)
+                    headers.removeValue(forKey: payload.toSwiftVariableCase())
+                } else {
+                    body = .empty
                 }
-                headers.removeValue(forKey: payload.toSwiftVariableCase())
             } else {
                 // only include the body if there are members that are output in the body.
                 if Input.hasEncodableBody {
@@ -365,22 +369,26 @@ extension AWSClient {
             }
 
         case .restxml:
-            if let payload = Input.payloadPath, let payloadBody = mirror.getAttribute(forKey: payload.toSwiftVariableCase()) {
-                switch payloadBody {
-                case is AWSShape:
-                    let node = try AWSShapeEncoder().xml(input)
-                    // cannot use payload path to find XmlElement as it may have a different. Need to translate this to the tag used in the Encoder
-                    guard let member = Input._members.first(where: {$0.label == payload}) else { throw AWSClientError.unsupportedOperation(message: "The shape is requesting a payload that does not exist")}
-                    guard let element = node.elements(forName: member.location?.name ?? member.label).first else { throw AWSClientError.missingParameter(message: "Payload is missing")}
-                    // if shape has an xml namespace apply it to the element
-                    if let xmlNamespace = Input._xmlNamespace {
-                        element.addNamespace(XMLNode.namespace(withName: "", stringValue: xmlNamespace) as! XMLNode)
+            if let payload = Input.payloadPath {
+                if let payloadBody = mirror.getAttribute(forKey: payload.toSwiftVariableCase()) {
+                    switch payloadBody {
+                    case is AWSShape:
+                        let node = try AWSShapeEncoder().xml(input)
+                        // cannot use payload path to find XmlElement as it may have a different. Need to translate this to the tag used in the Encoder
+                        guard let member = Input._members.first(where: {$0.label == payload}) else { throw AWSClientError.unsupportedOperation(message: "The shape is requesting a payload that does not exist")}
+                        guard let element = node.elements(forName: member.location?.name ?? member.label).first else { throw AWSClientError.missingParameter(message: "Payload is missing")}
+                        // if shape has an xml namespace apply it to the element
+                        if let xmlNamespace = Input._xmlNamespace {
+                            element.addNamespace(XMLNode.namespace(withName: "", stringValue: xmlNamespace) as! XMLNode)
+                        }
+                        body = .xml(element)
+                    default:
+                        body = Body(anyValue: payloadBody)
                     }
-                    body = .xml(element)
-                default:
-                    body = Body(anyValue: payloadBody)
+                    headers.removeValue(forKey: payload.toSwiftVariableCase())
+                } else {
+                    body = .empty
                 }
-                headers.removeValue(forKey: payload.toSwiftVariableCase())
             } else {
                 // only include the body if there are members that are output in the body.
                 if Input.hasEncodableBody {
@@ -391,7 +399,7 @@ extension AWSClient {
         case .other(let proto):
             switch proto.lowercased() {
             case "ec2":
-                var params = AWSShapeEncoder().query(input)
+                var params = AWSShapeEncoder().query(input, flattenLists: true)
                 params["Action"] = operationName
                 params["Version"] = apiVersion
                 if let urlEncodedQueryParams = urlEncodeQueryParams(fromDictionary: params) {
@@ -442,13 +450,20 @@ extension AWSClient {
         )
     }
 
+    static let queryAllowedCharacters = CharacterSet(charactersIn:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/")
     fileprivate func urlEncodeQueryParams(fromDictionary dict: [String:Any]) -> String? {
-        var components = URLComponents()
-        components.queryItems = urlQueryItems(fromDictionary: dict)
-        if components.queryItems != nil, let url = components.url {
-            return url.query
+        guard dict.count > 0 else {return nil}
+        var query = ""
+        let keys = Array(dict.keys).sorted()
+
+        for iterator in keys.enumerated() {
+            let value = dict[iterator.element]
+            query += iterator.element + "=" + (String(describing: value ?? "").addingPercentEncoding(withAllowedCharacters: AWSClient.queryAllowedCharacters) ?? "")
+            if iterator.offset < dict.count - 1 {
+                query += "&"
+            }
         }
-        return nil
+        return query
     }
 
     fileprivate func urlQueryItems(fromDictionary dict: [String:Any]) -> [URLQueryItem]? {

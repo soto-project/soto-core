@@ -14,7 +14,7 @@ public enum Body {
     case stream(InputStream) // currenty unsupported
     case multipart(Data) // currenty unsupported
     case json(Data)
-    case xml(XMLElement)
+    case xml(XMLNode)
     case empty
 }
 
@@ -83,10 +83,15 @@ extension Body {
             }
             
         case .xml(let node):
-            let xmlDocument = XMLDocument(rootElement: node)
-            xmlDocument.version = "1.0"
-            xmlDocument.characterEncoding = "UTF-8"
-            return xmlDocument.xmlData
+            if let document = node as? XMLDocument {
+                return document.xmlData
+            } else if let element = node as? XMLElement {
+                let xmlDocument = XMLDocument(rootElement: element)
+                xmlDocument.version = "1.0"
+                xmlDocument.characterEncoding = "UTF-8"
+                return xmlDocument.xmlData
+            }
+            return nil
             
         case .multipart(_):
             return nil

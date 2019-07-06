@@ -14,7 +14,7 @@ public enum Body {
     case stream(InputStream) // currenty unsupported
     case multipart(Data) // currenty unsupported
     case json(Data)
-    case xml(XML.Element)
+    case xml(XML.Node)
     case empty
 }
 
@@ -27,8 +27,8 @@ extension Body {
             self = .text("\(anyValue)")
         }
     }
-    
-    
+
+
     public func isJSON() -> Bool {
         switch self {
         case .json(_):
@@ -37,7 +37,7 @@ extension Body {
             return false
         }
     }
-    
+
     public func isXML() -> Bool {
         switch self {
         case .xml(_):
@@ -46,7 +46,7 @@ extension Body {
             return false
         }
     }
-    
+
     public func isBuffer() -> Bool {
         switch self {
         case .buffer(_):
@@ -55,48 +55,52 @@ extension Body {
             return false
         }
     }
-    
+
     public func asDictionary() throws -> [String: Any]? {
         switch self {
-            
+
         case .json(let data):
             return try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
-            
+
         default:
             return nil
         }
     }
-    
+
     public func asData() throws -> Data? {
         switch self {
         case .text(let text):
             return text.data(using: .utf8)
-            
+
         case .buffer(let data):
             return data
-            
+
         case .json(let data):
             if data.isEmpty {
                 return nil
             } else {
                 return data
             }
-            
+
         case .xml(let node):
-            let xmlDocument = XML.Document(rootElement: node)
-            xmlDocument.version = "1.0"
-            xmlDocument.characterEncoding = "UTF-8"
-            return xmlDocument.xmlData
-            
+            if let document = node as? XML.Document {
+                return document.xmlData
+            } else if let element = node as? XML.Element {
+                let xmlDocument = XML.Document(rootElement: element)
+                xmlDocument.version = "1.0"
+                xmlDocument.characterEncoding = "UTF-8"
+                return xmlDocument.xmlData
+            }
+            return nil
+
         case .multipart(_):
             return nil
-            
+
         case .stream(_):
             return nil
-            
+
         case .empty:
             return nil
         }
     }
 }
-

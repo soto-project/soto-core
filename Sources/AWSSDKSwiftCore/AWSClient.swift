@@ -381,7 +381,8 @@ extension AWSClient {
                         if let xmlNamespace = Input._xmlNamespace {
                             element.addNamespace(XML.Node.namespace(withName: "", stringValue: xmlNamespace) as! XML.Node)
                         }
-                        body = .xml(element)
+                        body = .text(element.xmlString)
+                        //body = .xml(element)
                     default:
                         body = Body(anyValue: payloadBody)
                     }
@@ -503,7 +504,7 @@ extension AWSClient {
             payloadPath: Output.payloadPath,
             members: Output._members
         )
-        
+
         let decoder = DictionaryDecoder()
 
         var responseHeaders: [String: String] = [:]
@@ -518,11 +519,18 @@ extension AWSClient {
             decoder.dataDecodingStrategy = .base64
 
         case .xml(let node):
-            var outputNode = node
-            if let child = node.children?.first as? XML.Element, (node.name == operationName + "Response" && child.name == operationName + "Result") {
-                outputNode = child
+            var outputElement : XML.Element? = nil
+            if let document = node as? XML.Document {
+                outputElement = document.rootElement()
+            } else {
+                outputElement = node as? XML.Element
             }
-            return try XMLDecoder().decode(Output.self, from: outputNode)
+            if var outputElement = outputElement {
+                if let child = outputElement.children?.first as? XML.Element, (outputElement.name == operationName + "Response" && child.name == operationName + "Result") {
+                    outputElement = child
+                }
+                return try XMLDecoder().decode(Output.self, from: outputElement)
+            }
 
         case .buffer(let data):
             if let payload = Output.payloadPath {
@@ -639,10 +647,7 @@ extension AWSClient {
             }
 
         case .restxml, .query:
-            let xmlDocument = try XML.Document(data: data)
-            if let element = xmlDocument.rootElement() {
-                responseBody = .xml(element)
-            }
+            responseBody = .xml(try XML.Document(data: data))
 
         case .other(let proto):
             switch proto.lowercased() {

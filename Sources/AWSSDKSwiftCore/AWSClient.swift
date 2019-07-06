@@ -381,7 +381,8 @@ extension AWSClient {
                         if let xmlNamespace = Input._xmlNamespace {
                             element.addNamespace(XMLNode.namespace(withName: "", stringValue: xmlNamespace) as! XMLNode)
                         }
-                        body = .xml(element)
+                        body = .text(element.xmlString)
+                        //body = .xml(element)
                     default:
                         body = Body(anyValue: payloadBody)
                     }

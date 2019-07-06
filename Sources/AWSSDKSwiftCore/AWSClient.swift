@@ -519,7 +519,7 @@ extension AWSClient {
 
         case .xml(let node):
             var outputNode = node
-            if let child = node.children?.first as? XML.Element, (node.name == operationName + "Response" && child.name == operationName + "Result") {
+            if let child = node.children(of:.element)?.first as? XML.Element, (node.name == operationName + "Response" && child.name == operationName + "Result") {
                 outputNode = child
             }
             return try XMLDecoder().decode(Output.self, from: outputNode)

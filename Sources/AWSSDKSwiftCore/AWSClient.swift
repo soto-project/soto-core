@@ -518,11 +518,18 @@ extension AWSClient {
             decoder.dataDecodingStrategy = .base64
 
         case .xml(let node):
-            var outputNode = node
-            if let child = node.children?.first as? XMLElement, (node.name == operationName + "Response" && child.name == operationName + "Result") {
-                outputNode = child
+            var outputElement : XMLElement? = nil
+            if let document = node as? XMLDocument {
+                outputElement = document.rootElement()
+            } else {
+                outputElement = node as? XMLElement
             }
-            return try XMLDecoder().decode(Output.self, from: outputNode)
+            if var outputElement = outputElement {
+                if let child = outputElement.children?.first as? XMLElement, (outputElement.name == operationName + "Response" && child.name == operationName + "Result") {
+                    outputElement = child
+                }
+                return try XMLDecoder().decode(Output.self, from: outputElement)
+            }
 
         case .buffer(let data):
             if let payload = Output.payloadPath {
@@ -639,10 +646,7 @@ extension AWSClient {
             }
 
         case .restxml, .query:
-            let xmlDocument = try XMLDocument(data: data)
-            if let element = xmlDocument.rootElement() {
-                responseBody = .xml(element)
-            }
+            responseBody = .xml(try XMLDocument(data: data))
 
         case .other(let proto):
             switch proto.lowercased() {

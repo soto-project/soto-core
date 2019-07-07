@@ -442,6 +442,10 @@ public class XML {
             currentElement?.addChild(XML.Node.comment(stringValue: comment) as! XML.Node)
         }
         
+        func parser(_ parser: XMLParser, foundCDATA CDATABlock: Data) {
+            currentElement?.addChild(XML.Node.text(stringValue: String(data: CDATABlock, encoding: .utf8)!) as! XML.Node)
+        }
+        
         func parser(_ parser: XMLParser, parseErrorOccurred parseError: Error) {
             error = parseError
         }

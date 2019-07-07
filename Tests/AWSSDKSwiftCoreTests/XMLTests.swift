@@ -75,6 +75,16 @@ class XMLTests: XCTestCase {
         let xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test>testing<!--Test Comment--></test>"
         testDecodeEncode(xml: xml)
     }
+    func testCDATADecodeEncode() {
+        let xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test><![CDATA[CDATA test]]></test>"
+        do {
+            let xmlDocument = try XML.Document(data: xml.data(using: .utf8)!)
+            let xml2 = xmlDocument.xmlString
+            XCTAssertEqual(xml2, "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test>CDATA test</test>")
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
 
     static var allTests : [(String, (XMLTests) -> () throws -> Void)] {
         return [

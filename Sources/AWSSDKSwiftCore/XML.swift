@@ -82,8 +82,13 @@ public class XML {
         
         /// detach XML node from its parent
         public func detach() {
-            parent?.children?.removeAll(where: {$0 === self})
+            parent?.detach(child:self)
             parent = nil
+        }
+        
+        /// detach child XML Node
+        fileprivate func detach(child: XML.Node) {
+            children?.removeAll(where: {$0 === child})
         }
         
         /// return children of a specific kind
@@ -196,6 +201,12 @@ public class XML {
     
     /// XML Element class
     public class Element : XML.Node {
+        
+        /// array of attributes attached to XML ELement
+        public fileprivate(set) var attributes : [XML.Node]?
+        /// array of namespaces attached to XML ELement
+        public fileprivate(set) var namespaces : [XML.Node]?
+
         public init(name: String, stringValue: String? = nil) {
             super.init(.element, name: name)
             self.stringValue = stringValue
@@ -213,6 +224,8 @@ public class XML {
                 }
             } else if let rootElement = parserDelegate.rootElement {
                 self.setChildren(rootElement.children)
+                self.setAttributes(rootElement.attributes)
+                self.setNamespaces(rootElement.namespaces)
                 self.name = rootElement.name
                 self.stringValue = rootElement.stringValue
             } else {
@@ -253,6 +266,7 @@ public class XML {
         
         /// add a child node to the xml element
         public func addChild(_ node: XML.Node) {
+            assert(node.kind != .namespace && node.kind != .attribute && node.kind != .document)
             if children == nil {
                 children = [node]
             } else {
@@ -263,6 +277,7 @@ public class XML {
         
         /// insert a child node at position in the list of children nodes
         public func insertChild(node: XML.Node, at index: Int) {
+            assert(node.kind != .namespace && node.kind != .attribute && node.kind != .document)
             children?.insert(node, at: index)
             node.parent = self
         }
@@ -280,8 +295,8 @@ public class XML {
         
         /// return attribute attached to element
         public func attribute(forName: String) -> XML.Node? {
-            return children?.first {
-                if $0.kind == .attribute && $0.name == forName {
+            return attributes?.first {
+                if $0.name == forName {
                     return true
                 }
                 return false
@@ -293,13 +308,29 @@ public class XML {
             if let name = node.name, let attributeNode = attribute(forName: name) {
                 attributeNode.detach()
             }
-            addChild(node)
+            if attributes == nil {
+                attributes = [node]
+            } else {
+                attributes!.append(node)
+            }
+            node.parent = self
+        }
+        
+        /// set this elements children nodes
+        public func setAttributes(_ attributes: [XML.Node]?) {
+            for attribute in self.attributes ?? [] {
+                attribute.parent = nil
+            }
+            self.attributes = attributes
+            for attribute in self.attributes ?? [] {
+                attribute.parent = self
+            }
         }
         
         /// return namespace attached to element
         public func namespace(forName: String) -> XML.Node? {
-            return children?.first {
-                if $0.kind == .namespace && $0.name == forName {
+            return namespaces?.first {
+                if $0.name == forName {
                     return true
                 }
                 return false
@@ -311,15 +342,43 @@ public class XML {
             if let name = node.name, let attributeNode = namespace(forName: name) {
                 attributeNode.detach()
             }
-            addChild(node)
+            if namespaces == nil {
+                namespaces = [node]
+            } else {
+                namespaces!.append(node)
+            }
+            node.parent = self
         }
         
+        /// set this elements children nodes
+        public func setNamespaces(_ namespaces: [XML.Node]?) {
+            for namespace in self.namespaces ?? [] {
+                namespace.parent = nil
+            }
+            self.namespaces = namespaces
+            for namespace in self.namespaces ?? [] {
+                namespace.parent = self
+            }
+        }
+
+        /// detach child XML Node
+        fileprivate override func detach(child: XML.Node) {
+            switch child.kind {
+            case .attribute:
+                attributes?.removeAll(where: {$0 === child})
+            case .namespace:
+                namespaces?.removeAll(where: {$0 === child})
+            default:
+                super.detach(child: child)
+            }
+        }
+
         /// return formatted XML
         override public var xmlString : String {
             var string = ""
             string += "<\(name!)"
-            string += children(of:.namespace)?.map({" "+$0.xmlString}).joined(separator:"") ?? ""
-            string += children(of:.attribute)?.map({" "+$0.xmlString}).joined(separator:"") ?? ""
+            string += namespaces?.map({" "+$0.xmlString}).joined(separator:"") ?? ""
+            string += attributes?.map({" "+$0.xmlString}).joined(separator:"") ?? ""
             string += ">"
             for node in children(of:.text) ?? [] {
                 string += node.xmlString

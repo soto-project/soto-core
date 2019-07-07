@@ -130,6 +130,12 @@ public class XML {
                 } else {
                     return ""
                 }
+            case .comment:
+                if let stringValue = stringValue {
+                    return "<!--\(stringValue)-->"
+                } else {
+                    return ""
+                }
             case .namespace:
                 var string = "xmlns"
                 if let name = name{
@@ -227,7 +233,6 @@ public class XML {
                 self.setAttributes(rootElement.attributes)
                 self.setNamespaces(rootElement.namespaces)
                 self.name = rootElement.name
-                self.stringValue = rootElement.stringValue
             } else {
                 throw ParsingError.emptyFile
             }
@@ -380,10 +385,7 @@ public class XML {
             string += namespaces?.map({" "+$0.xmlString}).joined(separator:"") ?? ""
             string += attributes?.map({" "+$0.xmlString}).joined(separator:"") ?? ""
             string += ">"
-            for node in children(of:.text) ?? [] {
-                string += node.xmlString
-            }
-            for node in children(of:.element) ?? [] {
+            for node in children ?? [] {
                 string += node.xmlString
             }
             string += "</\(name!)>"
@@ -433,13 +435,11 @@ public class XML {
         }
         
         func parser(_ parser: XMLParser, foundCharacters: String) {
-            if currentElement != nil {
-                if currentElement!.stringValue == nil {
-                    currentElement!.stringValue = foundCharacters
-                } else {
-                    currentElement!.stringValue! += foundCharacters
-                }
-            }
+            currentElement?.addChild(XML.Node.text(stringValue: foundCharacters) as! XML.Node)
+        }
+        
+        func parser(_ parser: XMLParser, foundComment comment: String) {
+            currentElement?.addChild(XML.Node.comment(stringValue: comment) as! XML.Node)
         }
         
         func parser(_ parser: XMLParser, parseErrorOccurred parseError: Error) {

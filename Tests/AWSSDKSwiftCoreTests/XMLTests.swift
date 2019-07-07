@@ -71,6 +71,10 @@ class XMLTests: XCTestCase {
         let xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><array><test>testing1</test><test>testing2</test><test>testing3</test></array>"
         testDecodeEncode(xml: xml)
     }
+    func testCommentDecodeEncode() {
+        let xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test>testing<!--Test Comment--></test>"
+        testDecodeEncode(xml: xml)
+    }
 
     static var allTests : [(String, (XMLTests) -> () throws -> Void)] {
         return [

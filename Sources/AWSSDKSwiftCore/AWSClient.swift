@@ -122,13 +122,7 @@ extension AWSClient {
     }
 
     private func createHTTPClient(for nioRequest: Request) -> HTTPClient {
-        let client: HTTPClient
-        if let _ = self._endpoint {
-            client = HTTPClient(hostname: nioRequest.head.host!, port: nioRequest.head.port ?? 443)
-        } else {
-            client = HTTPClient(hostname: nioRequest.head.hostWithPort!, port: 443)
-        }
-        return client
+        return HTTPClient(hostname: nioRequest.head.hostWithPort!, port: nioRequest.head.port ?? 443)
     }
 }
 

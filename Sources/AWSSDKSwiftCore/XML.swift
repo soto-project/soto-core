@@ -229,6 +229,7 @@ public class XML {
                     throw error
                 }
             } else if let rootElement = parserDelegate.rootElement {
+                // copy contents of rootElement
                 self.setChildren(rootElement.children)
                 self.setAttributes(rootElement.attributes)
                 self.setNamespaces(rootElement.namespaces)
@@ -294,6 +295,7 @@ public class XML {
             }
             self.children = children
             for child in self.children ?? [] {
+                assert(child.kind != .namespace && child.kind != .attribute && child.kind != .document)
                 child.parent = self
             }
         }
@@ -310,6 +312,7 @@ public class XML {
         
         /// add an attribute to an element. If one with this name already exists it is replaced
         public func addAttribute(_ node : XML.Node) {
+            assert(node.kind == .attribute)
             if let name = node.name, let attributeNode = attribute(forName: name) {
                 attributeNode.detach()
             }
@@ -328,6 +331,7 @@ public class XML {
             }
             self.attributes = attributes
             for attribute in self.attributes ?? [] {
+                assert(attribute.kind == .attribute)
                 attribute.parent = self
             }
         }
@@ -344,6 +348,7 @@ public class XML {
         
         /// add a namespace to an element. If one with this name already exists it is replaced
         public func addNamespace(_ node : XML.Node) {
+            assert(node.kind == .namespace)
             if let attributeNode = namespace(forName: node.name) {
                 attributeNode.detach()
             }
@@ -362,6 +367,7 @@ public class XML {
             }
             self.namespaces = namespaces
             for namespace in self.namespaces ?? [] {
+                assert(namespace.kind == .namespace)
                 namespace.parent = self
             }
         }
@@ -456,3 +462,4 @@ public class XML {
     }
     
 }
+

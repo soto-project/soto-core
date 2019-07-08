@@ -26,38 +26,44 @@ class XMLTests: XCTestCase {
         let element = XML.Element(name:"test")
         let element2 = XML.Element(name:"test2")
         element.addChild(element2)
-        element2.addChild(XML.Node.text(stringValue: "TestString") as! XML.Node)
+        element2.addChild(XML.Node.text(stringValue: "TestString"))
         XCTAssertEqual(element.xmlString, "<test><test2>TestString</test2></test>")
     }
     func testAddRemoveChild() {
         let element = XML.Element(name:"test")
         let element2 = XML.Element(name:"test2")
         element.addChild(element2)
-        element2.addChild(XML.Node.text(stringValue: "TestString") as! XML.Node)
+        element2.addChild(XML.Node.text(stringValue: "TestString"))
         element2.detach()
         XCTAssertEqual(element.xmlString, "<test></test>")
     }
     func testAttributeAdd() {
         let element = XML.Element(name:"test", stringValue: "data")
-        element.addAttribute(XML.Node.attribute(withName: "attribute", stringValue: "value") as! XML.Node)
+        element.addAttribute(XML.Node.attribute(withName: "attribute", stringValue: "value"))
         XCTAssertEqual(element.xmlString, "<test attribute=\"value\">data</test>")
     }
     func testAttributeReplace() {
         let element = XML.Element(name:"test", stringValue: "data")
-        element.addAttribute(XML.Node.attribute(withName: "attribute", stringValue: "value") as! XML.Node)
-        element.addAttribute(XML.Node.attribute(withName: "attribute", stringValue: "value2") as! XML.Node)
+        element.addAttribute(XML.Node.attribute(withName: "attribute", stringValue: "value"))
+        element.addAttribute(XML.Node.attribute(withName: "attribute", stringValue: "value2"))
         XCTAssertEqual(element.xmlString, "<test attribute=\"value2\">data</test>")
     }
     func testNamespaceAdd() {
         let element = XML.Element(name:"test", stringValue: "data")
-        element.addNamespace(XML.Node.namespace(withName: "name", stringValue: "http://me.com/") as! XML.Node)
+        element.addNamespace(XML.Node.namespace(withName: "name", stringValue: "http://me.com/"))
         XCTAssertEqual(element.xmlString, "<test xmlns:name=\"http://me.com/\">data</test>")
     }
     func testNamespaceReplace() {
         let element = XML.Element(name:"test", stringValue: "data")
-        element.addNamespace(XML.Node.namespace(withName: "name", stringValue: "http://me.com/") as! XML.Node)
-        element.addNamespace(XML.Node.namespace(withName: "name", stringValue: "http://me2.com/") as! XML.Node)
+        element.addNamespace(XML.Node.namespace(withName: "name", stringValue: "http://me.com/"))
+        element.addNamespace(XML.Node.namespace(withName: "name", stringValue: "http://me2.com/"))
         XCTAssertEqual(element.xmlString, "<test xmlns:name=\"http://me2.com/\">data</test>")
+    }
+    func testNullNamespaceReplace() {
+        let element = XML.Element(name:"test", stringValue: "data")
+        element.addNamespace(XML.Node.namespace(stringValue: "http://me.com/"))
+        element.addNamespace(XML.Node.namespace(stringValue: "http://me2.com/"))
+        XCTAssertEqual(element.xmlString, "<test xmlns=\"http://me2.com/\">data</test>")
     }
     func testAttributesDecodeEncode() {
         let xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test name=\"test\">testing</test>"
@@ -94,9 +100,12 @@ class XMLTests: XCTestCase {
             ("testAttributeReplace", testAttributeReplace),
             ("testNamespaceAdd", testNamespaceAdd),
             ("testNamespaceReplace", testNamespaceReplace),
+            ("testNullNamespaceReplace", testNamespaceReplace),
             ("testAttributesDecodeEncode", testAttributesDecodeEncode),
             ("testNamespacesDecodeEncode", testNamespacesDecodeEncode),
             ("testArrayDecodeEncode", testArrayDecodeEncode),
+            ("testCommentDecodeEncode", testArrayDecodeEncode),
+            ("testCDATADecodeEncode", testArrayDecodeEncode),
         ]
     }
 }

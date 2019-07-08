@@ -48,27 +48,27 @@ public class XML {
         }
         
         /// create XML element node
-        public static func element(withName: String, stringValue: String? = nil) -> Any {
+        public static func element(withName: String, stringValue: String? = nil) -> XML.Node {
             return XML.Element(name: withName, stringValue: stringValue)
         }
         
         /// create raw text node
-        public static func text(stringValue: String) -> Any {
+        public static func text(stringValue: String) -> XML.Node {
             return XML.Node(.text, stringValue: stringValue)
         }
         
         /// create XML attribute node
-        public static func attribute(withName: String, stringValue: String) -> Any {
+        public static func attribute(withName: String, stringValue: String) -> XML.Node {
             return XML.Node(.attribute, name: withName, stringValue: stringValue)
         }
         
         /// create XML namespace node
-        public static func namespace(withName: String, stringValue: String) -> Any {
+        public static func namespace(withName: String? = nil, stringValue: String) -> XML.Node {
             return XML.Node(.namespace, name: withName, stringValue: stringValue)
         }
         
         /// create XML comment node
-        public static func comment(stringValue: String) -> Any {
+        public static func comment(stringValue: String) -> XML.Node {
             return XML.Node(.comment, stringValue: stringValue)
         }
         
@@ -333,7 +333,7 @@ public class XML {
         }
         
         /// return namespace attached to element
-        public func namespace(forName: String) -> XML.Node? {
+        public func namespace(forName: String?) -> XML.Node? {
             return namespaces?.first {
                 if $0.name == forName {
                     return true
@@ -344,7 +344,7 @@ public class XML {
         
         /// add a namespace to an element. If one with this name already exists it is replaced
         public func addNamespace(_ node : XML.Node) {
-            if let name = node.name, let attributeNode = namespace(forName: name) {
+            if let attributeNode = namespace(forName: node.name) {
                 attributeNode.detach()
             }
             if namespaces == nil {
@@ -435,15 +435,15 @@ public class XML {
         }
         
         func parser(_ parser: XMLParser, foundCharacters: String) {
-            currentElement?.addChild(XML.Node.text(stringValue: foundCharacters) as! XML.Node)
+            currentElement?.addChild(XML.Node.text(stringValue: foundCharacters))
         }
         
         func parser(_ parser: XMLParser, foundComment comment: String) {
-            currentElement?.addChild(XML.Node.comment(stringValue: comment) as! XML.Node)
+            currentElement?.addChild(XML.Node.comment(stringValue: comment))
         }
         
         func parser(_ parser: XMLParser, foundCDATA CDATABlock: Data) {
-            currentElement?.addChild(XML.Node.text(stringValue: String(data: CDATABlock, encoding: .utf8)!) as! XML.Node)
+            currentElement?.addChild(XML.Node.text(stringValue: String(data: CDATABlock, encoding: .utf8)!))
         }
         
         func parser(_ parser: XMLParser, parseErrorOccurred parseError: Error) {

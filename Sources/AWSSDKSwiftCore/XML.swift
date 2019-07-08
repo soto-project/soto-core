@@ -138,7 +138,7 @@ public class XML {
                 }
             case .namespace:
                 var string = "xmlns"
-                if let name = name{
+                if let name = name, name != "" {
                     string += ":\(name)"
                 }
                 string += "=\"\(stringValue ?? "")\""

@@ -115,7 +115,7 @@ public final class HTTPClient {
             self.headerHostname = "\(hostname):\(port)"
         } else {
             let isSecure = (scheme == "https")
-            self.port = isSecure == true ? 443 : 80
+            self.port = isSecure ? 443 : 80
             self.headerHostname = hostname
         }
 

@@ -20,9 +20,6 @@ extension URL {
         guard var host = self.host else {
             return nil
         }
-        if host.contains("amazonaws.com") {
-            return host
-        }
         if let port = self.port {
             host+=":\(port)"
         }

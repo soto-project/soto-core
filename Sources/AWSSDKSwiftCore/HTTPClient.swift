@@ -95,6 +95,7 @@ private class HTTPClientResponseHandler: ChannelInboundHandler {
 
 public final class HTTPClient {
     private let hostname: String
+    private let headerHostname: String
     private let port: Int
     private let eventGroup: EventLoopGroup
 
@@ -106,19 +107,26 @@ public final class HTTPClient {
         guard let hostname = url.host else {
             throw HTTPClientError.malformedURL
         }
-        var port: Int {
-            let isSecure = scheme == "https" || scheme == "wss"
-            return isSecure ? 443 : Int(url.port ?? 80)
-        }
+        
         self.hostname = hostname
-        self.port = port
+        
+        if let port = url.port {
+            self.port = port
+            self.headerHostname = "\(hostname):\(port)"
+        } else {
+            let isSecure = (scheme == "https")
+            self.port = isSecure ? 443 : 80
+            self.headerHostname = hostname
+        }
+
         self.eventGroup = eventGroup
     }
 
     public init(hostname: String,
                 port: Int,
                 eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)) {
-        self.hostname = hostname
+        self.headerHostname = hostname
+        self.hostname = String(hostname.split(separator:":")[0])
         self.port = port
         self.eventGroup = eventGroup
     }
@@ -127,7 +135,7 @@ public final class HTTPClient {
         var head = request.head
         let body = request.body
 
-        head.headers.replaceOrAdd(name: "Host", value: hostname)
+        head.headers.replaceOrAdd(name: "Host", value: headerHostname)
         head.headers.replaceOrAdd(name: "User-Agent", value: "AWS SDK Swift Core")
         head.headers.replaceOrAdd(name: "Accept", value: "*/*")
         head.headers.replaceOrAdd(name: "Content-Length", value: body.count.description)

@@ -65,6 +65,10 @@ class XMLTests: XCTestCase {
         element.addNamespace(XML.Node.namespace(stringValue: "http://me2.com/"))
         XCTAssertEqual(element.xmlString, "<test xmlns=\"http://me2.com/\">data</test>")
     }
+    func testDocumentDefaultOutput() {
+        let document = XML.Node.document()
+        XCTAssertEqual(document.xmlString, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
+    }
     func testAttributesDecodeEncode() {
         let xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test name=\"test\">testing</test>"
         testDecodeEncode(xml: xml)

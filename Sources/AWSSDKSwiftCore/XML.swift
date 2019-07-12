@@ -440,7 +440,10 @@ public class XML {
         }
         
         func parser(_ parser: XMLParser, foundCharacters: String) {
-            currentElement?.addChild(XML.Node.text(stringValue: foundCharacters))
+            // if string with white space removed still has characters, add text node
+            if foundCharacters.components(separatedBy: .whitespaces).joined().count > 0 {
+                currentElement?.addChild(XML.Node.text(stringValue: foundCharacters))
+            }
         }
         
         func parser(_ parser: XMLParser, foundComment comment: String) {

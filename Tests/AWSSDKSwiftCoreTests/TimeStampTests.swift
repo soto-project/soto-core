@@ -32,7 +32,7 @@ class TimeStampTests: XCTestCase {
     func testDecodeFromXML() {
         do {
             let xml = "<A><date>2017-01-01T00:01:00.000Z</date></A>"
-            let xmlElement = try XMLElement(xmlString: xml)
+            let xmlElement = try XML.Element(xmlString: xml)
             let a = try XMLDecoder().decode(A.self, from: xmlElement)
             XCTAssertEqual(a.date.stringValue, "2017-01-01T00:01:00.000Z")
         } catch {

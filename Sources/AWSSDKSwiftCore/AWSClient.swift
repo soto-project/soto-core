@@ -373,10 +373,9 @@ extension AWSClient {
                         guard let element = node.elements(forName: member.location?.name ?? member.label).first else { throw AWSClientError.missingParameter(message: "Payload is missing")}
                         // if shape has an xml namespace apply it to the element
                         if let xmlNamespace = Input._xmlNamespace {
-                            element.addNamespace(XMLNode.namespace(withName: "", stringValue: xmlNamespace) as! XMLNode)
+                            element.addNamespace(XML.Node.namespace(stringValue: xmlNamespace))
                         }
-                        body = .text(element.xmlString)
-                        //body = .xml(element)
+                        body = .xml(element)
                     default:
                         body = Body(anyValue: payloadBody)
                     }
@@ -498,7 +497,7 @@ extension AWSClient {
             payloadPath: Output.payloadPath,
             members: Output._members
         )
-        
+
         let decoder = DictionaryDecoder()
 
         var responseHeaders: [String: String] = [:]
@@ -513,18 +512,11 @@ extension AWSClient {
             decoder.dataDecodingStrategy = .base64
 
         case .xml(let node):
-            var outputElement : XMLElement? = nil
-            if let document = node as? XMLDocument {
-                outputElement = document.rootElement()
-            } else {
-                outputElement = node as? XMLElement
+            var outputNode = node
+            if let child = node.children(of:.element)?.first as? XML.Element, (node.name == operationName + "Response" && child.name == operationName + "Result") {
+                outputNode = child
             }
-            if var outputElement = outputElement {
-                if let child = outputElement.children?.first as? XMLElement, (outputElement.name == operationName + "Response" && child.name == operationName + "Result") {
-                    outputElement = child
-                }
-                return try XMLDecoder().decode(Output.self, from: outputElement)
-            }
+            return try XMLDecoder().decode(Output.self, from: outputNode)
 
         case .buffer(let data):
             if let payload = Output.payloadPath {
@@ -641,12 +633,15 @@ extension AWSClient {
             }
 
         case .restxml, .query:
-            responseBody = .xml(try XMLDocument(data: data))
+            let xmlDocument = try XML.Document(data: data)
+            if let element = xmlDocument.rootElement() {
+               responseBody = .xml(element)
+            }
 
         case .other(let proto):
             switch proto.lowercased() {
             case "ec2":
-                let xmlDocument = try XMLDocument(data: data)
+                let xmlDocument = try XML.Document(data: data)
                 if let element = xmlDocument.rootElement() {
                     responseBody = .xml(element)
                 }
@@ -672,17 +667,17 @@ extension AWSClient {
 
         switch serviceProtocol.type {
         case .query:
-            guard let xmlDocument = try? XMLDocument(data: data) else { break }
+            guard let xmlDocument = try? XML.Document(data: data) else { break }
             guard let element = xmlDocument.rootElement() else { break }
             guard let error = element.elements(forName: "Error").first else { break }
             code = error.elements(forName: "Code").first?.stringValue
             message = error.elements(forName: "Message").first?.stringValue
 
         case .restxml:
-            guard let xmlDocument = try? XMLDocument(data: data) else { break }
+            guard let xmlDocument = try? XML.Document(data: data) else { break }
             guard let element = xmlDocument.rootElement() else { break }
             code = element.elements(forName: "Code").first?.stringValue
-            message = element.children?.filter({$0.name != "Code"}).map({"\($0.name!): \($0.stringValue!)"}).joined(separator: ", ")
+            message = element.children(of:.element)?.filter({$0.name != "Code"}).map({"\($0.name!): \($0.stringValue!)"}).joined(separator: ", ")
 
         case .restjson:
             code = response.head.headers.filter( { $0.name == "x-amzn-ErrorType"}).first?.value

@@ -232,7 +232,7 @@ class AWSClientTests: XCTestCase {
 
             XCTAssertNotNil(awsRequest.body)
             if let xmlData = try awsRequest.body.asData() {
-                let document = try XMLDocument(data:xmlData)
+                let document = try XML.Document(data:xmlData)
                 XCTAssertNotNil(document.rootElement())
                 let payload = try XMLDecoder().decode(E.self, from: document.rootElement()!)
                 XCTAssertEqual(payload.Member["memberKey2"], "memberValue2")

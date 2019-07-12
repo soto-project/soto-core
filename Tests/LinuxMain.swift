@@ -9,5 +9,6 @@ XCTMain([
     testCase(MetaDataServiceTests.allTests),
     testCase(SerializersTests.allTests),
     testCase(SignersV4Tests.allTests),
-    testCase(TimeStampTests.allTests)
+    testCase(TimeStampTests.allTests),
+    testCase(XMLTests.allTests)
 ])

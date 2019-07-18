@@ -37,10 +37,10 @@ public final class HTTPClient {
     public init(url: URL,
                 eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)) throws {
         guard let scheme = url.scheme else {
-            throw HTTPClientError.malformedURL
+            throw HTTPClient.ClientError.malformedURL
         }
         guard let hostname = url.host else {
-            throw HTTPClientError.malformedURL
+            throw HTTPClient.ClientError.malformedURL
         }
         
         self.hostname = hostname

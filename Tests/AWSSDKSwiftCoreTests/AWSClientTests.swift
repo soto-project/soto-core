@@ -21,7 +21,7 @@ class AWSClientTests: XCTestCase {
 
     struct C: AWSShape {
         public static var _members: [AWSShapeMember] = [
-            AWSShapeMember(label: "value", required: true, type: .string)
+            AWSShapeMember(label: "value", location: .header(locationName: "value"), required: true, type: .string)
         ]
 
         let value = "<html><body><a href=\"https://redsox.com\">Test</a></body></html>"
@@ -232,9 +232,9 @@ class AWSClientTests: XCTestCase {
 
             XCTAssertNotNil(awsRequest.body)
             if let xmlData = try awsRequest.body.asData() {
-                let document = try XMLDocument(data:xmlData)
+                let document = try XML.Document(data:xmlData)
                 XCTAssertNotNil(document.rootElement())
-                let payload = try AWSXMLDecoder().decode(E.self, from: document.rootElement()!)
+                let payload = try XMLDecoder().decode(E.self, from: document.rootElement()!)
                 XCTAssertEqual(payload.Member["memberKey2"], "memberValue2")
             }
             let nioRequest = try awsRequest.toNIORequest()

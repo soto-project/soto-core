@@ -128,6 +128,10 @@ extension Signers {
                 headersForSign[header.key] = header.value
             }
 
+            if let token = credentialForSignature.sessionToken {
+                headersForSign["x-amz-security-token"] = token
+            }
+            
             headersForSign["Authorization"] = authorization(
                 url: url,
                 headers: headersForSign,
@@ -136,10 +140,6 @@ extension Signers {
                 bodyDigest: bodyDigest,
                 credentialForSignature: credentialForSignature
             )
-
-            if let token = credentialForSignature.sessionToken {
-                headersForSign["x-amz-security-token"] = token
-            }
 
             return headersForSign
         }

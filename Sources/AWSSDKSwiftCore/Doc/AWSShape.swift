@@ -160,6 +160,12 @@ extension AWSShape {
     }
 }
 
+extension AWSShape {
+    public static func idempotencyToken() -> String {
+        return UUID().uuidString
+    }
+}
+
 /// extension to CollectionEncoding to produce the XML equivalent class
 extension ShapeEncoding {
     public var xmlEncoding : XMLContainerCoding? {

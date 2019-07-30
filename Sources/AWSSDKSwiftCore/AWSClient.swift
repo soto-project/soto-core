@@ -291,6 +291,9 @@ extension AWSClient {
         var body: Body = .empty
         var queryParams: [String: Any] = [:]
 
+        // validate input parameters
+        try input.validate()
+        
         guard let baseURL = URL(string: "\(endpoint)"), let _ = baseURL.hostWithPort else {
             throw RequestError.invalidURL("\(endpoint) must specify url host and scheme")
         }

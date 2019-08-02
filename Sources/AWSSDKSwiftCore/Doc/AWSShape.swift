@@ -107,22 +107,22 @@ extension AWSShape {
     }
     
     public func validate<T : BinaryInteger>(_ value: T, name: String, min: T) throws {
-        guard value >= min else { throw AWSClientError.validationError(message: "\(name) (\(value)) is less than minimum allowed value \(min).") }
+        guard value >= min else { throw AWSClientError.validationError(message: "\(name) (\(value)) in \(type(of:self)) is less than minimum allowed value \(min).") }
     }
     public func validate<T : BinaryInteger>(_ value: T, name: String, max: T) throws {
-        guard value <= max else { throw AWSClientError.validationError(message: "\(name) (\(value)) is greater than the maximum allowed value \(max).") }
+        guard value <= max else { throw AWSClientError.validationError(message: "\(name) (\(value)) in \(type(of:self)) is greater than the maximum allowed value \(max).") }
     }
     public func validate<T : FloatingPoint>(_ value: T, name: String, min: T) throws {
-        guard value >= min else { throw AWSClientError.validationError(message: "\(name) (\(value)) is less than minimum allowed value \(min).") }
+        guard value >= min else { throw AWSClientError.validationError(message: "\(name) (\(value)) in \(type(of:self)) is less than minimum allowed value \(min).") }
     }
     public func validate<T : FloatingPoint>(_ value: T, name: String, max: T) throws {
-        guard value <= max else { throw AWSClientError.validationError(message: "\(name) (\(value)) is greater than the maximum allowed value \(max).") }
+        guard value <= max else { throw AWSClientError.validationError(message: "\(name) (\(value)) in \(type(of:self)) is greater than the maximum allowed value \(max).") }
     }
     public func validate<T : Collection>(_ value: T, name: String, min: Int) throws {
-        guard value.count >= min else { throw AWSClientError.validationError(message: "Length of \(name) (\(value)) is less than minimum allowed value \(min).") }
+        guard value.count >= min else { throw AWSClientError.validationError(message: "Length of \(name) (\(value)) in \(type(of:self)) is less than minimum allowed value \(min).") }
     }
     public func validate<T : Collection>(_ value: T, name: String, max: Int) throws {
-        guard value.count <= max else { throw AWSClientError.validationError(message: "Length of \(name) (\(value)) is greater than the maximum allowed value \(max).") }
+        guard value.count <= max else { throw AWSClientError.validationError(message: "Length of \(name) (\(value)) in \(type(of:self)) is greater than the maximum allowed value \(max).") }
     }
     public func validate(_ value: String, name: String, pattern: String) throws {
         let regularExpression = try NSRegularExpression(pattern: pattern, options: [])

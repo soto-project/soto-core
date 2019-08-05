@@ -100,9 +100,7 @@ public class XML {
         }
         
         private static let xmlEncodedCharacters : [String.Element: String] = [
-            "\"": "&quot;",
             "&": "&amp;",
-            "'": "&apos;",
             "<": "&lt;",
             ">": "&gt;",
         ]

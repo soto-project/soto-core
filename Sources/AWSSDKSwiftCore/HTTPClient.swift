@@ -147,7 +147,7 @@ public final class HTTPClient {
                 buffer.writeBytes(request.body)
                 context.write(self.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: nil)
             }
-            context.write(self.wrapOutboundOut(.end(nil)), promise: nil)
+            context.write(self.wrapOutboundOut(.end(nil)), promise: promise)
         }
     }
     

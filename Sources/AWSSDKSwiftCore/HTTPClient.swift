@@ -31,11 +31,35 @@ public final class HTTPClient {
         case malformedHead
         case malformedBody
         case malformedURL
+        case alreadyShutdown
         case error(Error)
     }
 
-    public init(url: URL,
-                eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)) throws {
+    /// Specifies how `EventLoopGroup` will be created and establishes lifecycle ownership.
+    public enum EventLoopGroupProvider {
+        /// `EventLoopGroup` will be provided by the user. Owner of this group is responsible for its lifecycle.
+        case shared(EventLoopGroup)
+        /// `EventLoopGroup` will be created by the client. When `syncShutdown` is called, created `EventLoopGroup` will be shut down as well.
+        case createNew
+    }
+    
+    public init(hostname: String,
+                port: Int,
+                eventLoopGroupProvider: EventLoopGroupProvider = .createNew) {
+        self.headerHostname = hostname
+        self.hostname = String(hostname.split(separator:":")[0])
+        self.port = port
+        
+        self.eventLoopGroupProvider = eventLoopGroupProvider
+        switch eventLoopGroupProvider {
+        case .shared(let group):
+            self.eventLoopGroup = group
+        case .createNew:
+            self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+        }
+    }
+
+    public init(url: URL, eventLoopGroupProvider: EventLoopGroupProvider = .createNew) throws {
         guard let scheme = url.scheme else {
             throw HTTPClient.ClientError.malformedURL
         }
@@ -53,19 +77,16 @@ public final class HTTPClient {
             self.port = isSecure ? 443 : 80
             self.headerHostname = hostname
         }
-
-        self.eventGroup = eventGroup
+        
+        self.eventLoopGroupProvider = eventLoopGroupProvider
+        switch eventLoopGroupProvider {
+        case .shared(let group):
+            self.eventLoopGroup = group
+        case .createNew:
+            self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+        }
     }
     
-    public init(hostname: String,
-                port: Int,
-                eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)) {
-        self.headerHostname = hostname
-        self.hostname = String(hostname.split(separator:":")[0])
-        self.port = port
-        self.eventGroup = eventGroup
-    }
-
     /// add SSL Handler to channel pipeline if the port is 443
     public func addSSLHandlerIfNeeded(_ pipeline : ChannelPipeline) -> EventLoopFuture<Void> {
         if (self.port == 443) {
@@ -84,8 +105,8 @@ public final class HTTPClient {
     /// send request to HTTP client, return a future holding the Response
     public func connect(_ request: Request) -> EventLoopFuture<Response> {
         
-        let response: EventLoopPromise<Response> = eventGroup.next().makePromise()
-        let bootstrap = ClientBootstrap(group: eventGroup)
+        let response: EventLoopPromise<Response> = self.eventLoopGroup.next().makePromise()
+        let bootstrap = ClientBootstrap(group: self.eventLoopGroup)
             .connectTimeout(TimeAmount.seconds(5))
             .channelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: 1)
             .channelInitializer { channel in
@@ -113,9 +134,14 @@ public final class HTTPClient {
         return response.futureResult
     }
     
-    /// shutdown the event group
+   /// shutdown the event group
     public func close(_ callback: @escaping (Error?) -> Void) {
-        eventGroup.shutdownGracefully(callback)
+        switch self.eventLoopGroupProvider {
+        case .shared:
+            callback(nil)
+        case .createNew:
+            self.eventLoopGroup.shutdownGracefully(callback)
+        }
     }
 
     /// Channel Handler for serializing request header and data
@@ -213,5 +239,6 @@ public final class HTTPClient {
     private let hostname: String
     private let headerHostname: String
     private let port: Int
-    private let eventGroup: EventLoopGroup
+    private let eventLoopGroup: EventLoopGroup
+    private let eventLoopGroupProvider: EventLoopGroupProvider
 }

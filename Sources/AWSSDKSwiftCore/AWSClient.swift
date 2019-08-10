@@ -66,7 +66,7 @@ public struct AWSClient {
         return "\(signer.service).\(signer.region.rawValue).amazonaws.com"
     }
 
-    public static let eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+    public static let eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
 
     public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSRequestMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil) {
         let credential: CredentialProvider
@@ -122,7 +122,7 @@ extension AWSClient {
     }
 
     private func createHTTPClient(for nioRequest: HTTPClient.Request) -> HTTPClient {
-        return HTTPClient(hostname: nioRequest.head.hostWithPort!, port: nioRequest.head.port ?? 443)
+        return HTTPClient(hostname: nioRequest.head.hostWithPort!, port: nioRequest.head.port ?? 443, eventLoopGroupProvider: .shared(AWSClient.eventGroup))
     }
 }
 

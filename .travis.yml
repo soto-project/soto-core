@@ -12,6 +12,7 @@ matrix:
       language: swift
       osx_image: xcode10.2
       script:
+        - brew install libressl
         - swift build
         - swift test --parallel -Xswiftc -DDEBUG
         - swift package generate-xcodeproj

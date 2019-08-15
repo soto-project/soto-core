@@ -6,18 +6,19 @@
 //
 //
 
-import CNIOBoringSSL
+import Foundation
+import CAWSSDKOpenSSL
 
 func hmac(string: String, key: [UInt8]) -> [UInt8] {
-    var context = HMAC_CTX()
-    CNIOBoringSSL_HMAC_Init_ex(&context, key, key.count, CNIOBoringSSL_EVP_sha256(), nil)
+    let context = AWSSDK_HMAC_CTX_new()
+    HMAC_Init_ex(context, key, Int32(key.count), EVP_sha256(), nil)
 
     let bytes = Array(string.utf8)
-    CNIOBoringSSL_HMAC_Update(&context, bytes, bytes.count)
+    HMAC_Update(context, bytes, bytes.count)
     var digest = [UInt8](repeating: 0, count: Int(EVP_MAX_MD_SIZE))
     var length: UInt32 = 0
-    CNIOBoringSSL_HMAC_Final(&context, &digest, &length)
-    CNIOBoringSSL_HMAC_CTX_cleanup(&context)
+    HMAC_Final(context, &digest, &length)
+    AWSSDK_HMAC_CTX_free(context)
 
     return Array(digest[0..<Int(length)])
 }

@@ -1268,11 +1268,11 @@ fileprivate class __DictionaryDecoder : Decoder {
                                                                     debugDescription: "Cannot get unkeyed decoding container -- found null value instead."))
         }
         
-        guard let topContainer = self.storage.topContainer as? [Any] else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: [Any].self, reality: self.storage.topContainer)
+        if let topContainer = self.storage.topContainer as? [Any] {
+            return _DictionaryUnkeyedDecodingContainer(referencing: self, wrapping: topContainer)
+        } else {
+            return _DictionaryUnkeyedDecodingContainer(referencing: self, wrapping: [self.storage.topContainer])
         }
-        
-        return _DictionaryUnkeyedDecodingContainer(referencing: self, wrapping: topContainer)
     }
     
     public func singleValueContainer() throws -> SingleValueDecodingContainer {
@@ -1641,11 +1641,11 @@ fileprivate struct _DictionaryKeyedDecodingContainer<K : CodingKey> : KeyedDecod
                                                                   debugDescription: "Cannot get UnkeyedDecodingContainer -- no value found for key \(_errorDescription(of: key))"))
         }
         
-        guard let array = value as? [Any] else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: [Any].self, reality: value)
+        if let array = value as? [Any] {
+            return _DictionaryUnkeyedDecodingContainer(referencing: self.decoder, wrapping: array)
+        } else {
+            return _DictionaryUnkeyedDecodingContainer(referencing: self.decoder, wrapping: [value])
         }
-        
-        return _DictionaryUnkeyedDecodingContainer(referencing: self.decoder, wrapping: array)
     }
     
     private func _superDecoder(forKey key: __owned CodingKey) throws -> Decoder {
@@ -1996,12 +1996,12 @@ fileprivate struct _DictionaryUnkeyedDecodingContainer : UnkeyedDecodingContaine
                                                                     debugDescription: "Cannot get keyed decoding container -- found null value instead."))
         }
         
-        guard let array = value as? [Any] else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: [Any].self, reality: value)
-        }
-        
         self.currentIndex += 1
-        return _DictionaryUnkeyedDecodingContainer(referencing: self.decoder, wrapping: array)
+        if let array = value as? [Any] {
+            return _DictionaryUnkeyedDecodingContainer(referencing: self.decoder, wrapping: array)
+        } else {
+            return _DictionaryUnkeyedDecodingContainer(referencing: self.decoder, wrapping: [value])
+        }
     }
     
     public mutating func superDecoder() throws -> Decoder {

@@ -13,7 +13,7 @@ public protocol AWSShape: Codable, XMLContainerCodingMap {
     static var _xmlNamespace: String? { get }
     static var _members: [AWSShapeMember] { get }
     
-    func validate() throws
+    func validate(name: String) throws
 }
 
 extension AWSShape {
@@ -102,61 +102,65 @@ extension AWSShape {
 
 /// Validation code to add to AWSShape
 extension AWSShape {
-    /// stub function for all shapes
     public func validate() throws {
+        try validate(name: "\(type(of:self))")
     }
     
-    public func validate<T : BinaryInteger>(_ value: T, name: String, min: T) throws {
-        guard value >= min else { throw AWSClientError.validationError(message: "\(name) (\(value)) in \(type(of:self)) is less than minimum allowed value \(min).") }
+    /// stub function for all shapes
+    public func validate(name: String) throws {
     }
-    public func validate<T : BinaryInteger>(_ value: T, name: String, max: T) throws {
-        guard value <= max else { throw AWSClientError.validationError(message: "\(name) (\(value)) in \(type(of:self)) is greater than the maximum allowed value \(max).") }
+    
+    public func validate<T : BinaryInteger>(_ value: T, name: String, parent: String, min: T) throws {
+        guard value >= min else { throw AWSClientError.validationError(message: "\(parent).\(name) (\(value)) is less than minimum allowed value \(min).") }
     }
-    public func validate<T : FloatingPoint>(_ value: T, name: String, min: T) throws {
-        guard value >= min else { throw AWSClientError.validationError(message: "\(name) (\(value)) in \(type(of:self)) is less than minimum allowed value \(min).") }
+    public func validate<T : BinaryInteger>(_ value: T, name: String, parent: String, max: T) throws {
+        guard value <= max else { throw AWSClientError.validationError(message: "\(parent).\(name) (\(value)) is greater than the maximum allowed value \(max).") }
     }
-    public func validate<T : FloatingPoint>(_ value: T, name: String, max: T) throws {
-        guard value <= max else { throw AWSClientError.validationError(message: "\(name) (\(value)) in \(type(of:self)) is greater than the maximum allowed value \(max).") }
+    public func validate<T : FloatingPoint>(_ value: T, name: String, parent: String, min: T) throws {
+        guard value >= min else { throw AWSClientError.validationError(message: "\(parent).\(name) (\(value)) is less than minimum allowed value \(min).") }
     }
-    public func validate<T : Collection>(_ value: T, name: String, min: Int) throws {
-        guard value.count >= min else { throw AWSClientError.validationError(message: "Length of \(name) (\(value)) in \(type(of:self)) is less than minimum allowed value \(min).") }
+    public func validate<T : FloatingPoint>(_ value: T, name: String, parent: String, max: T) throws {
+        guard value <= max else { throw AWSClientError.validationError(message: "\(parent).\(name) (\(value)) is greater than the maximum allowed value \(max).") }
     }
-    public func validate<T : Collection>(_ value: T, name: String, max: Int) throws {
-        guard value.count <= max else { throw AWSClientError.validationError(message: "Length of \(name) (\(value)) in \(type(of:self)) is greater than the maximum allowed value \(max).") }
+    public func validate<T : Collection>(_ value: T, name: String, parent: String, min: Int) throws {
+        guard value.count >= min else { throw AWSClientError.validationError(message: "Length of \(parent).\(name) (\(value)) is less than minimum allowed value \(min).") }
     }
-    public func validate(_ value: String, name: String, pattern: String) throws {
+    public func validate<T : Collection>(_ value: T, name: String, parent: String, max: Int) throws {
+        guard value.count <= max else { throw AWSClientError.validationError(message: "Length of \(parent).\(name) (\(value)) is greater than the maximum allowed value \(max).") }
+    }
+    public func validate(_ value: String, name: String, parent: String, pattern: String) throws {
         let regularExpression = try NSRegularExpression(pattern: pattern, options: [])
         let firstMatch = regularExpression.rangeOfFirstMatch(in: value, options: .anchored, range: NSMakeRange(0, value.count))
-        guard firstMatch.location != NSNotFound && firstMatch.length == value.count else { throw AWSClientError.validationError(message: "\(name) (\(value)) does not match pattern \(pattern).") }
+        guard firstMatch.location != NSNotFound && firstMatch.length == value.count else { throw AWSClientError.validationError(message: "\(parent).\(name) (\(value)) does not match pattern \(pattern).") }
     }
     // optional values
-    public func validate<T : BinaryInteger>(_ value: T?, name: String, min: T) throws {
+    public func validate<T : BinaryInteger>(_ value: T?, name: String, parent: String, min: T) throws {
         guard let value = value else {return}
-        try validate(value, name: name, min: min)
+        try validate(value, name: name, parent: parent, min: min)
     }
-    public func validate<T : BinaryInteger>(_ value: T?, name: String, max: T) throws {
+    public func validate<T : BinaryInteger>(_ value: T?, name: String, parent: String, max: T) throws {
         guard let value = value else {return}
-        try validate(value, name: name, max: max)
+        try validate(value, name: name, parent: parent, max: max)
     }
-    public func validate<T : FloatingPoint>(_ value: T?, name: String, min: T) throws {
+    public func validate<T : FloatingPoint>(_ value: T?, name: String, parent: String, min: T) throws {
         guard let value = value else {return}
-        try validate(value, name: name, min: min)
+        try validate(value, name: name, parent: parent, min: min)
     }
-    public func validate<T : FloatingPoint>(_ value: T?, name: String, max: T) throws {
+    public func validate<T : FloatingPoint>(_ value: T?, name: String, parent: String, max: T) throws {
         guard let value = value else {return}
-        try validate(value, name: name, max: max)
+        try validate(value, name: name, parent: parent, max: max)
     }
-    public func validate<T : Collection>(_ value: T?, name: String, min: Int) throws {
+    public func validate<T : Collection>(_ value: T?, name: String, parent: String, min: Int) throws {
         guard let value = value else {return}
-        try validate(value, name: name, min: min)
+        try validate(value, name: name, parent: parent, min: min)
     }
-    public func validate<T : Collection>(_ value: T?, name: String, max: Int) throws {
+    public func validate<T : Collection>(_ value: T?, name: String, parent: String, max: Int) throws {
         guard let value = value else {return}
-        try validate(value, name: name, max: max)
+        try validate(value, name: name, parent: parent, max: max)
     }
-    public func validate(_ value: String?, name: String, pattern: String) throws {
+    public func validate(_ value: String?, name: String, parent: String, pattern: String) throws {
         guard let value = value else {return}
-        try validate(value, name: name, pattern: pattern)
+        try validate(value, name: name, parent: parent, pattern: pattern)
     }
 }
 

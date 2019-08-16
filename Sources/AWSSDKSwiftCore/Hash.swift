@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import CNIOOpenSSL
+import CAWSSDKOpenSSL
 
 public func sha256(_ string: String) -> [UInt8] {
     var bytes = Array(string.utf8)

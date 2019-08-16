@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import CNIOOpenSSL
 import CAWSSDKOpenSSL
 
 func hmac(string: String, key: [UInt8]) -> [UInt8] {

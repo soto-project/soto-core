@@ -30,7 +30,7 @@ public struct AWSClient {
         case invalidURL(String)
     }
 
-    let signer: Signers.V4
+    public let signer: Signers.V4
 
     let apiVersion: String
 

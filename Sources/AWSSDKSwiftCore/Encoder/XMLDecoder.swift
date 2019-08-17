@@ -693,7 +693,7 @@ fileprivate class _XMLDecoder : Decoder {
     }
 
     func unbox(_ element : XML.Element, as type: String.Type) throws -> String {
-        guard let unboxValue = element.stringValue else { throw DecodingError._typeMismatch(at: codingPath, expectation: Bool.self, reality: element.stringValue ?? "nil") }
+        guard let unboxValue = element.stringValue else { throw DecodingError._typeMismatch(at: codingPath, expectation: String.self, reality: element.stringValue ?? "nil") }
         return unboxValue
     }
 

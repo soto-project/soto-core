@@ -30,7 +30,7 @@ public struct AWSClient {
         case invalidURL(String)
     }
 
-    let signer: Signers.V4
+    public let signer: Signers.V4
 
     let apiVersion: String
 
@@ -44,7 +44,7 @@ public struct AWSClient {
 
     let partitionEndpoint: String?
 
-    public let middlewares: [AWSRequestMiddleware]
+    public let middlewares: [AWSServiceMiddleware]
 
     public var possibleErrorTypes: [AWSErrorType.Type]
 
@@ -68,7 +68,7 @@ public struct AWSClient {
 
     public static let eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
 
-    public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, sessionToken: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSRequestMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil) {
+    public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, sessionToken: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSServiceMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil) {
         let credential: CredentialProvider
         if let accessKey = accessKeyId, let secretKey = secretAccessKey {
             credential = Credential(accessKeyId: accessKey, secretAccessKey: secretKey, sessionToken: sessionToken)
@@ -291,6 +291,9 @@ extension AWSClient {
         var body: Body = .empty
         var queryParams: [String: Any] = [:]
 
+        // validate input parameters
+        try input.validate()
+        
         guard let baseURL = URL(string: "\(endpoint)"), let _ = baseURL.hostWithPort else {
             throw RequestError.invalidURL("\(endpoint) must specify url host and scheme")
         }
@@ -492,12 +495,17 @@ extension AWSClient {
 
         try validateCode(response: response, members: Output._members)
 
-        let responseBody = try validateBody(
+        var responseBody = try validateBody(
             for: response,
             payloadPath: Output.payloadPath,
             members: Output._members
         )
 
+        // do we need to fix up the response before processing it
+        for middleware in middlewares {
+            responseBody = try middleware.chain(responseBody: responseBody)
+        }
+        
         let decoder = DictionaryDecoder()
 
         var responseHeaders: [String: String] = [:]

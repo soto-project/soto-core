@@ -131,7 +131,7 @@ extension AWSShape {
     public func validate(_ value: String, name: String, parent: String, pattern: String) throws {
         let regularExpression = try NSRegularExpression(pattern: pattern, options: [])
         let firstMatch = regularExpression.rangeOfFirstMatch(in: value, options: .anchored, range: NSMakeRange(0, value.count))
-        guard firstMatch.location != NSNotFound && firstMatch.length == value.count else { throw AWSClientError.validationError(message: "\(parent).\(name) (\(value)) does not match pattern \(pattern).") }
+        guard firstMatch.location != NSNotFound && firstMatch.length > 0 else { throw AWSClientError.validationError(message: "\(parent).\(name) (\(value)) does not match pattern \(pattern).") }
     }
     // optional values
     public func validate<T : BinaryInteger>(_ value: T?, name: String, parent: String, min: T) throws {

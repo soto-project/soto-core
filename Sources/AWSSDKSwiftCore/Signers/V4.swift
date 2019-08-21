@@ -35,38 +35,11 @@ extension Signers {
 
         var credential: CredentialProvider
 
-
         public init(credential: CredentialProvider, region: Region, service: String, endpoint: String?) {
             self.region = region
             self.service = service
             self.credential = credential
             self.endpoint = endpoint
-        }
-
-        // manageCredential should be called and the future resolved
-        // prior to building signedURL or signedHeaders to ensure
-        // latest credentials are retreived and set
-        //
-        public func manageCredential() -> Future<CredentialProvider> {
-            if credential.isEmpty() || credential.nearExpiration() {
-                do {
-                    return try MetaDataService.getCredential().map { credential in
-                        self.credential = credential
-                        return credential
-                    }
-                } catch {
-                    // should not be crash
-                }
-            }
-
-            return AWSClient.eventGroup.next().newSucceededFuture(result: credential)
-        }
-
-        func hexEncodedBodyHash(_ data: Data) -> String {
-            if data.isEmpty && service == "s3" {
-                return "UNSIGNED-PAYLOAD"
-            }
-            return sha256(data).hexdigest()
         }
 
         public func signedURL(url: URL, method: String, date: Date = Date(), expires: Int = 86400) -> URL {
@@ -144,6 +117,32 @@ extension Signers {
             return headersForSign
         }
 
+        // manageCredential should be called and the future resolved
+        // prior to building signedURL or signedHeaders to ensure
+        // latest credentials are retreived and set
+        //
+        func manageCredential() -> Future<CredentialProvider> {
+            if credential.isEmpty() || credential.nearExpiration() {
+                do {
+                    return try MetaDataService.getCredential().map { credential in
+                        self.credential = credential
+                        return credential
+                    }
+                } catch {
+                    // should not be crash
+                }
+            }
+            
+            return AWSClient.eventGroup.next().newSucceededFuture(result: credential)
+        }
+        
+        func hexEncodedBodyHash(_ data: Data) -> String {
+            if data.isEmpty && service == "s3" {
+                return "UNSIGNED-PAYLOAD"
+            }
+            return sha256(data).hexdigest()
+        }
+        
         static func timestamp(_ date: Date) -> String {
             let formatter = DateFormatter()
             formatter.dateFormat = "yyyyMMdd'T'HHmmss'Z'"

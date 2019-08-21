@@ -28,17 +28,17 @@ public extension AWSServiceMiddleware {
 
 #if DEBUG
 
-class AWSLoggingMiddleware : AWSServiceMiddleware {
+public class AWSLoggingMiddleware : AWSServiceMiddleware {
     init(logFunction : @escaping (String)->() = { print($0) }) {
         self.logFunction = logFunction
     }
     
-    func chain(request: AWSRequest) throws -> AWSRequest {
+    public func chain(request: AWSRequest) throws -> AWSRequest {
         print("Request:")
         print(request)
         return request
     }
-    func chain(responseBody: Body) throws -> Body {
+    public func chain(responseBody: Body) throws -> Body {
         print("Response:")
         switch responseBody {
         case .xml(let element):

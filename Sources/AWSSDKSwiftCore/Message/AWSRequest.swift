@@ -96,24 +96,29 @@ public struct AWSRequest {
             headers["x-amz-target"] = "\(target).\(awsRequest.operation)"
         }
 
-        switch serviceProtocol.type {
-        case .json, .restjson:
-            headers["Content-Type"] = serviceProtocol.contentTypeString
-        case .query:
-            switch awsRequest.httpMethod {
-            case "POST":
-                headers["Content-Type"] = "application/x-www-form-urlencoded"
+        switch awsRequest.httpMethod {
+        case "GET","HEAD":
+            headers["Content-Type"] = nil
+        default:
+            switch serviceProtocol.type {
+            case .json:
+                headers["Content-Type"] = serviceProtocol.contentTypeString
+            case .restjson:
+                if case .buffer(_) = body {
+                    headers["Content-Type"] = "binary/octet-stream"
+                } else {
+                    headers["Content-Type"] = "application/json"
+                }
+            case .query:
+                headers["Content-Type"] = "application/x-www-form-urlencoded; charset=utf-8"
+            case .other(let service):
+                if service == "ec2" {
+                    headers["Content-Type"] = "application/x-www-form-urlencoded; charset=utf-8"
+                }
             default:
                 break
             }
-        default:
-            break
-        }
 
-        switch awsRequest.httpMethod {
-        case "GET","HEAD":
-            break
-        default:
             headers["Content-Type"] = headers["Content-Type"] ?? "application/octet-stream"
         }
 

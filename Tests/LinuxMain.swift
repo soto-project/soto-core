@@ -10,5 +10,6 @@ XCTMain([
     testCase(SerializersTests.allTests),
     testCase(SignersV4Tests.allTests),
     testCase(TimeStampTests.allTests),
+    testCase(ValidationTests.allTests),
     testCase(XMLTests.allTests)
 ])

@@ -98,7 +98,7 @@ public struct AWSRequest {
 
         switch awsRequest.httpMethod {
         case "GET","HEAD":
-            headers["Content-Type"] = nil
+            break
         default:
             switch serviceProtocol.type {
             case .json:

@@ -487,6 +487,7 @@ extension AWSClient {
 // response validator
 extension AWSClient {
 
+    /// Validate the operation response and return a response shape
     fileprivate func validate<Output: AWSShape>(operation operationName: String, response: Response) throws -> Output {
         var awsResponse = try AWSResponse(from: response, serviceProtocolType: serviceProtocol.type, raw: Output.payloadPath != nil)
         
@@ -533,9 +534,9 @@ extension AWSClient {
             break
         }
 
-        for (key, value) in response.head.headers {
+        for (key, value) in awsResponse.headers {
             let headerParams = Output.headerParams
-            if let index = headerParams.index(where: { $0.key.lowercased() == key.description.lowercased() }) {
+            if let index = headerParams.index(where: { $0.key.lowercased() == key.lowercased() }) {
                 if let number = Double(value) {
                     outputDict[headerParams[index].key] = number.truncatingRemainder(dividingBy: 1) == 0 ? Int(number) : number
                 } else if let boolean = Bool(value) {
@@ -549,11 +550,13 @@ extension AWSClient {
         return try decoder.decode(Output.self, from: outputDict)
     }
 
+    /// validate response without returning an output shape
     private func validate(response: Response) throws {
         let awsResponse = try AWSResponse(from: response, serviceProtocolType: serviceProtocol.type)
         try validateCode(response: awsResponse)
     }
     
+    /// validate http status code. If it is an error then throw an Error object
     private func validateCode(response: AWSResponse) throws {
         guard (200..<300).contains(response.status.code) else {
             throw createError(for: response)
@@ -624,6 +627,7 @@ extension AWSClient {
         return response
     }
     
+    /// create error from Response
     private func createError(for response: AWSResponse) -> Error {
         let bodyDict: [String: Any]
         if let dict = try? response.body.asDictionary() {

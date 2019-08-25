@@ -181,7 +181,7 @@ class AWSClientTests: XCTestCase {
             )
             XCTAssertEqual(awsRequest.url.absoluteString, "\(kinesisClient.endpoint)/")
 
-            if let bodyAsData = try awsRequest.body.asData(), let parsedBody = try JSONSerialization.jsonObject(with: bodyAsData, options: []) as? [String:Any] {
+            if let bodyAsData = awsRequest.body.asData(), let parsedBody = try JSONSerialization.jsonObject(with: bodyAsData, options: []) as? [String:Any] {
                 if let member = parsedBody["Member"] as? [String:Any] {
                     if let memberKey = member["memberKey"] {
                         XCTAssertEqual(String(describing: memberKey), "memberValue")
@@ -231,7 +231,7 @@ class AWSClientTests: XCTestCase {
             )
 
             XCTAssertNotNil(awsRequest.body)
-            if let xmlData = try awsRequest.body.asData() {
+            if let xmlData = awsRequest.body.asData() {
                 let document = try XML.Document(data:xmlData)
                 XCTAssertNotNil(document.rootElement())
                 let payload = try XMLDecoder().decode(E.self, from: document.rootElement()!)
@@ -253,7 +253,7 @@ class AWSClientTests: XCTestCase {
                 input: input3
             )
             XCTAssertNotNil(awsRequest.body)
-            if let jsonData = try awsRequest.body.asData() {
+            if let jsonData = awsRequest.body.asData() {
                 let jsonBody = try! JSONSerialization.jsonObject(with: jsonData, options: .allowFragments) as! [String:Any]
                 let fromJson = jsonBody["Member"]! as! [String: String]
                 XCTAssertEqual(fromJson["memberKey"], "memberValue")
@@ -312,9 +312,9 @@ class AWSClientTests: XCTestCase {
             ),
             body: Data()
         )
-
         do {
-            try s3Client.debugValidateCode(response: nioResponse)
+            let awsResponse = try AWSResponse(from: nioResponse, serviceProtocolType: .json)
+            try s3Client.debugValidateCode(response: awsResponse)
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -328,7 +328,8 @@ class AWSClientTests: XCTestCase {
         )
 
         do {
-            try s3Client.debugValidateCode(response: failNioResponse)
+            let awsResponse = try AWSResponse(from: failNioResponse, serviceProtocolType: .json)
+            try s3Client.debugValidateCode(response: awsResponse)
             XCTFail("call to validateCode should throw an error")
         } catch {
             XCTAssertTrue(true)

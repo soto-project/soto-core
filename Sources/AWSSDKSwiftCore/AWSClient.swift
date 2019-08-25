@@ -141,7 +141,7 @@ extension AWSClient {
             }.then { nioRequest in
                 return self.invoke(nioRequest)
             }.thenThrowing { response in
-                return try self.validateCode(response: response)
+                return try self.validate(response: response)
             }
     }
 
@@ -157,7 +157,7 @@ extension AWSClient {
             }.then { nioRequest in
                 return self.invoke(nioRequest)
             }.thenThrowing { response in
-                return try self.validateCode(response: response)
+                return try self.validate(response: response)
             }
     }
 
@@ -493,17 +493,13 @@ extension AWSClient {
 
     fileprivate func validate<Output: AWSShape>(operation operationName: String, response: Response) throws -> Output {
 
-        try validateCode(response: response, members: Output._members)
-
-        var responseBody = try validateBody(
-            for: response,
-            payloadPath: Output.payloadPath,
-            members: Output._members
-        )
+        var awsResponse = try AWSResponse(from: response, serviceProtocolType: serviceProtocol.type, raw: Output.payloadPath != nil)
+        
+        try validateCode(response: awsResponse)
 
         // do we need to fix up the response before processing it
         for middleware in middlewares {
-            responseBody = try middleware.chain(responseBody: responseBody)
+            awsResponse = try middleware.chain(response: awsResponse)
         }
         
         let decoder = DictionaryDecoder()
@@ -514,7 +510,7 @@ extension AWSClient {
         }
 
         var outputDict: [String: Any] = [:]
-        switch responseBody {
+        switch awsResponse.body {
         case .json(let data):
             outputDict = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] ?? [:]
             decoder.dataDecodingStrategy = .base64
@@ -556,18 +552,18 @@ extension AWSClient {
         return try decoder.decode(Output.self, from: outputDict)
     }
 
-    private func validateCode(response: Response, members: [AWSShapeMember] = []) throws {
-        guard (200..<300).contains(response.head.status.code) else {
-            let responseBody = try validateBody(
-                for: response,
-                payloadPath: nil,
-                members: members
-            )
-            throw createError(for: response, withComputedBody: responseBody, withRawData: response.body)
+    private func validate(response: Response) throws {
+        let awsResponse = try AWSResponse(from: response, serviceProtocolType: serviceProtocol.type)
+        try validateCode(response: awsResponse)
+    }
+    
+    private func validateCode(response: AWSResponse) throws {
+        guard (200..<300).contains(response.status.code) else {
+            throw createError(for: response)
         }
     }
 
-    private func validateBody(for response: Response, payloadPath: String?, members: [AWSShapeMember]) throws -> Body {
+    /*private func validateBody(for response: Response, payloadPath: String?, members: [AWSShapeMember]) throws -> Body {
         var responseBody: Body = .empty
         let data = response.body
 
@@ -660,11 +656,11 @@ extension AWSClient {
         }
 
         return responseBody
-    }
+    }*/
 
-    private func createError(for response: Response, withComputedBody body: Body, withRawData data: Data) -> Error {
+    private func createError(for response: AWSResponse) -> Error {
         let bodyDict: [String: Any]
-        if let dict = try? body.asDictionary() {
+        if let dict = try? response.body.asDictionary() {
             bodyDict = dict ?? [:]
         } else {
             bodyDict = [:]
@@ -675,20 +671,18 @@ extension AWSClient {
 
         switch serviceProtocol.type {
         case .query:
-            guard let xmlDocument = try? XML.Document(data: data) else { break }
-            guard let element = xmlDocument.rootElement() else { break }
+            guard case .xml(let element) = response.body else { break }
             guard let error = element.elements(forName: "Error").first else { break }
             code = error.elements(forName: "Code").first?.stringValue
             message = error.elements(forName: "Message").first?.stringValue
 
         case .restxml:
-            guard let xmlDocument = try? XML.Document(data: data) else { break }
-            guard let element = xmlDocument.rootElement() else { break }
+            guard case .xml(let element) = response.body else { break }
             code = element.elements(forName: "Code").first?.stringValue
             message = element.children(of:.element)?.filter({$0.name != "Code"}).map({"\($0.name!): \($0.stringValue!)"}).joined(separator: ", ")
 
         case .restjson:
-            code = response.head.headers.filter( { $0.name == "x-amzn-ErrorType"}).first?.value
+            code = response.headers["x-amzn-ErrorType"]
             message = bodyDict.filter({ $0.key.lowercased() == "message" }).first?.value as? String
 
         case .json:
@@ -716,8 +710,14 @@ extension AWSClient {
 
             return AWSResponseError(errorCode: errorCode, message: message)
         }
-
-        return AWSError(message: message ?? "Unhandled Error. Response Code: \(response.head.status.code)", rawBody: String(data: data, encoding: .utf8) ?? "")
+        
+        let rawBodyString : String?
+        if let rawBody = response.body.asData() {
+            rawBodyString = String(data: rawBody, encoding: .utf8)
+        } else {
+            rawBodyString = nil
+        }
+        return AWSError(message: message ?? "Unhandled Error. Response Code: \(response.status.code)", rawBody: rawBodyString ?? "")
     }
 }
 
@@ -725,7 +725,7 @@ extension AWSClient {
 #if DEBUG
 extension AWSClient {
 
-    func debugValidateCode(response: Response) throws {
+    func debugValidateCode(response: AWSResponse) throws {
         return try validateCode(response: response)
     }
 }

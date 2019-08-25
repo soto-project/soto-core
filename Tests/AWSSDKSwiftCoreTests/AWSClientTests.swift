@@ -109,7 +109,7 @@ class AWSClientTests: XCTestCase {
         service: "email",
         serviceProtocol: ServiceProtocol(type: .query),
         apiVersion: "2013-12-01",
-        middlewares: [],
+        middlewares: [AWSLoggingMiddleware()],
         possibleErrorTypes: [SESErrorType.self]
     )
 
@@ -121,7 +121,7 @@ class AWSClientTests: XCTestCase {
         service: "kinesis",
         serviceProtocol: ServiceProtocol(type: .json, version: ServiceProtocol.Version(major: 1, minor: 1)),
         apiVersion: "2013-12-02",
-        middlewares: [],
+        middlewares: [AWSLoggingMiddleware()],
         possibleErrorTypes: [KinesisErrorType.self]
     )
 
@@ -135,7 +135,7 @@ class AWSClientTests: XCTestCase {
         endpoint: nil,
         serviceEndpoints: ["us-west-2": "s3.us-west-2.amazonaws.com", "eu-west-1": "s3.eu-west-1.amazonaws.com", "us-east-1": "s3.amazonaws.com", "ap-northeast-1": "s3.ap-northeast-1.amazonaws.com", "s3-external-1": "s3-external-1.amazonaws.com", "ap-southeast-2": "s3.ap-southeast-2.amazonaws.com", "sa-east-1": "s3.sa-east-1.amazonaws.com", "ap-southeast-1": "s3.ap-southeast-1.amazonaws.com", "us-west-1": "s3.us-west-1.amazonaws.com"],
         partitionEndpoint: "us-east-1",
-        middlewares: [],
+        middlewares: [AWSLoggingMiddleware()],
         possibleErrorTypes: [S3ErrorType.self]
     )
 

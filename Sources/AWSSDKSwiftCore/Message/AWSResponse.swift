@@ -23,6 +23,12 @@ public struct AWSResponse {
         self.body = try AWSResponse.createBody(from: response, serviceProtocolType: serviceProtocolType, raw: raw)
     }
 
+    init(status: HTTPResponseStatus, headers: [String: String], body: Body) {
+        self.status = status
+        self.headers = headers
+        self.body = body
+    }
+    
     private static func createHeaders(from response: Response) -> [String: String] {
         var responseHeaders: [String: String] = [:]
         for (key, value) in response.head.headers {

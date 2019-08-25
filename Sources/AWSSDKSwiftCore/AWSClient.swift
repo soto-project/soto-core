@@ -107,7 +107,7 @@ public struct AWSClient {
 // invoker
 extension AWSClient {
     fileprivate func invoke(_ nioRequest: Request) -> Future<Response> {
-        let client = createHTTPClient(for: nioRequest)
+        let client = HTTPClient(hostname: nioRequest.head.hostWithPort!, port: nioRequest.head.port ?? 443)
         let futureResponse = client.connect(nioRequest)
 
         futureResponse.whenComplete {
@@ -119,10 +119,6 @@ extension AWSClient {
         }
 
         return futureResponse
-    }
-
-    private func createHTTPClient(for nioRequest: Request) -> HTTPClient {
-        return HTTPClient(hostname: nioRequest.head.hostWithPort!, port: nioRequest.head.port ?? 443)
     }
 }
 
@@ -492,11 +488,12 @@ extension AWSClient {
 extension AWSClient {
 
     fileprivate func validate<Output: AWSShape>(operation operationName: String, response: Response) throws -> Output {
-
         var awsResponse = try AWSResponse(from: response, serviceProtocolType: serviceProtocol.type, raw: Output.payloadPath != nil)
         
         try validateCode(response: awsResponse)
 
+        awsResponse = try hypertextApplicationLanguageProcess(response: awsResponse, members: Output._members)
+        
         // do we need to fix up the response before processing it
         for middleware in middlewares {
             awsResponse = try middleware.chain(response: awsResponse)
@@ -563,38 +560,27 @@ extension AWSClient {
         }
     }
 
-    /*private func validateBody(for response: Response, payloadPath: String?, members: [AWSShapeMember]) throws -> Body {
-        var responseBody: Body = .empty
-        let data = response.body
-
-        if data.isEmpty {
-            return responseBody
-        }
-
-        if payloadPath != nil {
-            return .buffer(data)
-        }
-
-        switch serviceProtocol.type {
-        case .json, .restjson:
-            if let cType = response.contentType(), cType.contains("hal+json") {
+    func hypertextApplicationLanguageProcess(response: AWSResponse, members: [AWSShapeMember]) throws -> AWSResponse {
+        switch response.body {
+        case .json(let data):
+            if let cType = response.headers["Content-Type"], cType.contains("hal+json") {
                 let representation = try Representation.from(json: data)
                 var dictionary = representation.properties
                 for rel in representation.rels {
                     guard let representations = try Representation.from(json: data).representations(for: rel) else {
                         continue
                     }
-
+                    
                     guard let hint = members.filter({ $0.location?.name == rel }).first else {
                         continue
                     }
-
+                    
                     switch hint.type {
                     case .list:
                         let properties : [[String: Any]] = try representations.map({
                             var props = $0.properties
                             var linkMap: [String: [Link]] = [:]
-
+                            
                             for link in $0.links {
                                 let key = link.rel.camelCased(separator: ":")
                                 if linkMap[key] == nil {
@@ -602,7 +588,7 @@ extension AWSClient {
                                 }
                                 linkMap[key]?.append(link)
                             }
-
+                            
                             for (key, links) in linkMap {
                                 var dict: [String: Any] = [:]
                                 for link in links {
@@ -621,43 +607,23 @@ extension AWSClient {
                                 }
                                 props[key] = dict
                             }
-
+                            
                             return props
                         })
                         dictionary[rel] = properties
-
+                        
                     default:
                         dictionary[rel] = representations.map({ $0.properties }).first ?? [:]
                     }
                 }
-                responseBody = .json(try JSONSerialization.data(withJSONObject: dictionary, options: []))
-
-            } else {
-                responseBody = .json(data)
+                return AWSResponse(status: response.status, headers: response.headers, body: .json(try JSONSerialization.data(withJSONObject: dictionary, options: [])))
             }
-
-        case .restxml, .query:
-            let xmlDocument = try XML.Document(data: data)
-            if let element = xmlDocument.rootElement() {
-               responseBody = .xml(element)
-            }
-
-        case .other(let proto):
-            switch proto.lowercased() {
-            case "ec2":
-                let xmlDocument = try XML.Document(data: data)
-                if let element = xmlDocument.rootElement() {
-                    responseBody = .xml(element)
-                }
-
-            default:
-                responseBody = .buffer(data)
-            }
+        default:
+            break
         }
-
-        return responseBody
-    }*/
-
+        return response
+    }
+    
     private func createError(for response: AWSResponse) -> Error {
         let bodyDict: [String: Any]
         if let dict = try? response.body.asDictionary() {

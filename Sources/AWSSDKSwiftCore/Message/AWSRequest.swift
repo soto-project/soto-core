@@ -125,7 +125,7 @@ public struct AWSRequest {
         let generatedHeaders = headers.map { ($0, $1) }
         head.headers = HTTPHeaders(generatedHeaders)
 
-        return Request(head: head, body: try awsRequest.body.asData() ?? Data())
+        return Request(head: head, body: awsRequest.body.asData() ?? Data())
     }
 
     fileprivate func nioHTTPMethod(from: String) -> HTTPMethod {
@@ -155,7 +155,7 @@ public struct AWSRequest {
 
         var request = URLRequest(url: awsRequest.url)
         request.httpMethod = awsRequest.httpMethod
-        request.httpBody = try awsRequest.body.asData()
+        request.httpBody = awsRequest.body.asData()
 
         if awsRequest.body.isJSON() {
             request.addValue("application/x-amz-json-1.1", forHTTPHeaderField: "Content-Type")

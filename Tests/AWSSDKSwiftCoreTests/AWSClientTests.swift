@@ -154,7 +154,7 @@ class AWSClientTests: XCTestCase {
             XCTAssertEqual(awsRequest.url.absoluteString, "\(sesClient.endpoint)/")
             XCTAssertEqual(String(describing: awsRequest.body), "text(\"Action=SendEmail&Value=%3Chtml%3E%3Cbody%3E%3Ca%20href%3D%22https://redsox.com%22%3ETest%3C/a%3E%3C/body%3E%3C/html%3E&Version=2013-12-01\")")
             let nioRequest = try awsRequest.toNIORequest()
-            XCTAssertEqual(nioRequest.head.headers["Content-Type"][0], "application/x-www-form-urlencoded")
+            XCTAssertEqual(nioRequest.head.headers["Content-Type"][0], "application/x-www-form-urlencoded; charset=utf-8")
             XCTAssertEqual(nioRequest.head.method, HTTPMethod.POST)
         } catch {
             XCTFail(error.localizedDescription)
@@ -181,7 +181,7 @@ class AWSClientTests: XCTestCase {
             )
             XCTAssertEqual(awsRequest.url.absoluteString, "\(kinesisClient.endpoint)/")
 
-            if let bodyAsData = try awsRequest.body.asData(), let parsedBody = try JSONSerialization.jsonObject(with: bodyAsData, options: []) as? [String:Any] {
+            if let bodyAsData = awsRequest.body.asData(), let parsedBody = try JSONSerialization.jsonObject(with: bodyAsData, options: []) as? [String:Any] {
                 if let member = parsedBody["Member"] as? [String:Any] {
                     if let memberKey = member["memberKey"] {
                         XCTAssertEqual(String(describing: memberKey), "memberValue")
@@ -231,7 +231,7 @@ class AWSClientTests: XCTestCase {
             )
 
             XCTAssertNotNil(awsRequest.body)
-            if let xmlData = try awsRequest.body.asData() {
+            if let xmlData = awsRequest.body.asData() {
                 let document = try XML.Document(data:xmlData)
                 XCTAssertNotNil(document.rootElement())
                 let payload = try XMLDecoder().decode(E.self, from: document.rootElement()!)
@@ -253,7 +253,7 @@ class AWSClientTests: XCTestCase {
                 input: input3
             )
             XCTAssertNotNil(awsRequest.body)
-            if let jsonData = try awsRequest.body.asData() {
+            if let jsonData = awsRequest.body.asData() {
                 let jsonBody = try! JSONSerialization.jsonObject(with: jsonData, options: .allowFragments) as! [String:Any]
                 let fromJson = jsonBody["Member"]! as! [String: String]
                 XCTAssertEqual(fromJson["memberKey"], "memberValue")

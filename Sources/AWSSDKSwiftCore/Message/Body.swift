@@ -67,7 +67,7 @@ extension Body {
         }
     }
 
-    public func asData() throws -> Data? {
+    public func asData() -> Data? {
         switch self {
         case .text(let text):
             return text.data(using: .utf8)

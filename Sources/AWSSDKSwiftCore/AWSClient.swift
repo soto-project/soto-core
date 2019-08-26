@@ -489,7 +489,14 @@ extension AWSClient {
 
     /// Validate the operation response and return a response shape
     fileprivate func validate<Output: AWSShape>(operation operationName: String, response: Response) throws -> Output {
-        var awsResponse = try AWSResponse(from: response, serviceProtocolType: serviceProtocol.type, raw: Output.payloadPath != nil)
+        let raw: Bool
+        if let payloadPath = Output.payloadPath, let member = Output.getMember(named: payloadPath), member.type == .blob {
+            raw = true
+        } else {
+            raw = false
+        }
+        
+        var awsResponse = try AWSResponse(from: response, serviceProtocolType: serviceProtocol.type, raw: raw)
         
         try validateCode(response: awsResponse)
 

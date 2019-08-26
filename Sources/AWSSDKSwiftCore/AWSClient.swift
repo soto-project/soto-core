@@ -518,6 +518,10 @@ extension AWSClient {
         switch awsResponse.body {
         case .json(let data):
             outputDict = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] ?? [:]
+            // if payload path is set then the decode will expect the payload to decode to the relevant member variable
+            if let payloadPath = Output.payloadPath {
+                outputDict = [payloadPath : outputDict]
+            }
             decoder.dataDecodingStrategy = .base64
 
         case .xml(let node):

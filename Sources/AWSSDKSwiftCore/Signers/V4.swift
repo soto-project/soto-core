@@ -38,10 +38,10 @@ extension Signers {
         var credential: CredentialProvider
 
 
-        public init(credential: CredentialProvider, region: Region, service: String, signingName: String, endpoint: String?) {
+        public init(credential: CredentialProvider, region: Region, service: String, signingName: String? = nil, endpoint: String?) {
             self.region = region
             self.service = service
-            self.signingName = signingName
+            self.signingName = signingName ?? service
             self.credential = credential
             self.endpoint = endpoint
         }

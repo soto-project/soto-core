@@ -96,24 +96,29 @@ public struct AWSRequest {
             headers["x-amz-target"] = "\(target).\(awsRequest.operation)"
         }
 
-        switch serviceProtocol.type {
-        case .json, .restjson:
-            headers["Content-Type"] = serviceProtocol.contentTypeString
-        case .query:
-            switch awsRequest.httpMethod {
-            case "POST":
-                headers["Content-Type"] = "application/x-www-form-urlencoded"
-            default:
-                break
-            }
-        default:
-            break
-        }
-
         switch awsRequest.httpMethod {
         case "GET","HEAD":
             break
         default:
+            switch serviceProtocol.type {
+            case .json:
+                headers["Content-Type"] = serviceProtocol.contentTypeString
+            case .restjson:
+                if case .buffer(_) = body {
+                    headers["Content-Type"] = "binary/octet-stream"
+                } else {
+                    headers["Content-Type"] = "application/json"
+                }
+            case .query:
+                headers["Content-Type"] = "application/x-www-form-urlencoded; charset=utf-8"
+            case .other(let service):
+                if service == "ec2" {
+                    headers["Content-Type"] = "application/x-www-form-urlencoded; charset=utf-8"
+                }
+            default:
+                break
+            }
+
             headers["Content-Type"] = headers["Content-Type"] ?? "application/octet-stream"
         }
 
@@ -145,35 +150,5 @@ public struct AWSRequest {
         default:
             return .GET
         }
-    }
-
-    func toURLRequest() throws -> URLRequest {
-        var awsRequest = self
-        for middleware in middlewares {
-            awsRequest = try middleware.chain(request: awsRequest)
-        }
-
-        var request = URLRequest(url: awsRequest.url)
-        request.httpMethod = awsRequest.httpMethod
-        request.httpBody = awsRequest.body.asData()
-
-        if awsRequest.body.isJSON() {
-            request.addValue("application/x-amz-json-1.1", forHTTPHeaderField: "Content-Type")
-        }
-
-        if let target = awsRequest.amzTarget {
-            request.addValue("\(target).\(awsRequest.operation)", forHTTPHeaderField: "x-amz-target")
-        }
-
-        for (key, value) in awsRequest.httpHeaders {
-            guard let value = value else { continue }
-            request.addValue("\(value)", forHTTPHeaderField: key)
-        }
-
-        if awsRequest.httpMethod.lowercased() != "get" && awsRequest.httpHeaders.filter({ $0.key.lowercased() == "content-type" }).first == nil {
-            request.addValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
-        }
-
-        return request
     }
 }

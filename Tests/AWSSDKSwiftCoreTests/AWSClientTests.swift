@@ -154,7 +154,7 @@ class AWSClientTests: XCTestCase {
             XCTAssertEqual(awsRequest.url.absoluteString, "\(sesClient.endpoint)/")
             XCTAssertEqual(String(describing: awsRequest.body), "text(\"Action=SendEmail&Value=%3Chtml%3E%3Cbody%3E%3Ca%20href%3D%22https://redsox.com%22%3ETest%3C/a%3E%3C/body%3E%3C/html%3E&Version=2013-12-01\")")
             let nioRequest = try awsRequest.toNIORequest()
-            XCTAssertEqual(nioRequest.head.headers["Content-Type"][0], "application/x-www-form-urlencoded")
+            XCTAssertEqual(nioRequest.head.headers["Content-Type"][0], "application/x-www-form-urlencoded; charset=utf-8")
             XCTAssertEqual(nioRequest.head.method, HTTPMethod.POST)
         } catch {
             XCTFail(error.localizedDescription)

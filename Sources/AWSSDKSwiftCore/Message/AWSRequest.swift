@@ -130,7 +130,7 @@ public struct AWSRequest {
         let generatedHeaders = headers.map { ($0, $1) }
         head.headers = HTTPHeaders(generatedHeaders)
 
-        return Request(head: head, body: try awsRequest.body.asData() ?? Data())
+        return Request(head: head, body: awsRequest.body.asData() ?? Data())
     }
 
     fileprivate func nioHTTPMethod(from: String) -> HTTPMethod {

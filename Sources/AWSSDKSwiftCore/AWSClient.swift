@@ -68,7 +68,7 @@ public struct AWSClient {
 
     public static let eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
 
-    public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, sessionToken: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSServiceMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil) {
+    public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, sessionToken: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, signingName: String? = nil, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSServiceMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil) {
         let credential: CredentialProvider
         if let accessKey = accessKeyId, let secretKey = secretAccessKey {
             credential = Credential(accessKeyId: accessKey, secretAccessKey: secretKey, sessionToken: sessionToken)
@@ -92,7 +92,7 @@ public struct AWSClient {
             region = .useast1
         }
 
-        self.signer = Signers.V4(credential: credential, region: region, service: service, endpoint: endpoint)
+        self.signer = Signers.V4(credential: credential, region: region, service: service, signingName: signingName ?? service, endpoint: endpoint)
         self.apiVersion = apiVersion
         self._endpoint = endpoint
         self.amzTarget = amzTarget

@@ -14,7 +14,9 @@ extension Signers {
         public let region: Region
 
         public let service: String
-
+        
+        public let signingName: String
+        
         public let endpoint: String?
 
         let identifier = "aws4_request"
@@ -36,9 +38,10 @@ extension Signers {
         var credential: CredentialProvider
 
 
-        public init(credential: CredentialProvider, region: Region, service: String, endpoint: String?) {
+        public init(credential: CredentialProvider, region: Region, service: String, signingName: String, endpoint: String?) {
             self.region = region
             self.service = service
+            self.signingName = signingName
             self.credential = credential
             self.endpoint = endpoint
         }
@@ -205,7 +208,7 @@ extension Signers {
                 key: secretBytes
             )
             let region = hmac(string: self.region.rawValue, key: date)
-            let service = hmac(string: self.service, key: region)
+            let service = hmac(string: self.signingName, key: region)
             let string = stringToSign(
                 url: url,
                 headers: headers,
@@ -221,7 +224,7 @@ extension Signers {
             return [
                 String(datetime.prefix(upTo: datetime.index(datetime.startIndex, offsetBy: 8))),
                 region.rawValue,
-                service,
+                signingName,
                 identifier
             ].joined(separator: "/")
         }

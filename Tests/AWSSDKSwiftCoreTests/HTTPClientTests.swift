@@ -25,8 +25,11 @@ class HTTPClientTests: XCTestCase {
 
     func testInitWithInvalidURL() {
       do {
-          _ = try HTTPClient(url: URL(string: "no_protocol.com")!)
-          XCTFail("Should throw malformedURL error")
+        let client = HTTPClient()
+        let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: "no_protocol.com")
+        let request = HTTPClient.Request(head: head, body: Data())
+        _ = try client.connect(request).wait()
+        XCTFail("Should throw malformedURL error")
       } catch {
         if case HTTPClient.ClientError.malformedURL = error {}
         else {
@@ -36,31 +39,31 @@ class HTTPClientTests: XCTestCase {
     }
 
     func testInitWithValidRL() {
-      do {
-          _ = try HTTPClient(url: URL(string: "https://kinesis.us-west-2.amazonaws.com/")!)
-      } catch {
-          XCTFail("Should not throw malformedURL error")
-      }
-
-      do {
-          _ = try HTTPClient(url: URL(string: "http://169.254.169.254/latest/meta-data/iam/security-credentials/")!)
-      } catch {
-          XCTFail("Should not throw malformedURL error")
-      }
+        let client = HTTPClient()
+        do {
+            let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: "https://kinesis.us-west-2.amazonaws.com/")
+            let request = HTTPClient.Request(head: head, body: Data())
+            _ = try client.connect(request).wait()
+        } catch {
+            XCTFail("Should not throw malformedURL error")
+        }
+        
+        do {
+            let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: "http://169.254.169.254/latest/meta-data/iam/security-credentials/")
+            let request = HTTPClient.Request(head: head, body: Data())
+            _ = try client.connect(request).wait()
+        } catch HTTPClient.ClientError.malformedURL{
+            XCTFail("Should not throw malformedURL error")
+        } catch {
+        }
     }
-
-    func testInitWithHostAndPort() {
-        let url = URL(string: "https://kinesis.us-west-2.amazonaws.com/")!
-        _ = HTTPClient(hostname: url.host!, port: 443)
-    }
-
+    
     func testConnectSimpleGet() {
-        let url = URL(string: "https://kinesis.us-west-2.amazonaws.com/")!
-        let client = HTTPClient(hostname: url.host!, port: 443)
+        let client = HTTPClient()
         let head = HTTPRequestHead(
                      version: HTTPVersion(major: 1, minor: 1),
                      method: .GET,
-                     uri: url.path
+                     uri: "https://kinesis.us-west-2.amazonaws.com/"
                    )
         let request = HTTPClient.Request(head: head, body: Data())
         let future = client.connect(request)
@@ -76,13 +79,11 @@ class HTTPClientTests: XCTestCase {
     }
 
     func testConnectGet() {
-
-        let url = URL(string: "https://kinesis.us-west-2.amazonaws.com/")!
-        let client = HTTPClient(hostname: url.host!, port: 443)
+        let client = HTTPClient()
         let head = HTTPRequestHead(
                      version: HTTPVersion(major: 1, minor: 1),
                      method: .GET,
-                     uri: url.path
+                     uri: "https://kinesis.us-west-2.amazonaws.com/"
                    )
         let request = HTTPClient.Request(head: head, body: Data())
         let future = client.connect(request)
@@ -98,12 +99,11 @@ class HTTPClientTests: XCTestCase {
     }
 
     func testConnectPost() {
-        let url = URL(string: "https://kinesis.us-west-2.amazonaws.com/")!
-        let client = HTTPClient(hostname: url.host!, port: 443)
+        let client = HTTPClient()
         let head = HTTPRequestHead(
                      version: HTTPVersion(major: 1, minor: 1),
                      method: .GET,
-                     uri: url.path
+                     uri: "https://kinesis.us-west-2.amazonaws.com/"
                    )
         let request = HTTPClient.Request(head: head, body: Data())
         let future = client.connect(request)

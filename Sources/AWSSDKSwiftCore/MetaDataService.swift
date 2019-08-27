@@ -89,7 +89,7 @@ struct MetaDataService {
     }
 
     static func request(host: String, uri: String, timeout: TimeInterval) -> Future<HTTPClient.Response> {
-        let client = HTTPClient(hostname: host, port: 80)
+        let client = HTTPClient()
         let head = HTTPRequestHead(
                      version: HTTPVersion(major: 1, minor: 1),
                      method: .GET,

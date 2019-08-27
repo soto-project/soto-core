@@ -107,8 +107,8 @@ public struct AWSClient {
 // invoker
 extension AWSClient {
     fileprivate func invoke(_ nioRequest: HTTPClient.Request) -> Future<HTTPClient.Response>{
-        let client = createHTTPClient(for: nioRequest)
-        let futureResponse = client.connect(nioRequest)
+        let client = HTTPClient()
+        let futureResponse = HTTPClient().connect(nioRequest)
 
         futureResponse.whenComplete { _ in
             client.close { error in
@@ -119,10 +119,6 @@ extension AWSClient {
         }
 
         return futureResponse
-    }
-
-    private func createHTTPClient(for nioRequest: HTTPClient.Request) -> HTTPClient {
-        return HTTPClient(hostname: nioRequest.head.hostWithPort!, port: nioRequest.head.port ?? 443, eventLoopGroupProvider: .shared(AWSClient.eventGroup))
     }
 }
 

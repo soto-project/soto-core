@@ -100,9 +100,7 @@ public class XML {
         }
         
         private static let xmlEncodedCharacters : [String.Element: String] = [
-            "\"": "&quot;",
             "&": "&amp;",
-            "'": "&apos;",
             "<": "&lt;",
             ">": "&gt;",
         ]
@@ -440,7 +438,10 @@ public class XML {
         }
         
         func parser(_ parser: XMLParser, foundCharacters: String) {
-            currentElement?.addChild(XML.Node.text(stringValue: foundCharacters))
+            // if string with white space removed still has characters, add text node
+            if foundCharacters.components(separatedBy: .whitespacesAndNewlines).joined().count > 0 {
+                currentElement?.addChild(XML.Node.text(stringValue: foundCharacters))
+            }
         }
         
         func parser(_ parser: XMLParser, foundComment comment: String) {

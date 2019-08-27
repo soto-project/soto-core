@@ -9,11 +9,16 @@
 // and the swift-server's swift-nio-http-client
 // https://github.com/swift-server/swift-nio-http-client
 //
+import Foundation
 import NIO
 import NIOFoundationCompat
 import NIOHTTP1
+#if canImport(NIOSSL)
 import NIOSSL
-import Foundation
+#elseif canImport(NIOTransportServices)
+import Network
+import NIOTransportServices
+#endif
 
 public final class HTTPClient {
     
@@ -49,10 +54,17 @@ public final class HTTPClient {
         case .shared(let group):
             self.eventLoopGroup = group
         case .createNew:
-            self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+            #if canImport(NIOSSL)
+                self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+            #elseif canImport(NIOTransportServices)
+                self.eventLoopGroup = NIOTSEventLoopGroup()
+            #else
+                fatalError("HTTPClient: needs to link with NIOSSL or NIOTransportServices")
+            #endif
         }
     }
 
+    #if canImport(NIOSSL)
     /// add SSL Handler to channel pipeline if the port is 443
     func addSSLHandlerIfNeeded(_ pipeline : ChannelPipeline, hostname: String, port: Int) -> EventLoopFuture<Void> {
         if (port == 443) {
@@ -67,6 +79,7 @@ public final class HTTPClient {
         }
         return pipeline.eventLoop.makeSucceededFuture(())
     }
+    #endif
     
     /// send request to HTTP client, return a future holding the Response
     public func connect(_ request: Request) -> EventLoopFuture<Response> {
@@ -87,9 +100,12 @@ public final class HTTPClient {
         
 
         let response: EventLoopPromise<Response> = self.eventLoopGroup.next().makePromise()
+        
+        #if canImport(NIOSSL)
+        
         let bootstrap = ClientBootstrap(group: self.eventLoopGroup)
             .connectTimeout(TimeAmount.seconds(5))
-            .channelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: 1)
+            .channelOption(ChannelOptions.socket(SocketOptionLevel(IPPROTO_TCP), TCP_NODELAY), value: 1)
             .channelInitializer { channel in
                 return channel.pipeline.addHTTPClientHandlers()
                     .flatMap {
@@ -102,9 +118,28 @@ public final class HTTPClient {
                         ]
                         return channel.pipeline.addHandlers(handlers)
                 }
-            }
-            
-            bootstrap.connect(host: hostname, port: port)
+        }
+        
+        #elseif canImport(NIOTransportServices)
+        
+        let bootstrap = NIOTSConnectionBootstrap(group: self.eventLoopGroup)
+            .connectTimeout(TimeAmount.seconds(5))
+            .channelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: 1)
+            .tlsOptions(NWProtocolTLS.Options())
+            .channelInitializer { channel in
+                return channel.pipeline.addHTTPClientHandlers()
+                    .flatMap {
+                        let handlers : [ChannelHandler] = [
+                            HTTPClientRequestSerializer(hostname: headerHostname),
+                            HTTPClientResponseHandler(promise: response)
+                        ]
+                        return channel.pipeline.addHandlers(handlers)
+                }
+        }
+        
+        #endif
+
+        bootstrap.connect(host: hostname, port: port)
             .flatMap { channel -> EventLoopFuture<Void> in
                 return channel.writeAndFlush(request)
             }

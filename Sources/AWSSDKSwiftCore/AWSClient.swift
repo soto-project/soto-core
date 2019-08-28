@@ -509,11 +509,6 @@ extension AWSClient {
         
         let decoder = DictionaryDecoder()
 
-        var responseHeaders: [String: String] = [:]
-        for (key, value) in response.head.headers {
-            responseHeaders[key.description] = value
-        }
-
         var outputDict: [String: Any] = [:]
         switch awsResponse.body {
         case .json(let data):
@@ -630,7 +625,9 @@ extension AWSClient {
                         dictionary[rel] = representations.map({ $0.properties }).first ?? [:]
                     }
                 }
-                return AWSResponse(status: response.status, headers: response.headers, body: .json(try JSONSerialization.data(withJSONObject: dictionary, options: [])))
+                var response = response
+                response.body = .json(try JSONSerialization.data(withJSONObject: dictionary, options: []))
+                return response
             }
         default:
             break

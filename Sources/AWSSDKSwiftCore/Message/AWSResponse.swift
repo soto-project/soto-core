@@ -14,7 +14,7 @@ import HypertextApplicationLanguage
 public struct AWSResponse {
 
     public let status: HTTPResponseStatus
-    public var headers: [String: String]
+    public var headers: [String: Any]
     public var body: Body
 
     init(from response: Response, serviceProtocolType: ServiceProtocolType, raw: Bool = false) throws {

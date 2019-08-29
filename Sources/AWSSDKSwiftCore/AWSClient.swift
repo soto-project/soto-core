@@ -281,7 +281,7 @@ extension AWSClient {
     }
 
     fileprivate func createAWSRequest<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
-        var headers: [String: String] = [:]
+        var headers: [String: Any] = [:]
         var path = path
         var urlComponents = URLComponents()
         var body: Body = .empty
@@ -303,7 +303,7 @@ extension AWSClient {
 
         for (key, value) in Input.headerParams {
             if let attr = mirror.getAttribute(forKey: value.toSwiftVariableCase()) {
-                headers[key] = "\(attr)"
+                headers[key] = attr
             }
         }
 
@@ -543,12 +543,17 @@ extension AWSClient {
         for (key, value) in awsResponse.headers {
             let headerParams = Output.headerParams
             if let index = headerParams.index(where: { $0.key.lowercased() == key.lowercased() }) {
-                if let number = Double(value) {
+                // check we can convert to a String. If not just put value straight into output dictionary
+                guard let stringValue = value as? String else {
+                    outputDict[headerParams[index].key] = value
+                    continue
+                }
+                if let number = Double(stringValue) {
                     outputDict[headerParams[index].key] = number.truncatingRemainder(dividingBy: 1) == 0 ? Int(number) : number
-                } else if let boolean = Bool(value) {
+                } else if let boolean = Bool(stringValue) {
                     outputDict[headerParams[index].key] = boolean
                 } else {
-                    outputDict[headerParams[index].key] = value
+                    outputDict[headerParams[index].key] = stringValue
                 }
             }
         }
@@ -572,7 +577,7 @@ extension AWSClient {
     func hypertextApplicationLanguageProcess(response: AWSResponse, members: [AWSShapeMember]) throws -> AWSResponse {
         switch response.body {
         case .json(let data):
-            if let cType = response.headers["Content-Type"], cType.contains("hal+json") {
+            if (response.headers["Content-Type"] as? String)?.contains("hal+json") == true {
                 let representation = try Representation.from(json: data)
                 var dictionary = representation.properties
                 for rel in representation.rels {
@@ -660,7 +665,7 @@ extension AWSClient {
             message = element.children(of:.element)?.filter({$0.name != "Code"}).map({"\($0.name!): \($0.stringValue!)"}).joined(separator: ", ")
 
         case .restjson:
-            code = response.headers["x-amzn-ErrorType"]
+            code = response.headers["x-amzn-ErrorType"] as? String
             message = bodyDict.filter({ $0.key.lowercased() == "message" }).first?.value as? String
 
         case .json:

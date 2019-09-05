@@ -13,6 +13,12 @@ public protocol AWSErrorType: Error, CustomStringConvertible {
     init?(errorCode: String, message: String?)
 }
 
+extension AWSErrorType {
+    public var localizedDescription: String {
+        return description
+    }
+}
+
 /// Standard Response Error type returned by aws-sdk-swift. If the error is unrecognised then this is returned
 public struct AWSResponseError: AWSErrorType {
     public let errorCode: String

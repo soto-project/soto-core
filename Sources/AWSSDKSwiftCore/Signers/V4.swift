@@ -13,8 +13,6 @@ extension Signers {
 
         public let region: Region
 
-        public let service: String
-        
         public let signingName: String
         
         public let endpoint: String?
@@ -38,10 +36,9 @@ extension Signers {
         var credential: CredentialProvider
 
 
-        public init(credential: CredentialProvider, region: Region, service: String, signingName: String? = nil, endpoint: String?) {
+        public init(credential: CredentialProvider, region: Region, signingName: String, endpoint: String?) {
             self.region = region
-            self.service = service
-            self.signingName = signingName ?? service
+            self.signingName = signingName
             self.credential = credential
             self.endpoint = endpoint
         }
@@ -66,7 +63,7 @@ extension Signers {
         }
 
         func hexEncodedBodyHash(_ data: Data) -> String {
-            if data.isEmpty && service == "s3" {
+            if data.isEmpty && signingName == "s3" {
                 return "UNSIGNED-PAYLOAD"
             }
             return sha256(data).hexdigest()
@@ -208,7 +205,7 @@ extension Signers {
                 key: secretBytes
             )
             let region = hmac(string: self.region.rawValue, key: date)
-            let service = hmac(string: self.signingName, key: region)
+            let signingName = hmac(string: self.signingName, key: region)
             let string = stringToSign(
                 url: url,
                 headers: headers,
@@ -217,7 +214,7 @@ extension Signers {
                 bodyDigest: bodyDigest
             )
 
-            return hmac(string: string, key: hmac(string: identifier, key: service)).hexdigest()
+            return hmac(string: string, key: hmac(string: identifier, key: signingName)).hexdigest()
         }
 
         func credentialScope(_ datetime: String) -> String {

@@ -40,15 +40,15 @@ public class AWSLoggingMiddleware : AWSServiceMiddleware {
         var output = ""
         switch body {
         case .xml(let element):
-            output += "\n"
+            output += "\n  "
             output += element.description
         case .json(let data):
-            output += "\n"
+            output += "\n  "
             output += String(data: data, encoding: .utf8) ?? "Failed to convert JSON response to UTF8"
         case .buffer(let data):
             output += "data (\(data.count) bytes)"
         case .text(let string):
-            output += "\n\(string)"
+            output += "\n  \(string)"
         case .empty:
             output += "empty"
         default:
@@ -65,23 +65,25 @@ public class AWSLoggingMiddleware : AWSServiceMiddleware {
         for header in headers {
             output += "\n    \(header.key) : \(header.value ?? "nil")"
         }
-        return output + "\n]"
+        return output + "\n  ]"
     }
     
     /// output request
     public func chain(request: AWSRequest) throws -> AWSRequest {
-        log("Request: \(request.operation)")
-        log("\(request.httpMethod) \(request.url)")
-        log("Headers: " + getHeadersOutput(request.httpHeaders))
-        log("Body: " + getBodyOutput(request.body))
+        log("Request:")
+        log("  \(request.operation)")
+        log("  \(request.httpMethod) \(request.url)")
+        log("  Headers: " + getHeadersOutput(request.httpHeaders))
+        log("  Body: " + getBodyOutput(request.body))
         return request
     }
     
     /// output response
     public func chain(response: AWSResponse) throws -> AWSResponse {
-        log("Response: status : \(response.status.code)")
-        log("Headers: " + getHeadersOutput(response.headers))
-        log("Body: " + getBodyOutput(response.body))
+        log("Response:")
+        log("  Status : \(response.status.code)")
+        log("  Headers: " + getHeadersOutput(response.headers))
+        log("  Body: " + getBodyOutput(response.body))
         return response
     }
     

@@ -12,8 +12,8 @@ public protocol AWSServiceMiddleware {
     /// Process AWSRequest before it is converted to a HTTPClient Request to be sent to AWS
     func chain(request: AWSRequest) throws -> AWSRequest
     
-    /// Process responseBody before it is converted to an output AWSShape
-    func chain(responseBody: Body) throws -> Body
+    /// Process response before it is converted to an output AWSShape
+    func chain(response: AWSResponse) throws -> AWSResponse
 }
 
 /// Default versions of protocol functions
@@ -21,12 +21,10 @@ public extension AWSServiceMiddleware {
     func chain(request: AWSRequest) throws -> AWSRequest {
         return request
     }
-    func chain(responseBody: Body) throws -> Body {
-        return responseBody
+    func chain(response: AWSResponse) throws -> AWSResponse {
+        return response
     }
 }
-
-#if DEBUG
 
 /// Middleware class that outputs the contents of requests being sent to AWS and the bodies of the responses received
 public class AWSLoggingMiddleware : AWSServiceMiddleware {
@@ -34,7 +32,7 @@ public class AWSLoggingMiddleware : AWSServiceMiddleware {
     /// initialize AWSLoggingMiddleware class
     /// - parameters:
     ///     - log: Function to call with logging output
-    init(log : @escaping (String)->() = { print($0) }) {
+    public init(log : @escaping (String)->() = { print($0) }) {
         self.log = log
     }
     
@@ -80,14 +78,12 @@ public class AWSLoggingMiddleware : AWSServiceMiddleware {
     }
     
     /// output response
-    public func chain(responseBody: Body) throws -> Body {
-        var output = "Response: "
-        output += getBodyOutput(responseBody)
-        log(output)
-        return responseBody
+    public func chain(response: AWSResponse) throws -> AWSResponse {
+        log("Response: status : \(response.status.code)")
+        log("Headers: " + getHeadersOutput(response.headers))
+        log("Body: " + getBodyOutput(response.body))
+        return response
     }
     
     let log : (String)->()
 }
-
-#endif //DEBUG

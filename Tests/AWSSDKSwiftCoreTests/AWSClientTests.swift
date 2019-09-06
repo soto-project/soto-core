@@ -312,9 +312,9 @@ class AWSClientTests: XCTestCase {
             ),
             body: Data()
         )
-
         do {
-            try s3Client.debugValidateCode(response: nioResponse)
+            let awsResponse = try AWSResponse(from: nioResponse, serviceProtocolType: .json)
+            try s3Client.debugValidateCode(response: awsResponse)
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -328,7 +328,8 @@ class AWSClientTests: XCTestCase {
         )
 
         do {
-            try s3Client.debugValidateCode(response: failNioResponse)
+            let awsResponse = try AWSResponse(from: failNioResponse, serviceProtocolType: .json)
+            try s3Client.debugValidateCode(response: awsResponse)
             XCTFail("call to validateCode should throw an error")
         } catch {
             XCTAssertTrue(true)

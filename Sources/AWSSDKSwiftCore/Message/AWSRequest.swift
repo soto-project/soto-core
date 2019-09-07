@@ -11,20 +11,6 @@ import NIO
 import NIOTLS
 import NIOHTTP1
 
-public protocol AWSServiceMiddleware {
-    func chain(request: AWSRequest) throws -> AWSRequest
-    func chain(response: AWSResponse) throws -> AWSResponse
-}
-
-public extension AWSServiceMiddleware {
-    func chain(request: AWSRequest) throws -> AWSRequest {
-        return request
-    }
-    func chain(response: AWSResponse) throws -> AWSResponse {
-        return response
-    }
-}
-
 extension URL {
     public var hostWithPort: String? {
         guard var host = self.host else {

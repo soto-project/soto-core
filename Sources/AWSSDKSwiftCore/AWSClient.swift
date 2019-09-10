@@ -716,8 +716,12 @@ extension AWSClient {
 #if DEBUG
 extension AWSClient {
 
-    func debugValidateCode(response: AWSResponse) throws {
-        return try validateCode(response: response)
+    func debugValidate(response: Response) throws {
+        try validate(response: response)
+    }
+
+    func debugValidate<Output: AWSShape>(operation operationName: String, response: Response) throws -> Output {
+        return try validate(operation: operationName, response: response)
     }
 }
 #endif

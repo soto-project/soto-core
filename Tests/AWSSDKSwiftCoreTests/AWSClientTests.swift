@@ -15,7 +15,16 @@ class AWSClientTests: XCTestCase {
 
     static var allTests : [(String, (AWSClientTests) -> () throws -> Void)] {
         return [
-            ("testCreateAWSRequest", testCreateAWSRequest)
+            ("testGetCredential", testGetCredential),
+            ("testCreateAWSRequest", testCreateAWSRequest),
+            ("testCreateNIORequest", testCreateNIORequest),
+            ("testValidateCode", testValidateCode),
+            ("testValidateXMLResponse", testValidateXMLResponse),
+            ("testValidateXMLPayloadResponse", testValidateXMLPayloadResponse),
+            ("testValidateXMLError", testValidateXMLError),
+            ("testValidateJSONResponse", testValidateJSONResponse),
+            ("testValidateJSONPayloadResponse", testValidateJSONPayloadResponse),
+            ("testValidateJSONError", testValidateJSONError),
         ]
     }
 
@@ -305,7 +314,7 @@ class AWSClientTests: XCTestCase {
     }
 
     func testValidateCode() {
-        let nioResponse = Response(
+        let response = Response(
             head: HTTPResponseHead(
                 version: HTTPVersion(major: 1, minor: 1),
                 status: HTTPResponseStatus(statusCode: 200)
@@ -313,13 +322,12 @@ class AWSClientTests: XCTestCase {
             body: Data()
         )
         do {
-            let awsResponse = try AWSResponse(from: nioResponse, serviceProtocolType: .json)
-            try s3Client.debugValidateCode(response: awsResponse)
+            try s3Client.debugValidate(response: response)
         } catch {
             XCTFail(error.localizedDescription)
         }
 
-        let failNioResponse = Response(
+        let failResponse = Response(
             head: HTTPResponseHead(
                 version: HTTPVersion(major: 1, minor: 1),
                 status: HTTPResponseStatus(statusCode: 403)
@@ -328,14 +336,129 @@ class AWSClientTests: XCTestCase {
         )
 
         do {
-            let awsResponse = try AWSResponse(from: failNioResponse, serviceProtocolType: .json)
-            try s3Client.debugValidateCode(response: awsResponse)
+            try s3Client.debugValidate(response: failResponse)
             XCTFail("call to validateCode should throw an error")
         } catch {
             XCTAssertTrue(true)
         }
     }
 
+    func testValidateXMLResponse() {
+        class Output : AWSShape {
+            let name : String
+        }
+        let response = Response(
+            head: HTTPResponseHead(
+                version: HTTPVersion(major: 1, minor: 1),
+                status: HTTPResponseStatus(statusCode: 200)
+            ),
+            body: "<Output><name>hello</name></Output>".data(using: .utf8)!
+        )
+        do {
+            let output : Output = try s3Client.debugValidate(operation: "Output", response: response)
+            XCTAssertEqual(output.name, "hello")
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+    
+    func testValidateXMLPayloadResponse() {
+        class Output : AWSShape {
+            static let payloadPath: String? = "name"
+            let name : String
+        }
+        let response = Response(
+            head: HTTPResponseHead(
+                version: HTTPVersion(major: 1, minor: 1),
+                status: HTTPResponseStatus(statusCode: 200)
+            ),
+            body: "<name>hello</name>".data(using: .utf8)!
+        )
+        do {
+            let output : Output = try s3Client.debugValidate(operation: "Output", response: response)
+            XCTAssertEqual(output.name, "hello")
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+    
+    func testValidateXMLError() {
+        let response = Response(
+            head: HTTPResponseHead(
+                version: HTTPVersion(major: 1, minor: 1),
+                status: HTTPResponseStatus(statusCode: 404)
+            ),
+            body: "<Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message></Error>".data(using: .utf8)!
+        )
+        do {
+            try s3Client.debugValidate(response: response)
+            XCTFail("Should not get here")
+        } catch S3ErrorType.noSuchKey(let message) {
+            XCTAssertEqual(message, "Message: It doesn't exist")
+        } catch {
+            XCTFail("Throwing the wrong error")
+        }
+    }
+
+    func testValidateJSONResponse() {
+        class Output : AWSShape {
+            let name : String
+        }
+        let response = Response(
+            head: HTTPResponseHead(
+                version: HTTPVersion(major: 1, minor: 1),
+                status: HTTPResponseStatus(statusCode: 200)
+            ),
+            body: "{\"name\":\"hello\"}".data(using: .utf8)!
+        )
+        do {
+            let output : Output = try kinesisClient.debugValidate(operation: "Output", response: response)
+            XCTAssertEqual(output.name, "hello")
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+    
+    func testValidateJSONPayloadResponse() {
+        class Output2 : AWSShape {
+            let name : String
+        }
+        class Output : AWSShape {
+            static let payloadPath: String? = "output2"
+            let output2 : Output2
+        }
+        let response = Response(
+            head: HTTPResponseHead(
+                version: HTTPVersion(major: 1, minor: 1),
+                status: HTTPResponseStatus(statusCode: 200)
+            ),
+            body: "{\"name\":\"hello\"}".data(using: .utf8)!
+        )
+        do {
+            let output : Output = try kinesisClient.debugValidate(operation: "Output", response: response)
+            XCTAssertEqual(output.output2.name, "hello")
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+    
+    func testValidateJSONError() {
+        let response = Response(
+            head: HTTPResponseHead(
+                version: HTTPVersion(major: 1, minor: 1),
+                status: HTTPResponseStatus(statusCode: 404)
+            ),
+            body: "{\"__type\":\"ResourceNotFoundException\", \"message\": \"Donald Where's Your Troosers?\"}".data(using: .utf8)!
+        )
+        do {
+            try kinesisClient.debugValidate(response: response)
+            XCTFail("Should not get here")
+        } catch KinesisErrorType.resourceNotFoundException(let message) {
+            XCTAssertEqual(message, "Donald Where's Your Troosers?")
+        } catch {
+            XCTFail("Throwing the wrong error")
+        }
+    }
 }
 
 /// Error enum for Kinesis

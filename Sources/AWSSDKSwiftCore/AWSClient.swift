@@ -512,7 +512,15 @@ extension AWSClient {
 
         case .xml(let node):
             var outputNode = node
-            if let child = node.children(of:.element)?.first as? XML.Element, (node.name == operationName + "Response" && child.name == operationName + "Result") {
+            // if payload path is set then the decode will expect the payload to decode to the relevant member variable. Most CloudFront responses have this.
+            if let payloadPath = Output.payloadPath {
+                // set output node name
+                outputNode.name = payloadPath
+                // create parent node and add output node and set output node to parent
+                let parentNode = XML.Element(name: "Container")
+                parentNode.addChild(outputNode)
+                outputNode = parentNode
+            } else if let child = node.children(of:.element)?.first as? XML.Element, (node.name == operationName + "Response" && child.name == operationName + "Result") {
                 outputNode = child
             }
             return try XMLDecoder().decode(Output.self, from: outputNode)
@@ -699,8 +707,12 @@ extension AWSClient {
 #if DEBUG
 extension AWSClient {
 
-    func debugValidateCode(response: AWSResponse) throws {
-        return try validateCode(response: response)
+    func debugValidate(response: Response) throws {
+        try validate(response: response)
+    }
+
+    func debugValidate<Output: AWSShape>(operation operationName: String, response: Response) throws -> Output {
+        return try validate(operation: operationName, response: response)
     }
 }
 #endif

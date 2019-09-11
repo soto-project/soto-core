@@ -27,6 +27,8 @@ public struct AWSClient {
 
     let amzTarget: String?
 
+    let service: String
+
     let _endpoint: String?
 
     let serviceProtocol: ServiceProtocol
@@ -54,12 +56,12 @@ public struct AWSClient {
         if let partitionEndpoint = partitionEndpoint, let globalEndpoint = serviceEndpoints[partitionEndpoint] {
             return globalEndpoint
         }
-        return "\(signer.service).\(signer.region.rawValue).amazonaws.com"
+        return "\(service).\(signer.region.rawValue).amazonaws.com"
     }
 
     public static let eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
 
-    public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, sessionToken: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSServiceMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil) {
+    public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, sessionToken: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, signingName: String? = nil, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSServiceMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil) {
         let credential: CredentialProvider
         if let accessKey = accessKeyId, let secretKey = secretAccessKey {
             credential = Credential(accessKeyId: accessKey, secretAccessKey: secretKey, sessionToken: sessionToken)
@@ -83,8 +85,9 @@ public struct AWSClient {
             region = .useast1
         }
 
-        self.signer = Signers.V4(credential: credential, region: region, service: service, endpoint: endpoint)
+        self.signer = Signers.V4(credential: credential, region: region, signingName: signingName ?? service, endpoint: endpoint)
         self.apiVersion = apiVersion
+        self.service = service
         self._endpoint = endpoint
         self.amzTarget = amzTarget
         self.serviceProtocol = serviceProtocol
@@ -261,7 +264,7 @@ extension AWSClient {
             region: self.signer.region,
             url: url,
             serviceProtocol: serviceProtocol,
-            service: signer.service,
+            service: service,
             amzTarget: amzTarget,
             operation: operationName,
             httpMethod: httpMethod,
@@ -424,7 +427,7 @@ extension AWSClient {
             region: self.signer.region,
             url: url,
             serviceProtocol: serviceProtocol,
-            service: signer.service,
+            service: service,
             amzTarget: amzTarget,
             operation: operationName,
             httpMethod: httpMethod,

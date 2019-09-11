@@ -479,6 +479,13 @@ extension KinesisErrorType {
             return nil
         }
     }
+
+    public var description : String {
+        switch self {
+        case .resourceNotFoundException(let message):
+            return "ResourceNotFoundException :\(message ?? "")"
+        }
+    }
 }
 
 /// Error enum for SES
@@ -499,6 +506,13 @@ extension SESErrorType {
             return nil
         }
     }
+
+    public var description : String {
+        switch self {
+        case .messageRejected(let message):
+            return "MessageRejected :\(message ?? "")"
+        }
+    }
 }
 
 /// Error enum for S3
@@ -507,16 +521,23 @@ public enum S3ErrorType: AWSErrorType {
 }
 
 extension S3ErrorType {
-  public init?(errorCode: String, message: String?){
-      var errorCode = errorCode
-      if let index = errorCode.index(of: "#") {
-          errorCode = String(errorCode[errorCode.index(index, offsetBy: 1)...])
-      }
-      switch errorCode {
-      case "NoSuchKey":
-          self = .noSuchKey(message: message)
-      default:
-          return nil
-      }
-  }
+    public init?(errorCode: String, message: String?){
+        var errorCode = errorCode
+        if let index = errorCode.index(of: "#") {
+            errorCode = String(errorCode[errorCode.index(index, offsetBy: 1)...])
+        }
+        switch errorCode {
+        case "NoSuchKey":
+            self = .noSuchKey(message: message)
+        default:
+            return nil
+        }
+    }
+
+    public var description : String {
+        switch self {
+        case .noSuchKey(let message):
+            return "NoSuchKey :\(message ?? "")"
+        }
+    }
 }

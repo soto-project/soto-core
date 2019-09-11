@@ -44,8 +44,8 @@ class SignersV4Tests: XCTestCase {
     }
 
     func ec2Signer() -> (Signers.V4, URL, [String: String]) {
-        let sign = Signers.V4(credential: credential, region: .apnortheast1, service: "ec2", endpoint: nil)
-        let host = "\(sign.service).\(sign.region).amazon.com"
+        let sign = Signers.V4(credential: credential, region: .apnortheast1, signingName: "ec2", endpoint: nil)
+        let host = "ec2.\(sign.region).amazon.com"
         let url = URL(string: "https://\(host)/foo?query=foobar")!
         let headers: [String: String] = ["Host": host]
         return (sign, url, headers)
@@ -53,10 +53,10 @@ class SignersV4Tests: XCTestCase {
 
     func testHexEncodedBodyHash() {
         let helloDigest = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
-        let ec2sign = Signers.V4(credential: credential, region: .apnortheast1, service: "ec2", endpoint: nil)
+        let ec2sign = Signers.V4(credential: credential, region: .apnortheast1, signingName: "ec2", endpoint: nil)
         XCTAssertEqual(ec2sign.hexEncodedBodyHash("hello".data(using: .utf8)!), helloDigest)
 
-        let s3sign = Signers.V4(credential: credential, region: .apnortheast1, service: "s3", endpoint: nil)
+        let s3sign = Signers.V4(credential: credential, region: .apnortheast1, signingName: "s3", endpoint: nil)
         // if body data is empty, should return `UNSIGNED-PAYLOAD`
         XCTAssertEqual(s3sign.hexEncodedBodyHash(Data()), "UNSIGNED-PAYLOAD")
 
@@ -115,8 +115,8 @@ class SignersV4Tests: XCTestCase {
     }
 
     func testSignedHeadersForS3() {
-        let sign = Signers.V4(credential: credential, region: .apnortheast1, service: "s3", endpoint: nil)
-        let host = "\(sign.service)-\(sign.region).amazon.com"
+        let sign = Signers.V4(credential: credential, region: .apnortheast1, signingName: "s3", endpoint: nil)
+        let host = "s3-\(sign.region).amazon.com"
         let url = URL(string: "https://\(host)")!
         let headers = sign.signedHeaders(url: url, headers: [:], method: "PUT", date: requestDate, bodyData: Data())
 
@@ -127,8 +127,8 @@ class SignersV4Tests: XCTestCase {
     }
 
     func testSignedGETQuery() {
-        let sign = Signers.V4(credential: credential, region: .apnortheast1, service: "s3", endpoint: nil)
-        let host = "\(sign.service)-\(sign.region).amazon.com"
+        let sign = Signers.V4(credential: credential, region: .apnortheast1, signingName: "s3", endpoint: nil)
+        let host = "s3-\(sign.region).amazon.com"
         let url = URL(string: "https://\(host)")!
         let signedURL = sign.signedURL(url: url, method: "GET", date: requestDate)
 
@@ -136,8 +136,8 @@ class SignersV4Tests: XCTestCase {
     }
 
     func testSignedHEADQuery() {
-        let sign = Signers.V4(credential: credential, region: .apnortheast1, service: "s3", endpoint: nil)
-        let host = "\(sign.service)-\(sign.region).amazon.com"
+        let sign = Signers.V4(credential: credential, region: .apnortheast1, signingName: "s3", endpoint: nil)
+        let host = "s3-\(sign.region).amazon.com"
         let url = URL(string: "https://\(host)")!
         let signedURL = sign.signedURL(url: url, method: "HEAD", date: requestDate)
 
@@ -148,7 +148,7 @@ class SignersV4Tests: XCTestCase {
         let url = URL(string: "http://localhost:8000")!
 
         let emptyCred = Credential(accessKeyId: "", secretAccessKey: "")
-        let sign = Signers.V4(credential: emptyCred, region: .apnortheast1, service: "s3", endpoint: url.absoluteString)
+        let sign = Signers.V4(credential: emptyCred, region: .apnortheast1, signingName: "s3", endpoint: url.absoluteString)
 
         let headers = sign.signedHeaders(url: url, headers: [:], method: "PUT", bodyData: Data())
         XCTAssertEqual(headers["Host"], "localhost:8000")

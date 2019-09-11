@@ -12,7 +12,6 @@ public enum Body {
     case text(String)
     case buffer(Data)
     case stream(InputStream) // currenty unsupported
-    case multipart(Data) // currenty unsupported
     case json(Data)
     case xml(XML.Element)
     case empty
@@ -85,9 +84,6 @@ extension Body {
         case .xml(let node):
             let xmlDocument = XML.Document(rootElement: node)
             return xmlDocument.xmlData
-
-        case .multipart(_):
-            return nil
 
         case .stream(_):
             return nil

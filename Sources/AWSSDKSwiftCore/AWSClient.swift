@@ -21,7 +21,7 @@ public struct AWSClient {
         case invalidURL(String)
     }
 
-    public let signer: Signers.V4
+    let signer: Signers.V4
 
     let apiVersion: String
 
@@ -185,6 +185,9 @@ extension AWSClient {
                 }
     }
 
+    public func signURL(url: URL, httpMethod: String, expires: Int = 86400) -> URL {
+        return signer.signedURL(url: url, method: httpMethod, expires: expires)
+    }
 }
 
 // request creator

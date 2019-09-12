@@ -62,7 +62,7 @@ class HTTPClientTests: XCTestCase {
                      method: .GET,
                      uri: url.path
                    )
-        let request = Request(head: head, body: Data())
+        let request = HTTPClient.Request(head: head, body: Data())
         let future = client.connect(request)
         future.whenSuccess { response in }
         future.whenFailure { error in }
@@ -84,7 +84,7 @@ class HTTPClientTests: XCTestCase {
                      method: .GET,
                      uri: url.path
                    )
-        let request = Request(head: head, body: Data())
+        let request = HTTPClient.Request(head: head, body: Data())
         let future = client.connect(request)
         future.whenSuccess { response in }
         future.whenFailure { error in }
@@ -105,7 +105,7 @@ class HTTPClientTests: XCTestCase {
                      method: .GET,
                      uri: url.path
                    )
-        let request = Request(head: head, body: Data())
+        let request = HTTPClient.Request(head: head, body: Data())
         let future = client.connect(request)
         future.whenSuccess { response in }
         future.whenFailure { error in }

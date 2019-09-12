@@ -69,11 +69,11 @@ public class AWSClient {
     ///     - secretAccessKey: Private access key provided by AWS
     ///     - sessionToken: Token provided by STS.AssumeRole() which allows access to another AWS account
     ///     - region: Region of server you want to communicate with
-    ///     - amzTarget: Value to place in amzTarget header
+    ///     - amzTarget: "x-amz-target" header value
     ///     - service: Name of service endpoint
     ///     - signingName: Name that all AWS requests are signed with
     ///     - serviceProtocol: protocol of service (.json, .xml, .query etc)
-    ///     - apiVersion: API Version header value
+    ///     - apiVersion: "Version" header value
     ///     - endpoint: Custom endpoint URL to use instead of standard AWS servers
     ///     - serviceEndpoints: Dictionary of region to endpoints URLs
     ///     - partitionEndpoint: Default endpoint to use

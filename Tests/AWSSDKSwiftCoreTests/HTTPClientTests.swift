@@ -28,7 +28,7 @@ class HTTPClientTests: XCTestCase {
           _ = try HTTPClient(url: URL(string: "no_protocol.com")!)
           XCTFail("Should throw malformedURL error")
       } catch {
-        if case HTTPClientError.malformedURL = error {}
+        if case HTTPClient.HTTPError.malformedURL = error {}
         else {
             XCTFail("Should throw malformedURL error")
         }

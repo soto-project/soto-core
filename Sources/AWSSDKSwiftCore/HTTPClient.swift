@@ -15,10 +15,6 @@ import NIOOpenSSL
 import NIOFoundationCompat
 import Foundation
 
-public enum HTTPClientError: Error {
-    case malformedHead, malformedBody, malformedURL, error(Error)
-}
-
 private class HTTPClientResponseHandler: ChannelInboundHandler {
     typealias InboundIn = HTTPClientResponsePart
     typealias OutboundOut = HTTPClient.Response
@@ -39,7 +35,7 @@ private class HTTPClientResponseHandler: ChannelInboundHandler {
     }
 
     func errorCaught(ctx: ChannelHandlerContext, error: Error) {
-        promise.fail(error: HTTPClientError.error(error))
+        promise.fail(error: error)
         ctx.fireErrorCaught(error)
     }
 
@@ -48,11 +44,11 @@ private class HTTPClientResponseHandler: ChannelInboundHandler {
         case .head(let head):
             switch state {
             case .ready: state = .parsingBody(head, nil)
-            case .parsingBody: promise.fail(error: HTTPClientError.malformedHead)
+            case .parsingBody: promise.fail(error: HTTPClient.HTTPError.malformedHead)
             }
         case .body(var body):
             switch state {
-            case .ready: promise.fail(error: HTTPClientError.malformedBody)
+            case .ready: promise.fail(error: HTTPClient.HTTPError.malformedBody)
             case .parsingBody(let head, let existingData):
                 let data: Data
                 if var existing = existingData {
@@ -66,7 +62,7 @@ private class HTTPClientResponseHandler: ChannelInboundHandler {
         case .end(let tailHeaders):
             assert(tailHeaders == nil, "Unexpected tail headers")
             switch state {
-            case .ready: promise.fail(error: HTTPClientError.malformedHead)
+            case .ready: promise.fail(error: HTTPClient.HTTPError.malformedHead)
             case .parsingBody(let head, let data):
                 let res = HTTPClient.Response(head: head, body: data ?? Data())
                 if ctx.channel.isActive {
@@ -98,6 +94,11 @@ public final class HTTPClient {
         }
     }
     
+    /// Errors returned from HTTPClient when parsing responses
+    public enum HTTPError: Error {
+        case malformedHead, malformedBody, malformedURL
+    }
+    
     private let hostname: String
     private let headerHostname: String
     private let port: Int
@@ -106,10 +107,10 @@ public final class HTTPClient {
     public init(url: URL,
                 eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)) throws {
         guard let scheme = url.scheme else {
-            throw HTTPClientError.malformedURL
+            throw HTTPClient.HTTPError.malformedURL
         }
         guard let hostname = url.host else {
-            throw HTTPClientError.malformedURL
+            throw HTTPClient.HTTPError.malformedURL
         }
         
         self.hostname = hostname

@@ -5,10 +5,10 @@ set -eux
 swift package generate-xcodeproj
 jazzy --clean
 
-# stash everything that isn't in docs
-git stash push -- ":(exclude)docs"
-
-current_branch=$(git rev-parse --abbrev-ref HEAD)
+# stash everything that isn't in docs, store result in STASH_RESULT
+STASH_RESULT=$(git stash push -- ":(exclude)docs")
+# get branch name
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
 git checkout gh-pages
 # copy contents of docs to docs/current replacing the ones that are already there
@@ -20,6 +20,10 @@ mv current/ docs/
 git add --all docs
 git commit -m "Publish latest docs"
 git push
-# return to master branch
-git checkout $current_branch
-git stash pop
+# return to branch
+git checkout $CURRENT_BRANCH
+
+if [ "$STASH_RESULT" != "No local changes to save" ]; then
+    git stash pop
+fi
+

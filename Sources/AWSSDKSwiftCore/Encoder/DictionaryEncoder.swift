@@ -647,82 +647,82 @@ extension __DictionaryEncoder : SingleValueEncodingContainer {
         precondition(self.canEncodeNewValue, "Attempt to encode value through single value container when previously value already encoded.")
     }
     
-    public func encodeNil() throws {
+    func encodeNil() throws {
         assertCanEncodeNewValue()
         self.storage.push(container: NSNull())
     }
     
-    public func encode(_ value: Bool) throws {
+    func encode(_ value: Bool) throws {
         assertCanEncodeNewValue()
         self.storage.push(container: self.box(value))
     }
     
-    public func encode(_ value: Int) throws {
+    func encode(_ value: Int) throws {
         assertCanEncodeNewValue()
         self.storage.push(container: self.box(value))
     }
     
-    public func encode(_ value: Int8) throws {
+    func encode(_ value: Int8) throws {
         assertCanEncodeNewValue()
         self.storage.push(container: self.box(value))
     }
     
-    public func encode(_ value: Int16) throws {
+    func encode(_ value: Int16) throws {
         assertCanEncodeNewValue()
         self.storage.push(container: self.box(value))
     }
     
-    public func encode(_ value: Int32) throws {
+    func encode(_ value: Int32) throws {
         assertCanEncodeNewValue()
         self.storage.push(container: self.box(value))
     }
     
-    public func encode(_ value: Int64) throws {
+    func encode(_ value: Int64) throws {
         assertCanEncodeNewValue()
         self.storage.push(container: self.box(value))
     }
     
-    public func encode(_ value: UInt) throws {
+    func encode(_ value: UInt) throws {
         assertCanEncodeNewValue()
         self.storage.push(container: self.box(value))
     }
     
-    public func encode(_ value: UInt8) throws {
+    func encode(_ value: UInt8) throws {
         assertCanEncodeNewValue()
         self.storage.push(container: self.box(value))
     }
     
-    public func encode(_ value: UInt16) throws {
+    func encode(_ value: UInt16) throws {
         assertCanEncodeNewValue()
         self.storage.push(container: self.box(value))
     }
     
-    public func encode(_ value: UInt32) throws {
+    func encode(_ value: UInt32) throws {
         assertCanEncodeNewValue()
         self.storage.push(container: self.box(value))
     }
     
-    public func encode(_ value: UInt64) throws {
+    func encode(_ value: UInt64) throws {
         assertCanEncodeNewValue()
         self.storage.push(container: self.box(value))
     }
     
-    public func encode(_ value: String) throws {
+    func encode(_ value: String) throws {
         assertCanEncodeNewValue()
         self.storage.push(container: self.box(value))
     }
     
-    public func encode(_ value: Float) throws {
+    func encode(_ value: Float) throws {
         assertCanEncodeNewValue()
         try self.storage.push(container: self.box(value))
     }
     
-    public func encode(_ value: Double) throws {
+    func encode(_ value: Double) throws {
         assertCanEncodeNewValue()
         try self.storage.push(container: self.box(value))
     }
     
-    public func encode<T : Encodable>(_ value: T) throws {
+    func encode<T : Encodable>(_ value: T) throws {
         assertCanEncodeNewValue()
         try self.storage.push(container: self.box(value))
     }
@@ -1032,7 +1032,7 @@ fileprivate class __DictionaryReferencingEncoder : __DictionaryEncoder {
 }
 
 //===----------------------------------------------------------------------===//
-// JSON Decoder
+// JSON Decoders
 //===----------------------------------------------------------------------===//
 
 /// `DictionaryDecoder` facilitates the decoding of JSON into semantic `Decodable` types.
@@ -2029,81 +2029,81 @@ extension __DictionaryDecoder : SingleValueDecodingContainer {
         }
     }
     
-    public func decodeNil() -> Bool {
+    func decodeNil() -> Bool {
         return self.storage.topContainer is NSNull
     }
     
-    public func decode(_ type: Bool.Type) throws -> Bool {
+    func decode(_ type: Bool.Type) throws -> Bool {
         try expectNonNull(Bool.self)
         return try self.unbox(self.storage.topContainer, as: Bool.self)!
     }
     
-    public func decode(_ type: Int.Type) throws -> Int {
+    func decode(_ type: Int.Type) throws -> Int {
         try expectNonNull(Int.self)
         return try self.unbox(self.storage.topContainer, as: Int.self)!
     }
     
-    public func decode(_ type: Int8.Type) throws -> Int8 {
+    func decode(_ type: Int8.Type) throws -> Int8 {
         try expectNonNull(Int8.self)
         return try self.unbox(self.storage.topContainer, as: Int8.self)!
     }
     
-    public func decode(_ type: Int16.Type) throws -> Int16 {
+    func decode(_ type: Int16.Type) throws -> Int16 {
         try expectNonNull(Int16.self)
         return try self.unbox(self.storage.topContainer, as: Int16.self)!
     }
     
-    public func decode(_ type: Int32.Type) throws -> Int32 {
+    func decode(_ type: Int32.Type) throws -> Int32 {
         try expectNonNull(Int32.self)
         return try self.unbox(self.storage.topContainer, as: Int32.self)!
     }
     
-    public func decode(_ type: Int64.Type) throws -> Int64 {
+    func decode(_ type: Int64.Type) throws -> Int64 {
         try expectNonNull(Int64.self)
         return try self.unbox(self.storage.topContainer, as: Int64.self)!
     }
     
-    public func decode(_ type: UInt.Type) throws -> UInt {
+    func decode(_ type: UInt.Type) throws -> UInt {
         try expectNonNull(UInt.self)
         return try self.unbox(self.storage.topContainer, as: UInt.self)!
     }
     
-    public func decode(_ type: UInt8.Type) throws -> UInt8 {
+    func decode(_ type: UInt8.Type) throws -> UInt8 {
         try expectNonNull(UInt8.self)
         return try self.unbox(self.storage.topContainer, as: UInt8.self)!
     }
     
-    public func decode(_ type: UInt16.Type) throws -> UInt16 {
+    func decode(_ type: UInt16.Type) throws -> UInt16 {
         try expectNonNull(UInt16.self)
         return try self.unbox(self.storage.topContainer, as: UInt16.self)!
     }
     
-    public func decode(_ type: UInt32.Type) throws -> UInt32 {
+    func decode(_ type: UInt32.Type) throws -> UInt32 {
         try expectNonNull(UInt32.self)
         return try self.unbox(self.storage.topContainer, as: UInt32.self)!
     }
     
-    public func decode(_ type: UInt64.Type) throws -> UInt64 {
+    func decode(_ type: UInt64.Type) throws -> UInt64 {
         try expectNonNull(UInt64.self)
         return try self.unbox(self.storage.topContainer, as: UInt64.self)!
     }
     
-    public func decode(_ type: Float.Type) throws -> Float {
+    func decode(_ type: Float.Type) throws -> Float {
         try expectNonNull(Float.self)
         return try self.unbox(self.storage.topContainer, as: Float.self)!
     }
     
-    public func decode(_ type: Double.Type) throws -> Double {
+    func decode(_ type: Double.Type) throws -> Double {
         try expectNonNull(Double.self)
         return try self.unbox(self.storage.topContainer, as: Double.self)!
     }
     
-    public func decode(_ type: String.Type) throws -> String {
+    func decode(_ type: String.Type) throws -> String {
         try expectNonNull(String.self)
         return try self.unbox(self.storage.topContainer, as: String.self)!
     }
     
-    public func decode<T : Decodable>(_ type: T.Type) throws -> T {
+    func decode<T : Decodable>(_ type: T.Type) throws -> T {
         try expectNonNull(type)
         return try self.unbox(self.storage.topContainer, as: type)!
     }

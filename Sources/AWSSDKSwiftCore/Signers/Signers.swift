@@ -6,4 +6,4 @@
 //
 //
 
-final class Signers {}
+public final class Signers {}

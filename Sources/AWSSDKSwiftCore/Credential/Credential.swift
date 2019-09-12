@@ -9,7 +9,8 @@
 import Foundation
 import INIParser
 
-protocol CredentialProvider {
+/// Protocol defining requirements for object providing AWS credentials
+public protocol CredentialProvider {
     var accessKeyId: String { get }
     var secretAccessKey: String { get }
     var sessionToken: String? { get }
@@ -31,6 +32,21 @@ extension CredentialProvider {
     }
 }
 
+/// Provide AWS credentials directly
+public struct Credential: CredentialProvider {
+    public let accessKeyId: String
+    public let secretAccessKey: String
+    public let sessionToken: String?
+    public let expiration: Date?
+    
+    init(accessKeyId: String, secretAccessKey: String, sessionToken: String? = nil, expiration: Date? = nil) {
+        self.accessKeyId = accessKeyId
+        self.secretAccessKey = secretAccessKey
+        self.sessionToken = sessionToken ?? ProcessInfo.processInfo.environment["AWS_SESSION_TOKEN"]
+        self.expiration = expiration
+    }
+}
+
 /// Protocol for parsing AWS credential configs
 protocol SharedCredentialsConfigParser {
     /// Parse a specified file
@@ -49,23 +65,24 @@ class IniConfigParser: SharedCredentialsConfigParser {
     }
 }
 
-struct SharedCredential: CredentialProvider {
+/// Provide AWS credentials via the ~/.aws/credential file
+public struct SharedCredential: CredentialProvider {
 
     /// Errors occurring when initializing a SharedCredential
     ///
     /// - missingProfile: If the profile requested was not found
     /// - missingAccessKeyId: If the access key ID was not found
     /// - missingSecretAccessKey: If the secret access key was not found
-    enum SharedCredentialError: Error, Equatable {
+    public enum SharedCredentialError: Error, Equatable {
         case missingProfile(String)
         case missingAccessKeyId
         case missingSecretAccessKey
     }
 
-    let accessKeyId: String
-    let secretAccessKey: String
-    let sessionToken: String?
-    let expiration: Date? = nil
+    public let accessKeyId: String
+    public let secretAccessKey: String
+    public let sessionToken: String?
+    public let expiration: Date? = nil
 
     init(filename: String = "~/.aws/credentials",
                 profile: String = "default") throws {
@@ -95,21 +112,8 @@ struct SharedCredential: CredentialProvider {
     }
 }
 
-struct Credential: CredentialProvider {
-    let accessKeyId: String
-    let secretAccessKey: String
-    let sessionToken: String?
-    let expiration: Date?
-
-    init(accessKeyId: String, secretAccessKey: String, sessionToken: String? = nil, expiration: Date? = nil) {
-        self.accessKeyId = accessKeyId
-        self.secretAccessKey = secretAccessKey
-        self.sessionToken = sessionToken ?? ProcessInfo.processInfo.environment["AWS_SESSION_TOKEN"]
-        self.expiration = expiration
-    }
-}
-
-struct EnvironementCredential: CredentialProvider {
+/// Provide AWS credentials via environment variables
+struct EnvironmentCredential: CredentialProvider {
     let accessKeyId: String
     let secretAccessKey: String
     let sessionToken: String?

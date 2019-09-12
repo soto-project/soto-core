@@ -83,7 +83,7 @@ public class AWSClient {
         let credential: CredentialProvider
         if let accessKey = accessKeyId, let secretKey = secretAccessKey {
             credential = Credential(accessKeyId: accessKey, secretAccessKey: secretKey, sessionToken: sessionToken)
-        } else if let ecredential = EnvironementCredential() {
+        } else if let ecredential = EnvironmentCredential() {
             credential = ecredential
         } else if let scredential = try? SharedCredential() {
             credential = scredential

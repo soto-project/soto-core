@@ -12,7 +12,7 @@ import NIOTLS
 import NIOHTTP1
 
 extension URL {
-    public var hostWithPort: String? {
+    var hostWithPort: String? {
         guard var host = self.host else {
             return nil
         }
@@ -37,11 +37,11 @@ extension HTTPRequestHead {
     }
 }
 
+/// Object encapsulating all the information needed to generate a raw HTTP request to AWS
 public struct AWSRequest {
     public let region: Region
     public var url: URL
     public let serviceProtocol: ServiceProtocol
-    public let service: String
     public let amzTarget: String?
     public let operation: String
     public let httpMethod: String
@@ -49,11 +49,21 @@ public struct AWSRequest {
     public var body: Body
     public let middlewares: [AWSServiceMiddleware]
 
-    public init(region: Region = .useast1, url: URL, serviceProtocol: ServiceProtocol, service: String, amzTarget: String? = nil, operation: String, httpMethod: String, httpHeaders: [String: Any] = [:], body: Body = .empty, middlewares: [AWSServiceMiddleware] = []) {
+    /// Initialize AWSRequest struct
+    /// - parameters:
+    ///     - region: Region of AWS server
+    ///     - url : Request URL
+    ///     - serviceProtocol: protocol of service (.json, .xml, .query etc)
+    ///     - amzTarget: Value to place in amzTarget header
+    ///     - operation: Name of AWS operation
+    ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - httpHeaders: HTTP request headers
+    ///     - body: HTTP Request body
+    ///     - middlewares: Any middlewares to apply to the AWSRequest
+    public init(region: Region = .useast1, url: URL, serviceProtocol: ServiceProtocol, amzTarget: String? = nil, operation: String, httpMethod: String, httpHeaders: [String: Any] = [:], body: Body = .empty, middlewares: [AWSServiceMiddleware] = []) {
         self.region = region
         self.url = url
         self.serviceProtocol = serviceProtocol
-        self.service = service
         self.amzTarget = amzTarget
         self.operation = operation
         self.httpMethod = httpMethod
@@ -62,6 +72,10 @@ public struct AWSRequest {
         self.middlewares = middlewares
     }
 
+    /// Add a header value
+    /// - parameters:
+    ///     - value : value
+    ///     - forHTTPHeaderField: name of header
     public mutating func addValue(_ value: String, forHTTPHeaderField field: String) {
         httpHeaders[field] = value
     }

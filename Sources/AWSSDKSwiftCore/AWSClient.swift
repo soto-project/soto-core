@@ -15,7 +15,8 @@ import HypertextApplicationLanguage
 /// Convenience shorthand for `EventLoopFuture`.
 public typealias Future = EventLoopFuture
 
-public struct AWSClient {
+/// This is the workhorse of aws-sdk-swift-core. You provide it with a `AWSShape` Input object, it converts it to `AWSRequest` which is then converted to a raw `HTTPClient` Request. This is then sent to AWS. When the response from AWS is received if it is successful it is converted to a `AWSResponse` which is then decoded to generate a `AWSShape` Output object. If it is not successful then `AWSClient` will throw an `AWSErrorType`.
+public class AWSClient {
 
     public enum RequestError: Error {
         case invalidURL(String)
@@ -37,10 +38,11 @@ public struct AWSClient {
 
     let partitionEndpoint: String?
 
-    public let middlewares: [AWSServiceMiddleware]
+    let middlewares: [AWSServiceMiddleware]
 
-    public var possibleErrorTypes: [AWSErrorType.Type]
+    var possibleErrorTypes: [AWSErrorType.Type]
 
+    /// endpoint URL
     public var endpoint: String {
         if let givenEndpoint = self._endpoint {
             return givenEndpoint
@@ -48,7 +50,7 @@ public struct AWSClient {
         return "https://\(serviceHost)"
     }
 
-    public var serviceHost: String {
+    var serviceHost: String {
         if let serviceEndpoint = serviceEndpoints[signer.region.rawValue] {
             return serviceEndpoint
         }
@@ -59,8 +61,24 @@ public struct AWSClient {
         return "\(service).\(signer.region.rawValue).amazonaws.com"
     }
 
-    public static let eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+    static let eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
 
+    /// Initialize an AWSClient struct
+    /// - parameters:
+    ///     - accessKeyId: Public access key provided by AWS
+    ///     - secretAccessKey: Private access key provided by AWS
+    ///     - sessionToken: Token provided by STS.AssumeRole() which allows access to another AWS account
+    ///     - region: Region of server you want to communicate with
+    ///     - amzTarget: Value to place in amzTarget header
+    ///     - service: Name of service endpoint
+    ///     - signingName: Name that all AWS requests are signed with
+    ///     - serviceProtocol: protocol of service (.json, .xml, .query etc)
+    ///     - apiVersion: API Version header value
+    ///     - endpoint: Custom endpoint URL to use instead of standard AWS servers
+    ///     - serviceEndpoints: Dictionary of region to endpoints URLs
+    ///     - partitionEndpoint: Default endpoint to use
+    ///     - middlewares: Array of middlewares to apply to requests and responses
+    ///     - possibleErrorTypes: Array of possible error types that the client can throw
     public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, sessionToken: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, signingName: String? = nil, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSServiceMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil) {
         let credential: CredentialProvider
         if let accessKey = accessKeyId, let secretKey = secretAccessKey {
@@ -118,6 +136,15 @@ extension AWSClient {
 
 // public facing apis
 extension AWSClient {
+    
+    /// send a request with an input object and return a future with an empty response
+    /// - parameters:
+    ///     - operationName: Name of the AWS operation
+    ///     - path: path to append to endpoint URL
+    ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - input: Input object
+    /// - returns:
+    ///     Empty Future that completes when response is received
     public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> Future<Void> {
 
         return signer.manageCredential().thenThrowing { _ in
@@ -135,6 +162,13 @@ extension AWSClient {
             }
     }
 
+    /// send an empty request and return a future with an empty response
+    /// - parameters:
+    ///     - operationName: Name of the AWS operation
+    ///     - path: path to append to endpoint URL
+    ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    /// - returns:
+    ///     Empty Future that completes when response is received
     public func send(operation operationName: String, path: String, httpMethod: String) throws -> Future<Void> {
 
         return signer.manageCredential().thenThrowing { _ in
@@ -151,6 +185,13 @@ extension AWSClient {
             }
     }
 
+    /// send an empty request and return a future with the output object generated from the response
+    /// - parameters:
+    ///     - operationName: Name of the AWS operation
+    ///     - path: path to append to endpoint URL
+    ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    /// - returns:
+    ///     Future containing output object that completes when response is received
     public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) throws -> Future<Output> {
 
         return signer.manageCredential().thenThrowing { _ in
@@ -167,6 +208,14 @@ extension AWSClient {
             }
     }
 
+    /// send a request with an input object and return a future with the output object generated from the response
+    /// - parameters:
+    ///     - operationName: Name of the AWS operation
+    ///     - path: path to append to endpoint URL
+    ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - input: Input object
+    /// - returns:
+    ///     Future containing output object that completes when response is received
     public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input)
         throws -> Future<Output> {
 
@@ -185,6 +234,13 @@ extension AWSClient {
                 }
     }
 
+    /// generate a signed URL
+    /// - parameters:
+    ///     - url : URL to sign
+    ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - expires: How long before the signed URL expires
+    /// - returns:
+    ///     A signed URL
     public func signURL(url: URL, httpMethod: String, expires: Int = 86400) -> URL {
         return signer.signedURL(url: url, method: httpMethod, expires: expires)
     }
@@ -267,7 +323,6 @@ extension AWSClient {
             region: self.signer.region,
             url: url,
             serviceProtocol: serviceProtocol,
-            service: service,
             amzTarget: amzTarget,
             operation: operationName,
             httpMethod: httpMethod,
@@ -430,7 +485,6 @@ extension AWSClient {
             region: self.signer.region,
             url: url,
             serviceProtocol: serviceProtocol,
-            service: service,
             amzTarget: amzTarget,
             operation: operationName,
             httpMethod: httpMethod,

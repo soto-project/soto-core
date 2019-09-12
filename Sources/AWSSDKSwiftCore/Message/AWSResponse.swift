@@ -11,12 +11,21 @@ import NIO
 import NIOHTTP1
 import HypertextApplicationLanguage
 
+/// Structure encapsulating a processed HTTP Response
 public struct AWSResponse {
 
+    /// response status
     public let status: HTTPResponseStatus
+    /// response headers
     public var headers: [String: Any]
+    /// response body
     public var body: Body
 
+    /// initialize an AWSResponse Object
+    /// - parameters:
+    ///     - from: Raw HTTP Response
+    ///     - serviceProtocol: protocol of service (.json, .xml, .query etc)
+    ///     - raw: Whether Body should be treated as raw data
     init(from response: HTTPClient.Response, serviceProtocolType: ServiceProtocolType, raw: Bool = false) throws {
         self.status = response.head.status
         self.headers = AWSResponse.createHeaders(from: response)

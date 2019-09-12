@@ -23,7 +23,7 @@ public enum XMLContainerCoding {
 }
 
 /// protocol to return XMLContainerCoding values. To control how the child elements of a Codable class are encoded inherit from this and return coding values for each
-public protocol XMLContainerCodingMap {
+public protocol XMLCodable: Codable {
     static func getXMLContainerCoding(for key: CodingKey) -> XMLContainerCoding?
 }
 
@@ -133,7 +133,7 @@ public class XMLDecoder {
 
     /// decode a Codable class from XML
     public func decode<T : Decodable>(_ type: T.Type, from xml: XML.Element) throws -> T {
-        let containerCodingMapType = type as? XMLContainerCodingMap.Type
+        let containerCodingMapType = type as? XMLCodable.Type
         let decoder = _XMLDecoder(xml, options: self.options, containerCodingMapType: containerCodingMapType)
         let value = try T(from: decoder)
         return value
@@ -187,12 +187,12 @@ fileprivate class _XMLDecoder : Decoder {
     var element : XML.Element { return storage.topContainer! }
 
     /// the container coding map for the current element
-    var containerCodingMapType : XMLContainerCodingMap.Type?
+    var containerCodingMapType : XMLCodable.Type?
     
     /// the container encoding for the current element
     var containerCoding : XMLContainerCoding = .default
 
-    public init(_ element : XML.Element, at codingPath: [CodingKey] = [], options: XMLDecoder._Options, containerCodingMapType: XMLContainerCodingMap.Type?) {
+    public init(_ element : XML.Element, at codingPath: [CodingKey] = [], options: XMLDecoder._Options, containerCodingMapType: XMLCodable.Type?) {
         self.storage = _XMLDecoderStorage()
         self.storage.push(container: element)
         self.codingPath = codingPath
@@ -844,7 +844,7 @@ fileprivate class _XMLDecoder : Decoder {
         let prevContainerCodingOwner = self.containerCodingMapType
         defer { self.containerCodingMapType = prevContainerCodingOwner }
         // set the current container coding map
-        containerCodingMapType = type as? XMLContainerCodingMap.Type
+        containerCodingMapType = type as? XMLCodable.Type
         
         if type == Date.self || type == NSDate.self {
             return try self.unbox(element, as: Date.self)

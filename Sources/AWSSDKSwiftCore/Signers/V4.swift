@@ -9,13 +9,13 @@
 import Foundation
 
 extension Signers {
-    public final class V4 {
+    final class V4 {
 
-        public let region: Region
+        let region: Region
 
-        public let signingName: String
+        let signingName: String
         
-        public let endpoint: String?
+        let endpoint: String?
 
         let identifier = "aws4_request"
 

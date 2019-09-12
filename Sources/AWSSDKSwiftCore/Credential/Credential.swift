@@ -9,7 +9,7 @@
 import Foundation
 import INIParser
 
-public protocol CredentialProvider {
+protocol CredentialProvider {
     var accessKeyId: String { get }
     var secretAccessKey: String { get }
     var sessionToken: String? { get }
@@ -17,11 +17,11 @@ public protocol CredentialProvider {
 }
 
 extension CredentialProvider {
-    public func isEmpty() -> Bool {
+    func isEmpty() -> Bool {
         return self.accessKeyId.isEmpty || self.secretAccessKey.isEmpty
     }
 
-    public func nearExpiration() -> Bool {
+    func nearExpiration() -> Bool {
         if let expiration = self.expiration {
             // are we within 5 minutes of expiration?
             return Date().addingTimeInterval(5.0 * 60.0) > expiration
@@ -49,25 +49,25 @@ class IniConfigParser: SharedCredentialsConfigParser {
     }
 }
 
-public struct SharedCredential: CredentialProvider {
+struct SharedCredential: CredentialProvider {
 
     /// Errors occurring when initializing a SharedCredential
     ///
     /// - missingProfile: If the profile requested was not found
     /// - missingAccessKeyId: If the access key ID was not found
     /// - missingSecretAccessKey: If the secret access key was not found
-    public enum SharedCredentialError: Error, Equatable {
+    enum SharedCredentialError: Error, Equatable {
         case missingProfile(String)
         case missingAccessKeyId
         case missingSecretAccessKey
     }
 
-    public let accessKeyId: String
-    public let secretAccessKey: String
-    public let sessionToken: String?
-    public let expiration: Date? = nil
+    let accessKeyId: String
+    let secretAccessKey: String
+    let sessionToken: String?
+    let expiration: Date? = nil
 
-    public init(filename: String = "~/.aws/credentials",
+    init(filename: String = "~/.aws/credentials",
                 profile: String = "default") throws {
         try self.init(
             filename: filename,
@@ -95,13 +95,13 @@ public struct SharedCredential: CredentialProvider {
     }
 }
 
-public struct Credential: CredentialProvider {
-    public let accessKeyId: String
-    public let secretAccessKey: String
-    public let sessionToken: String?
-    public let expiration: Date?
+struct Credential: CredentialProvider {
+    let accessKeyId: String
+    let secretAccessKey: String
+    let sessionToken: String?
+    let expiration: Date?
 
-    public init(accessKeyId: String, secretAccessKey: String, sessionToken: String? = nil, expiration: Date? = nil) {
+    init(accessKeyId: String, secretAccessKey: String, sessionToken: String? = nil, expiration: Date? = nil) {
         self.accessKeyId = accessKeyId
         self.secretAccessKey = secretAccessKey
         self.sessionToken = sessionToken ?? ProcessInfo.processInfo.environment["AWS_SESSION_TOKEN"]

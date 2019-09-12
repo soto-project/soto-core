@@ -17,13 +17,13 @@ public struct AWSResponse {
     public var headers: [String: Any]
     public var body: Body
 
-    init(from response: Response, serviceProtocolType: ServiceProtocolType, raw: Bool = false) throws {
+    init(from response: HTTPClient.Response, serviceProtocolType: ServiceProtocolType, raw: Bool = false) throws {
         self.status = response.head.status
         self.headers = AWSResponse.createHeaders(from: response)
         self.body = try AWSResponse.createBody(from: response, serviceProtocolType: serviceProtocolType, raw: raw)
     }
 
-    private static func createHeaders(from response: Response) -> [String: String] {
+    private static func createHeaders(from response: HTTPClient.Response) -> [String: String] {
         var responseHeaders: [String: String] = [:]
         for (key, value) in response.head.headers {
             responseHeaders[key.description] = value
@@ -32,7 +32,7 @@ public struct AWSResponse {
         return responseHeaders
     }
     
-    private static func createBody(from response: Response, serviceProtocolType: ServiceProtocolType, raw: Bool) throws -> Body {
+    private static func createBody(from response: HTTPClient.Response, serviceProtocolType: ServiceProtocolType, raw: Bool) throws -> Body {
         var responseBody: Body = .empty
         let data = response.body
         

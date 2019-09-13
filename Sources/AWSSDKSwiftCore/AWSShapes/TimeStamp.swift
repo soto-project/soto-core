@@ -24,21 +24,46 @@ public struct TimeStamp {
         self.dateValue = TimeStamp.date(from: string)
     }
     
+    public init(_ double: Double) {
+        self.dateValue = Date(timeIntervalSince1970: double)
+    }
+    
     static func string(from date: Date) -> String {
-        return dateFormatter.string(from: date)
+        return defaultDateFormatter.string(from: date)
     }
 
     static func date(from string: String) -> Date? {
-        return dateFormatter.date(from: string)
+        for formatter in dateFormatters {
+            if let date = formatter.date(from: string) {
+                return date
+            }
+        }
+        return nil
     }
     
-    private static var dateFormatter : DateFormatter {
+    /// date formatter for outputting dates
+    private static var defaultDateFormatter : DateFormatter {
         let dateFormatter = DateFormatter()
         dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
         dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
         return dateFormatter
     }
+
+    /// date formatters for parsing date strings. Currently know of two different formats returned by AWS: iso and http
+    static func createDateFormatters() -> [DateFormatter] {
+        var dateFormatters : [DateFormatter] = [defaultDateFormatter]
+        
+        let httpDateFormatter = DateFormatter()
+        httpDateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        httpDateFormatter.dateFormat = "EEE, d MMM yyy HH:mm:ss z"
+        httpDateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        dateFormatters.append(httpDateFormatter)
+
+        return dateFormatters
+    }
+    
+    static var dateFormatters : [DateFormatter] = TimeStamp.createDateFormatters()
 }
 
 
@@ -46,8 +71,10 @@ extension TimeStamp: Codable {
     
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
-        if let value = try? container.decode(String.self) {
+        if let value = try? container.decode(Double.self) {
             self.init(value)
+        } else if let value = try? container.decode(String.self) {
+                self.init(value)
         } else if let value = try? container.decode(Date.self) {
             self.init(value)
         } else {

@@ -15,7 +15,16 @@ class AWSClientTests: XCTestCase {
 
     static var allTests : [(String, (AWSClientTests) -> () throws -> Void)] {
         return [
-            ("testCreateAWSRequest", testCreateAWSRequest)
+            ("testGetCredential", testGetCredential),
+            ("testCreateAWSRequest", testCreateAWSRequest),
+            ("testCreateNIORequest", testCreateNIORequest),
+            ("testValidateCode", testValidateCode),
+            ("testValidateXMLResponse", testValidateXMLResponse),
+            ("testValidateXMLPayloadResponse", testValidateXMLPayloadResponse),
+            ("testValidateXMLError", testValidateXMLError),
+            ("testValidateJSONResponse", testValidateJSONResponse),
+            ("testValidateJSONPayloadResponse", testValidateJSONPayloadResponse),
+            ("testValidateJSONError", testValidateJSONError),
         ]
     }
 
@@ -109,7 +118,7 @@ class AWSClientTests: XCTestCase {
         service: "email",
         serviceProtocol: ServiceProtocol(type: .query),
         apiVersion: "2013-12-01",
-        middlewares: [],
+        middlewares: [AWSLoggingMiddleware()],
         possibleErrorTypes: [SESErrorType.self]
     )
 
@@ -121,7 +130,7 @@ class AWSClientTests: XCTestCase {
         service: "kinesis",
         serviceProtocol: ServiceProtocol(type: .json, version: ServiceProtocol.Version(major: 1, minor: 1)),
         apiVersion: "2013-12-02",
-        middlewares: [],
+        middlewares: [AWSLoggingMiddleware()],
         possibleErrorTypes: [KinesisErrorType.self]
     )
 
@@ -135,7 +144,7 @@ class AWSClientTests: XCTestCase {
         endpoint: nil,
         serviceEndpoints: ["us-west-2": "s3.us-west-2.amazonaws.com", "eu-west-1": "s3.eu-west-1.amazonaws.com", "us-east-1": "s3.amazonaws.com", "ap-northeast-1": "s3.ap-northeast-1.amazonaws.com", "s3-external-1": "s3-external-1.amazonaws.com", "ap-southeast-2": "s3.ap-southeast-2.amazonaws.com", "sa-east-1": "s3.sa-east-1.amazonaws.com", "ap-southeast-1": "s3.ap-southeast-1.amazonaws.com", "us-west-1": "s3.us-west-1.amazonaws.com"],
         partitionEndpoint: "us-east-1",
-        middlewares: [],
+        middlewares: [AWSLoggingMiddleware()],
         possibleErrorTypes: [S3ErrorType.self]
     )
 
@@ -305,21 +314,20 @@ class AWSClientTests: XCTestCase {
     }
 
     func testValidateCode() {
-        let nioResponse = Response(
+        let response = Response(
             head: HTTPResponseHead(
                 version: HTTPVersion(major: 1, minor: 1),
                 status: HTTPResponseStatus(statusCode: 200)
             ),
             body: Data()
         )
-
         do {
-            try s3Client.debugValidateCode(response: nioResponse)
+            try s3Client.debugValidate(response: response)
         } catch {
             XCTFail(error.localizedDescription)
         }
 
-        let failNioResponse = Response(
+        let failResponse = Response(
             head: HTTPResponseHead(
                 version: HTTPVersion(major: 1, minor: 1),
                 status: HTTPResponseStatus(statusCode: 403)
@@ -328,13 +336,129 @@ class AWSClientTests: XCTestCase {
         )
 
         do {
-            try s3Client.debugValidateCode(response: failNioResponse)
+            try s3Client.debugValidate(response: failResponse)
             XCTFail("call to validateCode should throw an error")
         } catch {
             XCTAssertTrue(true)
         }
     }
 
+    func testValidateXMLResponse() {
+        class Output : AWSShape {
+            let name : String
+        }
+        let response = Response(
+            head: HTTPResponseHead(
+                version: HTTPVersion(major: 1, minor: 1),
+                status: HTTPResponseStatus(statusCode: 200)
+            ),
+            body: "<Output><name>hello</name></Output>".data(using: .utf8)!
+        )
+        do {
+            let output : Output = try s3Client.debugValidate(operation: "Output", response: response)
+            XCTAssertEqual(output.name, "hello")
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+
+    func testValidateXMLPayloadResponse() {
+        class Output : AWSShape {
+            static let payloadPath: String? = "name"
+            let name : String
+        }
+        let response = Response(
+            head: HTTPResponseHead(
+                version: HTTPVersion(major: 1, minor: 1),
+                status: HTTPResponseStatus(statusCode: 200)
+            ),
+            body: "<name>hello</name>".data(using: .utf8)!
+        )
+        do {
+            let output : Output = try s3Client.debugValidate(operation: "Output", response: response)
+            XCTAssertEqual(output.name, "hello")
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+
+    func testValidateXMLError() {
+        let response = Response(
+            head: HTTPResponseHead(
+                version: HTTPVersion(major: 1, minor: 1),
+                status: HTTPResponseStatus(statusCode: 404)
+            ),
+            body: "<Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message></Error>".data(using: .utf8)!
+        )
+        do {
+            try s3Client.debugValidate(response: response)
+            XCTFail("Should not get here")
+        } catch S3ErrorType.noSuchKey(let message) {
+            XCTAssertEqual(message, "Message: It doesn't exist")
+        } catch {
+            XCTFail("Throwing the wrong error")
+        }
+    }
+
+    func testValidateJSONResponse() {
+        class Output : AWSShape {
+            let name : String
+        }
+        let response = Response(
+            head: HTTPResponseHead(
+                version: HTTPVersion(major: 1, minor: 1),
+                status: HTTPResponseStatus(statusCode: 200)
+            ),
+            body: "{\"name\":\"hello\"}".data(using: .utf8)!
+        )
+        do {
+            let output : Output = try kinesisClient.debugValidate(operation: "Output", response: response)
+            XCTAssertEqual(output.name, "hello")
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+
+    func testValidateJSONPayloadResponse() {
+        class Output2 : AWSShape {
+            let name : String
+        }
+        class Output : AWSShape {
+            static let payloadPath: String? = "output2"
+            let output2 : Output2
+        }
+        let response = Response(
+            head: HTTPResponseHead(
+                version: HTTPVersion(major: 1, minor: 1),
+                status: HTTPResponseStatus(statusCode: 200)
+            ),
+            body: "{\"name\":\"hello\"}".data(using: .utf8)!
+        )
+        do {
+            let output : Output = try kinesisClient.debugValidate(operation: "Output", response: response)
+            XCTAssertEqual(output.output2.name, "hello")
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+
+    func testValidateJSONError() {
+        let response = Response(
+            head: HTTPResponseHead(
+                version: HTTPVersion(major: 1, minor: 1),
+                status: HTTPResponseStatus(statusCode: 404)
+            ),
+            body: "{\"__type\":\"ResourceNotFoundException\", \"message\": \"Donald Where's Your Troosers?\"}".data(using: .utf8)!
+        )
+        do {
+            try kinesisClient.debugValidate(response: response)
+            XCTFail("Should not get here")
+        } catch KinesisErrorType.resourceNotFoundException(let message) {
+            XCTAssertEqual(message, "Donald Where's Your Troosers?")
+        } catch {
+            XCTFail("Throwing the wrong error")
+        }
+    }
 }
 
 /// Error enum for Kinesis
@@ -353,6 +477,13 @@ extension KinesisErrorType {
             self = .resourceNotFoundException(message: message)
         default:
             return nil
+        }
+    }
+
+    public var description : String {
+        switch self {
+        case .resourceNotFoundException(let message):
+            return "ResourceNotFoundException :\(message ?? "")"
         }
     }
 }
@@ -375,6 +506,13 @@ extension SESErrorType {
             return nil
         }
     }
+
+    public var description : String {
+        switch self {
+        case .messageRejected(let message):
+            return "MessageRejected :\(message ?? "")"
+        }
+    }
 }
 
 /// Error enum for S3
@@ -383,16 +521,23 @@ public enum S3ErrorType: AWSErrorType {
 }
 
 extension S3ErrorType {
-  public init?(errorCode: String, message: String?){
-      var errorCode = errorCode
-      if let index = errorCode.firstIndex(of: "#") {
-          errorCode = String(errorCode[errorCode.index(index, offsetBy: 1)...])
-      }
-      switch errorCode {
-      case "NoSuchKey":
-          self = .noSuchKey(message: message)
-      default:
-          return nil
-      }
-  }
+    public init?(errorCode: String, message: String?){
+        var errorCode = errorCode
+        if let index = errorCode.firstIndex(of: "#") {
+            errorCode = String(errorCode[errorCode.index(index, offsetBy: 1)...])
+        }
+        switch errorCode {
+        case "NoSuchKey":
+            self = .noSuchKey(message: message)
+        default:
+            return nil
+        }
+    }
+
+    public var description : String {
+        switch self {
+        case .noSuchKey(let message):
+            return "NoSuchKey :\(message ?? "")"
+        }
+    }
 }

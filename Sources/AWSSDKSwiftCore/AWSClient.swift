@@ -12,17 +12,8 @@ import NIO
 import NIOHTTP1
 import HypertextApplicationLanguage
 
-extension String {
-    public static let uriAWSQueryAllowed: [String] = ["&", "\'", "(", ")", "-", ".", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "=", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "_", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
-}
-
 /// Convenience shorthand for `EventLoopFuture`.
 public typealias Future = EventLoopFuture
-
-public struct InputContext {
-    let Shape: AWSShape.Type
-    let input: AWSShape
-}
 
 public struct AWSClient {
 
@@ -30,11 +21,13 @@ public struct AWSClient {
         case invalidURL(String)
     }
 
-    public let signer: Signers.V4
+    let signer: Signers.V4
 
     let apiVersion: String
 
     let amzTarget: String?
+
+    let service: String
 
     let _endpoint: String?
 
@@ -63,12 +56,12 @@ public struct AWSClient {
         if let partitionEndpoint = partitionEndpoint, let globalEndpoint = serviceEndpoints[partitionEndpoint] {
             return globalEndpoint
         }
-        return "\(signer.service).\(signer.region.rawValue).amazonaws.com"
+        return "\(service).\(signer.region.rawValue).amazonaws.com"
     }
 
     public static let eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
 
-    public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, sessionToken: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSServiceMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil) {
+    public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, sessionToken: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, signingName: String? = nil, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSServiceMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil) {
         let credential: CredentialProvider
         if let accessKey = accessKeyId, let secretKey = secretAccessKey {
             credential = Credential(accessKeyId: accessKey, secretAccessKey: secretKey, sessionToken: sessionToken)
@@ -92,8 +85,9 @@ public struct AWSClient {
             region = .useast1
         }
 
-        self.signer = Signers.V4(credential: credential, region: region, service: service, endpoint: endpoint)
+        self.signer = Signers.V4(credential: credential, region: region, signingName: signingName ?? service, endpoint: endpoint)
         self.apiVersion = apiVersion
+        self.service = service
         self._endpoint = endpoint
         self.amzTarget = amzTarget
         self.serviceProtocol = serviceProtocol
@@ -107,7 +101,7 @@ public struct AWSClient {
 // invoker
 extension AWSClient {
     fileprivate func invoke(_ nioRequest: Request) -> Future<Response> {
-        let client = createHTTPClient(for: nioRequest)
+        let client = HTTPClient(hostname: nioRequest.head.hostWithPort!, port: nioRequest.head.port ?? 443)
         let futureResponse = client.connect(nioRequest)
 
         futureResponse.whenComplete { _ in
@@ -119,10 +113,6 @@ extension AWSClient {
         }
 
         return futureResponse
-    }
-
-    private func createHTTPClient(for nioRequest: Request) -> HTTPClient {
-        return HTTPClient(hostname: nioRequest.head.hostWithPort!, port: nioRequest.head.port ?? 443)
     }
 }
 
@@ -141,7 +131,7 @@ extension AWSClient {
             }.flatMap { nioRequest in
                 return self.invoke(nioRequest)
             }.flatMapThrowing { response in
-                return try self.validateCode(response: response)
+                return try self.validate(response: response)
             }
     }
 
@@ -157,7 +147,7 @@ extension AWSClient {
             }.flatMap { nioRequest in
                 return self.invoke(nioRequest)
             }.flatMapThrowing { response in
-                return try self.validateCode(response: response)
+                return try self.validate(response: response)
             }
     }
 
@@ -195,6 +185,9 @@ extension AWSClient {
                 }
     }
 
+    public func signURL(url: URL, httpMethod: String, expires: Int = 86400) -> URL {
+        return signer.signedURL(url: url, method: httpMethod, expires: expires)
+    }
 }
 
 // request creator
@@ -274,7 +267,7 @@ extension AWSClient {
             region: self.signer.region,
             url: url,
             serviceProtocol: serviceProtocol,
-            service: signer.service,
+            service: service,
             amzTarget: amzTarget,
             operation: operationName,
             httpMethod: httpMethod,
@@ -285,7 +278,7 @@ extension AWSClient {
     }
 
     fileprivate func createAWSRequest<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
-        var headers: [String: String] = [:]
+        var headers: [String: Any] = [:]
         var path = path
         var urlComponents = URLComponents()
         var body: Body = .empty
@@ -293,7 +286,7 @@ extension AWSClient {
 
         // validate input parameters
         try input.validate()
-        
+
         guard let baseURL = URL(string: "\(endpoint)"), let _ = baseURL.hostWithPort else {
             throw RequestError.invalidURL("\(endpoint) must specify url host and scheme")
         }
@@ -307,7 +300,7 @@ extension AWSClient {
 
         for (key, value) in Input.headerParams {
             if let attr = mirror.getAttribute(forKey: value.toSwiftVariableCase()) {
-                headers[key] = "\(attr)"
+                headers[key] = attr
             }
         }
 
@@ -437,7 +430,7 @@ extension AWSClient {
             region: self.signer.region,
             url: url,
             serviceProtocol: serviceProtocol,
-            service: signer.service,
+            service: service,
             amzTarget: amzTarget,
             operation: operationName,
             httpMethod: httpMethod,
@@ -491,37 +484,49 @@ extension AWSClient {
 // response validator
 extension AWSClient {
 
+    /// Validate the operation response and return a response shape
     fileprivate func validate<Output: AWSShape>(operation operationName: String, response: Response) throws -> Output {
+        let raw: Bool
+        if let payloadPath = Output.payloadPath, let member = Output.getMember(named: payloadPath), member.type == .blob {
+            raw = true
+        } else {
+            raw = false
+        }
 
-        try validateCode(response: response, members: Output._members)
+        var awsResponse = try AWSResponse(from: response, serviceProtocolType: serviceProtocol.type, raw: raw)
 
-        var responseBody = try validateBody(
-            for: response,
-            payloadPath: Output.payloadPath,
-            members: Output._members
-        )
+        try validateCode(response: awsResponse)
+
+        awsResponse = try hypertextApplicationLanguageProcess(response: awsResponse, members: Output._members)
 
         // do we need to fix up the response before processing it
         for middleware in middlewares {
-            responseBody = try middleware.chain(responseBody: responseBody)
+            awsResponse = try middleware.chain(response: awsResponse)
         }
-        
+
         let decoder = DictionaryDecoder()
 
-        var responseHeaders: [String: String] = [:]
-        for (key, value) in response.head.headers {
-            responseHeaders[key.description] = value
-        }
-
         var outputDict: [String: Any] = [:]
-        switch responseBody {
+        switch awsResponse.body {
         case .json(let data):
             outputDict = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] ?? [:]
+            // if payload path is set then the decode will expect the payload to decode to the relevant member variable
+            if let payloadPath = Output.payloadPath {
+                outputDict = [payloadPath : outputDict]
+            }
             decoder.dataDecodingStrategy = .base64
 
         case .xml(let node):
             var outputNode = node
-            if let child = node.children(of:.element)?.first as? XML.Element, (node.name == operationName + "Response" && child.name == operationName + "Result") {
+            // if payload path is set then the decode will expect the payload to decode to the relevant member variable. Most CloudFront responses have this.
+            if let payloadPath = Output.payloadPath {
+                // set output node name
+                outputNode.name = payloadPath
+                // create parent node and add output node and set output node to parent
+                let parentNode = XML.Element(name: "Container")
+                parentNode.addChild(outputNode)
+                outputNode = parentNode
+            } else if let child = node.children(of:.element)?.first as? XML.Element, (node.name == operationName + "Response" && child.name == operationName + "Result") {
                 outputNode = child
             }
             return try XMLDecoder().decode(Output.self, from: outputNode)
@@ -540,15 +545,20 @@ extension AWSClient {
             break
         }
 
-        for (key, value) in response.head.headers {
+        for (key, value) in awsResponse.headers {
             let headerParams = Output.headerParams
-            if let index = headerParams.firstIndex(where: { $0.key.lowercased() == key.description.lowercased() }) {
-                if let number = Double(value) {
+            if let index = headerParams.firstIndex(where: { $0.key.lowercased() == key.lowercased() }) {
+                // check we can convert to a String. If not just put value straight into output dictionary
+                guard let stringValue = value as? String else {
+                    outputDict[headerParams[index].key] = value
+                    continue
+                }
+                if let number = Double(stringValue) {
                     outputDict[headerParams[index].key] = number.truncatingRemainder(dividingBy: 1) == 0 ? Int(number) : number
-                } else if let boolean = Bool(value) {
+                } else if let boolean = Bool(stringValue) {
                     outputDict[headerParams[index].key] = boolean
                 } else {
-                    outputDict[headerParams[index].key] = value
+                    outputDict[headerParams[index].key] = stringValue
                 }
             }
         }
@@ -556,32 +566,23 @@ extension AWSClient {
         return try decoder.decode(Output.self, from: outputDict)
     }
 
-    private func validateCode(response: Response, members: [AWSShapeMember] = []) throws {
-        guard (200..<300).contains(response.head.status.code) else {
-            let responseBody = try validateBody(
-                for: response,
-                payloadPath: nil,
-                members: members
-            )
-            throw createError(for: response, withComputedBody: responseBody, withRawData: response.body)
+    /// validate response without returning an output shape
+    private func validate(response: Response) throws {
+        let awsResponse = try AWSResponse(from: response, serviceProtocolType: serviceProtocol.type)
+        try validateCode(response: awsResponse)
+    }
+
+    /// validate http status code. If it is an error then throw an Error object
+    private func validateCode(response: AWSResponse) throws {
+        guard (200..<300).contains(response.status.code) else {
+            throw createError(for: response)
         }
     }
 
-    private func validateBody(for response: Response, payloadPath: String?, members: [AWSShapeMember]) throws -> Body {
-        var responseBody: Body = .empty
-        let data = response.body
-
-        if data.isEmpty {
-            return responseBody
-        }
-
-        if payloadPath != nil {
-            return .buffer(data)
-        }
-
-        switch serviceProtocol.type {
-        case .json, .restjson:
-            if let cType = response.contentType(), cType.contains("hal+json") {
+    func hypertextApplicationLanguageProcess(response: AWSResponse, members: [AWSShapeMember]) throws -> AWSResponse {
+        switch response.body {
+        case .json(let data):
+            if (response.headers["Content-Type"] as? String)?.contains("hal+json") == true {
                 let representation = try Representation.from(json: data)
                 var dictionary = representation.properties
                 for rel in representation.rels {
@@ -634,56 +635,36 @@ extension AWSClient {
                         dictionary[rel] = representations.map({ $0.properties }).first ?? [:]
                     }
                 }
-                responseBody = .json(try JSONSerialization.data(withJSONObject: dictionary, options: []))
-
-            } else {
-                responseBody = .json(data)
+                var response = response
+                response.body = .json(try JSONSerialization.data(withJSONObject: dictionary, options: []))
+                return response
             }
-
-        case .restxml, .query:
-            let xmlDocument = try XML.Document(data: data)
-            if let element = xmlDocument.rootElement() {
-               responseBody = .xml(element)
-            }
-
-        case .other(let proto):
-            switch proto.lowercased() {
-            case "ec2":
-                let xmlDocument = try XML.Document(data: data)
-                if let element = xmlDocument.rootElement() {
-                    responseBody = .xml(element)
-                }
-
-            default:
-                responseBody = .buffer(data)
-            }
+        default:
+            break
         }
-
-        return responseBody
+        return response
     }
 
-    private func createError(for response: Response, withComputedBody body: Body, withRawData data: Data) -> Error {
-        let bodyDict: [String: Any] = (try? body.asDictionary()) ?? [:]
+    private func createError(for response: AWSResponse) -> Error {
+        let bodyDict: [String: Any] = (try? response.body.asDictionary()) ?? [:]
 
         var code: String?
         var message: String?
 
         switch serviceProtocol.type {
         case .query:
-            guard let xmlDocument = try? XML.Document(data: data) else { break }
-            guard let element = xmlDocument.rootElement() else { break }
+            guard case .xml(let element) = response.body else { break }
             guard let error = element.elements(forName: "Error").first else { break }
             code = error.elements(forName: "Code").first?.stringValue
             message = error.elements(forName: "Message").first?.stringValue
 
         case .restxml:
-            guard let xmlDocument = try? XML.Document(data: data) else { break }
-            guard let element = xmlDocument.rootElement() else { break }
+            guard case .xml(let element) = response.body else { break }
             code = element.elements(forName: "Code").first?.stringValue
             message = element.children(of:.element)?.filter({$0.name != "Code"}).map({"\($0.name!): \($0.stringValue!)"}).joined(separator: ", ")
 
         case .restjson:
-            code = response.head.headers.filter( { $0.name == "x-amzn-ErrorType"}).first?.value
+            code = response.headers["x-amzn-ErrorType"] as? String
             message = bodyDict.filter({ $0.key.lowercased() == "message" }).first?.value as? String
 
         case .json:
@@ -712,7 +693,13 @@ extension AWSClient {
             return AWSResponseError(errorCode: errorCode, message: message)
         }
 
-        return AWSError(message: message ?? "Unhandled Error. Response Code: \(response.head.status.code)", rawBody: String(data: data, encoding: .utf8) ?? "")
+        let rawBodyString : String?
+        if let rawBody = response.body.asData() {
+            rawBodyString = String(data: rawBody, encoding: .utf8)
+        } else {
+            rawBodyString = nil
+        }
+        return AWSError(message: message ?? "Unhandled Error. Response Code: \(response.status.code)", rawBody: rawBodyString ?? "")
     }
 }
 
@@ -720,8 +707,12 @@ extension AWSClient {
 #if DEBUG
 extension AWSClient {
 
-    func debugValidateCode(response: Response) throws {
-        return try validateCode(response: response)
+    func debugValidate(response: Response) throws {
+        try validate(response: response)
+    }
+
+    func debugValidate<Output: AWSShape>(operation operationName: String, response: Response) throws -> Output {
+        return try validate(operation: operationName, response: response)
     }
 }
 #endif

@@ -42,7 +42,6 @@ public struct AWSRequest {
     public let region: Region
     public var url: URL
     public let serviceProtocol: ServiceProtocol
-    public let amzTarget: String?
     public let operation: String
     public let httpMethod: String
     public var httpHeaders: [String: Any] = [:]
@@ -53,16 +52,14 @@ public struct AWSRequest {
     ///     - region: Region of AWS server
     ///     - url : Request URL
     ///     - serviceProtocol: protocol of service (.json, .xml, .query etc)
-    ///     - amzTarget: Value to place in amzTarget header
     ///     - operation: Name of AWS operation
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
     ///     - httpHeaders: HTTP request headers
     ///     - body: HTTP Request body
-    public init(region: Region = .useast1, url: URL, serviceProtocol: ServiceProtocol, amzTarget: String? = nil, operation: String, httpMethod: String, httpHeaders: [String: Any] = [:], body: Body = .empty) {
+    public init(region: Region = .useast1, url: URL, serviceProtocol: ServiceProtocol, operation: String, httpMethod: String, httpHeaders: [String: Any] = [:], body: Body = .empty) {
         self.region = region
         self.url = url
         self.serviceProtocol = serviceProtocol
-        self.amzTarget = amzTarget
         self.operation = operation
         self.httpMethod = httpMethod
         self.httpHeaders = httpHeaders
@@ -83,10 +80,6 @@ public struct AWSRequest {
         for (key, value) in httpHeaders {
             //guard let value = value else { continue }
             headers[key] = "\(value)"
-        }
-
-        if let target = amzTarget {
-            headers["x-amz-target"] = "\(target).\(operation)"
         }
 
         switch httpMethod {

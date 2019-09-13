@@ -323,7 +323,6 @@ extension AWSClient {
             region: self.signer.region,
             url: url,
             serviceProtocol: serviceProtocol,
-            amzTarget: amzTarget,
             operation: operationName,
             httpMethod: httpMethod,
             httpHeaders: [:],
@@ -349,6 +348,11 @@ extension AWSClient {
         urlComponents.host = baseURL.host
         urlComponents.port = baseURL.port
 
+        // set x-amz-target header
+        if let target = amzTarget {
+            headers["x-amz-target"] = "\(target).\(operationName)"
+        }
+        
         // TODO should replace with Encodable
         let mirror = Mirror(reflecting: input)
 
@@ -484,7 +488,6 @@ extension AWSClient {
             region: self.signer.region,
             url: url,
             serviceProtocol: serviceProtocol,
-            amzTarget: amzTarget,
             operation: operationName,
             httpMethod: httpMethod,
             httpHeaders: headers,

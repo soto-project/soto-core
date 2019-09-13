@@ -9,6 +9,7 @@ jazzy --clean
 STASH_RESULT=$(git stash push -- ":(exclude)docs")
 # get branch name
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+REVISION_HASH=$(git rev-parse HEAD)
 
 git checkout gh-pages
 # copy contents of docs to docs/current replacing the ones that are already there
@@ -18,7 +19,7 @@ mkdir docs
 mv current/ docs/
 # commit
 git add --all docs
-git commit -m "Publish latest docs"
+git commit -m "Documentation for https://github.com/swift-aws/aws-sdk-swift-core/tree/$REVISION_HASH"
 git push
 # return to branch
 git checkout $CURRENT_BRANCH

@@ -319,7 +319,7 @@ extension AWSClient {
             throw RequestError.invalidURL("\(endpoint)\(path) must specify url host and scheme")
         }
 
-        return AWSRequest(
+        return try AWSRequest(
             region: self.signer.region,
             url: url,
             serviceProtocol: serviceProtocol,
@@ -327,9 +327,8 @@ extension AWSClient {
             operation: operationName,
             httpMethod: httpMethod,
             httpHeaders: [:],
-            body: .empty,
-            middlewares: middlewares
-        )
+            body: .empty
+        ).applyMiddlewares(middlewares)
     }
 
     fileprivate func createAWSRequest<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
@@ -481,7 +480,7 @@ extension AWSClient {
             throw RequestError.invalidURL("\(endpoint)\(path)")
         }
 
-        return AWSRequest(
+        return try AWSRequest(
             region: self.signer.region,
             url: url,
             serviceProtocol: serviceProtocol,
@@ -489,9 +488,8 @@ extension AWSClient {
             operation: operationName,
             httpMethod: httpMethod,
             httpHeaders: headers,
-            body: body,
-            middlewares: middlewares
-        )
+            body: body
+        ).applyMiddlewares(middlewares)
     }
 
     static let queryAllowedCharacters = CharacterSet(charactersIn:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/")

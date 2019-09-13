@@ -47,7 +47,6 @@ public struct AWSRequest {
     public let httpMethod: String
     public var httpHeaders: [String: Any] = [:]
     public var body: Body
-    public let middlewares: [AWSServiceMiddleware]
 
     /// Initialize AWSRequest struct
     /// - parameters:
@@ -59,8 +58,7 @@ public struct AWSRequest {
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
     ///     - httpHeaders: HTTP request headers
     ///     - body: HTTP Request body
-    ///     - middlewares: Any middlewares to apply to the AWSRequest
-    public init(region: Region = .useast1, url: URL, serviceProtocol: ServiceProtocol, amzTarget: String? = nil, operation: String, httpMethod: String, httpHeaders: [String: Any] = [:], body: Body = .empty, middlewares: [AWSServiceMiddleware] = []) {
+    public init(region: Region = .useast1, url: URL, serviceProtocol: ServiceProtocol, amzTarget: String? = nil, operation: String, httpMethod: String, httpHeaders: [String: Any] = [:], body: Body = .empty) {
         self.region = region
         self.url = url
         self.serviceProtocol = serviceProtocol
@@ -69,7 +67,6 @@ public struct AWSRequest {
         self.httpMethod = httpMethod
         self.httpHeaders = httpHeaders
         self.body = body
-        self.middlewares = middlewares
     }
 
     /// Add a header value
@@ -80,23 +77,19 @@ public struct AWSRequest {
         httpHeaders[field] = value
     }
 
+    /// Create HTTP Client request from AWSRequest
     func toNIORequest() throws -> HTTPClient.Request {
-        var awsRequest = self
-        for middleware in middlewares {
-            awsRequest = try middleware.chain(request: awsRequest)
-        }
-
         var headers: [String:String] = [:]
-        for (key, value) in awsRequest.httpHeaders {
+        for (key, value) in httpHeaders {
             //guard let value = value else { continue }
             headers[key] = "\(value)"
         }
 
-        if let target = awsRequest.amzTarget {
-            headers["x-amz-target"] = "\(target).\(awsRequest.operation)"
+        if let target = amzTarget {
+            headers["x-amz-target"] = "\(target).\(operation)"
         }
 
-        switch awsRequest.httpMethod {
+        switch httpMethod {
         case "GET","HEAD":
             break
         default:
@@ -124,15 +117,26 @@ public struct AWSRequest {
 
         var head = HTTPRequestHead(
           version: HTTPVersion(major: 1, minor: 1),
-          method: nioHTTPMethod(from: awsRequest.httpMethod),
-          uri: awsRequest.url.absoluteString
+          method: nioHTTPMethod(from: httpMethod),
+          uri: url.absoluteString
         )
         let generatedHeaders = headers.map { ($0, $1) }
         head.headers = HTTPHeaders(generatedHeaders)
 
-        return HTTPClient.Request(head: head, body: awsRequest.body.asData() ?? Data())
+        return HTTPClient.Request(head: head, body: body.asData() ?? Data())
+    }
+    
+    // return new request with middleware applied
+    func applyMiddlewares(_ middlewares: [AWSServiceMiddleware]) throws -> AWSRequest {
+        var awsRequest = self
+        // apply middleware to request
+        for middleware in middlewares {
+            awsRequest = try middleware.chain(request: awsRequest)
+        }
+        return awsRequest
     }
 
+    // Convert string to NIO HTTP Method
     fileprivate func nioHTTPMethod(from: String) -> HTTPMethod {
         switch from {
         case "HEAD":

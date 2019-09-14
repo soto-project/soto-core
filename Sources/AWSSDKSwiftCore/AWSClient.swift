@@ -118,7 +118,7 @@ extension AWSClient {
 
 // public facing apis
 extension AWSClient {
-    public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> Future<Void> {
+    public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> Future<Void> {
 
         return signer.manageCredential().thenThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
@@ -135,7 +135,7 @@ extension AWSClient {
             }
     }
 
-    public func send(operation operationName: String, path: String, httpMethod: String) throws -> Future<Void> {
+    public func send(operation operationName: String, path: String, httpMethod: String) -> Future<Void> {
 
         return signer.manageCredential().thenThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
@@ -151,7 +151,7 @@ extension AWSClient {
             }
     }
 
-    public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) throws -> Future<Output> {
+    public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) -> Future<Output> {
 
         return signer.manageCredential().thenThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
@@ -167,8 +167,7 @@ extension AWSClient {
             }
     }
 
-    public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input)
-        throws -> Future<Output> {
+    public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> Future<Output> {
 
             return signer.manageCredential().thenThrowing { _ in
                     let awsRequest = try self.createAWSRequest(

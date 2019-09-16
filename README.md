@@ -2,7 +2,7 @@
 
 <div>
     <a href="https://swift.org">
-        <img src="http://img.shields.io/badge/swift-4.2-brightgreen.svg" alt="Swift 4.2" />
+        <img src="http://img.shields.io/badge/swift-5.0-brightgreen.svg" alt="Swift 5.0" />
     </a>
     <a href="https://travis-ci.org/swift-aws/aws-sdk-swift-core">
         <img src="https://travis-ci.org/swift-aws/aws-sdk-swift-core.svg?branch=master" alt="Travis Build" />
@@ -23,7 +23,7 @@ This client utilizes [Swift NIO](https://github.com/apple/swift-nio#conceptual-o
 ## Example Package.swift
 
 ```swift
-// swift-tools-version:4.2
+// swift-tools-version:5.0
 import PackageDescription
 
 let package = Package(

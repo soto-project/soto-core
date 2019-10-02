@@ -7,7 +7,7 @@ matrix:
       before_install:
         - docker pull swift:5.0
       script:
-        - docker run -v "$(pwd):/root/aws-sdk-swift-core" swift:4.2 /bin/sh -c "cd /root/aws-sdk-swift-core && swift build && swift test --parallel -Xswiftc -DDEBUG"
+        - docker run -v "$(pwd):/root/aws-sdk-swift-core" swift:5.0 /bin/sh -c "apt-get -qq update && apt-get -q -y install tzdata libssl-dev zlib1g-dev && rm -r /var/lib/apt/lists/* && cd /root/aws-sdk-swift-core && swift build && swift test --parallel -Xswiftc -DDEBUG"
     - os: linux
       services: docker
       before_install:

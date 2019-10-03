@@ -145,7 +145,7 @@ extension AWSClient {
     ///     - input: Input object
     /// - returns:
     ///     Empty Future that completes when response is received
-    public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> Future<Void> {
+    public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> Future<Void> {
 
         return signer.manageCredential().thenThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
@@ -169,7 +169,7 @@ extension AWSClient {
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
     /// - returns:
     ///     Empty Future that completes when response is received
-    public func send(operation operationName: String, path: String, httpMethod: String) throws -> Future<Void> {
+    public func send(operation operationName: String, path: String, httpMethod: String) -> Future<Void> {
 
         return signer.manageCredential().thenThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
@@ -192,7 +192,7 @@ extension AWSClient {
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
     /// - returns:
     ///     Future containing output object that completes when response is received
-    public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) throws -> Future<Output> {
+    public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) -> Future<Output> {
 
         return signer.manageCredential().thenThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
@@ -216,8 +216,7 @@ extension AWSClient {
     ///     - input: Input object
     /// - returns:
     ///     Future containing output object that completes when response is received
-    public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input)
-        throws -> Future<Output> {
+    public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> Future<Output> {
 
             return signer.manageCredential().thenThrowing { _ in
                     let awsRequest = try self.createAWSRequest(

@@ -17,7 +17,7 @@ func unwrap(any: Any) -> Any? {
     return some
 }
 
-public struct AWSShapeEncoder {
+class AWSShapeEncoder {
     public init() {}
 
     public func json<Input: AWSShape>(_ input: Input) throws -> Data {

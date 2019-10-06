@@ -82,7 +82,7 @@ class SignersV4Tests: XCTestCase {
 
     func testStringToSign() {
         let (sign, url, httpHeaders) = ec2Signer()
-        let stringToSign = sign.stringToSign(url: url, headers: httpHeaders, datetime: timestamp, method: "PUT", bodyDigest: sha256("hello").hexdigest())
+        let stringToSign = sign.stringToSign(url: url, headers: httpHeaders, datetime: timestamp, method: "PUT", bodyDigest: sha256("hello".data(using: .utf8)!).hexdigest())
 
         let splited = stringToSign.components(separatedBy: "\n")
         XCTAssertEqual(splited[0], "AWS4-HMAC-SHA256")
@@ -93,7 +93,7 @@ class SignersV4Tests: XCTestCase {
 
     func testCanonicalRequest() {
         let (sign, url, httpHeaders) = ec2Signer()
-        let bodyDigest = sha256("hello").hexdigest()
+        let bodyDigest = sha256("hello".data(using: .utf8)!).hexdigest()
 
         let canonicalRequest = sign.canonicalRequest(url: URLComponents(url: url, resolvingAgainstBaseURL: true)!, headers: httpHeaders, method: "PUT", bodyDigest: bodyDigest)
 
@@ -109,7 +109,7 @@ class SignersV4Tests: XCTestCase {
 
     func testSignature() {
         let (sign, url, httpHeaders) = ec2Signer()
-        let bodyDigest = sha256("hello").hexdigest()
+        let bodyDigest = sha256("hello".data(using: .utf8)!).hexdigest()
         let signature = sign.signature(url: url, headers: httpHeaders, datetime: timestamp, method: "PUT", bodyDigest: bodyDigest, credentialForSignature: credential)
         XCTAssertEqual(signature, "4a2fc55d5e517133a8dae28752f36851e77f291221095ee9fb4cfcff8ac63dd9")
     }

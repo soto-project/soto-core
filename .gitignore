@@ -3,3 +3,6 @@
 /Packages
 /*.xcodeproj
 Package.resolved
+/build
+/docs
+

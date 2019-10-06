@@ -116,7 +116,7 @@ public class XMLEncoder {
     
     open func encode<T : Encodable>(_ value: T, name: String? = nil) throws -> XML.Element {
         // set the current container coding map
-        let containerCodingMap = value as? XMLContainerCodingMap
+        let containerCodingMap = value as? XMLCodable
         let containerCodingMapType = containerCodingMap != nil ? type(of:containerCodingMap!) : nil
         let rootName = name ?? "\(type(of: value))"
         let encoder = _XMLEncoder(options: options, codingPath: [_XMLKey(stringValue: rootName, intValue: nil)], containerCodingMapType: containerCodingMapType)
@@ -168,13 +168,13 @@ class _XMLEncoder : Encoder {
     var element : XML.Element? { return storage.topContainer }
 
     /// the container coding map for the current element
-    var containerCodingMapType : XMLContainerCodingMap.Type?
+    var containerCodingMapType : XMLCodable.Type?
     
     /// the container encoding for the current element
     var containerCoding : XMLContainerCoding = .default
     
     // MARK: - Initialization
-    fileprivate init(options: XMLEncoder._Options, codingPath: [CodingKey] = [], containerCodingMapType: XMLContainerCodingMap.Type?) {
+    fileprivate init(options: XMLEncoder._Options, codingPath: [CodingKey] = [], containerCodingMapType: XMLCodable.Type?) {
         self.storage = _XMLEncoderStorage()
         self.options = options
         self.codingPath = codingPath
@@ -789,7 +789,7 @@ extension _XMLEncoder {
         let prevContainerCodingOwner = self.containerCodingMapType
         defer { self.containerCodingMapType = prevContainerCodingOwner }
         // set the current container coding map
-        let containerCodingMap = value as? XMLContainerCodingMap
+        let containerCodingMap = value as? XMLCodable
         containerCodingMapType = containerCodingMap != nil ? Swift.type(of:containerCodingMap!) : nil
 
         let type = Swift.type(of: value)

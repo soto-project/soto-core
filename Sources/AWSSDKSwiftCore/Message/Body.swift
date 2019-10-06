@@ -8,16 +8,24 @@
 
 import Foundation
 
+/// Enumaration used to store request/response body in various forms
 public enum Body {
+    /// text
     case text(String)
+    /// raw data
     case buffer(Data)
-    case stream(InputStream) // currenty unsupported
+    /// stream is currenty unsupported
+    case stream(InputStream)
+    /// json data
     case json(Data)
+    /// xml
     case xml(XML.Element)
+    /// empty body
     case empty
 }
 
 extension Body {
+    /// initialize Body with Any. If it is Data, create .buffer() otherwise create a String describing the value
     init(anyValue: Any) {
         switch anyValue {
         case let v as Data:
@@ -27,34 +35,7 @@ extension Body {
         }
     }
 
-
-    public func isJSON() -> Bool {
-        switch self {
-        case .json(_):
-            return true
-        default:
-            return false
-        }
-    }
-
-    public func isXML() -> Bool {
-        switch self {
-        case .xml(_):
-            return true
-        default:
-            return false
-        }
-    }
-
-    public func isBuffer() -> Bool {
-        switch self {
-        case .buffer(_):
-            return true
-        default:
-            return false
-        }
-    }
-
+    /// return as a dictionary. Currently only works for JSON
     public func asDictionary() throws -> [String: Any]? {
         switch self {
 
@@ -66,6 +47,7 @@ extension Body {
         }
     }
 
+    /// return as a raw data buffer
     public func asData() -> Data? {
         switch self {
         case .text(let text):

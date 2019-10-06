@@ -15,6 +15,7 @@ extension UInt8 {
 }
 
 extension Collection where Self.Iterator.Element == UInt8 {
+    /// generate a hexdigest of the array of bytes
     public func hexdigest() -> String {
         return self.map({ $0.hexdigest() }).joined()
     }

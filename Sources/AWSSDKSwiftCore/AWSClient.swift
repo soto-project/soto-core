@@ -61,7 +61,7 @@ public class AWSClient {
         return "\(service).\(signer.region.rawValue).amazonaws.com"
     }
 
-    static let eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+    public static let eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
 
     /// Initialize an AWSClient struct
     /// - parameters:

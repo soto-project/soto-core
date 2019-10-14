@@ -35,7 +35,7 @@ private class HTTPClientResponseHandler: ChannelInboundHandler {
     }
 
     func errorCaught(context: ChannelHandlerContext, error: Error) {
-        promise.fail(error: error)
+        promise.fail(error)
         context.fireErrorCaught(error)
     }
 

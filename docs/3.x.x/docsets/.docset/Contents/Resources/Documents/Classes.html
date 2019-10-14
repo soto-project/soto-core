@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Classes  Reference</title>
+    <link rel="stylesheet" type="text/css" href="css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="js/jquery.min.js" defer></script>
+    <script src="js/jazzy.js" defer></script>
+    
+  </head>
+  <body>
+    <a name="//apple_ref/swift/Section/Classes" class="dashAnchor"></a>
+    <a title="Classes  Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="index.html"> Docs</a> (62% documented)</p>
+        <p class="header-right"><a href="https://github.com/swift-aws/aws-sdk-swift-core"><img src="img/gh.png"/>View on GitHub</a></p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="index.html"> Reference</a>
+        <img id="carat" src="img/carat.png" />
+        Classes  Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Classes/AWSClient.html">AWSClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/AWSClient/RequestError.html">– RequestError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/AWSLoggingMiddleware.html">AWSLoggingMiddleware</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/DictionaryDecoder.html">DictionaryDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/DictionaryDecoder/DateDecodingStrategy.html">– DateDecodingStrategy</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/DictionaryDecoder/DataDecodingStrategy.html">– DataDecodingStrategy</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/DictionaryDecoder/NonConformingFloatDecodingStrategy.html">– NonConformingFloatDecodingStrategy</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/DictionaryDecoder/KeyDecodingStrategy.html">– KeyDecodingStrategy</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/DictionaryEncoder.html">DictionaryEncoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/DictionaryEncoder/DateEncodingStrategy.html">– DateEncodingStrategy</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/DictionaryEncoder/DataEncodingStrategy.html">– DataEncodingStrategy</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/DictionaryEncoder/NonConformingFloatEncodingStrategy.html">– NonConformingFloatEncodingStrategy</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/DictionaryEncoder/KeyEncodingStrategy.html">– KeyEncodingStrategy</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/HTTPClient.html">HTTPClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/HTTPClient.html#/s:15AWSSDKSwiftCore10HTTPClientC7RequestV">– Request</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/HTTPClient/Response.html">– Response</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/HTTPClient/HTTPError.html">– HTTPError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/Signers.html">Signers</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/Signers/V4.html">– V4</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/XML.html">XML</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/XML/Node.html">– Node</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/XML/Document.html">– Document</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/XML/Element.html">– Element</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/XMLDecoder.html">XMLDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/XMLDecoder/DateDecodingStrategy.html">– DateDecodingStrategy</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/XMLDecoder/DataDecodingStrategy.html">– DataDecodingStrategy</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/XMLDecoder/NonConformingFloatDecodingStrategy.html">– NonConformingFloatDecodingStrategy</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/XMLEncoder.html">XMLEncoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/XMLEncoder/DateEncodingStrategy.html">– DateEncodingStrategy</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/XMLEncoder/DataEncodingStrategy.html">– DataEncodingStrategy</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/XMLEncoder/NonConformingFloatEncodingStrategy.html">– NonConformingFloatEncodingStrategy</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Enums.html">Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Enums/AWSClientError.html">AWSClientError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/AWSServerError.html">AWSServerError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/Body.html">Body</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/Region.html">Region</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/ServiceProtocolType.html">ServiceProtocolType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/XMLContainerCoding.html">XMLContainerCoding</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Extensions/Collection.html">Collection</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/String.html">String</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/UInt8.html">UInt8</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Functions.html">Functions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Functions.html#/s:15AWSSDKSwiftCore3md5ySays5UInt8VG10Foundation4DataVF">md5(_:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Functions.html#/s:15AWSSDKSwiftCore6sha256ySays5UInt8VG10Foundation4DataVF">sha256(_:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Functions.html#/s:15AWSSDKSwiftCore6sha256ySays5UInt8VGAEzF">sha256(_:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Functions.html#/s:15AWSSDKSwiftCore6sha256ySays5UInt8VGAEz_AEztF">sha256(_:_:)</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Protocols/AWSErrorType.html">AWSErrorType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/AWSServiceMiddleware.html">AWSServiceMiddleware</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/AWSShape.html">AWSShape</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/CredentialProvider.html">CredentialProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/XMLCodable.html">XMLCodable</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Structs.html">Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Structs/AWSError.html">AWSError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/AWSRequest.html">AWSRequest</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/AWSResponse.html">AWSResponse</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/AWSResponseError.html">AWSResponseError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/AWSShapeMember.html">AWSShapeMember</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/AWSShapeMember/Shape.html">– Shape</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/AWSShapeMember/Location.html">– Location</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/AWSShapeMember/ShapeEncoding.html">– ShapeEncoding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/Credential.html">Credential</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/ServiceProtocol.html">ServiceProtocol</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/ServiceProtocol/Version.html">– Version</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/SharedCredential.html">SharedCredential</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/SharedCredential/SharedCredentialError.html">– SharedCredentialError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/TimeStamp.html">TimeStamp</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Typealiases.html">Type Aliases</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Typealiases.html#/s:15AWSSDKSwiftCore6Futurea">Future</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>Classes</h1>
+            <p>The following classes are available globally.</p>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore9AWSClientC"></a>
+                    <a name="//apple_ref/swift/Class/AWSClient" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore9AWSClientC">AWSClient</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>This is the workhorse of aws-sdk-swift-core. You provide it with a <code><a href="Protocols/AWSShape.html">AWSShape</a></code> Input object, it converts it to <code><a href="Structs/AWSRequest.html">AWSRequest</a></code> which is then converted to a raw <code><a href="Classes/HTTPClient.html">HTTPClient</a></code> Request. This is then sent to AWS. When the response from AWS is received if it is successful it is converted to a <code><a href="Structs/AWSResponse.html">AWSResponse</a></code> which is then decoded to generate a <code><a href="Protocols/AWSShape.html">AWSShape</a></code> Output object. If it is not successful then <code>AWSClient</code> will throw an <code><a href="Protocols/AWSErrorType.html">AWSErrorType</a></code>.</p>
+
+                        <a href="Classes/AWSClient.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">AWSClient</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore17DictionaryEncoderC"></a>
+                    <a name="//apple_ref/swift/Class/DictionaryEncoder" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore17DictionaryEncoderC">DictionaryEncoder</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p><code>DictionaryEncoder</code> facilitates the encoding of <code>Encodable</code> values into a dictionary.</p>
+
+                        <a href="Classes/DictionaryEncoder.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">open</span> <span class="kd">class</span> <span class="kt">DictionaryEncoder</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/__DictionaryReferencingEncoder"></a>
+                <a name="//apple_ref/swift/Section/__DictionaryReferencingEncoder" class="dashAnchor"></a>
+                <a href="#/__DictionaryReferencingEncoder">
+                  <h3 class="section-name">__DictionaryReferencingEncoder</h3>
+                </a>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore17DictionaryDecoderC"></a>
+                    <a name="//apple_ref/swift/Class/DictionaryDecoder" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore17DictionaryDecoderC">DictionaryDecoder</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p><code>DictionaryDecoder</code> facilitates the decoding of Dictionaries into semantic <code>Decodable</code> types.</p>
+
+                        <a href="Classes/DictionaryDecoder.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">open</span> <span class="kd">class</span> <span class="kt">DictionaryDecoder</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore10XMLDecoderC"></a>
+                    <a name="//apple_ref/swift/Class/XMLDecoder" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore10XMLDecoderC">XMLDecoder</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The wrapper class for decoding Codable classes from XMLElements</p>
+
+                        <a href="Classes/XMLDecoder.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">XMLDecoder</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore10XMLEncoderC"></a>
+                    <a name="//apple_ref/swift/Class/XMLEncoder" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore10XMLEncoderC">XMLEncoder</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The wrapper class for encoding Codable classes to XMLElements</p>
+
+                        <a href="Classes/XMLEncoder.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">XMLEncoder</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore10HTTPClientC"></a>
+                    <a name="//apple_ref/swift/Class/HTTPClient" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore10HTTPClientC">HTTPClient</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>HTTP Client class providing API for sending HTTP requests</p>
+
+                        <a href="Classes/HTTPClient.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">HTTPClient</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore20AWSLoggingMiddlewareC"></a>
+                    <a name="//apple_ref/swift/Class/AWSLoggingMiddleware" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore20AWSLoggingMiddlewareC">AWSLoggingMiddleware</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Middleware class that outputs the contents of requests being sent to AWS and the bodies of the responses received</p>
+
+                        <a href="Classes/AWSLoggingMiddleware.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">AWSLoggingMiddleware</span> <span class="p">:</span> <span class="kt"><a href="Protocols/AWSServiceMiddleware.html">AWSServiceMiddleware</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore7SignersC"></a>
+                    <a name="//apple_ref/swift/Class/Signers" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore7SignersC">Signers</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                        <a href="Classes/Signers.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">Signers</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore3XMLC"></a>
+                    <a name="//apple_ref/swift/Class/XML" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLC">XML</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                        <a href="Classes/XML.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">XML</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>© Copyright (c) 2019 Yuki Takei(noppoMan), Joe Smith(Yasumoto), Jonathan McAllister(jonnymacs), Adam Fowler (adam-fowler)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.11.2</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>

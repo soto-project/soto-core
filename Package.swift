@@ -7,10 +7,10 @@ let package = Package(
         .library(name: "AWSSDKSwiftCore", targets: ["AWSSDKSwiftCore"])
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-nio.git", .upToNextMajor(from:"2.1.0")),
-        .package(url: "https://github.com/apple/swift-nio-ssl.git", .upToNextMajor(from:"2.0.0")),
-        .package(url: "https://github.com/swift-aws/HypertextApplicationLanguage.git", .upToNextMajor(from: "1.1.0")),
-        .package(url: "https://github.com/swift-aws/Perfect-INIParser.git", .upToNextMajor(from: "3.0.0")),
+        .package(url: "https://github.com/apple/swift-nio.git", .upToNextMinor(from:"2.8.0")),
+        .package(url: "https://github.com/apple/swift-nio-ssl.git", .upToNextMinor(from:"2.4.0")),
+        .package(url: "https://github.com/swift-aws/HypertextApplicationLanguage.git", .upToNextMinor(from: "1.1.0")),
+        .package(url: "https://github.com/swift-aws/Perfect-INIParser.git", .upToNextMinor(from: "3.0.0")),
     ],
     targets: [
         .target(

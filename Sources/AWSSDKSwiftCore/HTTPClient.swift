@@ -16,9 +16,8 @@ import NIOHTTP1
 #if canImport(Network)
 import Network
 import NIOTransportServices
-#else
-import NIOSSL
 #endif
+import NIOSSL
 
 public final class HTTPClient {
 
@@ -54,14 +53,17 @@ public final class HTTPClient {
             self.eventLoopGroup = group
         case .createNew:
             #if canImport(Network)
-                self.eventLoopGroup = NIOTSEventLoopGroup()
+                if #available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *) {
+                    self.eventLoopGroup = NIOTSEventLoopGroup()
+                } else {
+                    self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+                }
             #else
                 self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
             #endif
         }
     }
 
-    #if !canImport(Network)
     /// add SSL Handler to channel pipeline if the port is 443
     func addSSLHandlerIfNeeded(_ pipeline : ChannelPipeline, hostname: String, port: Int) -> EventLoopFuture<Void> {
         if (port == 443) {
@@ -76,8 +78,60 @@ public final class HTTPClient {
         }
         return pipeline.eventLoop.makeSucceededFuture(())
     }
-    #endif
 
+    func clientBootstrap(hostname: String, port: Int, headerHostname: String, request: Request, response: EventLoopPromise<Response>) {
+        _ = ClientBootstrap(group: self.eventLoopGroup)
+            .connectTimeout(TimeAmount.seconds(5))
+            .channelOption(ChannelOptions.socket(SocketOptionLevel(IPPROTO_TCP), TCP_NODELAY), value: 1)
+            .channelInitializer { channel in
+                return channel.pipeline.addHTTPClientHandlers()
+                    .flatMap {
+                        return self.addSSLHandlerIfNeeded(channel.pipeline, hostname: hostname, port: port)
+                    }
+                    .flatMap {
+                        let handlers : [ChannelHandler] = [
+                            HTTPClientRequestSerializer(hostname: headerHostname),
+                            HTTPClientResponseHandler(promise: response)
+                        ]
+                        return channel.pipeline.addHandlers(handlers)
+                }
+            }
+            .connect(host: hostname, port: port)
+            .flatMap { channel -> EventLoopFuture<Void> in
+                return channel.writeAndFlush(request)
+            }
+            .whenFailure { error in
+                response.fail(error)
+        }
+    }
+
+    #if canImport(Network)
+    @available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)
+    func tsConnectionBootstrap(hostname: String, port: Int, headerHostname: String, request: Request, response: EventLoopPromise<Response>) {
+        _ = NIOTSConnectionBootstrap(group: self.eventLoopGroup)
+            .connectTimeout(TimeAmount.seconds(5))
+            .channelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: 1)
+            .tlsOptions(NWProtocolTLS.Options())
+            .channelInitializer { channel in
+                return channel.pipeline.addHTTPClientHandlers()
+                    .flatMap {
+                        let handlers : [ChannelHandler] = [
+                            HTTPClientRequestSerializer(hostname: headerHostname),
+                            HTTPClientResponseHandler(promise: response)
+                        ]
+                        return channel.pipeline.addHandlers(handlers)
+                }
+            }
+            .connect(host: hostname, port: port)
+            .flatMap { channel -> EventLoopFuture<Void> in
+                return channel.writeAndFlush(request)
+            }
+            .whenFailure { error in
+                response.fail(error)
+        }
+    }
+    #endif
+    
     /// send request to HTTP client, return a future holding the Response
     public func connect(_ request: Request) -> EventLoopFuture<Response> {
         guard let url = URL(string:request.head.uri) else { return eventLoopGroup.next().makeFailedFuture(HTTPClient.HTTPError.malformedURL(url: request.head.uri)) }
@@ -99,51 +153,15 @@ public final class HTTPClient {
         let response: EventLoopPromise<Response> = self.eventLoopGroup.next().makePromise()
 
         #if canImport(Network)
-
-        let bootstrap = NIOTSConnectionBootstrap(group: self.eventLoopGroup)
-            .connectTimeout(TimeAmount.seconds(5))
-            .channelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: 1)
-            .tlsOptions(NWProtocolTLS.Options())
-            .channelInitializer { channel in
-                return channel.pipeline.addHTTPClientHandlers()
-                    .flatMap {
-                        let handlers : [ChannelHandler] = [
-                            HTTPClientRequestSerializer(hostname: headerHostname),
-                            HTTPClientResponseHandler(promise: response)
-                        ]
-                        return channel.pipeline.addHandlers(handlers)
-                }
-        }
-
-        #else
-
-        let bootstrap = ClientBootstrap(group: self.eventLoopGroup)
-            .connectTimeout(TimeAmount.seconds(5))
-            .channelOption(ChannelOptions.socket(SocketOptionLevel(IPPROTO_TCP), TCP_NODELAY), value: 1)
-            .channelInitializer { channel in
-                return channel.pipeline.addHTTPClientHandlers()
-                    .flatMap {
-                        return self.addSSLHandlerIfNeeded(channel.pipeline, hostname: hostname, port: port)
-                    }
-                    .flatMap {
-                        let handlers : [ChannelHandler] = [
-                            HTTPClientRequestSerializer(hostname: headerHostname),
-                            HTTPClientResponseHandler(promise: response)
-                        ]
-                        return channel.pipeline.addHandlers(handlers)
-                }
-        }
-
-        #endif
-
-        bootstrap.connect(host: hostname, port: port)
-            .flatMap { channel -> EventLoopFuture<Void> in
-                return channel.writeAndFlush(request)
+            if #available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *) {
+                tsConnectionBootstrap(hostname: hostname, port: port, headerHostname: headerHostname, request: request, response: response)
+            } else {
+                clientBootstrap(hostname: hostname, port: port, headerHostname: headerHostname, request: request, response: response)
             }
-            .whenFailure { error in
-                response.fail(error)
-        }
-
+        #else
+            clientBootstrap(hostname: hostname, port: port, headerHostname: headerHostname, request: request, response: response)
+        #endif
+        
         return response.futureResult
     }
 

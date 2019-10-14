@@ -21,17 +21,17 @@ import NIOTransportServices
 #endif
 
 public final class HTTPClient {
-    
+
     public struct Request {
         var head: HTTPRequestHead
         var body: Data
     }
-    
+
     public struct Response {
         let head: HTTPResponseHead
         let body: Data
     }
-    
+
     public enum ClientError: Error {
         case malformedHead
         case malformedBody
@@ -47,7 +47,7 @@ public final class HTTPClient {
         /// `EventLoopGroup` will be created by the client. When `syncShutdown` is called, created `EventLoopGroup` will be shut down as well.
         case createNew
     }
-    
+
     public init(eventLoopGroupProvider: EventLoopGroupProvider = .createNew) {
         self.eventLoopGroupProvider = eventLoopGroupProvider
         switch eventLoopGroupProvider {
@@ -80,13 +80,13 @@ public final class HTTPClient {
         return pipeline.eventLoop.makeSucceededFuture(())
     }
     #endif
-    
+
     /// send request to HTTP client, return a future holding the Response
     public func connect(_ request: Request) -> EventLoopFuture<Response> {
         guard let url = URL(string:request.head.uri) else { return eventLoopGroup.next().makeFailedFuture(HTTPClient.ClientError.malformedURL(url: request.head.uri)) }
         guard let scheme = url.scheme else { return eventLoopGroup.next().makeFailedFuture(HTTPClient.ClientError.malformedURL(url: request.head.uri)) }
         guard let hostname = url.host else { return eventLoopGroup.next().makeFailedFuture(HTTPClient.ClientError.malformedURL(url: request.head.uri)) }
-        
+
         let port : Int
         let headerHostname : String
         if url.port != nil {
@@ -97,12 +97,12 @@ public final class HTTPClient {
             port = isSecure ? 443 : 80
             headerHostname = hostname
         }
-        
+
 
         let response: EventLoopPromise<Response> = self.eventLoopGroup.next().makePromise()
-        
+
         #if canImport(NIOSSL)
-        
+
         let bootstrap = ClientBootstrap(group: self.eventLoopGroup)
             .connectTimeout(TimeAmount.seconds(5))
             .channelOption(ChannelOptions.socket(SocketOptionLevel(IPPROTO_TCP), TCP_NODELAY), value: 1)
@@ -119,9 +119,9 @@ public final class HTTPClient {
                         return channel.pipeline.addHandlers(handlers)
                 }
         }
-        
+
         #elseif canImport(NIOTransportServices)
-        
+
         let bootstrap = NIOTSConnectionBootstrap(group: self.eventLoopGroup)
             .connectTimeout(TimeAmount.seconds(5))
             .channelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: 1)
@@ -136,7 +136,7 @@ public final class HTTPClient {
                         return channel.pipeline.addHandlers(handlers)
                 }
         }
-        
+
         #endif
 
         bootstrap.connect(host: hostname, port: port)
@@ -146,10 +146,10 @@ public final class HTTPClient {
             .whenFailure { error in
                 response.fail(error)
         }
-        
+
         return response.futureResult
     }
-    
+
    /// shutdown the event group
     public func close(_ callback: @escaping (Error?) -> Void) {
         switch self.eventLoopGroupProvider {
@@ -164,25 +164,25 @@ public final class HTTPClient {
     private class HTTPClientRequestSerializer : ChannelOutboundHandler {
         typealias OutboundIn = Request
         typealias OutboundOut = HTTPClientRequestPart
-        
+
         private let hostname: String
-        
+
         init(hostname: String) {
             self.hostname = hostname
         }
-        
+
         func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
             let request = unwrapOutboundIn(data)
             var head = request.head
-            
+
             head.headers.replaceOrAdd(name: "Host", value: hostname)
             head.headers.replaceOrAdd(name: "User-Agent", value: "AWS SDK Swift Core")
             head.headers.replaceOrAdd(name: "Accept", value: "*/*")
             head.headers.replaceOrAdd(name: "Content-Length", value: request.body.count.description)
             // TODO implement keep-alive
             head.headers.replaceOrAdd(name: "Connection", value: "Close")
-            
-            
+
+
             context.write(wrapOutboundOut(.head(head)), promise: nil)
             if request.body.count > 0 {
                 var buffer = ByteBufferAllocator().buffer(capacity: request.body.count)
@@ -192,30 +192,30 @@ public final class HTTPClient {
             context.write(self.wrapOutboundOut(.end(nil)), promise: promise)
         }
     }
-    
+
     /// Channel Handler for parsing response from server
     private class HTTPClientResponseHandler: ChannelInboundHandler {
         typealias InboundIn = HTTPClientResponsePart
         typealias OutboundOut = Response
-        
+
         private enum ResponseState {
             /// Waiting to parse the next response.
             case ready
             /// Currently parsing the response's body.
             case parsingBody(HTTPResponseHead, Data?)
         }
-        
+
         private var state: ResponseState = .ready
         private let promise : EventLoopPromise<Response>
-        
+
         init(promise: EventLoopPromise<Response>) {
             self.promise = promise
         }
-        
+
         func errorCaught(context: ChannelHandlerContext, error: Error) {
             context.fireErrorCaught(error)
         }
-        
+
         func channelRead(context: ChannelHandlerContext, data: NIOAny) {
             switch unwrapInboundIn(data) {
             case .head(let head):

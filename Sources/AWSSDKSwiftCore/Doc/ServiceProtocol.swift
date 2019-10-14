@@ -93,6 +93,6 @@ extension ServiceProtocol {
     }
 }
 
-public func == (lhs: ServiceProtocol, rhs: ServiceProtocol) -> Bool {
+func == (lhs: ServiceProtocol, rhs: ServiceProtocol) -> Bool {
     return lhs.contentTypeString == lhs.contentTypeString
 }

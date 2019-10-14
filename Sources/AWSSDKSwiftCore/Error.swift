@@ -8,11 +8,19 @@
 
 import Foundation
 
-public protocol AWSErrorType: Error {
+/// Standard Error type returned by aws-sdk-swift. Initialized with error code and message. Must provide an implementation of var description : String
+public protocol AWSErrorType: Error, CustomStringConvertible {
     init?(errorCode: String, message: String?)
 }
 
-public struct AWSResponseError: Error {
+extension AWSErrorType {
+    public var localizedDescription: String {
+        return description
+    }
+}
+
+/// Standard Response Error type returned by aws-sdk-swift. If the error is unrecognised then this is returned
+public struct AWSResponseError: AWSErrorType {
     public let errorCode: String
     public let message: String?
     
@@ -20,9 +28,14 @@ public struct AWSResponseError: Error {
         self.errorCode = errorCode
         self.message = message
     }
+    
+    public var description: String {
+        return "\(errorCode): \(message ?? "")"
+    }
 }
 
-public struct AWSError: Error {
+/// Unrecognised error. Used when we cannot recognise the error code from the AWS response
+public struct AWSError: Error, CustomStringConvertible {
     public let message: String
     public let rawBody: String
     
@@ -30,8 +43,13 @@ public struct AWSError: Error {
         self.message = message
         self.rawBody = rawBody
     }
+
+    public var description: String {
+        return "\(message)"
+    }
 }
 
+/// Error type for standard server errors returned by AWS
 public enum AWSServerError: AWSErrorType {
     // Not enough available addresses to satisfy your minimum request. Reduce the number of addresses you are requesting or wait for additional capacity to become available.
     case insufficientAddressCapacity(message: String?)
@@ -82,8 +100,37 @@ extension AWSServerError {
             return nil
         }
     }
+    
 }
 
+extension AWSServerError : CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .insufficientAddressCapacity(let message):
+            return "InsufficientAddressCapacity: \(message ?? "")"
+        case .insufficientCapacity(let message):
+            return "InsufficientCapacity: \(message ?? "")"
+        case .insufficientInstanceCapacity(let message):
+            return "InsufficientInstanceCapacity: \(message ?? "")"
+        case .insufficientHostCapacity(let message):
+            return "InsufficientHostCapacity: \(message ?? "")"
+        case .insufficientReservedInstanceCapacity(let message):
+            return "InsufficientReservedInstanceCapacity: \(message ?? "")"
+        case .internalError(let message):
+            return "InternalError: \(message ?? "")"
+        case .internalFailure(let message):
+            return "InternalFailure: \(message ?? "")"
+        case .requestLimitExceeded(let message):
+            return "RequestLimitExceeded: \(message ?? "")"
+        case .serviceUnavailable(let message):
+            return "ServiceUnavailable: \(message ?? "")"
+        case .unavailable(let message):
+            return "Unavailable: \(message ?? "")"
+        }
+    }
+}
+
+/// Error type for standard client errors returned by AWS
 public enum AWSClientError: AWSErrorType {
     /// The provided credentials could not be validated. You may not be authorized to carry out the request; for example, associating an Elastic IP address that is not yours, or trying to use an AMI for which you do not have permissions. Ensure that your account is authorized to use the Amazon EC2 service, that your credit card details are correct, and that you are using the correct access keys.
     case authFailure(message: String?)
@@ -148,90 +195,125 @@ extension AWSClientError {
         switch errorCode {
         case "AuthFailure":
             self = .authFailure(message: message)
-            
         case "Blocked":
             self = .blocked(message: message)
-            
         case "DryRunOperation":
             self = .dryRunOperation(message: message)
-            
         case "IdempotentParameterMismatch":
             self = .idempotentParameterMismatch(message: message)
-            
         case "IncompleteSignature":
             self = .incompleteSignature(message: message)
-            
         case "InvalidAction":
             self = .invalidAction(message: message)
-            
         case "InvalidCharacter":
             self = .invalidCharacter(message: message)
-            
         case "InvalidClientTokenId":
             self = .invalidClientTokenId(message: message)
-            
         case "InvalidPaginationToken":
             self = .invalidPaginationToken(message: message)
-            
         case "InvalidParameter":
             self = .invalidParameter(message: message)
-            
         case "InvalidParameterCombination":
             self = .invalidParameterCombination(message: message)
-            
         case "InvalidParameterValue":
             self = .invalidParameterValue(message: message)
-            
         case "InvalidQueryParameter":
             self = .invalidQueryParameter(message: message)
-            
         case "MalformedQueryString":
             self = .malformedQueryString(message: message)
-            
         case "MissingAction":
             self = .missingAction(message: message)
-            
         case "MissingAuthenticationToken":
             self = .missingAuthenticationToken(message: message)
-            
         case "MissingParameter":
             self = .missingParameter(message: message)
-            
         case "OptInRequired":
             self = .optInRequired(message: message)
-            
         case "PendingVerification":
             self = .pendingVerification(message: message)
-            
         case "RequestExpired":
             self = .requestExpired(message: message)
-            
         case "UnauthorizedOperation":
             self = .unauthorizedOperation(message: message)
-            
         case "UnknownParameter":
             self = .unknownParameter(message: message)
-            
         case "UnsupportedInstanceAttribute":
             self = .unsupportedInstanceAttribute(message: message)
-            
         case "UnsupportedOperation":
             self = .unsupportedOperation(message: message)
-            
         case "UnsupportedProtocol":
             self = .unsupportedProtocol(message: message)
-            
         case "ValidationError":
             self = .validationError(message: message)
-            
         case "AccessDenied":
             self = .accessDenied(message: message)
-            
         case "SignatureDoesNotMatch":
             self = .signatureDoesNotMatch(message: message)
-            
         default:
             return nil
+        }
+    }
+}
+
+extension AWSClientError : CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .authFailure(let message):
+            return "AuthFailure: \(message ?? "")"
+        case .blocked(let message):
+            return "Blocked: \(message ?? "")"
+        case .dryRunOperation(let message):
+            return "DryRunOperation: \(message ?? "")"
+        case .idempotentParameterMismatch(let message):
+            return "IdempotentParameterMismatch: \(message ?? "")"
+        case .incompleteSignature(let message):
+            return "IncompleteSignature: \(message ?? "")"
+        case .invalidAction(let message):
+            return "InvalidAction: \(message ?? "")"
+        case .invalidCharacter(let message):
+            return "InvalidCharacter: \(message ?? "")"
+        case .invalidClientTokenId(let message):
+            return "InvalidClientTokenId: \(message ?? "")"
+        case .invalidPaginationToken(let message):
+            return "InvalidPaginationToken: \(message ?? "")"
+        case .invalidParameter(let message):
+            return "InvalidParameter: \(message ?? "")"
+        case .invalidParameterCombination(let message):
+            return "InvalidParameterCombination: \(message ?? "")"
+        case .invalidParameterValue(let message):
+            return "InvalidParameterValue: \(message ?? "")"
+        case .invalidQueryParameter(let message):
+            return "InvalidQueryParameter: \(message ?? "")"
+        case .malformedQueryString(let message):
+            return "MalformedQueryString: \(message ?? "")"
+        case .missingAction(let message):
+            return "MissingAction: \(message ?? "")"
+        case .missingAuthenticationToken(let message):
+            return "MissingAuthenticationToken: \(message ?? "")"
+        case .missingParameter(let message):
+            return "MissingParameter: \(message ?? "")"
+        case .optInRequired(let message):
+            return "OptInRequired: \(message ?? "")"
+        case .pendingVerification(let message):
+            return "PendingVerification: \(message ?? "")"
+        case .requestExpired(let message):
+            return "RequestExpired: \(message ?? "")"
+        case .unauthorizedOperation(let message):
+            return "UnauthorizedOperation: \(message ?? "")"
+        case .unknownParameter(let message):
+            return "UnknownParameter: \(message ?? "")"
+        case .unsupportedInstanceAttribute(let message):
+            return "UnsupportedInstanceAttribute: \(message ?? "")"
+        case .unsupportedOperation(let message):
+            return "UnsupportedOperation: \(message ?? "")"
+        case .unsupportedProtocol(let message):
+            return "UnsupportedProtocol: \(message ?? "")"
+        case .validationError(let message):
+            return "ValidationError: \(message ?? "")"
+        case .accessDenied(let message):
+            return "AccessDenied: \(message ?? "")"
+        case .signatureDoesNotMatch(let message):
+            return "SignatureDoesNotMatch: \(message ?? "")"
         }
     }
 }

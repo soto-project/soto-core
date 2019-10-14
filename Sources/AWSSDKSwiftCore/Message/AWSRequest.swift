@@ -11,22 +11,8 @@ import NIO
 import NIOTLS
 import NIOHTTP1
 
-public protocol AWSServiceMiddleware {
-    func chain(request: AWSRequest) throws -> AWSRequest
-    func chain(responseBody: Body) throws -> Body
-}
-
-public extension AWSServiceMiddleware {
-    func chain(request: AWSRequest) throws -> AWSRequest {
-        return request
-    }
-    func chain(responseBody: Body) throws -> Body {
-        return responseBody
-    }
-}
-
 extension URL {
-    public var hostWithPort: String? {
+    var hostWithPort: String? {
         guard var host = self.host else {
             return nil
         }
@@ -51,52 +37,52 @@ extension HTTPRequestHead {
     }
 }
 
+/// Object encapsulating all the information needed to generate a raw HTTP request to AWS
 public struct AWSRequest {
     public let region: Region
     public var url: URL
     public let serviceProtocol: ServiceProtocol
-    public let service: String
-    public let amzTarget: String?
     public let operation: String
     public let httpMethod: String
-    public var httpHeaders: [String: Any?] = [:]
+    public var httpHeaders: [String: Any] = [:]
     public var body: Body
-    public let middlewares: [AWSServiceMiddleware]
 
-    public init(region: Region = .useast1, url: URL, serviceProtocol: ServiceProtocol, service: String, amzTarget: String? = nil, operation: String, httpMethod: String, httpHeaders: [String: Any?] = [:], body: Body = .empty, middlewares: [AWSServiceMiddleware] = []) {
+    /// Initialize AWSRequest struct
+    /// - parameters:
+    ///     - region: Region of AWS server
+    ///     - url : Request URL
+    ///     - serviceProtocol: protocol of service (.json, .xml, .query etc)
+    ///     - operation: Name of AWS operation
+    ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - httpHeaders: HTTP request headers
+    ///     - body: HTTP Request body
+    public init(region: Region = .useast1, url: URL, serviceProtocol: ServiceProtocol, operation: String, httpMethod: String, httpHeaders: [String: Any] = [:], body: Body = .empty) {
         self.region = region
         self.url = url
         self.serviceProtocol = serviceProtocol
-        self.service = service
-        self.amzTarget = amzTarget
         self.operation = operation
         self.httpMethod = httpMethod
         self.httpHeaders = httpHeaders
         self.body = body
-        self.middlewares = middlewares
     }
 
+    /// Add a header value
+    /// - parameters:
+    ///     - value : value
+    ///     - forHTTPHeaderField: name of header
     public mutating func addValue(_ value: String, forHTTPHeaderField field: String) {
         httpHeaders[field] = value
     }
 
+    /// Create HTTP Client request from AWSRequest
     func toNIORequest() throws -> HTTPClient.Request {
-        var awsRequest = self
-        for middleware in middlewares {
-            awsRequest = try middleware.chain(request: awsRequest)
-        }
-
         var headers: [String:String] = [:]
-        for (key, value) in awsRequest.httpHeaders {
-            guard let value = value else { continue }
+        for (key, value) in httpHeaders {
+            //guard let value = value else { continue }
             headers[key] = "\(value)"
         }
 
-        if let target = awsRequest.amzTarget {
-            headers["x-amz-target"] = "\(target).\(awsRequest.operation)"
-        }
-
-        switch awsRequest.httpMethod {
+        switch httpMethod {
         case "GET","HEAD":
             break
         default:
@@ -124,15 +110,26 @@ public struct AWSRequest {
 
         var head = HTTPRequestHead(
           version: HTTPVersion(major: 1, minor: 1),
-          method: nioHTTPMethod(from: awsRequest.httpMethod),
-          uri: awsRequest.url.absoluteString
+          method: nioHTTPMethod(from: httpMethod),
+          uri: url.absoluteString
         )
         let generatedHeaders = headers.map { ($0, $1) }
         head.headers = HTTPHeaders(generatedHeaders)
 
-        return HTTPClient.Request(head: head, body: awsRequest.body.asData() ?? Data())
+        return HTTPClient.Request(head: head, body: body.asData() ?? Data())
     }
 
+    // return new request with middleware applied
+    func applyMiddlewares(_ middlewares: [AWSServiceMiddleware]) throws -> AWSRequest {
+        var awsRequest = self
+        // apply middleware to request
+        for middleware in middlewares {
+            awsRequest = try middleware.chain(request: awsRequest)
+        }
+        return awsRequest
+    }
+
+    // Convert string to NIO HTTP Method
     fileprivate func nioHTTPMethod(from: String) -> HTTPMethod {
         switch from {
         case "HEAD":

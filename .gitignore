@@ -1,6 +1,8 @@
 .DS_Store
 /.build
+/.swiftpm
 /Packages
 /*.xcodeproj
 Package.resolved
-
+/build
+/docs

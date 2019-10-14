@@ -60,24 +60,6 @@ extension Dictionary : _DictionaryStringDictionaryDecodableMarker where Key == S
 open class DictionaryEncoder {
     // MARK: Options
     
-    /// The formatting of the output dictionary data.
-    public struct OutputFormatting : OptionSet {
-        /// The format's default value.
-        public let rawValue: UInt
-        
-        /// Creates an OutputFormatting value with the given raw value.
-        public init(rawValue: UInt) {
-            self.rawValue = rawValue
-        }
-        
-        /// Produce human-readable text in dictionary with indented output.
-        public static let prettyPrinted = OutputFormatting(rawValue: 1 << 0)
-        
-        /// Produce JSON with dictionary keys sorted in lexicographic order.
-        @available(macOS 10.13, iOS 11.0, watchOS 4.0, tvOS 11.0, *)
-        public static let sortedKeys    = OutputFormatting(rawValue: 1 << 1)
-    }
-    
     /// The strategy to use for encoding `Date` values.
     public enum DateEncodingStrategy {
         /// Defer to `Date` for choosing an encoding. This is the default strategy.
@@ -149,7 +131,7 @@ open class DictionaryEncoder {
         /// - Note: Using a key encoding strategy has a nominal performance cost, as each string key has to be converted.
         case convertToSnakeCase
         
-        /// Provide a custom conversion to the key in the encoded JSON from the keys specified by the encoded types.
+        /// Provide a custom conversion to the key in the encoded dictionary from the keys specified by the encoded types.
         /// The full path to the current encoding position is provided for context (in case you need to locate this key within the payload). The returned key is used in place of the last component in the coding path before encoding.
         /// If the result of the conversion is a duplicate key, then only one value will be present in the result.
         case custom((_ codingPath: [CodingKey]) -> CodingKey)
@@ -204,9 +186,6 @@ open class DictionaryEncoder {
         }
     }
     
-    /// The output format to produce. Defaults to `[]`.
-    open var outputFormatting: OutputFormatting = []
-    
     /// The strategy to use in encoding dates. Defaults to `.deferredToDate`.
     open var dateEncodingStrategy: DateEncodingStrategy = .deferredToDate
     
@@ -240,17 +219,17 @@ open class DictionaryEncoder {
                         userInfo: userInfo)
     }
     
-    // MARK: - Constructing a JSON Encoder
+    // MARK: - Constructing a Dictionary Encoder
     
     /// Initializes `self` with default strategies.
     public init() {}
     
     // MARK: - Encoding Values
     
-    /// Encodes the given top-level value and returns its JSON representation.
+    /// Encodes the given top-level value and returns its Dictionary representation.
     ///
     /// - parameter value: The value to encode.
-    /// - returns: A new `Data` value containing the encoded JSON data.
+    /// - returns: A new `Dictionary` value containing the encoded dictionary data.
     /// - throws: `EncodingError.invalidValue` if a non-conforming floating-point value is encountered during encoding, and the encoding strategy is `.throw`.
     /// - throws: An error if any value throws an error during encoding.
     open func encode<T : Encodable>(_ value: T) throws -> [String:Any] {
@@ -266,13 +245,6 @@ open class DictionaryEncoder {
                                              EncodingError.Context(codingPath: [], debugDescription: "Top-level \(T.self) did not encode as a dictionary."))
         }
         return dictionary
-/*        let writingOptions = JSONSerialization.WritingOptions(rawValue: self.outputFormatting.rawValue)
-        do {
-            return try JSONSerialization.data(withJSONObject: topLevel, options: writingOptions)
-        } catch {
-            throw EncodingError.invalidValue(value,
-                                             EncodingError.Context(codingPath: [], debugDescription: "Unable to encode the given top-level value to JSON.", underlyingError: error))
-        }*/
     }
 }
 
@@ -647,82 +619,82 @@ extension __DictionaryEncoder : SingleValueEncodingContainer {
         precondition(self.canEncodeNewValue, "Attempt to encode value through single value container when previously value already encoded.")
     }
     
-    public func encodeNil() throws {
+    func encodeNil() throws {
         assertCanEncodeNewValue()
         self.storage.push(container: NSNull())
     }
     
-    public func encode(_ value: Bool) throws {
+    func encode(_ value: Bool) throws {
         assertCanEncodeNewValue()
         self.storage.push(container: self.box(value))
     }
     
-    public func encode(_ value: Int) throws {
+    func encode(_ value: Int) throws {
         assertCanEncodeNewValue()
         self.storage.push(container: self.box(value))
     }
     
-    public func encode(_ value: Int8) throws {
+    func encode(_ value: Int8) throws {
         assertCanEncodeNewValue()
         self.storage.push(container: self.box(value))
     }
     
-    public func encode(_ value: Int16) throws {
+    func encode(_ value: Int16) throws {
         assertCanEncodeNewValue()
         self.storage.push(container: self.box(value))
     }
     
-    public func encode(_ value: Int32) throws {
+    func encode(_ value: Int32) throws {
         assertCanEncodeNewValue()
         self.storage.push(container: self.box(value))
     }
     
-    public func encode(_ value: Int64) throws {
+    func encode(_ value: Int64) throws {
         assertCanEncodeNewValue()
         self.storage.push(container: self.box(value))
     }
     
-    public func encode(_ value: UInt) throws {
+    func encode(_ value: UInt) throws {
         assertCanEncodeNewValue()
         self.storage.push(container: self.box(value))
     }
     
-    public func encode(_ value: UInt8) throws {
+    func encode(_ value: UInt8) throws {
         assertCanEncodeNewValue()
         self.storage.push(container: self.box(value))
     }
     
-    public func encode(_ value: UInt16) throws {
+    func encode(_ value: UInt16) throws {
         assertCanEncodeNewValue()
         self.storage.push(container: self.box(value))
     }
     
-    public func encode(_ value: UInt32) throws {
+    func encode(_ value: UInt32) throws {
         assertCanEncodeNewValue()
         self.storage.push(container: self.box(value))
     }
     
-    public func encode(_ value: UInt64) throws {
+    func encode(_ value: UInt64) throws {
         assertCanEncodeNewValue()
         self.storage.push(container: self.box(value))
     }
     
-    public func encode(_ value: String) throws {
+    func encode(_ value: String) throws {
         assertCanEncodeNewValue()
         self.storage.push(container: self.box(value))
     }
     
-    public func encode(_ value: Float) throws {
+    func encode(_ value: Float) throws {
         assertCanEncodeNewValue()
         try self.storage.push(container: self.box(value))
     }
     
-    public func encode(_ value: Double) throws {
+    func encode(_ value: Double) throws {
         assertCanEncodeNewValue()
         try self.storage.push(container: self.box(value))
     }
     
-    public func encode<T : Encodable>(_ value: T) throws {
+    func encode<T : Encodable>(_ value: T) throws {
         assertCanEncodeNewValue()
         try self.storage.push(container: self.box(value))
     }
@@ -1032,10 +1004,10 @@ fileprivate class __DictionaryReferencingEncoder : __DictionaryEncoder {
 }
 
 //===----------------------------------------------------------------------===//
-// JSON Decoder
+// Dictionary Decoders
 //===----------------------------------------------------------------------===//
 
-/// `DictionaryDecoder` facilitates the decoding of JSON into semantic `Decodable` types.
+/// `DictionaryDecoder` facilitates the decoding of Dictionaries into semantic `Decodable` types.
 open class DictionaryDecoder {
     // MARK: Options
     
@@ -1044,10 +1016,10 @@ open class DictionaryDecoder {
         /// Defer to `Date` for decoding. This is the default strategy.
         case deferredToDate
         
-        /// Decode the `Date` as a UNIX timestamp from a JSON number.
+        /// Decode the `Date` as a UNIX timestamp from a NSNumber.
         case secondsSince1970
         
-        /// Decode the `Date` as UNIX millisecond timestamp from a JSON number.
+        /// Decode the `Date` as UNIX millisecond timestamp from a NSNumber.
         case millisecondsSince1970
         
         /// Decode the `Date` as an ISO-8601-formatted string (in RFC 3339 format).
@@ -1103,7 +1075,7 @@ open class DictionaryDecoder {
         /// - Note: Using a key decoding strategy has a nominal performance cost, as each string key has to be inspected for the `_` character.
         case convertFromSnakeCase
         
-        /// Provide a custom conversion from the key in the encoded JSON to the keys specified by the decoded types.
+        /// Provide a custom conversion from the key in the encoded Dictionary to the keys specified by the decoded types.
         /// The full path to the current decoding position is provided for context (in case you need to locate this key within the payload). The returned key is used in place of the last component in the coding path before decoding.
         /// If the result of the conversion is a duplicate key, then only one value will be present in the container for the type to decode from.
         case custom((_ codingPath: [CodingKey]) -> CodingKey)
@@ -1187,19 +1159,19 @@ open class DictionaryDecoder {
                         userInfo: userInfo)
     }
     
-    // MARK: - Constructing a JSON Decoder
+    // MARK: - Constructing a Dictionary Decoder
     
     /// Initializes `self` with default strategies.
     public init() {}
     
     // MARK: - Decoding Values
     
-    /// Decodes a top-level value of the given type from the given JSON representation.
+    /// Decodes a top-level value of the given type from the given dictionary representation.
     ///
     /// - parameter type: The type of the value to decode.
-    /// - parameter data: The data to decode from.
+    /// - parameter from: The dictionary to decode from.
     /// - returns: A value of the requested type.
-    /// - throws: `DecodingError.dataCorrupted` if values requested from the payload are corrupted, or if the given data is not valid JSON.
+    /// - throws: `DecodingError.dataCorrupted` if values requested from the payload are corrupted.
     /// - throws: An error if any value throws an error during decoding.
     open func decode<T : Decodable>(_ type: T.Type, from dictionary: Any) throws -> T {
         
@@ -2029,81 +2001,81 @@ extension __DictionaryDecoder : SingleValueDecodingContainer {
         }
     }
     
-    public func decodeNil() -> Bool {
+    func decodeNil() -> Bool {
         return self.storage.topContainer is NSNull
     }
     
-    public func decode(_ type: Bool.Type) throws -> Bool {
+    func decode(_ type: Bool.Type) throws -> Bool {
         try expectNonNull(Bool.self)
         return try self.unbox(self.storage.topContainer, as: Bool.self)!
     }
     
-    public func decode(_ type: Int.Type) throws -> Int {
+    func decode(_ type: Int.Type) throws -> Int {
         try expectNonNull(Int.self)
         return try self.unbox(self.storage.topContainer, as: Int.self)!
     }
     
-    public func decode(_ type: Int8.Type) throws -> Int8 {
+    func decode(_ type: Int8.Type) throws -> Int8 {
         try expectNonNull(Int8.self)
         return try self.unbox(self.storage.topContainer, as: Int8.self)!
     }
     
-    public func decode(_ type: Int16.Type) throws -> Int16 {
+    func decode(_ type: Int16.Type) throws -> Int16 {
         try expectNonNull(Int16.self)
         return try self.unbox(self.storage.topContainer, as: Int16.self)!
     }
     
-    public func decode(_ type: Int32.Type) throws -> Int32 {
+    func decode(_ type: Int32.Type) throws -> Int32 {
         try expectNonNull(Int32.self)
         return try self.unbox(self.storage.topContainer, as: Int32.self)!
     }
     
-    public func decode(_ type: Int64.Type) throws -> Int64 {
+    func decode(_ type: Int64.Type) throws -> Int64 {
         try expectNonNull(Int64.self)
         return try self.unbox(self.storage.topContainer, as: Int64.self)!
     }
     
-    public func decode(_ type: UInt.Type) throws -> UInt {
+    func decode(_ type: UInt.Type) throws -> UInt {
         try expectNonNull(UInt.self)
         return try self.unbox(self.storage.topContainer, as: UInt.self)!
     }
     
-    public func decode(_ type: UInt8.Type) throws -> UInt8 {
+    func decode(_ type: UInt8.Type) throws -> UInt8 {
         try expectNonNull(UInt8.self)
         return try self.unbox(self.storage.topContainer, as: UInt8.self)!
     }
     
-    public func decode(_ type: UInt16.Type) throws -> UInt16 {
+    func decode(_ type: UInt16.Type) throws -> UInt16 {
         try expectNonNull(UInt16.self)
         return try self.unbox(self.storage.topContainer, as: UInt16.self)!
     }
     
-    public func decode(_ type: UInt32.Type) throws -> UInt32 {
+    func decode(_ type: UInt32.Type) throws -> UInt32 {
         try expectNonNull(UInt32.self)
         return try self.unbox(self.storage.topContainer, as: UInt32.self)!
     }
     
-    public func decode(_ type: UInt64.Type) throws -> UInt64 {
+    func decode(_ type: UInt64.Type) throws -> UInt64 {
         try expectNonNull(UInt64.self)
         return try self.unbox(self.storage.topContainer, as: UInt64.self)!
     }
     
-    public func decode(_ type: Float.Type) throws -> Float {
+    func decode(_ type: Float.Type) throws -> Float {
         try expectNonNull(Float.self)
         return try self.unbox(self.storage.topContainer, as: Float.self)!
     }
     
-    public func decode(_ type: Double.Type) throws -> Double {
+    func decode(_ type: Double.Type) throws -> Double {
         try expectNonNull(Double.self)
         return try self.unbox(self.storage.topContainer, as: Double.self)!
     }
     
-    public func decode(_ type: String.Type) throws -> String {
+    func decode(_ type: String.Type) throws -> String {
         try expectNonNull(String.self)
         return try self.unbox(self.storage.topContainer, as: String.self)!
     }
     
-    public func decode<T : Decodable>(_ type: T.Type) throws -> T {
+    func decode<T : Decodable>(_ type: T.Type) throws -> T {
         try expectNonNull(type)
         return try self.unbox(self.storage.topContainer, as: type)!
     }
@@ -2132,7 +2104,7 @@ extension __DictionaryDecoder {
         
         let int = number.intValue
         guard NSNumber(value: int) == number else {
-            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed JSON number <\(number)> does not fit in \(type)."))
+            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed number <\(number)> does not fit in \(type)."))
         }
         
         return int
@@ -2147,7 +2119,7 @@ extension __DictionaryDecoder {
         
         let int8 = number.int8Value
         guard NSNumber(value: int8) == number else {
-            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed JSON number <\(number)> does not fit in \(type)."))
+            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed number <\(number)> does not fit in \(type)."))
         }
         
         return int8
@@ -2162,7 +2134,7 @@ extension __DictionaryDecoder {
         
         let int16 = number.int16Value
         guard NSNumber(value: int16) == number else {
-            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed JSON number <\(number)> does not fit in \(type)."))
+            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed number <\(number)> does not fit in \(type)."))
         }
         
         return int16
@@ -2177,7 +2149,7 @@ extension __DictionaryDecoder {
         
         let int32 = number.int32Value
         guard NSNumber(value: int32) == number else {
-            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed JSON number <\(number)> does not fit in \(type)."))
+            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed number <\(number)> does not fit in \(type)."))
         }
         
         return int32
@@ -2192,7 +2164,7 @@ extension __DictionaryDecoder {
         
         let int64 = number.int64Value
         guard NSNumber(value: int64) == number else {
-            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed JSON number <\(number)> does not fit in \(type)."))
+            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed number <\(number)> does not fit in \(type)."))
         }
         
         return int64
@@ -2207,7 +2179,7 @@ extension __DictionaryDecoder {
         
         let uint = number.uintValue
         guard NSNumber(value: uint) == number else {
-            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed JSON number <\(number)> does not fit in \(type)."))
+            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed number <\(number)> does not fit in \(type)."))
         }
         
         return uint
@@ -2222,7 +2194,7 @@ extension __DictionaryDecoder {
         
         let uint8 = number.uint8Value
         guard NSNumber(value: uint8) == number else {
-            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed JSON number <\(number)> does not fit in \(type)."))
+            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed number <\(number)> does not fit in \(type)."))
         }
         
         return uint8
@@ -2237,7 +2209,7 @@ extension __DictionaryDecoder {
         
         let uint16 = number.uint16Value
         guard NSNumber(value: uint16) == number else {
-            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed JSON number <\(number)> does not fit in \(type)."))
+            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed number <\(number)> does not fit in \(type)."))
         }
         
         return uint16
@@ -2252,7 +2224,7 @@ extension __DictionaryDecoder {
         
         let uint32 = number.uint32Value
         guard NSNumber(value: uint32) == number else {
-            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed JSON number <\(number)> does not fit in \(type)."))
+            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed number <\(number)> does not fit in \(type)."))
         }
         
         return uint32
@@ -2267,7 +2239,7 @@ extension __DictionaryDecoder {
         
         let uint64 = number.uint64Value
         guard NSNumber(value: uint64) == number else {
-            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed JSON number <\(number)> does not fit in \(type)."))
+            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed number <\(number)> does not fit in \(type)."))
         }
         
         return uint64
@@ -2285,7 +2257,7 @@ extension __DictionaryDecoder {
             // * If it was a Double or Decimal, you will get back the nearest approximation if it will fit
             let double = number.doubleValue
             guard abs(double) <= Double(Float.greatestFiniteMagnitude) else {
-                throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed JSON number \(number) does not fit in \(type)."))
+                throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed number \(number) does not fit in \(type)."))
             }
             
             return Float(double)

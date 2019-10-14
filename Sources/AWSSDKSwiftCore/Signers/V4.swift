@@ -9,13 +9,14 @@
 import Foundation
 
 extension Signers {
+    /// AWS V4 Signing code
     public final class V4 {
 
-        public let region: Region
+        let region: Region
 
-        public let service: String
-
-        public let endpoint: String?
+        let signingName: String
+        
+        let endpoint: String?
 
         let identifier = "aws4_request"
 
@@ -36,17 +37,15 @@ extension Signers {
         var credential: CredentialProvider
 
 
-        public init(credential: CredentialProvider, region: Region, service: String, endpoint: String?) {
+        /// initialize a Signers.V4 object
+        public init(credential: CredentialProvider, region: Region, signingName: String, endpoint: String?) {
             self.region = region
-            self.service = service
+            self.signingName = signingName
             self.credential = credential
             self.endpoint = endpoint
         }
 
-        // manageCredential should be called and the future resolved
-        // prior to building signedURL or signedHeaders to ensure
-        // latest credentials are retreived and set
-        //
+        /// If you did not provide credentials `manageCredential()` should be called and the future resolved prior to building signedURL or signedHeaders to ensure latest credentials are retreived and set
         public func manageCredential() -> Future<CredentialProvider> {
             if credential.isEmpty() || credential.nearExpiration() {
                 do {
@@ -63,12 +62,13 @@ extension Signers {
         }
 
         func hexEncodedBodyHash(_ data: Data) -> String {
-            if data.isEmpty && service == "s3" {
+            if data.isEmpty && signingName == "s3" {
                 return "UNSIGNED-PAYLOAD"
             }
             return sha256(data).hexdigest()
         }
 
+        /// Return signed URL
         public func signedURL(url: URL, method: String, date: Date = Date(), expires: Int = 86400) -> URL {
             let datetime = V4.timestamp(date)
             let headers = ["Host": url.hostWithPort!]
@@ -112,6 +112,7 @@ extension Signers {
             return URL(string: url.absoluteString+"&X-Amz-Signature="+sig)!
         }
 
+        /// Return signed headers
         public func signedHeaders(url: URL, headers: [String: String], method: String, date: Date = Date(), bodyData: Data) -> [String: String] {
             let datetime = V4.timestamp(date)
             let bodyDigest = hexEncodedBodyHash(bodyData)
@@ -205,7 +206,7 @@ extension Signers {
                 key: secretBytes
             )
             let region = hmac(string: self.region.rawValue, key: date)
-            let service = hmac(string: self.service, key: region)
+            let signingName = hmac(string: self.signingName, key: region)
             let string = stringToSign(
                 url: url,
                 headers: headers,
@@ -214,14 +215,14 @@ extension Signers {
                 bodyDigest: bodyDigest
             )
 
-            return hmac(string: string, key: hmac(string: identifier, key: service)).hexdigest()
+            return hmac(string: string, key: hmac(string: identifier, key: signingName)).hexdigest()
         }
 
         func credentialScope(_ datetime: String) -> String {
             return [
                 String(datetime.prefix(upTo: datetime.index(datetime.startIndex, offsetBy: 8))),
                 region.rawValue,
-                service,
+                signingName,
                 identifier
             ].joined(separator: "/")
         }

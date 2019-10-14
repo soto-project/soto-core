@@ -31,7 +31,7 @@ class HTTPClientTests: XCTestCase {
         _ = try client.connect(request).wait()
         XCTFail("Should throw malformedURL error")
       } catch {
-        if case HTTPClient.ClientError.malformedURL = error {}
+        if case HTTPClient.HTTPError.malformedURL = error {}
         else {
             XCTFail("Should throw malformedURL error")
         }
@@ -47,7 +47,7 @@ class HTTPClientTests: XCTestCase {
         } catch {
             XCTFail("Should not throw malformedURL error")
         }
-        
+
         do {
             let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: "http://169.254.169.254/latest/meta-data/iam/security-credentials/")
             let request = HTTPClient.Request(head: head, body: Data())
@@ -57,7 +57,7 @@ class HTTPClientTests: XCTestCase {
         } catch {
         }
     }
-    
+
     func testConnectSimpleGet() {
         let client = HTTPClient()
         let head = HTTPRequestHead(

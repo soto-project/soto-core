@@ -13,12 +13,10 @@ REVISION_HASH=$(git rev-parse HEAD)
 
 git checkout gh-pages
 # copy contents of docs to docs/current replacing the ones that are already there
-rm -rf docs/current
+rm -rf current
 mv docs/ current/
-mkdir docs
-mv current/ docs/
 # commit
-git add --all docs
+git add --all current
 git commit -m "Documentation for https://github.com/swift-aws/aws-sdk-swift-core/tree/$REVISION_HASH"
 git push
 # return to branch

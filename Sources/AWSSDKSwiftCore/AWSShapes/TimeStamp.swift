@@ -7,6 +7,7 @@
 
 import Foundation
 
+/// Time stamp object that can encoded to ISO8601 format and decoded from ISO8601, HTTP date format and UNIX epoch seconds
 public struct TimeStamp {
     
     public var stringValue: String? {

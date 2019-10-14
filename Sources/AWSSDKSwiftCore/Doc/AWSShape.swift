@@ -8,11 +8,17 @@
 
 import Foundation
 
-public protocol AWSShape: Codable, XMLContainerCodingMap {
+/// Protocol for the input and output objects for all AWS service commands. They need to be Codable so they can be serialized. They also need to provide details on how their container classes are coded when serializing XML.
+public protocol AWSShape: XMLCodable {
+    
+    /// The path to the object that is included in the request/response body
     static var payloadPath: String? { get }
+    /// The XML namespace for the object
     static var _xmlNamespace: String? { get }
+    /// The array of members serialization helpers
     static var _members: [AWSShapeMember] { get }
 
+    /// returns if a shape is valid. The checks for validity are defined by the AWS model files we get from http://github.com/aws/aws-sdk-go
     func validate(name: String) throws
 }
 
@@ -29,10 +35,12 @@ extension AWSShape {
         return []
     }
 
+    /// return member with provided name
     public static func getMember(named: String) -> AWSShapeMember? {
         return _members.first {$0.label == named}
     }
 
+    /// return member with provided location name
     public static func getMember(locationNamed: String) -> AWSShapeMember? {
         return _members.first {
             if let location = $0.location {
@@ -52,6 +60,7 @@ extension AWSShape {
         }
     }
 
+    /// return list of member variables serialized in the URL path
     public static var pathParams: [String: String] {
         var params: [String: String] = [:]
         for member in _members {
@@ -63,6 +72,7 @@ extension AWSShape {
         return params
     }
 
+    /// return list of member variables serialized in the headers
     public static var headerParams: [String: String] {
         var params: [String: String] = [:]
         for member in _members {
@@ -74,6 +84,7 @@ extension AWSShape {
         return params
     }
 
+    /// return list of member variables serialized as query parameters
     public static var queryParams: [String: String] {
         var params: [String: String] = [:]
         for member in _members {
@@ -85,6 +96,7 @@ extension AWSShape {
         return params
     }
 
+    /// returns whether the shape has any members being serialized into the request/response body
     public static var hasEncodableBody: Bool {
         for member in _members {
             if let location = member.location {
@@ -106,7 +118,7 @@ extension AWSShape {
         try validate(name: "\(type(of:self))")
     }
 
-    /// stub function for all shapes
+    /// stub validate function for all shapes
     public func validate(name: String) throws {
     }
 
@@ -133,7 +145,7 @@ extension AWSShape {
         let firstMatch = regularExpression.rangeOfFirstMatch(in: value, options: .anchored, range: NSMakeRange(0, value.count))
         guard firstMatch.location != NSNotFound && firstMatch.length > 0 else { throw AWSClientError.validationError(message: "\(parent).\(name) (\(value)) does not match pattern \(pattern).") }
     }
-    // optional values
+    // validate optional values
     public func validate<T : BinaryInteger>(_ value: T?, name: String, parent: String, min: T) throws {
         guard let value = value else {return}
         try validate(value, name: name, parent: parent, min: min)
@@ -165,13 +177,14 @@ extension AWSShape {
 }
 
 extension AWSShape {
+    /// Return an idempotencyToken 
     public static func idempotencyToken() -> String {
         return UUID().uuidString
     }
 }
 
 /// extension to CollectionEncoding to produce the XML equivalent class
-extension ShapeEncoding {
+extension AWSShapeMember.ShapeEncoding {
     public var xmlEncoding : XMLContainerCoding? {
         switch self {
         case .default:

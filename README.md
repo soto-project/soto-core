@@ -14,7 +14,7 @@
 
 A Core Framework for [AWSSDKSwift](https://github.com/swift-aws/aws-sdk-swift)
 
-This is the underlying driver for executing requests to AWS, but you should likely use one of the libraries provided by the package above instead of this! Documentation can be found [here](http://htmlpreview.github.io/?https://github.com/swift-aws/aws-sdk-swift-core/gh-pages/docs/3.x.x/index.html).
+This is the underlying driver for executing requests to AWS, but you should likely use one of the libraries provided by the package above instead of this! Documentation can be found [here](http://htmlpreview.github.io/?https://github.com/swift-aws/aws-sdk-swift-core/gh-pages/3.x.x/index.html).
 
 ## Swift NIO
 

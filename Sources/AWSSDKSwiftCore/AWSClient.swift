@@ -122,7 +122,7 @@ extension AWSClient {
         let client = HTTPClient(hostname: nioRequest.head.hostWithPort!, port: nioRequest.head.port ?? 443)
         let futureResponse = client.connect(nioRequest)
 
-        futureResponse.whenComplete {
+        futureResponse.whenComplete { _ in
             client.close { error in
                 if let error = error {
                     print("Error closing connection: \(error)")
@@ -147,7 +147,7 @@ extension AWSClient {
     ///     Empty Future that completes when response is received
     public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> Future<Void> {
 
-        return signer.manageCredential().thenThrowing { _ in
+        return signer.manageCredential().flatMapThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
                     operation: operationName,
                     path: path,
@@ -155,9 +155,9 @@ extension AWSClient {
                     input: input
                 )
                 return try self.createNioRequest(awsRequest)
-            }.then { nioRequest in
+            }.flatMap { nioRequest in
                 return self.invoke(nioRequest)
-            }.thenThrowing { response in
+            }.flatMapThrowing { response in
                 return try self.validate(response: response)
             }
     }
@@ -171,16 +171,16 @@ extension AWSClient {
     ///     Empty Future that completes when response is received
     public func send(operation operationName: String, path: String, httpMethod: String) -> Future<Void> {
 
-        return signer.manageCredential().thenThrowing { _ in
+        return signer.manageCredential().flatMapThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
                     operation: operationName,
                     path: path,
                     httpMethod: httpMethod
                 )
                 return try self.createNioRequest(awsRequest)
-            }.then { nioRequest in
+            }.flatMap { nioRequest in
                 return self.invoke(nioRequest)
-            }.thenThrowing { response in
+            }.flatMapThrowing { response in
                 return try self.validate(response: response)
             }
     }
@@ -194,16 +194,16 @@ extension AWSClient {
     ///     Future containing output object that completes when response is received
     public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) -> Future<Output> {
 
-        return signer.manageCredential().thenThrowing { _ in
+        return signer.manageCredential().flatMapThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
                     operation: operationName,
                     path: path,
                     httpMethod: httpMethod
                 )
                 return try self.createNioRequest(awsRequest)
-            }.then { nioRequest in
+            }.flatMap { nioRequest in
                 return self.invoke(nioRequest)
-            }.thenThrowing { response in
+            }.flatMapThrowing { response in
                 return try self.validate(operation: operationName, response: response)
             }
     }
@@ -218,7 +218,7 @@ extension AWSClient {
     ///     Future containing output object that completes when response is received
     public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> Future<Output> {
 
-            return signer.manageCredential().thenThrowing { _ in
+            return signer.manageCredential().flatMapThrowing { _ in
                     let awsRequest = try self.createAWSRequest(
                         operation: operationName,
                         path: path,
@@ -226,9 +226,9 @@ extension AWSClient {
                         input: input
                     )
                     return try self.createNioRequest(awsRequest)
-                }.then { nioRequest in
+                }.flatMap { nioRequest in
                     return self.invoke(nioRequest)
-                }.thenThrowing { response in
+                }.flatMapThrowing { response in
                     return try self.validate(operation: operationName, response: response)
                 }
     }
@@ -338,7 +338,7 @@ extension AWSClient {
 
         // validate input parameters
         try input.validate()
-        
+
         guard let baseURL = URL(string: "\(endpoint)"), let _ = baseURL.hostWithPort else {
             throw RequestError.invalidURL("\(endpoint) must specify url host and scheme")
         }
@@ -546,18 +546,18 @@ extension AWSClient {
         } else {
             raw = false
         }
-        
+
         var awsResponse = try AWSResponse(from: response, serviceProtocolType: serviceProtocol.type, raw: raw)
-        
+
         try validateCode(response: awsResponse)
 
         awsResponse = try hypertextApplicationLanguageProcess(response: awsResponse, members: Output._members)
-        
+
         // do we need to fix up the response before processing it
         for middleware in middlewares {
             awsResponse = try middleware.chain(response: awsResponse)
         }
-        
+
         let decoder = DictionaryDecoder()
 
         var outputDict: [String: Any] = [:]
@@ -601,7 +601,7 @@ extension AWSClient {
 
         for (key, value) in awsResponse.headers {
             let headerParams = Output.headerParams
-            if let index = headerParams.index(where: { $0.key.lowercased() == key.lowercased() }) {
+            if let index = headerParams.firstIndex(where: { $0.key.lowercased() == key.lowercased() }) {
                 // check we can convert to a String. If not just put value straight into output dictionary
                 guard let stringValue = value as? String else {
                     outputDict[headerParams[index].key] = value
@@ -625,7 +625,7 @@ extension AWSClient {
         let awsResponse = try AWSResponse(from: response, serviceProtocolType: serviceProtocol.type)
         try validateCode(response: awsResponse)
     }
-    
+
     /// validate http status code. If it is an error then throw an Error object
     private func validateCode(response: AWSResponse) throws {
         guard (200..<300).contains(response.status.code) else {
@@ -643,17 +643,17 @@ extension AWSClient {
                     guard let representations = try Representation.from(json: data).representations(for: rel) else {
                         continue
                     }
-                    
+
                     guard let hint = members.filter({ $0.location?.name == rel }).first else {
                         continue
                     }
-                    
+
                     switch hint.type {
                     case .list:
                         let properties : [[String: Any]] = try representations.map({
                             var props = $0.properties
                             var linkMap: [String: [Link]] = [:]
-                            
+
                             for link in $0.links {
                                 let key = link.rel.camelCased(separator: ":")
                                 if linkMap[key] == nil {
@@ -661,7 +661,7 @@ extension AWSClient {
                                 }
                                 linkMap[key]?.append(link)
                             }
-                            
+
                             for (key, links) in linkMap {
                                 var dict: [String: Any] = [:]
                                 for link in links {
@@ -672,7 +672,7 @@ extension AWSClient {
                                     // this is a hack to wait...
                                     ///
                                     while dict[name] == nil {
-                                        _ = invoke(nioRequest).thenThrowing{ res in
+                                        _ = invoke(nioRequest).flatMapThrowing{ res in
                                             let representaion = try Representation().from(json: res.body)
                                             dict[name] = representaion.properties
                                         }
@@ -680,11 +680,11 @@ extension AWSClient {
                                 }
                                 props[key] = dict
                             }
-                            
+
                             return props
                         })
                         dictionary[rel] = properties
-                        
+
                     default:
                         dictionary[rel] = representations.map({ $0.properties }).first ?? [:]
                     }
@@ -698,15 +698,9 @@ extension AWSClient {
         }
         return response
     }
-    
-    /// create error from Response
+
     private func createError(for response: AWSResponse) -> Error {
-        let bodyDict: [String: Any]
-        if let dict = try? response.body.asDictionary() {
-            bodyDict = dict ?? [:]
-        } else {
-            bodyDict = [:]
-        }
+        let bodyDict: [String: Any] = (try? response.body.asDictionary()) ?? [:]
 
         var code: String?
         var message: String?
@@ -752,7 +746,7 @@ extension AWSClient {
 
             return AWSResponseError(errorCode: errorCode, message: message)
         }
-        
+
         let rawBodyString : String?
         if let rawBody = response.body.asData() {
             rawBodyString = String(data: rawBody, encoding: .utf8)

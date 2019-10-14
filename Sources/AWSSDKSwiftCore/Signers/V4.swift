@@ -58,7 +58,7 @@ extension Signers {
                 }
             }
 
-            return AWSClient.eventGroup.next().newSucceededFuture(result: credential)
+            return AWSClient.eventGroup.next().makeSucceededFuture(credential)
         }
 
         func hexEncodedBodyHash(_ data: Data) -> String {
@@ -179,7 +179,7 @@ extension Signers {
 
         func signedHeaders(_ headers: [String:String]) -> String {
             var list = Array(headers.keys).map { $0.lowercased() }.sorted()
-            if let index = list.index(of: "authorization") {
+            if let index = list.firstIndex(of: "authorization") {
                 list.remove(at: index)
             }
             return list.joined(separator: ";")

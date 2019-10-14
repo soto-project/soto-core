@@ -1,4 +1,4 @@
-// swift-tools-version:4.1
+// swift-tools-version:5.0
 import PackageDescription
 
 let package = Package(
@@ -7,8 +7,8 @@ let package = Package(
         .library(name: "AWSSDKSwiftCore", targets: ["AWSSDKSwiftCore"])
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-nio.git", from: "1.11.0"),
-        .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "1.3.2"),
+        .package(url: "https://github.com/apple/swift-nio.git", .upToNextMajor(from:"2.1.0")),
+        .package(url: "https://github.com/apple/swift-nio-ssl.git", .upToNextMajor(from:"2.0.0")),
         .package(url: "https://github.com/swift-aws/HypertextApplicationLanguage.git", .upToNextMajor(from: "1.1.0")),
         .package(url: "https://github.com/swift-aws/Perfect-INIParser.git", .upToNextMajor(from: "3.0.0")),
     ],
@@ -19,7 +19,7 @@ let package = Package(
                 "HypertextApplicationLanguage",
                 "NIO",
                 "NIOHTTP1",
-                "NIOOpenSSL",
+                "NIOSSL",
                 "NIOFoundationCompat",
                 "INIParser"
             ]),
@@ -43,5 +43,3 @@ if useAWSSDKOpenSSLShim {
     awsSdkSwiftCoreTarget?.dependencies.append("CAWSSDKOpenSSL")
     package.dependencies.append(.package(url: "https://github.com/apple/swift-nio-ssl-support.git", from: "1.0.0"))
 }
-
-

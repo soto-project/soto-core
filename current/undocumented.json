@@ -23,7 +23,7 @@
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/nio1.4/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSClient.swift",
-      "line": 781,
+      "line": 775,
       "symbol": "AWSClient.RequestError",
       "symbol_kind": "source.lang.swift.decl.extension",
       "warning": "undocumented"

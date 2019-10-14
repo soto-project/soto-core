@@ -1,0 +1,9 @@
+.DS_Store
+.build
+/Packages
+*.xcodeproj
+.env
+node_modules
+build
+awssdkswift-sourcekitten-doc.json
+.jazzy.yaml

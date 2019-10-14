@@ -13,11 +13,11 @@ import Foundation
 import NIO
 import NIOFoundationCompat
 import NIOHTTP1
-#if canImport(NIOSSL)
-import NIOSSL
-#elseif canImport(NIOTransportServices)
+#if canImport(Network)
 import Network
 import NIOTransportServices
+#else
+import NIOSSL
 #endif
 
 public final class HTTPClient {
@@ -32,12 +32,11 @@ public final class HTTPClient {
         let body: Data
     }
 
-    public enum ClientError: Error {
+    public enum HTTPError: Error {
         case malformedHead
         case malformedBody
         case malformedURL(url: String)
         case alreadyShutdown
-        case error(Error)
     }
 
     /// Specifies how `EventLoopGroup` will be created and establishes lifecycle ownership.
@@ -54,17 +53,15 @@ public final class HTTPClient {
         case .shared(let group):
             self.eventLoopGroup = group
         case .createNew:
-            #if canImport(NIOSSL)
-                self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
-            #elseif canImport(NIOTransportServices)
+            #if canImport(Network)
                 self.eventLoopGroup = NIOTSEventLoopGroup()
             #else
-                fatalError("HTTPClient: needs to link with NIOSSL or NIOTransportServices")
+                self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
             #endif
         }
     }
 
-    #if canImport(NIOSSL)
+    #if !canImport(Network)
     /// add SSL Handler to channel pipeline if the port is 443
     func addSSLHandlerIfNeeded(_ pipeline : ChannelPipeline, hostname: String, port: Int) -> EventLoopFuture<Void> {
         if (port == 443) {
@@ -83,9 +80,9 @@ public final class HTTPClient {
 
     /// send request to HTTP client, return a future holding the Response
     public func connect(_ request: Request) -> EventLoopFuture<Response> {
-        guard let url = URL(string:request.head.uri) else { return eventLoopGroup.next().makeFailedFuture(HTTPClient.ClientError.malformedURL(url: request.head.uri)) }
-        guard let scheme = url.scheme else { return eventLoopGroup.next().makeFailedFuture(HTTPClient.ClientError.malformedURL(url: request.head.uri)) }
-        guard let hostname = url.host else { return eventLoopGroup.next().makeFailedFuture(HTTPClient.ClientError.malformedURL(url: request.head.uri)) }
+        guard let url = URL(string:request.head.uri) else { return eventLoopGroup.next().makeFailedFuture(HTTPClient.HTTPError.malformedURL(url: request.head.uri)) }
+        guard let scheme = url.scheme else { return eventLoopGroup.next().makeFailedFuture(HTTPClient.HTTPError.malformedURL(url: request.head.uri)) }
+        guard let hostname = url.host else { return eventLoopGroup.next().makeFailedFuture(HTTPClient.HTTPError.malformedURL(url: request.head.uri)) }
 
         let port : Int
         let headerHostname : String
@@ -101,16 +98,14 @@ public final class HTTPClient {
 
         let response: EventLoopPromise<Response> = self.eventLoopGroup.next().makePromise()
 
-        #if canImport(NIOSSL)
+        #if canImport(Network)
 
-        let bootstrap = ClientBootstrap(group: self.eventLoopGroup)
+        let bootstrap = NIOTSConnectionBootstrap(group: self.eventLoopGroup)
             .connectTimeout(TimeAmount.seconds(5))
-            .channelOption(ChannelOptions.socket(SocketOptionLevel(IPPROTO_TCP), TCP_NODELAY), value: 1)
+            .channelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: 1)
+            .tlsOptions(NWProtocolTLS.Options())
             .channelInitializer { channel in
                 return channel.pipeline.addHTTPClientHandlers()
-                    .flatMap {
-                        return self.addSSLHandlerIfNeeded(channel.pipeline, hostname: hostname, port: port)
-                    }
                     .flatMap {
                         let handlers : [ChannelHandler] = [
                             HTTPClientRequestSerializer(hostname: headerHostname),
@@ -120,14 +115,16 @@ public final class HTTPClient {
                 }
         }
 
-        #elseif canImport(NIOTransportServices)
+        #else
 
-        let bootstrap = NIOTSConnectionBootstrap(group: self.eventLoopGroup)
+        let bootstrap = ClientBootstrap(group: self.eventLoopGroup)
             .connectTimeout(TimeAmount.seconds(5))
-            .channelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: 1)
-            .tlsOptions(NWProtocolTLS.Options())
+            .channelOption(ChannelOptions.socket(SocketOptionLevel(IPPROTO_TCP), TCP_NODELAY), value: 1)
             .channelInitializer { channel in
                 return channel.pipeline.addHTTPClientHandlers()
+                    .flatMap {
+                        return self.addSSLHandlerIfNeeded(channel.pipeline, hostname: hostname, port: port)
+                    }
                     .flatMap {
                         let handlers : [ChannelHandler] = [
                             HTTPClientRequestSerializer(hostname: headerHostname),
@@ -221,11 +218,11 @@ public final class HTTPClient {
             case .head(let head):
                 switch state {
                 case .ready: state = .parsingBody(head, nil)
-                case .parsingBody: promise.fail(HTTPClient.ClientError.malformedHead)
+                case .parsingBody: promise.fail(HTTPClient.HTTPError.malformedHead)
                 }
             case .body(var body):
                 switch state {
-                case .ready: promise.fail(HTTPClient.ClientError.malformedBody)
+                case .ready: promise.fail(HTTPClient.HTTPError.malformedBody)
                 case .parsingBody(let head, let existingData):
                     let data: Data
                     if var existing = existingData {
@@ -239,7 +236,7 @@ public final class HTTPClient {
             case .end(let tailHeaders):
                 assert(tailHeaders == nil, "Unexpected tail headers")
                 switch state {
-                case .ready: promise.fail(HTTPClient.ClientError.malformedHead)
+                case .ready: promise.fail(HTTPClient.HTTPError.malformedHead)
                 case .parsingBody(let head, let data):
                     let res = Response(head: head, body: data ?? Data())
                     if context.channel.isActive {

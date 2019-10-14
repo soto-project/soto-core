@@ -8,7 +8,6 @@
 
 import Foundation
 import NIO
-import NIOTLS
 import NIOHTTP1
 
 extension URL {

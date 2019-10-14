@@ -52,7 +52,7 @@ class HTTPClientTests: XCTestCase {
             let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: "http://169.254.169.254/latest/meta-data/iam/security-credentials/")
             let request = HTTPClient.Request(head: head, body: Data())
             _ = try client.connect(request).wait()
-        } catch HTTPClient.ClientError.malformedURL{
+        } catch HTTPClient.HTTPError.malformedURL{
             XCTFail("Should not throw malformedURL error")
         } catch {
         }

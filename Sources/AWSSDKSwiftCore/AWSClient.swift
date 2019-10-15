@@ -7,10 +7,10 @@
 //
 
 import Foundation
-import Dispatch
+import HypertextApplicationLanguage
 import NIO
 import NIOHTTP1
-import HypertextApplicationLanguage
+import NIOTransportServices
 
 /// Convenience shorthand for `EventLoopFuture`.
 public typealias Future = EventLoopFuture
@@ -61,8 +61,18 @@ public class AWSClient {
         return "\(service).\(signer.region.rawValue).amazonaws.com"
     }
 
-    public static let eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+    public static let eventGroup: EventLoopGroup = createEventLoopGroup()
 
+    /// create an eventLoopGroup
+    static func createEventLoopGroup() -> EventLoopGroup {
+        #if canImport(Network)
+            if #available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *) {
+                return NIOTSEventLoopGroup()
+            }
+        #endif
+        return MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+    }
+    
     /// Initialize an AWSClient struct
     /// - parameters:
     ///     - accessKeyId: Public access key provided by AWS

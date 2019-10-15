@@ -129,8 +129,8 @@ public class AWSClient {
 // invoker
 extension AWSClient {
     fileprivate func invoke(_ nioRequest: HTTPClient.Request) -> Future<HTTPClient.Response>{
-        let client = HTTPClient()
-        let futureResponse = HTTPClient().connect(nioRequest)
+        let client = HTTPClient(eventLoopGroupProvider: .shared(AWSClient.eventGroup))
+        let futureResponse = client.connect(nioRequest)
 
         futureResponse.whenComplete { _ in
             client.close { error in

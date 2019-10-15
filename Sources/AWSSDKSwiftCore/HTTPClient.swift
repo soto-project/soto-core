@@ -110,11 +110,15 @@ public final class HTTPClient {
     #if canImport(Network)
     @available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)
     func tsConnectionBootstrap(hostname: String, port: Int, headerHostname: String, request: Request, response: EventLoopPromise<Response>) {
-        _ = NIOTSConnectionBootstrap(group: self.eventLoopGroup)
+        var bootstrap = NIOTSConnectionBootstrap(group: self.eventLoopGroup)
             .connectTimeout(TimeAmount.seconds(5))
             .channelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: 1)
-            .tlsOptions(NWProtocolTLS.Options())
-            .channelInitializer { channel in
+        
+        if port == 443 {
+            bootstrap = bootstrap.tlsOptions(NWProtocolTLS.Options())
+        }
+        
+        bootstrap.channelInitializer { channel in
                 return channel.pipeline.addHTTPClientHandlers()
                     .flatMap {
                         let handlers : [ChannelHandler] = [

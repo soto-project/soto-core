@@ -89,7 +89,7 @@ struct MetaDataService {
     }
 
     static func request(host: String, uri: String, timeout: TimeInterval) -> Future<HTTPClient.Response> {
-        let client = HTTPClient()
+        let client = HTTPClient(eventLoopGroupProvider: .shared(AWSClient.eventGroup))
         let head = HTTPRequestHead(
                      version: HTTPVersion(major: 1, minor: 1),
                      method: .GET,

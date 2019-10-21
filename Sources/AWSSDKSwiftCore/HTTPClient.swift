@@ -4,76 +4,17 @@
 //
 //  Created by Joseph Mehdi Smith on 4/21/18.
 //
-// Informed by the Swift NIO
-// [`testSimpleGet`](https://github.com/apple/swift-nio/blob/a4318d5e752f0e11638c0271f9c613e177c3bab8/Tests/NIOHTTP1Tests/HTTPServerClientTest.swift#L348)
-// and heavily built off Vapor's HTTP client library,
-// [`HTTPClient`](https://github.com/vapor/http/blob/2cb664097006e3fda625934079b51c90438947e1/Sources/HTTP/Responder/HTTPClient.swift)
+// Informed by Vapor's HTTP client
+// https://github.com/vapor/http/tree/master/Sources/HTTPKit/Client
+// and the swift-server's swift-nio-http-client
+// https://github.com/swift-server/swift-nio-http-client
+//
 
 import NIO
 import NIOHTTP1
 import NIOSSL
 import NIOFoundationCompat
 import Foundation
-
-private class HTTPClientResponseHandler: ChannelInboundHandler {
-    typealias InboundIn = HTTPClientResponsePart
-    typealias OutboundOut = HTTPClient.Response
-
-    private enum HTTPClientState {
-        /// Waiting to parse the next response.
-        case ready
-        /// Currently parsing the response's body.
-        case parsingBody(HTTPResponseHead, Data?)
-    }
-
-    private var receiveds: [HTTPClientResponsePart] = []
-    private var state: HTTPClientState = .ready
-    private var promise: EventLoopPromise<HTTPClient.Response>
-
-    public init(promise: EventLoopPromise<HTTPClient.Response>) {
-        self.promise = promise
-    }
-
-    func errorCaught(context: ChannelHandlerContext, error: Error) {
-        promise.fail(error)
-        context.fireErrorCaught(error)
-    }
-
-    public func channelRead(context: ChannelHandlerContext, data: NIOAny) {
-        switch unwrapInboundIn(data) {
-        case .head(let head):
-            switch state {
-            case .ready: state = .parsingBody(head, nil)
-            case .parsingBody: promise.fail(HTTPClient.HTTPError.malformedHead)
-            }
-        case .body(var body):
-            switch state {
-            case .ready: promise.fail(HTTPClient.HTTPError.malformedBody)
-            case .parsingBody(let head, let existingData):
-                let data: Data
-                if var existing = existingData {
-                    existing += body.readData(length: body.readableBytes) ?? Data()
-                    data = existing
-                } else {
-                    data = body.readData(length: body.readableBytes) ?? Data()
-                }
-                state = .parsingBody(head, data)
-            }
-        case .end(let tailHeaders):
-            assert(tailHeaders == nil, "Unexpected tail headers")
-            switch state {
-            case .ready: promise.fail(HTTPClient.HTTPError.malformedHead)
-            case .parsingBody(let head, let data):
-                let res = HTTPClient.Response(head: head, body: data ?? Data())
-                if context.channel.isActive {
-                    context.fireChannelRead(wrapOutboundOut(res))
-                }
-                promise.succeed(res)
-                state = .ready
-            }
-        }
-    }
-}
 
 /// HTTP Client class providing API for sending HTTP requests
 public final class HTTPClient {
@@ -136,50 +77,44 @@ public final class HTTPClient {
         self.eventGroup = eventGroup
     }
 
-    public func connect(_ request: Request) -> EventLoopFuture<Response> {
-        var head = request.head
-        let body = request.body
-
-        head.headers.replaceOrAdd(name: "Host", value: headerHostname)
-        head.headers.replaceOrAdd(name: "User-Agent", value: "AWS SDK Swift Core")
-        head.headers.replaceOrAdd(name: "Accept", value: "*/*")
-        head.headers.replaceOrAdd(name: "Content-Length", value: body.count.description)
-
-        // TODO implement Keep-alive
-        head.headers.replaceOrAdd(name: "Connection", value: "Close")
-
-        var preHandlers = [ChannelHandler]()
+    /// add SSL Handler to channel pipeline if the port is 443
+    func addSSLHandlerIfNeeded(_ pipeline : ChannelPipeline, hostname: String, port: Int) -> EventLoopFuture<Void> {
         if (port == 443) {
             do {
                 let tlsConfiguration = TLSConfiguration.forClient()
                 let sslContext = try NIOSSLContext(configuration: tlsConfiguration)
                 let tlsHandler = try NIOSSLClientHandler(context: sslContext, serverHostname: hostname)
-                preHandlers.append(tlsHandler)
+                return pipeline.addHandler(tlsHandler, position:.first)
             } catch {
-                print("Unable to setup TLS: \(error)")
+                return pipeline.eventLoop.makeFailedFuture(error)
             }
         }
+        return pipeline.eventLoop.makeSucceededFuture(())
+    }
+
+    /// send request to HTTP client, return a future holding the Response
+    public func connect(_ request: Request) -> EventLoopFuture<Response> {
         let response: EventLoopPromise<Response> = eventGroup.next().makePromise()
 
-        _ = ClientBootstrap(group: eventGroup)
+        _ = ClientBootstrap(group: self.eventGroup)
             .connectTimeout(TimeAmount.seconds(5))
-            .channelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: 1)
+            .channelOption(ChannelOptions.socket(SocketOptionLevel(IPPROTO_TCP), TCP_NODELAY), value: 1)
             .channelInitializer { channel in
-                let accumulation = HTTPClientResponseHandler(promise: response)
-                let results = preHandlers.map { channel.pipeline.addHandler($0) }
-                return EventLoopFuture<Void>.andAllSucceed(results, on: channel.eventLoop).flatMap { _ in
-                    channel.pipeline.addHTTPClientHandlers().flatMap { _ in
-                        channel.pipeline.addHandler(accumulation)
+                return channel.pipeline.addHTTPClientHandlers()
+                    .flatMap {
+                        return self.addSSLHandlerIfNeeded(channel.pipeline, hostname: self.hostname, port: self.port)
                     }
+                    .flatMap {
+                        let handlers : [ChannelHandler] = [
+                            HTTPClientRequestSerializer(hostname: self.headerHostname),
+                            HTTPClientResponseHandler(promise: response)
+                        ]
+                        return channel.pipeline.addHandlers(handlers)
                 }
             }
             .connect(host: hostname, port: port)
             .flatMap { channel -> EventLoopFuture<Void> in
-                channel.write(NIOAny(HTTPClientRequestPart.head(head)), promise: nil)
-                var buffer = ByteBufferAllocator().buffer(capacity: body.count)
-                buffer.writeBytes(body)
-                channel.write(NIOAny(HTTPClientRequestPart.body(.byteBuffer(buffer))), promise: nil)
-                return channel.writeAndFlush(NIOAny(HTTPClientRequestPart.end(nil)))
+                return channel.writeAndFlush(request)
             }
             .whenFailure { error in
                 response.fail(error)
@@ -189,5 +124,97 @@ public final class HTTPClient {
 
     public func close(_ callback: @escaping (Error?) -> Void) {
         eventGroup.shutdownGracefully(callback)
+    }
+
+    /// Channel Handler for serializing request header and data
+    private class HTTPClientRequestSerializer : ChannelOutboundHandler {
+        typealias OutboundIn = Request
+        typealias OutboundOut = HTTPClientRequestPart
+
+        private let hostname: String
+
+        init(hostname: String) {
+            self.hostname = hostname
+        }
+
+        func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
+            let request = unwrapOutboundIn(data)
+            var head = request.head
+
+            head.headers.replaceOrAdd(name: "Host", value: hostname)
+            head.headers.replaceOrAdd(name: "User-Agent", value: "AWS SDK Swift Core")
+            head.headers.replaceOrAdd(name: "Accept", value: "*/*")
+            head.headers.replaceOrAdd(name: "Content-Length", value: request.body.count.description)
+            // TODO implement keep-alive
+            head.headers.replaceOrAdd(name: "Connection", value: "Close")
+
+
+            context.write(wrapOutboundOut(.head(head)), promise: nil)
+            if request.body.count > 0 {
+                var buffer = ByteBufferAllocator().buffer(capacity: request.body.count)
+                buffer.writeBytes(request.body)
+                context.write(self.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: nil)
+            }
+            context.write(self.wrapOutboundOut(.end(nil)), promise: promise)
+        }
+    }
+
+    /// Channel Handler for parsing response from server
+    private class HTTPClientResponseHandler: ChannelInboundHandler {
+        typealias InboundIn = HTTPClientResponsePart
+        typealias OutboundOut = Response
+
+        private enum ResponseState {
+            /// Waiting to parse the next response.
+            case ready
+            /// Currently parsing the response's body.
+            case parsingBody(HTTPResponseHead, Data?)
+        }
+
+        private var state: ResponseState = .ready
+        private let promise : EventLoopPromise<Response>
+
+        init(promise: EventLoopPromise<Response>) {
+            self.promise = promise
+        }
+
+        func errorCaught(context: ChannelHandlerContext, error: Error) {
+            context.fireErrorCaught(error)
+        }
+
+        func channelRead(context: ChannelHandlerContext, data: NIOAny) {
+            switch unwrapInboundIn(data) {
+            case .head(let head):
+                switch state {
+                case .ready: state = .parsingBody(head, nil)
+                case .parsingBody: promise.fail(HTTPClient.HTTPError.malformedHead)
+                }
+            case .body(var body):
+                switch state {
+                case .ready: promise.fail(HTTPClient.HTTPError.malformedBody)
+                case .parsingBody(let head, let existingData):
+                    let data: Data
+                    if var existing = existingData {
+                        existing += body.readData(length: body.readableBytes) ?? Data()
+                        data = existing
+                    } else {
+                        data = body.readData(length: body.readableBytes) ?? Data()
+                    }
+                    state = .parsingBody(head, data)
+                }
+            case .end(let tailHeaders):
+                assert(tailHeaders == nil, "Unexpected tail headers")
+                switch state {
+                case .ready: promise.fail(HTTPClient.HTTPError.malformedHead)
+                case .parsingBody(let head, let data):
+                    let res = Response(head: head, body: data ?? Data())
+                    if context.channel.isActive {
+                        context.fireChannelRead(wrapOutboundOut(res))
+                    }
+                    promise.succeed(res)
+                    state = .ready
+                }
+            }
+        }
     }
 }

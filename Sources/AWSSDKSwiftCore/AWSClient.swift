@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import Dispatch
 import NIO
 import NIOHTTP1
 import HypertextApplicationLanguage
@@ -783,3 +782,16 @@ extension AWSClient.RequestError: CustomStringConvertible {
         }
     }
 }
+
+extension URL {
+    var hostWithPort: String? {
+        guard var host = self.host else {
+            return nil
+        }
+        if let port = self.port {
+            host+=":\(port)"
+        }
+        return host
+    }
+}
+

@@ -583,6 +583,16 @@ extension AWSClient {
             } else if let child = node.children(of:.element)?.first as? XML.Element, (node.name == operationName + "Response" && child.name == operationName + "Result") {
                 outputNode = child
             }
+
+            // add header values to xmlnode as children nodes, so they can be decoded into the response object
+            for (key, value) in awsResponse.headers {
+                let headerParams = Output.headerParams
+                if let index = headerParams.firstIndex(where: { $0.key.lowercased() == key.lowercased() }) {
+                    guard let stringValue = value as? String else { continue }
+                    let node = XML.Element(name: headerParams[index].key, stringValue: stringValue)
+                    outputNode.addChild(node)
+                }
+            }
             return try XMLDecoder().decode(Output.self, from: outputNode)
 
         case .buffer(let data):
@@ -599,6 +609,7 @@ extension AWSClient {
             break
         }
 
+        // add header values to output dictionary, so they can be decoded into the response object
         for (key, value) in awsResponse.headers {
             let headerParams = Output.headerParams
             if let index = headerParams.firstIndex(where: { $0.key.lowercased() == key.lowercased() }) {

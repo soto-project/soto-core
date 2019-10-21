@@ -39,7 +39,7 @@ public struct Credential: CredentialProvider {
     public let sessionToken: String?
     public let expiration: Date?
     
-    init(accessKeyId: String, secretAccessKey: String, sessionToken: String? = nil, expiration: Date? = nil) {
+    public init(accessKeyId: String, secretAccessKey: String, sessionToken: String? = nil, expiration: Date? = nil) {
         self.accessKeyId = accessKeyId
         self.secretAccessKey = secretAccessKey
         self.sessionToken = sessionToken ?? ProcessInfo.processInfo.environment["AWS_SESSION_TOKEN"]
@@ -84,7 +84,7 @@ public struct SharedCredential: CredentialProvider {
     public let sessionToken: String?
     public let expiration: Date? = nil
 
-    init(filename: String = "~/.aws/credentials",
+    public init(filename: String = "~/.aws/credentials",
                 profile: String = "default") throws {
         try self.init(
             filename: filename,
@@ -113,13 +113,13 @@ public struct SharedCredential: CredentialProvider {
 }
 
 /// Provide AWS credentials via environment variables
-struct EnvironmentCredential: CredentialProvider {
-    let accessKeyId: String
-    let secretAccessKey: String
-    let sessionToken: String?
-    let expiration: Date? = nil
+public struct EnvironmentCredential: CredentialProvider {
+    public let accessKeyId: String
+    public let secretAccessKey: String
+    public let sessionToken: String?
+    public let expiration: Date? = nil
 
-    init?() {
+    public init?() {
         guard let accessKeyId = ProcessInfo.processInfo.environment["AWS_ACCESS_KEY_ID"] else {
             return nil
         }

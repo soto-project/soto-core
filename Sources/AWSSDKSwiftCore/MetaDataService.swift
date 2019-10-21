@@ -201,7 +201,7 @@ extension MetaDataService.MetaData {
       self.token = token
 
       // ISO8601DateFormatter and DateFormatter inherit from Formatter, which does not have the methods we need.
-      if #available(OSX 10.12, *) {
+      if #available(OSX 10.12, iOS 10.0, tvOS 10.0, watchOS 3.0, *) {
           let dateFormatter = ISO8601DateFormatter()
           guard let date = dateFormatter.date(from: expiration) else {
               fatalError("ERROR: Date conversion failed due to mismatched format.")

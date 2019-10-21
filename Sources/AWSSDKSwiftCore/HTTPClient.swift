@@ -29,52 +29,19 @@ public final class HTTPClient {
     public struct Response {
         let head: HTTPResponseHead
         let body: Data
-
-        public func contentType() -> String? {
-            return head.headers.filter { $0.name.lowercased() == "content-type" }.first?.value
-        }
     }
 
     /// Errors returned from HTTPClient when parsing responses
     public enum HTTPError: Error {
-        case malformedHead, malformedBody, malformedURL
+        case malformedHead
+        case malformedBody
+        case malformedURL(url: String)
     }
 
-    private let hostname: String
-    private let headerHostname: String
-    private let port: Int
-    private let eventGroup: EventLoopGroup
+    private let eventLoopGroup: EventLoopGroup
 
-    public init(url: URL,
-                eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)) throws {
-        guard let scheme = url.scheme else {
-            throw HTTPClient.HTTPError.malformedURL
-        }
-        guard let hostname = url.host else {
-            throw HTTPClient.HTTPError.malformedURL
-        }
-
-        self.hostname = hostname
-
-        if let port = url.port {
-            self.port = port
-            self.headerHostname = "\(hostname):\(port)"
-        } else {
-            let isSecure = (scheme == "https")
-            self.port = isSecure ? 443 : 80
-            self.headerHostname = hostname
-        }
-
-        self.eventGroup = eventGroup
-    }
-
-    public init(hostname: String,
-                port: Int,
-                eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)) {
-        self.headerHostname = hostname
-        self.hostname = String(hostname.split(separator:":")[0])
-        self.port = port
-        self.eventGroup = eventGroup
+    public init(eventLoopGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)) {
+        self.eventLoopGroup = eventLoopGroup
     }
 
     /// add SSL Handler to channel pipeline if the port is 443
@@ -94,19 +61,35 @@ public final class HTTPClient {
 
     /// send request to HTTP client, return a future holding the Response
     public func connect(_ request: Request) -> EventLoopFuture<Response> {
-        let response: EventLoopPromise<Response> = eventGroup.next().makePromise()
+        // extract details from request URL
+        guard let url = URL(string:request.head.uri) else { return eventLoopGroup.next().makeFailedFuture(HTTPClient.HTTPError.malformedURL(url: request.head.uri)) }
+        guard let scheme = url.scheme else { return eventLoopGroup.next().makeFailedFuture(HTTPClient.HTTPError.malformedURL(url: request.head.uri)) }
+        guard let hostname = url.host else { return eventLoopGroup.next().makeFailedFuture(HTTPClient.HTTPError.malformedURL(url: request.head.uri)) }
 
-        _ = ClientBootstrap(group: self.eventGroup)
+        let port : Int
+        let headerHostname : String
+        if url.port != nil {
+            port = url.port!
+            headerHostname = "\(hostname):\(port)"
+        } else {
+            let isSecure = (scheme == "https")
+            port = isSecure ? 443 : 80
+            headerHostname = hostname
+        }
+
+        let response: EventLoopPromise<Response> = eventLoopGroup.next().makePromise()
+
+        _ = ClientBootstrap(group: self.eventLoopGroup)
             .connectTimeout(TimeAmount.seconds(5))
             .channelOption(ChannelOptions.socket(SocketOptionLevel(IPPROTO_TCP), TCP_NODELAY), value: 1)
             .channelInitializer { channel in
                 return channel.pipeline.addHTTPClientHandlers()
                     .flatMap {
-                        return self.addSSLHandlerIfNeeded(channel.pipeline, hostname: self.hostname, port: self.port)
+                        return self.addSSLHandlerIfNeeded(channel.pipeline, hostname: hostname, port: port)
                     }
                     .flatMap {
                         let handlers : [ChannelHandler] = [
-                            HTTPClientRequestSerializer(hostname: self.headerHostname),
+                            HTTPClientRequestSerializer(hostname: headerHostname),
                             HTTPClientResponseHandler(promise: response)
                         ]
                         return channel.pipeline.addHandlers(handlers)
@@ -123,7 +106,7 @@ public final class HTTPClient {
     }
 
     public func close(_ callback: @escaping (Error?) -> Void) {
-        eventGroup.shutdownGracefully(callback)
+        eventLoopGroup.shutdownGracefully(callback)
     }
 
     /// Channel Handler for serializing request header and data

@@ -25,7 +25,7 @@ class HTTPClientTests: XCTestCase {
 
     func testInitWithInvalidURL() {
       do {
-        let client = try HTTPClient(url: URL(string:"no_protocol.com")!)
+        let client = HTTPClient()
         let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: "no_protocol.com")
         let request = HTTPClient.Request(head: head, body: Data())
         _ = try client.connect(request).wait()
@@ -39,8 +39,8 @@ class HTTPClientTests: XCTestCase {
     }
 
     func testInitWithValidRL() {
+        let client = HTTPClient()
         do {
-            let client = try HTTPClient(url: URL(string:"https://kinesis.us-west-2.amazonaws.com/")!)
             let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: "https://kinesis.us-west-2.amazonaws.com/")
             let request = HTTPClient.Request(head: head, body: Data())
             _ = try client.connect(request).wait()
@@ -49,7 +49,6 @@ class HTTPClientTests: XCTestCase {
         }
 
         do {
-            let client = try HTTPClient(url: URL(string:"http://169.254.169.254/latest/meta-data/iam/security-credentials/")!)
             let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: "http://169.254.169.254/latest/meta-data/iam/security-credentials/")
             let request = HTTPClient.Request(head: head, body: Data())
             _ = try client.connect(request).wait()
@@ -61,7 +60,7 @@ class HTTPClientTests: XCTestCase {
 
     func testConnectSimpleGet() {
         do {
-            let client = try HTTPClient(url: URL(string:"https://kinesis.us-west-2.amazonaws.com/")!)
+            let client = HTTPClient()
             let head = HTTPRequestHead(
                          version: HTTPVersion(major: 1, minor: 1),
                          method: .GET,
@@ -81,7 +80,7 @@ class HTTPClientTests: XCTestCase {
 
     func testConnectGet() {
         do {
-            let client = try HTTPClient(url: URL(string:"https://kinesis.us-west-2.amazonaws.com/")!)
+            let client = HTTPClient()
             let head = HTTPRequestHead(
                          version: HTTPVersion(major: 1, minor: 1),
                          method: .GET,
@@ -101,7 +100,7 @@ class HTTPClientTests: XCTestCase {
 
     func testConnectPost() {
         do {
-            let client = try HTTPClient(url: URL(string:"https://kinesis.us-west-2.amazonaws.com/")!)
+            let client = HTTPClient()
             let head = HTTPRequestHead(
                          version: HTTPVersion(major: 1, minor: 1),
                          method: .GET,

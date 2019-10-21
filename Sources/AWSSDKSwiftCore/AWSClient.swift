@@ -119,7 +119,7 @@ public class AWSClient {
 // invoker
 extension AWSClient {
     fileprivate func invoke(_ nioRequest: HTTPClient.Request) -> Future<HTTPClient.Response> {
-        let client = HTTPClient(hostname: nioRequest.head.hostWithPort!, port: nioRequest.head.port ?? 443)
+        let client = HTTPClient()
         let futureResponse = client.connect(nioRequest)
 
         futureResponse.whenComplete { _ in

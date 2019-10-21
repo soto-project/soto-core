@@ -10,11 +10,12 @@
 // https://github.com/swift-server/swift-nio-http-client
 //
 
+import Foundation
 import NIO
+import NIOConcurrencyHelpers
+import NIOFoundationCompat
 import NIOHTTP1
 import NIOSSL
-import NIOFoundationCompat
-import Foundation
 
 /// HTTP Client class providing API for sending HTTP requests
 public final class HTTPClient {
@@ -47,6 +48,9 @@ public final class HTTPClient {
         case createNew
     }
 
+    /// has HTTPClient been shutdown
+    let isShutdown = Atomic<Bool>(value: false)
+
     public init(eventLoopGroupProvider: EventLoopGroupProvider = .createNew) {
         self.eventLoopGroupProvider = eventLoopGroupProvider
         switch eventLoopGroupProvider {
@@ -55,6 +59,10 @@ public final class HTTPClient {
         case .createNew:
             self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         }
+    }
+    
+    deinit {
+        assert(self.isShutdown.load(), "Client not shut down before the deinit. Please call client.close() when no longer needed.")
     }
 
     /// add SSL Handler to channel pipeline if the port is 443
@@ -118,12 +126,17 @@ public final class HTTPClient {
         return response.futureResult
     }
 
-    public func close(_ callback: @escaping (Error?) -> Void) {
+    /// Shuts down the client and `EventLoopGroup` if it was created by the client.
+    public func syncShutdown() throws {
         switch self.eventLoopGroupProvider {
         case .shared:
-            callback(nil)
+            self.isShutdown.store(true)
         case .createNew:
-            self.eventLoopGroup.shutdownGracefully(callback)
+            if self.isShutdown.compareAndExchange(expected: false, desired: true) {
+                try self.eventLoopGroup.syncShutdownGracefully()
+            } else {
+                throw HTTPError.alreadyShutdown
+            }
         }
     }
 

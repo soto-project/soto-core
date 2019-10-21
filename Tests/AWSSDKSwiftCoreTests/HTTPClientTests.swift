@@ -13,19 +13,24 @@ import XCTest
 
 class HTTPClientTests: XCTestCase {
 
-      static var allTests : [(String, (HTTPClientTests) -> () throws -> Void)] {
-          return [
-              ("testInitWithInvalidURL", testInitWithInvalidURL),
-              ("testInitWithValidRL", testInitWithValidRL),
-              ("testConnectSimpleGet", testConnectSimpleGet),
-              ("testConnectGet", testConnectGet),
-              ("testConnectPost", testConnectPost)
-          ]
-      }
+    let client = HTTPClient()
+
+    deinit {
+        try? client.syncShutdown()
+    }
+    
+    static var allTests : [(String, (HTTPClientTests) -> () throws -> Void)] {
+        return [
+            ("testInitWithInvalidURL", testInitWithInvalidURL),
+            ("testInitWithValidRL", testInitWithValidRL),
+            ("testConnectSimpleGet", testConnectSimpleGet),
+            ("testConnectGet", testConnectGet),
+            ("testConnectPost", testConnectPost)
+        ]
+    }
 
     func testInitWithInvalidURL() {
       do {
-        let client = HTTPClient()
         let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: "no_protocol.com")
         let request = HTTPClient.Request(head: head, body: Data())
         _ = try client.connect(request).wait()
@@ -39,7 +44,6 @@ class HTTPClientTests: XCTestCase {
     }
 
     func testInitWithValidRL() {
-        let client = HTTPClient()
         do {
             let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: "https://kinesis.us-west-2.amazonaws.com/")
             let request = HTTPClient.Request(head: head, body: Data())
@@ -60,7 +64,6 @@ class HTTPClientTests: XCTestCase {
 
     func testConnectSimpleGet() {
         do {
-            let client = HTTPClient()
             let head = HTTPRequestHead(
                          version: HTTPVersion(major: 1, minor: 1),
                          method: .GET,
@@ -80,7 +83,6 @@ class HTTPClientTests: XCTestCase {
 
     func testConnectGet() {
         do {
-            let client = HTTPClient()
             let head = HTTPRequestHead(
                          version: HTTPVersion(major: 1, minor: 1),
                          method: .GET,
@@ -100,7 +102,6 @@ class HTTPClientTests: XCTestCase {
 
     func testConnectPost() {
         do {
-            let client = HTTPClient()
             let head = HTTPRequestHead(
                          version: HTTPVersion(major: 1, minor: 1),
                          method: .GET,

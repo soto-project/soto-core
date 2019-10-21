@@ -123,10 +123,10 @@ extension AWSClient {
         let futureResponse = client.connect(nioRequest)
 
         futureResponse.whenComplete { _ in
-            client.close { error in
-                if let error = error {
-                    print("Error closing connection: \(error)")
-                }
+            do {
+                try client.syncShutdown()
+            } catch {
+                print("Error closing connection: \(error)")
             }
         }
 

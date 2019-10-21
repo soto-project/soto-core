@@ -36,12 +36,25 @@ public final class HTTPClient {
         case malformedHead
         case malformedBody
         case malformedURL(url: String)
+        case alreadyShutdown
     }
 
-    private let eventLoopGroup: EventLoopGroup
+    /// Specifies how `EventLoopGroup` will be created and establishes lifecycle ownership.
+    public enum EventLoopGroupProvider {
+        /// `EventLoopGroup` will be provided by the user. Owner of this group is responsible for its lifecycle.
+        case shared(EventLoopGroup)
+        /// `EventLoopGroup` will be created by the client. When `syncShutdown` is called, created `EventLoopGroup` will be shut down as well.
+        case createNew
+    }
 
-    public init(eventLoopGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)) {
-        self.eventLoopGroup = eventLoopGroup
+    public init(eventLoopGroupProvider: EventLoopGroupProvider = .createNew) {
+        self.eventLoopGroupProvider = eventLoopGroupProvider
+        switch eventLoopGroupProvider {
+        case .shared(let group):
+            self.eventLoopGroup = group
+        case .createNew:
+            self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+        }
     }
 
     /// add SSL Handler to channel pipeline if the port is 443
@@ -106,7 +119,12 @@ public final class HTTPClient {
     }
 
     public func close(_ callback: @escaping (Error?) -> Void) {
-        eventLoopGroup.shutdownGracefully(callback)
+        switch self.eventLoopGroupProvider {
+        case .shared:
+            callback(nil)
+        case .createNew:
+            self.eventLoopGroup.shutdownGracefully(callback)
+        }
     }
 
     /// Channel Handler for serializing request header and data
@@ -200,4 +218,7 @@ public final class HTTPClient {
             }
         }
     }
+    
+    private let eventLoopGroup: EventLoopGroup
+    private let eventLoopGroupProvider: EventLoopGroupProvider
 }

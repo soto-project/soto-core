@@ -14,6 +14,7 @@ import XCTest
 class AWSClientTests: XCTestCase {
 
     static var allTests : [(String, (AWSClientTests) -> () throws -> Void)] {
+        #if DEBUG
         return [
             ("testGetCredential", testGetCredential),
             ("testCreateAWSRequest", testCreateAWSRequest),
@@ -26,6 +27,11 @@ class AWSClientTests: XCTestCase {
             ("testValidateJSONPayloadResponse", testValidateJSONPayloadResponse),
             ("testValidateJSONError", testValidateJSONError),
         ]
+        #else
+        return [
+            ("testGetCredential", testGetCredential),
+        ]
+        #endif
     }
 
     struct C: AWSShape {
@@ -148,6 +154,7 @@ class AWSClientTests: XCTestCase {
         possibleErrorTypes: [S3ErrorType.self]
     )
 
+#if DEBUG
     func testCreateAWSRequest() {
         let input1 = C()
         let input2 = E()
@@ -459,6 +466,8 @@ class AWSClientTests: XCTestCase {
             XCTFail("Throwing the wrong error")
         }
     }
+#endif // DEBUG
+    
 }
 
 /// Error enum for Kinesis

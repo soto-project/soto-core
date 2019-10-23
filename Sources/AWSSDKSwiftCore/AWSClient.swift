@@ -312,7 +312,7 @@ extension AWSClient {
         }
     }
 
-    fileprivate func createAWSRequest(operation operationName: String, path: String, httpMethod: String) throws -> AWSRequest {
+    internal func createAWSRequest(operation operationName: String, path: String, httpMethod: String) throws -> AWSRequest {
 
         guard let url = URL(string: "\(endpoint)\(path)"), let _ = url.hostWithPort else {
             throw RequestError.invalidURL("\(endpoint)\(path) must specify url host and scheme")
@@ -329,7 +329,7 @@ extension AWSClient {
         ).applyMiddlewares(middlewares)
     }
 
-    fileprivate func createAWSRequest<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
+    internal func createAWSRequest<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
         var headers: [String: Any] = [:]
         var path = path
         var urlComponents = URLComponents()
@@ -525,21 +525,11 @@ extension AWSClient {
     }
 }
 
-// debug request creator
-#if DEBUG
-extension AWSClient {
-
-    func debugCreateAWSRequest<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
-        return try createAWSRequest(operation: operationName, path: path, httpMethod: httpMethod, input: input)
-    }
-}
-#endif
-
 // response validator
 extension AWSClient {
 
     /// Validate the operation response and return a response shape
-    fileprivate func validate<Output: AWSShape>(operation operationName: String, response: HTTPClient.Response) throws -> Output {
+    internal func validate<Output: AWSShape>(operation operationName: String, response: HTTPClient.Response) throws -> Output {
         let raw: Bool
         if let payloadPath = Output.payloadPath, let member = Output.getMember(named: payloadPath), member.type == .blob {
             raw = true
@@ -632,7 +622,7 @@ extension AWSClient {
     }
 
     /// validate response without returning an output shape
-    private func validate(response: HTTPClient.Response) throws {
+    internal func validate(response: HTTPClient.Response) throws {
         let awsResponse = try AWSResponse(from: response, serviceProtocolType: serviceProtocol.type)
         try validateCode(response: awsResponse)
     }
@@ -767,21 +757,6 @@ extension AWSClient {
         return AWSError(message: message ?? "Unhandled Error. Response Code: \(response.status.code)", rawBody: rawBodyString ?? "")
     }
 }
-
-// debug request validator
-#if DEBUG
-extension AWSClient {
-
-    func debugValidate(response: HTTPClient.Response) throws {
-        try validate(response: response)
-    }
-
-    func debugValidate<Output: AWSShape>(operation operationName: String, response: HTTPClient.Response) throws -> Output {
-        return try validate(operation: operationName, response: response)
-    }
-}
-#endif
-
 
 extension AWSClient.RequestError: CustomStringConvertible {
     public var description: String {

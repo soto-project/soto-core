@@ -44,7 +44,7 @@ class MetaDataServiceTests: XCTestCase {
 
        do {
            let uri = try MetaDataService.serviceProvider.uri().wait()
-           XCTAssertEqual(uri, "/v2/credentials/5275a487-9ff6-49b7-b50c-b64850f99999")
+           XCTAssertEqual(uri, "http://169.254.170.2/v2/credentials/5275a487-9ff6-49b7-b50c-b64850f99999")
        } catch {
            XCTFail("\(error)")
            return

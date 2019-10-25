@@ -55,8 +55,8 @@ struct MetaDataService {
 
         func uri() throws -> Future<String> {
             switch self {
-            case .ecsCredentials(let containerCredentialsUri):
-                return AWSClient.eventGroup.next().makeSucceededFuture(containerCredentialsUri)
+            case .ecsCredentials(_):
+                return AWSClient.eventGroup.next().makeSucceededFuture(self.baseURLString)
             case .instanceProfileCredentials:
                 // instance service expects absoluteString as uri...
                 return MetaDataService.request(host: host, uri: baseURLString, timeout: 2).flatMapThrowing{ response in

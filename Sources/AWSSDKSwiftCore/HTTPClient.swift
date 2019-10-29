@@ -16,6 +16,10 @@ import NIOConcurrencyHelpers
 import NIOFoundationCompat
 import NIOHTTP1
 import NIOSSL
+#if canImport(Network)
+import Network
+import NIOTransportServices
+#endif
 
 /// HTTP Client class providing API for sending HTTP requests
 public final class HTTPClient {
@@ -23,7 +27,7 @@ public final class HTTPClient {
     /// Request structure to send
     public struct Request {
         var head: HTTPRequestHead
-        var body: Data = Data()
+        var body: Data
     }
 
     /// Response structure received back
@@ -51,13 +55,22 @@ public final class HTTPClient {
     /// has HTTPClient been shutdown
     let isShutdown = Atomic<Bool>(value: false)
 
+    /// Initialise HTTPClient
     public init(eventLoopGroupProvider: EventLoopGroupProvider = .createNew) {
         self.eventLoopGroupProvider = eventLoopGroupProvider
         switch eventLoopGroupProvider {
         case .shared(let group):
             self.eventLoopGroup = group
         case .createNew:
-            self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+            #if canImport(Network)
+                if #available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *) {
+                    self.eventLoopGroup = NIOTSEventLoopGroup()
+                } else {
+                    self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+                }
+            #else
+                self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+            #endif
         }
     }
     
@@ -80,26 +93,8 @@ public final class HTTPClient {
         return pipeline.eventLoop.makeSucceededFuture(())
     }
 
-    /// send request to HTTP client, return a future holding the Response
-    public func connect(_ request: Request) -> EventLoopFuture<Response> {
-        // extract details from request URL
-        guard let url = URL(string:request.head.uri) else { return eventLoopGroup.next().makeFailedFuture(HTTPClient.HTTPError.malformedURL(url: request.head.uri)) }
-        guard let scheme = url.scheme else { return eventLoopGroup.next().makeFailedFuture(HTTPClient.HTTPError.malformedURL(url: request.head.uri)) }
-        guard let hostname = url.host else { return eventLoopGroup.next().makeFailedFuture(HTTPClient.HTTPError.malformedURL(url: request.head.uri)) }
-
-        let port : Int
-        let headerHostname : String
-        if url.port != nil {
-            port = url.port!
-            headerHostname = "\(hostname):\(port)"
-        } else {
-            let isSecure = (scheme == "https")
-            port = isSecure ? 443 : 80
-            headerHostname = hostname
-        }
-
-        let response: EventLoopPromise<Response> = eventLoopGroup.next().makePromise()
-
+    /// setup client bootstrap for HTTP request
+    func clientBootstrap(hostname: String, port: Int, headerHostname: String, request: Request, response: EventLoopPromise<Response>) {
         _ = ClientBootstrap(group: self.eventLoopGroup)
             .connectTimeout(TimeAmount.seconds(5))
             .channelOption(ChannelOptions.socket(SocketOptionLevel(IPPROTO_TCP), TCP_NODELAY), value: 1)
@@ -123,6 +118,71 @@ public final class HTTPClient {
             .whenFailure { error in
                 response.fail(error)
         }
+    }
+
+    /// setup client bootstrap for HTTP request using NIO transport services
+    #if canImport(Network)
+    @available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)
+    func tsConnectionBootstrap(hostname: String, port: Int, headerHostname: String, request: Request, response: EventLoopPromise<Response>) {
+        var bootstrap = NIOTSConnectionBootstrap(group: self.eventLoopGroup)
+            .connectTimeout(TimeAmount.seconds(5))
+            .channelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: 1)
+        
+        if port == 443 {
+            bootstrap = bootstrap.tlsOptions(NWProtocolTLS.Options())
+        }
+        
+        bootstrap.channelInitializer { channel in
+                return channel.pipeline.addHTTPClientHandlers()
+                    .flatMap {
+                        let handlers : [ChannelHandler] = [
+                            HTTPClientRequestSerializer(hostname: headerHostname),
+                            HTTPClientResponseHandler(promise: response)
+                        ]
+                        return channel.pipeline.addHandlers(handlers)
+                }
+            }
+            .connect(host: hostname, port: port)
+            .flatMap { channel -> EventLoopFuture<Void> in
+                return channel.writeAndFlush(request)
+            }
+            .whenFailure { error in
+                response.fail(error)
+        }
+    }
+    #endif
+    
+    /// send request to HTTP client, return a future holding the Response
+    public func connect(_ request: Request) -> EventLoopFuture<Response> {
+        // extract details from request URL
+        guard let url = URL(string:request.head.uri) else { return eventLoopGroup.next().makeFailedFuture(HTTPClient.HTTPError.malformedURL(url: request.head.uri)) }
+        guard let scheme = url.scheme else { return eventLoopGroup.next().makeFailedFuture(HTTPClient.HTTPError.malformedURL(url: request.head.uri)) }
+        guard let hostname = url.host else { return eventLoopGroup.next().makeFailedFuture(HTTPClient.HTTPError.malformedURL(url: request.head.uri)) }
+
+        let port : Int
+        let headerHostname : String
+        if url.port != nil {
+            port = url.port!
+            headerHostname = "\(hostname):\(port)"
+        } else {
+            let isSecure = (scheme == "https")
+            port = isSecure ? 443 : 80
+            headerHostname = hostname
+        }
+
+
+        let response: EventLoopPromise<Response> = self.eventLoopGroup.next().makePromise()
+
+        #if canImport(Network)
+            if #available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *) {
+                tsConnectionBootstrap(hostname: hostname, port: port, headerHostname: headerHostname, request: request, response: response)
+            } else {
+                clientBootstrap(hostname: hostname, port: port, headerHostname: headerHostname, request: request, response: response)
+            }
+        #else
+            clientBootstrap(hostname: hostname, port: port, headerHostname: headerHostname, request: request, response: response)
+        #endif
+        
         return response.futureResult
     }
 

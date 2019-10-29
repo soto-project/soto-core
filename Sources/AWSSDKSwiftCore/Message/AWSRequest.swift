@@ -8,34 +8,7 @@
 
 import Foundation
 import NIO
-import NIOTLS
 import NIOHTTP1
-
-extension URL {
-    var hostWithPort: String? {
-        guard var host = self.host else {
-            return nil
-        }
-        if let port = self.port {
-            host+=":\(port)"
-        }
-        return host
-    }
-}
-
-extension HTTPRequestHead {
-    var hostWithPort: String? {
-        return URL(string: uri)?.hostWithPort
-    }
-
-    var host: String? {
-        return URL(string: uri)?.host
-    }
-
-    var port: Int? {
-        return URL(string: uri)?.port
-    }
-}
 
 /// Object encapsulating all the information needed to generate a raw HTTP request to AWS
 public struct AWSRequest {

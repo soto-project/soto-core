@@ -55,8 +55,8 @@ struct MetaDataService {
 
         func uri() throws -> Future<String> {
             switch self {
-            case .ecsCredentials(let containerCredentialsUri):
-                return AWSClient.eventGroup.next().makeSucceededFuture(containerCredentialsUri)
+            case .ecsCredentials(_):
+                return AWSClient.eventGroup.next().makeSucceededFuture(self.baseURLString)
             case .instanceProfileCredentials:
                 // instance service expects absoluteString as uri...
                 return MetaDataService.request(host: host, uri: baseURLString, timeout: 2).flatMapThrowing{ response in
@@ -89,7 +89,7 @@ struct MetaDataService {
     }
 
     static func request(host: String, uri: String, timeout: TimeInterval) -> Future<HTTPClient.Response> {
-        let client = HTTPClient(hostname: host, port: 80)
+        let client = HTTPClient(eventLoopGroupProvider: .shared(AWSClient.eventGroup))
         let head = HTTPRequestHead(
                      version: HTTPVersion(major: 1, minor: 1),
                      method: .GET,
@@ -99,10 +99,10 @@ struct MetaDataService {
         let futureResponse = client.connect(request)
 
         futureResponse.whenComplete { _ in
-            client.close { error in
-                if let error = error {
-                    print("Error closing connection: \(error)")
-                }
+            do {
+                try client.syncShutdown()
+            } catch {
+                print("Error closing connection: \(error)")
             }
         }
 

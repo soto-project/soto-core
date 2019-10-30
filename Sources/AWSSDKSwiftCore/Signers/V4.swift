@@ -47,11 +47,15 @@ extension Signers {
 
         /// If you did not provide credentials `manageCredential()` should be called and the future resolved prior to building signedURL or signedHeaders to ensure latest credentials are retreived and set
         public func manageCredential() -> Future<CredentialProvider> {
-            if credential.isEmpty() || credential.nearExpiration() {
+            if credential.nearExpiration() {
                 do {
-                    return try MetaDataService.getCredential().map { credential in
-                        self.credential = credential
-                        return credential
+                    return try MetaDataService.getCredential()
+                        .flatMapError { _ in
+                            return AWSClient.eventGroup.next().makeSucceededFuture(Credential(accessKeyId: "", secretAccessKey: ""))
+                        }
+                        .map { credential in
+                            self.credential = credential
+                            return credential
                     }
                 } catch {
                     // should not be crash
@@ -70,6 +74,8 @@ extension Signers {
 
         /// Return signed URL
         public func signedURL(url: URL, method: String, date: Date = Date(), expires: Int = 86400) -> URL {
+            guard !credential.isEmpty() else { return url }
+            
             let datetime = V4.timestamp(date)
             let headers = ["Host": url.hostWithPort!]
             let bodyDigest = hexEncodedBodyHash(Data())
@@ -114,6 +120,8 @@ extension Signers {
 
         /// Return signed headers
         public func signedHeaders(url: URL, headers: [String: String], method: String, date: Date = Date(), bodyData: Data) -> [String: String] {
+            guard !credential.isEmpty() else { return headers }
+            
             let datetime = V4.timestamp(date)
             let bodyDigest = hexEncodedBodyHash(bodyData)
             let credentialForSignature = credential

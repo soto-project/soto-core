@@ -22,7 +22,6 @@ class SignersV4Tests: XCTestCase {
             ("testSignedHeadersForS3", testSignedHeadersForS3),
             ("testSignedGETQuery", testSignedGETQuery),
             ("testSignedHEADQuery", testSignedHEADQuery),
-            ("testGivingCustomEndpointAndEmptyCredential", testGivingCustomEndpointAndEmptyCredential)
         ]
     }
 
@@ -142,15 +141,5 @@ class SignersV4Tests: XCTestCase {
         let signedURL = sign.signedURL(url: url, method: "HEAD", date: requestDate)
 
         XCTAssertEqual(signedURL.absoluteString, "https://s3-apnortheast1.amazon.com?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=key%2F20170101%2Fap-northeast-1%2Fs3%2Faws4_request&X-Amz-Date=20170101T000000Z&X-Amz-Expires=86400&X-Amz-SignedHeaders=host&X-Amz-Signature=74bea6a033f90cc7a4f23f9f315b1d2c1865f55d1e51f062228301dffc68048b")
-    }
-
-    func testGivingCustomEndpointAndEmptyCredential() {
-        let url = URL(string: "http://localhost:8000")!
-
-        let emptyCred = Credential(accessKeyId: "", secretAccessKey: "")
-        let sign = Signers.V4(credential: emptyCred, region: .apnortheast1, signingName: "s3", endpoint: url.absoluteString)
-
-        let headers = sign.signedHeaders(url: url, headers: [:], method: "PUT", bodyData: Data())
-        XCTAssertEqual(headers["Host"], "localhost:8000")
     }
 }

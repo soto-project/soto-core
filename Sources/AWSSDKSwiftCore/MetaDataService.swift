@@ -6,6 +6,8 @@
 //
 //
 
+#if os(Linux)
+
 import Foundation
 import NIO
 import NIOHTTP1
@@ -219,3 +221,5 @@ extension MetaDataService.MetaData {
 
     }
 }
+
+#endif // os(Linux)

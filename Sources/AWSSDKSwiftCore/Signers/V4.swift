@@ -49,11 +49,7 @@ extension Signers {
         public func manageCredential() -> Future<CredentialProvider> {
             if credential.nearExpiration() {
                 do {
-                    return try MetaDataService.getCredential()
-                        .flatMapError { _ in
-                            return AWSClient.eventGroup.next().makeSucceededFuture(Credential(accessKeyId: "", secretAccessKey: ""))
-                        }
-                        .map { credential in
+                    return try MetaDataService.getCredential().map { credential in
                             self.credential = credential
                             return credential
                     }

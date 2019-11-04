@@ -17,8 +17,9 @@ enum MetaDataServiceError: Error {
 }
 
 /// Object managing accessing of AWS credentials from various sources
-struct MetaDataService {
+public struct MetaDataService {
 
+    /// return future holding a credential provider 
     public static func getCredential() throws -> Future<CredentialProvider> {
         if let ecsCredentialProvider = ECSMetaDataServiceProvider() {
             return ecsCredentialProvider.getCredential()
@@ -68,7 +69,15 @@ extension MetaDataServiceProvider {
     /// decode response return by metadata service
     func decodeCredential(_ data: Data) -> CredentialProvider {
         do {
-            let metaData = try JSONDecoder().decode(MetaData.self, from: data)
+            let decoder = JSONDecoder()
+            // set JSON decoding strategy for dates
+            let dateFormatter = DateFormatter()
+            dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+            dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
+            dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+            decoder.dateDecodingStrategy = .formatted(dateFormatter)
+            // decode to associated type
+            let metaData = try decoder.decode(MetaData.self, from: data)
             return metaData.credential
         } catch {
             return Credential(accessKeyId: "", secretAccessKey: "")
@@ -86,7 +95,7 @@ struct ECSMetaDataServiceProvider: MetaDataServiceProvider {
         let secretAccessKey: String
         let token: String
         let expiration: Date
-        let roleArn: String?
+        let roleArn: String
 
         var credential: Credential {
             return Credential(
@@ -135,9 +144,9 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
         let secretAccessKey: String
         let token: String
         let expiration: Date
-        let code: String?
-        let lastUpdated: String?
-        let type: String?
+        let code: String
+        let lastUpdated: Date
+        let type: String
 
         var credential: Credential {
             return Credential(

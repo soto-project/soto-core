@@ -16,7 +16,7 @@ extension Signers {
         let region: Region
 
         let signingName: String
-        
+
         let endpoint: String?
 
         let identifier = "aws4_request"
@@ -48,17 +48,18 @@ extension Signers {
 
         /// If you did not provide credentials `manageCredential()` should be called and the future resolved prior to building signedURL or signedHeaders to ensure latest credentials are retreived and set
         public func manageCredential(eventLoopGroup: EventLoopGroup) -> Future<CredentialProvider> {
-            if credential.isEmpty() || credential.nearExpiration() {
+#if os(Linux)
+            if credential.nearExpiration() {
                 do {
                     return try MetaDataService.getCredential(eventLoopGroup: eventLoopGroup).map { credential in
-                        self.credential = credential
-                        return credential
+                            self.credential = credential
+                            return credential
                     }
                 } catch {
                     // should not be crash
                 }
             }
-
+#endif // os(Linux)
             return AWSClient.eventGroup.next().makeSucceededFuture(credential)
         }
 
@@ -71,6 +72,8 @@ extension Signers {
 
         /// Return signed URL
         public func signedURL(url: URL, method: String, date: Date = Date(), expires: Int = 86400) -> URL {
+            guard !credential.isEmpty() else { return url }
+
             let datetime = V4.timestamp(date)
             let headers = ["Host": url.hostWithPort!]
             let bodyDigest = hexEncodedBodyHash(Data())
@@ -115,6 +118,8 @@ extension Signers {
 
         /// Return signed headers
         public func signedHeaders(url: URL, headers: [String: String], method: String, date: Date = Date(), bodyData: Data) -> [String: String] {
+            guard !credential.isEmpty() else { return headers }
+
             let datetime = V4.timestamp(date)
             let bodyDigest = hexEncodedBodyHash(bodyData)
             let credentialForSignature = credential
@@ -133,7 +138,7 @@ extension Signers {
             if let token = credentialForSignature.sessionToken {
                 headersForSign["x-amz-security-token"] = token
             }
-            
+
             headersForSign["Authorization"] = authorization(
                 url: url,
                 headers: headersForSign,

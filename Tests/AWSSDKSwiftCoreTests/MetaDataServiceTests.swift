@@ -4,6 +4,7 @@
 //
 //  Created by Jonathan McAllister on 2017/12/29.
 //
+#if os(Linux)
 
 import Foundation
 import XCTest
@@ -77,3 +78,5 @@ class MetaDataServiceTests: XCTestCase {
     }*/
   }
 }
+
+#endif // os(Linux)

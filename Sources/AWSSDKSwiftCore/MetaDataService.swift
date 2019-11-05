@@ -6,6 +6,8 @@
 //
 //
 
+#if os(Linux)
+
 import Foundation
 import NIO
 import NIOHTTP1
@@ -19,7 +21,7 @@ enum MetaDataServiceError: Error {
 /// Object managing accessing of AWS credentials from various sources
 public struct MetaDataService {
 
-    /// return future holding a credential provider 
+    /// return future holding a credential provider
     public static func getCredential(eventLoopGroup: EventLoopGroup) throws -> Future<CredentialProvider> {
         if let ecsCredentialProvider = ECSMetaDataServiceProvider() {
             return ecsCredentialProvider.getCredential(eventLoopGroup: eventLoopGroup)
@@ -43,7 +45,7 @@ protocol MetaDataServiceProvider {
 }
 
 extension MetaDataServiceProvider {
-    
+
     /// make HTTP request
     func request(host: String, uri: String, timeout: TimeInterval, eventLoopGroup: EventLoopGroup) -> Future<HTTPClient.Response> {
         let client = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
@@ -65,7 +67,7 @@ extension MetaDataServiceProvider {
 
         return futureResponse
     }
-    
+
     /// decode response return by metadata service
     func decodeCredential(_ data: Data) -> CredentialProvider {
         do {
@@ -114,18 +116,18 @@ struct ECSMetaDataServiceProvider: MetaDataServiceProvider {
             case roleArn = "RoleArn"
         }
     }
-    
+
     typealias MetaData = ECSMetaData
-    
+
     static var containerCredentialsUri = ProcessInfo.processInfo.environment["AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"]
     static var host = "169.254.170.2"
     var uri: String
- 
+
     init?() {
         guard let uri = ECSMetaDataServiceProvider.containerCredentialsUri else {return nil}
         self.uri = "http://\(ECSMetaDataServiceProvider.host)\(uri)"
     }
-    
+
     func getCredential(eventLoopGroup: EventLoopGroup) -> Future<CredentialProvider> {
         return request(host: ECSMetaDataServiceProvider.host, uri: uri, timeout: 2, eventLoopGroup: eventLoopGroup)
             .map { response in
@@ -138,7 +140,7 @@ struct ECSMetaDataServiceProvider: MetaDataServiceProvider {
 
 /// Provide AWS credentials for instances
 struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
-    
+
     struct InstanceMetaData: MetaDataContainer {
         let accessKeyId: String
         let secretAccessKey: String
@@ -169,13 +171,13 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
     }
 
     typealias MetaData = InstanceMetaData
-    
+
     static let instanceMetadataUri = "/latest/meta-data/iam/security-credentials/"
     static var host = "169.254.169.254"
     static var baseURLString: String {
         return "http://\(host)\(instanceMetadataUri)"
     }
-    
+
     func uri(eventLoopGroup: EventLoopGroup) -> Future<String> {
         // instance service expects absoluteString as uri...
         return request(host: InstanceMetaDataServiceProvider.host, uri:InstanceMetaDataServiceProvider.baseURLString, timeout: 2, eventLoopGroup: eventLoopGroup)
@@ -201,3 +203,4 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
     }
 }
 
+#endif // os(Linux)

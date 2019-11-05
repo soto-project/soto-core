@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import NIO
 
 extension Signers {
     /// AWS V4 Signing code
@@ -46,10 +47,10 @@ extension Signers {
         }
 
         /// If you did not provide credentials `manageCredential()` should be called and the future resolved prior to building signedURL or signedHeaders to ensure latest credentials are retreived and set
-        public func manageCredential() -> Future<CredentialProvider> {
+        public func manageCredential(on eventLoopGroup: EventLoopGroup) -> Future<CredentialProvider> {
             if credential.isEmpty() || credential.nearExpiration() {
                 do {
-                    return try MetaDataService.getCredential(on: AWSClient.eventGroup).map { credential in
+                    return try MetaDataService.getCredential(on: eventLoopGroup).map { credential in
                         self.credential = credential
                         return credential
                     }

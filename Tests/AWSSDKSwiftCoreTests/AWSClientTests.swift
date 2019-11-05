@@ -85,7 +85,7 @@ class AWSClientTests: XCTestCase {
         )
 
         do {
-            let credentialForSignature = try sesClient.signer.manageCredential().wait()
+            let credentialForSignature = try sesClient.signer.manageCredential(on: AWSClient.eventGroup).wait()
             XCTAssertEqual(credentialForSignature.accessKeyId, "key")
             XCTAssertEqual(credentialForSignature.secretAccessKey, "secret")
         } catch {

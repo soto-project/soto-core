@@ -98,7 +98,8 @@ public class AWSClient {
         } else if let scredential = try? SharedCredential() {
             credential = scredential
         } else {
-            credential = Credential(accessKeyId: "", secretAccessKey: "")
+            // create an expired credential
+            credential = Credential(accessKeyId: "", secretAccessKey: "", expiration: Date.init(timeIntervalSince1970: 0))
         }
 
         let region: Region

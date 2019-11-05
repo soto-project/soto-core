@@ -49,7 +49,7 @@ extension Signers {
         public func manageCredential() -> Future<CredentialProvider> {
             if credential.isEmpty() || credential.nearExpiration() {
                 do {
-                    return try MetaDataService.getCredential().map { credential in
+                    return try MetaDataService.getCredential(on: AWSClient.eventGroup).map { credential in
                         self.credential = credential
                         return credential
                     }

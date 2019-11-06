@@ -6,16 +6,9 @@
 //
 //
 
+import AWSSigner
 import Foundation
 import INIParser
-
-/// Protocol defining requirements for object providing AWS credentials
-public protocol CredentialProvider {
-    var accessKeyId: String { get }
-    var secretAccessKey: String { get }
-    var sessionToken: String? { get }
-    var expiration: Date? { get }
-}
 
 extension CredentialProvider {
     func isEmpty() -> Bool {
@@ -23,17 +16,12 @@ extension CredentialProvider {
     }
 
     func nearExpiration() -> Bool {
-        if let expiration = self.expiration {
-            // are we within 5 minutes of expiration?
-            return Date().addingTimeInterval(5.0 * 60.0) > expiration
-        } else {
-            return false
-        }
+        return false       
     }
 }
 
 /// Provide AWS credentials directly
-public struct Credential: CredentialProvider {
+public struct ExpiringCredential: CredentialProvider {
     public let accessKeyId: String
     public let secretAccessKey: String
     public let sessionToken: String?
@@ -44,6 +32,15 @@ public struct Credential: CredentialProvider {
         self.secretAccessKey = secretAccessKey
         self.sessionToken = sessionToken ?? ProcessInfo.processInfo.environment["AWS_SESSION_TOKEN"]
         self.expiration = expiration
+    }
+    
+    func nearExpiration() -> Bool {
+        if let expiration = self.expiration {
+            // are we within 5 minutes of expiration?
+            return Date().addingTimeInterval(5.0 * 60.0) > expiration
+        } else {
+            return false
+        }
     }
 }
 
@@ -112,22 +109,22 @@ public struct SharedCredential: CredentialProvider {
     }
 }
 
-/// Provide AWS credentials via environment variables
-public struct EnvironmentCredential: CredentialProvider {
-    public let accessKeyId: String
-    public let secretAccessKey: String
-    public let sessionToken: String?
-    public let expiration: Date? = nil
-
-    public init?() {
-        guard let accessKeyId = ProcessInfo.processInfo.environment["AWS_ACCESS_KEY_ID"] else {
-            return nil
+extension AWSSigner {
+    /// If you did not provide credentials `manageCredential()` should be called and the future resolved prior to building signedURL or signedHeaders to ensure latest credentials are retreived and set
+    func manageCredential() -> Future<CredentialProvider> {
+        #if os(Linux)
+        if credential.nearExpiration() {
+            do {
+                return try MetaDataService.getCredential().map { credential in
+                    self.credentials = credential
+                    return credential
+                }
+            } catch {
+                // should not be crash
+            }
         }
-        guard let secretAccessKey = ProcessInfo.processInfo.environment["AWS_SECRET_ACCESS_KEY"] else {
-            return nil
-        }
-        self.accessKeyId = accessKeyId
-        self.secretAccessKey = secretAccessKey
-        self.sessionToken = ProcessInfo.processInfo.environment["AWS_SESSION_TOKEN"]
+        #endif // os(Linux)
+        return AWSClient.eventGroup.next().makeSucceededFuture(self.credentials)
     }
 }
+

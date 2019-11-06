@@ -9,6 +9,7 @@
 import Foundation
 import NIO
 import NIOHTTP1
+import AWSSigner
 
 /// Object encapsulating all the information needed to generate a raw HTTP request to AWS
 public struct AWSRequest {
@@ -47,8 +48,7 @@ public struct AWSRequest {
         httpHeaders[field] = value
     }
 
-    /// Create HTTP Client request from AWSRequest
-    func toHTTPRequest<Request: HTTPRequestDescription>() throws -> Request {
+    func getHttpHeaders() -> HTTPHeaders {
         var headers: [String:String] = [:]
         for (key, value) in httpHeaders {
             //guard let value = value else { continue }
@@ -81,9 +81,28 @@ public struct AWSRequest {
             headers["Content-Type"] = headers["Content-Type"] ?? "application/octet-stream"
         }
 
-        let generatedHeaders = HTTPHeaders(headers.map { ($0, $1) })
-
-        return try! Request.init(url: url, method: nioHTTPMethod(from: httpMethod), headers: generatedHeaders, body: body.asData())
+        return HTTPHeaders(headers.map { ($0, $1) })
+    }
+    
+    /// Create HTTP Client request from AWSRequest
+    func toHTTPRequest<Request: HTTPRequestDescription>() throws -> Request {
+        return try! Request.init(url: url, method: HTTPMethod(from: httpMethod), headers: getHttpHeaders(), body: body.asData())
+    }
+    
+    /// Create HTTP Client request from AWSRequest
+    func toHTTPRequestWithSignedURL<Request: HTTPRequestDescription>(signer: AWSSigner) throws -> Request {
+        let method = HTTPMethod(from: httpMethod)
+        let bodyData = body.asData()
+        let signedURL = signer.signURL(url: url, method: method, body: bodyData != nil ? .data(bodyData!) : nil, date: Date(), expires: 86400)
+        return try! Request.init(url: signedURL, method: method, headers: getHttpHeaders(), body: bodyData)
+    }
+    
+    /// Create HTTP Client request from AWSRequest
+    func toHTTPRequestWithSignedHeader<Request: HTTPRequestDescription>(signer: AWSSigner) throws -> Request {
+        let method = HTTPMethod(from: httpMethod)
+        let bodyData = body.asData()
+        let signedHeaders = signer.signHeaders(url: url, method: method, headers: getHttpHeaders(), body: bodyData != nil ? .data(bodyData!) : nil, date: Date())
+        return try! Request.init(url: url, method: method, headers: signedHeaders, body: bodyData)
     }
     
     // return new request with middleware applied
@@ -95,24 +114,26 @@ public struct AWSRequest {
         }
         return awsRequest
     }
+}
 
-    // Convert string to NIO HTTP Method
-    fileprivate func nioHTTPMethod(from: String) -> HTTPMethod {
+
+extension HTTPMethod {
+    init(from: String) {
         switch from {
         case "HEAD":
-            return .HEAD
+            self = .HEAD
         case "GET":
-            return .GET
+            self = .GET
         case "POST":
-            return .POST
+            self = .POST
         case "PUT":
-            return .PUT
+            self = .PUT
         case "PATCH":
-            return .PATCH
+            self = .PATCH
         case "DELETE":
-            return .DELETE
+            self = .DELETE
         default:
-            return .GET
+            self = .GET
         }
     }
 }

@@ -9,7 +9,7 @@
 import Foundation
 import XCTest
 @testable import AWSSDKSwiftCore
-
+/*
 class SignersV4Tests: XCTestCase {
     static var allTests : [(String, (SignersV4Tests) -> () throws -> Void)] {
         return [
@@ -143,3 +143,4 @@ class SignersV4Tests: XCTestCase {
         XCTAssertEqual(signedURL.absoluteString, "https://s3-apnortheast1.amazon.com?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=key%2F20170101%2Fap-northeast-1%2Fs3%2Faws4_request&X-Amz-Date=20170101T000000Z&X-Amz-Expires=86400&X-Amz-SignedHeaders=host&X-Amz-Signature=74bea6a033f90cc7a4f23f9f315b1d2c1865f55d1e51f062228301dffc68048b")
     }
 }
+*/

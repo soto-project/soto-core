@@ -6,6 +6,7 @@
 //
 //
 
+import AWSSigner
 import HypertextApplicationLanguage
 import Foundation
 import NIO
@@ -22,7 +23,7 @@ public class AWSClient {
         case invalidURL(String)
     }
 
-    let signer: Signers.V4
+    let signer: AWSSigner
 
     let apiVersion: String
 
@@ -30,7 +31,9 @@ public class AWSClient {
 
     let service: String
 
-    let _endpoint: String?
+    let endpoint: String
+    
+    public let region: Region
 
     let serviceProtocol: ServiceProtocol
 
@@ -41,25 +44,6 @@ public class AWSClient {
     let middlewares: [AWSServiceMiddleware]
 
     var possibleErrorTypes: [AWSErrorType.Type]
-
-    /// endpoint URL
-    public var endpoint: String {
-        if let givenEndpoint = self._endpoint {
-            return givenEndpoint
-        }
-        return "https://\(serviceHost)"
-    }
-
-    var serviceHost: String {
-        if let serviceEndpoint = serviceEndpoints[signer.region.rawValue] {
-            return serviceEndpoint
-        }
-
-        if let partitionEndpoint = partitionEndpoint, let globalEndpoint = serviceEndpoints[partitionEndpoint] {
-            return globalEndpoint
-        }
-        return "\(service).\(signer.region.rawValue).amazonaws.com"
-    }
 
     public static let eventGroup: EventLoopGroup = createEventLoopGroup()
 
@@ -99,10 +83,9 @@ public class AWSClient {
             credential = scredential
         } else {
             // create an expired credential
-            credential = Credential(accessKeyId: "", secretAccessKey: "", expiration: Date.init(timeIntervalSince1970: 0))
+            credential = ExpiringCredential(accessKeyId: "", secretAccessKey: "", expiration: Date.init(timeIntervalSince1970: 0))
         }
 
-        let region: Region
         if let _region = givenRegion {
             region = _region
         }
@@ -114,16 +97,30 @@ public class AWSClient {
             region = .useast1
         }
 
-        self.signer = Signers.V4(credential: credential, region: region, signingName: signingName ?? service, endpoint: endpoint)
+        self.signer = AWSSigner(credentials: credential, name: signingName ?? service, region: region.rawValue)
         self.apiVersion = apiVersion
         self.service = service
-        self._endpoint = endpoint
+        //self._endpoint = endpoint
         self.amzTarget = amzTarget
         self.serviceProtocol = serviceProtocol
         self.serviceEndpoints = serviceEndpoints
         self.partitionEndpoint = partitionEndpoint
         self.middlewares = middlewares
         self.possibleErrorTypes = possibleErrorTypes ?? []
+        // work out endpoint, if provided use that otherwise
+        if let endpoint = endpoint {
+            self.endpoint = endpoint
+        } else {
+            let serviceHost: String
+            if let serviceEndpoint = serviceEndpoints[region.rawValue] {
+                serviceHost = serviceEndpoint
+            } else if let partitionEndpoint = partitionEndpoint, let globalEndpoint = serviceEndpoints[partitionEndpoint] {
+                serviceHost = globalEndpoint
+            } else {
+                serviceHost = "\(service).\(region.rawValue).amazonaws.com"
+            }
+            self.endpoint = "https://\(serviceHost)"
+        }
     }
 
 }
@@ -229,7 +226,7 @@ extension AWSClient {
     ///     Future containing output object that completes when response is received
     public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> Future<Output> {
 
-            return signer.manageCredential().flatMapThrowing { _ in
+        return signer.manageCredential().flatMapThrowing { _ in
                     let awsRequest = try self.createAWSRequest(
                         operation: operationName,
                         path: path,
@@ -252,74 +249,24 @@ extension AWSClient {
     /// - returns:
     ///     A signed URL
     public func signURL(url: URL, httpMethod: String, expires: Int = 86400) -> URL {
-        return signer.signedURL(url: url, method: httpMethod, expires: expires)
+        return signer.signURL(url: url, method: HTTPMethod(from: httpMethod), expires: expires)
     }
 }
 
 // request creator
 extension AWSClient {
 
-    fileprivate func createNIORequestWithSignedURL(_ awsRequest: AWSRequest) throws -> AWSHTTPClient.Request {
-        var nioRequest:AWSHTTPClient.Request  = try awsRequest.toHTTPRequest()
-
-        guard let unsignedUrl = URL(string: nioRequest.head.uri), let hostWithPort = unsignedUrl.hostWithPort else {
-            fatalError("nioRequest.head.uri is invalid.")
-        }
-
-        let signedURI = signer.signedURL(url: unsignedUrl, method: awsRequest.httpMethod)
-        nioRequest.head.uri = signedURI.absoluteString
-        nioRequest.head.headers.replaceOrAdd(name: "Host", value: hostWithPort)
-
-        return nioRequest
-    }
-
-    fileprivate func createNIORequestWithSignedHeader(_ awsRequest: AWSRequest) throws -> AWSHTTPClient.Request {
-        return try nioRequestWithSignedHeader(awsRequest.toHTTPRequest())
-    }
-
-    fileprivate func nioRequestWithSignedHeader(_ nioRequest: AWSHTTPClient.Request) throws -> AWSHTTPClient.Request {
-        var nioRequest = nioRequest
-
-        guard let url = URL(string: nioRequest.head.uri), let _ = url.hostWithPort else {
-            throw RequestError.invalidURL("nioRequest.head.uri is invalid.")
-        }
-
-        // TODO avoid copying
-        var headers: [String: String] = [:]
-        for (key, value) in nioRequest.head.headers {
-            headers[key.description] = value
-        }
-
-        // We need to convert from the NIO type to a string
-        // when we sign the headers and attach the auth cookies
-        //
-        let method = "\(nioRequest.head.method)"
-
-        let signedHeaders = signer.signedHeaders(
-            url: url,
-            headers: headers,
-            method: method,
-            bodyData: nioRequest.body
-        )
-
-        for (key, value) in signedHeaders {
-            nioRequest.head.headers.replaceOrAdd(name: key, value: value)
-        }
-
-        return nioRequest
-    }
-
     func createNioRequest(_ awsRequest: AWSRequest) throws -> AWSHTTPClient.Request {
         switch awsRequest.httpMethod {
         case "GET", "HEAD":
             switch self.serviceProtocol.type {
             case .restjson:
-                return try createNIORequestWithSignedHeader(awsRequest)
+                return try awsRequest.toHTTPRequestWithSignedHeader(signer: signer)
             default:
-                return try createNIORequestWithSignedURL(awsRequest)
+                return try awsRequest.toHTTPRequestWithSignedURL(signer: signer)
             }
         default:
-            return try createNIORequestWithSignedHeader(awsRequest)
+            return try awsRequest.toHTTPRequestWithSignedHeader(signer: signer)
         }
     }
 
@@ -330,7 +277,7 @@ extension AWSClient {
         }
 
         return try AWSRequest(
-            region: self.signer.region,
+            region: region,
             url: url,
             serviceProtocol: serviceProtocol,
             operation: operationName,
@@ -495,7 +442,7 @@ extension AWSClient {
         }
 
         return try AWSRequest(
-            region: self.signer.region,
+            region: region,
             url: url,
             serviceProtocol: serviceProtocol,
             operation: operationName,
@@ -688,13 +635,16 @@ extension AWSClient {
                                 var dict: [String: Any] = [:]
                                 for link in links {
                                     guard let name = link.name else { continue }
-                                    let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: endpoint + link.href)
-                                    let nioRequest = try nioRequestWithSignedHeader(AWSHTTPClient.Request(head: head, body: Data()))
+                                    guard let url = URL(string:endpoint + link.href) else { continue }
+                                    //let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: endpoint + link.href)
+                                    let signedHeaders = signer.signHeaders(url: url, method: .GET)
+                                    let httpRequest = try AWSHTTPClient.Request(url: url, method: .GET, headers: signedHeaders)
+                                    //let nioRequest = try nioRequestWithSignedHeader(AWSHTTPClient.Request(head: head, body: Data()))
                                     //
                                     // this is a hack to wait...
                                     ///
                                     while dict[name] == nil {
-                                        _ = invoke(nioRequest).flatMapThrowing{ res in
+                                        _ = invoke(httpRequest).flatMapThrowing{ res in
                                             if let body = res.body {
                                                 let representaion = try Representation().from(json: body)
                                                 dict[name] = representaion.properties

@@ -21,6 +21,7 @@ let package = Package(
             name: "AWSSDKSwiftCore",
             dependencies: [
                 "AsyncHTTPClient",
+                "AWSSigner",
                 "HypertextApplicationLanguage",
                 "NIO",
                 "NIOHTTP1",

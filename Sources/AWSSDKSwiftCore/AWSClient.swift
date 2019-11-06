@@ -17,6 +17,30 @@ import NIOTransportServices
 /// Convenience shorthand for `EventLoopFuture`.
 public typealias Future = EventLoopFuture
 
+/// Helper struct for ensuring atomic access to a structure
+struct AtomicProperty<T> {
+    private var _value: T
+    private var lock = NSLock()
+
+    public init(value: T) {
+        _value = value
+    }
+
+    public var value: T {
+        get {
+            lock.lock()
+            let value = _value
+            lock.unlock()
+            return value
+        }
+        set {
+            lock.lock()
+            _value = newValue
+            lock.unlock()
+        }
+    }
+}
+
 /// This is the workhorse of aws-sdk-swift-core. You provide it with a `AWSShape` Input object, it converts it to `AWSRequest` which is then converted to a raw `HTTPClient` Request. This is then sent to AWS. When the response from AWS is received if it is successful it is converted to a `AWSResponse` which is then decoded to generate a `AWSShape` Output object. If it is not successful then `AWSClient` will throw an `AWSErrorType`.
 public class AWSClient {
 
@@ -24,7 +48,7 @@ public class AWSClient {
         case invalidURL(String)
     }
 
-    var signer: AWSSigner
+    var signer: AtomicProperty<AWSSigner>
 
     let apiVersion: String
 
@@ -107,7 +131,7 @@ public class AWSClient {
             region = .useast1
         }
 
-        self.signer = AWSSigner(credentials: credential, name: signingName ?? service, region: region.rawValue)
+        self.signer = AtomicProperty(value: AWSSigner(credentials: credential, name: signingName ?? service, region: region.rawValue))
         self.apiVersion = apiVersion
         self.service = service
         //self._endpoint = endpoint
@@ -137,6 +161,7 @@ public class AWSClient {
 // invoker
 extension AWSClient {
 
+    /// invoke AWS request, create HTTP request from AWS request and then make request. Return response. Function chooses which HTTP client to use based
     fileprivate func invoke(_ awsRequest: AWSRequest, signer: AWSSigner) -> Future<HTTPResponseDescription> {
         do {
             if usingNIOTransportServices {
@@ -151,7 +176,7 @@ extension AWSClient {
         }
     }
 
-
+    /// invoke HTTP request using AsyncHTTPClient
     fileprivate func invokeAsyncHTTPClient(_ httpRequest: AsyncHTTPClient.HTTPClient.Request) -> Future<AsyncHTTPClient.HTTPClient.Response> {
         let client = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(AWSClient.eventGroup))
         let futureResponse = client.execute(request: httpRequest)
@@ -166,6 +191,8 @@ extension AWSClient {
 
         return futureResponse
     }
+
+    /// invoke HTTP request using AWSSDKSwiftCore internal HTTPClient
     fileprivate func invokeAWSHTTPClient(_ httpRequest: AWSHTTPClient.Request) -> Future<AWSHTTPClient.Response> {
         let client = AWSHTTPClient(eventLoopGroupProvider: .shared(AWSClient.eventGroup))
         let futureResponse = client.connect(httpRequest)
@@ -286,7 +313,7 @@ extension AWSClient {
     /// - returns:
     ///     A signed URL
     public func signURL(url: URL, httpMethod: String, expires: Int = 86400) -> URL {
-        return signer.signURL(url: url, method: HTTPMethod(from: httpMethod), expires: expires)
+        return signer.value.signURL(url: url, method: HTTPMethod(from: httpMethod), expires: expires)
     }
 }
 
@@ -295,11 +322,12 @@ extension AWSClient {
 
     func manageCredential() -> Future<AWSSigner> {
         #if os(Linux)
-        if self.signer.credentials.nearExpiration() {
+        let signer = self.signer.value
+        if signer.credentials.nearExpiration() {
             do {
                 return try MetaDataService.getCredential().map { credential in
-                    let signer = AWSSigner(credentials: credential, name: self.signer.name, region: self.signer.region)
-                    self.signer = signer
+                    let signer = AWSSigner(credentials: credential, name: signer.name, region: signer.region)
+                    self.signer.value = signer
                     return signer
                 }
             } catch {
@@ -307,7 +335,7 @@ extension AWSClient {
             }
         }
         #endif // os(Linux)
-        return AWSClient.eventGroup.next().makeSucceededFuture(self.signer)
+        return AWSClient.eventGroup.next().makeSucceededFuture(self.signer.value)
     }
     
     func createHTTPRequest<Request: HTTPRequestDescription>(_ awsRequest: AWSRequest, signer: AWSSigner) throws -> Request {
@@ -696,7 +724,7 @@ extension AWSClient {
                                     guard let name = link.name else { continue }
                                     guard let url = URL(string:endpoint + link.href) else { continue }
                                     //let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: endpoint + link.href)
-                                    let signedHeaders = signer.signHeaders(url: url, method: .GET)
+                                    let signedHeaders = signer.value.signHeaders(url: url, method: .GET)
                                     let httpRequest = try AWSHTTPClient.Request(url: url, method: .GET, headers: signedHeaders)
                                     //let nioRequest = try nioRequestWithSignedHeader(AWSHTTPClient.Request(head: head, body: Data()))
                                     //

@@ -8,7 +8,7 @@ import AsyncHTTPClient
 import Foundation
 import NIOHTTP1
 
-/// protocol defining requirement for creating an HTTP Request
+/// protocol defining requirement for creating an HTTP Response
 protocol HTTPResponseDescription {
     /// Response HTTP status.
     var status: HTTPResponseStatus { get }

@@ -154,7 +154,7 @@ class AWSClientTests: XCTestCase {
         let input3 = F(fooParams: input2)
 
         do {
-            let awsRequest = try sesClient.debugCreateAWSRequest(
+            let awsRequest = try sesClient.createAWSRequest(
                 operation: "SendEmail",
                 path: "/",
                 httpMethod: "POST",
@@ -182,7 +182,7 @@ class AWSClientTests: XCTestCase {
         )
 
         do {
-            let awsRequest = try kinesisClient.debugCreateAWSRequest(
+            let awsRequest = try kinesisClient.createAWSRequest(
                 operation: "PutRecord",
                 path: "/",
                 httpMethod: "POST",
@@ -214,7 +214,7 @@ class AWSClientTests: XCTestCase {
         }
 
         do {
-            let awsRequest = try s3Client.debugCreateAWSRequest(
+            let awsRequest = try s3Client.createAWSRequest(
                 operation: "ListObjectsV2",
                 path: "/Bucket?list-type=2",
                 httpMethod: "GET",
@@ -232,7 +232,7 @@ class AWSClientTests: XCTestCase {
         // encode for restxml
         //
         do {
-            let awsRequest = try s3Client.debugCreateAWSRequest(
+            let awsRequest = try s3Client.createAWSRequest(
                 operation: "payloadPath",
                 path: "/Bucket?list-type=2",
                 httpMethod: "POST",
@@ -255,7 +255,7 @@ class AWSClientTests: XCTestCase {
         // encode for json
         //
         do {
-            let awsRequest = try kinesisClient.debugCreateAWSRequest(
+            let awsRequest = try kinesisClient.createAWSRequest(
                 operation: "PutRecord",
                 path: "/",
                 httpMethod: "POST",
@@ -289,7 +289,7 @@ class AWSClientTests: XCTestCase {
         )
 
         do {
-            let awsRequest = try kinesisClient.debugCreateAWSRequest(
+            let awsRequest = try kinesisClient.createAWSRequest(
                 operation: "PutRecord",
                 path: "/",
                 httpMethod: "POST",
@@ -322,7 +322,7 @@ class AWSClientTests: XCTestCase {
             body: Data()
         )
         do {
-            try s3Client.debugValidate(response: response)
+            try s3Client.validate(response: response)
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -336,7 +336,7 @@ class AWSClientTests: XCTestCase {
         )
 
         do {
-            try s3Client.debugValidate(response: failResponse)
+            try s3Client.validate(response: failResponse)
             XCTFail("call to validateCode should throw an error")
         } catch {
             XCTAssertTrue(true)
@@ -355,7 +355,7 @@ class AWSClientTests: XCTestCase {
             body: "<Output><name>hello</name></Output>".data(using: .utf8)!
         )
         do {
-            let output : Output = try s3Client.debugValidate(operation: "Output", response: response)
+            let output : Output = try s3Client.validate(operation: "Output", response: response)
             XCTAssertEqual(output.name, "hello")
         } catch {
             XCTFail(error.localizedDescription)
@@ -375,7 +375,7 @@ class AWSClientTests: XCTestCase {
             body: "<name>hello</name>".data(using: .utf8)!
         )
         do {
-            let output : Output = try s3Client.debugValidate(operation: "Output", response: response)
+            let output : Output = try s3Client.validate(operation: "Output", response: response)
             XCTAssertEqual(output.name, "hello")
         } catch {
             XCTFail(error.localizedDescription)
@@ -391,7 +391,7 @@ class AWSClientTests: XCTestCase {
             body: "<Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message></Error>".data(using: .utf8)!
         )
         do {
-            try s3Client.debugValidate(response: response)
+            try s3Client.validate(response: response)
             XCTFail("Should not get here")
         } catch S3ErrorType.noSuchKey(let message) {
             XCTAssertEqual(message, "Message: It doesn't exist")
@@ -412,7 +412,7 @@ class AWSClientTests: XCTestCase {
             body: "{\"name\":\"hello\"}".data(using: .utf8)!
         )
         do {
-            let output : Output = try kinesisClient.debugValidate(operation: "Output", response: response)
+            let output : Output = try kinesisClient.validate(operation: "Output", response: response)
             XCTAssertEqual(output.name, "hello")
         } catch {
             XCTFail(error.localizedDescription)
@@ -435,7 +435,7 @@ class AWSClientTests: XCTestCase {
             body: "{\"name\":\"hello\"}".data(using: .utf8)!
         )
         do {
-            let output : Output = try kinesisClient.debugValidate(operation: "Output", response: response)
+            let output : Output = try kinesisClient.validate(operation: "Output", response: response)
             XCTAssertEqual(output.output2.name, "hello")
         } catch {
             XCTFail(error.localizedDescription)
@@ -451,7 +451,7 @@ class AWSClientTests: XCTestCase {
             body: "{\"__type\":\"ResourceNotFoundException\", \"message\": \"Donald Where's Your Troosers?\"}".data(using: .utf8)!
         )
         do {
-            try kinesisClient.debugValidate(response: response)
+            try kinesisClient.validate(response: response)
             XCTFail("Should not get here")
         } catch KinesisErrorType.resourceNotFoundException(let message) {
             XCTAssertEqual(message, "Donald Where's Your Troosers?")

@@ -57,7 +57,7 @@ public class AWSClient {
     let service: String
 
     let endpoint: String
-    
+
     public let region: Region
 
     let serviceProtocol: ServiceProtocol
@@ -90,7 +90,7 @@ public class AWSClient {
         #endif
         return false
     }
-    
+
     /// Initialize an AWSClient struct
     /// - parameters:
     ///     - accessKeyId: Public access key provided by AWS
@@ -212,7 +212,7 @@ extension AWSClient {
 
 // public facing apis
 extension AWSClient {
-    
+
     /// send a request with an input object and return a future with an empty response
     /// - parameters:
     ///     - operationName: Name of the AWS operation
@@ -337,13 +337,13 @@ extension AWSClient {
         #endif // os(Linux)
         return AWSClient.eventGroup.next().makeSucceededFuture(self.signer.value)
     }
-    
+
     func createHTTPRequest<Request: HTTPRequestDescription>(_ awsRequest: AWSRequest, signer: AWSSigner) throws -> Request {
         // if credentials are empty don't sign request
         if signer.credentials.isEmpty() {
             return try awsRequest.toHTTPRequest()
         }
-        
+
         switch awsRequest.httpMethod {
         case "GET", "HEAD":
             switch self.serviceProtocol.type {
@@ -357,7 +357,7 @@ extension AWSClient {
         }
     }
 
-    fileprivate func createAWSRequest(operation operationName: String, path: String, httpMethod: String) throws -> AWSRequest {
+    internal func createAWSRequest(operation operationName: String, path: String, httpMethod: String) throws -> AWSRequest {
 
         guard let url = URL(string: "\(endpoint)\(path)"), let _ = url.hostWithPort else {
             throw RequestError.invalidURL("\(endpoint)\(path) must specify url host and scheme")
@@ -374,7 +374,7 @@ extension AWSClient {
         ).applyMiddlewares(middlewares)
     }
 
-    fileprivate func createAWSRequest<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
+    internal func createAWSRequest<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
         var headers: [String: Any] = [:]
         var path = path
         var urlComponents = URLComponents()
@@ -396,7 +396,7 @@ extension AWSClient {
         if let target = amzTarget {
             headers["x-amz-target"] = "\(target).\(operationName)"
         }
-        
+
         // TODO should replace with Encodable
         let mirror = Mirror(reflecting: input)
 
@@ -570,21 +570,11 @@ extension AWSClient {
     }
 }
 
-// debug request creator
-#if DEBUG
-extension AWSClient {
-
-    func debugCreateAWSRequest<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
-        return try createAWSRequest(operation: operationName, path: path, httpMethod: httpMethod, input: input)
-    }
-}
-#endif
-
 // response validator
 extension AWSClient {
 
     /// Validate the operation response and return a response shape
-    fileprivate func validate<Output: AWSShape>(operation operationName: String, response: HTTPResponseDescription) throws -> Output {
+    internal func validate<Output: AWSShape>(operation operationName: String, response: HTTPResponseDescription) throws -> Output {
         let raw: Bool
         if let payloadPath = Output.payloadPath, let member = Output.getMember(named: payloadPath), member.type == .blob {
             raw = true
@@ -677,7 +667,7 @@ extension AWSClient {
     }
 
     /// validate response without returning an output shape
-    private func validate(response: HTTPResponseDescription) throws {
+    internal func validate(response: HTTPResponseDescription) throws {
         let awsResponse = try AWSResponse(from: response, serviceProtocolType: serviceProtocol.type)
         try validateCode(response: awsResponse)
     }
@@ -818,21 +808,6 @@ extension AWSClient {
     }
 }
 
-// debug request validator
-#if DEBUG
-extension AWSClient {
-
-    func debugValidate(response: AWSHTTPClient.Response) throws {
-        try validate(response: response)
-    }
-
-    func debugValidate<Output: AWSShape>(operation operationName: String, response: AWSHTTPClient.Response) throws -> Output {
-        return try validate(operation: operationName, response: response)
-    }
-}
-#endif
-
-
 extension AWSClient.RequestError: CustomStringConvertible {
     public var description: String {
         switch self {
@@ -856,4 +831,3 @@ extension URL {
         return host
     }
 }
-

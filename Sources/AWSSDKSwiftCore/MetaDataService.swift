@@ -78,7 +78,7 @@ struct MetaDataService {
     public static func getCredential() throws -> Future<CredentialProvider> {
         let futurUri = try serviceProvider.uri()
 
-        return futurUri.flatMap { uri -> Future<HTTPClient.Response> in
+        return futurUri.flatMap { uri -> Future<AWSHTTPClient.Response> in
             return request(host: serviceProvider.host, uri: uri, timeout: 2)
         }.map{ credentialResponse -> CredentialProvider in
             do {
@@ -90,14 +90,14 @@ struct MetaDataService {
         }
     }
 
-    static func request(host: String, uri: String, timeout: TimeInterval) -> Future<HTTPClient.Response> {
-        let client = HTTPClient(eventLoopGroupProvider: .shared(AWSClient.eventGroup))
+    static func request(host: String, uri: String, timeout: TimeInterval) -> Future<AWSHTTPClient.Response> {
+        let client = AWSHTTPClient(eventLoopGroupProvider: .shared(AWSClient.eventGroup))
         let head = HTTPRequestHead(
                      version: HTTPVersion(major: 1, minor: 1),
                      method: .GET,
                      uri: uri
                    )
-        let request = HTTPClient.Request(head: head, body: Data())
+        let request = AWSHTTPClient.Request(head: head, body: Data())
         let futureResponse = client.connect(request)
 
         futureResponse.whenComplete { _ in

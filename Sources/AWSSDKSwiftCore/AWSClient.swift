@@ -129,8 +129,8 @@ public class AWSClient {
 }
 // invoker
 extension AWSClient {
-    fileprivate func invoke(_ nioRequest: HTTPClient.Request) -> Future<HTTPClient.Response> {
-        let client = HTTPClient(eventLoopGroupProvider: .shared(AWSClient.eventGroup))
+    fileprivate func invoke(_ nioRequest: AWSHTTPClient.Request) -> Future<AWSHTTPClient.Response> {
+        let client = AWSHTTPClient(eventLoopGroupProvider: .shared(AWSClient.eventGroup))
         let futureResponse = client.connect(nioRequest)
 
         futureResponse.whenComplete { _ in
@@ -259,8 +259,8 @@ extension AWSClient {
 // request creator
 extension AWSClient {
 
-    fileprivate func createNIORequestWithSignedURL(_ awsRequest: AWSRequest) throws -> HTTPClient.Request {
-        var nioRequest = try awsRequest.toNIORequest()
+    fileprivate func createNIORequestWithSignedURL(_ awsRequest: AWSRequest) throws -> AWSHTTPClient.Request {
+        var nioRequest:AWSHTTPClient.Request  = try awsRequest.toHTTPRequest()
 
         guard let unsignedUrl = URL(string: nioRequest.head.uri), let hostWithPort = unsignedUrl.hostWithPort else {
             fatalError("nioRequest.head.uri is invalid.")
@@ -273,11 +273,11 @@ extension AWSClient {
         return nioRequest
     }
 
-    fileprivate func createNIORequestWithSignedHeader(_ awsRequest: AWSRequest) throws -> HTTPClient.Request {
-        return try nioRequestWithSignedHeader(awsRequest.toNIORequest())
+    fileprivate func createNIORequestWithSignedHeader(_ awsRequest: AWSRequest) throws -> AWSHTTPClient.Request {
+        return try nioRequestWithSignedHeader(awsRequest.toHTTPRequest())
     }
 
-    fileprivate func nioRequestWithSignedHeader(_ nioRequest: HTTPClient.Request) throws -> HTTPClient.Request {
+    fileprivate func nioRequestWithSignedHeader(_ nioRequest: AWSHTTPClient.Request) throws -> AWSHTTPClient.Request {
         var nioRequest = nioRequest
 
         guard let url = URL(string: nioRequest.head.uri), let _ = url.hostWithPort else {
@@ -309,7 +309,7 @@ extension AWSClient {
         return nioRequest
     }
 
-    func createNioRequest(_ awsRequest: AWSRequest) throws -> HTTPClient.Request {
+    func createNioRequest(_ awsRequest: AWSRequest) throws -> AWSHTTPClient.Request {
         switch awsRequest.httpMethod {
         case "GET", "HEAD":
             switch self.serviceProtocol.type {
@@ -550,7 +550,7 @@ extension AWSClient {
 extension AWSClient {
 
     /// Validate the operation response and return a response shape
-    fileprivate func validate<Output: AWSShape>(operation operationName: String, response: HTTPClient.Response) throws -> Output {
+    fileprivate func validate<Output: AWSShape>(operation operationName: String, response: AWSHTTPClient.Response) throws -> Output {
         let raw: Bool
         if let payloadPath = Output.payloadPath, let member = Output.getMember(named: payloadPath), member.type == .blob {
             raw = true
@@ -643,7 +643,7 @@ extension AWSClient {
     }
 
     /// validate response without returning an output shape
-    private func validate(response: HTTPClient.Response) throws {
+    private func validate(response: AWSHTTPClient.Response) throws {
         let awsResponse = try AWSResponse(from: response, serviceProtocolType: serviceProtocol.type)
         try validateCode(response: awsResponse)
     }
@@ -689,7 +689,7 @@ extension AWSClient {
                                 for link in links {
                                     guard let name = link.name else { continue }
                                     let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: endpoint + link.href)
-                                    let nioRequest = try nioRequestWithSignedHeader(HTTPClient.Request(head: head, body: Data()))
+                                    let nioRequest = try nioRequestWithSignedHeader(AWSHTTPClient.Request(head: head, body: Data()))
                                     //
                                     // this is a hack to wait...
                                     ///
@@ -783,11 +783,11 @@ extension AWSClient {
 #if DEBUG
 extension AWSClient {
 
-    func debugValidate(response: HTTPClient.Response) throws {
+    func debugValidate(response: AWSHTTPClient.Response) throws {
         try validate(response: response)
     }
 
-    func debugValidate<Output: AWSShape>(operation operationName: String, response: HTTPClient.Response) throws -> Output {
+    func debugValidate<Output: AWSShape>(operation operationName: String, response: AWSHTTPClient.Response) throws -> Output {
         return try validate(operation: operationName, response: response)
     }
 }

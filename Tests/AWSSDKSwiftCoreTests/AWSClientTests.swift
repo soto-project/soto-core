@@ -162,7 +162,7 @@ class AWSClientTests: XCTestCase {
             )
             XCTAssertEqual(awsRequest.url.absoluteString, "\(sesClient.endpoint)/")
             XCTAssertEqual(String(describing: awsRequest.body), "text(\"Action=SendEmail&Value=%3Chtml%3E%3Cbody%3E%3Ca%20href%3D%22https://redsox.com%22%3ETest%3C/a%3E%3C/body%3E%3C/html%3E&Version=2013-12-01\")")
-            let nioRequest = try awsRequest.toNIORequest()
+            let nioRequest: AWSHTTPClient.Request = try awsRequest.toHTTPRequest()
             XCTAssertEqual(nioRequest.head.headers["Content-Type"][0], "application/x-www-form-urlencoded; charset=utf-8")
             XCTAssertEqual(nioRequest.head.method, HTTPMethod.POST)
         } catch {
@@ -206,7 +206,7 @@ class AWSClientTests: XCTestCase {
 
             }
 
-            let nioRequest = try awsRequest.toNIORequest()
+            let nioRequest: AWSHTTPClient.Request = try awsRequest.toHTTPRequest()
             XCTAssertEqual(nioRequest.head.headers["Content-Type"][0], "application/x-amz-json-1.1")
             XCTAssertEqual(nioRequest.head.method, HTTPMethod.POST)
         } catch {
@@ -222,7 +222,7 @@ class AWSClientTests: XCTestCase {
             )
 
             XCTAssertEqual(awsRequest.url.absoluteString, "https://s3.amazonaws.com/Bucket?list-type=2")
-            let nioRequest = try awsRequest.toNIORequest()
+            let nioRequest: AWSHTTPClient.Request = try awsRequest.toHTTPRequest()
             XCTAssertEqual(nioRequest.head.method, HTTPMethod.GET)
             XCTAssertEqual(nioRequest.body, Data())
         } catch {
@@ -246,7 +246,7 @@ class AWSClientTests: XCTestCase {
                 let payload = try XMLDecoder().decode(E.self, from: document.rootElement()!)
                 XCTAssertEqual(payload.Member["memberKey2"], "memberValue2")
             }
-            let nioRequest = try awsRequest.toNIORequest()
+            let nioRequest: AWSHTTPClient.Request = try awsRequest.toHTTPRequest()
             XCTAssertEqual(nioRequest.head.method, HTTPMethod.POST)
         } catch {
             XCTFail(error.localizedDescription)
@@ -314,7 +314,7 @@ class AWSClientTests: XCTestCase {
     }
 
     func testValidateCode() {
-        let response = HTTPClient.Response(
+        let response = AWSHTTPClient.Response(
             head: HTTPResponseHead(
                 version: HTTPVersion(major: 1, minor: 1),
                 status: HTTPResponseStatus(statusCode: 200)
@@ -327,7 +327,7 @@ class AWSClientTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
 
-        let failResponse = HTTPClient.Response(
+        let failResponse = AWSHTTPClient.Response(
             head: HTTPResponseHead(
                 version: HTTPVersion(major: 1, minor: 1),
                 status: HTTPResponseStatus(statusCode: 403)
@@ -347,7 +347,7 @@ class AWSClientTests: XCTestCase {
         class Output : AWSShape {
             let name : String
         }
-        let response = HTTPClient.Response(
+        let response = AWSHTTPClient.Response(
             head: HTTPResponseHead(
                 version: HTTPVersion(major: 1, minor: 1),
                 status: HTTPResponseStatus(statusCode: 200)
@@ -367,7 +367,7 @@ class AWSClientTests: XCTestCase {
             static let payloadPath: String? = "name"
             let name : String
         }
-        let response = HTTPClient.Response(
+        let response = AWSHTTPClient.Response(
             head: HTTPResponseHead(
                 version: HTTPVersion(major: 1, minor: 1),
                 status: HTTPResponseStatus(statusCode: 200)
@@ -383,7 +383,7 @@ class AWSClientTests: XCTestCase {
     }
 
     func testValidateXMLError() {
-        let response = HTTPClient.Response(
+        let response = AWSHTTPClient.Response(
             head: HTTPResponseHead(
                 version: HTTPVersion(major: 1, minor: 1),
                 status: HTTPResponseStatus(statusCode: 404)
@@ -404,7 +404,7 @@ class AWSClientTests: XCTestCase {
         class Output : AWSShape {
             let name : String
         }
-        let response = HTTPClient.Response(
+        let response = AWSHTTPClient.Response(
             head: HTTPResponseHead(
                 version: HTTPVersion(major: 1, minor: 1),
                 status: HTTPResponseStatus(statusCode: 200)
@@ -427,7 +427,7 @@ class AWSClientTests: XCTestCase {
             static let payloadPath: String? = "output2"
             let output2 : Output2
         }
-        let response = HTTPClient.Response(
+        let response = AWSHTTPClient.Response(
             head: HTTPResponseHead(
                 version: HTTPVersion(major: 1, minor: 1),
                 status: HTTPResponseStatus(statusCode: 200)
@@ -443,7 +443,7 @@ class AWSClientTests: XCTestCase {
     }
 
     func testValidateJSONError() {
-        let response = HTTPClient.Response(
+        let response = AWSHTTPClient.Response(
             head: HTTPResponseHead(
                 version: HTTPVersion(major: 1, minor: 1),
                 status: HTTPResponseStatus(statusCode: 404)

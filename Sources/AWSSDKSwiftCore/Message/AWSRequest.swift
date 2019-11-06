@@ -48,7 +48,7 @@ public struct AWSRequest {
     }
 
     /// Create HTTP Client request from AWSRequest
-    func toNIORequest() throws -> HTTPClient.Request {
+    func toHTTPRequest<Request: HTTPRequestDescription>() throws -> Request {
         var headers: [String:String] = [:]
         for (key, value) in httpHeaders {
             //guard let value = value else { continue }
@@ -81,15 +81,9 @@ public struct AWSRequest {
             headers["Content-Type"] = headers["Content-Type"] ?? "application/octet-stream"
         }
 
-        var head = HTTPRequestHead(
-          version: HTTPVersion(major: 1, minor: 1),
-          method: nioHTTPMethod(from: httpMethod),
-          uri: url.absoluteString
-        )
-        let generatedHeaders = headers.map { ($0, $1) }
-        head.headers = HTTPHeaders(generatedHeaders)
+        let generatedHeaders = HTTPHeaders(headers.map { ($0, $1) })
 
-        return HTTPClient.Request(head: head, body: body.asData() ?? Data())
+        return try! Request.init(url: url, method: nioHTTPMethod(from: httpMethod), headers: generatedHeaders, body: body.asData())
     }
     
     // return new request with middleware applied

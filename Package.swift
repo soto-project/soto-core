@@ -11,6 +11,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio.git", .upToNextMajor(from:"2.8.0")),
         .package(url: "https://github.com/apple/swift-nio-ssl.git", .upToNextMajor(from:"2.4.0")),
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", .upToNextMajor(from:"1.0.0")),
+        .package(url: "https://github.com/swift-server/async-http-client.git", .upToNextMajor(from:"1.0.0")),
         .package(url: "https://github.com/swift-aws/HypertextApplicationLanguage.git", .upToNextMinor(from: "1.1.0")),
         .package(url: "https://github.com/swift-aws/Perfect-INIParser.git", .upToNextMinor(from: "3.0.0")),
     ],
@@ -18,6 +19,7 @@ let package = Package(
         .target(
             name: "AWSSDKSwiftCore",
             dependencies: [
+                "AsyncHTTPClient",
                 "HypertextApplicationLanguage",
                 "NIO",
                 "NIOHTTP1",

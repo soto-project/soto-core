@@ -22,7 +22,7 @@ import NIOTransportServices
 #endif
 
 /// HTTP Client class providing API for sending HTTP requests
-public final class HTTPClient {
+public final class AWSHTTPClient {
 
     /// Request structure to send
     public struct Request {
@@ -155,9 +155,9 @@ public final class HTTPClient {
     /// send request to HTTP client, return a future holding the Response
     public func connect(_ request: Request) -> EventLoopFuture<Response> {
         // extract details from request URL
-        guard let url = URL(string:request.head.uri) else { return eventLoopGroup.next().makeFailedFuture(HTTPClient.HTTPError.malformedURL(url: request.head.uri)) }
-        guard let scheme = url.scheme else { return eventLoopGroup.next().makeFailedFuture(HTTPClient.HTTPError.malformedURL(url: request.head.uri)) }
-        guard let hostname = url.host else { return eventLoopGroup.next().makeFailedFuture(HTTPClient.HTTPError.malformedURL(url: request.head.uri)) }
+        guard let url = URL(string:request.head.uri) else { return eventLoopGroup.next().makeFailedFuture(AWSHTTPClient.HTTPError.malformedURL(url: request.head.uri)) }
+        guard let scheme = url.scheme else { return eventLoopGroup.next().makeFailedFuture(AWSHTTPClient.HTTPError.malformedURL(url: request.head.uri)) }
+        guard let hostname = url.host else { return eventLoopGroup.next().makeFailedFuture(AWSHTTPClient.HTTPError.malformedURL(url: request.head.uri)) }
 
         let port : Int
         let headerHostname : String
@@ -261,11 +261,11 @@ public final class HTTPClient {
             case .head(let head):
                 switch state {
                 case .ready: state = .parsingBody(head, nil)
-                case .parsingBody: promise.fail(HTTPClient.HTTPError.malformedHead)
+                case .parsingBody: promise.fail(AWSHTTPClient.HTTPError.malformedHead)
                 }
             case .body(var body):
                 switch state {
-                case .ready: promise.fail(HTTPClient.HTTPError.malformedBody)
+                case .ready: promise.fail(AWSHTTPClient.HTTPError.malformedBody)
                 case .parsingBody(let head, let existingData):
                     let data: Data
                     if var existing = existingData {
@@ -279,7 +279,7 @@ public final class HTTPClient {
             case .end(let tailHeaders):
                 assert(tailHeaders == nil, "Unexpected tail headers")
                 switch state {
-                case .ready: promise.fail(HTTPClient.HTTPError.malformedHead)
+                case .ready: promise.fail(AWSHTTPClient.HTTPError.malformedHead)
                 case .parsingBody(let head, let data):
                     let res = Response(head: head, body: data ?? Data())
                     if context.channel.isActive {

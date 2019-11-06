@@ -60,7 +60,7 @@ extension Signers {
                 }
             }
 #endif // os(Linux)
-            return AWSClient.eventGroup.next().makeSucceededFuture(credential)
+            return eventLoopGroup.next().makeSucceededFuture(credential)
         }
 
         func hexEncodedBodyHash(_ data: Data) -> String {

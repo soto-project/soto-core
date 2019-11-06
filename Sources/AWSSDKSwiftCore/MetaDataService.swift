@@ -8,6 +8,7 @@
 
 #if os(Linux)
 
+import AsyncHTTPClient
 import AWSSigner
 import Foundation
 import NIO
@@ -15,7 +16,7 @@ import NIOHTTP1
 
 /// errors returned by metadata service
 enum MetaDataServiceError: Error {
-    case missingRequiredParam(String)
+    case failedToDecode
     case couldNotGetInstanceRoleName
 }
 
@@ -34,7 +35,7 @@ public struct MetaDataService {
 
 /// protocol for decodable objects containing credential information
 protocol MetaDataContainer: Decodable {
-    var credential: Credential { get }
+    var credential: ExpiringCredential { get }
 }
 
 //MARK: MetadataServiceProvider
@@ -48,15 +49,9 @@ protocol MetaDataServiceProvider {
 extension MetaDataServiceProvider {
 
     /// make HTTP request
-    func request(uri: String, timeout: TimeInterval, eventLoopGroup: EventLoopGroup) -> Future<HTTPClient.Response> {
-        let client = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
-        let head = HTTPRequestHead(
-                     version: HTTPVersion(major: 1, minor: 1),
-                     method: .GET,
-                     uri: uri
-                   )
-        let request = AWSHTTPClient.Request(head: head, body: Data())
-        let futureResponse = client.connect(request)
+    func request(url: String, timeout: TimeInterval, eventLoopGroup: EventLoopGroup) -> Future<AsyncHTTPClient.HTTPClient.Response> {
+        let client = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
+        let futureResponse = client.get(url: url)
 
         futureResponse.whenComplete { _ in
             do {
@@ -70,7 +65,7 @@ extension MetaDataServiceProvider {
     }
 
     /// decode response return by metadata service
-    func decodeCredential(_ data: Data) -> CredentialProvider {
+    func decodeCredential(_ data: Data) -> CredentialProvider? {
         do {
             let decoder = JSONDecoder()
             // set JSON decoding strategy for dates
@@ -83,7 +78,7 @@ extension MetaDataServiceProvider {
             let metaData = try decoder.decode(MetaData.self, from: data)
             return metaData.credential
         } catch {
-            return Credential(accessKeyId: "", secretAccessKey: "")
+            return nil
         }
     }
 }
@@ -100,8 +95,8 @@ struct ECSMetaDataServiceProvider: MetaDataServiceProvider {
         let expiration: Date
         let roleArn: String
 
-        var credential: Credential {
-            return Credential(
+        var credential: ExpiringCredential {
+            return ExpiringCredential(
                 accessKeyId: accessKeyId,
                 secretAccessKey: secretAccessKey,
                 sessionToken: token,
@@ -122,17 +117,21 @@ struct ECSMetaDataServiceProvider: MetaDataServiceProvider {
 
     static var containerCredentialsUri = ProcessInfo.processInfo.environment["AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"]
     static var host = "169.254.170.2"
-    var uri: String
+    var url: String
 
     init?() {
         guard let uri = ECSMetaDataServiceProvider.containerCredentialsUri else {return nil}
-        self.uri = "http://\(ECSMetaDataServiceProvider.host)\(uri)"
+        self.url = "http://\(ECSMetaDataServiceProvider.host)\(uri)"
     }
 
     func getCredential(eventLoopGroup: EventLoopGroup) -> Future<CredentialProvider> {
-        return request(uri: uri, timeout: 2, eventLoopGroup: eventLoopGroup)
-            .map { response in
-                return self.decodeCredential(response.body)
+        return request(url: url, timeout: 2, eventLoopGroup: eventLoopGroup)
+            .flatMapThrowing { response in
+                if let body = response.bodyData, let credential = self.decodeCredential(body) {
+                    return credential
+                } else {
+                    throw MetaDataServiceError.failedToDecode
+                }
         }
     }
 }
@@ -181,12 +180,14 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
 
     func uri(eventLoopGroup: EventLoopGroup) -> Future<String> {
         // instance service expects absoluteString as uri...
-        return request(uri:InstanceMetaDataServiceProvider.baseURLString, timeout: 2, eventLoopGroup: eventLoopGroup)
+        return request(url:InstanceMetaDataServiceProvider.baseURLString, timeout: 2, eventLoopGroup: eventLoopGroup)
             .flatMapThrowing{ response in
-                switch response.head.status {
+                switch response.status {
                 case .ok:
-                    let roleName = String(data: response.body, encoding: .utf8) ?? ""
-                    return "\(InstanceMetaDataServiceProvider.baseURLString)/\(roleName)"
+                    if let body = response.body, let roleName = body.getString(at: body.readerIndex, length: body.readableBytes, encoding: .utf8) {
+                        return "\(InstanceMetaDataServiceProvider.baseURLString)/\(roleName)"
+                    }
+                    return InstanceMetaDataServiceProvider.baseURLString
                 default:
                     throw MetaDataServiceError.couldNotGetInstanceRoleName
                 }
@@ -195,11 +196,15 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
 
     func getCredential(eventLoopGroup: EventLoopGroup) -> Future<CredentialProvider> {
         return uri(eventLoopGroup: eventLoopGroup)
-            .flatMap { uri in
-                return self.request(uri: uri, timeout: 2, eventLoopGroup: eventLoopGroup)
+            .flatMap { url in
+                return self.request(url: url, timeout: 2, eventLoopGroup: eventLoopGroup)
             }
-            .map { response in
-                return self.decodeCredential(response.body)
+            .flatMapThrowing { response in
+                if let body = response.bodyData, let credential = self.decodeCredential(body) {
+                    return credential
+                } else {
+                    throw MetaDataServiceError.failedToDecode
+                }
         }
     }
 }

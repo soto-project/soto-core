@@ -6,6 +6,7 @@
 //
 //
 
+import AsyncHTTPClient
 import AWSSigner
 import HypertextApplicationLanguage
 import Foundation
@@ -57,6 +58,15 @@ public class AWSClient {
         return MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
     }
 
+    var usingNIOTransportServices: Bool {
+        #if canImport(Network)
+        if #available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *), AWSClient.eventGroup is NIOTSEventLoopGroup {
+            return true
+        }
+        #endif
+        return false
+    }
+    
     /// Initialize an AWSClient struct
     /// - parameters:
     ///     - accessKeyId: Public access key provided by AWS
@@ -126,9 +136,25 @@ public class AWSClient {
 }
 // invoker
 extension AWSClient {
-    fileprivate func invoke(_ nioRequest: AWSHTTPClient.Request) -> Future<AWSHTTPClient.Response> {
-        let client = AWSHTTPClient(eventLoopGroupProvider: .shared(AWSClient.eventGroup))
-        let futureResponse = client.connect(nioRequest)
+
+    fileprivate func invoke(_ awsRequest: AWSRequest, signer: AWSSigner) -> Future<HTTPResponseDescription> {
+        do {
+            if usingNIOTransportServices {
+                let request: AWSHTTPClient.Request = try createHTTPRequest(awsRequest, signer: signer)
+                return invokeAWSHTTPClient(request).map { $0 }
+            } else {
+                let request: AsyncHTTPClient.HTTPClient.Request = try createHTTPRequest(awsRequest, signer: signer)
+                return invokeAsyncHTTPClient(request).map { $0 }
+            }
+        } catch {
+            return AWSClient.eventGroup.next().makeFailedFuture(error)
+        }
+    }
+
+
+    fileprivate func invokeAsyncHTTPClient(_ httpRequest: AsyncHTTPClient.HTTPClient.Request) -> Future<AsyncHTTPClient.HTTPClient.Response> {
+        let client = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(AWSClient.eventGroup))
+        let futureResponse = client.execute(request: httpRequest)
 
         futureResponse.whenComplete { _ in
             do {
@@ -140,6 +166,21 @@ extension AWSClient {
 
         return futureResponse
     }
+    fileprivate func invokeAWSHTTPClient(_ httpRequest: AWSHTTPClient.Request) -> Future<AWSHTTPClient.Response> {
+        let client = AWSHTTPClient(eventLoopGroupProvider: .shared(AWSClient.eventGroup))
+        let futureResponse = client.connect(httpRequest)
+
+        futureResponse.whenComplete { _ in
+            do {
+                try client.syncShutdown()
+            } catch {
+                print("Error closing connection: \(error)")
+            }
+        }
+
+        return futureResponse
+    }
+
 }
 
 // public facing apis
@@ -156,18 +197,17 @@ extension AWSClient {
     public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> Future<Void> {
 
         return manageCredential().flatMapThrowing { signer in
-                let awsRequest = try self.createAWSRequest(
-                    operation: operationName,
-                    path: path,
-                    httpMethod: httpMethod,
-                    input: input
-                )
-                return try self.createHTTPRequest(awsRequest, signer: signer)
-            }.flatMap { nioRequest in
-                return self.invoke(nioRequest)
-            }.flatMapThrowing { response in
-                return try self.validate(response: response)
-            }
+            return (request: try self.createAWSRequest(
+                        operation: operationName,
+                        path: path,
+                        httpMethod: httpMethod,
+                        input: input),
+                    signer: signer)
+        }.flatMap { request in
+            return self.invoke(request.request, signer: request.signer)
+        }.flatMapThrowing { response in
+            return try self.validate(response: response)
+        }
     }
 
     /// send an empty request and return a future with an empty response
@@ -180,17 +220,16 @@ extension AWSClient {
     public func send(operation operationName: String, path: String, httpMethod: String) -> Future<Void> {
 
         return manageCredential().flatMapThrowing { signer in
-                let awsRequest = try self.createAWSRequest(
-                    operation: operationName,
-                    path: path,
-                    httpMethod: httpMethod
-                )
-                return try self.createHTTPRequest(awsRequest, signer: signer)
-            }.flatMap { nioRequest in
-                return self.invoke(nioRequest)
-            }.flatMapThrowing { response in
-                return try self.validate(response: response)
-            }
+            return (request: try self.createAWSRequest(
+                        operation: operationName,
+                        path: path,
+                        httpMethod: httpMethod),
+                    signer: signer)
+        }.flatMap { request in
+            return self.invoke(request.request, signer: request.signer)
+        }.flatMapThrowing { response in
+            return try self.validate(response: response)
+        }
     }
 
     /// send an empty request and return a future with the output object generated from the response
@@ -203,17 +242,16 @@ extension AWSClient {
     public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) -> Future<Output> {
 
         return manageCredential().flatMapThrowing { signer in
-                let awsRequest = try self.createAWSRequest(
-                    operation: operationName,
-                    path: path,
-                    httpMethod: httpMethod
-                )
-            return try self.createHTTPRequest(awsRequest, signer: signer)
-            }.flatMap { nioRequest in
-                return self.invoke(nioRequest)
-            }.flatMapThrowing { response in
-                return try self.validate(operation: operationName, response: response)
-            }
+            return (request: try self.createAWSRequest(
+                        operation: operationName,
+                        path: path,
+                        httpMethod: httpMethod),
+                    signer: signer)
+        }.flatMap { request in
+            return self.invoke(request.request, signer: request.signer)
+        }.flatMapThrowing { response in
+            return try self.validate(operation: operationName, response: response)
+        }
     }
 
     /// send a request with an input object and return a future with the output object generated from the response
@@ -227,18 +265,17 @@ extension AWSClient {
     public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> Future<Output> {
 
         return manageCredential().flatMapThrowing { signer in
-                    let awsRequest = try self.createAWSRequest(
+            return (request: try self.createAWSRequest(
                         operation: operationName,
                         path: path,
                         httpMethod: httpMethod,
-                        input: input
-                    )
-                    return try self.createHTTPRequest(awsRequest, signer: signer)
-                }.flatMap { nioRequest in
-                    return self.invoke(nioRequest)
-                }.flatMapThrowing { response in
-                    return try self.validate(operation: operationName, response: response)
-                }
+                        input: input),
+                    signer: signer)
+        }.flatMap { request in
+            return self.invoke(request.request, signer: request.signer)
+        }.flatMapThrowing { response in
+            return try self.validate(operation: operationName, response: response)
+        }
     }
 
     /// generate a signed URL
@@ -273,7 +310,7 @@ extension AWSClient {
         return AWSClient.eventGroup.next().makeSucceededFuture(self.signer)
     }
     
-    func createHTTPRequest(_ awsRequest: AWSRequest, signer: AWSSigner) throws -> AWSHTTPClient.Request {
+    func createHTTPRequest<Request: HTTPRequestDescription>(_ awsRequest: AWSRequest, signer: AWSSigner) throws -> Request {
         // if credentials are empty don't sign request
         if signer.credentials.isEmpty() {
             return try awsRequest.toHTTPRequest()
@@ -519,7 +556,7 @@ extension AWSClient {
 extension AWSClient {
 
     /// Validate the operation response and return a response shape
-    fileprivate func validate<Output: AWSShape>(operation operationName: String, response: AWSHTTPClient.Response) throws -> Output {
+    fileprivate func validate<Output: AWSShape>(operation operationName: String, response: HTTPResponseDescription) throws -> Output {
         let raw: Bool
         if let payloadPath = Output.payloadPath, let member = Output.getMember(named: payloadPath), member.type == .blob {
             raw = true
@@ -612,7 +649,7 @@ extension AWSClient {
     }
 
     /// validate response without returning an output shape
-    private func validate(response: AWSHTTPClient.Response) throws {
+    private func validate(response: HTTPResponseDescription) throws {
         let awsResponse = try AWSResponse(from: response, serviceProtocolType: serviceProtocol.type)
         try validateCode(response: awsResponse)
     }
@@ -666,8 +703,8 @@ extension AWSClient {
                                     // this is a hack to wait...
                                     ///
                                     while dict[name] == nil {
-                                        _ = invoke(httpRequest).flatMapThrowing{ res in
-                                            if let body = res.body {
+                                        _ = invokeAWSHTTPClient(httpRequest).flatMapThrowing{ res in
+                                            if let body = res.bodyData {
                                                 let representaion = try Representation().from(json: body)
                                                 dict[name] = representaion.properties
                                             }

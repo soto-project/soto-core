@@ -15,7 +15,13 @@ protocol HTTPRequestDescription {
 
 extension AsyncHTTPClient.HTTPClient.Request: HTTPRequestDescription {
     init(url: URL, method: HTTPMethod = .GET, headers: HTTPHeaders = HTTPHeaders(), body: Data? = nil) throws {
-        try self.init(url: url, method: method, headers: headers, body: body)
+        let requestBody: AsyncHTTPClient.HTTPClient.Body?
+        if let body = body {
+            requestBody = AsyncHTTPClient.HTTPClient.Body.data(body)
+        } else {
+            requestBody = nil
+        }
+        self = try AsyncHTTPClient.HTTPClient.Request.init(url: url, method: method, headers: headers, body: requestBody)
     }
 }
 

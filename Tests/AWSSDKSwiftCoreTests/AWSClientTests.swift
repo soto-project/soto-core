@@ -296,7 +296,7 @@ class AWSClientTests: XCTestCase {
                 input: input2
             )
 
-            let nioRequest = try kinesisClient.createHTTPRequest(awsRequest, signer: kinesisClient.signer)
+            let nioRequest: AWSHTTPClient.Request = try kinesisClient.createHTTPRequest(awsRequest, signer: kinesisClient.signer)
             XCTAssertEqual(nioRequest.head.method, HTTPMethod.POST)
             if let host = nioRequest.head.headers.first(where: { $0.name == "Host" }) {
                 XCTAssertEqual(host.value, "kinesis.us-east-1.amazonaws.com")

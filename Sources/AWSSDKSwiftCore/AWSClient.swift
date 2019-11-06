@@ -158,7 +158,7 @@ extension AWSClient {
     ///     Empty Future that completes when response is received
     public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> Future<Void> {
 
-        return signer.manageCredential().flatMapThrowing { _ in
+        return signer.manageCredential(eventLoopGroup: AWSClient.eventGroup).flatMapThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
                     operation: operationName,
                     path: path,
@@ -182,7 +182,7 @@ extension AWSClient {
     ///     Empty Future that completes when response is received
     public func send(operation operationName: String, path: String, httpMethod: String) -> Future<Void> {
 
-        return signer.manageCredential().flatMapThrowing { _ in
+        return signer.manageCredential(eventLoopGroup: AWSClient.eventGroup).flatMapThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
                     operation: operationName,
                     path: path,
@@ -205,7 +205,7 @@ extension AWSClient {
     ///     Future containing output object that completes when response is received
     public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) -> Future<Output> {
 
-        return signer.manageCredential().flatMapThrowing { _ in
+        return signer.manageCredential(eventLoopGroup: AWSClient.eventGroup).flatMapThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
                     operation: operationName,
                     path: path,
@@ -229,7 +229,7 @@ extension AWSClient {
     ///     Future containing output object that completes when response is received
     public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> Future<Output> {
 
-            return signer.manageCredential().flatMapThrowing { _ in
+            return signer.manageCredential(eventLoopGroup: AWSClient.eventGroup).flatMapThrowing { _ in
                     let awsRequest = try self.createAWSRequest(
                         operation: operationName,
                         path: path,

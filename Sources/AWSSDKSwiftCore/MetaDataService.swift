@@ -8,6 +8,7 @@
 
 #if os(Linux)
 
+import AWSSigner
 import Foundation
 import NIO
 import NIOHTTP1
@@ -64,8 +65,11 @@ struct MetaDataService {
                 return MetaDataService.request(host: host, uri: baseURLString, timeout: 2).flatMapThrowing{ response in
                     switch response.head.status {
                     case .ok:
-                        let roleName = String(data: response.body, encoding: .utf8) ?? ""
-                        return "\(self.baseURLString)/\(roleName)"
+                        if let body = response.body, let roleName = String(data: body, encoding: .utf8) {
+                            return "\(self.baseURLString)/\(roleName)"
+                        } else {
+                            return self.baseURLString
+                        }
                     default:
                         throw MetaDataServiceError.couldNotGetInstanceRoleName
                     }
@@ -82,11 +86,13 @@ struct MetaDataService {
             return request(host: serviceProvider.host, uri: uri, timeout: 2)
         }.map{ credentialResponse -> CredentialProvider in
             do {
-                let metaData = try JSONDecoder().decode(MetaData.self, from: credentialResponse.body)
-                return metaData.credential
+                if let body = credentialResponse.body {
+                    let metaData = try JSONDecoder().decode(MetaData.self, from: body)
+                    return metaData.credential
+                }
             } catch {
-                return Credential(accessKeyId: "", secretAccessKey: "")
             }
+            return Credential(accessKeyId: "", secretAccessKey: "")
         }
     }
 
@@ -122,8 +128,8 @@ struct MetaDataService {
         let type: String?
         let roleArn: String?
 
-        var credential: Credential {
-            return Credential(
+        var credential: ExpiringCredential {
+            return ExpiringCredential(
                 accessKeyId: accessKeyId,
                 secretAccessKey: secretAccessKey,
                 sessionToken: token,

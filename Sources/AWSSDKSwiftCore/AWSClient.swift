@@ -23,7 +23,7 @@ public class AWSClient {
         case invalidURL(String)
     }
 
-    let signer: AWSSigner
+    var signer: AWSSigner
 
     let apiVersion: String
 
@@ -155,14 +155,14 @@ extension AWSClient {
     ///     Empty Future that completes when response is received
     public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> Future<Void> {
 
-        return signer.manageCredential().flatMapThrowing { _ in
+        return manageCredential().flatMapThrowing { signer in
                 let awsRequest = try self.createAWSRequest(
                     operation: operationName,
                     path: path,
                     httpMethod: httpMethod,
                     input: input
                 )
-                return try self.createNioRequest(awsRequest)
+                return try self.createHTTPRequest(awsRequest, signer: signer)
             }.flatMap { nioRequest in
                 return self.invoke(nioRequest)
             }.flatMapThrowing { response in
@@ -179,13 +179,13 @@ extension AWSClient {
     ///     Empty Future that completes when response is received
     public func send(operation operationName: String, path: String, httpMethod: String) -> Future<Void> {
 
-        return signer.manageCredential().flatMapThrowing { _ in
+        return manageCredential().flatMapThrowing { signer in
                 let awsRequest = try self.createAWSRequest(
                     operation: operationName,
                     path: path,
                     httpMethod: httpMethod
                 )
-                return try self.createNioRequest(awsRequest)
+                return try self.createHTTPRequest(awsRequest, signer: signer)
             }.flatMap { nioRequest in
                 return self.invoke(nioRequest)
             }.flatMapThrowing { response in
@@ -202,13 +202,13 @@ extension AWSClient {
     ///     Future containing output object that completes when response is received
     public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) -> Future<Output> {
 
-        return signer.manageCredential().flatMapThrowing { _ in
+        return manageCredential().flatMapThrowing { signer in
                 let awsRequest = try self.createAWSRequest(
                     operation: operationName,
                     path: path,
                     httpMethod: httpMethod
                 )
-                return try self.createNioRequest(awsRequest)
+            return try self.createHTTPRequest(awsRequest, signer: signer)
             }.flatMap { nioRequest in
                 return self.invoke(nioRequest)
             }.flatMapThrowing { response in
@@ -226,14 +226,14 @@ extension AWSClient {
     ///     Future containing output object that completes when response is received
     public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> Future<Output> {
 
-        return signer.manageCredential().flatMapThrowing { _ in
+        return manageCredential().flatMapThrowing { signer in
                     let awsRequest = try self.createAWSRequest(
                         operation: operationName,
                         path: path,
                         httpMethod: httpMethod,
                         input: input
                     )
-                    return try self.createNioRequest(awsRequest)
+                    return try self.createHTTPRequest(awsRequest, signer: signer)
                 }.flatMap { nioRequest in
                     return self.invoke(nioRequest)
                 }.flatMapThrowing { response in
@@ -256,7 +256,29 @@ extension AWSClient {
 // request creator
 extension AWSClient {
 
-    func createNioRequest(_ awsRequest: AWSRequest) throws -> AWSHTTPClient.Request {
+    func manageCredential() -> Future<AWSSigner> {
+        #if os(Linux)
+        if self.signer.credentials.nearExpiration() {
+            do {
+                return try MetaDataService.getCredential().map { credential in
+                    let signer = AWSSigner(credentials: credential, name: self.signer.name, region: self.signer.region)
+                    self.signer = signer
+                    return signer
+                }
+            } catch {
+                // should not be crash
+            }
+        }
+        #endif // os(Linux)
+        return AWSClient.eventGroup.next().makeSucceededFuture(self.signer)
+    }
+    
+    func createHTTPRequest(_ awsRequest: AWSRequest, signer: AWSSigner) throws -> AWSHTTPClient.Request {
+        // if credentials are empty don't sign request
+        if signer.credentials.isEmpty() {
+            return try awsRequest.toHTTPRequest()
+        }
+        
         switch awsRequest.httpMethod {
         case "GET", "HEAD":
             switch self.serviceProtocol.type {

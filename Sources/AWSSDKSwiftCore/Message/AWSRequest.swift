@@ -86,23 +86,23 @@ public struct AWSRequest {
     
     /// Create HTTP Client request from AWSRequest
     func toHTTPRequest<Request: HTTPRequestDescription>() throws -> Request {
-        return try! Request.init(url: url, method: HTTPMethod(from: httpMethod), headers: getHttpHeaders(), body: body.asData())
+        return try Request.init(url: url, method: HTTPMethod(from: httpMethod), headers: getHttpHeaders(), body: body.asData())
     }
     
-    /// Create HTTP Client request from AWSRequest
+    /// Create HTTP Client request with signed URL from AWSRequest
     func toHTTPRequestWithSignedURL<Request: HTTPRequestDescription>(signer: AWSSigner) throws -> Request {
         let method = HTTPMethod(from: httpMethod)
         let bodyData = body.asData()
         let signedURL = signer.signURL(url: url, method: method, body: bodyData != nil ? .data(bodyData!) : nil, date: Date(), expires: 86400)
-        return try! Request.init(url: signedURL, method: method, headers: getHttpHeaders(), body: bodyData)
+        return try Request.init(url: signedURL, method: method, headers: getHttpHeaders(), body: bodyData)
     }
     
-    /// Create HTTP Client request from AWSRequest
+    /// Create HTTP Client request with signed headers from AWSRequest
     func toHTTPRequestWithSignedHeader<Request: HTTPRequestDescription>(signer: AWSSigner) throws -> Request {
         let method = HTTPMethod(from: httpMethod)
         let bodyData = body.asData()
         let signedHeaders = signer.signHeaders(url: url, method: method, headers: getHttpHeaders(), body: bodyData != nil ? .data(bodyData!) : nil, date: Date())
-        return try! Request.init(url: url, method: method, headers: signedHeaders, body: bodyData)
+        return try Request.init(url: url, method: method, headers: signedHeaders, body: bodyData)
     }
     
     // return new request with middleware applied

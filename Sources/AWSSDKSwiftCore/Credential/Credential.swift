@@ -109,22 +109,3 @@ public struct SharedCredential: CredentialProvider {
     }
 }
 
-extension AWSSigner {
-    /// If you did not provide credentials `manageCredential()` should be called and the future resolved prior to building signedURL or signedHeaders to ensure latest credentials are retreived and set
-    func manageCredential() -> Future<CredentialProvider> {
-        #if os(Linux)
-        if credential.nearExpiration() {
-            do {
-                return try MetaDataService.getCredential().map { credential in
-                    self.credentials = credential
-                    return credential
-                }
-            } catch {
-                // should not be crash
-            }
-        }
-        #endif // os(Linux)
-        return AWSClient.eventGroup.next().makeSucceededFuture(self.credentials)
-    }
-}
-

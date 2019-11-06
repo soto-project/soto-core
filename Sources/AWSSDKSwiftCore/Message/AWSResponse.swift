@@ -26,25 +26,25 @@ public struct AWSResponse {
     ///     - from: Raw HTTP Response
     ///     - serviceProtocol: protocol of service (.json, .xml, .query etc)
     ///     - raw: Whether Body should be treated as raw data
-    init(from response: AWSHTTPClient.Response, serviceProtocolType: ServiceProtocolType, raw: Bool = false) throws {
-        self.status = response.head.status
+    init(from response: HTTPResponseDescription, serviceProtocolType: ServiceProtocolType, raw: Bool = false) throws {
+        self.status = response.status
         self.headers = AWSResponse.createHeaders(from: response)
         self.body = try AWSResponse.createBody(from: response, serviceProtocolType: serviceProtocolType, raw: raw)
     }
 
-    private static func createHeaders(from response: AWSHTTPClient.Response) -> [String: String] {
+    private static func createHeaders(from response: HTTPResponseDescription) -> [String: String] {
         var responseHeaders: [String: String] = [:]
-        for (key, value) in response.head.headers {
+        for (key, value) in response.headers {
             responseHeaders[key.description] = value
         }
 
         return responseHeaders
     }
     
-    private static func createBody(from response: AWSHTTPClient.Response, serviceProtocolType: ServiceProtocolType, raw: Bool) throws -> Body {
+    private static func createBody(from response: HTTPResponseDescription, serviceProtocolType: ServiceProtocolType, raw: Bool) throws -> Body {
         var responseBody: Body = .empty
         
-        guard let data = response.body, !data.isEmpty else  {
+        guard let data = response.bodyData, !data.isEmpty else  {
             return .empty
         }
         

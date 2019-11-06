@@ -47,7 +47,7 @@ protocol MetaDataServiceProvider {
 extension MetaDataServiceProvider {
 
     /// make HTTP request
-    func request(host: String, uri: String, timeout: TimeInterval, eventLoopGroup: EventLoopGroup) -> Future<HTTPClient.Response> {
+    func request(uri: String, timeout: TimeInterval, eventLoopGroup: EventLoopGroup) -> Future<HTTPClient.Response> {
         let client = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
         let head = HTTPRequestHead(
                      version: HTTPVersion(major: 1, minor: 1),
@@ -129,7 +129,7 @@ struct ECSMetaDataServiceProvider: MetaDataServiceProvider {
     }
 
     func getCredential(eventLoopGroup: EventLoopGroup) -> Future<CredentialProvider> {
-        return request(host: ECSMetaDataServiceProvider.host, uri: uri, timeout: 2, eventLoopGroup: eventLoopGroup)
+        return request(uri: uri, timeout: 2, eventLoopGroup: eventLoopGroup)
             .map { response in
                 return self.decodeCredential(response.body)
         }
@@ -180,7 +180,7 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
 
     func uri(eventLoopGroup: EventLoopGroup) -> Future<String> {
         // instance service expects absoluteString as uri...
-        return request(host: InstanceMetaDataServiceProvider.host, uri:InstanceMetaDataServiceProvider.baseURLString, timeout: 2, eventLoopGroup: eventLoopGroup)
+        return request(uri:InstanceMetaDataServiceProvider.baseURLString, timeout: 2, eventLoopGroup: eventLoopGroup)
             .flatMapThrowing{ response in
                 switch response.head.status {
                 case .ok:
@@ -195,7 +195,7 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
     func getCredential(eventLoopGroup: EventLoopGroup) -> Future<CredentialProvider> {
         return uri(eventLoopGroup: eventLoopGroup)
             .flatMap { uri in
-                return self.request(host: InstanceMetaDataServiceProvider.host, uri: uri, timeout: 2, eventLoopGroup: eventLoopGroup)
+                return self.request(uri: uri, timeout: 2, eventLoopGroup: eventLoopGroup)
             }
             .map { response in
                 return self.decodeCredential(response.body)

@@ -116,11 +116,11 @@ extension Signers {
         }
 
         /// Return signed headers
-        public func signedHeaders(url: URL, headers: [String: String], method: String, date: Date = Date(), bodyData: Data) -> [String: String] {
+        public func signedHeaders(url: URL, headers: [String: String], method: String, date: Date = Date(), bodyData: Data?) -> [String: String] {
             guard !credential.isEmpty() else { return headers }
             
             let datetime = V4.timestamp(date)
-            let bodyDigest = hexEncodedBodyHash(bodyData)
+            let bodyDigest = hexEncodedBodyHash(bodyData ?? Data())
             let credentialForSignature = credential
 
             var headersForSign = [

@@ -695,8 +695,10 @@ extension AWSClient {
                                     ///
                                     while dict[name] == nil {
                                         _ = invoke(nioRequest).flatMapThrowing{ res in
-                                            let representaion = try Representation().from(json: res.body)
-                                            dict[name] = representaion.properties
+                                            if let body = res.body {
+                                                let representaion = try Representation().from(json: body)
+                                                dict[name] = representaion.properties
+                                            }
                                         }
                                     }
                                 }

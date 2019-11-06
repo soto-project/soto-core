@@ -29,6 +29,6 @@ extension AWSHTTPClient.Request: HTTPRequestDescription {
         head.headers = headers
         
         self.head = head
-        self.body = body ?? Data()
+        self.body = body
     }
 }

@@ -27,13 +27,13 @@ public final class AWSHTTPClient {
     /// Request structure to send
     public struct Request {
         var head: HTTPRequestHead
-        var body: Data
+        var body: Data?
     }
 
     /// Response structure received back
     public struct Response {
         let head: HTTPResponseHead
-        let body: Data
+        let body: Data?
     }
 
     /// Errors returned from HTTPClient when parsing responses
@@ -218,15 +218,17 @@ public final class AWSHTTPClient {
             head.headers.replaceOrAdd(name: "Host", value: hostname)
             head.headers.replaceOrAdd(name: "User-Agent", value: "AWS SDK Swift Core")
             head.headers.replaceOrAdd(name: "Accept", value: "*/*")
-            head.headers.replaceOrAdd(name: "Content-Length", value: request.body.count.description)
+            if let body = request.body {
+                head.headers.replaceOrAdd(name: "Content-Length", value: body.count.description)
+            }
             // TODO implement keep-alive
             head.headers.replaceOrAdd(name: "Connection", value: "Close")
 
 
             context.write(wrapOutboundOut(.head(head)), promise: nil)
-            if request.body.count > 0 {
-                var buffer = ByteBufferAllocator().buffer(capacity: request.body.count)
-                buffer.writeBytes(request.body)
+            if let body = request.body, body.count > 0 {
+                var buffer = ByteBufferAllocator().buffer(capacity: body.count)
+                buffer.writeBytes(body)
                 context.write(self.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: nil)
             }
             context.write(self.wrapOutboundOut(.end(nil)), promise: promise)
@@ -281,7 +283,7 @@ public final class AWSHTTPClient {
                 switch state {
                 case .ready: promise.fail(AWSHTTPClient.HTTPError.malformedHead)
                 case .parsingBody(let head, let data):
-                    let res = Response(head: head, body: data ?? Data())
+                    let res = Response(head: head, body: data)
                     if context.channel.isActive {
                         context.fireChannelRead(wrapOutboundOut(res))
                     }

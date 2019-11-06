@@ -43,9 +43,8 @@ public struct AWSResponse {
     
     private static func createBody(from response: AWSHTTPClient.Response, serviceProtocolType: ServiceProtocolType, raw: Bool) throws -> Body {
         var responseBody: Body = .empty
-        let data = response.body
         
-        if data.isEmpty {
+        guard let data = response.body, !data.isEmpty else  {
             return .empty
         }
         

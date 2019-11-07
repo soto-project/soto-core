@@ -174,7 +174,7 @@ public final class HTTPClient {
         let response: EventLoopPromise<Response> = self.eventLoopGroup.next().makePromise()
 
         #if canImport(Network)
-            if #available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *) {
+            if #available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *), eventLoopGroup is NIOTSEventLoopGroup {
                 tsConnectionBootstrap(hostname: hostname, port: port, headerHostname: headerHostname, request: request, response: response)
             } else {
                 clientBootstrap(hostname: hostname, port: port, headerHostname: headerHostname, request: request, response: response)

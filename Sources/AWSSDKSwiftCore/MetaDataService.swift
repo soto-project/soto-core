@@ -6,8 +6,6 @@
 //
 //
 
-#if os(Linux)
-
 import AsyncHTTPClient
 import AWSSigner
 import Foundation
@@ -208,5 +206,3 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
         }
     }
 }
-
-#endif // os(Linux)

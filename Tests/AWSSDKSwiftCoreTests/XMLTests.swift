@@ -115,12 +115,14 @@ class XMLTests: XCTestCase {
             ("testAttributeReplace", testAttributeReplace),
             ("testNamespaceAdd", testNamespaceAdd),
             ("testNamespaceReplace", testNamespaceReplace),
+            ("testDocumentDefaultOutput", testDocumentDefaultOutput),
             ("testNullNamespaceReplace", testNamespaceReplace),
             ("testAttributesDecodeEncode", testAttributesDecodeEncode),
             ("testNamespacesDecodeEncode", testNamespacesDecodeEncode),
             ("testArrayDecodeEncode", testArrayDecodeEncode),
             ("testCommentDecodeEncode", testArrayDecodeEncode),
             ("testCDATADecodeEncode", testArrayDecodeEncode),
+            ("testWhitespaceDecodeEncode", testWhitespaceDecodeEncode),
         ]
     }
 }

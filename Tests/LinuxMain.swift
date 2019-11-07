@@ -7,6 +7,7 @@ XCTMain([
     testCase(DictionaryEncoderTests.allTests),
     testCase(HTTPClientTests.allTests),
     testCase(MetaDataServiceTests.allTests),
+    testCase(QueryEncoderTests.allTests),
     testCase(SerializersTests.allTests),
     testCase(TimeStampTests.allTests),
     testCase(ValidationTests.allTests),

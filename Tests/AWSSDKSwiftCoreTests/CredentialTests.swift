@@ -221,6 +221,7 @@ class CredentialTests: XCTestCase {
             ("testSharedCredentialsMissingSecretKey", testSharedCredentialsMissingSecretKey),
             ("testSharedCredentialsMissingProfile", testSharedCredentialsMissingProfile),
             ("testSharedCredentialsParseFailure", testSharedCredentialsParseFailure),
+            ("testExpiringCredential", testExpiringCredential),
         ]
     }
 }

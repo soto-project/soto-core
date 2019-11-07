@@ -7,8 +7,10 @@
 //
 
 import Foundation
+import NIO
 import NIOHTTP1
 import XCTest
+import AsyncHTTPClient
 @testable import AWSSDKSwiftCore
 
 class AWSClientTests: XCTestCase {
@@ -16,9 +18,11 @@ class AWSClientTests: XCTestCase {
     static var allTests : [(String, (AWSClientTests) -> () throws -> Void)] {
         return [
             ("testGetCredential", testGetCredential),
+            ("testExpiredCredential", testExpiredCredential),
             ("testCreateAWSRequest", testCreateAWSRequest),
             ("testCreateNIORequest", testCreateNIORequest),
             ("testValidateCode", testValidateCode),
+            ("testUnsignedClient", testUnsignedClient),
             ("testValidateXMLResponse", testValidateXMLResponse),
             ("testValidateXMLPayloadResponse", testValidateXMLPayloadResponse),
             ("testValidateXMLError", testValidateXMLError),
@@ -80,14 +84,33 @@ class AWSClientTests: XCTestCase {
             service: "email",
             serviceProtocol: ServiceProtocol(type: .query),
             apiVersion: "2013-12-01",
-            middlewares: [],
-            possibleErrorTypes: [SESErrorType.self]
+            middlewares: []
         )
 
         do {
             let credentialForSignature = try sesClient.manageCredential().wait().credentials
             XCTAssertEqual(credentialForSignature.accessKeyId, "key")
             XCTAssertEqual(credentialForSignature.secretAccessKey, "secret")
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+
+    // this test only really works on Linux as it requires the MetaDataService. On mac it will just pass automatically
+    func testExpiredCredential() {
+        let client = AWSClient(
+            region: .useast1,
+            service: "email",
+            serviceProtocol: ServiceProtocol(type: .query),
+            apiVersion: "2013-12-01")
+
+        do {
+            let credentials = try client.manageCredential().wait().credentials
+            print(credentials)
+        } catch NIO.ChannelError.connectTimeout(_) {
+            // credentials request should fail and throw a timeout error as we are not running on a EC2/ECS instance
+        } catch MetaDataServiceError.couldNotGetInstanceRoleName {
+            // credentials request fails in a slightly different way on travis
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -118,8 +141,7 @@ class AWSClientTests: XCTestCase {
         service: "email",
         serviceProtocol: ServiceProtocol(type: .query),
         apiVersion: "2013-12-01",
-        middlewares: [AWSLoggingMiddleware()],
-        possibleErrorTypes: [SESErrorType.self]
+        middlewares: [AWSLoggingMiddleware()]
     )
 
     let kinesisClient = AWSClient(
@@ -296,15 +318,27 @@ class AWSClientTests: XCTestCase {
                 input: input2
             )
 
-            let nioRequest: AWSHTTPClient.Request = try kinesisClient.createHTTPRequest(awsRequest, signer: kinesisClient.signer.value)
-            XCTAssertEqual(nioRequest.head.method, HTTPMethod.POST)
-            if let host = nioRequest.head.headers.first(where: { $0.name == "Host" }) {
+            let awsHTTPRequest: AWSHTTPClient.Request = try kinesisClient.createHTTPRequest(awsRequest, signer: kinesisClient.signer.value)
+            XCTAssertEqual(awsHTTPRequest.head.method, HTTPMethod.POST)
+            if let host = awsHTTPRequest.head.headers.first(where: { $0.name == "Host" }) {
                 XCTAssertEqual(host.value, "kinesis.us-east-1.amazonaws.com")
             }
-            if let contentType = nioRequest.head.headers.first(where: { $0.name == "Content-Type" }) {
+            if let contentType = awsHTTPRequest.head.headers.first(where: { $0.name == "Content-Type" }) {
                 XCTAssertEqual(contentType.value, "application/x-amz-json-1.1")
             }
-            if let xAmzTarget = nioRequest.head.headers.first(where: { $0.name == "x-amz-target" }) {
+            if let xAmzTarget = awsHTTPRequest.head.headers.first(where: { $0.name == "x-amz-target" }) {
+                XCTAssertEqual(xAmzTarget.value, "Kinesis_20131202.PutRecord")
+            }
+
+            let asyncHTTPRequest: AsyncHTTPClient.HTTPClient.Request = try kinesisClient.createHTTPRequest(awsRequest, signer: kinesisClient.signer.value)
+            XCTAssertEqual(asyncHTTPRequest.method, HTTPMethod.POST)
+            if let host = asyncHTTPRequest.headers.first(where: { $0.name == "Host" }) {
+                XCTAssertEqual(host.value, "kinesis.us-east-1.amazonaws.com")
+            }
+            if let contentType = asyncHTTPRequest.headers.first(where: { $0.name == "Content-Type" }) {
+                XCTAssertEqual(contentType.value, "application/x-amz-json-1.1")
+            }
+            if let xAmzTarget = asyncHTTPRequest.headers.first(where: { $0.name == "x-amz-target" }) {
                 XCTAssertEqual(xAmzTarget.value, "Kinesis_20131202.PutRecord")
             }
 
@@ -313,6 +347,33 @@ class AWSClientTests: XCTestCase {
         }
     }
 
+    func testUnsignedClient() {
+        let input = E()
+        let client = AWSClient(
+            accessKeyId: "",
+            secretAccessKey: "",
+            region: .useast1,
+            service: "s3",
+            serviceProtocol: ServiceProtocol(type: .restxml),
+            apiVersion: "2013-12-02",
+            middlewares: []
+        )
+        
+        do {
+            let awsRequest = try client.createAWSRequest(
+                operation: "CopyObject",
+                path: "/",
+                httpMethod: "PUT",
+                input: input
+            )
+            
+            let request: AsyncHTTPClient.HTTPClient.Request = try client.createHTTPRequest(awsRequest, signer: client.signer.value)
+            
+            XCTAssertNil(request.headers["Authorization"].first)
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
     func testValidateCode() {
         let response = AWSHTTPClient.Response(
             head: HTTPResponseHead(
@@ -347,15 +408,30 @@ class AWSClientTests: XCTestCase {
         class Output : AWSShape {
             let name : String
         }
-        let response = AWSHTTPClient.Response(
+        let responseBody = "<Output><name>hello</name></Output>"
+        let awsHTTPResponse = AWSHTTPClient.Response(
             head: HTTPResponseHead(
                 version: HTTPVersion(major: 1, minor: 1),
                 status: HTTPResponseStatus(statusCode: 200)
             ),
-            body: "<Output><name>hello</name></Output>".data(using: .utf8)!
+            body: responseBody.data(using: .utf8)!
         )
         do {
-            let output : Output = try s3Client.validate(operation: "Output", response: response)
+            let output : Output = try s3Client.validate(operation: "Output", response: awsHTTPResponse)
+            XCTAssertEqual(output.name, "hello")
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+
+        var byteBuffer = ByteBufferAllocator().buffer(capacity: responseBody.utf8.count)
+        byteBuffer.writeString(responseBody)
+        let asyncHTTPResponse = AsyncHTTPClient.HTTPClient.Response(
+            host: "aws.amazon.com",
+            status: .ok,
+            headers: HTTPHeaders(),
+            body: byteBuffer)
+        do {
+            let output : Output = try s3Client.validate(operation: "Output", response: asyncHTTPResponse)
             XCTAssertEqual(output.name, "hello")
         } catch {
             XCTFail(error.localizedDescription)
@@ -459,6 +535,7 @@ class AWSClientTests: XCTestCase {
             XCTFail("Throwing the wrong error")
         }
     }
+    
 }
 
 /// Error enum for Kinesis
@@ -484,33 +561,6 @@ extension KinesisErrorType {
         switch self {
         case .resourceNotFoundException(let message):
             return "ResourceNotFoundException :\(message ?? "")"
-        }
-    }
-}
-
-/// Error enum for SES
-public enum SESErrorType: AWSErrorType {
-    case messageRejected(message: String?)
-}
-
-extension SESErrorType {
-    public init?(errorCode: String, message: String?){
-        var errorCode = errorCode
-        if let index = errorCode.firstIndex(of: "#") {
-            errorCode = String(errorCode[errorCode.index(index, offsetBy: 1)...])
-        }
-        switch errorCode {
-        case "MessageRejected":
-            self = .messageRejected(message: message)
-        default:
-            return nil
-        }
-    }
-
-    public var description : String {
-        switch self {
-        case .messageRejected(let message):
-            return "MessageRejected :\(message ?? "")"
         }
     }
 }

@@ -50,7 +50,7 @@ public class AWSClient {
 
     var possibleErrorTypes: [AWSErrorType.Type]
     
-    let eventLoopGroupProvider: EventLoopGroupProvider
+    public let eventLoopGroup: EventLoopGroup
 
     /// endpoint URL
     public var endpoint: String {
@@ -71,7 +71,7 @@ public class AWSClient {
         return "\(service).\(signer.region.rawValue).amazonaws.com"
     }
 
-    public static let eventGroup: EventLoopGroup = createEventLoopGroup()
+    public static let sharedEventLoopGroup: EventLoopGroup = createEventLoopGroup()
 
     /// create an eventLoopGroup
     static func createEventLoopGroup() -> EventLoopGroup {
@@ -123,6 +123,13 @@ public class AWSClient {
         } else {
             region = .useast1
         }
+        
+        switch eventLoopGroupProvider {
+        case .shared(let eventLoopGroup):
+            self.eventLoopGroup = eventLoopGroup
+        case .useAWSClientShared:
+            self.eventLoopGroup = AWSClient.sharedEventLoopGroup
+        }
 
         self.signer = Signers.V4(credential: credential, region: region, signingName: signingName ?? service, endpoint: endpoint)
         self.apiVersion = apiVersion
@@ -134,22 +141,13 @@ public class AWSClient {
         self.partitionEndpoint = partitionEndpoint
         self.middlewares = middlewares
         self.possibleErrorTypes = possibleErrorTypes ?? []
-        self.eventLoopGroupProvider = eventLoopGroupProvider
     }
 
 }
 // invoker
 extension AWSClient {
     fileprivate func invoke(_ nioRequest: HTTPClient.Request) -> Future<HTTPClient.Response> {
-        let httpClientEventLoopGroupProvider: HTTPClient.EventLoopGroupProvider
-        switch self.eventLoopGroupProvider {
-        case .shared(let eventLoopGroup):
-            httpClientEventLoopGroupProvider = .shared(eventLoopGroup)
-        case .useAWSClientShared:
-            httpClientEventLoopGroupProvider = .shared(AWSClient.eventGroup)
-        }
-        
-        let client = HTTPClient(eventLoopGroupProvider: httpClientEventLoopGroupProvider)
+        let client = HTTPClient(eventLoopGroupProvider: .shared(self.eventLoopGroup))
         let futureResponse = client.connect(nioRequest)
 
         futureResponse.whenComplete { _ in
@@ -177,7 +175,7 @@ extension AWSClient {
     ///     Empty Future that completes when response is received
     public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> Future<Void> {
 
-        return signer.manageCredential(eventLoopGroup: AWSClient.eventGroup).flatMapThrowing { _ in
+        return signer.manageCredential(eventLoopGroup: self.eventLoopGroup).flatMapThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
                     operation: operationName,
                     path: path,
@@ -201,7 +199,7 @@ extension AWSClient {
     ///     Empty Future that completes when response is received
     public func send(operation operationName: String, path: String, httpMethod: String) -> Future<Void> {
 
-        return signer.manageCredential(eventLoopGroup: AWSClient.eventGroup).flatMapThrowing { _ in
+        return signer.manageCredential(eventLoopGroup: self.eventLoopGroup).flatMapThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
                     operation: operationName,
                     path: path,
@@ -224,7 +222,7 @@ extension AWSClient {
     ///     Future containing output object that completes when response is received
     public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) -> Future<Output> {
 
-        return signer.manageCredential(eventLoopGroup: AWSClient.eventGroup).flatMapThrowing { _ in
+        return signer.manageCredential(eventLoopGroup: self.eventLoopGroup).flatMapThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
                     operation: operationName,
                     path: path,
@@ -248,7 +246,7 @@ extension AWSClient {
     ///     Future containing output object that completes when response is received
     public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> Future<Output> {
 
-            return signer.manageCredential(eventLoopGroup: AWSClient.eventGroup).flatMapThrowing { _ in
+            return signer.manageCredential(eventLoopGroup: self.eventLoopGroup).flatMapThrowing { _ in
                     let awsRequest = try self.createAWSRequest(
                         operation: operationName,
                         path: path,

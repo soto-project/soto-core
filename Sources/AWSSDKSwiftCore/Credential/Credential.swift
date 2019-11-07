@@ -14,10 +14,6 @@ extension CredentialProvider {
     func isEmpty() -> Bool {
         return self.accessKeyId.isEmpty || self.secretAccessKey.isEmpty
     }
-
-    func nearExpiration() -> Bool {
-        return false       
-    }
 }
 
 /// Provide AWS credentials directly

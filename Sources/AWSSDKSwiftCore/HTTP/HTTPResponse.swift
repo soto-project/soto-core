@@ -21,8 +21,9 @@ protocol HTTPResponseDescription {
 extension AsyncHTTPClient.HTTPClient.Response: HTTPResponseDescription {
     var bodyData: Data? {
         if let body = body {
-            var slice = body.getSlice(at: body.readerIndex, length: body.readableBytes)
-            return slice?.readData(length: body.readableBytes)
+            return body.getData(at: body.readerIndex, length: body.readableBytes, byteTransferStrategy: .noCopy)
+            //var slice = body.getSlice(at: body.readerIndex, length: body.readableBytes)
+            //return slice?.readData(length: body.readableBytes)
         }
         return nil
     }

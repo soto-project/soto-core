@@ -323,7 +323,7 @@ extension AWSClient {
     func manageCredential() -> Future<AWSSigner> {
         #if os(Linux)
         let signer = self.signer.value
-        if signer.credentials.nearExpiration() {
+        if let expiringCredential = signer.credentials as? ExpiringCredential, expiringCredential.nearExpiration() {
             do {
                 return try MetaDataService.getCredential(eventLoopGroup: AWSClient.eventGroup).map { credential in
                     let signer = AWSSigner(credentials: credential, name: signer.name, region: signer.region)

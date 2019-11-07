@@ -7,6 +7,7 @@
 
 import Foundation
 import XCTest
+import AWSSigner
 @testable import AWSSDKSwiftCore
 
 class CredentialTests: XCTestCase {
@@ -202,6 +203,16 @@ class CredentialTests: XCTestCase {
         }
     }
 
+    func testExpiringCredential() {
+        let credential: CredentialProvider = ExpiringCredential(accessKeyId: "", secretAccessKey: "", expiration: Date.init(timeIntervalSince1970: 0))
+        guard let ecredential = credential as? ExpiringCredential else {XCTFail(); return }
+        XCTAssertEqual(ecredential.nearExpiration(), true)
+
+        let credential2: CredentialProvider = ExpiringCredential(accessKeyId: "", secretAccessKey: "", expiration: Date(timeIntervalSinceNow: 3600))
+        guard let ecredential2 = credential2 as? ExpiringCredential else {XCTFail(); return }
+        XCTAssertEqual(ecredential2.nearExpiration(), false)
+    }
+    
     static var allTests : [(String, (CredentialTests) -> () throws -> Void)] {
         return [
             ("testSharedCredentials", testSharedCredentials),

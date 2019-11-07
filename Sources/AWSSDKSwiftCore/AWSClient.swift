@@ -179,7 +179,7 @@ extension AWSClient {
     /// invoke HTTP request using AsyncHTTPClient
     fileprivate func invokeAsyncHTTPClient(_ httpRequest: AsyncHTTPClient.HTTPClient.Request) -> Future<AsyncHTTPClient.HTTPClient.Response> {
         let client = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(AWSClient.eventGroup))
-        let futureResponse = client.execute(request: httpRequest)
+        let futureResponse = client.execute(request: httpRequest, deadline: NIODeadline.now() + .seconds(5))
 
         futureResponse.whenComplete { _ in
             do {

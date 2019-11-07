@@ -51,7 +51,7 @@ extension MetaDataServiceProvider {
     /// make HTTP request
     func request(url: String, timeout: TimeInterval, eventLoopGroup: EventLoopGroup) -> Future<AsyncHTTPClient.HTTPClient.Response> {
         let client = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
-        let futureResponse = client.get(url: url)
+        let futureResponse = client.get(url: url, deadline: NIODeadline.now() + .seconds(2) )
 
         futureResponse.whenComplete { _ in
             do {

@@ -15,15 +15,6 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
             let asyncRequest = try AsyncHTTPClient.HTTPClient.Request(url: request.url, method: request.method, headers: request.headers, body: requestBody)
             
             return execute(request: asyncRequest, deadline: deadline).map { $0 }
-/*                .map { response in
-                    let bodyData: Data?
-                    if let body = response.body {
-                        bodyData = body.getData(at: body.readerIndex, length: body.readableBytes, byteTransferStrategy: .noCopy)
-                    } else {
-                        bodyData = nil
-                    }
-                    return AWSHTTPResponse(status: response.status, headers: response.headers, body: bodyData)*/
-           // }
         } catch {
             return eventLoopGroup.next().makeFailedFuture(error)
         }

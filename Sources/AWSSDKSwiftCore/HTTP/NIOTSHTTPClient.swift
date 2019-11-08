@@ -72,8 +72,27 @@ public final class NIOTSHTTPClient {
         assert(self.isShutdown.load(), "Client not shut down before the deinit. Please call client.close() when no longer needed.")
     }
 
-    /// setup client bootstrap for HTTP request using NIO transport services
-    func tsConnectionBootstrap(hostname: String, port: Int, headerHostname: String, request: Request, response: EventLoopPromise<Response>) {
+    /// send request to HTTP client, return a future holding the Response
+    public func connect(_ request: Request, deadline: NIODeadline) -> EventLoopFuture<Response> {
+        // extract details from request URL
+        guard let url = URL(string:request.head.uri) else { return eventLoopGroup.next().makeFailedFuture(HTTPError.malformedURL(url: request.head.uri)) }
+        guard let scheme = url.scheme else { return eventLoopGroup.next().makeFailedFuture(HTTPError.malformedURL(url: request.head.uri)) }
+        guard let hostname = url.host else { return eventLoopGroup.next().makeFailedFuture(HTTPError.malformedURL(url: request.head.uri)) }
+
+        let port : Int
+        let headerHostname : String
+        if url.port != nil {
+            port = url.port!
+            headerHostname = "\(hostname):\(port)"
+        } else {
+            let isSecure = (scheme == "https")
+            port = isSecure ? 443 : 80
+            headerHostname = hostname
+        }
+
+
+        let response: EventLoopPromise<Response> = self.eventLoopGroup.next().makePromise()
+
         var bootstrap = NIOTSConnectionBootstrap(group: self.eventLoopGroup)
             .connectTimeout(TimeAmount.seconds(5))
             .channelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: 1)
@@ -99,31 +118,7 @@ public final class NIOTSHTTPClient {
             .whenFailure { error in
                 response.fail(error)
         }
-    }
-    
-    /// send request to HTTP client, return a future holding the Response
-    public func connect(_ request: Request) -> EventLoopFuture<Response> {
-        // extract details from request URL
-        guard let url = URL(string:request.head.uri) else { return eventLoopGroup.next().makeFailedFuture(HTTPError.malformedURL(url: request.head.uri)) }
-        guard let scheme = url.scheme else { return eventLoopGroup.next().makeFailedFuture(HTTPError.malformedURL(url: request.head.uri)) }
-        guard let hostname = url.host else { return eventLoopGroup.next().makeFailedFuture(HTTPError.malformedURL(url: request.head.uri)) }
 
-        let port : Int
-        let headerHostname : String
-        if url.port != nil {
-            port = url.port!
-            headerHostname = "\(hostname):\(port)"
-        } else {
-            let isSecure = (scheme == "https")
-            port = isSecure ? 443 : 80
-            headerHostname = hostname
-        }
-
-
-        let response: EventLoopPromise<Response> = self.eventLoopGroup.next().makePromise()
-
-        tsConnectionBootstrap(hostname: hostname, port: port, headerHostname: headerHostname, request: request, response: response)
-        
         return response.futureResult
     }
 

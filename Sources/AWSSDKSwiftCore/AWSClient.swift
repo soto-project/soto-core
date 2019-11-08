@@ -82,15 +82,6 @@ public class AWSClient {
         return MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
     }
 
-    var usingNIOTransportServices: Bool {
-        #if canImport(Network)
-        if #available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *), AWSClient.eventGroup is NIOTSEventLoopGroup {
-            return true
-        }
-        #endif
-        return false
-    }
-
     /// Initialize an AWSClient struct
     /// - parameters:
     ///     - accessKeyId: Public access key provided by AWS
@@ -186,7 +177,7 @@ extension AWSClient {
     /// create HTTPClient
     fileprivate func createHTTPClient() -> AWSHTTPClient {
         #if canImport(Network)
-        if #available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *), usingNIOTransportServices {
+        if #available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *), AWSClient.eventGroup is NIOTSEventLoopGroup {
             return NIOTSHTTPClient(eventLoopGroupProvider: .shared(AWSClient.eventGroup))
         }
         #endif

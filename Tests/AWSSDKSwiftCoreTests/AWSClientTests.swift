@@ -184,9 +184,9 @@ class AWSClientTests: XCTestCase {
             )
             XCTAssertEqual(awsRequest.url.absoluteString, "\(sesClient.endpoint)/")
             XCTAssertEqual(String(describing: awsRequest.body), "text(\"Action=SendEmail&Value=%3Chtml%3E%3Cbody%3E%3Ca%20href%3D%22https://redsox.com%22%3ETest%3C/a%3E%3C/body%3E%3C/html%3E&Version=2013-12-01\")")
-            let nioRequest: AWSHTTPClient.Request = try awsRequest.toHTTPRequest()
-            XCTAssertEqual(nioRequest.head.headers["Content-Type"][0], "application/x-www-form-urlencoded; charset=utf-8")
-            XCTAssertEqual(nioRequest.head.method, HTTPMethod.POST)
+            let nioRequest: AWSHTTPRequest = awsRequest.toHTTPRequest()
+            XCTAssertEqual(nioRequest.headers["Content-Type"][0], "application/x-www-form-urlencoded; charset=utf-8")
+            XCTAssertEqual(nioRequest.method, HTTPMethod.POST)
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -228,9 +228,9 @@ class AWSClientTests: XCTestCase {
 
             }
 
-            let nioRequest: AWSHTTPClient.Request = try awsRequest.toHTTPRequest()
-            XCTAssertEqual(nioRequest.head.headers["Content-Type"][0], "application/x-amz-json-1.1")
-            XCTAssertEqual(nioRequest.head.method, HTTPMethod.POST)
+            let nioRequest: AWSHTTPRequest = awsRequest.toHTTPRequest()
+            XCTAssertEqual(nioRequest.headers["Content-Type"][0], "application/x-amz-json-1.1")
+            XCTAssertEqual(nioRequest.method, HTTPMethod.POST)
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -244,8 +244,8 @@ class AWSClientTests: XCTestCase {
             )
 
             XCTAssertEqual(awsRequest.url.absoluteString, "https://s3.amazonaws.com/Bucket?list-type=2")
-            let nioRequest: AWSHTTPClient.Request = try awsRequest.toHTTPRequest()
-            XCTAssertEqual(nioRequest.head.method, HTTPMethod.GET)
+            let nioRequest: AWSHTTPRequest = awsRequest.toHTTPRequest()
+            XCTAssertEqual(nioRequest.method, HTTPMethod.GET)
             XCTAssertEqual(nioRequest.body, nil)
         } catch {
             XCTFail(error.localizedDescription)
@@ -268,8 +268,8 @@ class AWSClientTests: XCTestCase {
                 let payload = try XMLDecoder().decode(E.self, from: document.rootElement()!)
                 XCTAssertEqual(payload.Member["memberKey2"], "memberValue2")
             }
-            let nioRequest: AWSHTTPClient.Request = try awsRequest.toHTTPRequest()
-            XCTAssertEqual(nioRequest.head.method, HTTPMethod.POST)
+            let nioRequest: AWSHTTPRequest = awsRequest.toHTTPRequest()
+            XCTAssertEqual(nioRequest.method, HTTPMethod.POST)
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -318,30 +318,17 @@ class AWSClientTests: XCTestCase {
                 input: input2
             )
 
-            let awsHTTPRequest: AWSHTTPClient.Request = try kinesisClient.createHTTPRequest(awsRequest, signer: kinesisClient.signer.value)
-            XCTAssertEqual(awsHTTPRequest.head.method, HTTPMethod.POST)
-            if let host = awsHTTPRequest.head.headers.first(where: { $0.name == "Host" }) {
+            let awsHTTPRequest: AWSHTTPRequest = kinesisClient.createHTTPRequest(awsRequest, signer: kinesisClient.signer.value)
+            XCTAssertEqual(awsHTTPRequest.method, HTTPMethod.POST)
+            if let host = awsHTTPRequest.headers.first(where: { $0.name == "Host" }) {
                 XCTAssertEqual(host.value, "kinesis.us-east-1.amazonaws.com")
             }
-            if let contentType = awsHTTPRequest.head.headers.first(where: { $0.name == "Content-Type" }) {
+            if let contentType = awsHTTPRequest.headers.first(where: { $0.name == "Content-Type" }) {
                 XCTAssertEqual(contentType.value, "application/x-amz-json-1.1")
             }
-            if let xAmzTarget = awsHTTPRequest.head.headers.first(where: { $0.name == "x-amz-target" }) {
+            if let xAmzTarget = awsHTTPRequest.headers.first(where: { $0.name == "x-amz-target" }) {
                 XCTAssertEqual(xAmzTarget.value, "Kinesis_20131202.PutRecord")
             }
-
-            let asyncHTTPRequest: AsyncHTTPClient.HTTPClient.Request = try kinesisClient.createHTTPRequest(awsRequest, signer: kinesisClient.signer.value)
-            XCTAssertEqual(asyncHTTPRequest.method, HTTPMethod.POST)
-            if let host = asyncHTTPRequest.headers.first(where: { $0.name == "Host" }) {
-                XCTAssertEqual(host.value, "kinesis.us-east-1.amazonaws.com")
-            }
-            if let contentType = asyncHTTPRequest.headers.first(where: { $0.name == "Content-Type" }) {
-                XCTAssertEqual(contentType.value, "application/x-amz-json-1.1")
-            }
-            if let xAmzTarget = asyncHTTPRequest.headers.first(where: { $0.name == "x-amz-target" }) {
-                XCTAssertEqual(xAmzTarget.value, "Kinesis_20131202.PutRecord")
-            }
-
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -367,7 +354,7 @@ class AWSClientTests: XCTestCase {
                 input: input
             )
             
-            let request: AsyncHTTPClient.HTTPClient.Request = try client.createHTTPRequest(awsRequest, signer: client.signer.value)
+            let request: AWSHTTPRequest = client.createHTTPRequest(awsRequest, signer: client.signer.value)
             
             XCTAssertNil(request.headers["Authorization"].first)
         } catch {
@@ -375,11 +362,9 @@ class AWSClientTests: XCTestCase {
         }
     }
     func testValidateCode() {
-        let response = AWSHTTPClient.Response(
-            head: HTTPResponseHead(
-                version: HTTPVersion(major: 1, minor: 1),
-                status: HTTPResponseStatus(statusCode: 200)
-            ),
+        let response = AWSHTTPResponse(
+            status: .ok,
+            headers: HTTPHeaders(),
             body: Data()
         )
         do {
@@ -388,11 +373,9 @@ class AWSClientTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
 
-        let failResponse = AWSHTTPClient.Response(
-            head: HTTPResponseHead(
-                version: HTTPVersion(major: 1, minor: 1),
-                status: HTTPResponseStatus(statusCode: 403)
-            ),
+        let failResponse = AWSHTTPResponse(
+            status: .forbidden,
+            headers: HTTPHeaders(),
             body: Data()
         )
 
@@ -409,29 +392,13 @@ class AWSClientTests: XCTestCase {
             let name : String
         }
         let responseBody = "<Output><name>hello</name></Output>"
-        let awsHTTPResponse = AWSHTTPClient.Response(
-            head: HTTPResponseHead(
-                version: HTTPVersion(major: 1, minor: 1),
-                status: HTTPResponseStatus(statusCode: 200)
-            ),
+        let awsHTTPResponse = AWSHTTPResponse(
+            status: .ok,
+            headers: HTTPHeaders(),
             body: responseBody.data(using: .utf8)!
         )
         do {
             let output : Output = try s3Client.validate(operation: "Output", response: awsHTTPResponse)
-            XCTAssertEqual(output.name, "hello")
-        } catch {
-            XCTFail(error.localizedDescription)
-        }
-
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: responseBody.utf8.count)
-        byteBuffer.writeString(responseBody)
-        let asyncHTTPResponse = AsyncHTTPClient.HTTPClient.Response(
-            host: "aws.amazon.com",
-            status: .ok,
-            headers: HTTPHeaders(),
-            body: byteBuffer)
-        do {
-            let output : Output = try s3Client.validate(operation: "Output", response: asyncHTTPResponse)
             XCTAssertEqual(output.name, "hello")
         } catch {
             XCTFail(error.localizedDescription)
@@ -443,11 +410,9 @@ class AWSClientTests: XCTestCase {
             static let payloadPath: String? = "name"
             let name : String
         }
-        let response = AWSHTTPClient.Response(
-            head: HTTPResponseHead(
-                version: HTTPVersion(major: 1, minor: 1),
-                status: HTTPResponseStatus(statusCode: 200)
-            ),
+        let response = AWSHTTPResponse(
+            status: .ok,
+            headers: HTTPHeaders(),
             body: "<name>hello</name>".data(using: .utf8)!
         )
         do {
@@ -459,11 +424,9 @@ class AWSClientTests: XCTestCase {
     }
 
     func testValidateXMLError() {
-        let response = AWSHTTPClient.Response(
-            head: HTTPResponseHead(
-                version: HTTPVersion(major: 1, minor: 1),
-                status: HTTPResponseStatus(statusCode: 404)
-            ),
+        let response = AWSHTTPResponse(
+            status: .notFound,
+            headers: HTTPHeaders(),
             body: "<Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message></Error>".data(using: .utf8)!
         )
         do {
@@ -480,11 +443,9 @@ class AWSClientTests: XCTestCase {
         class Output : AWSShape {
             let name : String
         }
-        let response = AWSHTTPClient.Response(
-            head: HTTPResponseHead(
-                version: HTTPVersion(major: 1, minor: 1),
-                status: HTTPResponseStatus(statusCode: 200)
-            ),
+        let response = AWSHTTPResponse(
+            status: .ok,
+            headers: HTTPHeaders(),
             body: "{\"name\":\"hello\"}".data(using: .utf8)!
         )
         do {
@@ -503,11 +464,9 @@ class AWSClientTests: XCTestCase {
             static let payloadPath: String? = "output2"
             let output2 : Output2
         }
-        let response = AWSHTTPClient.Response(
-            head: HTTPResponseHead(
-                version: HTTPVersion(major: 1, minor: 1),
-                status: HTTPResponseStatus(statusCode: 200)
-            ),
+        let response = AWSHTTPResponse(
+            status: .ok,
+            headers: HTTPHeaders(),
             body: "{\"name\":\"hello\"}".data(using: .utf8)!
         )
         do {
@@ -519,11 +478,9 @@ class AWSClientTests: XCTestCase {
     }
 
     func testValidateJSONError() {
-        let response = AWSHTTPClient.Response(
-            head: HTTPResponseHead(
-                version: HTTPVersion(major: 1, minor: 1),
-                status: HTTPResponseStatus(statusCode: 404)
-            ),
+        let response = AWSHTTPResponse(
+            status: .notFound,
+            headers: HTTPHeaders(),
             body: "{\"__type\":\"ResourceNotFoundException\", \"message\": \"Donald Where's Your Troosers?\"}".data(using: .utf8)!
         )
         do {

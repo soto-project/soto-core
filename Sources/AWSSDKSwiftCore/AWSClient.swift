@@ -162,23 +162,14 @@ public class AWSClient {
 extension AWSClient {
 
     /// invoke AWS request, create HTTP request from AWS request and then make request. Return response. Function chooses which HTTP client to use based
-    fileprivate func invoke(_ awsRequest: AWSRequest, signer: AWSSigner) -> Future<HTTPResponseDescription> {
-        do {
-            if usingNIOTransportServices {
-                let request: AWSHTTPClient.Request = try createHTTPRequest(awsRequest, signer: signer)
-                return invokeAWSHTTPClient(request).map { $0 }
-            } else {
-                let request: AsyncHTTPClient.HTTPClient.Request = try createHTTPRequest(awsRequest, signer: signer)
-                return invokeAsyncHTTPClient(request).map { $0 }
-            }
-        } catch {
-            return AWSClient.eventGroup.next().makeFailedFuture(error)
-        }
+    fileprivate func invoke(_ awsRequest: AWSRequest, signer: AWSSigner) -> Future<AWSHTTPResponse> {
+        let request = createHTTPRequest(awsRequest, signer: signer)
+        return invoke(request)
     }
 
     /// invoke HTTP request using AsyncHTTPClient
-    fileprivate func invokeAsyncHTTPClient(_ httpRequest: AsyncHTTPClient.HTTPClient.Request) -> Future<AsyncHTTPClient.HTTPClient.Response> {
-        let client = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(AWSClient.eventGroup))
+    fileprivate func invoke(_ httpRequest: AWSHTTPRequest) -> Future<AWSHTTPResponse> {
+        let client = createHTTPClient()
         let futureResponse = client.execute(request: httpRequest, deadline: NIODeadline.now() + .seconds(5))
 
         futureResponse.whenComplete { _ in
@@ -192,20 +183,13 @@ extension AWSClient {
         return futureResponse
     }
 
-    /// invoke HTTP request using AWSSDKSwiftCore internal HTTPClient
-    fileprivate func invokeAWSHTTPClient(_ httpRequest: AWSHTTPClient.Request) -> Future<AWSHTTPClient.Response> {
-        let client = AWSHTTPClient(eventLoopGroupProvider: .shared(AWSClient.eventGroup))
-        let futureResponse = client.connect(httpRequest)
-
-        futureResponse.whenComplete { _ in
-            do {
-                try client.syncShutdown()
-            } catch {
-                print("Error closing connection: \(error)")
-            }
+    /// create HTTPClient
+    fileprivate func createHTTPClient() -> AWSHTTPClient {
+        if usingNIOTransportServices {
+            return NIOTSHTTPClient(eventLoopGroupProvider: .shared(AWSClient.eventGroup))
+        } else {
+            return AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(AWSClient.eventGroup))
         }
-
-        return futureResponse
     }
 
 }
@@ -338,22 +322,22 @@ extension AWSClient {
         return AWSClient.eventGroup.next().makeSucceededFuture(self.signer.value)
     }
 
-    func createHTTPRequest<Request: HTTPRequestDescription>(_ awsRequest: AWSRequest, signer: AWSSigner) throws -> Request {
+    func createHTTPRequest(_ awsRequest: AWSRequest, signer: AWSSigner) -> AWSHTTPRequest {
         // if credentials are empty don't sign request
         if signer.credentials.isEmpty() {
-            return try awsRequest.toHTTPRequest()
+            return awsRequest.toHTTPRequest()
         }
 
         switch awsRequest.httpMethod {
         case "GET", "HEAD":
             switch self.serviceProtocol.type {
             case .restjson:
-                return try awsRequest.toHTTPRequestWithSignedHeader(signer: signer)
+                return awsRequest.toHTTPRequestWithSignedHeader(signer: signer)
             default:
-                return try awsRequest.toHTTPRequestWithSignedURL(signer: signer)
+                return awsRequest.toHTTPRequestWithSignedURL(signer: signer)
             }
         default:
-            return try awsRequest.toHTTPRequestWithSignedHeader(signer: signer)
+            return awsRequest.toHTTPRequestWithSignedHeader(signer: signer)
         }
     }
 
@@ -574,7 +558,7 @@ extension AWSClient {
 extension AWSClient {
 
     /// Validate the operation response and return a response shape
-    internal func validate<Output: AWSShape>(operation operationName: String, response: HTTPResponseDescription) throws -> Output {
+    internal func validate<Output: AWSShape>(operation operationName: String, response: AWSHTTPResponse) throws -> Output {
         let raw: Bool
         if let payloadPath = Output.payloadPath, let member = Output.getMember(named: payloadPath), member.type == .blob {
             raw = true
@@ -667,7 +651,7 @@ extension AWSClient {
     }
 
     /// validate response without returning an output shape
-    internal func validate(response: HTTPResponseDescription) throws {
+    internal func validate(response: AWSHTTPResponse) throws {
         let awsResponse = try AWSResponse(from: response, serviceProtocolType: serviceProtocol.type)
         try validateCode(response: awsResponse)
     }
@@ -696,7 +680,7 @@ extension AWSClient {
 
                     switch hint.type {
                     case .list:
-                        let properties : [[String: Any]] = try representations.map({
+                        let properties : [[String: Any]] = representations.map({
                             var props = $0.properties
                             var linkMap: [String: [Link]] = [:]
 
@@ -715,14 +699,14 @@ extension AWSClient {
                                     guard let url = URL(string:endpoint + link.href) else { continue }
                                     //let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: endpoint + link.href)
                                     let signedHeaders = signer.value.signHeaders(url: url, method: .GET)
-                                    let httpRequest = try AWSHTTPClient.Request(url: url, method: .GET, headers: signedHeaders)
+                                    let httpRequest = AWSHTTPRequest(url: url, method: .GET, headers: signedHeaders, body: nil)
                                     //let nioRequest = try nioRequestWithSignedHeader(AWSHTTPClient.Request(head: head, body: Data()))
                                     //
                                     // this is a hack to wait...
                                     ///
                                     while dict[name] == nil {
-                                        _ = invokeAWSHTTPClient(httpRequest).flatMapThrowing{ res in
-                                            if let body = res.bodyData {
+                                        _ = invoke(httpRequest).flatMapThrowing{ res in
+                                            if let body = res.body {
                                                 let representaion = try Representation().from(json: body)
                                                 dict[name] = representaion.properties
                                             }

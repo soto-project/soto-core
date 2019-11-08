@@ -125,7 +125,9 @@ struct ECSMetaDataServiceProvider: MetaDataServiceProvider {
     func getCredential(eventLoopGroup: EventLoopGroup) -> Future<CredentialProvider> {
         return request(url: url, timeout: 2, eventLoopGroup: eventLoopGroup)
             .flatMapThrowing { response in
-                if let body = response.bodyData, let credential = self.decodeCredential(body) {
+                if let body = response.body,
+                    let data = body.getData(at: body.readerIndex, length: body.readableBytes, byteTransferStrategy: .noCopy),
+                    let credential = self.decodeCredential(data) {
                     return credential
                 } else {
                     throw MetaDataServiceError.failedToDecode
@@ -198,7 +200,9 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
                 return self.request(url: url, timeout: 2, eventLoopGroup: eventLoopGroup)
             }
             .flatMapThrowing { response in
-                if let body = response.bodyData, let credential = self.decodeCredential(body) {
+                if let body = response.body,
+                    let data = body.getData(at: body.readerIndex, length: body.readableBytes, byteTransferStrategy: .noCopy),
+                    let credential = self.decodeCredential(data) {
                     return credential
                 } else {
                     throw MetaDataServiceError.failedToDecode

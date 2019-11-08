@@ -13,7 +13,7 @@ import XCTest
 
 class HTTPClientTests: XCTestCase {
 
-    let client = AWSHTTPClient()
+    let client = NIOTSHTTPClient()
 
     deinit {
         try? client.syncShutdown()
@@ -32,11 +32,11 @@ class HTTPClientTests: XCTestCase {
     func testInitWithInvalidURL() {
       do {
         let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: "no_protocol.com")
-        let request = AWSHTTPClient.Request(head: head, body: Data())
+        let request = NIOTSHTTPClient.Request(head: head, body: Data())
         _ = try client.connect(request).wait()
         XCTFail("Should throw malformedURL error")
       } catch {
-        if case AWSHTTPClient.HTTPError.malformedURL = error {}
+        if case NIOTSHTTPClient.HTTPError.malformedURL = error {}
         else {
             XCTFail("Should throw malformedURL error")
         }
@@ -46,7 +46,7 @@ class HTTPClientTests: XCTestCase {
     func testInitWithValidRL() {
         do {
             let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: "https://kinesis.us-west-2.amazonaws.com/")
-            let request = AWSHTTPClient.Request(head: head, body: Data())
+            let request = NIOTSHTTPClient.Request(head: head, body: Data())
             _ = try client.connect(request).wait()
         } catch {
             XCTFail("Should not throw malformedURL error")
@@ -54,9 +54,9 @@ class HTTPClientTests: XCTestCase {
 
         do {
             let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: "http://169.254.169.254/latest/meta-data/iam/security-credentials/")
-            let request = AWSHTTPClient.Request(head: head, body: Data())
+            let request = NIOTSHTTPClient.Request(head: head, body: Data())
             _ = try client.connect(request).wait()
-        } catch AWSHTTPClient.HTTPError.malformedURL{
+        } catch NIOTSHTTPClient.HTTPError.malformedURL{
             XCTFail("Should not throw malformedURL error")
         } catch {
         }
@@ -69,7 +69,7 @@ class HTTPClientTests: XCTestCase {
                          method: .GET,
                          uri: "https://kinesis.us-west-2.amazonaws.com/"
                        )
-            let request = AWSHTTPClient.Request(head: head, body: Data())
+            let request = NIOTSHTTPClient.Request(head: head, body: Data())
             let future = client.connect(request)
             future.whenSuccess { response in }
             future.whenFailure { error in }
@@ -88,7 +88,7 @@ class HTTPClientTests: XCTestCase {
                          method: .GET,
                          uri: "https://kinesis.us-west-2.amazonaws.com/"
                        )
-            let request = AWSHTTPClient.Request(head: head, body: Data())
+            let request = NIOTSHTTPClient.Request(head: head, body: Data())
             let future = client.connect(request)
             future.whenSuccess { response in }
             future.whenFailure { error in }
@@ -107,7 +107,7 @@ class HTTPClientTests: XCTestCase {
                          method: .GET,
                          uri: "https://kinesis.us-west-2.amazonaws.com/"
                        )
-            let request = AWSHTTPClient.Request(head: head, body: Data())
+            let request = NIOTSHTTPClient.Request(head: head, body: Data())
             let future = client.connect(request)
             future.whenSuccess { response in }
             future.whenFailure { error in }

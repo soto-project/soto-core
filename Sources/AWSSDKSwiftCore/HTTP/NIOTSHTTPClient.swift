@@ -9,6 +9,7 @@
 // and the swift-server's swift-nio-http-client
 // https://github.com/swift-server/swift-nio-http-client
 //
+#if canImport(Network)
 
 import Foundation
 import NIO
@@ -22,6 +23,7 @@ import NIOTransportServices
 #endif
 
 /// HTTP Client class providing API for sending HTTP requests
+@available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)
 public final class NIOTSHTTPClient {
 
     /// Request structure to send
@@ -62,15 +64,7 @@ public final class NIOTSHTTPClient {
         case .shared(let group):
             self.eventLoopGroup = group
         case .createNew:
-            #if canImport(Network)
-                if #available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *) {
-                    self.eventLoopGroup = NIOTSEventLoopGroup()
-                } else {
-                    self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
-                }
-            #else
-                self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
-            #endif
+            self.eventLoopGroup = NIOTSEventLoopGroup()
         }
     }
     
@@ -78,51 +72,7 @@ public final class NIOTSHTTPClient {
         assert(self.isShutdown.load(), "Client not shut down before the deinit. Please call client.close() when no longer needed.")
     }
 
-    /// add SSL Handler to channel pipeline if the port is 443
-    func addSSLHandlerIfNeeded(_ pipeline : ChannelPipeline, hostname: String, port: Int) -> EventLoopFuture<Void> {
-        if (port == 443) {
-            do {
-                let tlsConfiguration = TLSConfiguration.forClient()
-                let sslContext = try NIOSSLContext(configuration: tlsConfiguration)
-                let tlsHandler = try NIOSSLClientHandler(context: sslContext, serverHostname: hostname)
-                return pipeline.addHandler(tlsHandler, position:.first)
-            } catch {
-                return pipeline.eventLoop.makeFailedFuture(error)
-            }
-        }
-        return pipeline.eventLoop.makeSucceededFuture(())
-    }
-
-    /// setup client bootstrap for HTTP request
-    func clientBootstrap(hostname: String, port: Int, headerHostname: String, request: Request, response: EventLoopPromise<Response>) {
-        _ = ClientBootstrap(group: self.eventLoopGroup)
-            .connectTimeout(TimeAmount.seconds(5))
-            .channelOption(ChannelOptions.socket(SocketOptionLevel(IPPROTO_TCP), TCP_NODELAY), value: 1)
-            .channelInitializer { channel in
-                return channel.pipeline.addHTTPClientHandlers()
-                    .flatMap {
-                        return self.addSSLHandlerIfNeeded(channel.pipeline, hostname: hostname, port: port)
-                    }
-                    .flatMap {
-                        let handlers : [ChannelHandler] = [
-                            HTTPClientRequestSerializer(hostname: headerHostname),
-                            HTTPClientResponseHandler(promise: response)
-                        ]
-                        return channel.pipeline.addHandlers(handlers)
-                }
-            }
-            .connect(host: hostname, port: port)
-            .flatMap { channel -> EventLoopFuture<Void> in
-                return channel.writeAndFlush(request)
-            }
-            .whenFailure { error in
-                response.fail(error)
-        }
-    }
-
     /// setup client bootstrap for HTTP request using NIO transport services
-    #if canImport(Network)
-    @available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)
     func tsConnectionBootstrap(hostname: String, port: Int, headerHostname: String, request: Request, response: EventLoopPromise<Response>) {
         var bootstrap = NIOTSConnectionBootstrap(group: self.eventLoopGroup)
             .connectTimeout(TimeAmount.seconds(5))
@@ -150,7 +100,6 @@ public final class NIOTSHTTPClient {
                 response.fail(error)
         }
     }
-    #endif
     
     /// send request to HTTP client, return a future holding the Response
     public func connect(_ request: Request) -> EventLoopFuture<Response> {
@@ -173,15 +122,7 @@ public final class NIOTSHTTPClient {
 
         let response: EventLoopPromise<Response> = self.eventLoopGroup.next().makePromise()
 
-        #if canImport(Network)
-            if #available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *) {
-                tsConnectionBootstrap(hostname: hostname, port: port, headerHostname: headerHostname, request: request, response: response)
-            } else {
-                clientBootstrap(hostname: hostname, port: port, headerHostname: headerHostname, request: request, response: response)
-            }
-        #else
-            clientBootstrap(hostname: hostname, port: port, headerHostname: headerHostname, request: request, response: response)
-        #endif
+        tsConnectionBootstrap(hostname: hostname, port: port, headerHostname: headerHostname, request: request, response: response)
         
         return response.futureResult
     }
@@ -299,6 +240,7 @@ public final class NIOTSHTTPClient {
 }
 
 /// comply with AWSHTTPClient protocol
+@available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)
 extension NIOTSHTTPClient: AWSHTTPClient {
     func execute(request: AWSHTTPRequest, deadline: NIODeadline) -> EventLoopFuture<AWSHTTPResponse> {
         var head = HTTPRequestHead(
@@ -315,3 +257,5 @@ extension NIOTSHTTPClient: AWSHTTPClient {
         }
     }
 }
+
+#endif

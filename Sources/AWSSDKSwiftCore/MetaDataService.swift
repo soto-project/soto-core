@@ -10,6 +10,7 @@ import AsyncHTTPClient
 import AWSSigner
 import Foundation
 import NIO
+import NIOFoundationCompat
 import NIOHTTP1
 
 /// errors returned by metadata service

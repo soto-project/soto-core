@@ -5,13 +5,15 @@
 //  Created by Yuki Takei on 2017/04/06.
 //
 //
+#if canImport(Network)
 
 import Foundation
 import NIOHTTP1
 import XCTest
 @testable import AWSSDKSwiftCore
 
-class HTTPClientTests: XCTestCase {
+@available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)
+class NIOTSHTTPClientTests: XCTestCase {
 
     let client = NIOTSHTTPClient()
 
@@ -19,7 +21,7 @@ class HTTPClientTests: XCTestCase {
         try? client.syncShutdown()
     }
     
-    static var allTests : [(String, (HTTPClientTests) -> () throws -> Void)] {
+    static var allTests : [(String, (NIOTSHTTPClientTests) -> () throws -> Void)] {
         return [
             ("testInitWithInvalidURL", testInitWithInvalidURL),
             ("testInitWithValidRL", testInitWithValidRL),
@@ -121,3 +123,5 @@ class HTTPClientTests: XCTestCase {
 
 
 }
+
+#endif //canImport(Network)

@@ -5,7 +5,6 @@ XCTMain([
     testCase(AWSClientTests.allTests),
     testCase(CredentialTests.allTests),
     testCase(DictionaryEncoderTests.allTests),
-    testCase(HTTPClientTests.allTests),
     testCase(MetaDataServiceTests.allTests),
     testCase(QueryEncoderTests.allTests),
     testCase(SerializersTests.allTests),

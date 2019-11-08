@@ -185,11 +185,12 @@ extension AWSClient {
 
     /// create HTTPClient
     fileprivate func createHTTPClient() -> AWSHTTPClient {
-        if usingNIOTransportServices {
+        #if canImport(Network)
+        if #available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *), usingNIOTransportServices {
             return NIOTSHTTPClient(eventLoopGroupProvider: .shared(AWSClient.eventGroup))
-        } else {
-            return AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(AWSClient.eventGroup))
         }
+        #endif
+        return AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(AWSClient.eventGroup))
     }
 
 }

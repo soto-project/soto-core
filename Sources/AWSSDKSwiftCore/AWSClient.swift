@@ -700,14 +700,14 @@ extension AWSClient {
                                     guard let url = URL(string:endpoint + link.href) else { continue }
                                     //let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: endpoint + link.href)
                                     let signedHeaders = signer.value.signHeaders(url: url, method: .GET)
-                                    let httpRequest = AWSHTTPRequest(url: url, method: .GET, headers: signedHeaders, body: nil)
+                                    let httpRequest = AWSHTTPRequest(url: url, method: .GET, headers: signedHeaders, bodyData: nil)
                                     //let nioRequest = try nioRequestWithSignedHeader(AWSHTTPClient.Request(head: head, body: Data()))
                                     //
                                     // this is a hack to wait...
                                     ///
                                     while dict[name] == nil {
                                         _ = invoke(httpRequest).flatMapThrowing{ res in
-                                            if let body = res.body {
+                                            if let body = res.bodyData {
                                                 let representaion = try Representation().from(json: body)
                                                 dict[name] = representaion.properties
                                             }

@@ -6,26 +6,35 @@ import NIO
 extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
     func execute(request: AWSHTTPRequest, deadline: NIODeadline) -> EventLoopFuture<AWSHTTPResponse> {
         let requestBody: AsyncHTTPClient.HTTPClient.Body?
-        if let body = request.body {
-            requestBody = AsyncHTTPClient.HTTPClient.Body.data(body)
+        if let bodyData = request.bodyData {
+            requestBody = AsyncHTTPClient.HTTPClient.Body.data(bodyData)
         } else {
             requestBody = nil
         }
         do {
             let asyncRequest = try AsyncHTTPClient.HTTPClient.Request(url: request.url, method: request.method, headers: request.headers, body: requestBody)
             
-            return execute(request: asyncRequest, deadline: deadline)
-                .map { response in
+            return execute(request: asyncRequest, deadline: deadline).map { $0 }
+/*                .map { response in
                     let bodyData: Data?
                     if let body = response.body {
                         bodyData = body.getData(at: body.readerIndex, length: body.readableBytes, byteTransferStrategy: .noCopy)
                     } else {
                         bodyData = nil
                     }
-                    return AWSHTTPResponse(status: response.status, headers: response.headers, body: bodyData)
-            }
+                    return AWSHTTPResponse(status: response.status, headers: response.headers, body: bodyData)*/
+           // }
         } catch {
             return eventLoopGroup.next().makeFailedFuture(error)
         }
+    }
+}
+
+extension AsyncHTTPClient.HTTPClient.Response: AWSHTTPResponse {
+    var bodyData: Data? {
+        if let body = self.body {
+            return body.getData(at: body.readerIndex, length: body.readableBytes, byteTransferStrategy: .noCopy)
+        }
+        return nil
     }
 }

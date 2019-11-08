@@ -86,7 +86,7 @@ public struct AWSRequest {
     
     /// Create HTTP Client request from AWSRequest
     func toHTTPRequest() -> AWSHTTPRequest {
-        return AWSHTTPRequest.init(url: url, method: HTTPMethod(from: httpMethod), headers: getHttpHeaders(), body: body.asData())
+        return AWSHTTPRequest.init(url: url, method: HTTPMethod(from: httpMethod), headers: getHttpHeaders(), bodyData: body.asData())
     }
     
     /// Create HTTP Client request with signed URL from AWSRequest
@@ -94,7 +94,7 @@ public struct AWSRequest {
         let method = HTTPMethod(from: httpMethod)
         let bodyData = body.asData()
         let signedURL = signer.signURL(url: url, method: method, body: bodyData != nil ? .data(bodyData!) : nil, date: Date(), expires: 86400)
-        return AWSHTTPRequest.init(url: signedURL, method: method, headers: getHttpHeaders(), body: bodyData)
+        return AWSHTTPRequest.init(url: signedURL, method: method, headers: getHttpHeaders(), bodyData: bodyData)
     }
     
     /// Create HTTP Client request with signed headers from AWSRequest
@@ -102,7 +102,7 @@ public struct AWSRequest {
         let method = HTTPMethod(from: httpMethod)
         let bodyData = body.asData()
         let signedHeaders = signer.signHeaders(url: url, method: method, headers: getHttpHeaders(), body: bodyData != nil ? .data(bodyData!) : nil, date: Date())
-        return AWSHTTPRequest.init(url: url, method: method, headers: signedHeaders, body: bodyData)
+        return AWSHTTPRequest.init(url: url, method: method, headers: signedHeaders, bodyData: bodyData)
     }
     
     // return new request with middleware applied

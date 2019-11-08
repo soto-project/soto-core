@@ -44,7 +44,7 @@ public struct AWSResponse {
     private static func createBody(from response: AWSHTTPResponse, serviceProtocolType: ServiceProtocolType, raw: Bool) throws -> Body {
         var responseBody: Body = .empty
         
-        guard let data = response.body, !data.isEmpty else  {
+        guard let data = response.bodyData, !data.isEmpty else  {
             return .empty
         }
         

@@ -15,6 +15,12 @@ import AsyncHTTPClient
 
 class AWSClientTests: XCTestCase {
 
+    struct AWSHTTPResponseImpl: AWSHTTPResponse {
+        let status: HTTPResponseStatus
+        let headers: HTTPHeaders
+        let bodyData: Data?
+    }
+    
     static var allTests : [(String, (AWSClientTests) -> () throws -> Void)] {
         return [
             ("testGetCredential", testGetCredential),
@@ -246,7 +252,7 @@ class AWSClientTests: XCTestCase {
             XCTAssertEqual(awsRequest.url.absoluteString, "https://s3.amazonaws.com/Bucket?list-type=2")
             let nioRequest: AWSHTTPRequest = awsRequest.toHTTPRequest()
             XCTAssertEqual(nioRequest.method, HTTPMethod.GET)
-            XCTAssertEqual(nioRequest.body, nil)
+            XCTAssertEqual(nioRequest.bodyData, nil)
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -362,10 +368,10 @@ class AWSClientTests: XCTestCase {
         }
     }
     func testValidateCode() {
-        let response = AWSHTTPResponse(
+        let response = AWSHTTPResponseImpl(
             status: .ok,
             headers: HTTPHeaders(),
-            body: Data()
+            bodyData: Data()
         )
         do {
             try s3Client.validate(response: response)
@@ -373,10 +379,10 @@ class AWSClientTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
 
-        let failResponse = AWSHTTPResponse(
+        let failResponse = AWSHTTPResponseImpl(
             status: .forbidden,
             headers: HTTPHeaders(),
-            body: Data()
+            bodyData: Data()
         )
 
         do {
@@ -392,10 +398,10 @@ class AWSClientTests: XCTestCase {
             let name : String
         }
         let responseBody = "<Output><name>hello</name></Output>"
-        let awsHTTPResponse = AWSHTTPResponse(
+        let awsHTTPResponse = AWSHTTPResponseImpl(
             status: .ok,
             headers: HTTPHeaders(),
-            body: responseBody.data(using: .utf8)!
+            bodyData: responseBody.data(using: .utf8)!
         )
         do {
             let output : Output = try s3Client.validate(operation: "Output", response: awsHTTPResponse)
@@ -410,10 +416,10 @@ class AWSClientTests: XCTestCase {
             static let payloadPath: String? = "name"
             let name : String
         }
-        let response = AWSHTTPResponse(
+        let response = AWSHTTPResponseImpl(
             status: .ok,
             headers: HTTPHeaders(),
-            body: "<name>hello</name>".data(using: .utf8)!
+            bodyData: "<name>hello</name>".data(using: .utf8)!
         )
         do {
             let output : Output = try s3Client.validate(operation: "Output", response: response)
@@ -424,10 +430,10 @@ class AWSClientTests: XCTestCase {
     }
 
     func testValidateXMLError() {
-        let response = AWSHTTPResponse(
+        let response = AWSHTTPResponseImpl(
             status: .notFound,
             headers: HTTPHeaders(),
-            body: "<Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message></Error>".data(using: .utf8)!
+            bodyData: "<Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message></Error>".data(using: .utf8)!
         )
         do {
             try s3Client.validate(response: response)
@@ -443,10 +449,10 @@ class AWSClientTests: XCTestCase {
         class Output : AWSShape {
             let name : String
         }
-        let response = AWSHTTPResponse(
+        let response = AWSHTTPResponseImpl(
             status: .ok,
             headers: HTTPHeaders(),
-            body: "{\"name\":\"hello\"}".data(using: .utf8)!
+            bodyData: "{\"name\":\"hello\"}".data(using: .utf8)!
         )
         do {
             let output : Output = try kinesisClient.validate(operation: "Output", response: response)
@@ -464,10 +470,10 @@ class AWSClientTests: XCTestCase {
             static let payloadPath: String? = "output2"
             let output2 : Output2
         }
-        let response = AWSHTTPResponse(
+        let response = AWSHTTPResponseImpl(
             status: .ok,
             headers: HTTPHeaders(),
-            body: "{\"name\":\"hello\"}".data(using: .utf8)!
+            bodyData: "{\"name\":\"hello\"}".data(using: .utf8)!
         )
         do {
             let output : Output = try kinesisClient.validate(operation: "Output", response: response)
@@ -478,10 +484,10 @@ class AWSClientTests: XCTestCase {
     }
 
     func testValidateJSONError() {
-        let response = AWSHTTPResponse(
+        let response = AWSHTTPResponseImpl(
             status: .notFound,
             headers: HTTPHeaders(),
-            body: "{\"__type\":\"ResourceNotFoundException\", \"message\": \"Donald Where's Your Troosers?\"}".data(using: .utf8)!
+            bodyData: "{\"__type\":\"ResourceNotFoundException\", \"message\": \"Donald Where's Your Troosers?\"}".data(using: .utf8)!
         )
         do {
             try kinesisClient.validate(response: response)

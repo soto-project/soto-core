@@ -242,6 +242,7 @@ public final class NIOTSHTTPClient {
 /// comply with AWSHTTPClient protocol
 @available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)
 extension NIOTSHTTPClient: AWSHTTPClient {
+    
     func execute(request: AWSHTTPRequest, deadline: NIODeadline) -> EventLoopFuture<AWSHTTPResponse> {
         var head = HTTPRequestHead(
           version: HTTPVersion(major: 1, minor: 1),
@@ -249,13 +250,17 @@ extension NIOTSHTTPClient: AWSHTTPClient {
           uri: request.url.absoluteString
         )
         head.headers = request.headers
-        let request = Request(head: head, body: request.body)
+        let request = Request(head: head, body: request.bodyData)
         
-        return connect(request)
-            .map { response in
-                return AWSHTTPResponse(status: response.head.status, headers: response.head.headers, body: response.body)
-        }
+        return connect(request).map { return $0 }
     }
+}
+
+@available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)
+extension NIOTSHTTPClient.Response: AWSHTTPResponse {
+    var status: HTTPResponseStatus { return head.status }
+    var headers: HTTPHeaders { return head.headers }
+    var bodyData: Data? { return body }
 }
 
 #endif

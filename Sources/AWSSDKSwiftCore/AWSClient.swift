@@ -170,7 +170,7 @@ extension AWSClient {
     /// invoke HTTP request using AsyncHTTPClient
     fileprivate func invoke(_ httpRequest: AWSHTTPRequest) -> Future<AWSHTTPResponse> {
         let client = createHTTPClient()
-        let futureResponse = client.execute(request: httpRequest, deadline: NIODeadline.now() + .seconds(5))
+        let futureResponse = client.execute(request: httpRequest, timeout: .seconds(5))
 
         futureResponse.whenComplete { _ in
             do {

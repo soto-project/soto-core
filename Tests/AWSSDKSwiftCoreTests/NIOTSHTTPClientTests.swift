@@ -35,7 +35,7 @@ class NIOTSHTTPClientTests: XCTestCase {
       do {
         let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: "no_protocol.com")
         let request = NIOTSHTTPClient.Request(head: head, body: Data())
-        _ = try client.connect(request).wait()
+        _ = try client.connect(request, timeout: .seconds(5)).wait()
         XCTFail("Should throw malformedURL error")
       } catch {
         if case NIOTSHTTPClient.HTTPError.malformedURL = error {}
@@ -49,7 +49,7 @@ class NIOTSHTTPClientTests: XCTestCase {
         do {
             let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: "https://kinesis.us-west-2.amazonaws.com/")
             let request = NIOTSHTTPClient.Request(head: head, body: Data())
-            _ = try client.connect(request).wait()
+            _ = try client.connect(request, timeout: .seconds(5)).wait()
         } catch {
             XCTFail("Should not throw malformedURL error")
         }
@@ -57,7 +57,7 @@ class NIOTSHTTPClientTests: XCTestCase {
         do {
             let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: "http://169.254.169.254/latest/meta-data/iam/security-credentials/")
             let request = NIOTSHTTPClient.Request(head: head, body: Data())
-            _ = try client.connect(request).wait()
+            _ = try client.connect(request, timeout: .seconds(5)).wait()
         } catch NIOTSHTTPClient.HTTPError.malformedURL{
             XCTFail("Should not throw malformedURL error")
         } catch {
@@ -72,7 +72,7 @@ class NIOTSHTTPClientTests: XCTestCase {
                          uri: "https://kinesis.us-west-2.amazonaws.com/"
                        )
             let request = NIOTSHTTPClient.Request(head: head, body: Data())
-            let future = client.connect(request)
+            let future = client.connect(request, timeout: .seconds(5))
             future.whenSuccess { response in }
             future.whenFailure { error in }
             future.whenComplete { _ in }
@@ -91,7 +91,7 @@ class NIOTSHTTPClientTests: XCTestCase {
                          uri: "https://kinesis.us-west-2.amazonaws.com/"
                        )
             let request = NIOTSHTTPClient.Request(head: head, body: Data())
-            let future = client.connect(request)
+            let future = client.connect(request, timeout: .seconds(5))
             future.whenSuccess { response in }
             future.whenFailure { error in }
             future.whenComplete { _ in }
@@ -110,7 +110,7 @@ class NIOTSHTTPClientTests: XCTestCase {
                          uri: "https://kinesis.us-west-2.amazonaws.com/"
                        )
             let request = NIOTSHTTPClient.Request(head: head, body: Data())
-            let future = client.connect(request)
+            let future = client.connect(request, timeout: .seconds(5))
             future.whenSuccess { response in }
             future.whenFailure { error in }
             future.whenComplete { _ in }

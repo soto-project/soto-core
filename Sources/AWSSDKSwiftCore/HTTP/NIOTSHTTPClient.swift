@@ -73,7 +73,7 @@ public final class NIOTSHTTPClient {
     }
 
     /// send request to HTTP client, return a future holding the Response
-    public func connect(_ request: Request, deadline: NIODeadline) -> EventLoopFuture<Response> {
+    public func connect(_ request: Request, timeout: TimeAmount) -> EventLoopFuture<Response> {
         // extract details from request URL
         guard let url = URL(string:request.head.uri) else { return eventLoopGroup.next().makeFailedFuture(HTTPError.malformedURL(url: request.head.uri)) }
         guard let scheme = url.scheme else { return eventLoopGroup.next().makeFailedFuture(HTTPError.malformedURL(url: request.head.uri)) }
@@ -94,7 +94,7 @@ public final class NIOTSHTTPClient {
         let response: EventLoopPromise<Response> = self.eventLoopGroup.next().makePromise()
 
         var bootstrap = NIOTSConnectionBootstrap(group: self.eventLoopGroup)
-            .connectTimeout(TimeAmount.seconds(5))
+            .connectTimeout(timeout)
             .channelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: 1)
         
         if port == 443 {
@@ -238,7 +238,7 @@ public final class NIOTSHTTPClient {
 @available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)
 extension NIOTSHTTPClient: AWSHTTPClient {
     
-    func execute(request: AWSHTTPRequest, deadline: NIODeadline) -> EventLoopFuture<AWSHTTPResponse> {
+    func execute(request: AWSHTTPRequest, timeout: TimeAmount) -> EventLoopFuture<AWSHTTPResponse> {
         var head = HTTPRequestHead(
           version: HTTPVersion(major: 1, minor: 1),
           method: request.method,
@@ -247,7 +247,7 @@ extension NIOTSHTTPClient: AWSHTTPClient {
         head.headers = request.headers
         let request = Request(head: head, body: request.bodyData)
         
-        return connect(request).map { return $0 }
+        return connect(request, timeout: timeout).map { return $0 }
     }
 }
 

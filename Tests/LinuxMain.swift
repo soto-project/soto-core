@@ -2,6 +2,7 @@ import XCTest
 @testable import AWSSDKSwiftCoreTests
 
 XCTMain([
+    testCase(AsyncHTTPClientTests.allTests),
     testCase(AWSClientTests.allTests),
     testCase(CredentialTests.allTests),
     testCase(DictionaryEncoderTests.allTests),

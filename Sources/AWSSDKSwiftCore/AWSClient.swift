@@ -200,14 +200,14 @@ extension AWSClient {
     public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> Future<Void> {
 
         return manageCredential().flatMapThrowing { signer in
-            return (request: try self.createAWSRequest(
+            let awsRequest = try self.createAWSRequest(
                         operation: operationName,
                         path: path,
                         httpMethod: httpMethod,
-                        input: input),
-                    signer: signer)
+                        input: input)
+            return self.createHTTPRequest(awsRequest, signer: signer)
         }.flatMap { request in
-            return self.invoke(request.request, signer: request.signer)
+            return self.invoke(request)
         }.flatMapThrowing { response in
             return try self.validate(response: response)
         }
@@ -223,13 +223,13 @@ extension AWSClient {
     public func send(operation operationName: String, path: String, httpMethod: String) -> Future<Void> {
 
         return manageCredential().flatMapThrowing { signer in
-            return (request: try self.createAWSRequest(
+            let awsRequest = try self.createAWSRequest(
                         operation: operationName,
                         path: path,
-                        httpMethod: httpMethod),
-                    signer: signer)
+                        httpMethod: httpMethod)
+            return self.createHTTPRequest(awsRequest, signer: signer)
         }.flatMap { request in
-            return self.invoke(request.request, signer: request.signer)
+            return self.invoke(request)
         }.flatMapThrowing { response in
             return try self.validate(response: response)
         }
@@ -245,13 +245,13 @@ extension AWSClient {
     public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) -> Future<Output> {
 
         return manageCredential().flatMapThrowing { signer in
-            return (request: try self.createAWSRequest(
+            let awsRequest = try self.createAWSRequest(
                         operation: operationName,
                         path: path,
-                        httpMethod: httpMethod),
-                    signer: signer)
+                        httpMethod: httpMethod)
+            return self.createHTTPRequest(awsRequest, signer: signer)
         }.flatMap { request in
-            return self.invoke(request.request, signer: request.signer)
+            return self.invoke(request)
         }.flatMapThrowing { response in
             return try self.validate(operation: operationName, response: response)
         }
@@ -268,14 +268,14 @@ extension AWSClient {
     public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> Future<Output> {
 
         return manageCredential().flatMapThrowing { signer in
-            return (request: try self.createAWSRequest(
+            let awsRequest = try self.createAWSRequest(
                         operation: operationName,
                         path: path,
                         httpMethod: httpMethod,
-                        input: input),
-                    signer: signer)
+                        input: input)
+            return self.createHTTPRequest(awsRequest, signer: signer)
         }.flatMap { request in
-            return self.invoke(request.request, signer: request.signer)
+            return self.invoke(request)
         }.flatMapThrowing { response in
             return try self.validate(operation: operationName, response: response)
         }

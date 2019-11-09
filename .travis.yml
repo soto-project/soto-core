@@ -4,16 +4,26 @@ matrix:
   include:
     - os: linux
       services: docker
+      addons:
+        hosts:
+          - httpbin.org
       before_install:
         - docker pull swift:5.0
+      install:
+        - docker run -d -p 80:80 kennethreitz/httpbin
       script:
-        - docker run -v "$(pwd):/root/aws-sdk-swift-core" swift:5.0 /bin/sh -c "apt-get -qq update && apt-get -q -y install tzdata libssl-dev zlib1g-dev && rm -r /var/lib/apt/lists/* && cd /root/aws-sdk-swift-core && swift build && swift test --parallel -Xswiftc -DDEBUG"
+        - docker run --network=host -v "$(pwd):/root/aws-sdk-swift-core" swift:5.0 /bin/sh -c "apt-get -qq update && apt-get -q -y install tzdata libssl-dev zlib1g-dev && rm -r /var/lib/apt/lists/* && cd /root/aws-sdk-swift-core && swift build && swift test --parallel -Xswiftc -DDEBUG"
     - os: linux
       services: docker
+      addons:
+        hosts:
+          - httpbin.org
       before_install:
         - docker pull swift:5.1
+      install:
+        - docker run -d -p 80:80 kennethreitz/httpbin
       script:
-        - docker run -v "$(pwd):/root/aws-sdk-swift-core" swift:5.1 /bin/sh -c "apt-get -qq update && apt-get -q -y install tzdata libssl-dev zlib1g-dev && rm -r /var/lib/apt/lists/* && cd /root/aws-sdk-swift-core && swift build && swift test --parallel -Xswiftc -DDEBUG"
+        - docker run --network=host -v "$(pwd):/root/aws-sdk-swift-core" swift:5.1 /bin/sh -c "apt-get -qq update && apt-get -q -y install tzdata libssl-dev zlib1g-dev && rm -r /var/lib/apt/lists/* && cd /root/aws-sdk-swift-core && swift build && swift test --parallel -Xswiftc -DDEBUG"
     - os: osx
       language: swift
       osx_image: xcode11

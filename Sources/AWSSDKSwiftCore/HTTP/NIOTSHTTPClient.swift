@@ -69,7 +69,7 @@ public final class NIOTSHTTPClient {
     }
     
     deinit {
-        assert(self.isShutdown.load(), "Client not shut down before the deinit. Please call client.close() when no longer needed.")
+        assert(self.isShutdown.load(), "Client not shut down before the deinit. Please call client.syncShutdown() when no longer needed.")
     }
 
     /// send request to HTTP client, return a future holding the Response

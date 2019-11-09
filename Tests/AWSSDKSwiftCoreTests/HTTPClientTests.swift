@@ -105,10 +105,6 @@ class AsyncHTTPClientTests: XCTestCase {
         HTTPClientTests(client).testGet()
     }
     
-    func testHTTPS() {
-        HTTPClientTests(client).testHTTPS()
-    }
-    
     func testHeaders() {
         HTTPClientTests(client).testHeaders()
     }
@@ -119,6 +115,7 @@ class AsyncHTTPClientTests: XCTestCase {
     
     static var allTests : [(String, (AsyncHTTPClientTests) -> () throws -> Void)] {
         return [
+            ("testGet", testGet),
             ("testHeaders", testHeaders),
             ("testBody", testBody),
         ]

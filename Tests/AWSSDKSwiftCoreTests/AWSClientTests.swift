@@ -9,6 +9,7 @@
 import Foundation
 import NIOHTTP1
 import XCTest
+import NIO
 @testable import AWSSDKSwiftCore
 
 class AWSClientTests: XCTestCase {
@@ -73,6 +74,11 @@ class AWSClientTests: XCTestCase {
 
 
     func testGetCredential() {
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        defer {
+           XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
+        }
+        
         let sesClient = AWSClient(
             accessKeyId: "key",
             secretAccessKey: "secret",
@@ -81,11 +87,12 @@ class AWSClientTests: XCTestCase {
             serviceProtocol: ServiceProtocol(type: .query),
             apiVersion: "2013-12-01",
             middlewares: [],
-            possibleErrorTypes: [SESErrorType.self]
+            possibleErrorTypes: [SESErrorType.self],
+            eventLoopGroupProvider: .shared(eventLoopGroup)
         )
 
         do {
-            let credentialForSignature = try sesClient.signer.manageCredential(eventLoopGroup: AWSClient.eventGroup).wait()
+            let credentialForSignature = try sesClient.signer.manageCredential(eventLoopGroup: eventLoopGroup).wait()
             XCTAssertEqual(credentialForSignature.accessKeyId, "key")
             XCTAssertEqual(credentialForSignature.secretAccessKey, "secret")
         } catch {

@@ -21,6 +21,14 @@ public class AWSClient {
     public enum RequestError: Error {
         case invalidURL(String)
     }
+    
+    /// Specifies how `EventLoopGroup` will be created and establishes lifecycle ownership.
+    public enum EventLoopGroupProvider {
+        /// `EventLoopGroup` will be provided by the user. Owner of this group is responsible for its lifecycle.
+        case shared(EventLoopGroup)
+        /// `EventLoopGroup` will be created by the client. When `syncShutdown` is called, created `EventLoopGroup` will be shut down as well.
+        case useAWSClientShared
+    }
 
     let signer: Signers.V4
 
@@ -41,6 +49,8 @@ public class AWSClient {
     let middlewares: [AWSServiceMiddleware]
 
     var possibleErrorTypes: [AWSErrorType.Type]
+    
+    public let eventLoopGroup: EventLoopGroup
 
     /// endpoint URL
     public var endpoint: String {
@@ -61,7 +71,7 @@ public class AWSClient {
         return "\(service).\(signer.region.rawValue).amazonaws.com"
     }
 
-    public static let eventGroup: EventLoopGroup = createEventLoopGroup()
+    public static let sharedEventLoopGroup: EventLoopGroup = createEventLoopGroup()
 
     /// create an eventLoopGroup
     static func createEventLoopGroup() -> EventLoopGroup {
@@ -89,7 +99,7 @@ public class AWSClient {
     ///     - partitionEndpoint: Default endpoint to use
     ///     - middlewares: Array of middlewares to apply to requests and responses
     ///     - possibleErrorTypes: Array of possible error types that the client can throw
-    public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, sessionToken: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, signingName: String? = nil, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSServiceMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil) {
+    public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, sessionToken: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, signingName: String? = nil, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSServiceMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil, eventLoopGroupProvider: EventLoopGroupProvider = .useAWSClientShared) {
         let credential: CredentialProvider
         if let accessKey = accessKeyId, let secretKey = secretAccessKey {
             credential = Credential(accessKeyId: accessKey, secretAccessKey: secretKey, sessionToken: sessionToken)
@@ -113,6 +123,13 @@ public class AWSClient {
         } else {
             region = .useast1
         }
+        
+        switch eventLoopGroupProvider {
+        case .shared(let eventLoopGroup):
+            self.eventLoopGroup = eventLoopGroup
+        case .useAWSClientShared:
+            self.eventLoopGroup = AWSClient.sharedEventLoopGroup
+        }
 
         self.signer = Signers.V4(credential: credential, region: region, signingName: signingName ?? service, endpoint: endpoint)
         self.apiVersion = apiVersion
@@ -130,7 +147,7 @@ public class AWSClient {
 // invoker
 extension AWSClient {
     fileprivate func invoke(_ nioRequest: HTTPClient.Request) -> Future<HTTPClient.Response> {
-        let client = HTTPClient(eventLoopGroupProvider: .shared(AWSClient.eventGroup))
+        let client = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
         let futureResponse = client.connect(nioRequest)
 
         futureResponse.whenComplete { _ in
@@ -158,7 +175,7 @@ extension AWSClient {
     ///     Empty Future that completes when response is received
     public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> Future<Void> {
 
-        return signer.manageCredential(eventLoopGroup: AWSClient.eventGroup).flatMapThrowing { _ in
+        return signer.manageCredential(eventLoopGroup: eventLoopGroup).flatMapThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
                     operation: operationName,
                     path: path,
@@ -182,7 +199,7 @@ extension AWSClient {
     ///     Empty Future that completes when response is received
     public func send(operation operationName: String, path: String, httpMethod: String) -> Future<Void> {
 
-        return signer.manageCredential(eventLoopGroup: AWSClient.eventGroup).flatMapThrowing { _ in
+        return signer.manageCredential(eventLoopGroup: eventLoopGroup).flatMapThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
                     operation: operationName,
                     path: path,
@@ -205,7 +222,7 @@ extension AWSClient {
     ///     Future containing output object that completes when response is received
     public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) -> Future<Output> {
 
-        return signer.manageCredential(eventLoopGroup: AWSClient.eventGroup).flatMapThrowing { _ in
+        return signer.manageCredential(eventLoopGroup: eventLoopGroup).flatMapThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
                     operation: operationName,
                     path: path,
@@ -229,7 +246,7 @@ extension AWSClient {
     ///     Future containing output object that completes when response is received
     public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> Future<Output> {
 
-            return signer.manageCredential(eventLoopGroup: AWSClient.eventGroup).flatMapThrowing { _ in
+            return signer.manageCredential(eventLoopGroup: eventLoopGroup).flatMapThrowing { _ in
                     let awsRequest = try self.createAWSRequest(
                         operation: operationName,
                         path: path,

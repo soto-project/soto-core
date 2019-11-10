@@ -20,7 +20,7 @@ class AWSClientTests: XCTestCase {
         let headers: HTTPHeaders
         let bodyData: Data?
     }
-    
+
     static var allTests : [(String, (AWSClientTests) -> () throws -> Void)] {
         return [
             ("testGetCredential", testGetCredential),
@@ -83,6 +83,11 @@ class AWSClientTests: XCTestCase {
 
 
     func testGetCredential() {
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        defer {
+           XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
+        }
+
         let sesClient = AWSClient(
             accessKeyId: "key",
             secretAccessKey: "secret",
@@ -90,7 +95,8 @@ class AWSClientTests: XCTestCase {
             service: "email",
             serviceProtocol: ServiceProtocol(type: .query),
             apiVersion: "2013-12-01",
-            middlewares: []
+            middlewares: [],
+            eventLoopGroupProvider: .shared(eventLoopGroup)
         )
 
         do {
@@ -351,7 +357,7 @@ class AWSClientTests: XCTestCase {
             apiVersion: "2013-12-02",
             middlewares: []
         )
-        
+
         do {
             let awsRequest = try client.createAWSRequest(
                 operation: "CopyObject",
@@ -359,9 +365,9 @@ class AWSClientTests: XCTestCase {
                 httpMethod: "PUT",
                 input: input
             )
-            
+
             let request: AWSHTTPRequest = client.createHTTPRequest(awsRequest, signer: client.signer.value)
-            
+
             XCTAssertNil(request.headers["Authorization"].first)
         } catch {
             XCTFail(error.localizedDescription)
@@ -498,7 +504,7 @@ class AWSClientTests: XCTestCase {
             XCTFail("Throwing the wrong error")
         }
     }
-    
+
 }
 
 /// Error enum for Kinesis

@@ -67,7 +67,7 @@ public final class NIOTSHTTPClient {
             self.eventLoopGroup = NIOTSEventLoopGroup()
         }
     }
-    
+
     deinit {
         assert(self.isShutdown.load(), "Client not shut down before the deinit. Please call client.syncShutdown() when no longer needed.")
     }
@@ -96,11 +96,11 @@ public final class NIOTSHTTPClient {
         var bootstrap = NIOTSConnectionBootstrap(group: self.eventLoopGroup)
             .connectTimeout(timeout)
             .channelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: 1)
-        
+
         if port == 443 {
             bootstrap = bootstrap.tlsOptions(NWProtocolTLS.Options())
         }
-        
+
         bootstrap.channelInitializer { channel in
                 return channel.pipeline.addHTTPClientHandlers()
                     .flatMap {
@@ -229,7 +229,7 @@ public final class NIOTSHTTPClient {
             }
         }
     }
-    
+
     internal let eventLoopGroup: EventLoopGroup
     private let eventLoopGroupProvider: EventLoopGroupProvider
 }
@@ -237,7 +237,7 @@ public final class NIOTSHTTPClient {
 /// comply with AWSHTTPClient protocol
 @available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)
 extension NIOTSHTTPClient: AWSHTTPClient {
-    
+
     func execute(request: AWSHTTPRequest, timeout: TimeAmount) -> EventLoopFuture<AWSHTTPResponse> {
         var head = HTTPRequestHead(
           version: HTTPVersion(major: 1, minor: 1),
@@ -246,7 +246,7 @@ extension NIOTSHTTPClient: AWSHTTPClient {
         )
         head.headers = request.headers
         let request = Request(head: head, body: request.bodyData)
-        
+
         return connect(request, timeout: timeout).map { return $0 }
     }
 }

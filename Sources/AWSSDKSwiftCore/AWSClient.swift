@@ -48,6 +48,14 @@ public class AWSClient {
         case invalidURL(String)
     }
 
+    /// Specifies how `EventLoopGroup` will be created and establishes lifecycle ownership.
+    public enum EventLoopGroupProvider {
+        /// `EventLoopGroup` will be provided by the user. Owner of this group is responsible for its lifecycle.
+        case shared(EventLoopGroup)
+        /// `EventLoopGroup` will be created by the client. When `syncShutdown` is called, created `EventLoopGroup` will be shut down as well.
+        case useAWSClientShared
+    }
+
     var signer: AtomicProperty<AWSSigner>
 
     let apiVersion: String
@@ -70,7 +78,9 @@ public class AWSClient {
 
     var possibleErrorTypes: [AWSErrorType.Type]
 
-    public static let eventGroup: EventLoopGroup = createEventLoopGroup()
+    public let eventLoopGroup: EventLoopGroup
+
+    public static let sharedEventLoopGroup: EventLoopGroup = createEventLoopGroup()
 
     /// create an eventLoopGroup
     static func createEventLoopGroup() -> EventLoopGroup {
@@ -98,7 +108,7 @@ public class AWSClient {
     ///     - partitionEndpoint: Default endpoint to use
     ///     - middlewares: Array of middlewares to apply to requests and responses
     ///     - possibleErrorTypes: Array of possible error types that the client can throw
-    public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, sessionToken: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, signingName: String? = nil, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSServiceMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil) {
+    public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, sessionToken: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, signingName: String? = nil, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSServiceMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil, eventLoopGroupProvider: EventLoopGroupProvider = .useAWSClientShared) {
         let credential: CredentialProvider
         if let accessKey = accessKeyId, let secretKey = secretAccessKey {
             credential = Credential(accessKeyId: accessKey, secretAccessKey: secretKey, sessionToken: sessionToken)
@@ -120,6 +130,13 @@ public class AWSClient {
             region = reg
         } else {
             region = .useast1
+        }
+
+        switch eventLoopGroupProvider {
+        case .shared(let eventLoopGroup):
+            self.eventLoopGroup = eventLoopGroup
+        case .useAWSClientShared:
+            self.eventLoopGroup = AWSClient.sharedEventLoopGroup
         }
 
         self.signer = AtomicProperty(value: AWSSigner(credentials: credential, name: signingName ?? service, region: region.rawValue))
@@ -177,11 +194,11 @@ extension AWSClient {
     /// create HTTPClient
     fileprivate func createHTTPClient() -> AWSHTTPClient {
         #if canImport(Network)
-        if #available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *), AWSClient.eventGroup is NIOTSEventLoopGroup {
-            return NIOTSHTTPClient(eventLoopGroupProvider: .shared(AWSClient.eventGroup))
+        if #available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *), eventLoopGroup is NIOTSEventLoopGroup {
+            return NIOTSHTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
         }
         #endif
-        return AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(AWSClient.eventGroup))
+        return AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
     }
 
 }
@@ -301,7 +318,7 @@ extension AWSClient {
         let signer = self.signer.value
         if let expiringCredential = signer.credentials as? ExpiringCredential, expiringCredential.nearExpiration() {
             do {
-                return try MetaDataService.getCredential(eventLoopGroup: AWSClient.eventGroup).map { credential in
+                return try MetaDataService.getCredential(eventLoopGroup: eventLoopGroup).map { credential in
                     let signer = AWSSigner(credentials: credential, name: signer.name, region: signer.region)
                     self.signer.value = signer
                     return signer
@@ -311,7 +328,7 @@ extension AWSClient {
             }
         }
         #endif // os(Linux)
-        return AWSClient.eventGroup.next().makeSucceededFuture(self.signer.value)
+        return eventLoopGroup.next().makeSucceededFuture(self.signer.value)
     }
 
     func createHTTPRequest(_ awsRequest: AWSRequest, signer: AWSSigner) -> AWSHTTPRequest {

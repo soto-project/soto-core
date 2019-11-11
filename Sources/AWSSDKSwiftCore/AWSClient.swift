@@ -71,7 +71,7 @@ public class AWSClient {
         return "\(service).\(signer.region.rawValue).amazonaws.com"
     }
 
-    public static let sharedEventLoopGroup: EventLoopGroup = createEventLoopGroup()
+    private static let sharedEventLoopGroup: EventLoopGroup = createEventLoopGroup()
 
     /// create an eventLoopGroup
     static func createEventLoopGroup() -> EventLoopGroup {
@@ -99,7 +99,8 @@ public class AWSClient {
     ///     - partitionEndpoint: Default endpoint to use
     ///     - middlewares: Array of middlewares to apply to requests and responses
     ///     - possibleErrorTypes: Array of possible error types that the client can throw
-    public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, sessionToken: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, signingName: String? = nil, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSServiceMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil, eventLoopGroupProvider: EventLoopGroupProvider = .useAWSClientShared) {
+    ///     - eventLoopGroupProvider: EventLoopGroup to use. Use `useAWSClientShared` if the client shall manage its own EventLoopGroup.
+    public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, sessionToken: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, signingName: String? = nil, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSServiceMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil, eventLoopGroupProvider: EventLoopGroupProvider) {
         let credential: CredentialProvider
         if let accessKey = accessKeyId, let secretKey = secretAccessKey {
             credential = Credential(accessKeyId: accessKey, secretAccessKey: secretKey, sessionToken: sessionToken)

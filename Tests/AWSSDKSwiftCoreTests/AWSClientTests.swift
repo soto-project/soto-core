@@ -84,9 +84,7 @@ class AWSClientTests: XCTestCase {
 
     func testGetCredential() {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer {
-           XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
-        }
+        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
 
         let sesClient = AWSClient(
             accessKeyId: "key",
@@ -114,7 +112,8 @@ class AWSClientTests: XCTestCase {
             region: .useast1,
             service: "email",
             serviceProtocol: ServiceProtocol(type: .query),
-            apiVersion: "2013-12-01")
+            apiVersion: "2013-12-01",
+            eventLoopGroupProvider: .useAWSClientShared)
 
         do {
             let credentials = try client.manageCredential().wait().credentials
@@ -153,7 +152,8 @@ class AWSClientTests: XCTestCase {
         service: "email",
         serviceProtocol: ServiceProtocol(type: .query),
         apiVersion: "2013-12-01",
-        middlewares: [AWSLoggingMiddleware()]
+        middlewares: [AWSLoggingMiddleware()],
+        eventLoopGroupProvider: .useAWSClientShared
     )
 
     let kinesisClient = AWSClient(
@@ -165,7 +165,8 @@ class AWSClientTests: XCTestCase {
         serviceProtocol: ServiceProtocol(type: .json, version: ServiceProtocol.Version(major: 1, minor: 1)),
         apiVersion: "2013-12-02",
         middlewares: [AWSLoggingMiddleware()],
-        possibleErrorTypes: [KinesisErrorType.self]
+        possibleErrorTypes: [KinesisErrorType.self],
+        eventLoopGroupProvider: .useAWSClientShared
     )
 
     let s3Client = AWSClient(
@@ -179,10 +180,14 @@ class AWSClientTests: XCTestCase {
         serviceEndpoints: ["us-west-2": "s3.us-west-2.amazonaws.com", "eu-west-1": "s3.eu-west-1.amazonaws.com", "us-east-1": "s3.amazonaws.com", "ap-northeast-1": "s3.ap-northeast-1.amazonaws.com", "s3-external-1": "s3-external-1.amazonaws.com", "ap-southeast-2": "s3.ap-southeast-2.amazonaws.com", "sa-east-1": "s3.sa-east-1.amazonaws.com", "ap-southeast-1": "s3.ap-southeast-1.amazonaws.com", "us-west-1": "s3.us-west-1.amazonaws.com"],
         partitionEndpoint: "us-east-1",
         middlewares: [AWSLoggingMiddleware()],
-        possibleErrorTypes: [S3ErrorType.self]
+        possibleErrorTypes: [S3ErrorType.self],
+        eventLoopGroupProvider: .useAWSClientShared
     )
 
     func testCreateAWSRequest() {
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+
         let input1 = C()
         let input2 = E()
         let input3 = F(fooParams: input2)
@@ -212,7 +217,8 @@ class AWSClientTests: XCTestCase {
             serviceProtocol: ServiceProtocol(type: .json, version: ServiceProtocol.Version(major: 1, minor: 1)),
             apiVersion: "2013-12-02",
             middlewares: [],
-            possibleErrorTypes: [KinesisErrorType.self]
+            possibleErrorTypes: [KinesisErrorType.self],
+            eventLoopGroupProvider: .shared(eventLoopGroup)
         )
 
         do {
@@ -308,6 +314,9 @@ class AWSClientTests: XCTestCase {
     }
 
     func testCreateNIORequest() {
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+
         let input2 = E()
 
         let kinesisClient = AWSClient(
@@ -319,7 +328,8 @@ class AWSClientTests: XCTestCase {
             serviceProtocol: ServiceProtocol(type: .json, version: ServiceProtocol.Version(major: 1, minor: 1)),
             apiVersion: "2013-12-02",
             middlewares: [],
-            possibleErrorTypes: [KinesisErrorType.self]
+            possibleErrorTypes: [KinesisErrorType.self],
+            eventLoopGroupProvider: .shared(eventLoopGroup)
         )
 
         do {
@@ -355,7 +365,8 @@ class AWSClientTests: XCTestCase {
             service: "s3",
             serviceProtocol: ServiceProtocol(type: .restxml),
             apiVersion: "2013-12-02",
-            middlewares: []
+            middlewares: [],
+            eventLoopGroupProvider: .useAWSClientShared
         )
 
         do {

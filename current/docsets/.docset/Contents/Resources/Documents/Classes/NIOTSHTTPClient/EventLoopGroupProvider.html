@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>HTTPError Enumeration Reference</title>
+    <title>EventLoopGroupProvider Enumeration Reference</title>
     <link rel="stylesheet" type="text/css" href="../../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../../css/highlight.css" />
     <meta charset='utf-8'>
@@ -10,11 +10,11 @@
     
   </head>
   <body>
-    <a name="//apple_ref/swift/Enum/HTTPError" class="dashAnchor"></a>
-    <a title="HTTPError Enumeration Reference"></a>
+    <a name="//apple_ref/swift/Enum/EventLoopGroupProvider" class="dashAnchor"></a>
+    <a title="EventLoopGroupProvider Enumeration Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../../index.html"> Docs</a> (62% documented)</p>
+        <p><a href="../../index.html"> Docs</a> (64% documented)</p>
         <p class="header-right"><a href="https://github.com/swift-aws/aws-sdk-swift-core"><img src="../../img/gh.png"/>View on GitHub</a></p>
       </div>
     </header>
@@ -22,7 +22,7 @@
       <p id="breadcrumbs">
         <a href="../../index.html"> Reference</a>
         <img id="carat" src="../../img/carat.png" />
-        HTTPError Enumeration Reference
+        EventLoopGroupProvider Enumeration Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -36,6 +36,9 @@
               </li>
               <li class="nav-group-task">
                 <a href="../../Classes/AWSClient/RequestError.html">– RequestError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Classes/AWSClient/EventLoopGroupProvider.html">– EventLoopGroupProvider</a>
               </li>
               <li class="nav-group-task">
                 <a href="../../Classes/AWSLoggingMiddleware.html">AWSLoggingMiddleware</a>
@@ -71,22 +74,19 @@
                 <a href="../../Classes/DictionaryEncoder/KeyEncodingStrategy.html">– KeyEncodingStrategy</a>
               </li>
               <li class="nav-group-task">
-                <a href="../../Classes/HTTPClient.html">HTTPClient</a>
+                <a href="../../Classes/NIOTSHTTPClient.html">NIOTSHTTPClient</a>
               </li>
               <li class="nav-group-task">
-                <a href="../../Classes/HTTPClient.html#/s:15AWSSDKSwiftCore10HTTPClientC7RequestV">– Request</a>
+                <a href="../../Classes/NIOTSHTTPClient.html#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC7RequestV">– Request</a>
               </li>
               <li class="nav-group-task">
-                <a href="../../Classes/HTTPClient/Response.html">– Response</a>
+                <a href="../../Classes/NIOTSHTTPClient.html#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC8ResponseV">– Response</a>
               </li>
               <li class="nav-group-task">
-                <a href="../../Classes/HTTPClient/HTTPError.html">– HTTPError</a>
+                <a href="../../Classes/NIOTSHTTPClient/HTTPError.html">– HTTPError</a>
               </li>
               <li class="nav-group-task">
-                <a href="../../Classes/Signers.html">Signers</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../../Classes/Signers/V4.html">– V4</a>
+                <a href="../../Classes/NIOTSHTTPClient/EventLoopGroupProvider.html">– EventLoopGroupProvider</a>
               </li>
               <li class="nav-group-task">
                 <a href="../../Classes/XML.html">XML</a>
@@ -193,9 +193,6 @@
                 <a href="../../Protocols/AWSShape.html">AWSShape</a>
               </li>
               <li class="nav-group-task">
-                <a href="../../Protocols/CredentialProvider.html">CredentialProvider</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../../Protocols/XMLCodable.html">XMLCodable</a>
               </li>
             </ul>
@@ -228,7 +225,10 @@
                 <a href="../../Structs/AWSShapeMember/ShapeEncoding.html">– ShapeEncoding</a>
               </li>
               <li class="nav-group-task">
-                <a href="../../Structs/Credential.html">Credential</a>
+                <a href="../../Structs/ExpiringCredential.html">ExpiringCredential</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Structs/MetaDataService.html">MetaDataService</a>
               </li>
               <li class="nav-group-task">
                 <a href="../../Structs/ServiceProtocol.html">ServiceProtocol</a>
@@ -260,14 +260,14 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>HTTPError</h1>
+            <h1>EventLoopGroupProvider</h1>
               <div class="declaration">
                 <div class="language">
-                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">HTTPError</span> <span class="p">:</span> <span class="kt">Error</span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">EventLoopGroupProvider</span></code></pre>
 
                 </div>
               </div>
-            <p>Errors returned from HTTPClient when parsing responses</p>
+            <p>Specifies how <code>EventLoopGroup</code> will be created and establishes lifecycle ownership.</p>
 
           </section>
           <section class="section task-group-section">
@@ -276,9 +276,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore10HTTPClientC9HTTPErrorO13malformedHeadyA2EmF"></a>
-                    <a name="//apple_ref/swift/Element/malformedHead" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore10HTTPClientC9HTTPErrorO13malformedHeadyA2EmF">malformedHead</a>
+                    <a name="/s:15AWSSDKSwiftCore15NIOTSHTTPClientC22EventLoopGroupProviderO6sharedyAE3NIO0deF0_pcAEmF"></a>
+                    <a name="//apple_ref/swift/Element/shared(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC22EventLoopGroupProviderO6sharedyAE3NIO0deF0_pcAEmF">shared(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -286,14 +286,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p><code>EventLoopGroup</code> will be provided by the user. Owner of this group is responsible for its lifecycle.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">malformedHead</span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">shared</span><span class="p">(</span><span class="kt">EventLoopGroup</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -303,9 +303,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore10HTTPClientC9HTTPErrorO13malformedBodyyA2EmF"></a>
-                    <a name="//apple_ref/swift/Element/malformedBody" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore10HTTPClientC9HTTPErrorO13malformedBodyyA2EmF">malformedBody</a>
+                    <a name="/s:15AWSSDKSwiftCore15NIOTSHTTPClientC22EventLoopGroupProviderO9createNewyA2EmF"></a>
+                    <a name="//apple_ref/swift/Element/createNew" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC22EventLoopGroupProviderO9createNewyA2EmF">createNew</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -313,41 +313,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p><code>EventLoopGroup</code> will be created by the client. When <code>syncShutdown</code> is called, created <code>EventLoopGroup</code> will be shut down as well.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">malformedBody</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:15AWSSDKSwiftCore10HTTPClientC9HTTPErrorO12malformedURLyA2EmF"></a>
-                    <a name="//apple_ref/swift/Element/malformedURL" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore10HTTPClientC9HTTPErrorO12malformedURLyA2EmF">malformedURL</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Undocumented</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">malformedURL</span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">createNew</span></code></pre>
 
                         </div>
                       </div>

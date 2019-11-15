@@ -13,7 +13,7 @@
     <a title="  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html"> Docs</a> (62% documented)</p>
+        <p><a href="index.html"> Docs</a> (64% documented)</p>
         <p class="header-right"><a href="https://github.com/swift-aws/aws-sdk-swift-core"><img src="img/gh.png"/>View on GitHub</a></p>
       </div>
     </header>
@@ -35,6 +35,9 @@
               </li>
               <li class="nav-group-task">
                 <a href="Classes/AWSClient/RequestError.html">– RequestError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/AWSClient/EventLoopGroupProvider.html">– EventLoopGroupProvider</a>
               </li>
               <li class="nav-group-task">
                 <a href="Classes/AWSLoggingMiddleware.html">AWSLoggingMiddleware</a>
@@ -70,22 +73,19 @@
                 <a href="Classes/DictionaryEncoder/KeyEncodingStrategy.html">– KeyEncodingStrategy</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/HTTPClient.html">HTTPClient</a>
+                <a href="Classes/NIOTSHTTPClient.html">NIOTSHTTPClient</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/HTTPClient.html#/s:15AWSSDKSwiftCore10HTTPClientC7RequestV">– Request</a>
+                <a href="Classes/NIOTSHTTPClient.html#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC7RequestV">– Request</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/HTTPClient/Response.html">– Response</a>
+                <a href="Classes/NIOTSHTTPClient.html#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC8ResponseV">– Response</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/HTTPClient/HTTPError.html">– HTTPError</a>
+                <a href="Classes/NIOTSHTTPClient/HTTPError.html">– HTTPError</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/Signers.html">Signers</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/Signers/V4.html">– V4</a>
+                <a href="Classes/NIOTSHTTPClient/EventLoopGroupProvider.html">– EventLoopGroupProvider</a>
               </li>
               <li class="nav-group-task">
                 <a href="Classes/XML.html">XML</a>
@@ -192,9 +192,6 @@
                 <a href="Protocols/AWSShape.html">AWSShape</a>
               </li>
               <li class="nav-group-task">
-                <a href="Protocols/CredentialProvider.html">CredentialProvider</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="Protocols/XMLCodable.html">XMLCodable</a>
               </li>
             </ul>
@@ -227,7 +224,10 @@
                 <a href="Structs/AWSShapeMember/ShapeEncoding.html">– ShapeEncoding</a>
               </li>
               <li class="nav-group-task">
-                <a href="Structs/Credential.html">Credential</a>
+                <a href="Structs/ExpiringCredential.html">ExpiringCredential</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/MetaDataService.html">MetaDataService</a>
               </li>
               <li class="nav-group-task">
                 <a href="Structs/ServiceProtocol.html">ServiceProtocol</a>
@@ -268,7 +268,7 @@
 
 <p>A Core Framework for <a href="https://github.com/swift-aws/aws-sdk-swift">AWSSDKSwift</a></p>
 
-<p>This is the underlying driver for executing requests to AWS, but you should likely use one of the libraries provided by the package above instead of this! Documentation can be found <a href="http://htmlpreview.github.io/?https://github.com/swift-aws/aws-sdk-swift-core/gh-pages/docs/current/index.html">here</a>.</p>
+<p>This is the underlying driver for executing requests to AWS, but you should likely use one of the libraries provided by the package above instead of this! Documentation can be found <a href="http://htmlpreview.github.io/?https://github.com/swift-aws/aws-sdk-swift-core/gh-pages/current/index.html">here</a>.</p>
 <h2 id='swift-nio' class='heading'>Swift NIO</h2>
 
 <p>This client utilizes <a href="https://github.com/apple/swift-nio#conceptual-overview">Swift NIO</a> to power its interactions with AWS. It returns an <a href="https://apple.github.io/swift-nio/docs/current/NIO/Classes/EventLoopFuture.html"><code>EventLoopFuture</code></a> in order to allow non-blocking frameworks to use this code. Please see the Swift NIO documentation for more details, and please let us know via an Issue if you have questions!</p>

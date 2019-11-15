@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Signers Class Reference</title>
+    <title>NIOTSHTTPClient Class Reference</title>
     <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
     <meta charset='utf-8'>
@@ -10,11 +10,11 @@
     
   </head>
   <body>
-    <a name="//apple_ref/swift/Class/Signers" class="dashAnchor"></a>
-    <a title="Signers Class Reference"></a>
+    <a name="//apple_ref/swift/Class/NIOTSHTTPClient" class="dashAnchor"></a>
+    <a title="NIOTSHTTPClient Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> Docs</a> (62% documented)</p>
+        <p><a href="../index.html"> Docs</a> (64% documented)</p>
         <p class="header-right"><a href="https://github.com/swift-aws/aws-sdk-swift-core"><img src="../img/gh.png"/>View on GitHub</a></p>
       </div>
     </header>
@@ -22,7 +22,7 @@
       <p id="breadcrumbs">
         <a href="../index.html"> Reference</a>
         <img id="carat" src="../img/carat.png" />
-        Signers Class Reference
+        NIOTSHTTPClient Class Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -36,6 +36,9 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/AWSClient/RequestError.html">– RequestError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AWSClient/EventLoopGroupProvider.html">– EventLoopGroupProvider</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/AWSLoggingMiddleware.html">AWSLoggingMiddleware</a>
@@ -71,22 +74,19 @@
                 <a href="../Classes/DictionaryEncoder/KeyEncodingStrategy.html">– KeyEncodingStrategy</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/HTTPClient.html">HTTPClient</a>
+                <a href="../Classes/NIOTSHTTPClient.html">NIOTSHTTPClient</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/HTTPClient.html#/s:15AWSSDKSwiftCore10HTTPClientC7RequestV">– Request</a>
+                <a href="../Classes/NIOTSHTTPClient.html#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC7RequestV">– Request</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/HTTPClient/Response.html">– Response</a>
+                <a href="../Classes/NIOTSHTTPClient.html#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC8ResponseV">– Response</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/HTTPClient/HTTPError.html">– HTTPError</a>
+                <a href="../Classes/NIOTSHTTPClient/HTTPError.html">– HTTPError</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/Signers.html">Signers</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/Signers/V4.html">– V4</a>
+                <a href="../Classes/NIOTSHTTPClient/EventLoopGroupProvider.html">– EventLoopGroupProvider</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/XML.html">XML</a>
@@ -193,9 +193,6 @@
                 <a href="../Protocols/AWSShape.html">AWSShape</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Protocols/CredentialProvider.html">CredentialProvider</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Protocols/XMLCodable.html">XMLCodable</a>
               </li>
             </ul>
@@ -228,7 +225,10 @@
                 <a href="../Structs/AWSShapeMember/ShapeEncoding.html">– ShapeEncoding</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Structs/Credential.html">Credential</a>
+                <a href="../Structs/ExpiringCredential.html">ExpiringCredential</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/MetaDataService.html">MetaDataService</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/ServiceProtocol.html">ServiceProtocol</a>
@@ -260,14 +260,15 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>Signers</h1>
+            <h1>NIOTSHTTPClient</h1>
               <div class="declaration">
                 <div class="language">
-                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">Signers</span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">@available</span><span class="p">(</span><span class="kt">OSX</span> <span class="mf">10.14</span><span class="p">,</span> <span class="n">iOS</span> <span class="mf">12.0</span><span class="p">,</span> <span class="n">tvOS</span> <span class="mf">12.0</span><span class="p">,</span> <span class="n">watchOS</span> <span class="mf">6.0</span><span class="p">,</span> <span class="o">*</span><span class="p">)</span>
+<span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">NIOTSHTTPClient</span></code></pre>
 
                 </div>
               </div>
-            <p>Undocumented</p>
+            <p>HTTP Client class providing API for sending HTTP requests</p>
 
           </section>
           <section class="section task-group-section">
@@ -276,9 +277,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore7SignersC2V4C"></a>
-                    <a name="//apple_ref/swift/Class/V4" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore7SignersC2V4C">V4</a>
+                    <a name="/s:15AWSSDKSwiftCore15NIOTSHTTPClientC7RequestV"></a>
+                    <a name="//apple_ref/swift/Struct/Request" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC7RequestV">Request</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -286,15 +287,178 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>AWS V4 Signing code</p>
+                        <p>Request structure to send</p>
 
-                        <a href="../Classes/Signers/V4.html" class="slightly-smaller">See more</a>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">V4</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">Request</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore15NIOTSHTTPClientC8ResponseV"></a>
+                    <a name="//apple_ref/swift/Struct/Response" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC8ResponseV">Response</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Response structure received back</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">Response</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore15NIOTSHTTPClientC9HTTPErrorO"></a>
+                    <a name="//apple_ref/swift/Enum/HTTPError" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC9HTTPErrorO">HTTPError</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Errors returned from HTTPClient when parsing responses</p>
+
+                        <a href="../Classes/NIOTSHTTPClient/HTTPError.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">HTTPError</span> <span class="p">:</span> <span class="kt">Error</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore15NIOTSHTTPClientC22EventLoopGroupProviderO"></a>
+                    <a name="//apple_ref/swift/Enum/EventLoopGroupProvider" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC22EventLoopGroupProviderO">EventLoopGroupProvider</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Specifies how <code>EventLoopGroup</code> will be created and establishes lifecycle ownership.</p>
+
+                        <a href="../Classes/NIOTSHTTPClient/EventLoopGroupProvider.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">EventLoopGroupProvider</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore15NIOTSHTTPClientC22eventLoopGroupProviderA2C05EventefG0O_tcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(eventLoopGroupProvider:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC22eventLoopGroupProviderA2C05EventefG0O_tcfc">init(eventLoopGroupProvider:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Initialise HTTPClient</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">eventLoopGroupProvider</span><span class="p">:</span> <span class="kt"><a href="../Classes/NIOTSHTTPClient/EventLoopGroupProvider.html">EventLoopGroupProvider</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">createNew</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore15NIOTSHTTPClientC7connect_7timeout3NIO15EventLoopFutureCyAC8ResponseVGAC7RequestV_AF10TimeAmountVtF"></a>
+                    <a name="//apple_ref/swift/Method/connect(_:timeout:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC7connect_7timeout3NIO15EventLoopFutureCyAC8ResponseVGAC7RequestV_AF10TimeAmountVtF">connect(_:timeout:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>send request to HTTP client, return a future holding the Response</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">connect</span><span class="p">(</span><span class="n">_</span> <span class="nv">request</span><span class="p">:</span> <span class="kt"><a href="../Classes/NIOTSHTTPClient.html#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC7RequestV">Request</a></span><span class="p">,</span> <span class="nv">timeout</span><span class="p">:</span> <span class="kt">TimeAmount</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt"><a href="../Classes/NIOTSHTTPClient.html#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC8ResponseV">Response</a></span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore15NIOTSHTTPClientC12syncShutdownyyKF"></a>
+                    <a name="//apple_ref/swift/Method/syncShutdown()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC12syncShutdownyyKF">syncShutdown()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Shuts down the client and <code>EventLoopGroup</code> if it was created by the client.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">syncShutdown</span><span class="p">()</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>

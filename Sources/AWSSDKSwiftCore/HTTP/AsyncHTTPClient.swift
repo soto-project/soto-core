@@ -6,8 +6,8 @@ import NIO
 extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
     func execute(request: AWSHTTPRequest, timeout: TimeAmount) -> EventLoopFuture<AWSHTTPResponse> {
         let requestBody: AsyncHTTPClient.HTTPClient.Body?
-        if let bodyData = request.bodyData {
-            requestBody = AsyncHTTPClient.HTTPClient.Body.data(bodyData)
+        if let body = request.body {
+            requestBody = AsyncHTTPClient.HTTPClient.Body.byteBuffer(body)
         } else {
             requestBody = nil
         }
@@ -20,11 +20,4 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
     }
 }
 
-extension AsyncHTTPClient.HTTPClient.Response: AWSHTTPResponse {
-    var bodyData: Data? {
-        if let body = self.body {
-            return body.getData(at: body.readerIndex, length: body.readableBytes, byteTransferStrategy: .noCopy)
-        }
-        return nil
-    }
-}
+extension AsyncHTTPClient.HTTPClient.Response: AWSHTTPResponse {}

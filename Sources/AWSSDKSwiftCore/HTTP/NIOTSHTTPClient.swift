@@ -26,13 +26,13 @@ public final class NIOTSHTTPClient {
     /// Request structure to send
     public struct Request {
         var head: HTTPRequestHead
-        var body: Data?
+        var body: ByteBuffer?
     }
 
     /// Response structure received back
     public struct Response {
         let head: HTTPResponseHead
-        let body: Data?
+        let body: ByteBuffer?
     }
 
     /// Errors returned from HTTPClient when parsing responses
@@ -152,17 +152,15 @@ public final class NIOTSHTTPClient {
             head.headers.replaceOrAdd(name: "User-Agent", value: "AWS SDK Swift Core")
             head.headers.replaceOrAdd(name: "Accept", value: "*/*")
             if let body = request.body {
-                head.headers.replaceOrAdd(name: "Content-Length", value: body.count.description)
+                head.headers.replaceOrAdd(name: "Content-Length", value: body.readableBytes.description)
             }
             // TODO implement keep-alive
             head.headers.replaceOrAdd(name: "Connection", value: "Close")
 
 
             context.write(wrapOutboundOut(.head(head)), promise: nil)
-            if let body = request.body, body.count > 0 {
-                var buffer = ByteBufferAllocator().buffer(capacity: body.count)
-                buffer.writeBytes(body)
-                context.write(self.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: nil)
+            if let body = request.body, body.readableBytes > 0 {
+                context.write(self.wrapOutboundOut(.body(.byteBuffer(body))), promise: nil)
             }
             context.write(self.wrapOutboundOut(.end(nil)), promise: promise)
         }
@@ -176,8 +174,10 @@ public final class NIOTSHTTPClient {
         private enum ResponseState {
             /// Waiting to parse the next response.
             case ready
+            /// Received the head.
+            case head(HTTPResponseHead)
             /// Currently parsing the response's body.
-            case parsingBody(HTTPResponseHead, Data?)
+            case body(HTTPResponseHead, ByteBuffer)
         }
 
         private var state: ResponseState = .ready
@@ -195,28 +195,31 @@ public final class NIOTSHTTPClient {
             switch unwrapInboundIn(data) {
             case .head(let head):
                 switch state {
-                case .ready: state = .parsingBody(head, nil)
-                case .parsingBody: promise.fail(HTTPError.malformedHead)
+                case .ready: state = .head(head)
+                case .head, .body: promise.fail(HTTPError.malformedHead)
                 }
-            case .body(var body):
+            case .body(let part):
                 switch state {
                 case .ready: promise.fail(HTTPError.malformedBody)
-                case .parsingBody(let head, let existingData):
-                    let data: Data
-                    if var existing = existingData {
-                        existing += body.readData(length: body.readableBytes) ?? Data()
-                        data = existing
-                    } else {
-                        data = body.readData(length: body.readableBytes) ?? Data()
-                    }
-                    state = .parsingBody(head, data)
+                case .head(let head):
+                    state = .body(head, part)
+                case .body(let head, var body):
+                    var part = part
+                    body.writeBuffer(&part)
+                    state = .body(head, body)
                 }
-            case .end(let tailHeaders):
-                assert(tailHeaders == nil, "Unexpected tail headers")
+            case .end:
                 switch state {
                 case .ready: promise.fail(HTTPError.malformedHead)
-                case .parsingBody(let head, let data):
-                    let res = Response(head: head, body: data)
+                case .head(let head):
+                    let res = Response(head: head, body: nil)
+                    if context.channel.isActive {
+                        context.fireChannelRead(wrapOutboundOut(res))
+                    }
+                    promise.succeed(res)
+                    state = .ready
+                case .body(let head, let body):
+                    let res = Response(head: head, body: body)
                     if context.channel.isActive {
                         context.fireChannelRead(wrapOutboundOut(res))
                     }
@@ -242,7 +245,7 @@ extension NIOTSHTTPClient: AWSHTTPClient {
           uri: request.url.absoluteString
         )
         head.headers = request.headers
-        let request = Request(head: head, body: request.bodyData)
+        let request = Request(head: head, body: request.body)
 
         return connect(request, timeout: timeout).map { return $0 }
     }
@@ -252,7 +255,6 @@ extension NIOTSHTTPClient: AWSHTTPClient {
 extension NIOTSHTTPClient.Response: AWSHTTPResponse {
     var status: HTTPResponseStatus { return head.status }
     var headers: HTTPHeaders { return head.headers }
-    var bodyData: Data? { return body }
 }
 
 #endif

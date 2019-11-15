@@ -14,14 +14,14 @@ struct AWSHTTPRequest {
     let url: URL
     let method: HTTPMethod
     let headers: HTTPHeaders
-    let bodyData: Data?
+    let body: ByteBuffer?
 }
 
 /// HTTP Response
 protocol AWSHTTPResponse {
     var status: HTTPResponseStatus { get }
     var headers: HTTPHeaders { get }
-    var bodyData: Data? { get }
+    var body: ByteBuffer? { get }
 }
 
 /// Protocol defining requirements for a HTTPClient

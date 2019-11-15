@@ -18,7 +18,22 @@ class AWSClientTests: XCTestCase {
     struct AWSHTTPResponseImpl: AWSHTTPResponse {
         let status: HTTPResponseStatus
         let headers: HTTPHeaders
-        let bodyData: Data?
+        let body: ByteBuffer?
+
+        init(status: HTTPResponseStatus, headers: HTTPHeaders, body: ByteBuffer?) {
+            self.status = status
+            self.headers = headers
+            self.body = body
+        }
+
+        init(status: HTTPResponseStatus, headers: HTTPHeaders, bodyData: Data?) {
+            var body: ByteBuffer? = nil
+            if let bodyData = bodyData {
+                body = ByteBufferAllocator().buffer(capacity: bodyData.count)
+                body?.writeBytes(bodyData)
+            }
+            self.init(status: status, headers: headers, body: body)
+        }
     }
 
     static var allTests : [(String, (AWSClientTests) -> () throws -> Void)] {
@@ -264,7 +279,7 @@ class AWSClientTests: XCTestCase {
             XCTAssertEqual(awsRequest.url.absoluteString, "https://s3.amazonaws.com/Bucket?list-type=2")
             let nioRequest: AWSHTTPRequest = awsRequest.toHTTPRequest()
             XCTAssertEqual(nioRequest.method, HTTPMethod.GET)
-            XCTAssertEqual(nioRequest.bodyData, nil)
+            XCTAssertEqual(nioRequest.body, nil)
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -388,7 +403,7 @@ class AWSClientTests: XCTestCase {
         let response = AWSHTTPResponseImpl(
             status: .ok,
             headers: HTTPHeaders(),
-            bodyData: Data()
+            body: nil
         )
         do {
             try s3Client.validate(response: response)
@@ -399,7 +414,7 @@ class AWSClientTests: XCTestCase {
         let failResponse = AWSHTTPResponseImpl(
             status: .forbidden,
             headers: HTTPHeaders(),
-            bodyData: Data()
+            body: nil
         )
 
         do {

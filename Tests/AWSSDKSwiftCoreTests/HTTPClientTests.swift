@@ -8,9 +8,19 @@
 
 import AsyncHTTPClient
 import Foundation
+import NIO
 import NIOHTTP1
 import XCTest
 @testable import AWSSDKSwiftCore
+
+extension AWSHTTPResponse {
+    var bodyData: Data? {
+        if let body = self.body {
+            return body.getData(at: body.readerIndex, length: body.readableBytes, byteTransferStrategy: .noCopy)
+        }
+        return nil
+    }
+}
 
 #if canImport(Network)
 
@@ -25,7 +35,7 @@ class NIOTSHTTPClientTests: XCTestCase {
     
     func testInitWithInvalidURL() {
       do {
-        let request = AWSHTTPRequest(url: URL(string:"no_protocol.com")!, method: .GET, headers: HTTPHeaders(), bodyData: nil)
+        let request = AWSHTTPRequest(url: URL(string:"no_protocol.com")!, method: .GET, headers: HTTPHeaders(), body: nil)
         _ = try client.execute(request: request, timeout: .seconds(5)).wait()
         XCTFail("Should throw malformedURL error")
       } catch {
@@ -38,14 +48,14 @@ class NIOTSHTTPClientTests: XCTestCase {
 
     func testInitWithValidRL() {
         do {
-            let request = AWSHTTPRequest(url: URL(string:"https://kinesis.us-west-2.amazonaws.com/")!, method: .GET, headers: HTTPHeaders(), bodyData: nil)
+            let request = AWSHTTPRequest(url: URL(string:"https://kinesis.us-west-2.amazonaws.com/")!, method: .GET, headers: HTTPHeaders(), body: nil)
             _ = try client.execute(request: request, timeout: .seconds(5)).wait()
         } catch {
             XCTFail("Should not throw malformedURL error")
         }
 
         do {
-            let request = AWSHTTPRequest(url: URL(string:"http://169.254.169.254/latest/meta-data/iam/security-credentials/")!, method: .GET, headers: HTTPHeaders(), bodyData: nil)
+            let request = AWSHTTPRequest(url: URL(string:"http://169.254.169.254/latest/meta-data/iam/security-credentials/")!, method: .GET, headers: HTTPHeaders(), body: nil)
             _ = try client.execute(request: request, timeout: .seconds(5)).wait()
         } catch NIOTSHTTPClient.HTTPError.malformedURL{
             XCTFail("Should not throw malformedURL error")
@@ -55,7 +65,7 @@ class NIOTSHTTPClientTests: XCTestCase {
 
     func testConnectGet() {
         do {
-            let request = AWSHTTPRequest(url: URL(string:"https://kinesis.us-west-2.amazonaws.com/")!, method: .GET, headers: HTTPHeaders(), bodyData: nil)
+            let request = AWSHTTPRequest(url: URL(string:"https://kinesis.us-west-2.amazonaws.com/")!, method: .GET, headers: HTTPHeaders(), body: nil)
             let future = client.execute(request: request, timeout: .seconds(5))
 
             _ = try future.wait()
@@ -66,7 +76,7 @@ class NIOTSHTTPClientTests: XCTestCase {
 
     func testConnectPost() {
         do {
-            let request = AWSHTTPRequest(url: URL(string:"https://kinesis.us-west-2.amazonaws.com/")!, method: .POST, headers: HTTPHeaders(), bodyData: nil)
+            let request = AWSHTTPRequest(url: URL(string:"https://kinesis.us-west-2.amazonaws.com/")!, method: .POST, headers: HTTPHeaders(), body: nil)
             let future = client.execute(request: request, timeout: .seconds(5))
 
             _ = try future.wait()
@@ -149,7 +159,7 @@ class HTTPClientTests {
     func testGet() {
         do {
             let headers: HTTPHeaders = [:]
-            let request = AWSHTTPRequest(url: URL(string:"http://httpbin.org/get?arg=1")!, method: .GET, headers: headers, bodyData: nil)
+            let request = AWSHTTPRequest(url: URL(string:"http://httpbin.org/get?arg=1")!, method: .GET, headers: headers, body: nil)
             let response = try execute(request).wait()
             
             XCTAssertEqual(response.args["arg"], "1")
@@ -161,7 +171,7 @@ class HTTPClientTests {
     func testHTTPS() {
         do {
             let headers: HTTPHeaders = [:]
-            let request = AWSHTTPRequest(url: URL(string:"https://httpbin.org/get")!, method: .GET, headers: headers, bodyData: nil)
+            let request = AWSHTTPRequest(url: URL(string:"https://httpbin.org/get")!, method: .GET, headers: headers, body: nil)
             let response = try execute(request).wait()
             
             XCTAssertEqual(response.url, "https://httpbin.org/get")
@@ -176,7 +186,7 @@ class HTTPClientTests {
                 "Content-Type": "application/json",
                 "Test-Header": "testValue"
             ]
-            let request = AWSHTTPRequest(url: URL(string:"http://httpbin.org/post")!, method: .POST, headers: headers, bodyData: nil)
+            let request = AWSHTTPRequest(url: URL(string:"http://httpbin.org/post")!, method: .POST, headers: headers, body: nil)
             let response = try execute(request).wait()
             
             XCTAssertEqual(response.headers["Test-Header"], "testValue")
@@ -190,8 +200,10 @@ class HTTPClientTests {
             let headers: HTTPHeaders = [
                 "Content-Type": "text/plain"
             ]
-            let body: Data = "thisisatest".data(using: .utf8)!
-            let request = AWSHTTPRequest(url: URL(string:"http://httpbin.org/post")!, method: .POST, headers: headers, bodyData: body)
+            let text = "thisisatest"
+            var body = ByteBufferAllocator().buffer(capacity: text.utf8.count)
+            body.writeString(text)
+            let request = AWSHTTPRequest(url: URL(string:"http://httpbin.org/post")!, method: .POST, headers: headers, body: body)
             let response = try execute(request).wait()
             
             XCTAssertEqual(response.data, "thisisatest")

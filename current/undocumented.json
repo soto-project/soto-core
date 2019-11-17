@@ -2,35 +2,28 @@
   "warnings": [
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSClient.swift",
-      "line": 47,
+      "line": 21,
       "symbol": "AWSClient.RequestError",
       "symbol_kind": "source.lang.swift.decl.enum",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSClient.swift",
-      "line": 48,
+      "line": 22,
       "symbol": "AWSClient.RequestError.invalidURL(_:)",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSClient.swift",
-      "line": 69,
-      "symbol": "AWSClient.region",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSClient.swift",
-      "line": 81,
+      "line": 53,
       "symbol": "AWSClient.eventLoopGroup",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSClient.swift",
-      "line": 807,
+      "line": 790,
       "symbol": "AWSClient.RequestError",
       "symbol_kind": "source.lang.swift.decl.extension",
       "warning": "undocumented"
@@ -79,92 +72,155 @@
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 21,
-      "symbol": "ExpiringCredential.accessKeyId",
+      "line": 14,
+      "symbol": "CredentialProvider.accessKeyId",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 22,
-      "symbol": "ExpiringCredential.secretAccessKey",
+      "line": 15,
+      "symbol": "CredentialProvider.secretAccessKey",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 23,
-      "symbol": "ExpiringCredential.sessionToken",
+      "line": 16,
+      "symbol": "CredentialProvider.sessionToken",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 24,
-      "symbol": "ExpiringCredential.expiration",
+      "line": 17,
+      "symbol": "CredentialProvider.expiration",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 26,
-      "symbol": "ExpiringCredential.init(accessKeyId:secretAccessKey:sessionToken:expiration:)",
+      "line": 37,
+      "symbol": "Credential.accessKeyId",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
+      "line": 38,
+      "symbol": "Credential.secretAccessKey",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
+      "line": 39,
+      "symbol": "Credential.sessionToken",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
+      "line": 40,
+      "symbol": "Credential.expiration",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
+      "line": 42,
+      "symbol": "Credential.init(accessKeyId:secretAccessKey:sessionToken:expiration:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 70,
+      "line": 77,
       "symbol": "SharedCredential.SharedCredentialError.missingProfile(_:)",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 71,
+      "line": 78,
       "symbol": "SharedCredential.SharedCredentialError.missingAccessKeyId",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 72,
+      "line": 79,
       "symbol": "SharedCredential.SharedCredentialError.missingSecretAccessKey",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 75,
+      "line": 82,
       "symbol": "SharedCredential.accessKeyId",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 76,
+      "line": 83,
       "symbol": "SharedCredential.secretAccessKey",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 77,
+      "line": 84,
       "symbol": "SharedCredential.sessionToken",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 78,
+      "line": 85,
       "symbol": "SharedCredential.expiration",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 80,
+      "line": 87,
       "symbol": "SharedCredential.init(filename:profile:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
+      "line": 117,
+      "symbol": "EnvironmentCredential.accessKeyId",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
+      "line": 118,
+      "symbol": "EnvironmentCredential.secretAccessKey",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
+      "line": 119,
+      "symbol": "EnvironmentCredential.sessionToken",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
+      "line": 120,
+      "symbol": "EnvironmentCredential.expiration",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
+      "line": 122,
+      "symbol": "EnvironmentCredential.init()",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
@@ -876,80 +932,94 @@
       "warning": "undocumented"
     },
     {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTP/NIOTSHTTPClient.swift",
-      "line": 40,
-      "symbol": "NIOTSHTTPClient.HTTPError.malformedHead",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTP/NIOTSHTTPClient.swift",
+      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTPClient.swift",
       "line": 41,
-      "symbol": "NIOTSHTTPClient.HTTPError.malformedBody",
+      "symbol": "HTTPClient.HTTPError.malformedHead",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTP/NIOTSHTTPClient.swift",
+      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTPClient.swift",
       "line": 42,
-      "symbol": "NIOTSHTTPClient.HTTPError.malformedURL(url:)",
+      "symbol": "HTTPClient.HTTPError.malformedBody",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTP/NIOTSHTTPClient.swift",
+      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTPClient.swift",
       "line": 43,
-      "symbol": "NIOTSHTTPClient.HTTPError.alreadyShutdown",
+      "symbol": "HTTPClient.HTTPError.malformedURL(url:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTPClient.swift",
+      "line": 44,
+      "symbol": "HTTPClient.HTTPError.alreadyShutdown",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Message/AWSRequest.swift",
-      "line": 16,
+      "line": 15,
       "symbol": "AWSRequest.region",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Message/AWSRequest.swift",
-      "line": 17,
+      "line": 16,
       "symbol": "AWSRequest.url",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Message/AWSRequest.swift",
-      "line": 18,
+      "line": 17,
       "symbol": "AWSRequest.serviceProtocol",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Message/AWSRequest.swift",
-      "line": 19,
+      "line": 18,
       "symbol": "AWSRequest.operation",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Message/AWSRequest.swift",
-      "line": 20,
+      "line": 19,
       "symbol": "AWSRequest.httpMethod",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Message/AWSRequest.swift",
-      "line": 21,
+      "line": 20,
       "symbol": "AWSRequest.httpHeaders",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Message/AWSRequest.swift",
-      "line": 22,
+      "line": 21,
       "symbol": "AWSRequest.body",
       "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Signers/Signers.swift",
+      "line": 9,
+      "symbol": "Signers",
+      "symbol_kind": "source.lang.swift.decl.class",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Signers/Signers.swift",
+      "line": 12,
+      "symbol": "Signers",
+      "symbol_kind": "source.lang.swift.decl.extension",
       "warning": "undocumented"
     },
     {

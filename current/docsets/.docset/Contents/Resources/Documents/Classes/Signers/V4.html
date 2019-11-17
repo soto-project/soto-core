@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>HTTPError Enumeration Reference</title>
+    <title>V4 Class Reference</title>
     <link rel="stylesheet" type="text/css" href="../../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../../css/highlight.css" />
     <meta charset='utf-8'>
@@ -10,11 +10,11 @@
     
   </head>
   <body>
-    <a name="//apple_ref/swift/Enum/HTTPError" class="dashAnchor"></a>
-    <a title="HTTPError Enumeration Reference"></a>
+    <a name="//apple_ref/swift/Class/V4" class="dashAnchor"></a>
+    <a title="V4 Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../../index.html"> Docs</a> (64% documented)</p>
+        <p><a href="../../index.html"> Docs</a> (63% documented)</p>
         <p class="header-right"><a href="https://github.com/swift-aws/aws-sdk-swift-core"><img src="../../img/gh.png"/>View on GitHub</a></p>
       </div>
     </header>
@@ -22,7 +22,7 @@
       <p id="breadcrumbs">
         <a href="../../index.html"> Reference</a>
         <img id="carat" src="../../img/carat.png" />
-        HTTPError Enumeration Reference
+        V4 Class Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -74,19 +74,25 @@
                 <a href="../../Classes/DictionaryEncoder/KeyEncodingStrategy.html">– KeyEncodingStrategy</a>
               </li>
               <li class="nav-group-task">
-                <a href="../../Classes/NIOTSHTTPClient.html">NIOTSHTTPClient</a>
+                <a href="../../Classes/HTTPClient.html">HTTPClient</a>
               </li>
               <li class="nav-group-task">
-                <a href="../../Classes/NIOTSHTTPClient.html#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC7RequestV">– Request</a>
+                <a href="../../Classes/HTTPClient.html#/s:15AWSSDKSwiftCore10HTTPClientC7RequestV">– Request</a>
               </li>
               <li class="nav-group-task">
-                <a href="../../Classes/NIOTSHTTPClient.html#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC8ResponseV">– Response</a>
+                <a href="../../Classes/HTTPClient.html#/s:15AWSSDKSwiftCore10HTTPClientC8ResponseV">– Response</a>
               </li>
               <li class="nav-group-task">
-                <a href="../../Classes/NIOTSHTTPClient/HTTPError.html">– HTTPError</a>
+                <a href="../../Classes/HTTPClient/HTTPError.html">– HTTPError</a>
               </li>
               <li class="nav-group-task">
-                <a href="../../Classes/NIOTSHTTPClient/EventLoopGroupProvider.html">– EventLoopGroupProvider</a>
+                <a href="../../Classes/HTTPClient/EventLoopGroupProvider.html">– EventLoopGroupProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Classes/Signers.html">Signers</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Classes/Signers/V4.html">– V4</a>
               </li>
               <li class="nav-group-task">
                 <a href="../../Classes/XML.html">XML</a>
@@ -193,6 +199,9 @@
                 <a href="../../Protocols/AWSShape.html">AWSShape</a>
               </li>
               <li class="nav-group-task">
+                <a href="../../Protocols/CredentialProvider.html">CredentialProvider</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../../Protocols/XMLCodable.html">XMLCodable</a>
               </li>
             </ul>
@@ -225,7 +234,10 @@
                 <a href="../../Structs/AWSShapeMember/ShapeEncoding.html">– ShapeEncoding</a>
               </li>
               <li class="nav-group-task">
-                <a href="../../Structs/ExpiringCredential.html">ExpiringCredential</a>
+                <a href="../../Structs/Credential.html">Credential</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Structs/EnvironmentCredential.html">EnvironmentCredential</a>
               </li>
               <li class="nav-group-task">
                 <a href="../../Structs/MetaDataService.html">MetaDataService</a>
@@ -260,14 +272,14 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>HTTPError</h1>
+            <h1>V4</h1>
               <div class="declaration">
                 <div class="language">
-                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">HTTPError</span> <span class="p">:</span> <span class="kt">Error</span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">V4</span></code></pre>
 
                 </div>
               </div>
-            <p>Errors returned from HTTPClient when parsing responses</p>
+            <p>AWS V4 Signing code</p>
 
           </section>
           <section class="section task-group-section">
@@ -276,9 +288,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore15NIOTSHTTPClientC9HTTPErrorO13malformedHeadyA2EmF"></a>
-                    <a name="//apple_ref/swift/Element/malformedHead" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC9HTTPErrorO13malformedHeadyA2EmF">malformedHead</a>
+                    <a name="/s:15AWSSDKSwiftCore7SignersC2V4C10credential6region11signingName8endpointAeA18CredentialProvider_p_AA6RegionOS2SSgtcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(credential:region:signingName:endpoint:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore7SignersC2V4C10credential6region11signingName8endpointAeA18CredentialProvider_p_AA6RegionOS2SSgtcfc">init(credential:region:signingName:endpoint:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -286,14 +298,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>initialize a Signers.V4 object</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">malformedHead</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">credential</span><span class="p">:</span> <span class="kt"><a href="../../Protocols/CredentialProvider.html">CredentialProvider</a></span><span class="p">,</span> <span class="nv">region</span><span class="p">:</span> <span class="kt"><a href="../../Enums/Region.html">Region</a></span><span class="p">,</span> <span class="nv">signingName</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">endpoint</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
 
                         </div>
                       </div>
@@ -303,9 +315,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore15NIOTSHTTPClientC9HTTPErrorO13malformedBodyyA2EmF"></a>
-                    <a name="//apple_ref/swift/Element/malformedBody" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC9HTTPErrorO13malformedBodyyA2EmF">malformedBody</a>
+                    <a name="/s:15AWSSDKSwiftCore7SignersC2V4C16manageCredential14eventLoopGroup3NIO05EventH6FutureCyAA0F8Provider_pGAH0khI0_p_tF"></a>
+                    <a name="//apple_ref/swift/Method/manageCredential(eventLoopGroup:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore7SignersC2V4C16manageCredential14eventLoopGroup3NIO05EventH6FutureCyAA0F8Provider_pGAH0khI0_p_tF">manageCredential(eventLoopGroup:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -313,14 +325,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>If you did not provide credentials <code>manageCredential()</code> should be called and the future resolved prior to building signedURL or signedHeaders to ensure latest credentials are retreived and set</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">malformedBody</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">manageCredential</span><span class="p">(</span><span class="nv">eventLoopGroup</span><span class="p">:</span> <span class="kt">EventLoopGroup</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../../Typealiases.html#/s:15AWSSDKSwiftCore6Futurea">Future</a></span><span class="o">&lt;</span><span class="kt"><a href="../../Protocols/CredentialProvider.html">CredentialProvider</a></span><span class="o">&gt;</span></code></pre>
 
                         </div>
                       </div>
@@ -330,9 +342,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore15NIOTSHTTPClientC9HTTPErrorO12malformedURLyAESS_tcAEmF"></a>
-                    <a name="//apple_ref/swift/Element/malformedURL(url:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC9HTTPErrorO12malformedURLyAESS_tcAEmF">malformedURL(url:)</a>
+                    <a name="/s:15AWSSDKSwiftCore7SignersC2V4C9signedURL3url6method4date7expires10Foundation0F0VAM_SSAK4DateVSitF"></a>
+                    <a name="//apple_ref/swift/Method/signedURL(url:method:date:expires:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore7SignersC2V4C9signedURL3url6method4date7expires10Foundation0F0VAM_SSAK4DateVSitF">signedURL(url:method:date:expires:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -340,14 +352,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Return signed URL</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">malformedURL</span><span class="p">(</span><span class="nv">url</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">signedURL</span><span class="p">(</span><span class="nv">url</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span> <span class="nv">method</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">date</span><span class="p">:</span> <span class="kt">Date</span> <span class="o">=</span> <span class="kt">Date</span><span class="p">(),</span> <span class="nv">expires</span><span class="p">:</span> <span class="kt">Int</span> <span class="o">=</span> <span class="mi">86400</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">URL</span></code></pre>
 
                         </div>
                       </div>
@@ -357,9 +369,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore15NIOTSHTTPClientC9HTTPErrorO15alreadyShutdownyA2EmF"></a>
-                    <a name="//apple_ref/swift/Element/alreadyShutdown" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC9HTTPErrorO15alreadyShutdownyA2EmF">alreadyShutdown</a>
+                    <a name="/s:15AWSSDKSwiftCore7SignersC2V4C13signedHeaders3url7headers6method4date8bodyDataSDyS2SG10Foundation3URLV_ALSSAM4DateVAM0L0VtF"></a>
+                    <a name="//apple_ref/swift/Method/signedHeaders(url:headers:method:date:bodyData:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore7SignersC2V4C13signedHeaders3url7headers6method4date8bodyDataSDyS2SG10Foundation3URLV_ALSSAM4DateVAM0L0VtF">signedHeaders(url:headers:method:date:bodyData:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -367,14 +379,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Return signed headers</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">alreadyShutdown</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">signedHeaders</span><span class="p">(</span><span class="nv">url</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span> <span class="nv">headers</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span> <span class="p">:</span> <span class="kt">String</span><span class="p">],</span> <span class="nv">method</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">date</span><span class="p">:</span> <span class="kt">Date</span> <span class="o">=</span> <span class="kt">Date</span><span class="p">(),</span> <span class="nv">bodyData</span><span class="p">:</span> <span class="kt">Data</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="kt">String</span> <span class="p">:</span> <span class="kt">String</span><span class="p">]</span></code></pre>
 
                         </div>
                       </div>

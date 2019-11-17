@@ -13,7 +13,7 @@
     <a title="  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html"> Docs</a> (64% documented)</p>
+        <p><a href="index.html"> Docs</a> (63% documented)</p>
         <p class="header-right"><a href="https://github.com/swift-aws/aws-sdk-swift-core"><img src="img/gh.png"/>View on GitHub</a></p>
       </div>
     </header>
@@ -73,19 +73,25 @@
                 <a href="Classes/DictionaryEncoder/KeyEncodingStrategy.html">– KeyEncodingStrategy</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/NIOTSHTTPClient.html">NIOTSHTTPClient</a>
+                <a href="Classes/HTTPClient.html">HTTPClient</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/NIOTSHTTPClient.html#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC7RequestV">– Request</a>
+                <a href="Classes/HTTPClient.html#/s:15AWSSDKSwiftCore10HTTPClientC7RequestV">– Request</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/NIOTSHTTPClient.html#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC8ResponseV">– Response</a>
+                <a href="Classes/HTTPClient.html#/s:15AWSSDKSwiftCore10HTTPClientC8ResponseV">– Response</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/NIOTSHTTPClient/HTTPError.html">– HTTPError</a>
+                <a href="Classes/HTTPClient/HTTPError.html">– HTTPError</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/NIOTSHTTPClient/EventLoopGroupProvider.html">– EventLoopGroupProvider</a>
+                <a href="Classes/HTTPClient/EventLoopGroupProvider.html">– EventLoopGroupProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/Signers.html">Signers</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/Signers/V4.html">– V4</a>
               </li>
               <li class="nav-group-task">
                 <a href="Classes/XML.html">XML</a>
@@ -192,6 +198,9 @@
                 <a href="Protocols/AWSShape.html">AWSShape</a>
               </li>
               <li class="nav-group-task">
+                <a href="Protocols/CredentialProvider.html">CredentialProvider</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="Protocols/XMLCodable.html">XMLCodable</a>
               </li>
             </ul>
@@ -224,7 +233,10 @@
                 <a href="Structs/AWSShapeMember/ShapeEncoding.html">– ShapeEncoding</a>
               </li>
               <li class="nav-group-task">
-                <a href="Structs/ExpiringCredential.html">ExpiringCredential</a>
+                <a href="Structs/Credential.html">Credential</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/EnvironmentCredential.html">EnvironmentCredential</a>
               </li>
               <li class="nav-group-task">
                 <a href="Structs/MetaDataService.html">MetaDataService</a>
@@ -268,36 +280,39 @@
 
 <p>A Core Framework for <a href="https://github.com/swift-aws/aws-sdk-swift">AWSSDKSwift</a></p>
 
-<p>This is the underlying driver for executing requests to AWS, but you should likely use one of the libraries provided by the package above instead of this! Documentation can be found <a href="http://htmlpreview.github.io/?https://github.com/swift-aws/aws-sdk-swift-core/gh-pages/current/index.html">here</a>.</p>
+<p>This is the underlying driver for executing requests to AWS, but you should likely use one of the libraries provided by the package above instead of this! Documentation can be found <a href="https://swift-aws.github.io/aws-sdk-swift-core">here</a>.</p>
 <h2 id='swift-nio' class='heading'>Swift NIO</h2>
 
-<p>This client utilizes <a href="https://github.com/apple/swift-nio#conceptual-overview">Swift NIO</a> to power its interactions with AWS. It returns an <a href="https://apple.github.io/swift-nio/docs/current/NIO/Classes/EventLoopFuture.html"><code>EventLoopFuture</code></a> in order to allow non-blocking frameworks to use this code. Please see the Swift NIO documentation for more details, and please let us know via an Issue if you have questions!</p>
+<p>This client utilizes <a href="https://github.com/apple/swift-nio#conceptual-overview">Swift NIO</a> to power its interactions with AWS. It returns an <a href="https://apple.github.io/swift-nio/docs/current/NIO/Classes/EventLoopFuture.html"><code>EventLoopFuture</code></a> in order to allow non-blocking frameworks to use this code. Please see the <a href="https://apple.github.io/swift-nio/">Swift NIO documentation</a> for more details, and please let us know via an Issue if you have questions!</p>
 <h2 id='compatibility' class='heading'>Compatibility</h2>
 
 <p>Versions 4.x of aws-sdk-swift-core are dependent on swift-nio 2, this means certain libraries/frameworks that are dependent on an earlier version of swift-nio will not work with version 4 of aws-sdk-swift-core. Version 3.x of the aws-sdk-swift-core can be used if you need to use an earlier version of swift-nio. For instance Vapor 3 uses swift-nio 1.13 so you can only use versions 3.x of aws-sdk-swift-core with Vapor 3. Below is a compatibility table for versions 3 and 4 of aws-sdk-swift-core.</p>
 
 <table><thead>
 <tr>
-<th></th>
+<th>Version</th>
 <th>Swift</th>
 <th>MacOS</th>
+<th>iOS</th>
 <th>Linux</th>
 <th>Vapor</th>
 </tr>
 </thead><tbody>
 <tr>
-<td>v3.x</td>
-<td>4.2-5.1</td>
+<td>3.x</td>
+<td>4.2 -</td>
 <td>✓</td>
+<td></td>
 <td>Ubuntu 14.04-18.04</td>
-<td>v3</td>
+<td>3.0</td>
 </tr>
 <tr>
-<td>v4.x</td>
-<td>5.0-5.1</td>
+<td>4.x</td>
+<td>5.0 -</td>
 <td>✓</td>
+<td>12.0 -</td>
 <td>Ubuntu 14.04-18.04</td>
-<td>v4</td>
+<td>4.0</td>
 </tr>
 </tbody></table>
 <h2 id='example-package-swift' class='heading'>Example Package.swift</h2>

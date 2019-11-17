@@ -14,7 +14,7 @@
     <a title="MetaDataService Structure Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> Docs</a> (64% documented)</p>
+        <p><a href="../index.html"> Docs</a> (63% documented)</p>
         <p class="header-right"><a href="https://github.com/swift-aws/aws-sdk-swift-core"><img src="../img/gh.png"/>View on GitHub</a></p>
       </div>
     </header>
@@ -74,19 +74,25 @@
                 <a href="../Classes/DictionaryEncoder/KeyEncodingStrategy.html">– KeyEncodingStrategy</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/NIOTSHTTPClient.html">NIOTSHTTPClient</a>
+                <a href="../Classes/HTTPClient.html">HTTPClient</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/NIOTSHTTPClient.html#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC7RequestV">– Request</a>
+                <a href="../Classes/HTTPClient.html#/s:15AWSSDKSwiftCore10HTTPClientC7RequestV">– Request</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/NIOTSHTTPClient.html#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC8ResponseV">– Response</a>
+                <a href="../Classes/HTTPClient.html#/s:15AWSSDKSwiftCore10HTTPClientC8ResponseV">– Response</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/NIOTSHTTPClient/HTTPError.html">– HTTPError</a>
+                <a href="../Classes/HTTPClient/HTTPError.html">– HTTPError</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/NIOTSHTTPClient/EventLoopGroupProvider.html">– EventLoopGroupProvider</a>
+                <a href="../Classes/HTTPClient/EventLoopGroupProvider.html">– EventLoopGroupProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/Signers.html">Signers</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/Signers/V4.html">– V4</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/XML.html">XML</a>
@@ -193,6 +199,9 @@
                 <a href="../Protocols/AWSShape.html">AWSShape</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Protocols/CredentialProvider.html">CredentialProvider</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Protocols/XMLCodable.html">XMLCodable</a>
               </li>
             </ul>
@@ -225,7 +234,10 @@
                 <a href="../Structs/AWSShapeMember/ShapeEncoding.html">– ShapeEncoding</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Structs/ExpiringCredential.html">ExpiringCredential</a>
+                <a href="../Structs/Credential.html">Credential</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/EnvironmentCredential.html">EnvironmentCredential</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/MetaDataService.html">MetaDataService</a>
@@ -261,12 +273,6 @@
         <section>
           <section class="section">
             <h1>MetaDataService</h1>
-              <div class="declaration">
-                <div class="language">
-                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">MetaDataService</span></code></pre>
-
-                </div>
-              </div>
             <p>Object managing accessing of AWS credentials from various sources</p>
 
           </section>
@@ -276,9 +282,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore15MetaDataServiceV13getCredential14eventLoopGroup3NIO05EventI6FutureCy9AWSSigner0G8Provider_pGAF0liJ0_p_tKFZ"></a>
+                    <a name="/"></a>
                     <a name="//apple_ref/swift/Method/getCredential(eventLoopGroup:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore15MetaDataServiceV13getCredential14eventLoopGroup3NIO05EventI6FutureCy9AWSSigner0G8Provider_pGAF0liJ0_p_tKFZ">getCredential(eventLoopGroup:)</a>
+                    <a class="token" href="#/">getCredential(eventLoopGroup:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -288,14 +294,6 @@
                       <div class="abstract">
                         <p>return future holding a credential provider</p>
 
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">getCredential</span><span class="p">(</span><span class="nv">eventLoopGroup</span><span class="p">:</span> <span class="kt">EventLoopGroup</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Typealiases.html#/s:15AWSSDKSwiftCore6Futurea">Future</a></span><span class="o">&lt;</span><span class="kt">CredentialProvider</span><span class="o">&gt;</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>

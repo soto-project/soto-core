@@ -16,10 +16,10 @@ This client utilizes [Swift NIO](https://github.com/apple/swift-nio#conceptual-o
 
 Versions 4.x of aws-sdk-swift-core are dependent on swift-nio 2, this means certain libraries/frameworks that are dependent on an earlier version of swift-nio will not work with version 4 of aws-sdk-swift-core. Version 3.x of the aws-sdk-swift-core can be used if you need to use an earlier version of swift-nio. For instance Vapor 3 uses swift-nio 1.13 so you can only use versions 3.x of aws-sdk-swift-core with Vapor 3. Below is a compatibility table for versions 3 and 4 of aws-sdk-swift-core.
 
-| Version | Swift     | MacOS | iOS | Linux              | Vapor |
-|---------|-------- --|-------|-----|--------------------|-------|
-| 3.x     | 4.2 - 5.1 | ✓     |     | Ubuntu 14.04-18.04 | 3.0   |
-| 4.x     | 5.0 - 5.1 | ✓     | ✓   | Ubuntu 14.04-18.04 | 4.0   |
+| Version | Swift | MacOS | iOS    | Linux              | Vapor  |
+|---------|-------|-------|--------|--------------------|--------|
+| 3.x     | 4.2 - | ✓     |        | Ubuntu 14.04-18.04 | 3.0    |
+| 4.x     | 5.0 - | ✓     | 12.0 - | Ubuntu 14.04-18.04 | 4.0    |
 
 ## Example Package.swift
 

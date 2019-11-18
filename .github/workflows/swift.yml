@@ -8,6 +8,9 @@ on:
     branches: 
     - master
 
+env:
+  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
 jobs:
   macos:
     runs-on: macOS-latest
@@ -26,8 +29,6 @@ jobs:
       run: xcodebuild -quiet -parallel-testing-enabled YES -scheme AWSSDKSwiftCore-Package -enableCodeCoverage YES build test
     - name: Upload to codecov.io
       run: bash <(curl -s https://codecov.io/bash) -J 'AWSSDKSwiftCore' 
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   linux:
     runs-on: ubuntu-latest
@@ -59,6 +60,4 @@ jobs:
       if: matrix.tag >= 5.1
     - name: Upload to codecov.io
       run: bash <(curl -s https://codecov.io/bash) -J 'AWSSDKSwiftCore' 
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       if: matrix.tag >= 5.1

@@ -9,7 +9,7 @@ on:
     - master
 
 env:
-  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  CODECOV_TOKEN: ${{ secrets. CODECOV_TOKEN }}
 
 jobs:
   macos:

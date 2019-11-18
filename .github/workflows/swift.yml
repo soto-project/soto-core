@@ -1,0 +1,40 @@
+name: Swift
+
+on: [push]
+
+env:
+   CODECOV_TOKEN: ${{ secrets. CODECOV_TOKEN }}
+
+jobs:
+  macos:
+    runs-on: macOS-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Build
+      run: swift build
+    - name: Run tests
+      run: swift test
+    - name: Code Coverage
+      run:
+        swift package generate-xcodeproj &&
+        xcodebuild -quiet -parallel-testing-enabled YES -scheme AWSSDKSwiftCore-Package -enableCodeCoverage YES build test &&
+        bash <(curl -s https://codecov.io/bash) -J 'AWSSDKSwiftCore' 
+            
+  linux-swift-5-0:
+    runs-on: ubuntu-16.04
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install
+      run: docker pull swift:5.0
+    - name: Build & Test
+      run: docker run -v "$(pwd):/root/" swift:5.0 /bin/sh -c "apt-get -qq update && apt-get -q -y install tzdata libssl-dev zlib1g-dev && cd /root/ && swift build && swift test --parallel"
+      
+  linux-swift-5-1-1:
+    runs-on: ubuntu-16.04
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install
+      run: docker pull swift:5.1.1
+    - name: Build & Test
+      run: docker run -v "$(pwd):/root/" swift:5.1.1 /bin/sh -c "apt-get -qq update && apt-get -q -y install tzdata libssl-dev zlib1g-dev && cd /root/ && swift build && swift test --parallel"
+

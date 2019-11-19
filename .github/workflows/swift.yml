@@ -1,40 +1,62 @@
 name: Swift
 
-on: [push]
-
-env:
-   CODECOV_TOKEN: ${{ secrets. CODECOV_TOKEN }}
+on: 
+  push:
+    branches: 
+    - master
+  pull_request:
+    branches: 
+    - master
 
 jobs:
   macos:
     runs-on: macOS-latest
     steps:
-    - uses: actions/checkout@v1
-    - name: Build
+    - name: Checkout
+      uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+    - name: SPM build
       run: swift build
-    - name: Run tests
+    - name: SPM tests
       run: swift test
-    - name: Code Coverage
-      run:
-        swift package generate-xcodeproj &&
-        xcodebuild -quiet -parallel-testing-enabled YES -scheme AWSSDKSwiftCore-Package -enableCodeCoverage YES build test &&
-        bash <(curl -s https://codecov.io/bash) -J 'AWSSDKSwiftCore' 
-            
-  linux-swift-5-0:
-    runs-on: ubuntu-16.04
-    steps:
-    - uses: actions/checkout@v1
-    - name: Install
-      run: docker pull swift:5.0
-    - name: Build & Test
-      run: docker run -v "$(pwd):/root/" swift:5.0 /bin/sh -c "apt-get -qq update && apt-get -q -y install tzdata libssl-dev zlib1g-dev && cd /root/ && swift build && swift test --parallel"
-      
-  linux-swift-5-1-1:
-    runs-on: ubuntu-16.04
-    steps:
-    - uses: actions/checkout@v1
-    - name: Install
-      run: docker pull swift:5.1.1
-    - name: Build & Test
-      run: docker run -v "$(pwd):/root/" swift:5.1.1 /bin/sh -c "apt-get -qq update && apt-get -q -y install tzdata libssl-dev zlib1g-dev && cd /root/ && swift build && swift test --parallel"
+    - name: Generate xcode project
+      run: swift package generate-xcodeproj
+    - name: Xcode tests
+      run: xcodebuild -quiet -parallel-testing-enabled YES -scheme AWSSDKSwiftCore-Package -enableCodeCoverage YES build test
+    - name: Upload to codecov.io
+      run: bash <(curl -s https://codecov.io/bash) -J 'AWSSDKSwiftCore' -t ${{secrets.CODECOV_TOKEN}}
 
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        tag: ['5.0', '5.1']
+    container:
+      image: swift:${{ matrix.tag }}
+      volumes:
+      - $GITHUB_WORKSPACE:/src
+      options: --workdir /src
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+    - name: Install dependencies
+      run: |
+        apt-get update -qq
+        apt-get install -q -y tzdata libssl-dev zlib1g-dev
+    - name: Test
+      run: swift test --parallel --enable-code-coverage
+      if: matrix.tag < 5.1
+    - name: Test
+      run: swift test --parallel --enable-code-coverage --enable-test-discovery
+      if: matrix.tag >= 5.1
+    - name: Convert coverage files
+      run: llvm-cov export -format="lcov" .build/debug/AWSSDKSwiftCorePackageTests.xctest -instr-profile .build/debug/codecov/default.profdata > info.lcov
+      if: matrix.tag >= 5.1
+    - name: Upload to codecov.io
+      if: matrix.tag >= 5.1
+      uses: codecov/codecov-action@v1.0.3
+      with:
+        token: ${{secrets.CODECOV_TOKEN}}

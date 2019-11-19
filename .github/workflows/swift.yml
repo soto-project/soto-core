@@ -47,14 +47,14 @@ jobs:
         apt-get update -qq
         apt-get install -q -y tzdata libssl-dev zlib1g-dev
     - name: Test
-      run: swift test --parallel --enable-code-coverage
       if: matrix.tag < 5.1
+      run: swift test --parallel --enable-code-coverage
     - name: Test
+      if: matrix.tag >= 5.1
       run: swift test --parallel --enable-code-coverage --enable-test-discovery
-      if: matrix.tag >= 5.1
     - name: Convert coverage files
-      run: llvm-cov export -format="lcov" .build/debug/AWSSDKSwiftCorePackageTests.xctest -instr-profile .build/debug/codecov/default.profdata > info.lcov
       if: matrix.tag >= 5.1
+      run: llvm-cov export -format="lcov" .build/debug/AWSSDKSwiftCorePackageTests.xctest -instr-profile .build/debug/codecov/default.profdata > info.lcov
     - name: Upload to codecov.io
       if: matrix.tag >= 5.1
       uses: codecov/codecov-action@v1.0.3

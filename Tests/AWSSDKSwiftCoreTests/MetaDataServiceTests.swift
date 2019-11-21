@@ -7,6 +7,7 @@
 #if os(Linux)
 
 import Foundation
+import NIO
 import XCTest
 @testable import AWSSDKSwiftCore
 
@@ -77,6 +78,19 @@ class MetaDataServiceTests: XCTestCase {
         return
     }*/
   }
+    
+    /*func testMetaDataServiceOnEC2Instance() {
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        defer {
+            try? eventLoopGroup.syncShutdownGracefully()
+        }
+        do {
+            let result = try InstanceMetaDataServiceProvider().getCredential(eventLoopGroup: eventLoopGroup).wait()
+            print(result)
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }*/
 }
 
 #endif // os(Linux)

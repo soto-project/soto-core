@@ -174,11 +174,11 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
 
     typealias MetaData = InstanceMetaData
 
-    static let instanceMetadataApiTokenUri = "/latest/api/token/"
+    static let instanceMetadataApiTokenUri = "/latest/api/token"
     static let instanceMetadataUri = "/latest/meta-data/iam/security-credentials/"
     static var host = "169.254.169.254"
     static var apiTokenURL: String {
-        return "http://\(host)\(instanceMetadataUri)"
+        return "http://\(host)\(instanceMetadataApiTokenUri)"
     }
     static var baseURLString: String {
         return "http://\(host)\(instanceMetadataUri)"
@@ -194,7 +194,6 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
                 guard response.head.status == .ok,
                     let token = String(data: response.body, encoding: .utf8) else { throw MetaDataServiceError.couldNotGetInstanceSessionKey }
                 sessionToken = token
-                print("Token: \(token)")
                 return token
             }
             .flatMap { token in
@@ -205,7 +204,6 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
                 // extract rolename
                 guard response.head.status == .ok,
                     let roleName = String(data: response.body, encoding: .utf8) else { throw MetaDataServiceError.couldNotGetInstanceRoleName }
-                print("Rolename: \(roleName)")
                 return "\(InstanceMetaDataServiceProvider.baseURLString)/\(roleName)" }
             .flatMap { uri in
                 // request credentials
@@ -214,7 +212,6 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
             .flatMapThrowing { response in
                 // decode credentials
                 guard response.head.status == .ok else { throw MetaDataServiceError.couldNotGetInstanceMetadata }
-                print("Body: \(String(data:response.body, encoding: .utf8)!)")
                 return self.decodeCredential(response.body)
         }
     }

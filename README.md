@@ -30,12 +30,12 @@ import PackageDescription
 let package = Package(
     name: "MyAWSTool",
     dependencies: [
-        .package(url: "https://github.com/swift-aws/aws-sdk-swift", from: "3.0.0"),
+        .package(url: "https://github.com/swift-aws/aws-sdk-swift", from: "4.0.0"),
     ],
     targets: [
         .target(
             name: "MyAWSTool",
-            dependencies: ["CloudFront", "ELB", "ELBV2",  "IAM"]),
+            dependencies: ["CloudFront", "ELB", "IAM",  "S3"]),
         .testTarget(
             name: "MyAWSToolTests",
             dependencies: ["MyAWSTool"]),

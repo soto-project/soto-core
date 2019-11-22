@@ -275,7 +275,7 @@
             <h1 id='aws-sdk-swift-core' class='heading'>aws-sdk-swift-core</h1>
 
 <p><a href="https://swift.org"><img src="http://img.shields.io/badge/swift-5.0-brightgreen.svg" alt="Swift 5.0" /></a>
-<a href="https://travis-ci.org/swift-aws/aws-sdk-swift-core"><img src="https://travis-ci.org/swift-aws/aws-sdk-swift-core.svg?branch=master" alt="Travis Build" /></a>
+<a href="https://github.com/swift-aws/aws-sdk-swift-core/actions"><img src="https://github.com/swift-aws/aws-sdk-swift-core/workflows/Swift/badge.svg" /></a>
 <a href="https://codecov.io/gh/swift-aws/aws-sdk-swift-core"><img src="https://codecov.io/gh/swift-aws/aws-sdk-swift-core/branch/master/graph/badge.svg" alt="Codecov Result" /></a></p>
 
 <p>A Core Framework for <a href="https://github.com/swift-aws/aws-sdk-swift">AWSSDKSwift</a></p>
@@ -322,12 +322,12 @@
 <span class="k">let</span> <span class="nv">package</span> <span class="o">=</span> <span class="kt">Package</span><span class="p">(</span>
     <span class="nv">name</span><span class="p">:</span> <span class="s">"MyAWSTool"</span><span class="p">,</span>
     <span class="nv">dependencies</span><span class="p">:</span> <span class="p">[</span>
-        <span class="o">.</span><span class="nf">package</span><span class="p">(</span><span class="nv">url</span><span class="p">:</span> <span class="s">"https://github.com/swift-aws/aws-sdk-swift"</span><span class="p">,</span> <span class="nv">from</span><span class="p">:</span> <span class="s">"3.0.0"</span><span class="p">),</span>
+        <span class="o">.</span><span class="nf">package</span><span class="p">(</span><span class="nv">url</span><span class="p">:</span> <span class="s">"https://github.com/swift-aws/aws-sdk-swift"</span><span class="p">,</span> <span class="nv">from</span><span class="p">:</span> <span class="s">"4.0.0"</span><span class="p">),</span>
     <span class="p">],</span>
     <span class="nv">targets</span><span class="p">:</span> <span class="p">[</span>
         <span class="o">.</span><span class="nf">target</span><span class="p">(</span>
             <span class="nv">name</span><span class="p">:</span> <span class="s">"MyAWSTool"</span><span class="p">,</span>
-            <span class="nv">dependencies</span><span class="p">:</span> <span class="p">[</span><span class="s">"CloudFront"</span><span class="p">,</span> <span class="s">"ELB"</span><span class="p">,</span> <span class="s">"ELBV2"</span><span class="p">,</span>  <span class="s">"IAM"</span><span class="p">]),</span>
+            <span class="nv">dependencies</span><span class="p">:</span> <span class="p">[</span><span class="s">"CloudFront"</span><span class="p">,</span> <span class="s">"ELB"</span><span class="p">,</span> <span class="s">"IAM"</span><span class="p">,</span>  <span class="s">"S3"</span><span class="p">]),</span>
         <span class="o">.</span><span class="nf">testTarget</span><span class="p">(</span>
             <span class="nv">name</span><span class="p">:</span> <span class="s">"MyAWSToolTests"</span><span class="p">,</span>
             <span class="nv">dependencies</span><span class="p">:</span> <span class="p">[</span><span class="s">"MyAWSTool"</span><span class="p">]),</span>

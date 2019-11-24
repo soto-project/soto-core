@@ -334,6 +334,9 @@ extension AWSClient {
             case .restjson:
                 return try createNIORequestWithSignedHeader(awsRequest)
             default:
+                if awsRequest.httpHeaders.count > 0 {
+                    return try createNIORequestWithSignedHeader(awsRequest)
+                }
                 return try createNIORequestWithSignedURL(awsRequest)
             }
         default:

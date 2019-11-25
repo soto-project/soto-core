@@ -61,7 +61,7 @@ public class AWSClient {
         return "\(service).\(signer.region.rawValue).amazonaws.com"
     }
 
-    public static let eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+    public static let eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
 
     /// Initialize an AWSClient struct
     /// - parameters:
@@ -119,17 +119,8 @@ public class AWSClient {
 // invoker
 extension AWSClient {
     fileprivate func invoke(_ nioRequest: HTTPClient.Request) -> Future<HTTPClient.Response> {
-        let client = HTTPClient(hostname: nioRequest.head.hostWithPort!, port: nioRequest.head.port ?? 443)
+        let client = HTTPClient(hostname: nioRequest.head.hostWithPort!, port: nioRequest.head.port ?? 443, eventGroup: AWSClient.eventGroup)
         let futureResponse = client.connect(nioRequest)
-
-        futureResponse.whenComplete {
-            client.close { error in
-                if let error = error {
-                    print("Error closing connection: \(error)")
-                }
-            }
-        }
-
         return futureResponse
     }
 }

@@ -89,7 +89,7 @@ struct MetaDataService {
     }
 
     static func request(host: String, uri: String, timeout: TimeInterval) -> Future<HTTPClient.Response> {
-        let client = HTTPClient(hostname: host, port: 80)
+        let client = HTTPClient(hostname: host, port: 80, eventGroup: AWSClient.eventGroup)
         let head = HTTPRequestHead(
                      version: HTTPVersion(major: 1, minor: 1),
                      method: .GET,
@@ -97,15 +97,6 @@ struct MetaDataService {
                    )
         let request = HTTPClient.Request(head: head, body: Data())
         let futureResponse = client.connect(request)
-
-        futureResponse.whenComplete {
-            client.close { error in
-                if let error = error {
-                    print("Error closing connection: \(error)")
-                }
-            }
-        }
-
         return futureResponse
     }
 

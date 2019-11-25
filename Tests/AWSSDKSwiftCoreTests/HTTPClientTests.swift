@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import NIO
 import NIOHTTP1
 import XCTest
 @testable import AWSSDKSwiftCore
@@ -22,10 +23,10 @@ class HTTPClientTests: XCTestCase {
               ("testConnectPost", testConnectPost)
           ]
       }
-
+    let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
     func testInitWithInvalidURL() {
       do {
-          _ = try HTTPClient(url: URL(string: "no_protocol.com")!)
+          _ = try HTTPClient(url: URL(string: "no_protocol.com")!, eventGroup: eventLoopGroup)
           XCTFail("Should throw malformedURL error")
       } catch {
         if case HTTPClient.HTTPError.malformedURL = error {}
@@ -37,13 +38,13 @@ class HTTPClientTests: XCTestCase {
 
     func testInitWithValidRL() {
       do {
-          _ = try HTTPClient(url: URL(string: "https://kinesis.us-west-2.amazonaws.com/")!)
+          _ = try HTTPClient(url: URL(string: "https://kinesis.us-west-2.amazonaws.com/")!, eventGroup: eventLoopGroup)
       } catch {
           XCTFail("Should not throw malformedURL error")
       }
 
       do {
-          _ = try HTTPClient(url: URL(string: "http://169.254.169.254/latest/meta-data/iam/security-credentials/")!)
+          _ = try HTTPClient(url: URL(string: "http://169.254.169.254/latest/meta-data/iam/security-credentials/")!, eventGroup: eventLoopGroup)
       } catch {
           XCTFail("Should not throw malformedURL error")
       }
@@ -51,12 +52,12 @@ class HTTPClientTests: XCTestCase {
 
     func testInitWithHostAndPort() {
         let url = URL(string: "https://kinesis.us-west-2.amazonaws.com/")!
-        _ = HTTPClient(hostname: url.host!, port: 443)
+        _ = HTTPClient(hostname: url.host!, port: 443, eventGroup: eventLoopGroup)
     }
 
     func testConnectSimpleGet() {
         let url = URL(string: "https://kinesis.us-west-2.amazonaws.com/")!
-        let client = HTTPClient(hostname: url.host!, port: 443)
+        let client = HTTPClient(hostname: url.host!, port: 443, eventGroup: eventLoopGroup)
         let head = HTTPRequestHead(
                      version: HTTPVersion(major: 1, minor: 1),
                      method: .GET,
@@ -69,7 +70,7 @@ class HTTPClientTests: XCTestCase {
         future.whenComplete { }
 
         do {
-            _ = try HTTPClient(url: URL(string: "http://169.254.169.254/latest/meta-data/iam/security-credentials/")!)
+            _ = try HTTPClient(url: URL(string: "http://169.254.169.254/latest/meta-data/iam/security-credentials/")!, eventGroup: eventLoopGroup)
         } catch {
             XCTFail("Should not throw malformedURL error")
         }
@@ -78,7 +79,7 @@ class HTTPClientTests: XCTestCase {
     func testConnectGet() {
 
         let url = URL(string: "https://kinesis.us-west-2.amazonaws.com/")!
-        let client = HTTPClient(hostname: url.host!, port: 443)
+        let client = HTTPClient(hostname: url.host!, port: 443, eventGroup: eventLoopGroup)
         let head = HTTPRequestHead(
                      version: HTTPVersion(major: 1, minor: 1),
                      method: .GET,
@@ -91,7 +92,7 @@ class HTTPClientTests: XCTestCase {
         future.whenComplete { }
 
         do {
-            _ = try HTTPClient(url: URL(string: "http://169.254.169.254/latest/meta-data/iam/security-credentials/")!)
+            _ = try HTTPClient(url: URL(string: "http://169.254.169.254/latest/meta-data/iam/security-credentials/")!, eventGroup: eventLoopGroup)
         } catch {
             XCTFail("Should not throw malformedURL error")
         }
@@ -99,7 +100,7 @@ class HTTPClientTests: XCTestCase {
 
     func testConnectPost() {
         let url = URL(string: "https://kinesis.us-west-2.amazonaws.com/")!
-        let client = HTTPClient(hostname: url.host!, port: 443)
+        let client = HTTPClient(hostname: url.host!, port: 443, eventGroup: eventLoopGroup)
         let head = HTTPRequestHead(
                      version: HTTPVersion(major: 1, minor: 1),
                      method: .GET,
@@ -112,7 +113,7 @@ class HTTPClientTests: XCTestCase {
         future.whenComplete { }
 
         do {
-            _ = try HTTPClient(url: URL(string: "http://169.254.169.254/latest/meta-data/iam/security-credentials/")!)
+            _ = try HTTPClient(url: URL(string: "http://169.254.169.254/latest/meta-data/iam/security-credentials/")!, eventGroup: eventLoopGroup)
         } catch {
             XCTFail("Should not throw malformedURL error")
         }

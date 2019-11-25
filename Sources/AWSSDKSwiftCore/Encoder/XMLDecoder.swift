@@ -236,18 +236,17 @@ fileprivate class _XMLDecoder : Decoder {
                         element = parent
                     }
                 }
-                if let entryName = entryName {
-                    if let entries = (element as? XML.Element)?.elements(forName: entryName) {
-                        for entry in entries {
-                            if let keyNode = entry.child(for: keyName), let valueNode = entry.child(for: valueName) {
-                                guard let keyString = keyNode.stringValue else { continue }
-                                if let key = Key(stringValue: keyString) {
-                                    allKeys.append(key)
-                                    // store value elements for later
-                                    allValueNodes[keyString] = valueNode
-                                }
-                            }
+                if let entryName = entryName, let entries = (element as? XML.Element)?.elements(forName: entryName) {
+                    for entry in entries {
+                        guard let keyNode = entry.child(for: keyName),
+                            let valueNode = entry.child(for: valueName),
+                            let keyString = keyNode.stringValue,
+                            let key = Key(stringValue: keyString) else {
+                            continue
                         }
+                        allKeys.append(key)
+                        // store value elements for later
+                        allValueNodes[keyString] = valueNode
                     }
                 }
 
@@ -281,14 +280,12 @@ fileprivate class _XMLDecoder : Decoder {
                     throw DecodingError.keyNotFound(key, DecodingError.Context(codingPath: codingPath, debugDescription:"Failed to find key value in expanded dictionary. Should not get here"))
                 }
                 return child
-            } else {
-                if let child = element.child(for: key) {
-                    return child
-                } else if let attribute = (element as? XML.Element)?.attribute(for: key) {
-                    return attribute
-                }
-                throw DecodingError.keyNotFound(key, DecodingError.Context(codingPath: codingPath, debugDescription: "Key not found"))
+            } else if let child = element.child(for: key) {
+                return child
+            } else if let attribute = (element as? XML.Element)?.attribute(for: key) {
+                return attribute
             }
+            throw DecodingError.keyNotFound(key, DecodingError.Context(codingPath: codingPath, debugDescription: "Key not found"))
         }
 
         func decodeNil(forKey key: Key) throws -> Bool {
@@ -469,15 +466,14 @@ fileprivate class _XMLDecoder : Decoder {
             }
             if let elements = elements {
                 self.elements = elements
+            } else if let parent = element.parent {
+                decoder.storage.popContainer()
+                decoder.storage.push(container: parent)
+                self.elements = (parent as? XML.Element)?.elements(forName: decoder.codingPath.last!.stringValue) ?? []
             } else {
-                if let parent = element.parent {
-                    decoder.storage.popContainer()
-                    decoder.storage.push(container: parent)
-                    self.elements = (parent as? XML.Element)?.elements(forName: decoder.codingPath.last!.stringValue) ?? []
-                } else {
-                    self.elements = []
-                }
+                self.elements = []
             }
+
             self.decoder = decoder
         }
 

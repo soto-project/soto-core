@@ -42,7 +42,7 @@ struct AtomicProperty<T> {
 }
 
 /// This is the workhorse of aws-sdk-swift-core. You provide it with a `AWSShape` Input object, it converts it to `AWSRequest` which is then converted to a raw `HTTPClient` Request. This is then sent to AWS. When the response from AWS is received if it is successful it is converted to a `AWSResponse` which is then decoded to generate a `AWSShape` Output object. If it is not successful then `AWSClient` will throw an `AWSErrorType`.
-public class AWSClient {
+public final class AWSClient {
 
     public enum RequestError: Error {
         case invalidURL(String)
@@ -78,6 +78,8 @@ public class AWSClient {
 
     var possibleErrorTypes: [AWSErrorType.Type]
 
+    let httpClient: AWSHTTPClient
+    
     public let eventLoopGroup: EventLoopGroup
 
     private static let sharedEventLoopGroup: EventLoopGroup = createEventLoopGroup()
@@ -139,7 +141,8 @@ public class AWSClient {
         case .useAWSClientShared:
             self.eventLoopGroup = AWSClient.sharedEventLoopGroup
         }
-
+        self.httpClient = AWSClient.createHTTPClient(eventLoopGroup: self.eventLoopGroup)
+            
         self.signer = AtomicProperty(value: AWSSigner(credentials: credential, name: signingName ?? service, region: region.rawValue))
         self.apiVersion = apiVersion
         self.service = service
@@ -166,6 +169,13 @@ public class AWSClient {
         }
     }
 
+    deinit {
+        do {
+            try httpClient.syncShutdown()
+        } catch {
+            preconditionFailure("Error shutting down AWSClient: \(error.localizedDescription)")
+        }
+    }
 }
 // invoker
 extension AWSClient {
@@ -178,22 +188,12 @@ extension AWSClient {
 
     /// invoke HTTP request using AsyncHTTPClient
     fileprivate func invoke(_ httpRequest: AWSHTTPRequest) -> Future<AWSHTTPResponse> {
-        let client = createHTTPClient()
-        let futureResponse = client.execute(request: httpRequest, timeout: .seconds(5))
-
-        futureResponse.whenComplete { _ in
-            do {
-                try client.syncShutdown()
-            } catch {
-                print("Error closing connection: \(error)")
-            }
-        }
-
+        let futureResponse = httpClient.execute(request: httpRequest, timeout: .seconds(5))
         return futureResponse
     }
 
     /// create HTTPClient
-    fileprivate func createHTTPClient() -> AWSHTTPClient {
+    fileprivate static func createHTTPClient(eventLoopGroup: EventLoopGroup) -> AWSHTTPClient {
         #if canImport(Network)
         if #available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *), eventLoopGroup is NIOTSEventLoopGroup {
             return NIOTSHTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))

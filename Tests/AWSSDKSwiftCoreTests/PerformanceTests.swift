@@ -47,6 +47,21 @@ struct PayloadRequest: AWSShape {
     let payload: StandardRequest
 }
 
+struct MixedRequest: AWSShape {
+    static var _members: [AWSShapeMember] = [
+        AWSShapeMember(label: "item1", location: .header(locationName: "item1"), required: true, type: .string),
+        AWSShapeMember(label: "item2", location: .body(locationName: "item2"), required: true, type: .integer),
+        AWSShapeMember(label: "item3", location: .body(locationName: "item3"), required: true, type: .double),
+        AWSShapeMember(label: "item4", location: .body(locationName: "item4"), required: true, type: .timestamp)
+    ]
+
+    let item1: String
+    let item2: Int
+    let item3: Double
+    let item4: Date
+}
+
+
 class PerformanceTests: XCTestCase {
     
     func testHeaderRequest() {
@@ -168,6 +183,74 @@ class PerformanceTests: XCTestCase {
             do {
                 for _ in 0..<1000 {
                     _ = try client.createAWSRequest(operation: "Test", path: "/", httpMethod: "POST", input: request)
+                }
+            } catch {
+                XCTFail(error.localizedDescription)
+            }
+        }
+    }
+    
+    func testUnsignedRequest() {
+        let client = AWSClient(
+            accessKeyId: "",
+            secretAccessKey: "",
+            region: .useast1,
+            service:"Test",
+            serviceProtocol: ServiceProtocol(type: .json),
+            apiVersion: "1.0",
+            eventLoopGroupProvider: .useAWSClientShared
+        )
+        let awsRequest = try! client.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET")
+        measure {
+            do {
+                for _ in 0..<1000 {
+                    _ = try client.createNioRequest(awsRequest)
+                }
+            } catch {
+                XCTFail(error.localizedDescription)
+            }
+        }
+    }
+
+    func testSignedURLRequest() {
+        let client = AWSClient(
+            accessKeyId: "MyAccessKeyId",
+            secretAccessKey: "MySecretAccessKey",
+            region: .useast1,
+            service:"Test",
+            serviceProtocol: ServiceProtocol(type: .json),
+            apiVersion: "1.0",
+            eventLoopGroupProvider: .useAWSClientShared
+        )
+        let awsRequest = try! client.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET")
+        measure {
+            do {
+                for _ in 0..<1000 {
+                    _ = try client.createNioRequest(awsRequest)
+                }
+            } catch {
+                XCTFail(error.localizedDescription)
+            }
+        }
+    }
+
+    func testSignedHeadersRequest() {
+        let client = AWSClient(
+            accessKeyId: "MyAccessKeyId",
+            secretAccessKey: "MySecretAccessKey",
+            region: .useast1,
+            service:"Test",
+            serviceProtocol: ServiceProtocol(type: .json),
+            apiVersion: "1.0",
+            eventLoopGroupProvider: .useAWSClientShared
+        )
+        let date = Date()
+        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: date)
+        let awsRequest = try! client.createAWSRequest(operation: "Test", path: "/", httpMethod: "POST", input: request)
+        measure {
+            do {
+                for _ in 0..<1000 {
+                    _ = try client.createNioRequest(awsRequest)
                 }
             } catch {
                 XCTFail(error.localizedDescription)

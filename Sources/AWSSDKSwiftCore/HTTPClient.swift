@@ -105,7 +105,7 @@ public final class HTTPClient {
     private let eventGroup: EventLoopGroup
 
     public init(url: URL,
-                eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)) throws {
+                eventGroup: EventLoopGroup) throws {
         guard let scheme = url.scheme else {
             throw HTTPClient.HTTPError.malformedURL
         }
@@ -129,7 +129,7 @@ public final class HTTPClient {
 
     public init(hostname: String,
                 port: Int,
-                eventGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)) {
+                eventGroup: EventLoopGroup) {
         self.headerHostname = hostname
         self.hostname = String(hostname.split(separator:":")[0])
         self.port = port
@@ -185,9 +185,5 @@ public final class HTTPClient {
                 response.fail(error: error)
         }
         return response.futureResult
-    }
-
-    public func close(_ callback: @escaping (Error?) -> Void) {
-        eventGroup.shutdownGracefully(callback)
     }
 }

@@ -79,7 +79,7 @@ public final class AWSClient {
     var possibleErrorTypes: [AWSErrorType.Type]
 
     let httpClient: AWSHTTPClient
-    
+
     public let eventLoopGroup: EventLoopGroup
 
     private static let sharedEventLoopGroup: EventLoopGroup = createEventLoopGroup()
@@ -142,7 +142,7 @@ public final class AWSClient {
             self.eventLoopGroup = AWSClient.sharedEventLoopGroup
         }
         self.httpClient = AWSClient.createHTTPClient(eventLoopGroup: self.eventLoopGroup)
-            
+
         self.signer = AtomicProperty(value: AWSSigner(credentials: credential, name: signingName ?? service, region: region.rawValue))
         self.apiVersion = apiVersion
         self.service = service
@@ -338,14 +338,16 @@ extension AWSClient {
             return awsRequest.toHTTPRequest()
         }
 
-        switch awsRequest.httpMethod {
-        case "GET", "HEAD":
-            switch self.serviceProtocol.type {
-            case .restjson:
+        switch (awsRequest.httpMethod, self.serviceProtocol.type) {
+        case ("GET",  .restjson), ("HEAD", .restjson):
+            return awsRequest.toHTTPRequestWithSignedHeader(signer: signer)
+
+        case ("GET",  _), ("HEAD", _):
+            if awsRequest.httpHeaders.count > 0 {
                 return awsRequest.toHTTPRequestWithSignedHeader(signer: signer)
-            default:
-                return awsRequest.toHTTPRequestWithSignedURL(signer: signer)
             }
+            return awsRequest.toHTTPRequestWithSignedURL(signer: signer)
+
         default:
             return awsRequest.toHTTPRequestWithSignedHeader(signer: signer)
         }

@@ -21,7 +21,7 @@ public class AWSClient {
     public enum RequestError: Error {
         case invalidURL(String)
     }
-    
+
     /// Specifies how `EventLoopGroup` will be created and establishes lifecycle ownership.
     public enum EventLoopGroupProvider {
         /// `EventLoopGroup` will be provided by the user. Owner of this group is responsible for its lifecycle.
@@ -49,7 +49,7 @@ public class AWSClient {
     let middlewares: [AWSServiceMiddleware]
 
     var possibleErrorTypes: [AWSErrorType.Type]
-    
+
     public let eventLoopGroup: EventLoopGroup
 
     /// endpoint URL
@@ -124,7 +124,7 @@ public class AWSClient {
         } else {
             region = .useast1
         }
-        
+
         switch eventLoopGroupProvider {
         case .shared(let eventLoopGroup):
             self.eventLoopGroup = eventLoopGroup
@@ -165,7 +165,7 @@ extension AWSClient {
 
 // public facing apis
 extension AWSClient {
-    
+
     /// send a request with an input object and return a future with an empty response
     /// - parameters:
     ///     - operationName: Name of the AWS operation
@@ -328,17 +328,16 @@ extension AWSClient {
     }
 
     func createNioRequest(_ awsRequest: AWSRequest) throws -> HTTPClient.Request {
-        switch awsRequest.httpMethod {
-        case "GET", "HEAD":
-            switch self.serviceProtocol.type {
-            case .restjson:
+        switch (awsRequest.httpMethod, self.serviceProtocol.type) {
+        case ("GET",  .restjson), ("HEAD", .restjson):
+            return try createNIORequestWithSignedHeader(awsRequest)
+
+        case ("GET",  _), ("HEAD", _):
+            if awsRequest.httpHeaders.count > 0 {
                 return try createNIORequestWithSignedHeader(awsRequest)
-            default:
-                if awsRequest.httpHeaders.count > 0 {
-                    return try createNIORequestWithSignedHeader(awsRequest)
-                }
-                return try createNIORequestWithSignedURL(awsRequest)
             }
+            return try createNIORequestWithSignedURL(awsRequest)
+            
         default:
             return try createNIORequestWithSignedHeader(awsRequest)
         }
@@ -383,7 +382,7 @@ extension AWSClient {
         if let target = amzTarget {
             headers["x-amz-target"] = "\(target).\(operationName)"
         }
-        
+
         // TODO should replace with Encodable
         let mirror = Mirror(reflecting: input)
 
@@ -813,4 +812,3 @@ extension URL {
         return host
     }
 }
-

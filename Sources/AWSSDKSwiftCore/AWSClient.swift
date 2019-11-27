@@ -319,7 +319,7 @@ extension AWSClient {
         let signer = self.signer.value
         if let expiringCredential = signer.credentials as? ExpiringCredential, expiringCredential.nearExpiration() {
             do {
-                return try MetaDataService.getCredential(eventLoopGroup: eventLoopGroup).map { credential in
+                return try MetaDataService.getCredential(httpClient: self.httpClient).map { credential in
                     let signer = AWSSigner(credentials: credential, name: signer.name, region: signer.region)
                     self.signer.value = signer
                     return signer

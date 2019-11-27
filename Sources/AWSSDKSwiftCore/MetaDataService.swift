@@ -20,14 +20,14 @@ enum MetaDataServiceError: Error {
 }
 
 /// Object managing accessing of AWS credentials from various sources
-public struct MetaDataService {
+struct MetaDataService {
 
     /// return future holding a credential provider
-    public static func getCredential(eventLoopGroup: EventLoopGroup) throws -> Future<CredentialProvider> {
+    static func getCredential(httpClient: AWSHTTPClient) throws -> Future<CredentialProvider> {
         if let ecsCredentialProvider = ECSMetaDataServiceProvider() {
-            return ecsCredentialProvider.getCredential(eventLoopGroup: eventLoopGroup)
+            return ecsCredentialProvider.getCredential(httpClient: httpClient)
         } else {
-            return InstanceMetaDataServiceProvider().getCredential(eventLoopGroup: eventLoopGroup)
+            return InstanceMetaDataServiceProvider().getCredential(httpClient: httpClient)
         }
     }
 }
@@ -42,24 +42,15 @@ protocol MetaDataContainer: Decodable {
 /// protocol for metadata service returning AWS credentials
 protocol MetaDataServiceProvider {
     associatedtype MetaData: MetaDataContainer
-    func getCredential(eventLoopGroup: EventLoopGroup) -> Future<CredentialProvider>
+    func getCredential(httpClient: AWSHTTPClient) -> Future<CredentialProvider>
 }
 
 extension MetaDataServiceProvider {
 
     /// make HTTP request
-    func request(url: String, timeout: TimeInterval, eventLoopGroup: EventLoopGroup) -> Future<AsyncHTTPClient.HTTPClient.Response> {
-        let client = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
-        let futureResponse = client.get(url: url, deadline: NIODeadline.now() + .seconds(2) )
-
-        futureResponse.whenComplete { _ in
-            do {
-                try client.syncShutdown()
-            } catch {
-                print("Error closing connection: \(error)")
-            }
-        }
-
+    func request(url: String, timeout: TimeInterval, httpClient: AWSHTTPClient) -> Future<AWSHTTPResponse> {
+        let request = AWSHTTPRequest(url: URL(string: url)!, method: .GET, headers: [:], body: nil)
+        let futureResponse = httpClient.execute(request: request, timeout: TimeAmount.seconds(2))
         return futureResponse
     }
 
@@ -123,8 +114,8 @@ struct ECSMetaDataServiceProvider: MetaDataServiceProvider {
         self.url = "http://\(ECSMetaDataServiceProvider.host)\(uri)"
     }
 
-    func getCredential(eventLoopGroup: EventLoopGroup) -> Future<CredentialProvider> {
-        return request(url: url, timeout: 2, eventLoopGroup: eventLoopGroup)
+    func getCredential(httpClient: AWSHTTPClient) -> Future<CredentialProvider> {
+        return request(url: url, timeout: 2, httpClient: httpClient)
             .flatMapThrowing { response in
                 if let body = response.body,
                     let data = body.getData(at: body.readerIndex, length: body.readableBytes, byteTransferStrategy: .noCopy),
@@ -179,9 +170,9 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
         return "http://\(host)\(instanceMetadataUri)"
     }
 
-    func uri(eventLoopGroup: EventLoopGroup) -> Future<String> {
+    func uri(httpClient: AWSHTTPClient) -> Future<String> {
         // instance service expects absoluteString as uri...
-        return request(url:InstanceMetaDataServiceProvider.baseURLString, timeout: 2, eventLoopGroup: eventLoopGroup)
+        return request(url:InstanceMetaDataServiceProvider.baseURLString, timeout: 2, httpClient: httpClient)
             .flatMapThrowing{ response in
                 switch response.status {
                 case .ok:
@@ -195,10 +186,10 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
         }
     }
 
-    func getCredential(eventLoopGroup: EventLoopGroup) -> Future<CredentialProvider> {
-        return uri(eventLoopGroup: eventLoopGroup)
+    func getCredential(httpClient: AWSHTTPClient) -> Future<CredentialProvider> {
+        return uri(httpClient: httpClient)
             .flatMap { url in
-                return self.request(url: url, timeout: 2, eventLoopGroup: eventLoopGroup)
+                return self.request(url: url, timeout: 2, httpClient: httpClient)
             }
             .flatMapThrowing { response in
                 if let body = response.body,

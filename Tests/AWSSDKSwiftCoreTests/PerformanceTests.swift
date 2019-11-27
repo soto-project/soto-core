@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import NIOHTTP1
 import XCTest
 @testable import AWSSDKSwiftCore
 
@@ -35,7 +36,7 @@ struct StandardRequest: AWSShape {
     let item1: String
     let item2: Int
     let item3: Double
-    let item4: Date
+    let item4: TimeStamp
 }
 
 struct PayloadRequest: AWSShape {
@@ -58,7 +59,7 @@ struct MixedRequest: AWSShape {
     let item1: String
     let item2: Int
     let item3: Double
-    let item4: Date
+    let item4: TimeStamp
 }
 
 
@@ -94,7 +95,7 @@ class PerformanceTests: XCTestCase {
             eventLoopGroupProvider: .useAWSClientShared
         )
         let date = Date()
-        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: date)
+        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date))
         measure {
             do {
                 for _ in 0..<1000 {
@@ -115,7 +116,7 @@ class PerformanceTests: XCTestCase {
             eventLoopGroupProvider: .useAWSClientShared
         )
         let date = Date()
-        let request = PayloadRequest(payload: StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: date))
+        let request = PayloadRequest(payload: StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date)))
         measure {
             do {
                 for _ in 0..<1000 {
@@ -136,7 +137,7 @@ class PerformanceTests: XCTestCase {
             eventLoopGroupProvider: .useAWSClientShared
         )
         let date = Date()
-        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: date)
+        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date))
         measure {
             do {
                 for _ in 0..<1000 {
@@ -157,7 +158,7 @@ class PerformanceTests: XCTestCase {
             eventLoopGroupProvider: .useAWSClientShared
         )
         let date = Date()
-        let request = PayloadRequest(payload: StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: date))
+        let request = PayloadRequest(payload: StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date)))
         measure {
             do {
                 for _ in 0..<1000 {
@@ -178,7 +179,7 @@ class PerformanceTests: XCTestCase {
             eventLoopGroupProvider: .useAWSClientShared
         )
         let date = Date()
-        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: date)
+        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date))
         measure {
             do {
                 for _ in 0..<1000 {
@@ -245,12 +246,64 @@ class PerformanceTests: XCTestCase {
             eventLoopGroupProvider: .useAWSClientShared
         )
         let date = Date()
-        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: date)
+        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date))
         let awsRequest = try! client.createAWSRequest(operation: "Test", path: "/", httpMethod: "POST", input: request)
         measure {
             do {
                 for _ in 0..<1000 {
                     _ = try client.createNioRequest(awsRequest)
+                }
+            } catch {
+                XCTFail(error.localizedDescription)
+            }
+        }
+    }
+    
+    func testValidateXMLResponse() {
+        let client = AWSClient(
+            region: .useast1,
+            service:"Test",
+            serviceProtocol: ServiceProtocol(type: .restxml),
+            apiVersion: "1.0",
+            eventLoopGroupProvider: .useAWSClientShared
+        )
+        let response = HTTPClient.Response(
+            head: HTTPResponseHead(
+                version: HTTPVersion(major: 1, minor: 1),
+                status: HTTPResponseStatus(statusCode: 200)
+            ),
+            body: "<Output><item1>Hello</item1><item2>5</item2><item3>3.141</item3><item4>2001-12-23T15:34:12.590Z</item4></Output>".data(using: .utf8)!
+        )
+        measure {
+            do {
+                for _ in 0..<1000 {
+                    let output: StandardRequest = try client.validate(operation: "Output", response: response)
+                }
+            } catch {
+                XCTFail(error.localizedDescription)
+            }
+        }
+    }
+    
+    func testValidateJSONResponse() {
+        let client = AWSClient(
+            region: .useast1,
+            service:"Test",
+            serviceProtocol: ServiceProtocol(type: .restjson),
+            apiVersion: "1.0",
+            eventLoopGroupProvider: .useAWSClientShared
+        )
+        let response = HTTPClient.Response(
+            head: HTTPResponseHead(
+                version: HTTPVersion(major: 1, minor: 1),
+                status: HTTPResponseStatus(statusCode: 200)
+            ),
+            body: "{\"item1\":\"Hello\", \"item2\":5, \"item3\":3.14, \"item4\":\"2001-12-23T15:34:12.590Z\"}".data(using: .utf8)!
+        )
+        measure {
+            do {
+                for _ in 0..<1000 {
+                    let output: StandardRequest = try client.validate(operation: "Output", response: response)
                 }
             } catch {
                 XCTFail(error.localizedDescription)

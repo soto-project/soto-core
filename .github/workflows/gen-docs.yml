@@ -1,6 +1,6 @@
 name: Generate Documentation
 
-on: [push]
+on: [release]
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

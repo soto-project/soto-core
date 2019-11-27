@@ -8,43 +8,6 @@
 
 import Foundation
 
-let swiftReservedWords: [String] = [
-    "protocol",
-    "return",
-    "operator",
-    "class",
-    "struct",
-    "break",
-    "continue",
-    "extension",
-    "self",
-    "public",
-    "private",
-    "internal",
-    "where",
-    "catch",
-    "try",
-    "default",
-    "case",
-    "static",
-    "switch",
-    "if",
-    "else",
-    "func",
-    "enum",
-    "true",
-    "false",
-    "nil",
-    "in",
-    "import",
-    "as",
-    "is",
-    "do",
-    "try",
-    "type",
-    "repeat"
-]
-
 extension String {
     public func lowerFirst() -> String {
         return String(self[startIndex]).lowercased() + self[index(after: startIndex)...]
@@ -61,26 +24,8 @@ extension String {
         return self.replacingOccurrences(of: "-", with: "_").camelCased()
     }
     
-    public func reservedwordEscaped() -> String {
-        if swiftReservedWords.contains(self.lowercased()) {
-            return "`\(self)`"
-        }
-        return self
-    }
-    
     public func toSwiftVariableCase() -> String {
-        return toSwiftLabelCase().reservedwordEscaped()
-    }
-    
-    public func toSwiftClassCase() -> String {
-        if self == "Type" {
-            return "`\(self)`"
-        }
-        
-        return self.replacingOccurrences(of: "-", with: "_")
-            .replacingOccurrences(of: ".", with: "")
-            .camelCased()
-            .upperFirst()
+        return toSwiftLabelCase()
     }
     
     public func camelCased(separator: String = "_") -> String {

@@ -64,7 +64,7 @@ public final class AWSClient {
 
     let service: String
 
-    let endpoint: String
+    public let endpoint: String
 
     public let region: Region
 

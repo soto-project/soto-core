@@ -32,30 +32,53 @@ struct StaticCredentialProvider: CredentialProvider {
 
 /// Provides credentials acquired from the metadata service. These expire and need updated occasionally
 class MetaDataCredentialProvider: CredentialProvider {
-    private(set) var credentialFuture: EventLoopFuture<Credential>
+    private(set) var credential: Credential
+    private(set) var refreshingCredentialFuture: EventLoopFuture<Credential>?
     let httpClient: AWSHTTPClient
     let lock = Lock()
 
     init(httpClient: AWSHTTPClient) {
-        let credential = ExpiringCredential(accessKeyId: "", secretAccessKey: "", expiration: Date.init(timeIntervalSince1970: 0))
-        self.credentialFuture = httpClient.eventLoopGroup.next().makeSucceededFuture(credential)
+        self.credential = ExpiringCredential(accessKeyId: "", secretAccessKey: "", expiration: Date.init(timeIntervalSince1970: 0))
+        self.refreshingCredentialFuture = nil
         self.httpClient = httpClient
     }
     
     func getCredential() -> EventLoopFuture<Credential> {
-        return credentialFuture.flatMap { credential in
-            return self.lock.withLock {
-                if let expiringCredential = credential as? ExpiringCredential, expiringCredential.nearExpiration() {
-                    return self.refresh()
-                } else {
-                    return self.credentialFuture
-                }
+        lock.lock()
+        let credential = self.credential
+        lock.unlock()
+        
+        if let credential = credential as? ExpiringCredential, credential.nearExpiration() == false {
+            // we have credentials and those are still valid
+            if httpClient.eventLoopGroup is MultiThreadedEventLoopGroup {
+                // if we are in a MultiThreadedEventLoopGroup we try to minimize hops.
+                return MultiThreadedEventLoopGroup.currentEventLoop!.makeSucceededFuture(credential)
             }
+            return httpClient.eventLoopGroup.next().makeSucceededFuture(credential)
         }
+        
+        // we need to refresh the credentials
+        return self.refreshCredentials()
     }
     
-    func refresh() -> EventLoopFuture<Credential> {
-        self.credentialFuture  = MetaDataService.getCredential(httpClient: self.httpClient)
-        return self.credentialFuture
+    func refreshCredentials() -> EventLoopFuture<Credential> {
+        return lock.withLock {
+        
+            if let future = refreshingCredentialFuture {
+                // a refresh is already running
+                return future
+            }
+            
+            let credentialFuture = MetaDataService.getCredential(httpClient: self.httpClient)
+                .map { (credential)->Credential in
+                    return self.lock.withLock {
+                        self.credential = credential
+                        self.refreshingCredentialFuture = nil
+                        return credential
+                    }
+            }
+            self.refreshingCredentialFuture = credentialFuture
+            return credentialFuture
+        }
     }
 }

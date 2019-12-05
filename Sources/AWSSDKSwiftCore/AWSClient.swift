@@ -17,30 +17,6 @@ import NIOTransportServices
 /// Convenience shorthand for `EventLoopFuture`.
 public typealias Future = EventLoopFuture
 
-/// Helper struct for ensuring atomic access to a structure
-struct AtomicProperty<T> {
-    private var _value: T
-    private var lock = NSLock()
-
-    public init(value: T) {
-        _value = value
-    }
-
-    public var value: T {
-        get {
-            lock.lock()
-            let value = _value
-            lock.unlock()
-            return value
-        }
-        set {
-            lock.lock()
-            _value = newValue
-            lock.unlock()
-        }
-    }
-}
-
 /// This is the workhorse of aws-sdk-swift-core. You provide it with a `AWSShape` Input object, it converts it to `AWSRequest` which is then converted to a raw `HTTPClient` Request. This is then sent to AWS. When the response from AWS is received if it is successful it is converted to a `AWSResponse` which is then decoded to generate a `AWSShape` Output object. If it is not successful then `AWSClient` will throw an `AWSErrorType`.
 public final class AWSClient {
 
@@ -56,30 +32,21 @@ public final class AWSClient {
         case useAWSClientShared
     }
 
-    var signer: AtomicProperty<AWSSigner>
+    let signer: AWSSigner
+    let credentialProvider: CredentialProvider
 
     let apiVersion: String
-
     let amzTarget: String?
-
     let service: String
-
     public let endpoint: String
-
     public let region: Region
-
     let serviceProtocol: ServiceProtocol
-
     let serviceEndpoints: [String: String]
-
     let partitionEndpoint: String?
-
     let middlewares: [AWSServiceMiddleware]
-
     var possibleErrorTypes: [AWSErrorType.Type]
 
     let httpClient: AWSHTTPClient
-
     public let eventLoopGroup: EventLoopGroup
 
     private static let sharedEventLoopGroup: EventLoopGroup = createEventLoopGroup()
@@ -111,62 +78,103 @@ public final class AWSClient {
     ///     - middlewares: Array of middlewares to apply to requests and responses
     ///     - possibleErrorTypes: Array of possible error types that the client can throw
     ///     - eventLoopGroupProvider: EventLoopGroup to use. Use `useAWSClientShared` if the client shall manage its own EventLoopGroup.
-    public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, sessionToken: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, signingName: String? = nil, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSServiceMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil, eventLoopGroupProvider: EventLoopGroupProvider) {
-        let credential: CredentialProvider
-        if let accessKey = accessKeyId, let secretKey = secretAccessKey {
-            credential = Credential(accessKeyId: accessKey, secretAccessKey: secretKey, sessionToken: sessionToken)
-        } else if let ecredential = EnvironmentCredential() {
-            credential = ecredential
-        } else if let scredential = try? SharedCredential() {
-            credential = scredential
-        } else {
-            // create an expired credential
-            credential = ExpiringCredential(accessKeyId: "", secretAccessKey: "", expiration: Date.init(timeIntervalSince1970: 0))
+    public convenience init(accessKeyId: String? = nil, secretAccessKey: String? = nil, sessionToken: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, signingName: String? = nil, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSServiceMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil, eventLoopGroupProvider: EventLoopGroupProvider) {
+        
+        // 1. get eventLoopGroup
+        let eventloopGroup: EventLoopGroup
+        switch eventLoopGroupProvider {
+        case .shared(let loopGroup):
+            eventloopGroup = loopGroup
+        case .useAWSClientShared:
+            eventloopGroup = AWSClient.sharedEventLoopGroup
         }
-
-        if let _region = givenRegion {
-            region = _region
+        let httpClient = AWSClient.createHTTPClient(eventLoopGroup: eventloopGroup)
+        
+        // 2. check credential chain
+        let credentialProvider = CredentialChain.createProvider(
+            accessKeyId: accessKeyId,
+            secretAccessKey: secretAccessKey,
+            sessionToken: sessionToken,
+            eventLoopGroup: eventloopGroup,
+            httpClient: httpClient)
+        
+        // 3. get endpoint
+        let _region: Region
+        if let region = givenRegion {
+            _region = region
         }
         else if let partitionEndpoint = partitionEndpoint, let reg = Region(rawValue: partitionEndpoint) {
-            region = reg
+            _region = reg
         } else if let defaultRegion = ProcessInfo.processInfo.environment["AWS_DEFAULT_REGION"], let reg = Region(rawValue: defaultRegion) {
-            region = reg
+            _region = reg
         } else {
-            region = .useast1
+            _region = .useast1
         }
-
-        switch eventLoopGroupProvider {
-        case .shared(let eventLoopGroup):
-            self.eventLoopGroup = eventLoopGroup
-        case .useAWSClientShared:
-            self.eventLoopGroup = AWSClient.sharedEventLoopGroup
-        }
-        self.httpClient = AWSClient.createHTTPClient(eventLoopGroup: self.eventLoopGroup)
-
-        self.signer = AtomicProperty(value: AWSSigner(credentials: credential, name: signingName ?? service, region: region.rawValue))
-        self.apiVersion = apiVersion
-        self.service = service
-        //self._endpoint = endpoint
-        self.amzTarget = amzTarget
-        self.serviceProtocol = serviceProtocol
-        self.serviceEndpoints = serviceEndpoints
-        self.partitionEndpoint = partitionEndpoint
-        self.middlewares = middlewares
-        self.possibleErrorTypes = possibleErrorTypes ?? []
-        // work out endpoint, if provided use that otherwise
+        
+        // 4. get endpoint
+        let _endpoint: String
         if let endpoint = endpoint {
-            self.endpoint = endpoint
+            _endpoint = endpoint
         } else {
             let serviceHost: String
-            if let serviceEndpoint = serviceEndpoints[region.rawValue] {
+            if let serviceEndpoint = serviceEndpoints[_region.rawValue] {
                 serviceHost = serviceEndpoint
             } else if let partitionEndpoint = partitionEndpoint, let globalEndpoint = serviceEndpoints[partitionEndpoint] {
                 serviceHost = globalEndpoint
             } else {
-                serviceHost = "\(service).\(region.rawValue).amazonaws.com"
+                serviceHost = "\(service).\(_region.rawValue).amazonaws.com"
             }
-            self.endpoint = "https://\(serviceHost)"
+            _endpoint = "https://\(serviceHost)"
         }
+        
+        self.init(credentialProvider: credentialProvider,
+                  region: _region,
+                  amzTarget: amzTarget,
+                  service: service,
+                  signingName: signingName,
+                  serviceProtocol: serviceProtocol,
+                  apiVersion: apiVersion,
+                  endpoint: _endpoint,
+                  serviceEndpoints: serviceEndpoints,
+                  partitionEndpoint: partitionEndpoint,
+                  middlewares: middlewares,
+                  possibleErrorTypes: possibleErrorTypes ?? [],
+                  eventLoopGroup: eventloopGroup,
+                  httpClient: httpClient)
+    }
+  
+    public init(credentialProvider: CredentialProvider,
+                region givenRegion: Region,
+                amzTarget: String?,
+                service: String,
+                signingName: String?,
+                serviceProtocol: ServiceProtocol,
+                apiVersion: String,
+                endpoint: String,
+                serviceEndpoints: [String: String],
+                partitionEndpoint: String?,
+                middlewares: [AWSServiceMiddleware],
+                possibleErrorTypes: [AWSErrorType.Type],
+                eventLoopGroup: EventLoopGroup,
+                httpClient: AWSHTTPClient) {
+        assert(eventLoopGroup === httpClient.eventLoopGroup)
+
+        self.apiVersion         = apiVersion
+        self.amzTarget          = amzTarget
+        self.service            = service
+        self.endpoint           = endpoint
+        self.region             = givenRegion
+        self.serviceProtocol    = serviceProtocol
+        self.serviceEndpoints   = serviceEndpoints
+        self.partitionEndpoint  = partitionEndpoint
+        self.middlewares        = middlewares
+        self.possibleErrorTypes = possibleErrorTypes
+        
+        self.signer = AWSSigner(name: signingName ?? service, region: region.rawValue)
+        self.credentialProvider = credentialProvider
+
+        self.eventLoopGroup     = eventLoopGroup
+        self.httpClient         = httpClient
     }
 
     deinit {
@@ -179,12 +187,6 @@ public final class AWSClient {
 }
 // invoker
 extension AWSClient {
-
-    /// invoke AWS request, create HTTP request from AWS request and then make request. Return response. Function chooses which HTTP client to use based
-    fileprivate func invoke(_ awsRequest: AWSRequest, signer: AWSSigner) -> Future<AWSHTTPResponse> {
-        let request = createHTTPRequest(awsRequest, signer: signer)
-        return invoke(request)
-    }
 
     /// invoke HTTP request using AsyncHTTPClient
     fileprivate func invoke(_ httpRequest: AWSHTTPRequest) -> Future<AWSHTTPResponse> {
@@ -216,19 +218,21 @@ extension AWSClient {
     /// - returns:
     ///     Empty Future that completes when response is received
     public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> Future<Void> {
-
-        return manageCredential().flatMapThrowing { signer in
-            let awsRequest = try self.createAWSRequest(
-                        operation: operationName,
-                        path: path,
-                        httpMethod: httpMethod,
-                        input: input)
-            return self.createHTTPRequest(awsRequest, signer: signer)
-        }.flatMap { request in
-            return self.invoke(request)
-        }.flatMapThrowing { response in
-            return try self.validate(response: response)
-        }
+        return self.credentialProvider.getCredential()
+            .flatMapThrowing { credential in
+                let awsRequest = try self.createAWSRequest(
+                    operation: operationName,
+                    path: path,
+                    httpMethod: httpMethod,
+                    input: input)
+                return self.signRequest(awsRequest, with: credential)
+            }
+            .flatMap { request in
+                return self.invoke(request)
+            }
+            .flatMapThrowing { response in
+                return try self.validate(response: response)
+            }
     }
 
     /// send an empty request and return a future with an empty response
@@ -239,18 +243,20 @@ extension AWSClient {
     /// - returns:
     ///     Empty Future that completes when response is received
     public func send(operation operationName: String, path: String, httpMethod: String) -> Future<Void> {
-
-        return manageCredential().flatMapThrowing { signer in
-            let awsRequest = try self.createAWSRequest(
-                        operation: operationName,
-                        path: path,
-                        httpMethod: httpMethod)
-            return self.createHTTPRequest(awsRequest, signer: signer)
-        }.flatMap { request in
-            return self.invoke(request)
-        }.flatMapThrowing { response in
-            return try self.validate(response: response)
-        }
+        return self.credentialProvider.getCredential()
+            .flatMapThrowing { credential in
+                let awsRequest = try self.createAWSRequest(
+                    operation: operationName,
+                    path: path,
+                    httpMethod: httpMethod)
+                return self.signRequest(awsRequest, with: credential)
+            }
+            .flatMap { request in
+                return self.invoke(request)
+            }
+            .flatMapThrowing { response in
+                return try self.validate(response: response)
+            }
     }
 
     /// send an empty request and return a future with the output object generated from the response
@@ -261,18 +267,20 @@ extension AWSClient {
     /// - returns:
     ///     Future containing output object that completes when response is received
     public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) -> Future<Output> {
-
-        return manageCredential().flatMapThrowing { signer in
-            let awsRequest = try self.createAWSRequest(
-                        operation: operationName,
-                        path: path,
-                        httpMethod: httpMethod)
-            return self.createHTTPRequest(awsRequest, signer: signer)
-        }.flatMap { request in
-            return self.invoke(request)
-        }.flatMapThrowing { response in
-            return try self.validate(operation: operationName, response: response)
-        }
+        return self.credentialProvider.getCredential()
+            .flatMapThrowing { credential in
+                let awsRequest = try self.createAWSRequest(
+                    operation: operationName,
+                    path: path,
+                    httpMethod: httpMethod)
+                return self.signRequest(awsRequest, with: credential)
+            }
+            .flatMap { request in
+                return self.invoke(request)
+            }
+            .flatMapThrowing { response in
+                return try self.validate(operation: operationName, response: response)
+            }
     }
 
     /// send a request with an input object and return a future with the output object generated from the response
@@ -284,72 +292,43 @@ extension AWSClient {
     /// - returns:
     ///     Future containing output object that completes when response is received
     public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> Future<Output> {
-
-        return manageCredential().flatMapThrowing { signer in
-            let awsRequest = try self.createAWSRequest(
-                        operation: operationName,
-                        path: path,
-                        httpMethod: httpMethod,
-                        input: input)
-            return self.createHTTPRequest(awsRequest, signer: signer)
-        }.flatMap { request in
-            return self.invoke(request)
-        }.flatMapThrowing { response in
-            return try self.validate(operation: operationName, response: response)
-        }
-    }
-
-    /// generate a signed URL
-    /// - parameters:
-    ///     - url : URL to sign
-    ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
-    ///     - expires: How long before the signed URL expires
-    /// - returns:
-    ///     A signed URL
-    public func signURL(url: URL, httpMethod: String, expires: Int = 86400) -> URL {
-        return signer.value.signURL(url: url, method: HTTPMethod(from: httpMethod), expires: expires)
+        return self.credentialProvider.getCredential()
+            .flatMapThrowing { credential in
+                let awsRequest = try self.createAWSRequest(
+                    operation: operationName,
+                    path: path,
+                    httpMethod: httpMethod,
+                    input: input)
+                return self.signRequest(awsRequest, with: credential)
+            }
+            .flatMap { request in
+                return self.invoke(request)
+            }
+            .flatMapThrowing { response in
+                return try self.validate(operation: operationName, response: response)
+            }
     }
 }
 
 // request creator
 extension AWSClient {
 
-    func manageCredential() -> Future<AWSSigner> {
-        #if os(Linux)
-        let signer = self.signer.value
-        if let expiringCredential = signer.credentials as? ExpiringCredential, expiringCredential.nearExpiration() {
-            do {
-                return try MetaDataService.getCredential(httpClient: self.httpClient).map { credential in
-                    let signer = AWSSigner(credentials: credential, name: signer.name, region: signer.region)
-                    self.signer.value = signer
-                    return signer
-                }
-            } catch {
-                // should not be crash
-            }
-        }
-        #endif // os(Linux)
-        return eventLoopGroup.next().makeSucceededFuture(self.signer.value)
-    }
-
-    func createHTTPRequest(_ awsRequest: AWSRequest, signer: AWSSigner) -> AWSHTTPRequest {
-        // if credentials are empty don't sign request
-        if signer.credentials.isEmpty() {
-            return awsRequest.toHTTPRequest()
-        }
+    func signRequest(_ awsRequest: AWSRequest, with credential: Credential) -> AWSHTTPRequest {
+        
+        #warning("we need a way if we don't have credentials here. is that even possible?")
 
         switch (awsRequest.httpMethod, self.serviceProtocol.type) {
         case ("GET",  .restjson), ("HEAD", .restjson):
-            return awsRequest.toHTTPRequestWithSignedHeader(signer: signer)
+            return awsRequest.withSignedHeader(signer, credential: credential)
 
         case ("GET",  _), ("HEAD", _):
             if awsRequest.httpHeaders.count > 0 {
-                return awsRequest.toHTTPRequestWithSignedHeader(signer: signer)
+                return awsRequest.withSignedHeader(signer, credential: credential)
             }
-            return awsRequest.toHTTPRequestWithSignedURL(signer: signer)
+            return awsRequest.withSignedURL(signer, credential: credential)
 
         default:
-            return awsRequest.toHTTPRequestWithSignedHeader(signer: signer)
+            return awsRequest.withSignedHeader(signer, credential: credential)
         }
     }
 
@@ -709,22 +688,25 @@ extension AWSClient {
                                 for link in links {
                                     guard let name = link.name else { continue }
                                     guard let url = URL(string:endpoint + link.href) else { continue }
-                                    //let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: endpoint + link.href)
-                                    let signedHeaders = signer.value.signHeaders(url: url, method: .GET)
-                                    let httpRequest = AWSHTTPRequest(url: url, method: .GET, headers: signedHeaders, body: nil)
-                                    //let nioRequest = try nioRequestWithSignedHeader(AWSHTTPClient.Request(head: head, body: Data()))
+                                    
                                     //
                                     // this is a hack to wait...
-                                    ///
+                                    //
                                     while dict[name] == nil {
-                                        _ = invoke(httpRequest).flatMapThrowing{ res in
-                                            if let body = res.body {
-                                                if let bodyData = body.getData(at: body.readerIndex, length: body.readableBytes, byteTransferStrategy: .noCopy) {
+                                        _ = self.credentialProvider.getCredential()
+                                            .flatMapThrowing { credential in
+                                                let signedHeaders = self.signer.signHeaders(with: credential, url: url, method: .GET)
+                                                return AWSHTTPRequest(url: url, method: .GET, headers: signedHeaders, body: nil)
+                                            }
+                                            .flatMap { (request) in
+                                                return self.invoke(request)
+                                            }
+                                            .flatMapThrowing{ res in
+                                                if let body = res.body, let bodyData = body.getData(at: body.readerIndex, length: body.readableBytes, byteTransferStrategy: .noCopy) {
                                                     let representaion = try Representation().from(json: bodyData)
                                                     dict[name] = representaion.properties
                                                 }
                                             }
-                                        }
                                     }
                                 }
                                 props[key] = dict

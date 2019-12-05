@@ -32,7 +32,7 @@ public final class NIOTSHTTPClient {
     /// Response structure received back
     public struct Response {
         let head: HTTPResponseHead
-        let body: ByteBuffer?
+        public let body: ByteBuffer?
     }
 
     /// Errors returned from HTTPClient when parsing responses
@@ -230,7 +230,7 @@ public final class NIOTSHTTPClient {
         }
     }
 
-    internal let eventLoopGroup: EventLoopGroup
+    public let eventLoopGroup: EventLoopGroup
     private let eventLoopGroupProvider: EventLoopGroupProvider
 }
 
@@ -238,7 +238,7 @@ public final class NIOTSHTTPClient {
 @available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)
 extension NIOTSHTTPClient: AWSHTTPClient {
 
-    func execute(request: AWSHTTPRequest, timeout: TimeAmount) -> EventLoopFuture<AWSHTTPResponse> {
+    public func execute(request: AWSHTTPRequest, timeout: TimeAmount) -> EventLoopFuture<AWSHTTPResponse> {
         var head = HTTPRequestHead(
           version: HTTPVersion(major: 1, minor: 1),
           method: request.method,
@@ -253,8 +253,8 @@ extension NIOTSHTTPClient: AWSHTTPClient {
 
 @available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)
 extension NIOTSHTTPClient.Response: AWSHTTPResponse {
-    var status: HTTPResponseStatus { return head.status }
-    var headers: HTTPHeaders { return head.headers }
+    public var status: HTTPResponseStatus { return head.status }
+    public var headers: HTTPHeaders { return head.headers }
 }
 
 #endif

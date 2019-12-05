@@ -4,7 +4,7 @@ import NIO
 
 /// comply with AWSHTTPClient protocol
 extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
-    func execute(request: AWSHTTPRequest, timeout: TimeAmount) -> EventLoopFuture<AWSHTTPResponse> {
+    public func execute(request: AWSHTTPRequest, timeout: TimeAmount) -> EventLoopFuture<AWSHTTPResponse> {
         let requestBody: AsyncHTTPClient.HTTPClient.Body?
         if let body = request.body {
             requestBody = AsyncHTTPClient.HTTPClient.Body.byteBuffer(body)

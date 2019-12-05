@@ -154,7 +154,6 @@ public final class NIOTSHTTPClient {
             if let body = request.body {
                 head.headers.replaceOrAdd(name: "Content-Length", value: body.readableBytes.description)
             }
-            // TODO implement keep-alive
             head.headers.replaceOrAdd(name: "Connection", value: "Close")
 
 

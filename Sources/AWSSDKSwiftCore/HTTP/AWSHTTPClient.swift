@@ -33,5 +33,5 @@ protocol AWSHTTPClient {
     func syncShutdown() throws
     
     /// Event loop group used by client
-    var eventLoopGroup: EventLoopGroup {get}
+    var eventLoopGroup: EventLoopGroup { get }
 }

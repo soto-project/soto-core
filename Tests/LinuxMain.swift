@@ -1,5 +1,6 @@
 import XCTest
 @testable import AWSSDKSwiftCoreTests
+@testable import AWSSignerTests
 
 XCTMain([
     testCase(AsyncHTTPClientTests.allTests),
@@ -11,5 +12,6 @@ XCTMain([
     testCase(SerializersTests.allTests),
     testCase(TimeStampTests.allTests),
     testCase(ValidationTests.allTests),
-    testCase(XMLTests.allTests)
+    testCase(XMLTests.allTests),
+    testCase(AWSSignerTests.allTests)
 ])

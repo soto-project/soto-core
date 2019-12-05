@@ -101,6 +101,7 @@ public final class AWSClient {
             region = .useast1
         }
 
+        // setup eventLoopGroup and httpClient
         switch eventLoopGroupProvider {
         case .shared(let eventLoopGroup):
             self.eventLoopGroup = eventLoopGroup
@@ -109,6 +110,7 @@ public final class AWSClient {
         }
         self.httpClient = AWSClient.createHTTPClient(eventLoopGroup: self.eventLoopGroup)
 
+        // create credentialProvider
         if let accessKey = accessKeyId, let secretKey = secretAccessKey {
             let credential = StaticCredential(accessKeyId: accessKey, secretAccessKey: secretKey, sessionToken: sessionToken)
             self.credentialProvider = StaticCredentialProvider(credential: credential, eventLoopGroup: self.eventLoopGroup)
@@ -122,17 +124,16 @@ public final class AWSClient {
             self.credentialProvider = MetaDataCredentialProvider(httpClient: self.httpClient)
         }
 
-//        self.signer = AtomicProperty(value: AWSSigner(credentials: credential, name: signingName ?? service, region: region.rawValue))
         self.signingName = signingName ?? service
         self.apiVersion = apiVersion
         self.service = service
-        //self._endpoint = endpoint
         self.amzTarget = amzTarget
         self.serviceProtocol = serviceProtocol
         self.serviceEndpoints = serviceEndpoints
         self.partitionEndpoint = partitionEndpoint
         self.middlewares = middlewares
         self.possibleErrorTypes = possibleErrorTypes ?? []
+        
         // work out endpoint, if provided use that otherwise
         if let endpoint = endpoint {
             self.endpoint = endpoint
@@ -304,19 +305,6 @@ extension AWSClient {
         }
     }
     
-    /*func manageCredential() -> Future<AWSSigner> {
-        #if os(Linux)
-        let signer = self.signer.value
-        if let expiringCredential = signer.credentials as? ExpiringCredential, expiringCredential.nearExpiration() {
-            return MetaDataService.getCredential(httpClient: self.httpClient).map { credential in
-                let signer = AWSSigner(credentials: credential, name: signer.name, region: signer.region)
-                self.signer.value = signer
-                return signer
-            }
-        }
-        #endif // os(Linux)
-        return eventLoopGroup.next().makeSucceededFuture(self.signer.value)
-    }*/
     func createHTTPRequest(_ awsRequest: AWSRequest, signer: AWSSigner) -> AWSHTTPRequest {
         // if credentials are empty don't sign request
         if signer.credentials.isEmpty() {

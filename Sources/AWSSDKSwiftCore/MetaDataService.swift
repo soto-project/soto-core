@@ -23,7 +23,7 @@ enum MetaDataServiceError: Error {
 struct MetaDataService {
 
     /// return future holding a credential provider
-    static func getCredential(httpClient: AWSHTTPClient) throws -> Future<CredentialProvider> {
+    static func getCredential(httpClient: AWSHTTPClient) -> Future<CredentialProvider> {
         if let ecsCredentialProvider = ECSMetaDataServiceProvider() {
             return ecsCredentialProvider.getCredential(httpClient: httpClient)
         } else {

@@ -49,11 +49,6 @@ class MetaDataCredentialProvider: CredentialProvider {
         lock.unlock()
         
         if let credential = credential as? ExpiringCredential, credential.nearExpiration() == false {
-            // we have credentials and those are still valid
-            if httpClient.eventLoopGroup is MultiThreadedEventLoopGroup {
-                // if we are in a MultiThreadedEventLoopGroup we try to minimize hops.
-                return MultiThreadedEventLoopGroup.currentEventLoop!.makeSucceededFuture(credential)
-            }
             return httpClient.eventLoopGroup.next().makeSucceededFuture(credential)
         }
         

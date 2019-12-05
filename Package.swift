@@ -12,7 +12,6 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio-ssl.git", .upToNextMajor(from:"2.4.0")),
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", .upToNextMajor(from:"1.0.0")),
         .package(url: "https://github.com/swift-server/async-http-client.git", .upToNextMajor(from:"1.0.0")),
-        .package(url: "https://github.com/adam-fowler/aws-signer.git", .upToNextMajor(from:"1.0.0")),
         .package(url: "https://github.com/swift-aws/HypertextApplicationLanguage.git", .upToNextMinor(from: "1.1.0")),
         .package(url: "https://github.com/swift-aws/Perfect-INIParser.git", .upToNextMinor(from: "3.0.0")),
     ],
@@ -22,6 +21,7 @@ let package = Package(
             dependencies: [
                 "AsyncHTTPClient",
                 "AWSSigner",
+                "CAWSSDKOpenSSL",
                 "HypertextApplicationLanguage",
                 "NIO",
                 "NIOHTTP1",
@@ -30,23 +30,20 @@ let package = Package(
                 "NIOFoundationCompat",
                 "INIParser"
             ]),
+        .target(name: "AWSSigner", dependencies: ["CAWSSDKOpenSSL", "NIOHTTP1"]),
+        .target(name: "CAWSSDKOpenSSL", dependencies: []),
         .testTarget(name: "AWSSDKSwiftCoreTests", dependencies: ["AWSSDKSwiftCore"])
     ]
 )
 
 // switch for whether to use CAWSSDKOpenSSL to shim between OpenSSL versions
 #if os(Linux)
-let useAWSSDKOpenSSLShim = true
+let useOpenSSL = true
 #else
-let useAWSSDKOpenSSLShim = false
+let useOpenSSL = false
 #endif
 
-// AWSSDKSwiftCore target
-let awsSdkSwiftCoreTarget = package.targets.first(where: {$0.name == "AWSSDKSwiftCore"})
-
 // Decide on where we get our SSL support from. Linux usses NIOSSL to provide SSL. Linux also needs CAWSSDKOpenSSL to shim across different OpenSSL versions for the HMAC functions.
-if useAWSSDKOpenSSLShim {
-    package.targets.append(.target(name: "CAWSSDKOpenSSL"))
-    awsSdkSwiftCoreTarget?.dependencies.append("CAWSSDKOpenSSL")
+if useOpenSSL {
     package.dependencies.append(.package(url: "https://github.com/apple/swift-nio-ssl-support.git", from: "1.0.0"))
 }

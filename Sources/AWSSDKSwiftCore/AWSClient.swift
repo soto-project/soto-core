@@ -17,30 +17,6 @@ import NIOTransportServices
 /// Convenience shorthand for `EventLoopFuture`.
 public typealias Future = EventLoopFuture
 
-/// Helper struct for ensuring atomic access to a structure
-struct AtomicProperty<T> {
-    private var _value: T
-    private var lock = NSLock()
-
-    public init(value: T) {
-        _value = value
-    }
-
-    public var value: T {
-        get {
-            lock.lock()
-            let value = _value
-            lock.unlock()
-            return value
-        }
-        set {
-            lock.lock()
-            _value = newValue
-            lock.unlock()
-        }
-    }
-}
-
 /// This is the workhorse of aws-sdk-swift-core. You provide it with a `AWSShape` Input object, it converts it to `AWSRequest` which is then converted to a raw `HTTPClient` Request. This is then sent to AWS. When the response from AWS is received if it is successful it is converted to a `AWSResponse` which is then decoded to generate a `AWSShape` Output object. If it is not successful then `AWSClient` will throw an `AWSErrorType`.
 public final class AWSClient {
 

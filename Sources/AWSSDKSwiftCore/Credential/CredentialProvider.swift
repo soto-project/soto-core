@@ -8,6 +8,7 @@
 import AWSSigner
 import Foundation
 import NIO
+import NIOConcurrencyHelpers
 
 /// Protocol providing future holding a credential
 protocol CredentialProvider {
@@ -33,7 +34,7 @@ struct StaticCredentialProvider: CredentialProvider {
 class MetaDataCredentialProvider: CredentialProvider {
     var credentialFuture: EventLoopFuture<Credential>
     let httpClient: AWSHTTPClient
-    let lock = NSLock()
+    let lock = Lock()
 
     init(httpClient: AWSHTTPClient) {
         let credential = ExpiringCredential(accessKeyId: "", secretAccessKey: "", expiration: Date.init(timeIntervalSince1970: 0))
@@ -43,19 +44,18 @@ class MetaDataCredentialProvider: CredentialProvider {
     
     func getCredential() -> EventLoopFuture<Credential> {
         return credentialFuture.flatMap { credential in
-            if let expiringCredential = credential as? ExpiringCredential, expiringCredential.nearExpiration() {
-                return self.refresh()
-            } else {
-                return self.credentialFuture
+            return self.lock.withLock {
+                if let expiringCredential = credential as? ExpiringCredential, expiringCredential.nearExpiration() {
+                    return self.refresh()
+                } else {
+                    return self.credentialFuture
+                }
             }
         }
     }
     
     func refresh() -> EventLoopFuture<Credential> {
-        let future = MetaDataService.getCredential(httpClient: self.httpClient)
-        lock.lock()
-        self.credentialFuture = future
-        lock.unlock()
+        self.credentialFuture  = MetaDataService.getCredential(httpClient: self.httpClient)
         return self.credentialFuture
     }
 }

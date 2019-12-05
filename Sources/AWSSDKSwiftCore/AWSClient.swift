@@ -32,7 +32,7 @@ public final class AWSClient {
         case useAWSClientShared
     }
 
-    var credentialProvider: CredentialProvider
+    let credentialProvider: CredentialProvider
     
     let signingName: String
 

@@ -12,7 +12,7 @@ import NIOConcurrencyHelpers
 
 /// Protocol providing future holding a credential
 protocol CredentialProvider {
-    mutating func getCredential() -> EventLoopFuture<Credential>
+    func getCredential() -> EventLoopFuture<Credential>
 }
 
 /// Provides credentials that don't change
@@ -32,7 +32,7 @@ struct StaticCredentialProvider: CredentialProvider {
 
 /// Provides credentials acquired from the metadata service. These expire and need updated occasionally
 class MetaDataCredentialProvider: CredentialProvider {
-    var credentialFuture: EventLoopFuture<Credential>
+    private(set) var credentialFuture: EventLoopFuture<Credential>
     let httpClient: AWSHTTPClient
     let lock = Lock()
 

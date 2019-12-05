@@ -12,13 +12,13 @@ import NIO
 import NIOHTTP1
 
 /// Amazon Web Services V4 Signer
-public final class AWSSigner {
+public struct AWSSigner {
     /// security credentials for accessing AWS services
-    public let credentials: Credential
+    public var credentials: Credential
     /// service signing name. In general this is the same as the service name
-    public let name: String
+    public var name: String
     /// AWS region you are working in
-    public let region: String
+    public var region: String
     
     static let hashedEmptyBody = AWSSigner.hexEncoded(sha256([UInt8]()))
     

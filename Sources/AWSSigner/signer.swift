@@ -14,7 +14,7 @@ import NIOHTTP1
 /// Amazon Web Services V4 Signer
 public final class AWSSigner {
     /// security credentials for accessing AWS services
-    public let credentials: CredentialProvider
+    public let credentials: Credential
     /// service signing name. In general this is the same as the service name
     public let name: String
     /// AWS region you are working in
@@ -23,7 +23,7 @@ public final class AWSSigner {
     static let hashedEmptyBody = AWSSigner.hexEncoded(sha256([UInt8]()))
     
     /// Initialise the Signer class with AWS credentials
-    public init(credentials: CredentialProvider, name: String, region: String) {
+    public init(credentials: Credential, name: String, region: String) {
         self.credentials = credentials
         self.name = name
         self.region = region

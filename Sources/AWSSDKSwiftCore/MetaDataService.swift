@@ -23,7 +23,7 @@ enum MetaDataServiceError: Error {
 struct MetaDataService {
 
     /// return future holding a credential provider
-    static func getCredential(httpClient: AWSHTTPClient) -> Future<CredentialProvider> {
+    static func getCredential(httpClient: AWSHTTPClient) -> Future<Credential> {
         if let ecsCredentialProvider = ECSMetaDataServiceProvider() {
             return ecsCredentialProvider.getCredential(httpClient: httpClient)
         } else {
@@ -42,7 +42,7 @@ protocol MetaDataContainer: Decodable {
 /// protocol for metadata service returning AWS credentials
 protocol MetaDataServiceProvider {
     associatedtype MetaData: MetaDataContainer
-    func getCredential(httpClient: AWSHTTPClient) -> Future<CredentialProvider>
+    func getCredential(httpClient: AWSHTTPClient) -> Future<Credential>
 }
 
 extension MetaDataServiceProvider {
@@ -55,7 +55,7 @@ extension MetaDataServiceProvider {
     }
 
     /// decode response return by metadata service
-    func decodeCredential(_ data: Data) -> CredentialProvider? {
+    func decodeCredential(_ data: Data) -> Credential? {
         do {
             let decoder = JSONDecoder()
             // set JSON decoding strategy for dates
@@ -114,7 +114,7 @@ struct ECSMetaDataServiceProvider: MetaDataServiceProvider {
         self.url = "http://\(ECSMetaDataServiceProvider.host)\(uri)"
     }
 
-    func getCredential(httpClient: AWSHTTPClient) -> Future<CredentialProvider> {
+    func getCredential(httpClient: AWSHTTPClient) -> Future<Credential> {
         return request(url: url, timeout: 2, httpClient: httpClient)
             .flatMapThrowing { response in
                 if let body = response.body,
@@ -186,7 +186,7 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
         }
     }
 
-    func getCredential(httpClient: AWSHTTPClient) -> Future<CredentialProvider> {
+    func getCredential(httpClient: AWSHTTPClient) -> Future<Credential> {
         return uri(httpClient: httpClient)
             .flatMap { url in
                 return self.request(url: url, timeout: 2, httpClient: httpClient)

@@ -7,14 +7,14 @@
 import Foundation
 
 /// Protocol for providing credential details for accessing AWS services
-public protocol CredentialProvider {
+public protocol Credential {
     var accessKeyId: String {get}
     var secretAccessKey: String {get}
     var sessionToken: String? {get}
 }
 
-/// basic version of CredentialProvider where you supply the credentials
-public struct Credential : CredentialProvider {
+/// basic version of Credential where you supply the credentials
+public struct StaticCredential: Credential {
     public let accessKeyId: String
     public let secretAccessKey: String
     public let sessionToken: String?
@@ -26,8 +26,8 @@ public struct Credential : CredentialProvider {
     }
 }
 
-/// environment variable version of credential provider that uses system environment variables to get credential details
-public struct EnvironmentCredential: CredentialProvider {
+/// environment variable version of credential that uses system environment variables to get credential details
+public struct EnvironmentCredential: Credential {
     public let accessKeyId: String
     public let secretAccessKey: String
     public let sessionToken: String?

@@ -10,14 +10,14 @@ import AWSSigner
 import Foundation
 import INIParser
 
-extension CredentialProvider {
+extension Credential {
     func isEmpty() -> Bool {
         return self.accessKeyId.isEmpty || self.secretAccessKey.isEmpty
     }
 }
 
 /// Provide AWS credentials directly
-public struct ExpiringCredential: CredentialProvider {
+public struct ExpiringCredential: Credential {
     public let accessKeyId: String
     public let secretAccessKey: String
     public let sessionToken: String?
@@ -59,7 +59,7 @@ class IniConfigParser: SharedCredentialsConfigParser {
 }
 
 /// Provide AWS credentials via the ~/.aws/credential file
-public struct SharedCredential: CredentialProvider {
+public struct SharedCredential: Credential {
 
     /// Errors occurring when initializing a SharedCredential
     ///

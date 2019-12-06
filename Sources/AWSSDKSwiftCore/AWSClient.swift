@@ -136,12 +136,12 @@ public final class AWSClient {
         }
 
         switch eventLoopGroupProvider {
-        case .shared(let eventLoopGroup):
-            self.eventLoopGroup = eventLoopGroup
+        case .shared(let providedEventLoopGroup):
+            self.eventLoopGroup = providedEventLoopGroup
         case .useAWSClientShared:
             self.eventLoopGroup = AWSClient.sharedEventLoopGroup
         }
-        self.httpClient = AWSClient.createHTTPClient(eventLoopGroup: self.eventLoopGroup)
+        self.httpClient = AWSClient.createHTTPClient(eventLoopGroup: eventLoopGroup)
 
         self.signer = AtomicProperty(value: AWSSigner(credentials: credential, name: signingName ?? service, region: region.rawValue))
         self.apiVersion = apiVersion
@@ -180,13 +180,13 @@ public final class AWSClient {
 // invoker
 extension AWSClient {
 
-    /// invoke AWS request, create HTTP request from AWS request and then make request. Return response. Function chooses which HTTP client to use based
+    /// invoke AWS request, create HTTP request from AWS request and then make request. Return response.
     fileprivate func invoke(_ awsRequest: AWSRequest, signer: AWSSigner) -> Future<AWSHTTPResponse> {
         let request = createHTTPRequest(awsRequest, signer: signer)
         return invoke(request)
     }
 
-    /// invoke HTTP request using AsyncHTTPClient
+    /// invoke HTTP request
     fileprivate func invoke(_ httpRequest: AWSHTTPRequest) -> Future<AWSHTTPResponse> {
         let futureResponse = httpClient.execute(request: httpRequest, timeout: .seconds(5))
         return futureResponse

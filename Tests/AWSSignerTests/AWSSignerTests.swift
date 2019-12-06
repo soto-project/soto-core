@@ -5,6 +5,32 @@ import NIO
 final class AWSSignerTests: XCTestCase {
     let credentials : Credential = StaticCredential(accessKeyId: "MYACCESSKEY", secretAccessKey: "MYSECRETACCESSKEY")
     
+    func testSha256() {
+        let testString = "This is a test string"
+        let sha256_1 = sha256(testString)
+        let sha256_2 = sha256(testString.data(using: .utf8)!)
+        var context = sha256_Init()
+        sha256_Update(&context, Array(testString.utf8))
+        let sha256_3 = sha256_Final(&context)
+        
+        XCTAssertEqual(sha256_1, sha256_2)
+        XCTAssertEqual(sha256_2, sha256_3)
+    }
+    
+    func testSha256_InitUpdateFinal() {
+        let testString = "This is a test string"
+        let testString1 = "This is a "
+        let testString2 = "test string"
+        
+        let sha256_1 = sha256(testString)
+        var context = sha256_Init()
+        sha256_Update(&context, Array(testString1.utf8))
+        sha256_Update(&context, Array(testString2.utf8))
+        let sha256_2 = sha256_Final(&context)
+        
+        XCTAssertEqual(sha256_1, sha256_2)
+    }
+    
     func testSignGetHeaders() {
         let signer = AWSSigner(credentials: credentials, name: "glacier", region:"us-east-1")
         let headers = signer.signHeaders(url: URL(string:"https://glacier.us-east-1.amazonaws.com/-/vaults")!, method: .GET, headers: ["x-amz-glacier-version":"2012-06-01"], date: Date(timeIntervalSinceReferenceDate: 2000000))
@@ -67,6 +93,8 @@ final class AWSSignerTests: XCTestCase {
     }
     
     static var allTests = [
+        ("testSha256", testSha256),
+        ("testSha256_InitUpdateFinal", testSha256_InitUpdateFinal),
         ("testSignGetHeaders", testSignGetHeaders),
         ("testSignPutHeaders", testSignPutHeaders),
         ("testSignS3GetURL", testSignS3GetURL),

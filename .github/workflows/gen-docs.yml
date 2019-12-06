@@ -16,6 +16,7 @@ jobs:
       run: |
         swift package generate-xcodeproj
         jazzy --clean
+        rm -rf docs/docsets
     - name: Commit
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

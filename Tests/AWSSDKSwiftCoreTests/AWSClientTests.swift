@@ -26,6 +26,7 @@ class AWSClientTests: XCTestCase {
             ("testValidateJSONResponse", testValidateJSONResponse),
             ("testValidateJSONPayloadResponse", testValidateJSONPayloadResponse),
             ("testValidateJSONError", testValidateJSONError),
+            ("testProcessHAL", testProcessHAL),
         ]
     }
 
@@ -473,6 +474,45 @@ class AWSClientTests: XCTestCase {
             XCTAssertEqual(message, "Donald Where's Your Troosers?")
         } catch {
             XCTFail("Throwing the wrong error")
+        }
+    }
+    
+    func testProcessHAL() {
+        class Output : AWSShape {
+            public static var _members: [AWSShapeMember] = [
+                AWSShapeMember(label: "s", required: true, type: .string),
+                AWSShapeMember(label: "i", required: true, type: .integer)
+            ]
+            let s: String
+            let i: Int
+        }
+        class Output2 : AWSShape {
+            public static var _members: [AWSShapeMember] = [
+                AWSShapeMember(label: "a", location: .body(locationName: "a"), required: true, type: .list),
+                AWSShapeMember(label: "d", required: true, type: .double),
+                AWSShapeMember(label: "b", required: true, type: .boolean),
+            ]
+            let a: [Output]
+            let d: Double
+            let b: Bool
+        }
+        let response = HTTPClient.Response(
+            head: HTTPResponseHead(
+                version: HTTPVersion(major: 1, minor: 1),
+                status: HTTPResponseStatus(statusCode: 200),
+                headers: ["Content-Type":"application/hal+json"]
+            ),
+            body: """
+                {"_embedded": {"a": [{"s":"Hello", "i":1234}, {"s":"Hello2", "i":12345}]}, "d":3.14, "b":true}
+                """.data(using: .utf8)!
+        )
+        do {
+            let output : Output2 = try kinesisClient.validate(operation: "Output", response: response)
+            XCTAssertEqual(output.a.count, 2)
+            XCTAssertEqual(output.d, 3.14)
+            XCTAssertEqual(output.a[1].s, "Hello2")
+        } catch {
+            XCTFail(error.localizedDescription)
         }
     }
 }

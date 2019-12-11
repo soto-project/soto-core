@@ -6,7 +6,6 @@
 //
 //
 
-import HypertextApplicationLanguage
 import Foundation
 import NIO
 import NIOHTTP1
@@ -663,72 +662,6 @@ extension AWSClient {
         guard (200..<300).contains(response.status.code) else {
             throw createError(for: response)
         }
-    }
-
-    func hypertextApplicationLanguageProcess(response: AWSResponse, members: [AWSShapeMember]) throws -> AWSResponse {
-        switch response.body {
-        case .json(let data):
-            if (response.headers["Content-Type"] as? String)?.contains("hal+json") == true {
-                let representation = try Representation.from(json: data)
-                var dictionary = representation.properties
-                for rel in representation.rels {
-                    guard let representations = try Representation.from(json: data).representations(for: rel) else {
-                        continue
-                    }
-
-                    guard let hint = members.filter({ $0.location?.name == rel }).first else {
-                        continue
-                    }
-
-                    switch hint.type {
-                    case .list:
-                        let properties : [[String: Any]] = try representations.map({
-                            var props = $0.properties
-                            var linkMap: [String: [Link]] = [:]
-
-                            for link in $0.links {
-                                let key = link.rel.camelCased(separator: ":")
-                                if linkMap[key] == nil {
-                                    linkMap[key] = []
-                                }
-                                linkMap[key]?.append(link)
-                            }
-
-                            for (key, links) in linkMap {
-                                var dict: [String: Any] = [:]
-                                for link in links {
-                                    guard let name = link.name else { continue }
-                                    let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: endpoint + link.href)
-                                    let nioRequest = try nioRequestWithSignedHeader(HTTPClient.Request(head: head, body: Data()))
-                                    //
-                                    // this is a hack to wait...
-                                    ///
-                                    while dict[name] == nil {
-                                        _ = invoke(nioRequest).flatMapThrowing{ res in
-                                            let representaion = try Representation().from(json: res.body)
-                                            dict[name] = representaion.properties
-                                        }
-                                    }
-                                }
-                                props[key] = dict
-                            }
-
-                            return props
-                        })
-                        dictionary[rel] = properties
-
-                    default:
-                        dictionary[rel] = representations.map({ $0.properties }).first ?? [:]
-                    }
-                }
-                var response = response
-                response.body = .json(try JSONSerialization.data(withJSONObject: dictionary, options: []))
-                return response
-            }
-        default:
-            break
-        }
-        return response
     }
 
     private func createError(for response: AWSResponse) -> Error {

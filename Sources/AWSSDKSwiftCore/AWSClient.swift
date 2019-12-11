@@ -569,14 +569,14 @@ extension AWSClient {
 
         var awsResponse = try AWSResponse(from: response, serviceProtocolType: serviceProtocol.type, raw: raw)
 
-        try validateCode(response: awsResponse)
-
-        awsResponse = try hypertextApplicationLanguageProcess(response: awsResponse, members: Output._members)
-
         // do we need to fix up the response before processing it
         for middleware in middlewares {
             awsResponse = try middleware.chain(response: awsResponse)
         }
+
+        try validateCode(response: awsResponse)
+
+        awsResponse = try hypertextApplicationLanguageProcess(response: awsResponse, members: Output._members)
 
         let decoder = DictionaryDecoder()
 

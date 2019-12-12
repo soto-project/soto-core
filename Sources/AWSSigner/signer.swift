@@ -12,7 +12,7 @@ import NIO
 import NIOHTTP1
 
 /// Amazon Web Services V4 Signer
-public final class AWSSigner {
+public struct AWSSigner {
     /// security credentials for accessing AWS services
     public let credentials: Credential
     /// service signing name. In general this is the same as the service name

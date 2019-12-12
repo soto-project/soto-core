@@ -17,30 +17,6 @@ import NIOTransportServices
 /// Convenience shorthand for `EventLoopFuture`.
 public typealias Future = EventLoopFuture
 
-/// Helper struct for ensuring atomic access to a structure
-struct AtomicProperty<T> {
-    private var _value: T
-    private var lock = NSLock()
-
-    public init(value: T) {
-        _value = value
-    }
-
-    public var value: T {
-        get {
-            lock.lock()
-            let value = _value
-            lock.unlock()
-            return value
-        }
-        set {
-            lock.lock()
-            _value = newValue
-            lock.unlock()
-        }
-    }
-}
-
 /// This is the workhorse of aws-sdk-swift-core. You provide it with a `AWSShape` Input object, it converts it to `AWSRequest` which is then converted to a raw `HTTPClient` Request. This is then sent to AWS. When the response from AWS is received if it is successful it is converted to a `AWSResponse` which is then decoded to generate a `AWSShape` Output object. If it is not successful then `AWSClient` will throw an `AWSErrorType`.
 public final class AWSClient {
 
@@ -56,7 +32,9 @@ public final class AWSClient {
         case useAWSClientShared
     }
 
-    var signer: AtomicProperty<AWSSigner>
+    let credentialProvider: CredentialProvider
+    
+    let signingName: String
 
     let apiVersion: String
 
@@ -112,18 +90,6 @@ public final class AWSClient {
     ///     - possibleErrorTypes: Array of possible error types that the client can throw
     ///     - eventLoopGroupProvider: EventLoopGroup to use. Use `useAWSClientShared` if the client shall manage its own EventLoopGroup.
     public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, sessionToken: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, signingName: String? = nil, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSServiceMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil, eventLoopGroupProvider: EventLoopGroupProvider) {
-        let credential: Credential
-        if let accessKey = accessKeyId, let secretKey = secretAccessKey {
-            credential = StaticCredential(accessKeyId: accessKey, secretAccessKey: secretKey, sessionToken: sessionToken)
-        } else if let ecredential = EnvironmentCredential() {
-            credential = ecredential
-        } else if let scredential = try? SharedCredential() {
-            credential = scredential
-        } else {
-            // create an expired credential
-            credential = ExpiringCredential(accessKeyId: "", secretAccessKey: "", expiration: Date.init(timeIntervalSince1970: 0))
-        }
-
         if let _region = givenRegion {
             region = _region
         }
@@ -135,6 +101,7 @@ public final class AWSClient {
             region = .useast1
         }
 
+        // setup eventLoopGroup and httpClient
         switch eventLoopGroupProvider {
         case .shared(let providedEventLoopGroup):
             self.eventLoopGroup = providedEventLoopGroup
@@ -143,16 +110,30 @@ public final class AWSClient {
         }
         self.httpClient = AWSClient.createHTTPClient(eventLoopGroup: eventLoopGroup)
 
-        self.signer = AtomicProperty(value: AWSSigner(credentials: credential, name: signingName ?? service, region: region.rawValue))
+        // create credentialProvider
+        if let accessKey = accessKeyId, let secretKey = secretAccessKey {
+            let credential = StaticCredential(accessKeyId: accessKey, secretAccessKey: secretKey, sessionToken: sessionToken)
+            self.credentialProvider = StaticCredentialProvider(credential: credential, eventLoopGroup: self.eventLoopGroup)
+        } else if let ecredential = EnvironmentCredential() {
+            let credential = ecredential
+            self.credentialProvider = StaticCredentialProvider(credential: credential, eventLoopGroup: self.eventLoopGroup)
+        } else if let scredential = try? SharedCredential() {
+            let credential = scredential
+            self.credentialProvider = StaticCredentialProvider(credential: credential, eventLoopGroup: self.eventLoopGroup)
+        } else {
+            self.credentialProvider = MetaDataCredentialProvider(httpClient: self.httpClient)
+        }
+
+        self.signingName = signingName ?? service
         self.apiVersion = apiVersion
         self.service = service
-        //self._endpoint = endpoint
         self.amzTarget = amzTarget
         self.serviceProtocol = serviceProtocol
         self.serviceEndpoints = serviceEndpoints
         self.partitionEndpoint = partitionEndpoint
         self.middlewares = middlewares
         self.possibleErrorTypes = possibleErrorTypes ?? []
+        
         // work out endpoint, if provided use that otherwise
         if let endpoint = endpoint {
             self.endpoint = endpoint
@@ -217,7 +198,8 @@ extension AWSClient {
     ///     Empty Future that completes when response is received
     public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> Future<Void> {
 
-        return manageCredential().flatMapThrowing { signer in
+        return credentialProvider.getCredential().flatMapThrowing { credential in
+            let signer = AWSSigner(credentials: credential, name: self.signingName, region: self.region.rawValue)
             let awsRequest = try self.createAWSRequest(
                         operation: operationName,
                         path: path,
@@ -240,7 +222,8 @@ extension AWSClient {
     ///     Empty Future that completes when response is received
     public func send(operation operationName: String, path: String, httpMethod: String) -> Future<Void> {
 
-        return manageCredential().flatMapThrowing { signer in
+        return credentialProvider.getCredential().flatMapThrowing { credential in
+            let signer = AWSSigner(credentials: credential, name: self.signingName, region: self.region.rawValue)
             let awsRequest = try self.createAWSRequest(
                         operation: operationName,
                         path: path,
@@ -262,7 +245,8 @@ extension AWSClient {
     ///     Future containing output object that completes when response is received
     public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) -> Future<Output> {
 
-        return manageCredential().flatMapThrowing { signer in
+        return credentialProvider.getCredential().flatMapThrowing { credential in
+            let signer = AWSSigner(credentials: credential, name: self.signingName, region: self.region.rawValue)
             let awsRequest = try self.createAWSRequest(
                         operation: operationName,
                         path: path,
@@ -285,7 +269,8 @@ extension AWSClient {
     ///     Future containing output object that completes when response is received
     public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> Future<Output> {
 
-        return manageCredential().flatMapThrowing { signer in
+        return credentialProvider.getCredential().flatMapThrowing { credential in
+            let signer = AWSSigner(credentials: credential, name: self.signingName, region: self.region.rawValue)
             let awsRequest = try self.createAWSRequest(
                         operation: operationName,
                         path: path,
@@ -306,28 +291,20 @@ extension AWSClient {
     ///     - expires: How long before the signed URL expires
     /// - returns:
     ///     A signed URL
-    public func signURL(url: URL, httpMethod: String, expires: Int = 86400) -> URL {
-        return signer.value.signURL(url: url, method: HTTPMethod(from: httpMethod), expires: expires)
+    public func signURL(url: URL, httpMethod: String, expires: Int = 86400) -> EventLoopFuture<URL> {
+        return signer.map { signer in signer.signURL(url: url, method: HTTPMethod(from: httpMethod), expires: expires) }
     }
 }
 
 // request creator
 extension AWSClient {
 
-    func manageCredential() -> Future<AWSSigner> {
-        #if os(Linux)
-        let signer = self.signer.value
-        if let expiringCredential = signer.credentials as? ExpiringCredential, expiringCredential.nearExpiration() {
-            return MetaDataService.getCredential(httpClient: self.httpClient).map { credential in
-                let signer = AWSSigner(credentials: credential, name: signer.name, region: signer.region)
-                self.signer.value = signer
-                return signer
-            }
+    var signer: EventLoopFuture<AWSSigner> {
+        return credentialProvider.getCredential().map { credential in
+            return AWSSigner(credentials: credential, name: self.signingName, region: self.region.rawValue)
         }
-        #endif // os(Linux)
-        return eventLoopGroup.next().makeSucceededFuture(self.signer.value)
     }
-
+    
     func createHTTPRequest(_ awsRequest: AWSRequest, signer: AWSSigner) -> AWSHTTPRequest {
         // if credentials are empty don't sign request
         if signer.credentials.isEmpty() {
@@ -706,7 +683,7 @@ extension AWSClient {
                                     guard let name = link.name else { continue }
                                     guard let url = URL(string:endpoint + link.href) else { continue }
                                     //let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: endpoint + link.href)
-                                    let signedHeaders = signer.value.signHeaders(url: url, method: .GET)
+                                    let signedHeaders: HTTPHeaders = [:]//signer.value.signHeaders(url: url, method: .GET)
                                     let httpRequest = AWSHTTPRequest(url: url, method: .GET, headers: signedHeaders, body: nil)
                                     //let nioRequest = try nioRequestWithSignedHeader(AWSHTTPClient.Request(head: head, body: Data()))
                                     //

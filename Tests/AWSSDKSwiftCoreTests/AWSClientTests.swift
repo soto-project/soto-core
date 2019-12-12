@@ -113,7 +113,7 @@ class AWSClientTests: XCTestCase {
         )
 
         do {
-            let credentialForSignature = try sesClient.manageCredential().wait().credentials
+            let credentialForSignature = try sesClient.credentialProvider.getCredential().wait()
             XCTAssertEqual(credentialForSignature.accessKeyId, "key")
             XCTAssertEqual(credentialForSignature.secretAccessKey, "secret")
         } catch {
@@ -131,7 +131,7 @@ class AWSClientTests: XCTestCase {
             eventLoopGroupProvider: .useAWSClientShared)
 
         do {
-            let credentials = try client.manageCredential().wait().credentials
+            let credentials = try client.credentialProvider.getCredential().wait()
             print(credentials)
         } catch NIO.ChannelError.connectTimeout(_) {
             // credentials request should fail and throw a timeout error as we are not running on a EC2/ECS instance
@@ -355,7 +355,7 @@ class AWSClientTests: XCTestCase {
                 input: input2
             )
 
-            let awsHTTPRequest: AWSHTTPRequest = kinesisClient.createHTTPRequest(awsRequest, signer: kinesisClient.signer.value)
+            let awsHTTPRequest: AWSHTTPRequest = kinesisClient.createHTTPRequest(awsRequest, signer: try kinesisClient.signer.wait())
             XCTAssertEqual(awsHTTPRequest.method, HTTPMethod.POST)
             if let host = awsHTTPRequest.headers.first(where: { $0.name == "Host" }) {
                 XCTAssertEqual(host.value, "kinesis.us-east-1.amazonaws.com")
@@ -392,7 +392,7 @@ class AWSClientTests: XCTestCase {
                 input: input
             )
 
-            let request: AWSHTTPRequest = client.createHTTPRequest(awsRequest, signer: client.signer.value)
+            let request: AWSHTTPRequest = client.createHTTPRequest(awsRequest, signer: try client.signer.wait())
 
             XCTAssertNil(request.headers["Authorization"].first)
         } catch {

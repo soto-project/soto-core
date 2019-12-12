@@ -16,9 +16,7 @@ jobs:
       run: gem install jazzy
     - name: Build
       run: |
-        swift package generate-xcodeproj
-        jazzy --clean
-        rm -rf docs/docsets
+        ./scripts/build-docs.sh
     - name: Commit
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

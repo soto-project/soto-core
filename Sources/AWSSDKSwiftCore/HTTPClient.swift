@@ -53,7 +53,7 @@ public final class HTTPClient {
     }
 
     /// has HTTPClient been shutdown
-    let isShutdown = Atomic<Bool>(value: false)
+    let isShutdown = NIOAtomic<Bool>.makeAtomic(value: false)
 
     /// Initialise HTTPClient
     public init(eventLoopGroupProvider: EventLoopGroupProvider = .createNew) {

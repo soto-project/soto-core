@@ -277,7 +277,7 @@ class PerformanceTests: XCTestCase {
         measure {
             do {
                 for _ in 0..<1000 {
-                    let output: StandardRequest = try client.validate(operation: "Output", response: response)
+                    let _: StandardRequest = try client.validate(operation: "Output", response: response)
                 }
             } catch {
                 XCTFail(error.localizedDescription)
@@ -303,7 +303,7 @@ class PerformanceTests: XCTestCase {
         measure {
             do {
                 for _ in 0..<1000 {
-                    let output: StandardRequest = try client.validate(operation: "Output", response: response)
+                    let _: StandardRequest = try client.validate(operation: "Output", response: response)
                 }
             } catch {
                 XCTFail(error.localizedDescription)

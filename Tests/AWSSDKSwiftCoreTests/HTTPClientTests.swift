@@ -10,6 +10,7 @@ import AsyncHTTPClient
 import Foundation
 import NIO
 import NIOHTTP1
+import NIOTransportServices
 import XCTest
 @testable import AWSSDKSwiftCore
 
@@ -27,7 +28,7 @@ extension AWSHTTPResponse {
 @available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)
 class NIOTSHTTPClientTests: XCTestCase {
 
-    let client = NIOTSHTTPClient()
+    let client = NIOTSHTTPClient(eventLoopGroup: NIOTSEventLoopGroup())
 
     deinit {
         try? client.syncShutdown()

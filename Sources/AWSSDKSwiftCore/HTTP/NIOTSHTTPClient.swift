@@ -43,30 +43,9 @@ public final class NIOTSHTTPClient {
         case alreadyShutdown
     }
 
-    /// Specifies how `EventLoopGroup` will be created and establishes lifecycle ownership.
-    public enum EventLoopGroupProvider {
-        /// `EventLoopGroup` will be provided by the user. Owner of this group is responsible for its lifecycle.
-        case shared(EventLoopGroup)
-        /// `EventLoopGroup` will be created by the client. When `syncShutdown` is called, created `EventLoopGroup` will be shut down as well.
-        case createNew
-    }
-
-    /// has HTTPClient been shutdown
-    let isShutdown = Atomic<Bool>(value: false)
-
     /// Initialise HTTPClient
-    public init(eventLoopGroupProvider: EventLoopGroupProvider = .createNew) {
-        self.eventLoopGroupProvider = eventLoopGroupProvider
-        switch eventLoopGroupProvider {
-        case .shared(let group):
-            self.eventLoopGroup = group
-        case .createNew:
-            self.eventLoopGroup = NIOTSEventLoopGroup()
-        }
-    }
-
-    deinit {
-        assert(self.isShutdown.load(), "Client not shut down before the deinit. Please call client.syncShutdown() when no longer needed.")
+    public init(eventLoopGroup: NIOTSEventLoopGroup) {
+        self.eventLoopGroup = eventLoopGroup
     }
 
     /// send request to HTTP client, return a future holding the Response
@@ -117,20 +96,6 @@ public final class NIOTSHTTPClient {
         }
 
         return response.futureResult
-    }
-
-    /// Shuts down the client and `EventLoopGroup` if it was created by the client.
-    public func syncShutdown() throws {
-        switch self.eventLoopGroupProvider {
-        case .shared:
-            self.isShutdown.store(true)
-        case .createNew:
-            if self.isShutdown.compareAndExchange(expected: false, desired: true) {
-                try self.eventLoopGroup.syncShutdownGracefully()
-            } else {
-                throw HTTPError.alreadyShutdown
-            }
-        }
     }
 
     /// Channel Handler for serializing request header and data
@@ -230,12 +195,13 @@ public final class NIOTSHTTPClient {
     }
 
     internal let eventLoopGroup: EventLoopGroup
-    private let eventLoopGroupProvider: EventLoopGroupProvider
 }
 
 /// comply with AWSHTTPClient protocol
 @available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)
 extension NIOTSHTTPClient: AWSHTTPClient {
+    
+    func syncShutdown() throws {}
 
     func execute(request: AWSHTTPRequest, timeout: TimeAmount) -> EventLoopFuture<AWSHTTPResponse> {
         var head = HTTPRequestHead(

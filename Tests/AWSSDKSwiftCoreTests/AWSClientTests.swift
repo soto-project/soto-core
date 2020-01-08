@@ -26,6 +26,7 @@ class AWSClientTests: XCTestCase {
             ("testValidateJSONResponse", testValidateJSONResponse),
             ("testValidateJSONPayloadResponse", testValidateJSONPayloadResponse),
             ("testValidateJSONError", testValidateJSONError),
+            ("testDataInJsonPayload", testDataInJsonPayload)
         ]
     }
 
@@ -473,6 +474,30 @@ class AWSClientTests: XCTestCase {
             XCTAssertEqual(message, "Donald Where's Your Troosers?")
         } catch {
             XCTFail("Throwing the wrong error")
+        }
+    }
+    
+    func testDataInJsonPayload() {
+        struct DataContainer: AWSShape {
+            let data: Data
+        }
+        struct J: AWSShape {
+            public static let payloadPath: String? = "dataContainer"
+            public static var _members: [AWSShapeMember] = [
+                AWSShapeMember(label: "dataContainer", required: false, type: .structure),
+            ]
+            let dataContainer: DataContainer
+        }
+        let input = J(dataContainer: DataContainer(data: Data("test data".utf8)))
+        do {
+            _ = try kinesisClient.createAWSRequest(
+                operation: "PutRecord",
+                path: "/",
+                httpMethod: "POST",
+                input: input
+            )
+        } catch {
+            XCTFail(error.localizedDescription)
         }
     }
 }

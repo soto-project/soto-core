@@ -420,7 +420,6 @@ extension AWSClient {
                     default:
                         body = Body(anyValue: payloadBody)
                     }
-                    headers.removeValue(forKey: payload.toSwiftVariableCase())
                 } else {
                     body = .empty
                 }
@@ -463,7 +462,6 @@ extension AWSClient {
                     default:
                         body = Body(anyValue: payloadBody)
                     }
-                    headers.removeValue(forKey: payload.toSwiftVariableCase())
                 } else {
                     body = .empty
                 }

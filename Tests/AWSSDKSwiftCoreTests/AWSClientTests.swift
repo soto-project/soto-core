@@ -286,6 +286,38 @@ class AWSClientTests: XCTestCase {
         }
     }
 
+    func testCreateAwsRequestWithKeywordInHeader() {
+        struct KeywordRequest: AWSShape {
+            static var _members: [AWSShapeMember] = [
+                AWSShapeMember(label: "repeat", location: .header(locationName: "repeat"), required: true, type: .string),
+            ]
+            let `repeat`: String
+        }
+        do {
+            let request = KeywordRequest(repeat: "Repeat")
+            let awsRequest = try s3Client.createAWSRequest(operation: "Keyword", path: "/", httpMethod: "POST", input: request)
+            XCTAssertEqual(awsRequest.httpHeaders["repeat"] as? String, "Repeat")
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+    
+    func testCreateAwsRequestWithKeywordInQuery() {
+        struct KeywordRequest: AWSShape {
+            static var _members: [AWSShapeMember] = [
+                AWSShapeMember(label: "self", location: .querystring(locationName: "self"), required: true, type: .string),
+            ]
+            let `self`: String
+        }
+        do {
+            let request = KeywordRequest(self: "KeywordRequest")
+            let awsRequest = try s3Client.createAWSRequest(operation: "Keyword", path: "/", httpMethod: "POST", input: request)
+            XCTAssertEqual(awsRequest.url, URL(string:"https://s3.amazonaws.com/?self=KeywordRequest")!)
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+    
     func testCreateNIORequest() {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }

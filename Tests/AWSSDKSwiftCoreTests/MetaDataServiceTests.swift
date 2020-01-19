@@ -4,7 +4,7 @@
 //
 //  Created by Jonathan McAllister on 2017/12/29.
 //
-import Foundation
+
 import XCTest
 @testable import AWSSDKSwiftCore
 

@@ -6,12 +6,11 @@
 //
 //
 
+import XCTest
 import AsyncHTTPClient
-import Foundation
 import NIO
 import NIOHTTP1
 import NIOTransportServices
-import XCTest
 @testable import AWSSDKSwiftCore
 
 extension AWSHTTPResponse {

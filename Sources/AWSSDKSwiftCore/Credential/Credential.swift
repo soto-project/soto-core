@@ -7,8 +7,10 @@
 //
 
 import AWSSigner
-import Foundation
 import INIParser
+import struct Foundation.Date
+import class  Foundation.ProcessInfo
+import class  Foundation.NSString
 
 extension Credential {
     func isEmpty() -> Bool {

@@ -5,7 +5,7 @@
 //  Created by Adam Fowler on 2019/08/29.
 //
 
-import Foundation
+import struct Foundation.Data
 
 #if canImport(CommonCrypto)
 

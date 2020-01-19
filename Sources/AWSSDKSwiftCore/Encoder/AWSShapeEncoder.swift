@@ -5,7 +5,8 @@
 //  Created by Yuki Takei on 2017/10/07.
 //
 
-import Foundation
+import struct Foundation.Data
+import class  Foundation.JSONEncoder
 
 func unwrap(any: Any) -> Any? {
     let mi = Mirror(reflecting: any)

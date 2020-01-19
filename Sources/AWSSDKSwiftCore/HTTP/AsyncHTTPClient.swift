@@ -1,5 +1,4 @@
 import AsyncHTTPClient
-import Foundation
 import NIO
 
 /// comply with AWSHTTPClient protocol

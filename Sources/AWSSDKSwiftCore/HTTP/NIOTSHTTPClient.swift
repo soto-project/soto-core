@@ -11,13 +11,14 @@
 //
 #if canImport(Network)
 
-import Foundation
 import Network
 import NIO
 import NIOConcurrencyHelpers
 import NIOFoundationCompat
 import NIOHTTP1
 import NIOTransportServices
+
+import struct Foundation.URL
 
 /// HTTP Client class providing API for sending HTTP requests
 @available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)

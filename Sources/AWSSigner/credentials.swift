@@ -4,7 +4,8 @@
 //
 //  Created by Adam Fowler on 29/08/2019.
 //
-import Foundation
+
+import class Foundation.ProcessInfo
 
 /// Protocol for providing credential details for accessing AWS services
 public protocol Credential {

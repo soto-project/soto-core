@@ -7,9 +7,15 @@
 //  AWS documentation about signing requests is here https://docs.aws.amazon.com/general/latest/gr/signing_aws_api_requests.html
 //
 
-import Foundation
 import NIO
 import NIOHTTP1
+import struct Foundation.URL
+import struct Foundation.Date
+import class  Foundation.DateFormatter
+import struct Foundation.Data
+import struct Foundation.TimeZone
+import struct Foundation.Locale
+import struct Foundation.CharacterSet
 
 /// Amazon Web Services V4 Signer
 public struct AWSSigner {

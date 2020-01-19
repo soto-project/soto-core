@@ -6,9 +6,9 @@
 //
 //
 import AWSSigner
-import Foundation
 import NIO
 import NIOConcurrencyHelpers
+import struct Foundation.Date
 
 /// Protocol providing future holding a credential
 protocol CredentialProvider {

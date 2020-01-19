@@ -7,11 +7,16 @@
 
 // Implemented to replace the XML Foundation classes. This was initially required as there is no implementation of the Foundation XMLNode classes in iOS. This is also here because the implementation of XMLNode in Linux Swift 4.2 was causing crashes. Whenever an XMLDocument was deleted all the underlying CoreFoundation objects were deleted. This meant if you still had a reference to a XMLElement from that document, while it was still valid the underlying CoreFoundation object had been deleted.
 
+import struct   Foundation.Data
+import class    Foundation.NSObject
 #if canImport(FoundationXML)
 import FoundationXML
+#else
+import class    Foundation.XMLParser
+import protocol Foundation.XMLParserDelegate
 #endif
 
-import Foundation
+
 
 // I have placed everything inside a holding XML class to avoid name clashes with the Foundation version. Otherwise this class reflects the behaviour of the Foundation classes as close as possible with the exceptions of, I haven't implemented queries, DTD, also XMLNodes do not contain an object reference. Also the node creation function in XMLNode return XMLNode instead of Any.
 public class XML {

@@ -5,9 +5,9 @@
 //  Created by Adam Fowler on 2019/11/8
 //
 
-import Foundation
 import NIO
 import NIOHTTP1
+import struct Foundation.URL
 
 /// HTTP Request
 struct AWSHTTPRequest {

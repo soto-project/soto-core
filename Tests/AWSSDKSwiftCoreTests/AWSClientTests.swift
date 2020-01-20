@@ -50,6 +50,7 @@ class AWSClientTests: XCTestCase {
             ("testValidateJSONResponse", testValidateJSONResponse),
             ("testValidateJSONPayloadResponse", testValidateJSONPayloadResponse),
             ("testValidateJSONError", testValidateJSONError),
+            ("testDataInJsonPayload", testDataInJsonPayload)
         ]
     }
 
@@ -328,6 +329,38 @@ class AWSClientTests: XCTestCase {
         }
     }
 
+    func testCreateAwsRequestWithKeywordInHeader() {
+        struct KeywordRequest: AWSShape {
+            static var _members: [AWSShapeMember] = [
+                AWSShapeMember(label: "repeat", location: .header(locationName: "repeat"), required: true, type: .string),
+            ]
+            let `repeat`: String
+        }
+        do {
+            let request = KeywordRequest(repeat: "Repeat")
+            let awsRequest = try s3Client.createAWSRequest(operation: "Keyword", path: "/", httpMethod: "POST", input: request)
+            XCTAssertEqual(awsRequest.httpHeaders["repeat"] as? String, "Repeat")
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+
+    func testCreateAwsRequestWithKeywordInQuery() {
+        struct KeywordRequest: AWSShape {
+            static var _members: [AWSShapeMember] = [
+                AWSShapeMember(label: "self", location: .querystring(locationName: "self"), required: true, type: .string),
+            ]
+            let `self`: String
+        }
+        do {
+            let request = KeywordRequest(self: "KeywordRequest")
+            let awsRequest = try s3Client.createAWSRequest(operation: "Keyword", path: "/", httpMethod: "POST", input: request)
+            XCTAssertEqual(awsRequest.url, URL(string:"https://s3.amazonaws.com/?self=KeywordRequest")!)
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+
     func testCreateNIORequest() {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
@@ -531,6 +564,29 @@ class AWSClientTests: XCTestCase {
         }
     }
 
+    func testDataInJsonPayload() {
+        struct DataContainer: AWSShape {
+            let data: Data
+        }
+        struct J: AWSShape {
+            public static let payloadPath: String? = "dataContainer"
+            public static var _members: [AWSShapeMember] = [
+                AWSShapeMember(label: "dataContainer", required: false, type: .structure),
+            ]
+            let dataContainer: DataContainer
+        }
+        let input = J(dataContainer: DataContainer(data: Data("test data".utf8)))
+        do {
+            _ = try kinesisClient.createAWSRequest(
+                operation: "PutRecord",
+                path: "/",
+                httpMethod: "POST",
+                input: input
+            )
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
 }
 
 /// Error enum for Kinesis

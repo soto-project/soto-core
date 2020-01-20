@@ -403,7 +403,6 @@ extension AWSClient {
                     default:
                         body = Body(anyValue: payloadBody)
                     }
-                    headers.removeValue(forKey: payload.toSwiftVariableCase())
                 } else {
                     body = .empty
                 }
@@ -446,7 +445,6 @@ extension AWSClient {
                     default:
                         body = Body(anyValue: payloadBody)
                     }
-                    headers.removeValue(forKey: payload.toSwiftVariableCase())
                 } else {
                     body = .empty
                 }
@@ -572,7 +570,6 @@ extension AWSClient {
             if let payloadPath = Output.payloadPath {
                 outputDict = [payloadPath : outputDict]
             }
-            decoder.dataDecodingStrategy = .base64
 
         case .xml(let node):
             var outputNode = node
@@ -603,6 +600,7 @@ extension AWSClient {
             if let payload = Output.payloadPath {
                 outputDict[payload] = data
             }
+            decoder.dataDecodingStrategy = .raw
 
         case .text(let text):
             if let payload = Output.payloadPath {

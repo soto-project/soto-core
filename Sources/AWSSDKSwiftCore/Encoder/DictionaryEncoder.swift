@@ -189,8 +189,8 @@ open class DictionaryEncoder {
     /// The strategy to use in encoding dates. Defaults to `.deferredToDate`.
     open var dateEncodingStrategy: DateEncodingStrategy = .deferredToDate
     
-    /// The strategy to use in encoding binary data. Defaults to `.raw`.
-    open var dataEncodingStrategy: DataEncodingStrategy = .raw
+    /// The strategy to use in encoding binary data. Defaults to `.base64`.
+    open var dataEncodingStrategy: DataEncodingStrategy = .base64
     
     /// The strategy to use in encoding non-conforming numbers. Defaults to `.throw`.
     open var nonConformingFloatEncodingStrategy: NonConformingFloatEncodingStrategy = .throw
@@ -1129,8 +1129,8 @@ open class DictionaryDecoder {
     /// The strategy to use in decoding dates. Defaults to `.deferredToDate`.
     open var dateDecodingStrategy: DateDecodingStrategy = .deferredToDate
     
-    /// The strategy to use in decoding binary data. Defaults to `.raw`.
-    open var dataDecodingStrategy: DataDecodingStrategy = .raw
+    /// The strategy to use in decoding binary data. Defaults to `.base64`.
+    open var dataDecodingStrategy: DataDecodingStrategy = .base64
     
     /// The strategy to use in decoding non-conforming numbers. Defaults to `.throw`.
     open var nonConformingFloatDecodingStrategy: NonConformingFloatDecodingStrategy = .throw

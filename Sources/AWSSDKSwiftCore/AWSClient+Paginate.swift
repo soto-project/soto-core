@@ -14,11 +14,20 @@ protocol AWSPaginateable: AWSShape {
 }
 
 extension AWSClient {
-    func paginate<Input: AWSPaginateable, Output: AWSShape, PaginateOutput: AWSShape>(input: Input, command: @escaping (Input)->EventLoopFuture<FullOutput>, contentsKey: String, tokenKey: String) -> Future<[PaginateOutput]> {
+    /// If an AWS command is returning an arbituary sized array sometimes it adds support for paginating this array
+    /// ie it will return the array in blocks of a defined size, each block also includes a token which can be used to access
+    /// the next block. This function returns a future that will contain the full contents of the array.
+    ///
+    /// - Parameters:
+    ///   - input: Input for request
+    ///   - command: Command to be paginated
+    ///   - contentsKey: The name of the objects to be paginated in the response object
+    ///   - tokenKey: The name of token in the response object to continue pagination
+    func paginate<Input: AWSPaginateable, Output: AWSShape, PaginateOutput: AWSShape>(input: Input, command: @escaping (Input)->EventLoopFuture<FullOutput>, contentsKey: String, tokenKey: String) -> EventLoopFuture<[PaginateOutput]> {
         var list : [PaginateOutput] = []
         
-        func paginatePart(input: Input) -> Future<[PaginateOutput]> {
-            let objects = command(input).flatMap { (response: Output) -> Future<[PaginateOutput]> in
+        func paginatePart(input: Input) -> EventLoopFuture<[PaginateOutput]> {
+            let objects = command(input).flatMap { (response: Output) -> EventLoopFuture<[PaginateOutput]> in
                 let mirror = Mirror(reflecting: response)
                 guard let contents = mirror.getAttribute(forKey: contentsKey) as? [PaginateOutput] else { return self.eventLoopGroup.next().makeSucceededFuture(list) }
 

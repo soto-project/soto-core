@@ -23,7 +23,7 @@ extension AWSClient {
     ///   - command: Command to be paginated
     ///   - contentsKey: The name of the objects to be paginated in the response object
     ///   - tokenKey: The name of token in the response object to continue pagination
-    func paginate<Input: AWSPaginateable, Output: AWSShape, PaginateOutput: AWSShape>(input: Input, command: @escaping (Input)->EventLoopFuture<FullOutput>, contentsKey: String, tokenKey: String) -> EventLoopFuture<[PaginateOutput]> {
+    func paginate<Input: AWSPaginateable, Output: AWSShape, PaginateOutput: AWSShape>(input: Input, command: @escaping (Input)->EventLoopFuture<Output>, contentsKey: String, tokenKey: String) -> EventLoopFuture<[PaginateOutput]> {
         var list : [PaginateOutput] = []
         
         func paginatePart(input: Input) -> EventLoopFuture<[PaginateOutput]> {

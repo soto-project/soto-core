@@ -22,7 +22,7 @@ enum MetaDataServiceError: Error {
 public struct MetaDataService {
 
     /// return future holding a credential provider
-    public static func getCredential(eventLoopGroup: EventLoopGroup) throws -> Future<CredentialProvider> {
+    public static func getCredential(eventLoopGroup: EventLoopGroup) throws -> EventLoopFuture<CredentialProvider> {
         if let ecsCredentialProvider = ECSMetaDataServiceProvider() {
             return ecsCredentialProvider.getCredential(eventLoopGroup: eventLoopGroup)
         } else {
@@ -41,13 +41,13 @@ protocol MetaDataContainer: Decodable {
 /// protocol for metadata service returning AWS credentials
 protocol MetaDataServiceProvider {
     associatedtype MetaData: MetaDataContainer
-    func getCredential(eventLoopGroup: EventLoopGroup) -> Future<CredentialProvider>
+    func getCredential(eventLoopGroup: EventLoopGroup) -> EventLoopFuture<CredentialProvider>
 }
 
 extension MetaDataServiceProvider {
 
     /// make HTTP request
-    func request(uri: String, timeout: TimeInterval, eventLoopGroup: EventLoopGroup) -> Future<HTTPClient.Response> {
+    func request(uri: String, timeout: TimeInterval, eventLoopGroup: EventLoopGroup) -> EventLoopFuture<HTTPClient.Response> {
         let client = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
         let head = HTTPRequestHead(
                      version: HTTPVersion(major: 1, minor: 1),
@@ -128,7 +128,7 @@ struct ECSMetaDataServiceProvider: MetaDataServiceProvider {
         self.uri = "http://\(ECSMetaDataServiceProvider.host)\(uri)"
     }
 
-    func getCredential(eventLoopGroup: EventLoopGroup) -> Future<CredentialProvider> {
+    func getCredential(eventLoopGroup: EventLoopGroup) -> EventLoopFuture<CredentialProvider> {
         return request(uri: uri, timeout: 2, eventLoopGroup: eventLoopGroup)
             .map { response in
                 return self.decodeCredential(response.body)
@@ -178,7 +178,7 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
         return "http://\(host)\(instanceMetadataUri)"
     }
 
-    func uri(eventLoopGroup: EventLoopGroup) -> Future<String> {
+    func uri(eventLoopGroup: EventLoopGroup) -> EventLoopFuture<String> {
         // instance service expects absoluteString as uri...
         return request(uri:InstanceMetaDataServiceProvider.baseURLString, timeout: 2, eventLoopGroup: eventLoopGroup)
             .flatMapThrowing{ response in
@@ -192,7 +192,7 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
         }
     }
 
-    func getCredential(eventLoopGroup: EventLoopGroup) -> Future<CredentialProvider> {
+    func getCredential(eventLoopGroup: EventLoopGroup) -> EventLoopFuture<CredentialProvider> {
         return uri(eventLoopGroup: eventLoopGroup)
             .flatMap { uri in
                 return self.request(uri: uri, timeout: 2, eventLoopGroup: eventLoopGroup)

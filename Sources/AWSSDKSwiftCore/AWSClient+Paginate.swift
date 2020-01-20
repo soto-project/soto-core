@@ -27,13 +27,13 @@ public extension AWSClient {
     ///   - command: Command to be paginated
     ///   - resultKey: The name of the objects to be paginated in the response object
     ///   - tokenKey: The name of token in the response object to continue pagination
-    func paginate<Input: AWSPaginateStringToken, Output: AWSShape, Result>(input: Input, command: @escaping (Input)->EventLoopFuture<Output>, resultKey: KeyPath<Output, [Result]?>, tokenKey: KeyPath<Output, String?>) -> EventLoopFuture<[Result]> {
+    func paginate<Input: AWSPaginateStringToken, Output: AWSShape, Result>(input: Input, command: @escaping (Input)->EventLoopFuture<Output>, resultKey: PartialKeyPath<Output>, tokenKey: KeyPath<Output, String?>) -> EventLoopFuture<[Result]> {
         var list: [Result] = []
         
         func paginatePart(input: Input) -> EventLoopFuture<[Result]> {
             let objects = command(input).flatMap { (response: Output) -> EventLoopFuture<[Result]> in
                 // extract results from response and add to list
-                if let results = response[keyPath: resultKey] {
+                if let results = response[keyPath: resultKey] as? [Result] {
                     list.append(contentsOf: results)
                 }
                 // get next block token and construct a new input with this token
@@ -46,27 +46,6 @@ public extension AWSClient {
         }
         return paginatePart(input: input)
     }
-
-    func paginate<Input: AWSPaginateStringToken, Output: AWSShape, Result>(input: Input, command: @escaping (Input)->EventLoopFuture<Output>, resultKey: KeyPath<Output, [Result]>, tokenKey: KeyPath<Output, String?>) -> EventLoopFuture<[Result]> {
-        var list: [Result] = []
-        
-        func paginatePart(input: Input) -> EventLoopFuture<[Result]> {
-            let objects = command(input).flatMap { (response: Output) -> EventLoopFuture<[Result]> in
-                // extract results from response and add to list
-                let results = response[keyPath: resultKey]
-                list.append(contentsOf: results)
-                
-                // get next block token and construct a new input with this token
-                guard let token = response[keyPath: tokenKey] else { return self.eventLoopGroup.next().makeSucceededFuture(list) }
-                let input = Input.init(input, token: token)
-
-                return paginatePart(input: input)
-            }
-            return objects
-        }
-        return paginatePart(input: input)
-    }
-
 
     /// If an AWS command is returning an arbituary sized array sometimes it adds support for paginating this array
     /// ie it will return the array in blocks of a defined size, each block also includes a token which can be used to access

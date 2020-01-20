@@ -92,13 +92,13 @@ public extension AWSClient {
     ///   - command: Command to be paginated
     ///   - resultKey: The name of the objects to be paginated in the response object
     ///   - tokenKey: The name of token in the response object to continue pagination
-    func paginate<Input: AWSPaginateIntToken, Output: AWSShape, Result>(input: Input, command: @escaping (Input)->EventLoopFuture<Output>, resultKey: KeyPath<Output, [Result]?>, tokenKey: KeyPath<Output, Int?>) -> EventLoopFuture<[Result]> {
+    func paginate<Input: AWSPaginateIntToken, Output: AWSShape, Result>(input: Input, command: @escaping (Input)->EventLoopFuture<Output>, resultKey: PartialKeyPath<Output>, tokenKey: KeyPath<Output, Int?>) -> EventLoopFuture<[Result]> {
         var list: [Result] = []
         
         func paginatePart(input: Input) -> EventLoopFuture<[Result]> {
             let objects = command(input).flatMap { (response: Output) -> EventLoopFuture<[Result]> in
                 // extract results from response and add to list
-                if let results = response[keyPath: resultKey] {
+                if let results = response[keyPath: resultKey] as? [Result] {
                     list.append(contentsOf: results)
                 }
                 // get next block token and construct a new input with this token

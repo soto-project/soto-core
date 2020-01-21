@@ -27,22 +27,22 @@ public extension AWSClient {
     ///   - command: Command to be paginated
     ///   - resultKey: The name of the objects to be paginated in the response object
     ///   - tokenKey: The name of token in the response object to continue pagination
-    func paginate<Input: AWSPaginateStringToken, Output: AWSShape, Result>(input: Input, command: @escaping (Input)->EventLoopFuture<Output>, resultKey: PartialKeyPath<Output>, tokenKey: KeyPath<Output, String?>) -> EventLoopFuture<[Result]> {
-        var list: [Result] = []
+    func paginate<Input: AWSPaginateStringToken, Output: AWSShape, Result>(input: Input, command: @escaping (Input)->EventLoopFuture<Output>, resultKey: PartialKeyPath<Output>, tokenKey: KeyPath<Output, String?>, onPage: @escaping ([Result], EventLoop)->EventLoopFuture<Bool>) -> EventLoopFuture<Void> {
         
-        func paginatePart(input: Input) -> EventLoopFuture<[Result]> {
-            let objects = command(input).flatMap { (response: Output) -> EventLoopFuture<[Result]> in
+        func paginatePart(input: Input) -> EventLoopFuture<Void> {
+            let future = command(input).flatMap { (response: Output) -> EventLoopFuture<Void> in
                 // extract results from response and add to list
-                if let results = response[keyPath: resultKey] as? [Result] {
-                    list.append(contentsOf: results)
+                let results = response[keyPath: resultKey] as? [Result] ?? []
+                
+                return onPage(results, self.eventLoopGroup.next()).flatMap { rt in
+                    guard rt == true else { return self.eventLoopGroup.next().makeSucceededFuture(Void()) }
+                    // get next block token and construct a new input with this token
+                    guard let token = response[keyPath: tokenKey] else { return self.eventLoopGroup.next().makeSucceededFuture(Void()) }
+                    let input = Input.init(input, token: token)
+                    return paginatePart(input: input)
                 }
-                // get next block token and construct a new input with this token
-                guard let token = response[keyPath: tokenKey] else { return self.eventLoopGroup.next().makeSucceededFuture(list) }
-                let input = Input.init(input, token: token)
-
-                return paginatePart(input: input)
             }
-            return objects
+            return future
         }
         return paginatePart(input: input)
     }
@@ -59,26 +59,22 @@ public extension AWSClient {
     ///   - resultKey1: The name of the first set of objects to be paginated in the response object
     ///   - resultKey2: The name of the second set of objects to be paginated in the response object
     ///   - tokenKey: The name of token in the response object to continue pagination
-    func paginate<Input: AWSPaginateStringToken, Output: AWSShape, Result1, Result2>(input: Input, command: @escaping (Input)->EventLoopFuture<Output>, resultKey1: PartialKeyPath<Output>, resultKey2: PartialKeyPath<Output>, tokenKey: KeyPath<Output, String?>) -> EventLoopFuture<([Result1],[Result2])> {
-        var list1: [Result1] = []
-        var list2: [Result2] = []
-        
-        func paginatePart(input: Input) -> EventLoopFuture<([Result1],[Result2])> {
-            let objects = command(input).flatMap { (response: Output) -> EventLoopFuture<([Result1],[Result2])> in
+    func paginate<Input: AWSPaginateStringToken, Output: AWSShape, Result1, Result2>(input: Input, command: @escaping (Input)->EventLoopFuture<Output>, resultKey1: PartialKeyPath<Output>, resultKey2: PartialKeyPath<Output>, tokenKey: KeyPath<Output, String?>, onPage: @escaping ([Result1], [Result2], EventLoop)->EventLoopFuture<Bool>) -> EventLoopFuture<Void> {
+
+        func paginatePart(input: Input) -> EventLoopFuture<Void> {
+            let objects = command(input).flatMap { (response: Output) -> EventLoopFuture<Void> in
                 // extract results from response and add to list
-                if let results = response[keyPath: resultKey1] as? [Result1] {
-                    list1.append(contentsOf: results)
-                }
-                if let results = response[keyPath: resultKey2] as? [Result2] {
-                    list2.append(contentsOf: results)
-                }
+                let results1 = response[keyPath: resultKey1] as? [Result1] ?? []
+                let results2 = response[keyPath: resultKey2] as? [Result2] ?? []
 
-                // get next block token and construct a new input with this token
-                guard let token = response[keyPath: tokenKey] else { return self.eventLoopGroup.next().makeSucceededFuture((list1, list2)) }
-                let input = Input.init(input, token: token)
-
-                return paginatePart(input: input)
-            }
+                 return onPage(results1, results2, self.eventLoopGroup.next()).flatMap { rt in
+                    guard rt == true else { return self.eventLoopGroup.next().makeSucceededFuture(Void()) }
+                    // get next block token and construct a new input with this token
+                    guard let token = response[keyPath: tokenKey] else { return self.eventLoopGroup.next().makeSucceededFuture(Void()) }
+                    let input = Input.init(input, token: token)
+                    return paginatePart(input: input)
+                }
+           }
             return objects
         }
         return paginatePart(input: input)
@@ -97,29 +93,22 @@ public extension AWSClient {
     ///   - resultKey2: The name of the second set of objects to be paginated in the response object
     ///   - resultKey3: The name of the second set of objects to be paginated in the response object
     ///   - tokenKey: The name of token in the response object to continue pagination
-    func paginate<Input: AWSPaginateStringToken, Output: AWSShape, Result1, Result2, Result3>(input: Input, command: @escaping (Input)->EventLoopFuture<Output>, resultKey1: PartialKeyPath<Output>, resultKey2: PartialKeyPath<Output>, resultKey3: PartialKeyPath<Output>, tokenKey: KeyPath<Output, String?>) -> EventLoopFuture<([Result1],[Result2],[Result3])> {
-        var list1: [Result1] = []
-        var list2: [Result2] = []
-        var list3: [Result3] = []
+    func paginate<Input: AWSPaginateStringToken, Output: AWSShape, Result1, Result2, Result3>(input: Input, command: @escaping (Input)->EventLoopFuture<Output>, resultKey1: PartialKeyPath<Output>, resultKey2: PartialKeyPath<Output>, resultKey3: PartialKeyPath<Output>, tokenKey: KeyPath<Output, String?>, onPage: @escaping ([Result1], [Result2], [Result3], EventLoop)->EventLoopFuture<Bool>) -> EventLoopFuture<Void> {
 
-        func paginatePart(input: Input) -> EventLoopFuture<([Result1],[Result2],[Result3])> {
-            let objects = command(input).flatMap { (response: Output) -> EventLoopFuture<([Result1],[Result2],[Result3])> in
+        func paginatePart(input: Input) -> EventLoopFuture<Void> {
+            let objects = command(input).flatMap { (response: Output) -> EventLoopFuture<Void> in
                 // extract results from response and add to list
-                if let results = response[keyPath: resultKey1] as? [Result1] {
-                    list1.append(contentsOf: results)
-                }
-                if let results = response[keyPath: resultKey2] as? [Result2] {
-                    list2.append(contentsOf: results)
-                }
-                if let results = response[keyPath: resultKey3] as? [Result3] {
-                    list3.append(contentsOf: results)
-                }
+                let results1 = response[keyPath: resultKey1] as? [Result1] ?? []
+                let results2 = response[keyPath: resultKey2] as? [Result2] ?? []
+                let results3 = response[keyPath: resultKey3] as? [Result3] ?? []
 
-                // get next block token and construct a new input with this token
-                guard let token = response[keyPath: tokenKey] else { return self.eventLoopGroup.next().makeSucceededFuture((list1, list2, list3)) }
-                let input = Input.init(input, token: token)
-
-                return paginatePart(input: input)
+                return onPage(results1, results2, results3, self.eventLoopGroup.next()).flatMap { rt in
+                    guard rt == true else { return self.eventLoopGroup.next().makeSucceededFuture(Void()) }
+                    // get next block token and construct a new input with this token
+                    guard let token = response[keyPath: tokenKey] else { return self.eventLoopGroup.next().makeSucceededFuture(Void()) }
+                    let input = Input.init(input, token: token)
+                    return paginatePart(input: input)
+                }
             }
             return objects
         }
@@ -139,33 +128,23 @@ public extension AWSClient {
     ///   - resultKey2: The name of the second set of objects to be paginated in the response object
     ///   - resultKey3: The name of the second set of objects to be paginated in the response object
     ///   - tokenKey: The name of token in the response object to continue pagination
-    func paginate<Input: AWSPaginateStringToken, Output: AWSShape, Result1, Result2, Result3, Result4>(input: Input, command: @escaping (Input)->EventLoopFuture<Output>, resultKey1: PartialKeyPath<Output>, resultKey2: PartialKeyPath<Output>, resultKey3: PartialKeyPath<Output>, resultKey4: PartialKeyPath<Output>, tokenKey: KeyPath<Output, String?>) -> EventLoopFuture<([Result1],[Result2],[Result3],[Result4])> {
-        var list1: [Result1] = []
-        var list2: [Result2] = []
-        var list3: [Result3] = []
-        var list4: [Result4] = []
+    func paginate<Input: AWSPaginateStringToken, Output: AWSShape, Result1, Result2, Result3, Result4>(input: Input, command: @escaping (Input)->EventLoopFuture<Output>, resultKey1: PartialKeyPath<Output>, resultKey2: PartialKeyPath<Output>, resultKey3: PartialKeyPath<Output>, resultKey4: PartialKeyPath<Output>, tokenKey: KeyPath<Output, String?>, onPage: @escaping ([Result1], [Result2], [Result3], [Result4], EventLoop)->EventLoopFuture<Bool>) -> EventLoopFuture<Void> {
 
-        func paginatePart(input: Input) -> EventLoopFuture<([Result1],[Result2],[Result3],[Result4])> {
-            let objects = command(input).flatMap { (response: Output) -> EventLoopFuture<([Result1],[Result2],[Result3],[Result4])> in
+        func paginatePart(input: Input) -> EventLoopFuture<Void> {
+            let objects = command(input).flatMap { (response: Output) -> EventLoopFuture<Void> in
                 // extract results from response and add to list
-                if let results = response[keyPath: resultKey1] as? [Result1] {
-                    list1.append(contentsOf: results)
-                }
-                if let results = response[keyPath: resultKey2] as? [Result2] {
-                    list2.append(contentsOf: results)
-                }
-                if let results = response[keyPath: resultKey3] as? [Result3] {
-                    list3.append(contentsOf: results)
-                }
-                if let results = response[keyPath: resultKey4] as? [Result4] {
-                    list4.append(contentsOf: results)
-                }
+                let results1 = response[keyPath: resultKey1] as? [Result1] ?? []
+                let results2 = response[keyPath: resultKey2] as? [Result2] ?? []
+                let results3 = response[keyPath: resultKey3] as? [Result3] ?? []
+                let results4 = response[keyPath: resultKey4] as? [Result4] ?? []
 
-                // get next block token and construct a new input with this token
-                guard let token = response[keyPath: tokenKey] else { return self.eventLoopGroup.next().makeSucceededFuture((list1, list2, list3, list4)) }
-                let input = Input.init(input, token: token)
-
-                return paginatePart(input: input)
+                 return onPage(results1, results2, results3, results4, self.eventLoopGroup.next()).flatMap { rt in
+                    guard rt == true else { return self.eventLoopGroup.next().makeSucceededFuture(Void()) }
+                    // get next block token and construct a new input with this token
+                    guard let token = response[keyPath: tokenKey] else { return self.eventLoopGroup.next().makeSucceededFuture(Void()) }
+                    let input = Input.init(input, token: token)
+                    return paginatePart(input: input)
+                }
             }
             return objects
         }
@@ -183,22 +162,23 @@ public extension AWSClient {
     ///   - command: Command to be paginated
     ///   - resultKey: The name of the objects to be paginated in the response object
     ///   - tokenKey: The name of token in the response object to continue pagination
-    func paginate<Input: AWSPaginateIntToken, Output: AWSShape, Result>(input: Input, command: @escaping (Input)->EventLoopFuture<Output>, resultKey: PartialKeyPath<Output>, tokenKey: KeyPath<Output, Int?>) -> EventLoopFuture<[Result]> {
-        var list: [Result] = []
+    func paginate<Input: AWSPaginateIntToken, Output: AWSShape, Result>(input: Input, command: @escaping (Input)->EventLoopFuture<Output>, resultKey: PartialKeyPath<Output>, tokenKey: KeyPath<Output, Int?>, onPage: @escaping ([Result], EventLoop)->EventLoopFuture<Bool>) -> EventLoopFuture<Void> {
         
-        func paginatePart(input: Input) -> EventLoopFuture<[Result]> {
-            let objects = command(input).flatMap { (response: Output) -> EventLoopFuture<[Result]> in
+        func paginatePart(input: Input) -> EventLoopFuture<Void> {
+            let future = command(input).flatMap { (response: Output) -> EventLoopFuture<Void> in
                 // extract results from response and add to list
-                if let results = response[keyPath: resultKey] as? [Result] {
-                    list.append(contentsOf: results)
+                // extract results from response and add to list
+                let results = response[keyPath: resultKey] as? [Result] ?? []
+                
+                return onPage(results, self.eventLoopGroup.next()).flatMap { rt in
+                    guard rt == true else { return self.eventLoopGroup.next().makeSucceededFuture(Void()) }
+                    // get next block token and construct a new input with this token
+                    guard let token = response[keyPath: tokenKey] else { return self.eventLoopGroup.next().makeSucceededFuture(Void()) }
+                    let input = Input.init(input, token: token)
+                    return paginatePart(input: input)
                 }
-                // get next block token and construct a new input with this token
-                guard let token = response[keyPath: tokenKey] else { return self.eventLoopGroup.next().makeSucceededFuture(list) }
-                let input = Input.init(input, token: token)
-
-                return paginatePart(input: input)
             }
-            return objects
+            return future
         }
         return paginatePart(input: input)
     }

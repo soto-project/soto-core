@@ -6,4 +6,4 @@ RUN apt-get -qq update && apt-get install -y \
 
 WORKDIR /aws-sdk-swift-core
 COPY . .
-RUN swift test
+RUN swift test -Xswiftc -DDEBUG

@@ -19,10 +19,23 @@ class AWSTestServer {
         case emptyBody
         case noXMLBody
     }
+    // what are we returning
     enum ServiceProtocol {
         case json
         case xml
     }
+    // http incoming request
+    struct Request {
+        let headers: [String: String]
+        let body: ByteBuffer
+    }
+    // http outgoing response
+    struct Response {
+        let httpStatus: HTTPResponseStatus
+        let headers: [String: String]
+        let body: ByteBuffer
+    }
+    // result from process
     struct Result<Output>{
         let output: Output
         let continueProcessing: Bool
@@ -41,7 +54,6 @@ class AWSTestServer {
     }
     
     func process<Input: AWSShape, Output: AWSShape>(_ process: (Input) throws -> Result<Output>) throws {
-        
         var continueProcessing =  true
         while(continueProcessing) {
             // read inbound
@@ -83,6 +95,60 @@ class AWSTestServer {
             XCTAssertNoThrow(try web.writeOutbound(.body(.byteBuffer(byteBuffer))))
             XCTAssertNoThrow(try web.writeOutbound(.end(nil)))
         }
+    }
+    
+    func process(_ process: (Request) throws -> Result<Response>) throws {
+        var continueProcessing =  true
+        while(continueProcessing) {
+            // read inbound
+            guard case .head(let head) = try web.readInbound() else {throw Error.notHead}
+            guard case .body(let buffer) = try web.readInbound() else {throw Error.notBody}
+            guard case .end(_) = try web.readInbound() else {throw Error.notEnd}
+            
+            var requestHeaders: [String: String] = [:]
+            for (key, value) in head.headers {
+                requestHeaders[key.description] = value
+            }
+
+            let request = Request(headers: requestHeaders, body: buffer)
+            
+            // process
+            let result = try process(request)
+            
+            continueProcessing = result.continueProcessing
+            
+            XCTAssertNoThrow(try web.writeOutbound(.head(.init(version: .init(major: 1, minor: 1),
+                                                               status: result.output.httpStatus,
+                                                               headers: HTTPHeaders(result.output.headers.map { ($0,$1) })))))
+            XCTAssertNoThrow(try web.writeOutbound(.body(.byteBuffer(result.output.body))))
+            XCTAssertNoThrow(try web.writeOutbound(.end(nil)))
+        }
+    }
+    
+    func echo() throws {
+        var byteBuffers: [ByteBuffer] = []
+        // read inbound
+        guard case .head(let head) = try web.readInbound() else {throw Error.notHead}
+        // read body
+        while(true) {
+            let inbound = try web.readInbound()
+            if case .body(let buffer) = inbound {
+                byteBuffers.append(buffer)
+            } else if case .end(_) = inbound {
+                break
+            } else {
+                throw Error.notEnd
+            }
+        }
+        
+        // write outbound
+        XCTAssertNoThrow(try web.writeOutbound(.head(.init(version: head.version,
+                                                           status: .ok,
+                                                           headers: head.headers))))
+        try byteBuffers.forEach {
+            XCTAssertNoThrow(try web.writeOutbound(.body(.byteBuffer($0))))
+        }
+        XCTAssertNoThrow(try web.writeOutbound(.end(nil)))
     }
     
     func stop() throws {

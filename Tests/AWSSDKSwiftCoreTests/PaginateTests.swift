@@ -67,6 +67,7 @@ class PaginateTests: XCTestCase {
         return client.paginate(input: input, command: counter, resultKey: \CounterOutput.array, tokenKey: \CounterOutput.outputToken, onPage: onPage)
     }
     
+    #if !os(Linux)
     func testPaginate() throws {
         
         // paginate input
@@ -106,11 +107,11 @@ class PaginateTests: XCTestCase {
             XCTAssertEqual(finalArray[i], i)
         }
     }
-    
+    #endif
+
     static var allTests : [(String, (PaginateTests) -> () throws -> Void)] {
         return [
-            ("testPaginate", testPaginate),
+            //("testPaginate", testPaginate),
         ]
     }
-
 }

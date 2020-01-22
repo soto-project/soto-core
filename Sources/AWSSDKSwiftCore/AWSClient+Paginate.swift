@@ -37,23 +37,36 @@ public extension AWSClient {
         tokenKey: KeyPath<Output, String?>,
         onPage: @escaping ([Result], EventLoop)->EventLoopFuture<Bool>
     ) -> EventLoopFuture<Void> {
-        
-        func paginatePart(input: Input) -> EventLoopFuture<Void> {
-            let future = command(input).flatMap { (response: Output) -> EventLoopFuture<Void> in
+        let eventLoop = self.eventLoopGroup.next()
+        let promise = eventLoop.makePromise(of: Void.self)
+
+        func paginatePart(input: Input) {
+            let responseFuture = command(input)
+            responseFuture.whenSuccess { (response: Output)->Void in
                 // extract results from response and add to list
                 let results = response[keyPath: resultKey] as? [Result] ?? []
-                
-                return onPage(results, self.eventLoopGroup.next()).flatMap { rt in
-                    guard rt == true else { return self.eventLoopGroup.next().makeSucceededFuture(Void()) }
+
+                let onPageFuture = onPage(results, eventLoop)
+                onPageFuture.whenSuccess { rt in
+                    guard rt == true else { return promise.succeed(Void()) }
                     // get next block token and construct a new input with this token
-                    guard let token = response[keyPath: tokenKey] else { return self.eventLoopGroup.next().makeSucceededFuture(Void()) }
+                    guard let token = response[keyPath: tokenKey] else { return promise.succeed(Void()) }
+
                     let input = Input.init(input, token: token)
-                    return paginatePart(input: input)
+                    paginatePart(input: input)
+                }
+                onPageFuture.whenFailure { error in
+                    promise.fail(error)
                 }
             }
-            return future
+            responseFuture.whenFailure { error in
+                promise.fail(error)
+            }
         }
-        return paginatePart(input: input)
+
+        paginatePart(input: input)
+        
+        return promise.futureResult
     }
 
     /// If an AWS command is returning an arbituary sized array sometimes it adds support for paginating this array
@@ -77,24 +90,37 @@ public extension AWSClient {
         tokenKey: KeyPath<Output, String?>,
         onPage: @escaping ([Result1], [Result2], EventLoop)->EventLoopFuture<Bool>
     ) -> EventLoopFuture<Void> {
+        let eventLoop = self.eventLoopGroup.next()
+        let promise = eventLoop.makePromise(of: Void.self)
 
-        func paginatePart(input: Input) -> EventLoopFuture<Void> {
-            let objects = command(input).flatMap { (response: Output) -> EventLoopFuture<Void> in
+        func paginatePart(input: Input) {
+            let responseFuture = command(input)
+            responseFuture.whenSuccess { (response: Output)->Void in
                 // extract results from response and add to list
                 let results1 = response[keyPath: resultKey1] as? [Result1] ?? []
                 let results2 = response[keyPath: resultKey2] as? [Result2] ?? []
 
-                 return onPage(results1, results2, self.eventLoopGroup.next()).flatMap { rt in
-                    guard rt == true else { return self.eventLoopGroup.next().makeSucceededFuture(Void()) }
+                let onPageFuture = onPage(results1, results2, eventLoop)
+                onPageFuture.whenSuccess { rt in
+                    guard rt == true else { return promise.succeed(Void()) }
                     // get next block token and construct a new input with this token
-                    guard let token = response[keyPath: tokenKey] else { return self.eventLoopGroup.next().makeSucceededFuture(Void()) }
+                    guard let token = response[keyPath: tokenKey] else { return promise.succeed(Void()) }
+
                     let input = Input.init(input, token: token)
-                    return paginatePart(input: input)
+                    paginatePart(input: input)
                 }
-           }
-            return objects
+                onPageFuture.whenFailure { error in
+                    promise.fail(error)
+                }
+            }
+            responseFuture.whenFailure { error in
+                promise.fail(error)
+            }
         }
-        return paginatePart(input: input)
+
+        paginatePart(input: input)
+        
+        return promise.futureResult
     }
 
     /// If an AWS command is returning an arbituary sized array sometimes it adds support for paginating this array
@@ -120,25 +146,38 @@ public extension AWSClient {
         tokenKey: KeyPath<Output, String?>,
         onPage: @escaping ([Result1], [Result2], [Result3], EventLoop)->EventLoopFuture<Bool>
     ) -> EventLoopFuture<Void> {
+        let eventLoop = self.eventLoopGroup.next()
+        let promise = eventLoop.makePromise(of: Void.self)
 
-        func paginatePart(input: Input) -> EventLoopFuture<Void> {
-            let objects = command(input).flatMap { (response: Output) -> EventLoopFuture<Void> in
+        func paginatePart(input: Input) {
+            let responseFuture = command(input)
+            responseFuture.whenSuccess { (response: Output)->Void in
                 // extract results from response and add to list
                 let results1 = response[keyPath: resultKey1] as? [Result1] ?? []
                 let results2 = response[keyPath: resultKey2] as? [Result2] ?? []
                 let results3 = response[keyPath: resultKey3] as? [Result3] ?? []
 
-                return onPage(results1, results2, results3, self.eventLoopGroup.next()).flatMap { rt in
-                    guard rt == true else { return self.eventLoopGroup.next().makeSucceededFuture(Void()) }
+                let onPageFuture = onPage(results1, results2, results3, eventLoop)
+                onPageFuture.whenSuccess { rt in
+                    guard rt == true else { return promise.succeed(Void()) }
                     // get next block token and construct a new input with this token
-                    guard let token = response[keyPath: tokenKey] else { return self.eventLoopGroup.next().makeSucceededFuture(Void()) }
+                    guard let token = response[keyPath: tokenKey] else { return promise.succeed(Void()) }
+
                     let input = Input.init(input, token: token)
-                    return paginatePart(input: input)
+                    paginatePart(input: input)
+                }
+                onPageFuture.whenFailure { error in
+                    promise.fail(error)
                 }
             }
-            return objects
+            responseFuture.whenFailure { error in
+                promise.fail(error)
+            }
         }
-        return paginatePart(input: input)
+
+        paginatePart(input: input)
+        
+        return promise.futureResult
     }
 
     /// If an AWS command is returning an arbituary sized array sometimes it adds support for paginating this array
@@ -166,26 +205,39 @@ public extension AWSClient {
         tokenKey: KeyPath<Output, String?>,
         onPage: @escaping ([Result1], [Result2], [Result3], [Result4], EventLoop)->EventLoopFuture<Bool>
     ) -> EventLoopFuture<Void> {
+        let eventLoop = self.eventLoopGroup.next()
+        let promise = eventLoop.makePromise(of: Void.self)
 
-        func paginatePart(input: Input) -> EventLoopFuture<Void> {
-            let objects = command(input).flatMap { (response: Output) -> EventLoopFuture<Void> in
+        func paginatePart(input: Input) {
+            let responseFuture = command(input)
+            responseFuture.whenSuccess { (response: Output)->Void in
                 // extract results from response and add to list
                 let results1 = response[keyPath: resultKey1] as? [Result1] ?? []
                 let results2 = response[keyPath: resultKey2] as? [Result2] ?? []
                 let results3 = response[keyPath: resultKey3] as? [Result3] ?? []
                 let results4 = response[keyPath: resultKey4] as? [Result4] ?? []
 
-                 return onPage(results1, results2, results3, results4, self.eventLoopGroup.next()).flatMap { rt in
-                    guard rt == true else { return self.eventLoopGroup.next().makeSucceededFuture(Void()) }
+                let onPageFuture = onPage(results1, results2, results3, results4, eventLoop)
+                onPageFuture.whenSuccess { rt in
+                    guard rt == true else { return promise.succeed(Void()) }
                     // get next block token and construct a new input with this token
-                    guard let token = response[keyPath: tokenKey] else { return self.eventLoopGroup.next().makeSucceededFuture(Void()) }
+                    guard let token = response[keyPath: tokenKey] else { return promise.succeed(Void()) }
+
                     let input = Input.init(input, token: token)
-                    return paginatePart(input: input)
+                    paginatePart(input: input)
+                }
+                onPageFuture.whenFailure { error in
+                    promise.fail(error)
                 }
             }
-            return objects
+            responseFuture.whenFailure { error in
+                promise.fail(error)
+            }
         }
-        return paginatePart(input: input)
+
+        paginatePart(input: input)
+        
+        return promise.futureResult
     }
 
     /// If an AWS command is returning an arbituary sized array sometimes it adds support for paginating this array
@@ -207,24 +259,36 @@ public extension AWSClient {
         tokenKey: KeyPath<Output, Int?>,
         onPage: @escaping ([Result], EventLoop)->EventLoopFuture<Bool>
     ) -> EventLoopFuture<Void> {
-        
-        func paginatePart(input: Input) -> EventLoopFuture<Void> {
-            let future = command(input).flatMap { (response: Output) -> EventLoopFuture<Void> in
-                // extract results from response and add to list
+        let eventLoop = self.eventLoopGroup.next()
+        let promise = eventLoop.makePromise(of: Void.self)
+
+        func paginatePart(input: Input) {
+            let responseFuture = command(input)
+            responseFuture.whenSuccess { (response: Output)->Void in
                 // extract results from response and add to list
                 let results = response[keyPath: resultKey] as? [Result] ?? []
-                
-                return onPage(results, self.eventLoopGroup.next()).flatMap { rt in
-                    guard rt == true else { return self.eventLoopGroup.next().makeSucceededFuture(Void()) }
+
+                let onPageFuture = onPage(results, eventLoop)
+                onPageFuture.whenSuccess { rt in
+                    guard rt == true else { return promise.succeed(Void()) }
                     // get next block token and construct a new input with this token
-                    guard let token = response[keyPath: tokenKey] else { return self.eventLoopGroup.next().makeSucceededFuture(Void()) }
+                    guard let token = response[keyPath: tokenKey] else { return promise.succeed(Void()) }
+
                     let input = Input.init(input, token: token)
-                    return paginatePart(input: input)
+                    paginatePart(input: input)
+                }
+                onPageFuture.whenFailure { error in
+                    promise.fail(error)
                 }
             }
-            return future
+            responseFuture.whenFailure { error in
+                promise.fail(error)
+            }
         }
-        return paginatePart(input: input)
+
+        paginatePart(input: input)
+        
+        return promise.futureResult
     }
 }
 

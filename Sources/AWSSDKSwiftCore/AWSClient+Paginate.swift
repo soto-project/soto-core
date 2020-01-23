@@ -10,13 +10,13 @@ import NIO
 /// protocol for all AWSShapes that can be paginated.
 /// Adds an initialiser that does a copy but inserts a new string based pagination token
 public protocol AWSPaginateStringToken: AWSShape {
-    init(_ original: Self, token: String)
+    func usingPaginationToken(_ token: String) -> Self
 }
 
 /// protocol for all AWSShapes that can be paginated.
 /// Adds an initialiser that does a copy but inserts a new integer based pagination token
 public protocol AWSPaginateIntToken: AWSShape {
-    init(_ original: Self, token: Int)
+    func usingPaginationToken(_ token: Int) -> Self
 }
 
 public extension AWSClient {
@@ -49,7 +49,7 @@ public extension AWSClient {
                     // get next block token and construct a new input with this token
                     guard let token = response[keyPath: tokenKey] else { return promise.succeed(Void()) }
 
-                    let input = Input.init(input, token: token)
+                    let input = input.usingPaginationToken(token)
                     paginatePart(input: input)
                 }
                 onPageFuture.whenFailure { error in
@@ -96,7 +96,7 @@ public extension AWSClient {
                     // get next block token and construct a new input with this token
                     guard let token = response[keyPath: tokenKey] else { return promise.succeed(Void()) }
 
-                    let input = Input.init(input, token: token)
+                    let input = input.usingPaginationToken(token)
                     paginatePart(input: input)
                 }
                 onPageFuture.whenFailure { error in

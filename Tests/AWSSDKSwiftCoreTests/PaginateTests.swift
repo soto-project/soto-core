@@ -53,9 +53,9 @@ class PaginateTests: XCTestCase {
             self.inputToken = inputToken
             self.pageSize = pageSize
         }
-        init(_ original: CounterInput, token: Int) {
-            self.inputToken = token
-            self.pageSize = original.pageSize
+        
+        func usingPaginationToken(_ token: Int) -> CounterInput {
+            return .init(inputToken: token, pageSize: self.pageSize)
         }
     }
     struct CounterOutput: AWSShape {
@@ -123,9 +123,9 @@ class PaginateTests: XCTestCase {
             self.inputToken = inputToken
             self.pageSize = pageSize
         }
-        init(_ original: StringListInput, token: String) {
-            self.inputToken = token
-            self.pageSize = original.pageSize
+        
+        func usingPaginationToken(_ token: String) -> StringListInput {
+            return .init(inputToken: token, pageSize: self.pageSize)
         }
     }
     struct StringListOutput: AWSShape {

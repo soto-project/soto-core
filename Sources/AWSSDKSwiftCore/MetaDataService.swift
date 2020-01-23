@@ -6,9 +6,19 @@
 //
 //
 
-import Foundation
+#if os(Linux)
 import NIO
 import NIOHTTP1
+
+import struct Foundation.Data
+import struct Foundation.URL
+import class  Foundation.DateFormatter
+import struct Foundation.Date
+import struct Foundation.TimeInterval
+import struct Foundation.TimeZone
+import struct Foundation.Locale
+import class  Foundation.JSONDecoder
+import class  Foundation.ProcessInfo
 
 /// errors returned by metadata service
 enum MetaDataServiceError: Error {
@@ -22,7 +32,7 @@ enum MetaDataServiceError: Error {
 public struct MetaDataService {
 
     /// return future holding a credential provider
-    public static func getCredential(eventLoopGroup: EventLoopGroup) throws -> Future<CredentialProvider> {
+    public static func getCredential(eventLoopGroup: EventLoopGroup) throws -> EventLoopFuture<CredentialProvider> {
         if let ecsCredentialProvider = ECSMetaDataServiceProvider() {
             return ecsCredentialProvider.getCredential(eventLoopGroup: eventLoopGroup)
         } else {
@@ -41,13 +51,13 @@ protocol MetaDataContainer: Decodable {
 /// protocol for metadata service returning AWS credentials
 protocol MetaDataServiceProvider {
     associatedtype MetaData: MetaDataContainer
-    func getCredential(eventLoopGroup: EventLoopGroup) -> Future<CredentialProvider>
+    func getCredential(eventLoopGroup: EventLoopGroup) -> EventLoopFuture<CredentialProvider>
 }
 
 extension MetaDataServiceProvider {
 
     /// make HTTP request
-    func request(uri: String, method: HTTPMethod = .GET, headers: [String:String] = [:], timeout: TimeInterval, eventLoopGroup: EventLoopGroup) -> Future<HTTPClient.Response> {
+    func request(uri: String, method: HTTPMethod = .GET, headers: [String:String] = [:], timeout: TimeInterval, eventLoopGroup: EventLoopGroup) -> EventLoopFuture<HTTPClient.Response> {
         let client = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
         let httpHeaders = HTTPHeaders(headers.map { ($0, $1) })
         let head = HTTPRequestHead(
@@ -130,7 +140,7 @@ struct ECSMetaDataServiceProvider: MetaDataServiceProvider {
         self.uri = "http://\(ECSMetaDataServiceProvider.host)\(uri)"
     }
 
-    func getCredential(eventLoopGroup: EventLoopGroup) -> Future<CredentialProvider> {
+    func getCredential(eventLoopGroup: EventLoopGroup) -> EventLoopFuture<CredentialProvider> {
         return request(uri: uri, timeout: 2, eventLoopGroup: eventLoopGroup)
             .map { response in
                 return self.decodeCredential(response.body)
@@ -184,7 +194,7 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
         return "http://\(host)\(instanceMetadataUri)"
     }
 
-    func getCredential(eventLoopGroup: EventLoopGroup) -> Future<CredentialProvider> {
+    func getCredential(eventLoopGroup: EventLoopGroup) -> EventLoopFuture<CredentialProvider> {
         //  no point storing the session key as the credentials last as long
         var sessionToken: String = ""
         // instance service expects absoluteString as uri...
@@ -216,3 +226,5 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
         }
     }
 }
+
+#endif // os(Linux)

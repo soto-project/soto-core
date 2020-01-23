@@ -7,12 +7,20 @@
 //
 
 import HypertextApplicationLanguage
-import Foundation
 import NIO
 import NIOHTTP1
 import NIOTransportServices
+import class  Foundation.ProcessInfo
+import class  Foundation.JSONSerialization
+import struct Foundation.Data
+import struct Foundation.Date
+import struct Foundation.URL
+import struct Foundation.URLComponents
+import struct Foundation.URLQueryItem
+import struct Foundation.CharacterSet
 
 /// Convenience shorthand for `EventLoopFuture`.
+@available(*, deprecated, message: "Use the EventLoopFuture directly")
 public typealias Future = EventLoopFuture
 
 /// This is the workhorse of aws-sdk-swift-core. You provide it with a `AWSShape` Input object, it converts it to `AWSRequest` which is then converted to a raw `HTTPClient` Request. This is then sent to AWS. When the response from AWS is received if it is successful it is converted to a `AWSResponse` which is then decoded to generate a `AWSShape` Output object. If it is not successful then `AWSClient` will throw an `AWSErrorType`.
@@ -21,7 +29,7 @@ public class AWSClient {
     public enum RequestError: Error {
         case invalidURL(String)
     }
-    
+
     /// Specifies how `EventLoopGroup` will be created and establishes lifecycle ownership.
     public enum EventLoopGroupProvider {
         /// `EventLoopGroup` will be provided by the user. Owner of this group is responsible for its lifecycle.
@@ -49,7 +57,7 @@ public class AWSClient {
     let middlewares: [AWSServiceMiddleware]
 
     var possibleErrorTypes: [AWSErrorType.Type]
-    
+
     public let eventLoopGroup: EventLoopGroup
 
     /// endpoint URL
@@ -124,7 +132,7 @@ public class AWSClient {
         } else {
             region = .useast1
         }
-        
+
         switch eventLoopGroupProvider {
         case .shared(let eventLoopGroup):
             self.eventLoopGroup = eventLoopGroup
@@ -147,7 +155,7 @@ public class AWSClient {
 }
 // invoker
 extension AWSClient {
-    fileprivate func invoke(_ nioRequest: HTTPClient.Request) -> Future<HTTPClient.Response> {
+    fileprivate func invoke(_ nioRequest: HTTPClient.Request) -> EventLoopFuture<HTTPClient.Response> {
         let client = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
         let futureResponse = client.connect(nioRequest)
 
@@ -165,7 +173,7 @@ extension AWSClient {
 
 // public facing apis
 extension AWSClient {
-    
+
     /// send a request with an input object and return a future with an empty response
     /// - parameters:
     ///     - operationName: Name of the AWS operation
@@ -174,7 +182,7 @@ extension AWSClient {
     ///     - input: Input object
     /// - returns:
     ///     Empty Future that completes when response is received
-    public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> Future<Void> {
+    public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> EventLoopFuture<Void> {
 
         return signer.manageCredential(eventLoopGroup: eventLoopGroup).flatMapThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
@@ -198,7 +206,7 @@ extension AWSClient {
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
     /// - returns:
     ///     Empty Future that completes when response is received
-    public func send(operation operationName: String, path: String, httpMethod: String) -> Future<Void> {
+    public func send(operation operationName: String, path: String, httpMethod: String) -> EventLoopFuture<Void> {
 
         return signer.manageCredential(eventLoopGroup: eventLoopGroup).flatMapThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
@@ -221,7 +229,7 @@ extension AWSClient {
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
     /// - returns:
     ///     Future containing output object that completes when response is received
-    public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) -> Future<Output> {
+    public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) -> EventLoopFuture<Output> {
 
         return signer.manageCredential(eventLoopGroup: eventLoopGroup).flatMapThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
@@ -245,7 +253,7 @@ extension AWSClient {
     ///     - input: Input object
     /// - returns:
     ///     Future containing output object that completes when response is received
-    public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> Future<Output> {
+    public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> EventLoopFuture<Output> {
 
             return signer.manageCredential(eventLoopGroup: eventLoopGroup).flatMapThrowing { _ in
                     let awsRequest = try self.createAWSRequest(
@@ -328,14 +336,16 @@ extension AWSClient {
     }
 
     func createNioRequest(_ awsRequest: AWSRequest) throws -> HTTPClient.Request {
-        switch awsRequest.httpMethod {
-        case "GET", "HEAD":
-            switch self.serviceProtocol.type {
-            case .restjson:
+        switch (awsRequest.httpMethod, self.serviceProtocol.type) {
+        case ("GET",  .restjson), ("HEAD", .restjson):
+            return try createNIORequestWithSignedHeader(awsRequest)
+
+        case ("GET",  _), ("HEAD", _):
+            if awsRequest.httpHeaders.count > 0 {
                 return try createNIORequestWithSignedHeader(awsRequest)
-            default:
-                return try createNIORequestWithSignedURL(awsRequest)
             }
+            return try createNIORequestWithSignedURL(awsRequest)
+            
         default:
             return try createNIORequestWithSignedHeader(awsRequest)
         }
@@ -380,7 +390,7 @@ extension AWSClient {
         if let target = amzTarget {
             headers["x-amz-target"] = "\(target).\(operationName)"
         }
-        
+
         // TODO should replace with Encodable
         let mirror = Mirror(reflecting: input)
 
@@ -418,7 +428,6 @@ extension AWSClient {
                     default:
                         body = Body(anyValue: payloadBody)
                     }
-                    headers.removeValue(forKey: payload.toSwiftVariableCase())
                 } else {
                     body = .empty
                 }
@@ -461,7 +470,6 @@ extension AWSClient {
                     default:
                         body = Body(anyValue: payloadBody)
                     }
-                    headers.removeValue(forKey: payload.toSwiftVariableCase())
                 } else {
                     body = .empty
                 }
@@ -587,7 +595,6 @@ extension AWSClient {
             if let payloadPath = Output.payloadPath {
                 outputDict = [payloadPath : outputDict]
             }
-            decoder.dataDecodingStrategy = .base64
 
         case .xml(let node):
             var outputNode = node
@@ -618,6 +625,7 @@ extension AWSClient {
             if let payload = Output.payloadPath {
                 outputDict[payload] = data
             }
+            decoder.dataDecodingStrategy = .raw
 
         case .text(let text):
             if let payload = Output.payloadPath {
@@ -810,4 +818,3 @@ extension URL {
         return host
     }
 }
-

@@ -6,7 +6,6 @@
 //
 //
 
-import Foundation
 import XCTest
 @testable import AWSSDKSwiftCore
 
@@ -228,6 +227,29 @@ class SerializersTests: XCTestCase {
         let base64 = "Hello, world".data(using:.utf8)!.base64EncodedString()
         let xml = "<Test><data>\(base64)</data></Test>"
         testDecodeEncode(type: Test.self, xml: xml)
+    }
+    
+    func testAttributeDecode() {
+        struct Test: Codable {
+            let type: String
+        }
+        let xml = "<Test type=\"Hello\" />"
+        let value = testDecode(type: Test.self, xml: xml)
+        XCTAssertEqual(value?.type, "Hello")
+    }
+    
+    func testEnumAttributeDecode() {
+        enum Answer: String, Codable {
+            case yes
+            case no
+        }
+        struct Test: Codable {
+          //  static let _members = [AWSShapeMember(label: "type", required: true, type: .map, encoding:.attribute)]
+            let type: Answer
+        }
+        let xml = "<Test type=\"yes\" />"
+        let value = testDecode(type: Test.self, xml: xml)
+        XCTAssertEqual(value?.type, .yes)
     }
     
     func testUrlDecodeEncode() {

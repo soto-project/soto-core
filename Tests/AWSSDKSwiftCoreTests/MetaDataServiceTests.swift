@@ -4,10 +4,8 @@
 //
 //  Created by Jonathan McAllister on 2017/12/29.
 //
-#if os(Linux)
 
-import Foundation
-import NIO
+#if os(Linux)
 import XCTest
 @testable import AWSSDKSwiftCore
 
@@ -78,7 +76,7 @@ class MetaDataServiceTests: XCTestCase {
         return
     }*/
   }
-    
+
     /*func testMetaDataServiceOnEC2Instance() {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         defer {

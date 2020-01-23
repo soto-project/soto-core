@@ -5,7 +5,6 @@
 //  Created by Adam Fowler 2019/08/22
 //
 
-import Foundation
 import XCTest
 @testable import AWSSDKSwiftCore
 

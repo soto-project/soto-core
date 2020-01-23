@@ -6,8 +6,6 @@
 //
 //
 
-import Foundation
-
 #if canImport(CAWSSDKOpenSSL)
 
 import CAWSSDKOpenSSL

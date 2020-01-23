@@ -6,9 +6,11 @@
 //
 //
 
-import Foundation
 import NIO
 import NIOHTTP1
+import struct Foundation.URL
+import struct Foundation.Date
+import struct Foundation.Data
 
 /// Object encapsulating all the information needed to generate a raw HTTP request to AWS
 public struct AWSRequest {

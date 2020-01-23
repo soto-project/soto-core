@@ -7,10 +7,17 @@
 //
 
 import HypertextApplicationLanguage
-import Foundation
 import NIO
 import NIOHTTP1
 import NIOTransportServices
+import class  Foundation.ProcessInfo
+import class  Foundation.JSONSerialization
+import struct Foundation.Data
+import struct Foundation.Date
+import struct Foundation.URL
+import struct Foundation.URLComponents
+import struct Foundation.URLQueryItem
+import struct Foundation.CharacterSet
 
 /// Convenience shorthand for `EventLoopFuture`.
 @available(*, deprecated, message: "Use the EventLoopFuture directly")

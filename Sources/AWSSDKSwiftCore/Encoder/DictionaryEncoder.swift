@@ -14,7 +14,25 @@
 // https://github.com/apple/swift/blob/2771eb520c4e3058058baf6bb3f6dba6184a17d3/stdlib/public/Darwin/Foundation/JSONEncoder.swift
 
 import CoreFoundation
-import Foundation
+import struct Foundation.Date
+import class  Foundation.DateFormatter
+import struct Foundation.Data
+import struct Foundation.CharacterSet
+import struct Foundation.URL
+import struct Foundation.Decimal
+import class  Foundation.ISO8601DateFormatter
+
+import class  Foundation.NSObject
+import class  Foundation.NSMutableDictionary
+import class  Foundation.NSMutableArray
+import class  Foundation.NSNull
+import class  Foundation.NSNumber
+import class  Foundation.NSString
+import class  Foundation.NSData
+import class  Foundation.NSDictionary
+import class  Foundation.NSDecimalNumber
+import class  Foundation.NSURL
+import class  Foundation.NSDate
 
 /// A marker protocol used to determine whether a value is a `String`-keyed `Dictionary`
 /// containing `Encodable` values (in which case it should be exempt from key conversion strategies).

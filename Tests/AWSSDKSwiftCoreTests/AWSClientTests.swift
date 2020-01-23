@@ -6,10 +6,9 @@
 //
 //
 
-import Foundation
-import NIOHTTP1
 import XCTest
 import NIO
+import NIOHTTP1
 @testable import AWSSDKSwiftCore
 
 class AWSClientTests: XCTestCase {

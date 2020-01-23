@@ -6,8 +6,10 @@
 //
 //
 
-import Foundation
 import INIParser
+import struct Foundation.Date
+import class  Foundation.ProcessInfo
+import class  Foundation.NSString
 
 /// Protocol defining requirements for object providing AWS credentials
 public protocol CredentialProvider {

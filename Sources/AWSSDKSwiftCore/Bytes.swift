@@ -6,8 +6,6 @@
 //
 //
 
-import Foundation
-
 extension UInt8 {
     public func hexdigest() -> String {
         return String(format: "%02x", self)

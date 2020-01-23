@@ -6,8 +6,16 @@
 //
 //
 
-import Foundation
 import NIO
+import struct Foundation.Data
+import struct Foundation.Date
+import struct Foundation.URL
+import struct Foundation.Locale
+import class  Foundation.DateFormatter
+import struct Foundation.TimeZone
+import struct Foundation.URLQueryItem
+import struct Foundation.URLComponents
+import enum   Foundation.ComparisonResult
 
 extension Signers {
     /// AWS V4 Signing code

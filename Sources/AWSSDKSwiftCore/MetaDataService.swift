@@ -7,10 +7,18 @@
 //
 
 #if os(Linux)
-
-import Foundation
 import NIO
 import NIOHTTP1
+
+import struct Foundation.Data
+import struct Foundation.URL
+import class  Foundation.DateFormatter
+import struct Foundation.Date
+import struct Foundation.TimeInterval
+import struct Foundation.TimeZone
+import struct Foundation.Locale
+import class  Foundation.JSONDecoder
+import class  Foundation.ProcessInfo
 
 /// errors returned by metadata service
 enum MetaDataServiceError: Error {

@@ -6,9 +6,8 @@
 //
 //
 
-import Foundation
-import NIOHTTP1
 import XCTest
+import NIOHTTP1
 @testable import AWSSDKSwiftCore
 
 struct HeaderRequest: AWSShape {

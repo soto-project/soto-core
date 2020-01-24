@@ -7,17 +7,31 @@
 
 #if os(Linux)
 import XCTest
+import NIO
 @testable import AWSSDKSwiftCore
 
 class MetaDataServiceTests: XCTestCase {
-  static var allTests : [(String, (MetaDataServiceTests) -> () throws -> Void)] {
-      return [
-        ("testMetaDataServiceForECSCredentials", testMetaDataServiceForECSCredentials),
-        ("testMetaDataServiceForInstanceProfileCredentials", testMetaDataServiceForInstanceProfileCredentials)
-      ]
-  }
+    static var allTests : [(String, (MetaDataServiceTests) -> () throws -> Void)] {
+        return [
+            ("testMetaDataServiceForECSCredentials", testMetaDataServiceForECSCredentials),
+            ("testMetaDataServiceForInstanceProfileCredentials", testMetaDataServiceForInstanceProfileCredentials),
+            ("testMetaDataGetCredential", testMetaDataGetCredential)
+        ]
+    }
 
-  func testMetaDataServiceForECSCredentials() {
+    // Disabling cannot guarantee that 169.254.169.254 is not a valid IP on another network
+    func testMetaDataGetCredential() {
+        if ProcessInfo.processInfo.environment["TEST_EC2_METADATA"] != nil {
+            do {
+                let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+                _ = try MetaDataService.getCredential(eventLoopGroup: group).wait()
+            } catch {
+                XCTFail("Unexpected error: \(error)")
+            }
+        }
+    }
+    
+    func testMetaDataServiceForECSCredentials() {
 /*    MetaDataService.containerCredentialsUri = "/v2/credentials/5275a487-9ff6-49b7-b50c-b64850f99999"
 
     do {
@@ -76,6 +90,19 @@ class MetaDataServiceTests: XCTestCase {
         return
     }*/
   }
+
+    /*func testMetaDataServiceOnEC2Instance() {
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        defer {
+            try? eventLoopGroup.syncShutdownGracefully()
+        }
+        do {
+            let result = try InstanceMetaDataServiceProvider().getCredential(eventLoopGroup: eventLoopGroup).wait()
+            print(result)
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }*/
 }
 
 #endif // os(Linux)

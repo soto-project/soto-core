@@ -24,6 +24,7 @@ import class  Foundation.ProcessInfo
 enum MetaDataServiceError: Error {
     case missingRequiredParam(String)
     case couldNotGetInstanceRoleName
+    case couldNotGetInstanceMetadata
 }
 
 /// Object managing accessing of AWS credentials from various sources
@@ -55,12 +56,14 @@ protocol MetaDataServiceProvider {
 extension MetaDataServiceProvider {
 
     /// make HTTP request
-    func request(uri: String, timeout: TimeInterval, eventLoopGroup: EventLoopGroup) -> EventLoopFuture<HTTPClient.Response> {
+    func request(uri: String, method: HTTPMethod = .GET, headers: [String:String] = [:], timeout: TimeInterval, eventLoopGroup: EventLoopGroup) -> EventLoopFuture<HTTPClient.Response> {
         let client = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
+        let httpHeaders = HTTPHeaders(headers.map { ($0, $1) })
         let head = HTTPRequestHead(
                      version: HTTPVersion(major: 1, minor: 1),
-                     method: .GET,
-                     uri: uri
+                     method: method,
+                     uri: uri,
+                     headers: httpHeaders
                    )
         let request = HTTPClient.Request(head: head, body: Data())
         let futureResponse = client.connect(request)
@@ -180,33 +183,58 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
 
     typealias MetaData = InstanceMetaData
 
+    static let instanceMetadataApiTokenUri = "/latest/api/token"
     static let instanceMetadataUri = "/latest/meta-data/iam/security-credentials/"
     static var host = "169.254.169.254"
+    static var apiTokenURL: String {
+        return "http://\(host)\(instanceMetadataApiTokenUri)"
+    }
     static var baseURLString: String {
         return "http://\(host)\(instanceMetadataUri)"
     }
 
-    func uri(eventLoopGroup: EventLoopGroup) -> EventLoopFuture<String> {
-        // instance service expects absoluteString as uri...
-        return request(uri:InstanceMetaDataServiceProvider.baseURLString, timeout: 2, eventLoopGroup: eventLoopGroup)
-            .flatMapThrowing{ response in
-                switch response.head.status {
-                case .ok:
-                    let roleName = String(data: response.body, encoding: .utf8) ?? ""
-                    return "\(InstanceMetaDataServiceProvider.baseURLString)/\(roleName)"
-                default:
-                    throw MetaDataServiceError.couldNotGetInstanceRoleName
-                }
-        }
-    }
-
     func getCredential(eventLoopGroup: EventLoopGroup) -> EventLoopFuture<CredentialProvider> {
-        return uri(eventLoopGroup: eventLoopGroup)
-            .flatMap { uri in
-                return self.request(uri: uri, timeout: 2, eventLoopGroup: eventLoopGroup)
+        //  no point storing the session key as the credentials last as long
+        var sessionTokenHeader: [String: String] = [:]
+        // instance service expects absoluteString as uri...
+        return request(
+            uri:InstanceMetaDataServiceProvider.apiTokenURL,
+            method: .PUT,
+            headers:["X-aws-ec2-metadata-token-ttl-seconds":"21600"],
+            timeout: 2,
+            eventLoopGroup: eventLoopGroup
+        ).flatMapThrowing { response in
+            // extract session key from response.
+            if response.head.status == .ok,
+                let token = String(data: response.body, encoding: .utf8) {
+                sessionTokenHeader = ["X-aws-ec2-metadata-token":token]
             }
-            .map { response in
-                return self.decodeCredential(response.body)
+        }.flatMapError { error in
+            // If we didn't find a session key then assume we are running IMDSv1 (we could be running from a Docker container
+            // and the hop count for the PUT request is still set to 1)
+            return eventLoopGroup.next().makeSucceededFuture(())
+        }.flatMap { _ in
+            // request rolename
+            return self.request(
+                uri:InstanceMetaDataServiceProvider.baseURLString,
+                headers:sessionTokenHeader,
+                timeout: 2,
+                eventLoopGroup: eventLoopGroup
+            )
+        }.flatMapThrowing { response in
+            // extract rolename
+            guard response.head.status == .ok,
+                let roleName = String(data: response.body, encoding: .utf8) else {
+                    throw MetaDataServiceError.couldNotGetInstanceRoleName
+            }
+            return "\(InstanceMetaDataServiceProvider.baseURLString)/\(roleName)"
+        }.flatMap { uri in
+            // request credentials
+            return self.request(uri: uri, headers:sessionTokenHeader, timeout: 2, eventLoopGroup: eventLoopGroup)
+        }.flatMapThrowing { response in
+            // decode credentials
+            guard response.head.status == .ok else { throw MetaDataServiceError.couldNotGetInstanceMetadata }
+            return self.decodeCredential(response.body)
         }
     }
 }

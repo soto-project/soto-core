@@ -42,19 +42,16 @@ public extension AWSClient {
 
         func paginatePart(input: Input) {
             let responseFuture = command(input)
-            responseFuture.whenSuccess { (response: Output)->Void in
-                let onPageFuture = onPage(response, eventLoop)
-                onPageFuture.whenSuccess { rt in
-                    guard rt == true else { return promise.succeed(Void()) }
-                    // get next block token and construct a new input with this token
-                    guard let token = response[keyPath: tokenKey] else { return promise.succeed(Void()) }
+                .flatMap { response in
+                    return onPage(response, eventLoop)
+                        .map { (rt)->Void in
+                            guard rt == true else { return promise.succeed(Void()) }
+                            // get next block token and construct a new input with this token
+                            guard let token = response[keyPath: tokenKey] else { return promise.succeed(Void()) }
 
-                    let input = input.usingPaginationToken(token)
-                    paginatePart(input: input)
-                }
-                onPageFuture.whenFailure { error in
-                    promise.fail(error)
-                }
+                            let input = input.usingPaginationToken(token)
+                            paginatePart(input: input)
+                    }
             }
             responseFuture.whenFailure { error in
                 promise.fail(error)
@@ -89,19 +86,16 @@ public extension AWSClient {
 
         func paginatePart(input: Input) {
             let responseFuture = command(input)
-            responseFuture.whenSuccess { (response: Output)->Void in
-                let onPageFuture = onPage(response, eventLoop)
-                onPageFuture.whenSuccess { rt in
-                    guard rt == true else { return promise.succeed(Void()) }
-                    // get next block token and construct a new input with this token
-                    guard let token = response[keyPath: tokenKey] else { return promise.succeed(Void()) }
+                .flatMap { response in
+                    return onPage(response, eventLoop)
+                        .map { (rt)->Void in
+                            guard rt == true else { return promise.succeed(Void()) }
+                            // get next block token and construct a new input with this token
+                            guard let token = response[keyPath: tokenKey] else { return promise.succeed(Void()) }
 
-                    let input = input.usingPaginationToken(token)
-                    paginatePart(input: input)
-                }
-                onPageFuture.whenFailure { error in
-                    promise.fail(error)
-                }
+                            let input = input.usingPaginationToken(token)
+                            paginatePart(input: input)
+                    }
             }
             responseFuture.whenFailure { error in
                 promise.fail(error)

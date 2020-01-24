@@ -6,10 +6,9 @@
 //
 //
 
-import Foundation
-import NIOHTTP1
 import XCTest
 import NIO
+import NIOHTTP1
 @testable import AWSSDKSwiftCore
 
 class AWSClientTests: XCTestCase {
@@ -27,6 +26,7 @@ class AWSClientTests: XCTestCase {
             ("testValidateJSONPayloadResponse", testValidateJSONPayloadResponse),
             ("testValidateJSONError", testValidateJSONError),
             ("testProcessHAL", testProcessHAL),
+            ("testDataInJsonPayload", testDataInJsonPayload)
         ]
     }
 
@@ -77,7 +77,7 @@ class AWSClientTests: XCTestCase {
     func testGetCredential() {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
-        
+
         let sesClient = AWSClient(
             accessKeyId: "key",
             secretAccessKey: "secret",
@@ -160,7 +160,7 @@ class AWSClientTests: XCTestCase {
     func testCreateAWSRequest() {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
-      
+
         let input1 = C()
         let input2 = E()
         let input3 = F(fooParams: input2)
@@ -286,10 +286,42 @@ class AWSClientTests: XCTestCase {
         }
     }
 
+    func testCreateAwsRequestWithKeywordInHeader() {
+        struct KeywordRequest: AWSShape {
+            static var _members: [AWSShapeMember] = [
+                AWSShapeMember(label: "repeat", location: .header(locationName: "repeat"), required: true, type: .string),
+            ]
+            let `repeat`: String
+        }
+        do {
+            let request = KeywordRequest(repeat: "Repeat")
+            let awsRequest = try s3Client.createAWSRequest(operation: "Keyword", path: "/", httpMethod: "POST", input: request)
+            XCTAssertEqual(awsRequest.httpHeaders["repeat"] as? String, "Repeat")
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+
+    func testCreateAwsRequestWithKeywordInQuery() {
+        struct KeywordRequest: AWSShape {
+            static var _members: [AWSShapeMember] = [
+                AWSShapeMember(label: "self", location: .querystring(locationName: "self"), required: true, type: .string),
+            ]
+            let `self`: String
+        }
+        do {
+            let request = KeywordRequest(self: "KeywordRequest")
+            let awsRequest = try s3Client.createAWSRequest(operation: "Keyword", path: "/", httpMethod: "POST", input: request)
+            XCTAssertEqual(awsRequest.url, URL(string:"https://s3.amazonaws.com/?self=KeywordRequest")!)
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+
     func testCreateNIORequest() {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
-      
+
         let input2 = E()
 
         let kinesisClient = AWSClient(
@@ -476,7 +508,7 @@ class AWSClientTests: XCTestCase {
             XCTFail("Throwing the wrong error")
         }
     }
-    
+
     func testProcessHAL() {
         class Output : AWSShape {
             public static var _members: [AWSShapeMember] = [
@@ -511,6 +543,30 @@ class AWSClientTests: XCTestCase {
             XCTAssertEqual(output.a.count, 2)
             XCTAssertEqual(output.d, 3.14)
             XCTAssertEqual(output.a[1].s, "Hello2")
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+
+    func testDataInJsonPayload() {
+        struct DataContainer: AWSShape {
+            let data: Data
+        }
+        struct J: AWSShape {
+            public static let payloadPath: String? = "dataContainer"
+            public static var _members: [AWSShapeMember] = [
+                AWSShapeMember(label: "dataContainer", required: false, type: .structure),
+            ]
+            let dataContainer: DataContainer
+        }
+        let input = J(dataContainer: DataContainer(data: Data("test data".utf8)))
+        do {
+            _ = try kinesisClient.createAWSRequest(
+                operation: "PutRecord",
+                path: "/",
+                httpMethod: "POST",
+                input: input
+            )
         } catch {
             XCTFail(error.localizedDescription)
         }

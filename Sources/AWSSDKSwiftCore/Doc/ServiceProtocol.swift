@@ -6,8 +6,6 @@
 //
 //
 
-import Foundation
-
 public enum ServiceProtocolType {
     case json
     case restjson

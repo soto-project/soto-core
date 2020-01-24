@@ -5,7 +5,6 @@
 //  Created by Yuki Takei on 2017/10/08.
 //
 
-import Foundation
 import XCTest
 @testable import AWSSDKSwiftCore
 
@@ -180,15 +179,15 @@ class DictionaryEncoderTests: XCTestCase {
         struct Test : Codable {
             let data : Data
         }
-        let dictionary: [String:Any] = ["data":"Hello, world".data(using:.utf8)!]
+        let dictionary: [String:Any] = ["data":"Hello, world".data(using:.utf8)!.base64EncodedString()]
         testDecodeEncode(type: Test.self, dictionary: dictionary)
         
         let decoder = DictionaryDecoder()
-        decoder.dataDecodingStrategy = .base64
+        decoder.dataDecodingStrategy = .raw
         let encoder = DictionaryEncoder()
-        encoder.dataEncodingStrategy = .base64
-        
-        let dictionary2: [String:Any] = ["data":"Hello, world".data(using:.utf8)!.base64EncodedString()]
+        encoder.dataEncodingStrategy = .raw
+
+        let dictionary2: [String:Any] = ["data":"Hello, world".data(using:.utf8)!]
         testDecodeEncode(type: Test.self, dictionary: dictionary2, decoder: decoder, encoder: encoder)
     }
     
@@ -343,7 +342,7 @@ class DictionaryEncoderTests: XCTestCase {
                     "double": Double.greatestFiniteMagnitude,
                     "float": Float.greatestFiniteMagnitude,
                     "string": "hello",
-                    "data": "hello".data(using: .utf8)!,
+                    "data": "hello".data(using: .utf8)!.base64EncodedString(),
                     "bool": true,
                     "optional": "hello"
                 ],
@@ -441,7 +440,7 @@ class DictionaryEncoderTests: XCTestCase {
             XCTAssertEqual(b!["double"] as? Double, 0.5)
             XCTAssertEqual(b!["float"] as? Float, 0.6)
             XCTAssertEqual(b!["string"] as? String, "string")
-            let data = b!["data"] as? Data
+            let data = Data(base64Encoded: b!["data"] as! String)
             XCTAssertNotNil(data)
             XCTAssertEqual(String(data: data!, encoding: .utf8), "hello")
             XCTAssertEqual(b!["optional"] as? String, "goodbye")

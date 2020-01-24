@@ -6,7 +6,10 @@
 //
 //
 
-import Foundation
+import NIO
+import struct Foundation.Data
+import class  Foundation.InputStream
+import class  Foundation.JSONSerialization
 
 /// Enumaration used to store request/response body in various forms
 public enum Body {

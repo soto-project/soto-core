@@ -6,9 +6,11 @@
 //
 //
 
-import Foundation
-import NIOHTTP1
 import XCTest
+import NIO
+import NIOHTTP1
+import NIOTransportServices
+
 @testable import AWSSDKSwiftCore
 
 class HTTPClientTests: XCTestCase {

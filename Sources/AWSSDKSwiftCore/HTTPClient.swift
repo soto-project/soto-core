@@ -10,12 +10,13 @@
 // https://github.com/swift-server/swift-nio-http-client
 //
 
-import Foundation
 import NIO
 import NIOConcurrencyHelpers
 import NIOFoundationCompat
 import NIOHTTP1
 import NIOSSL
+import struct Foundation.Data
+import struct Foundation.URL
 #if canImport(Network)
 import Network
 import NIOTransportServices
@@ -53,7 +54,7 @@ public final class HTTPClient {
     }
 
     /// has HTTPClient been shutdown
-    let isShutdown = Atomic<Bool>(value: false)
+    let isShutdown = NIOAtomic<Bool>.makeAtomic(value: false)
 
     /// Initialise HTTPClient
     public init(eventLoopGroupProvider: EventLoopGroupProvider = .createNew) {

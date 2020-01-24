@@ -4,9 +4,8 @@
 //
 //  Created by Jonathan McAllister on 2017/12/29.
 //
-#if os(Linux)
 
-import Foundation
+#if os(Linux)
 import XCTest
 @testable import AWSSDKSwiftCore
 

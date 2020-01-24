@@ -1,4 +1,4 @@
-name: Swift
+name: CI
 
 on: 
   push:
@@ -6,7 +6,7 @@ on:
     - "*"
   pull_request:
     branches: 
-    - master
+    - "*"
 
 jobs:
   macos:

@@ -5,7 +5,10 @@
 //  Created by Yuki Takei/Adam Fowler on 2017/10/09.
 //
 
-import Foundation
+import class  Foundation.DateFormatter
+import struct Foundation.Locale
+import struct Foundation.Date
+import struct Foundation.TimeZone
 
 /// Time stamp object that can encoded to ISO8601 format and decoded from ISO8601, HTTP date format and UNIX epoch seconds
 public struct TimeStamp {
@@ -43,7 +46,9 @@ public struct TimeStamp {
     }
     
     /// date formatter for outputting dates
-    private static var defaultDateFormatter : DateFormatter {
+    private static let defaultDateFormatter : DateFormatter = createDefaultDateFormatter()
+
+    static func createDefaultDateFormatter() -> DateFormatter {
         let dateFormatter = DateFormatter()
         dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"

@@ -6,12 +6,20 @@
 //
 //
 
-import Foundation
 import NIO
 import NIOHTTP1
 import NIOTransportServices
+import class  Foundation.ProcessInfo
+import class  Foundation.JSONSerialization
+import struct Foundation.Data
+import struct Foundation.Date
+import struct Foundation.URL
+import struct Foundation.URLComponents
+import struct Foundation.URLQueryItem
+import struct Foundation.CharacterSet
 
 /// Convenience shorthand for `EventLoopFuture`.
+@available(*, deprecated, message: "Use the EventLoopFuture directly")
 public typealias Future = EventLoopFuture
 
 /// This is the workhorse of aws-sdk-swift-core. You provide it with a `AWSShape` Input object, it converts it to `AWSRequest` which is then converted to a raw `HTTPClient` Request. This is then sent to AWS. When the response from AWS is received if it is successful it is converted to a `AWSResponse` which is then decoded to generate a `AWSShape` Output object. If it is not successful then `AWSClient` will throw an `AWSErrorType`.
@@ -146,7 +154,7 @@ public class AWSClient {
 }
 // invoker
 extension AWSClient {
-    fileprivate func invoke(_ nioRequest: HTTPClient.Request) -> Future<HTTPClient.Response> {
+    fileprivate func invoke(_ nioRequest: HTTPClient.Request) -> EventLoopFuture<HTTPClient.Response> {
         let client = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
         let futureResponse = client.connect(nioRequest)
 
@@ -173,7 +181,7 @@ extension AWSClient {
     ///     - input: Input object
     /// - returns:
     ///     Empty Future that completes when response is received
-    public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> Future<Void> {
+    public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> EventLoopFuture<Void> {
 
         return signer.manageCredential(eventLoopGroup: eventLoopGroup).flatMapThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
@@ -197,7 +205,7 @@ extension AWSClient {
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
     /// - returns:
     ///     Empty Future that completes when response is received
-    public func send(operation operationName: String, path: String, httpMethod: String) -> Future<Void> {
+    public func send(operation operationName: String, path: String, httpMethod: String) -> EventLoopFuture<Void> {
 
         return signer.manageCredential(eventLoopGroup: eventLoopGroup).flatMapThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
@@ -220,7 +228,7 @@ extension AWSClient {
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
     /// - returns:
     ///     Future containing output object that completes when response is received
-    public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) -> Future<Output> {
+    public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) -> EventLoopFuture<Output> {
 
         return signer.manageCredential(eventLoopGroup: eventLoopGroup).flatMapThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
@@ -244,7 +252,7 @@ extension AWSClient {
     ///     - input: Input object
     /// - returns:
     ///     Future containing output object that completes when response is received
-    public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> Future<Output> {
+    public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> EventLoopFuture<Output> {
 
             return signer.manageCredential(eventLoopGroup: eventLoopGroup).flatMapThrowing { _ in
                     let awsRequest = try self.createAWSRequest(
@@ -336,7 +344,7 @@ extension AWSClient {
                 return try createNIORequestWithSignedHeader(awsRequest)
             }
             return try createNIORequestWithSignedURL(awsRequest)
-            
+
         default:
             return try createNIORequestWithSignedHeader(awsRequest)
         }
@@ -419,7 +427,6 @@ extension AWSClient {
                     default:
                         body = Body(anyValue: payloadBody)
                     }
-                    headers.removeValue(forKey: payload.toSwiftVariableCase())
                 } else {
                     body = .empty
                 }
@@ -462,7 +469,6 @@ extension AWSClient {
                     default:
                         body = Body(anyValue: payloadBody)
                     }
-                    headers.removeValue(forKey: payload.toSwiftVariableCase())
                 } else {
                     body = .empty
                 }
@@ -588,7 +594,6 @@ extension AWSClient {
             if let payloadPath = Output.payloadPath {
                 outputDict = [payloadPath : outputDict]
             }
-            decoder.dataDecodingStrategy = .base64
 
         case .xml(let node):
             var outputNode = node
@@ -619,6 +624,7 @@ extension AWSClient {
             if let payload = Output.payloadPath {
                 outputDict[payload] = data
             }
+            decoder.dataDecodingStrategy = .raw
 
         case .text(let text):
             if let payload = Output.payloadPath {

@@ -1,0 +1,17 @@
+# run this with docker-compose -f docker/docker-compose.yml run test
+version: "3.3"
+
+services:
+  common: &common
+    build: .
+    volumes:
+      - ..:/working
+    working_dir: /working
+
+  test:
+    <<: *common
+    command: /bin/bash -xcl "swift test"
+
+  shell:
+    <<: *common
+    entrypoint: /bin/bash

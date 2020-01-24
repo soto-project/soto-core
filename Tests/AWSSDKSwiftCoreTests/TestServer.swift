@@ -21,6 +21,7 @@ class AWSTestServer {
     }
     // what are we returning
     enum ServiceProtocol {
+        case restjson
         case json
         case xml
     }
@@ -53,102 +54,47 @@ class AWSTestServer {
         self.byteBufferAllocator = ByteBufferAllocator()
     }
     
+    /// run server reading request, convert from to an input shape processing them and converting the result back to a response.
     func process<Input: AWSShape, Output: AWSShape>(_ process: (Input) throws -> Result<Output>) throws {
-        var continueProcessing =  true
-        while(continueProcessing) {
-            // read inbound
-            let head = try web.readInbound()
-            guard case .head(_) = head else {throw Error.notHead}
-            let body = try web.readInbound()
-            guard case .body(let buffer) = body else {throw Error.notBody}
-            let end = try web.readInbound()
-            guard case .end(_) = end else {throw Error.notEnd}
-            guard let data = buffer.getData(at: 0, length: buffer.readableBytes) else {throw Error.emptyBody}
-            
-            let input: Input
-            switch serviceProtocol {
-            case .json:
-                input = try JSONDecoder().decode(Input.self, from: data)
-            case .xml:
-                guard let xmlNode = try XML.Document(data: data).rootElement() else {throw Error.noXMLBody}
-                input = try XMLDecoder().decode(Input.self, from: xmlNode)
-            }
-            
-            // process
-            let result = try process(input)
-            
-            continueProcessing = result.continueProcessing
-            
-            // write outbound
-            let outputData: Data
-            switch serviceProtocol {
-            case .json:
-                outputData = try JSONEncoder().encode(result.output)
-            case .xml:
-                outputData = try XMLEncoder().encode(result.output).xmlString.data(using: .utf8) ?? Data()
-            }
-
-            var byteBuffer = byteBufferAllocator.buffer(capacity: 0)
-            byteBuffer.writeBytes(outputData)
-            XCTAssertNoThrow(try web.writeOutbound(.head(.init(version: .init(major: 1, minor: 1),
-                                                               status: .ok))))
-            XCTAssertNoThrow(try web.writeOutbound(.body(.byteBuffer(byteBuffer))))
-            XCTAssertNoThrow(try web.writeOutbound(.end(nil)))
-        }
+        while(try processSingleRequest(process)) { }
     }
     
+    /// run server reading request, convert from to an input shape processing them and converting the result back to a response. Return an error after so many requests
+    func ProcessWithErrors<Input: AWSShape, Output: AWSShape>(_ process: (Input) throws -> Result<Output>, error: ErrorType, errorAfter: Int) throws {
+        var count = errorAfter
+        repeat {
+            if count == 0 {
+                _ = try readRequest()
+                try writeError(error)
+                return
+            }
+            count -= 1
+        } while(try processSingleRequest(process))
+    }
+
+    /// run server reading requests, processing them and returning responses
     func process(_ process: (Request) throws -> Result<Response>) throws {
-        var continueProcessing =  true
-        while(continueProcessing) {
-            // read inbound
-            guard case .head(let head) = try web.readInbound() else {throw Error.notHead}
-            guard case .body(let buffer) = try web.readInbound() else {throw Error.notBody}
-            guard case .end(_) = try web.readInbound() else {throw Error.notEnd}
-            
-            var requestHeaders: [String: String] = [:]
-            for (key, value) in head.headers {
-                requestHeaders[key.description] = value
-            }
-
-            let request = Request(headers: requestHeaders, body: buffer)
-            
-            // process
-            let result = try process(request)
-            
-            continueProcessing = result.continueProcessing
-            
-            XCTAssertNoThrow(try web.writeOutbound(.head(.init(version: .init(major: 1, minor: 1),
-                                                               status: result.output.httpStatus,
-                                                               headers: HTTPHeaders(result.output.headers.map { ($0,$1) })))))
-            XCTAssertNoThrow(try web.writeOutbound(.body(.byteBuffer(result.output.body))))
-            XCTAssertNoThrow(try web.writeOutbound(.end(nil)))
-        }
+        while(try processSingleRequest(process)) { }
     }
     
-    func echo() throws {
-        var byteBuffers: [ByteBuffer] = []
-        // read inbound
-        guard case .head(let head) = try web.readInbound() else {throw Error.notHead}
-        // read body
-        while(true) {
-            let inbound = try web.readInbound()
-            if case .body(let buffer) = inbound {
-                byteBuffers.append(buffer)
-            } else if case .end(_) = inbound {
-                break
-            } else {
-                throw Error.notEnd
+    /// run server reading requests, processing them and returning responses. Return an error after so many requests
+    func ProcessWithErrors(_ process: (Request) throws -> Result<Response>, error: ErrorType, errorAfter: Int) throws {
+        var count = errorAfter
+        repeat {
+            if count == 0 {
+                _ = try readRequest()
+                try writeError(error)
+                return
             }
-        }
-        
-        // write outbound
-        XCTAssertNoThrow(try web.writeOutbound(.head(.init(version: head.version,
-                                                           status: .ok,
-                                                           headers: head.headers))))
-        try byteBuffers.forEach {
-            XCTAssertNoThrow(try web.writeOutbound(.body(.byteBuffer($0))))
-        }
-        XCTAssertNoThrow(try web.writeOutbound(.end(nil)))
+            count -= 1
+        } while(try processSingleRequest(process))
+    }
+    
+
+    /// read one request and return it back
+    func echo() throws {
+        let request = try readRequest()
+        try writeResponse(Response(httpStatus: .ok, headers: request.headers, body: request.body))
     }
     
     func stop() throws {
@@ -156,3 +102,112 @@ class AWSTestServer {
     }
 }
 
+// errors
+extension AWSTestServer {
+    struct ErrorType {
+        let status: Int
+        let errorCode: String
+        let message: String
+        
+        var json: String { return "{\"__type\":\"\(errorCode)\", \"message\": \"\(message)\"}"}
+        var xml: String { return "<Error><Code>\(errorCode)</Code><Message>\(message)</Message></Error>"}
+    }
+}
+
+extension AWSTestServer {
+    /// read one request, process it then return the respons
+    func processSingleRequest(_ process: (Request) throws -> Result<Response>) throws -> Bool {
+        let request = try readRequest()
+        let result = try process(request)
+        try writeResponse(result.output)
+
+        return result.continueProcessing
+    }
+
+    /// read one request, convert it from to an input shape, processing it and convert the result back to a response.
+    func processSingleRequest<Input: AWSShape, Output: AWSShape>(_ process: (Input) throws -> Result<Output>) throws -> Bool {
+        let request = try readRequest()
+
+        // Convert to Input AWSShape
+        guard let inputData = request.body.getData(at: 0, length: request.body.readableBytes) else {throw Error.emptyBody}
+        let input: Input
+        switch serviceProtocol {
+        case .json, .restjson:
+            input = try JSONDecoder().decode(Input.self, from: inputData)
+        case .xml:
+            guard let xmlNode = try XML.Document(data: inputData).rootElement() else {throw Error.noXMLBody}
+            input = try XMLDecoder().decode(Input.self, from: xmlNode)
+        }
+        
+        // process
+        let result = try process(input)
+        
+        // Convert to Output AWSShape
+        let outputData: Data
+        switch serviceProtocol {
+        case .json, .restjson:
+            outputData = try JSONEncoder().encode(result.output)
+        case .xml:
+            outputData = try XMLEncoder().encode(result.output).xmlString.data(using: .utf8) ?? Data()
+        }
+        var byteBuffer = byteBufferAllocator.buffer(capacity: 0)
+        byteBuffer.writeBytes(outputData)
+        
+        try writeResponse(Response(httpStatus: .ok, headers: [:], body: byteBuffer))
+
+        return result.continueProcessing
+    }
+    
+    /// read inbound request
+    func readRequest() throws -> Request {
+        var byteBuffer = byteBufferAllocator.buffer(capacity: 0)
+        
+        // read inbound
+        guard case .head(let head) = try web.readInbound() else {throw Error.notHead}
+        // read body
+        while(true) {
+            let inbound = try web.readInbound()
+            if case .body(var buffer) = inbound {
+                byteBuffer.writeBuffer(&buffer)
+            } else if case .end(_) = inbound {
+                break
+            } else {
+                throw Error.notEnd
+            }
+        }
+        var requestHeaders: [String: String] = [:]
+        for (key, value) in head.headers {
+            requestHeaders[key.description] = value
+        }
+        return Request(headers: requestHeaders, body: byteBuffer)
+    }
+    
+    /// write outbound response
+    func writeResponse(_ response: Response) throws {
+        XCTAssertNoThrow(try web.writeOutbound(.head(.init(version: .init(major: 1, minor: 1),
+                                                           status: response.httpStatus,
+                                                           headers: HTTPHeaders(response.headers.map { ($0,$1) })))))
+        XCTAssertNoThrow(try web.writeOutbound(.body(.byteBuffer(response.body))))
+        XCTAssertNoThrow(try web.writeOutbound(.end(nil)))
+    }
+    
+    /// write error
+    func writeError(_ error: ErrorType) throws {
+        let errorString: String
+        var headers: [String: String] = [:]
+        switch serviceProtocol {
+        case .json:
+            errorString = error.json
+        case .restjson:
+            errorString = error.json
+            headers["x-amzn-ErrorType"] = error.errorCode
+        case .xml:
+            errorString = error.xml
+        }
+        
+        var byteBuffer = byteBufferAllocator.buffer(capacity: 0)
+        byteBuffer.writeString(errorString)
+        
+        try writeResponse(Response(httpStatus: HTTPResponseStatus(statusCode:error.status), headers: headers, body: byteBuffer))
+    }
+}

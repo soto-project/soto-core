@@ -141,6 +141,31 @@ class PaginateTests: XCTestCase {
         return client.paginate(input: input, command: stringList, tokenKey: \StringListOutput.outputToken, onPage: onPage)
     }
     
+    // create list of unique strings
+    let stringList = Set("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.".split(separator: " ").map {String($0)}).map {$0}
+
+    func stringListServerProcess(_ input: StringListInput) throws -> AWSTestServer.Result<StringListOutput> {
+        // send part of array of numbers based on input startIndex and pageSize
+        var startIndex = 0
+        if let inputToken = input.inputToken {
+            guard let stringIndex = stringList.firstIndex(of:inputToken) else { throw Error.didntFindToken }
+            startIndex = stringIndex
+        }
+        let endIndex = min(startIndex+input.pageSize, stringList.count)
+        var array: [String] = []
+        for i in startIndex..<endIndex {
+            array.append(stringList[i])
+        }
+        var outputToken: String? = nil
+        var continueProcessing = false
+        if endIndex < stringList.count {
+            outputToken = stringList[endIndex]
+            continueProcessing = true
+        }
+        let output = StringListOutput(array: array, outputToken: outputToken)
+        return AWSTestServer.Result(output: output, continueProcessing: continueProcessing)
+    }
+    
     func testStringTokenPaginate() throws {
         
         // paginate input
@@ -152,32 +177,9 @@ class PaginateTests: XCTestCase {
             return eventloop.makeSucceededFuture(true)
         }
         
-        // create list of unique strings
-        let stringList = Set("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.".split(separator: " ").map {String($0)}).map {$0}
-        
         do {
             // aws server process
-            try awsServer.process { (input: StringListInput) throws -> AWSTestServer.Result<StringListOutput> in
-                // send part of array of numbers based on input startIndex and pageSize
-                var startIndex = 0
-                if let inputToken = input.inputToken {
-                    guard let stringIndex = stringList.firstIndex(of:inputToken) else { throw Error.didntFindToken }
-                    startIndex = stringIndex
-                }
-                let endIndex = min(startIndex+input.pageSize, stringList.count)
-                var array: [String] = []
-                for i in startIndex..<endIndex {
-                    array.append(stringList[i])
-                }
-                var outputToken: String? = nil
-                var continueProcessing = false
-                if endIndex < stringList.count {
-                    outputToken = stringList[endIndex]
-                    continueProcessing = true
-                }
-                let output = StringListOutput(array: array, outputToken: outputToken)
-                return AWSTestServer.Result(output: output, continueProcessing: continueProcessing)
-            }
+            try awsServer.process(stringListServerProcess)
 
             // wait for response
             try future.wait()
@@ -192,10 +194,58 @@ class PaginateTests: XCTestCase {
         }
     }
 
+    struct ErrorOutput: AWSShape {
+        let error: String
+    }
+
+    func testPaginateError() throws {
+        
+        // paginate input
+        let input = StringListInput(inputToken: nil, pageSize: 5)
+        let future = stringListPaginator(input) { _,eventloop in
+            return eventloop.makeSucceededFuture(true)
+        }
+        
+        do {
+            // aws server process
+            try awsServer.ProcessWithErrors(stringListServerProcess, error: AWSTestServer.ErrorType(status: 400, errorCode:"InvalidAction", message: "You didn't mean that"), errorAfter: 0)
+
+            // wait for response
+            try future.wait()
+            
+            XCTFail("testPaginateError: should have errored")
+        } catch {
+            print(error)
+        }
+    }
+
+    func testPaginateErrorAfterFirstRequest() throws {
+        
+        // paginate input
+        let input = StringListInput(inputToken: nil, pageSize: 5)
+        let future = stringListPaginator(input) { _,eventloop in
+            return eventloop.makeSucceededFuture(true)
+        }
+        
+        do {
+            // aws server process
+            try awsServer.ProcessWithErrors(stringListServerProcess, error: AWSTestServer.ErrorType(status: 400, errorCode:"InvalidAction", message: "You didn't mean that"), errorAfter: 1)
+
+            // wait for response
+            try future.wait()
+            
+            XCTFail("testPaginateError: should have errored")
+        } catch {
+            print(error)
+        }
+    }
+
     static var allTests : [(String, (PaginateTests) -> () throws -> Void)] {
         return [
             ("testIntegerTokenPaginate", testIntegerTokenPaginate),
             ("testStringTokenPaginate", testStringTokenPaginate),
+            ("testPaginateError", testPaginateError),
+            ("testPaginateErrorAfterFirstRequest", testPaginateErrorAfterFirstRequest),
         ]
     }
 }

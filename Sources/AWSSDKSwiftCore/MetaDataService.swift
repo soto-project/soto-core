@@ -23,7 +23,6 @@ import class  Foundation.ProcessInfo
 /// errors returned by metadata service
 enum MetaDataServiceError: Error {
     case missingRequiredParam(String)
-    case couldNotGetInstanceSessionKey
     case couldNotGetInstanceRoleName
     case couldNotGetInstanceMetadata
 }
@@ -196,33 +195,46 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
 
     func getCredential(eventLoopGroup: EventLoopGroup) -> EventLoopFuture<CredentialProvider> {
         //  no point storing the session key as the credentials last as long
-        var sessionToken: String = ""
+        var sessionTokenHeader: [String: String] = [:]
         // instance service expects absoluteString as uri...
-        return request(uri:InstanceMetaDataServiceProvider.apiTokenURL, method: .PUT, headers:["X-aws-ec2-metadata-token-ttl-seconds":"21600"], timeout: 2, eventLoopGroup: eventLoopGroup)
-            .flatMapThrowing { response in
-                // extract session key from response
-                guard response.head.status == .ok,
-                    let token = String(data: response.body, encoding: .utf8) else { throw MetaDataServiceError.couldNotGetInstanceSessionKey }
-                sessionToken = token
-                return token
+        return request(
+            uri:InstanceMetaDataServiceProvider.apiTokenURL,
+            method: .PUT,
+            headers:["X-aws-ec2-metadata-token-ttl-seconds":"21600"],
+            timeout: 2,
+            eventLoopGroup: eventLoopGroup
+        ).flatMapThrowing { response in
+            // extract session key from response.
+            if response.head.status == .ok,
+                let token = String(data: response.body, encoding: .utf8) {
+                sessionTokenHeader = ["X-aws-ec2-metadata-token":token]
             }
-            .flatMap { token in
-                // request rolename
-                return self.request(uri:InstanceMetaDataServiceProvider.baseURLString, headers:["X-aws-ec2-metadata-token":token], timeout: 2, eventLoopGroup: eventLoopGroup)
+        }.flatMapError { error in
+            // If we didn't find a session key then assume we are running IMDSv1 (we could be running from a Docker container
+            // and the hop count for the PUT request is still set to 1)
+            return eventLoopGroup.next().makeSucceededFuture(())
+        }.flatMap { _ in
+            // request rolename
+            return self.request(
+                uri:InstanceMetaDataServiceProvider.baseURLString,
+                headers:sessionTokenHeader,
+                timeout: 2,
+                eventLoopGroup: eventLoopGroup
+            )
+        }.flatMapThrowing { response in
+            // extract rolename
+            guard response.head.status == .ok,
+                let roleName = String(data: response.body, encoding: .utf8) else {
+                    throw MetaDataServiceError.couldNotGetInstanceRoleName
             }
-            .flatMapThrowing { response in
-                // extract rolename
-                guard response.head.status == .ok,
-                    let roleName = String(data: response.body, encoding: .utf8) else { throw MetaDataServiceError.couldNotGetInstanceRoleName }
-                return "\(InstanceMetaDataServiceProvider.baseURLString)/\(roleName)" }
-            .flatMap { uri in
-                // request credentials
-                return self.request(uri: uri, headers:["X-aws-ec2-metadata-token":sessionToken], timeout: 2, eventLoopGroup: eventLoopGroup)
-            }
-            .flatMapThrowing { response in
-                // decode credentials
-                guard response.head.status == .ok else { throw MetaDataServiceError.couldNotGetInstanceMetadata }
-                return self.decodeCredential(response.body)
+            return "\(InstanceMetaDataServiceProvider.baseURLString)/\(roleName)"
+        }.flatMap { uri in
+            // request credentials
+            return self.request(uri: uri, headers:sessionTokenHeader, timeout: 2, eventLoopGroup: eventLoopGroup)
+        }.flatMapThrowing { response in
+            // decode credentials
+            guard response.head.status == .ok else { throw MetaDataServiceError.couldNotGetInstanceMetadata }
+            return self.decodeCredential(response.body)
         }
     }
 }

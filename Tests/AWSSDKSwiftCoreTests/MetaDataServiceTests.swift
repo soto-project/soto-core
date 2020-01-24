@@ -26,8 +26,7 @@ class MetaDataServiceTests: XCTestCase {
                 let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
                 _ = try MetaDataService.getCredential(eventLoopGroup: group).wait()
             } catch {
-                print(error)
-                XCTFail()
+                XCTFail("Unexpected error: \(error)")
             }
         }
     }

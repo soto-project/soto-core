@@ -1,8 +1,8 @@
 //
-//  AWSClient.swift
-//  AWSSDKSwift
+//  PerformanceTests.swift
+//  AWSSDKSwiftCoreTests
 //
-//  Created by Jonathan McAllister on 2018/10/13.
+//  Created by Adam Fowler on 2018/10/13.
 //
 //
 

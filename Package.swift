@@ -26,7 +26,7 @@ let package = Package(
                 "NIOFoundationCompat",
                 "INIParser"
             ]),
-        .testTarget(name: "AWSSDKSwiftCoreTests", dependencies: ["AWSSDKSwiftCore"])
+        .testTarget(name: "AWSSDKSwiftCoreTests", dependencies: ["AWSSDKSwiftCore", "NIOTestUtils"])
     ]
 )
 

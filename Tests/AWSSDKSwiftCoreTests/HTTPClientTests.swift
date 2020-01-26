@@ -28,12 +28,22 @@ extension AWSHTTPResponse {
 @available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)
 class NIOTSHTTPClientTests: XCTestCase {
 
-    let client = NIOTSHTTPClient(eventLoopGroup: NIOTSEventLoopGroup())
-
-    deinit {
-        try? client.syncShutdown()
+    var eventLoopGroup: EventLoopGroup!
+    var awsServer: AWSTestServer!
+    var client: NIOTSHTTPClient!
+    
+    override func setUp() {
+        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        self.awsServer = AWSTestServer(serviceProtocol: .json, eventLoopGroup: self.eventLoopGroup)
+        self.client = NIOTSHTTPClient(eventLoopGroup: NIOTSEventLoopGroup())
     }
-
+    
+    override func tearDown() {
+        XCTAssertNoThrow(try self.awsServer.stop())
+        XCTAssertNoThrow(try self.client.syncShutdown())
+        XCTAssertNoThrow(try self.eventLoopGroup.syncShutdownGracefully())
+    }
+    
     func testInitWithInvalidURL() {
       do {
         let request = AWSHTTPRequest(url: URL(string:"no_protocol.com")!, method: .GET, headers: HTTPHeaders(), body: nil)
@@ -47,28 +57,11 @@ class NIOTSHTTPClientTests: XCTestCase {
       }
     }
 
-    func testInitWithValidRL() {
-        do {
-            let request = AWSHTTPRequest(url: URL(string:"https://kinesis.us-west-2.amazonaws.com/")!, method: .GET, headers: HTTPHeaders(), body: nil)
-            _ = try client.execute(request: request, timeout: .seconds(5)).wait()
-        } catch {
-            XCTFail("Should not throw malformedURL error")
-        }
-
-        do {
-            let request = AWSHTTPRequest(url: URL(string:"http://169.254.169.254/latest/meta-data/iam/security-credentials/")!, method: .GET, headers: HTTPHeaders(), body: nil)
-            _ = try client.execute(request: request, timeout: .seconds(5)).wait()
-        } catch NIOTSHTTPClient.HTTPError.malformedURL{
-            XCTFail("Should not throw malformedURL error")
-        } catch {
-        }
-    }
-
     func testConnectGet() {
         do {
-            let request = AWSHTTPRequest(url: URL(string:"https://kinesis.us-west-2.amazonaws.com/")!, method: .GET, headers: HTTPHeaders(), body: nil)
+            let request = AWSHTTPRequest(url: awsServer.address, method: .GET, headers: HTTPHeaders(), body: nil)
             let future = client.execute(request: request, timeout: .seconds(5))
-
+            try awsServer.echo()
             _ = try future.wait()
         } catch {
             XCTFail(error.localizedDescription)
@@ -77,9 +70,9 @@ class NIOTSHTTPClientTests: XCTestCase {
 
     func testConnectPost() {
         do {
-            let request = AWSHTTPRequest(url: URL(string:"https://kinesis.us-west-2.amazonaws.com/")!, method: .POST, headers: HTTPHeaders(), body: nil)
+            let request = AWSHTTPRequest(url: awsServer.address, method: .POST, headers: HTTPHeaders(), body: nil)
             let future = client.execute(request: request, timeout: .seconds(5))
-
+            try awsServer.echo()
             _ = try future.wait()
         } catch {
             XCTFail(error.localizedDescription)
@@ -144,11 +137,19 @@ class HTTPClientTests {
     }
 
     let client: AWSHTTPClient
+    let eventLoopGroup: EventLoopGroup
+    let awsServer: AWSTestServer
 
     init(_ client: AWSHTTPClient) {
         self.client = client
+        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        self.awsServer = AWSTestServer(serviceProtocol: .json, eventLoopGroup: self.eventLoopGroup)
     }
 
+    deinit {
+        XCTAssertNoThrow(try self.awsServer.stop())
+        XCTAssertNoThrow(try self.eventLoopGroup.syncShutdownGracefully())
+    }
     func execute(_ request: AWSHTTPRequest) throws -> EventLoopFuture<HTTPBinResponse> {
         return client.execute(request: request, timeout: .seconds(5))
             .flatMapThrowing { response in
@@ -160,10 +161,15 @@ class HTTPClientTests {
     func testGet() {
         do {
             let headers: HTTPHeaders = [:]
-            let request = AWSHTTPRequest(url: URL(string:"http://httpbin.org/get?arg=1")!, method: .GET, headers: headers, body: nil)
-            let response = try execute(request).wait()
+            let request = AWSHTTPRequest(url: awsServer.address.appendingPathComponent("get"), method: .GET, headers: headers, body: nil)
+            let responseFuture = client.execute(request: request, timeout: .seconds(5))
+            
+            try awsServer.echo()
 
-            XCTAssertEqual(response.args["arg"], "1")
+            let response = try responseFuture.wait()
+            print(response)
+
+            XCTAssertEqual(response.headers["echo-method"].first, "GET")
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -184,13 +190,18 @@ class HTTPClientTests {
     func testHeaders() {
         do {
             let headers: HTTPHeaders = [
-                "Content-Type": "application/json",
                 "Test-Header": "testValue"
             ]
-            let request = AWSHTTPRequest(url: URL(string:"http://httpbin.org/post")!, method: .POST, headers: headers, body: nil)
-            let response = try execute(request).wait()
+            let request = AWSHTTPRequest(url: awsServer.address, method: .POST, headers: headers, body: nil)
+            let responseFuture = client.execute(request: request, timeout: .seconds(5))
+            
+            try awsServer.echo()
 
-            XCTAssertEqual(response.headers["Test-Header"], "testValue")
+            let response = try responseFuture.wait()
+
+            XCTAssertEqual(response.headers["echo-method"].first, "POST")
+            XCTAssertEqual(response.headers["Test-Header"].first, "testValue")
+            
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -204,10 +215,16 @@ class HTTPClientTests {
             let text = "thisisatest"
             var body = ByteBufferAllocator().buffer(capacity: text.utf8.count)
             body.writeString(text)
-            let request = AWSHTTPRequest(url: URL(string:"http://httpbin.org/post")!, method: .POST, headers: headers, body: body)
-            let response = try execute(request).wait()
+            let request = AWSHTTPRequest(url: awsServer.address, method: .POST, headers: headers, body: body)
+            let responseFuture = client.execute(request: request, timeout: .seconds(5))
+            
+            try awsServer.echo()
 
-            XCTAssertEqual(response.data, "thisisatest")
+            let response = try responseFuture.wait()
+
+            let string = response.body?.getString(at: 0, length: response.body?.readableBytes ?? 0, encoding: .utf8)
+            XCTAssertEqual(response.headers["echo-method"].first, "POST")
+            XCTAssertEqual(string, "thisisatest")
         } catch {
             XCTFail(error.localizedDescription)
         }

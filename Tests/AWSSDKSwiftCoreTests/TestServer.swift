@@ -27,6 +27,8 @@ class AWSTestServer {
     }
     // http incoming request
     struct Request {
+        let method: HTTPMethod
+        let uri: String
         let headers: [String: String]
         let body: ByteBuffer
     }
@@ -45,6 +47,7 @@ class AWSTestServer {
     let web: NIOHTTP1TestServer
     let serviceProtocol: ServiceProtocol
     var serverPort: Int { return web.serverPort }
+    var address: URL { return URL(string: "http://localhost:\(web.serverPort)")!}
     let byteBufferAllocator: ByteBufferAllocator
 
     
@@ -94,7 +97,10 @@ class AWSTestServer {
     /// read one request and return it back
     func echo() throws {
         let request = try readRequest()
-        try writeResponse(Response(httpStatus: .ok, headers: request.headers, body: request.body))
+        var headers = request.headers
+        headers["echo-uri"] = request.uri
+        headers["echo-method"] =  request.method.rawValue
+        try writeResponse(Response(httpStatus: .ok, headers: headers, body: request.body))
     }
     
     func stop() throws {
@@ -179,7 +185,7 @@ extension AWSTestServer {
         for (key, value) in head.headers {
             requestHeaders[key.description] = value
         }
-        return Request(headers: requestHeaders, body: byteBuffer)
+        return Request(method: head.method, uri: head.uri, headers: requestHeaders, body: byteBuffer)
     }
     
     /// write outbound response

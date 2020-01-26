@@ -6,11 +6,10 @@
 //
 //
 
-import Foundation
-import NIO
-import NIOHTTP1
 import XCTest
 import AsyncHTTPClient
+import NIO
+import NIOHTTP1
 @testable import AWSSDKSwiftCore
 
 class AWSClientTests: XCTestCase {
@@ -50,6 +49,7 @@ class AWSClientTests: XCTestCase {
             ("testValidateJSONResponse", testValidateJSONResponse),
             ("testValidateJSONPayloadResponse", testValidateJSONPayloadResponse),
             ("testValidateJSONError", testValidateJSONError),
+            ("testProcessHAL", testProcessHAL),
             ("testDataInJsonPayload", testDataInJsonPayload)
         ]
     }
@@ -139,7 +139,7 @@ class AWSClientTests: XCTestCase {
         } catch MetaDataServiceError.couldNotGetInstanceRoleName {
             // credentials request fails in a slightly different way on travis
         } catch {
-            XCTFail(error.localizedDescription)
+            XCTFail("Unexpected error \(error)")
         }
     }
 
@@ -561,6 +561,47 @@ class AWSClientTests: XCTestCase {
             XCTAssertEqual(message, "Donald Where's Your Troosers?")
         } catch {
             XCTFail("Throwing the wrong error")
+        }
+    }
+
+    func testProcessHAL() {
+        class Output : AWSShape {
+            public static var _members: [AWSShapeMember] = [
+                AWSShapeMember(label: "s", required: true, type: .string),
+                AWSShapeMember(label: "i", required: true, type: .integer)
+            ]
+            let s: String
+            let i: Int
+        }
+        class Output2 : AWSShape {
+            public static var _members: [AWSShapeMember] = [
+                AWSShapeMember(label: "a", location: .body(locationName: "a"), required: true, type: .list),
+                AWSShapeMember(label: "d", required: true, type: .double),
+                AWSShapeMember(label: "b", required: true, type: .boolean),
+            ]
+            let a: [Output]
+            let d: Double
+            let b: Bool
+        }
+        var buffer = ByteBufferAllocator().buffer(capacity: 0)
+        buffer.writeString(
+            """
+            {"_embedded": {"a": [{"s":"Hello", "i":1234}, {"s":"Hello2", "i":12345}]}, "d":3.14, "b":true}
+            """
+        )
+        let response = HTTPClient.Response(
+            host: "localhost",
+            status: .ok,
+            headers: ["Content-Type":"application/hal+json"],
+            body: buffer
+        )
+        do {
+            let output : Output2 = try kinesisClient.validate(operation: "Output", response: response)
+            XCTAssertEqual(output.a.count, 2)
+            XCTAssertEqual(output.d, 3.14)
+            XCTAssertEqual(output.a[1].s, "Hello2")
+        } catch {
+            XCTFail(error.localizedDescription)
         }
     }
 

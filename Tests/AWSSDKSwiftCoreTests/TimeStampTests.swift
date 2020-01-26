@@ -5,7 +5,6 @@
 //  Created by Yuki Takei on 2017/10/09.
 //
 
-import Foundation
 import XCTest
 @testable import AWSSDKSwiftCore
 

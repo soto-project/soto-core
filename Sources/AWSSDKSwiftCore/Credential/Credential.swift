@@ -7,8 +7,10 @@
 //
 
 import AWSSigner
-import Foundation
 import INIParser
+import struct Foundation.Date
+import class  Foundation.ProcessInfo
+import class  Foundation.NSString
 
 extension Credential {
     func isEmpty() -> Bool {
@@ -22,14 +24,14 @@ public struct ExpiringCredential: Credential {
     public let secretAccessKey: String
     public let sessionToken: String?
     public let expiration: Date?
-    
+
     public init(accessKeyId: String, secretAccessKey: String, sessionToken: String? = nil, expiration: Date? = nil) {
         self.accessKeyId = accessKeyId
         self.secretAccessKey = secretAccessKey
         self.sessionToken = sessionToken ?? ProcessInfo.processInfo.environment["AWS_SESSION_TOKEN"]
         self.expiration = expiration
     }
-    
+
     func nearExpiration() -> Bool {
         if let expiration = self.expiration {
             // are we within 5 minutes of expiration?
@@ -104,4 +106,3 @@ public struct SharedCredential: Credential {
         self.sessionToken = config["aws_session_token"]
     }
 }
-

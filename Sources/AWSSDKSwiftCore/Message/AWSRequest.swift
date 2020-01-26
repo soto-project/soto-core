@@ -6,10 +6,12 @@
 //
 //
 
-import Foundation
 import NIO
 import NIOHTTP1
 import AWSSigner
+import struct Foundation.URL
+import struct Foundation.Date
+import struct Foundation.Data
 
 /// Object encapsulating all the information needed to generate a raw HTTP request to AWS
 public struct AWSRequest {
@@ -83,12 +85,12 @@ public struct AWSRequest {
 
         return HTTPHeaders(headers.map { ($0, $1) })
     }
-    
+
     /// Create HTTP Client request from AWSRequest
     func toHTTPRequest() -> AWSHTTPRequest {
         return AWSHTTPRequest.init(url: url, method: HTTPMethod(from: httpMethod), headers: getHttpHeaders(), body: body.asByteBuffer())
     }
-    
+
     /// Create HTTP Client request with signed URL from AWSRequest
     func toHTTPRequestWithSignedURL(signer: AWSSigner) -> AWSHTTPRequest {
         let method = HTTPMethod(from: httpMethod)
@@ -96,7 +98,7 @@ public struct AWSRequest {
         let signedURL = signer.signURL(url: url, method: method, body: bodyData != nil ? .byteBuffer(bodyData!) : nil, date: Date(), expires: 86400)
         return AWSHTTPRequest.init(url: signedURL, method: method, headers: getHttpHeaders(), body: bodyData)
     }
-    
+
     /// Create HTTP Client request with signed headers from AWSRequest
     func toHTTPRequestWithSignedHeader(signer: AWSSigner) -> AWSHTTPRequest {
         let method = HTTPMethod(from: httpMethod)
@@ -104,7 +106,7 @@ public struct AWSRequest {
         let signedHeaders = signer.signHeaders(url: url, method: method, headers: getHttpHeaders(), body: bodyData != nil ? .byteBuffer(bodyData!) : nil, date: Date())
         return AWSHTTPRequest.init(url: url, method: method, headers: signedHeaders, body: bodyData)
     }
-    
+
     // return new request with middleware applied
     func applyMiddlewares(_ middlewares: [AWSServiceMiddleware]) throws -> AWSRequest {
         var awsRequest = self

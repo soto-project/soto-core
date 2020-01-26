@@ -6,8 +6,10 @@
 //
 //
 
-import Foundation
 import NIO
+import struct Foundation.Data
+import class  Foundation.InputStream
+import class  Foundation.JSONSerialization
 
 /// Enumaration used to store request/response body in various forms
 public enum Body {
@@ -47,7 +49,7 @@ extension Body {
             return nil
         }
     }
-    
+
     /// return as a raw data buffer
     public func asData() -> Data? {
         switch self {
@@ -75,7 +77,7 @@ extension Body {
             return nil
         }
     }
-    
+
     /// return as bytebuffer
     public func asByteBuffer() -> ByteBuffer? {
         switch self {

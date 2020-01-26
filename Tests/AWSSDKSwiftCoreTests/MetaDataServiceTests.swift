@@ -4,8 +4,10 @@
 //
 //  Created by Jonathan McAllister on 2017/12/29.
 //
-import Foundation
 import XCTest
+import AsyncHTTPClient
+import NIO
+import NIOFoundationCompat
 @testable import AWSSDKSwiftCore
 
 class MetaDataServiceTests: XCTestCase {
@@ -13,6 +15,7 @@ class MetaDataServiceTests: XCTestCase {
         return [
             ("testInstanceMetaDataService", testInstanceMetaDataService),
             ("testInstanceMetaDataServiceFail", testInstanceMetaDataServiceFail),
+            ("testMetaDataGetCredential", testMetaDataGetCredential)
         ]
     }
 
@@ -26,7 +29,7 @@ class MetaDataServiceTests: XCTestCase {
                                       "Expiration" : "2017-12-30T13:22:39Z"]
 
         do {
-            let encodedData = try JSONEncoder().encode(body)
+            let encodedData = try JSONEncoder().encodeAsByteBuffer(body, allocator: ByteBufferAllocator())
             let instanceMetaData = InstanceMetaDataServiceProvider()
             let credential = instanceMetaData.decodeCredential(encodedData)
 
@@ -49,7 +52,7 @@ class MetaDataServiceTests: XCTestCase {
                                       "Expiration" : "2017-12-30T13:22:39Z"]
 
         do {
-            let encodedData = try JSONEncoder().encode(body)
+            let encodedData = try JSONEncoder().encodeAsByteBuffer(body, allocator: ByteBufferAllocator())
             let instanceMetaData = InstanceMetaDataServiceProvider()
             let credential = instanceMetaData.decodeCredential(encodedData)
             XCTAssertNil(credential)
@@ -57,4 +60,17 @@ class MetaDataServiceTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
     }
+
+    // Disabling cannot guarantee that 169.254.169.254 is not a valid IP on another network
+    func testMetaDataGetCredential() {
+        if ProcessInfo.processInfo.environment["TEST_EC2_METADATA"] != nil {
+            do {
+                let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+                _ = try MetaDataService.getCredential(httpClient: httpClient).wait()
+            } catch {
+                XCTFail("Unexpected error: \(error)")
+            }
+        }
+    }
+
 }

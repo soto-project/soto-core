@@ -5,7 +5,6 @@
 //  Created by Oliver ONeill on 2/9/18.
 //
 
-import Foundation
 import XCTest
 import AWSSigner
 @testable import AWSSDKSwiftCore

@@ -11,6 +11,7 @@ import AsyncHTTPClient
 import NIO
 import NIOHTTP1
 import NIOTransportServices
+import NIOTestUtils
 
 @testable import AWSSDKSwiftCore
 
@@ -28,20 +29,17 @@ extension AWSHTTPResponse {
 @available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)
 class NIOTSHTTPClientTests: XCTestCase {
 
-    var eventLoopGroup: EventLoopGroup!
     var awsServer: AWSTestServer!
     var client: NIOTSHTTPClient!
     
     override func setUp() {
-        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        self.awsServer = AWSTestServer(serviceProtocol: .json, eventLoopGroup: self.eventLoopGroup)
+        self.awsServer = AWSTestServer(serviceProtocol: .json)
         self.client = NIOTSHTTPClient(eventLoopGroup: NIOTSEventLoopGroup())
     }
     
     override func tearDown() {
         XCTAssertNoThrow(try self.awsServer.stop())
         XCTAssertNoThrow(try self.client.syncShutdown())
-        XCTAssertNoThrow(try self.eventLoopGroup.syncShutdownGracefully())
     }
     
     func testInitWithInvalidURL() {
@@ -99,8 +97,15 @@ class NIOTSHTTPClientTests: XCTestCase {
 #endif //canImport(Network)
 
 class AsyncHTTPClientTests: XCTestCase {
-    let client = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew)
-
+    var client: AsyncHTTPClient.HTTPClient!
+    override func setUp() {
+        self.client = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew)
+    }
+    
+    override func tearDown() {
+        XCTAssertNoThrow(try self.client.syncShutdown())
+    }
+    
     deinit {
         try? client.syncShutdown()
     }
@@ -137,18 +142,15 @@ class HTTPClientTests {
     }
 
     let client: AWSHTTPClient
-    let eventLoopGroup: EventLoopGroup
     let awsServer: AWSTestServer
 
     init(_ client: AWSHTTPClient) {
         self.client = client
-        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        self.awsServer = AWSTestServer(serviceProtocol: .json, eventLoopGroup: self.eventLoopGroup)
+        self.awsServer = AWSTestServer(serviceProtocol: .json)
     }
 
     deinit {
         XCTAssertNoThrow(try self.awsServer.stop())
-        XCTAssertNoThrow(try self.eventLoopGroup.syncShutdownGracefully())
     }
     func execute(_ request: AWSHTTPRequest) throws -> EventLoopFuture<HTTPBinResponse> {
         return client.execute(request: request, timeout: .seconds(5))
@@ -230,3 +232,4 @@ class HTTPClientTests {
         }
     }
 }
+

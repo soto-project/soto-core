@@ -44,6 +44,7 @@ class AWSTestServer {
         let continueProcessing: Bool
     }
     
+    let eventLoopGroup: EventLoopGroup
     let web: NIOHTTP1TestServer
     let serviceProtocol: ServiceProtocol
     var serverPort: Int { return web.serverPort }
@@ -51,10 +52,12 @@ class AWSTestServer {
     let byteBufferAllocator: ByteBufferAllocator
 
     
-    init(serviceProtocol: ServiceProtocol, eventLoopGroup: EventLoopGroup) {
-        self.web = NIOHTTP1TestServer(group: eventLoopGroup)
+    init(serviceProtocol: ServiceProtocol) {
+        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        self.web = NIOHTTP1TestServer(group: self.eventLoopGroup)
         self.serviceProtocol = serviceProtocol
         self.byteBufferAllocator = ByteBufferAllocator()
+        print("Starting serving on localhost:\(serverPort)")
     }
     
     /// run server reading request, convert from to an input shape processing them and converting the result back to a response.
@@ -104,7 +107,9 @@ class AWSTestServer {
     }
     
     func stop() throws {
+        print("Stop serving on localhost:\(serverPort)")
         try web.stop()
+        try eventLoopGroup.syncShutdownGracefully()
     }
 }
 
@@ -193,7 +198,9 @@ extension AWSTestServer {
         XCTAssertNoThrow(try web.writeOutbound(.head(.init(version: .init(major: 1, minor: 1),
                                                            status: response.httpStatus,
                                                            headers: HTTPHeaders(response.headers.map { ($0,$1) })))))
-        XCTAssertNoThrow(try web.writeOutbound(.body(.byteBuffer(response.body))))
+        if response.body.writableBytes > 0 {
+            XCTAssertNoThrow(try web.writeOutbound(.body(.byteBuffer(response.body))))
+        }
         XCTAssertNoThrow(try web.writeOutbound(.end(nil)))
     }
     

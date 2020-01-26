@@ -135,9 +135,11 @@ class AWSClientTests: XCTestCase {
             let credentials = try client.credentialProvider.getCredential().wait()
             print(credentials)
         } catch NIO.ChannelError.connectTimeout(_) {
-            // credentials request should fail and throw a timeout error as we are not running on a EC2/ECS instance
+            // credentials request should fail. One possible error is a connectTimerout
+        } catch is NIOConnectionError {
+                // credentials request should fail. One possible error is a connection error
         } catch MetaDataServiceError.couldNotGetInstanceRoleName {
-            // credentials request fails in a slightly different way on travis
+            // credentials request fails in a slightly different way if it finds the IP
         } catch {
             XCTFail("Unexpected error \(error)")
         }

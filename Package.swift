@@ -32,7 +32,7 @@ let package = Package(
             ]),
         .target(name: "AWSSigner", dependencies: ["CAWSSDKOpenSSL", "NIOHTTP1"]),
         .target(name: "CAWSSDKOpenSSL", dependencies: []),
-        .testTarget(name: "AWSSDKSwiftCoreTests", dependencies: ["AWSSDKSwiftCore"]),
+        .testTarget(name: "AWSSDKSwiftCoreTests", dependencies: ["AWSSDKSwiftCore", "NIOTestUtils"]),
         .testTarget(name: "AWSSignerTests", dependencies: ["AWSSigner"])
     ]
 )

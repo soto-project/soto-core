@@ -6,9 +6,8 @@
 //
 //
 
-import Foundation
-import NIOHTTP1
 import XCTest
+import NIOHTTP1
 @testable import AWSSDKSwiftCore
 
 struct HeaderRequest: AWSShape {
@@ -309,5 +308,21 @@ class PerformanceTests: XCTestCase {
                 XCTFail(error.localizedDescription)
             }
         }
+    }
+
+    static var allTests : [(String, (PerformanceTests) -> () throws -> Void)] {
+        return [
+            ("testHeaderRequest", testHeaderRequest),
+            ("testXMLRequest", testXMLRequest),
+            ("testXMLPayloadRequest", testXMLPayloadRequest),
+            ("testJSONRequest", testJSONRequest),
+            ("testJSONPayloadRequest", testJSONPayloadRequest),
+            ("testQueryRequest", testQueryRequest),
+            ("testUnsignedRequest", testUnsignedRequest),
+            ("testSignedURLRequest", testSignedURLRequest),
+            ("testSignedHeadersRequest", testSignedHeadersRequest),
+            ("testValidateXMLResponse", testValidateXMLResponse),
+            ("testValidateJSONResponse", testValidateJSONResponse),
+        ]
     }
 }

@@ -6,8 +6,6 @@
 //
 //
 
-import Foundation
-
 /// Standard Error type returned by aws-sdk-swift. Initialized with error code and message. Must provide an implementation of var description : String
 public protocol AWSErrorType: Error, CustomStringConvertible {
     init?(errorCode: String, message: String?)

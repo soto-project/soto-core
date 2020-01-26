@@ -6,8 +6,6 @@
 //
 //
 
-import Foundation
-
 extension String {
     public func lowerFirst() -> String {
         return String(self[startIndex]).lowercased() + self[index(after: startIndex)...]

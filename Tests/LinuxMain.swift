@@ -8,6 +8,7 @@ XCTMain([
     testCase(HTTPClientTests.allTests),
     testCase(MetaDataServiceTests.allTests),
     testCase(PaginateTests.allTests),
+    testCase(PerformanceTests.allTests),
     testCase(SerializersTests.allTests),
     testCase(SignersV4Tests.allTests),
     testCase(TimeStampTests.allTests),

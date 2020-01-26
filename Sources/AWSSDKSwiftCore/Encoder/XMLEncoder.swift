@@ -5,7 +5,17 @@
 //  Created by Adam Fowler on 2019/05/01.
 //
 //
-import Foundation
+
+import struct Foundation.Data
+import struct Foundation.Date
+import struct Foundation.URL
+import class  Foundation.DateFormatter
+import class  Foundation.ISO8601DateFormatter
+
+import class  Foundation.NSNumber
+import class  Foundation.NSURL
+import class  Foundation.NSDate
+import class  Foundation.NSData
 
 /// A marker protocols used to determine whether a value is a `Dictionary` or an `Array`
 ///

@@ -6,7 +6,7 @@
 //
 //
 
-import Foundation
+import struct Foundation.Data
 
 #if canImport(CAWSSDKOpenSSL)
 

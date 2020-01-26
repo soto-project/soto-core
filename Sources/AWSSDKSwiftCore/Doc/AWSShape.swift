@@ -6,7 +6,10 @@
 //
 //
 
-import Foundation
+import struct Foundation.UUID
+import class  Foundation.NSRegularExpression
+import var    Foundation.NSNotFound
+import func   Foundation.NSMakeRange
 
 /// Protocol for the input and output objects for all AWS service commands. They need to be Codable so they can be serialized. They also need to provide details on how their container classes are coded when serializing XML.
 public protocol AWSShape: XMLCodable {

@@ -6,13 +6,20 @@
 //
 //
 
-import HypertextApplicationLanguage
-import Foundation
 import NIO
 import NIOHTTP1
 import NIOTransportServices
+import class  Foundation.ProcessInfo
+import class  Foundation.JSONSerialization
+import struct Foundation.Data
+import struct Foundation.Date
+import struct Foundation.URL
+import struct Foundation.URLComponents
+import struct Foundation.URLQueryItem
+import struct Foundation.CharacterSet
 
 /// Convenience shorthand for `EventLoopFuture`.
+@available(*, deprecated, message: "Use the EventLoopFuture directly")
 public typealias Future = EventLoopFuture
 
 /// This is the workhorse of aws-sdk-swift-core. You provide it with a `AWSShape` Input object, it converts it to `AWSRequest` which is then converted to a raw `HTTPClient` Request. This is then sent to AWS. When the response from AWS is received if it is successful it is converted to a `AWSResponse` which is then decoded to generate a `AWSShape` Output object. If it is not successful then `AWSClient` will throw an `AWSErrorType`.
@@ -147,7 +154,7 @@ public class AWSClient {
 }
 // invoker
 extension AWSClient {
-    fileprivate func invoke(_ nioRequest: HTTPClient.Request) -> Future<HTTPClient.Response> {
+    fileprivate func invoke(_ nioRequest: HTTPClient.Request) -> EventLoopFuture<HTTPClient.Response> {
         let client = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
         let futureResponse = client.connect(nioRequest)
 
@@ -174,7 +181,7 @@ extension AWSClient {
     ///     - input: Input object
     /// - returns:
     ///     Empty Future that completes when response is received
-    public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> Future<Void> {
+    public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> EventLoopFuture<Void> {
 
         return signer.manageCredential(eventLoopGroup: eventLoopGroup).flatMapThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
@@ -198,7 +205,7 @@ extension AWSClient {
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
     /// - returns:
     ///     Empty Future that completes when response is received
-    public func send(operation operationName: String, path: String, httpMethod: String) -> Future<Void> {
+    public func send(operation operationName: String, path: String, httpMethod: String) -> EventLoopFuture<Void> {
 
         return signer.manageCredential(eventLoopGroup: eventLoopGroup).flatMapThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
@@ -221,7 +228,7 @@ extension AWSClient {
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
     /// - returns:
     ///     Future containing output object that completes when response is received
-    public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) -> Future<Output> {
+    public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) -> EventLoopFuture<Output> {
 
         return signer.manageCredential(eventLoopGroup: eventLoopGroup).flatMapThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
@@ -245,7 +252,7 @@ extension AWSClient {
     ///     - input: Input object
     /// - returns:
     ///     Future containing output object that completes when response is received
-    public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> Future<Output> {
+    public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> EventLoopFuture<Output> {
 
             return signer.manageCredential(eventLoopGroup: eventLoopGroup).flatMapThrowing { _ in
                     let awsRequest = try self.createAWSRequest(
@@ -337,7 +344,7 @@ extension AWSClient {
                 return try createNIORequestWithSignedHeader(awsRequest)
             }
             return try createNIORequestWithSignedURL(awsRequest)
-            
+
         default:
             return try createNIORequestWithSignedHeader(awsRequest)
         }
@@ -568,14 +575,14 @@ extension AWSClient {
 
         var awsResponse = try AWSResponse(from: response, serviceProtocolType: serviceProtocol.type, raw: raw)
 
-        try validateCode(response: awsResponse)
-
-        awsResponse = try hypertextApplicationLanguageProcess(response: awsResponse, members: Output._members)
-
         // do we need to fix up the response before processing it
         for middleware in middlewares {
             awsResponse = try middleware.chain(response: awsResponse)
         }
+
+        try validateCode(response: awsResponse)
+
+        awsResponse = try hypertextApplicationLanguageProcess(response: awsResponse, members: Output._members)
 
         let decoder = DictionaryDecoder()
 
@@ -661,72 +668,6 @@ extension AWSClient {
         guard (200..<300).contains(response.status.code) else {
             throw createError(for: response)
         }
-    }
-
-    func hypertextApplicationLanguageProcess(response: AWSResponse, members: [AWSShapeMember]) throws -> AWSResponse {
-        switch response.body {
-        case .json(let data):
-            if (response.headers["Content-Type"] as? String)?.contains("hal+json") == true {
-                let representation = try Representation.from(json: data)
-                var dictionary = representation.properties
-                for rel in representation.rels {
-                    guard let representations = try Representation.from(json: data).representations(for: rel) else {
-                        continue
-                    }
-
-                    guard let hint = members.filter({ $0.location?.name == rel }).first else {
-                        continue
-                    }
-
-                    switch hint.type {
-                    case .list:
-                        let properties : [[String: Any]] = try representations.map({
-                            var props = $0.properties
-                            var linkMap: [String: [Link]] = [:]
-
-                            for link in $0.links {
-                                let key = link.rel.camelCased(separator: ":")
-                                if linkMap[key] == nil {
-                                    linkMap[key] = []
-                                }
-                                linkMap[key]?.append(link)
-                            }
-
-                            for (key, links) in linkMap {
-                                var dict: [String: Any] = [:]
-                                for link in links {
-                                    guard let name = link.name else { continue }
-                                    let head = HTTPRequestHead(version: HTTPVersion(major: 1, minor: 1), method: .GET, uri: endpoint + link.href)
-                                    let nioRequest = try nioRequestWithSignedHeader(HTTPClient.Request(head: head, body: Data()))
-                                    //
-                                    // this is a hack to wait...
-                                    ///
-                                    while dict[name] == nil {
-                                        _ = invoke(nioRequest).flatMapThrowing{ res in
-                                            let representaion = try Representation().from(json: res.body)
-                                            dict[name] = representaion.properties
-                                        }
-                                    }
-                                }
-                                props[key] = dict
-                            }
-
-                            return props
-                        })
-                        dictionary[rel] = properties
-
-                    default:
-                        dictionary[rel] = representations.map({ $0.properties }).first ?? [:]
-                    }
-                }
-                var response = response
-                response.body = .json(try JSONSerialization.data(withJSONObject: dictionary, options: []))
-                return response
-            }
-        default:
-            break
-        }
-        return response
     }
 
     private func createError(for response: AWSResponse) -> Error {

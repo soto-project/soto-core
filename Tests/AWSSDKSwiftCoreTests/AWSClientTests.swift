@@ -6,10 +6,9 @@
 //
 //
 
-import Foundation
-import NIOHTTP1
 import XCTest
 import NIO
+import NIOHTTP1
 @testable import AWSSDKSwiftCore
 
 class AWSClientTests: XCTestCase {
@@ -26,6 +25,7 @@ class AWSClientTests: XCTestCase {
             ("testValidateJSONResponse", testValidateJSONResponse),
             ("testValidateJSONPayloadResponse", testValidateJSONPayloadResponse),
             ("testValidateJSONError", testValidateJSONError),
+            ("testProcessHAL", testProcessHAL),
             ("testDataInJsonPayload", testDataInJsonPayload)
         ]
     }
@@ -77,7 +77,7 @@ class AWSClientTests: XCTestCase {
     func testGetCredential() {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
-        
+
         let sesClient = AWSClient(
             accessKeyId: "key",
             secretAccessKey: "secret",
@@ -160,7 +160,7 @@ class AWSClientTests: XCTestCase {
     func testCreateAWSRequest() {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
-      
+
         let input1 = C()
         let input2 = E()
         let input3 = F(fooParams: input2)
@@ -301,7 +301,7 @@ class AWSClientTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
     }
-    
+
     func testCreateAwsRequestWithKeywordInQuery() {
         struct KeywordRequest: AWSShape {
             static var _members: [AWSShapeMember] = [
@@ -317,11 +317,11 @@ class AWSClientTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
     }
-    
+
     func testCreateNIORequest() {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
-      
+
         let input2 = E()
 
         let kinesisClient = AWSClient(
@@ -508,7 +508,46 @@ class AWSClientTests: XCTestCase {
             XCTFail("Throwing the wrong error")
         }
     }
-    
+
+    func testProcessHAL() {
+        class Output : AWSShape {
+            public static var _members: [AWSShapeMember] = [
+                AWSShapeMember(label: "s", required: true, type: .string),
+                AWSShapeMember(label: "i", required: true, type: .integer)
+            ]
+            let s: String
+            let i: Int
+        }
+        class Output2 : AWSShape {
+            public static var _members: [AWSShapeMember] = [
+                AWSShapeMember(label: "a", location: .body(locationName: "a"), required: true, type: .list),
+                AWSShapeMember(label: "d", required: true, type: .double),
+                AWSShapeMember(label: "b", required: true, type: .boolean),
+            ]
+            let a: [Output]
+            let d: Double
+            let b: Bool
+        }
+        let response = HTTPClient.Response(
+            head: HTTPResponseHead(
+                version: HTTPVersion(major: 1, minor: 1),
+                status: HTTPResponseStatus(statusCode: 200),
+                headers: ["Content-Type":"application/hal+json"]
+            ),
+            body: """
+                {"_embedded": {"a": [{"s":"Hello", "i":1234}, {"s":"Hello2", "i":12345}]}, "d":3.14, "b":true}
+                """.data(using: .utf8)!
+        )
+        do {
+            let output : Output2 = try kinesisClient.validate(operation: "Output", response: response)
+            XCTAssertEqual(output.a.count, 2)
+            XCTAssertEqual(output.d, 3.14)
+            XCTAssertEqual(output.a[1].s, "Hello2")
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+
     func testDataInJsonPayload() {
         struct DataContainer: AWSShape {
             let data: Data

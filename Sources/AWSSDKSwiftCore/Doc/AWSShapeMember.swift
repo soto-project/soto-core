@@ -6,8 +6,6 @@
 //
 //
 
-import Foundation
-
 /// Structure defining how to serialize member of AWSShape.
 public struct AWSShapeMember {
     /// Type of AWSShapeMember

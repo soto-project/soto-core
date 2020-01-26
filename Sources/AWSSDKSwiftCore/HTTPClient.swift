@@ -10,12 +10,13 @@
 // https://github.com/swift-server/swift-nio-http-client
 //
 
-import Foundation
 import NIO
 import NIOConcurrencyHelpers
 import NIOFoundationCompat
 import NIOHTTP1
 import NIOSSL
+import struct Foundation.Data
+import struct Foundation.URL
 #if canImport(Network)
 import Network
 import NIOTransportServices

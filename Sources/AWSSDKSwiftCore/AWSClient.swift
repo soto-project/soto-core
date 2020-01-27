@@ -694,12 +694,7 @@ extension AWSClient {
             return AWSResponseError(errorCode: errorCode, message: message)
         }
 
-        let rawBodyString : String?
-        if let rawBody = response.body.asData() {
-            rawBodyString = String(data: rawBody, encoding: .utf8)
-        } else {
-            rawBodyString = nil
-        }
+        let rawBodyString = response.body.asString()
         return AWSError(message: message ?? "Unhandled Error. Response Code: \(response.status.code)", rawBody: rawBodyString ?? "")
     }
 }

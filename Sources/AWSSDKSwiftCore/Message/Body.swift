@@ -17,8 +17,6 @@ public enum Body {
     case text(String)
     /// raw data
     case buffer(Data)
-    /// stream is currenty unsupported
-    case stream(InputStream)
     /// json data
     case json(Data)
     /// xml
@@ -51,27 +49,20 @@ extension Body {
     }
 
     /// return as a raw data buffer
-    public func asData() -> Data? {
+    public func asString() -> String? {
         switch self {
         case .text(let text):
-            return text.data(using: .utf8)
+            return text
 
         case .buffer(let data):
-            return data
+            return String(data: data, encoding: .utf8)
 
         case .json(let data):
-            if data.isEmpty {
-                return nil
-            } else {
-                return data
-            }
+            return String(data: data, encoding: .utf8)
 
         case .xml(let node):
             let xmlDocument = XML.Document(rootElement: node)
-            return xmlDocument.xmlData
-
-        case .stream(_):
-            return nil
+            return xmlDocument.xmlString
 
         case .empty:
             return nil
@@ -106,9 +97,6 @@ extension Body {
             var buffer = ByteBufferAllocator().buffer(capacity: text.utf8.count)
             buffer.writeString(text)
             return buffer
-
-        case .stream(_):
-            return nil
 
         case .empty:
             return nil

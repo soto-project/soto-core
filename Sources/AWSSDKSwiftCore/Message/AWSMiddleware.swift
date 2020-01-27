@@ -51,8 +51,6 @@ public class AWSLoggingMiddleware : AWSServiceMiddleware {
             output += "\n  \(string)"
         case .empty:
             output += "empty"
-        default:
-            break
         }
         return output
     }

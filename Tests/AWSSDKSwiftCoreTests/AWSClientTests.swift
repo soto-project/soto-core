@@ -641,7 +641,7 @@ class AWSClientTests: XCTestCase {
                 service:"TestClient",
                 serviceProtocol: ServiceProtocol(type: .json, version: ServiceProtocol.Version(major: 1, minor: 1)),
                 apiVersion: "2020-01-21",
-                endpoint: awsServer.address.absoluteString,
+                endpoint: awsServer.address,
                 middlewares: [AWSLoggingMiddleware()],
                 eventLoopGroupProvider: .useAWSClientShared
             )
@@ -682,7 +682,7 @@ class AWSClientTests: XCTestCase {
                 service:"TestClient",
                 serviceProtocol: ServiceProtocol(type: .json, version: ServiceProtocol.Version(major: 1, minor: 1)),
                 apiVersion: "2020-01-21",
-                endpoint: awsServer.address.absoluteString,
+                endpoint: awsServer.address,
                 middlewares: [AWSLoggingMiddleware()],
                 eventLoopGroupProvider: .useAWSClientShared
             )
@@ -722,7 +722,7 @@ class AWSClientTests: XCTestCase {
                 service:"TestClient",
                 serviceProtocol: ServiceProtocol(type: .json, version: ServiceProtocol.Version(major: 1, minor: 1)),
                 apiVersion: "2020-01-21",
-                endpoint: awsServer.address.absoluteString,
+                endpoint: awsServer.address,
                 middlewares: [AWSLoggingMiddleware()],
                 eventLoopGroupProvider: .useAWSClientShared
             )

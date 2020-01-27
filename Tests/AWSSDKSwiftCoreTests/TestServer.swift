@@ -43,12 +43,20 @@ class AWSTestServer {
         let output: Output
         let continueProcessing: Bool
     }
-    
+    // httpBin function response
+    struct HTTPBinResponse: Codable {
+        let method: String?
+        let data: String?
+        let headers: [String: String]
+        let url: String
+    }
+
     let eventLoopGroup: EventLoopGroup
     let web: NIOHTTP1TestServer
     let serviceProtocol: ServiceProtocol
     var serverPort: Int { return web.serverPort }
-    var address: URL { return URL(string: "http://localhost:\(web.serverPort)")!}
+    var address: String { return "http://localhost:\(web.serverPort)"}
+    var addressURL: URL { return URL(string: "http://localhost:\(web.serverPort)")!}
     let byteBufferAllocator: ByteBufferAllocator
 
     
@@ -97,13 +105,18 @@ class AWSTestServer {
     }
     
 
-    /// read one request and return it back
-    func echo() throws {
+    /// read one request and return details back in body
+    func httpBin() throws {
         let request = try readRequest()
-        var headers = request.headers
-        headers["echo-uri"] = request.uri
-        headers["echo-method"] =  request.method.rawValue
-        try writeResponse(Response(httpStatus: .ok, headers: headers, body: request.body))
+        
+        let data = request.body.getString(at: 0, length: request.body.readableBytes, encoding: .utf8)
+        let httpBinResponse = HTTPBinResponse(
+            method: request.method.rawValue,
+            data: data,
+            headers: request.headers,
+            url: request.uri)
+        let responseBody = try JSONEncoder().encodeAsByteBuffer(httpBinResponse, allocator: ByteBufferAllocator())
+        try writeResponse(Response(httpStatus: .ok, headers: [:], body: responseBody))
     }
     
     func stop() throws {

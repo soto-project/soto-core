@@ -44,10 +44,12 @@ class AWSClientTests: XCTestCase {
             ("testValidateCode", testValidateCode),
             ("testUnsignedClient", testUnsignedClient),
             ("testValidateXMLResponse", testValidateXMLResponse),
-            ("testValidateXMLPayloadResponse", testValidateXMLPayloadResponse),
+            ("testValidateXMLCodablePayloadResponse", testValidateXMLCodablePayloadResponse),
+            ("testValidateXMLRawPayloadResponse", testValidateXMLRawPayloadResponse),
             ("testValidateXMLError", testValidateXMLError),
             ("testValidateJSONResponse", testValidateJSONResponse),
-            ("testValidateJSONPayloadResponse", testValidateJSONPayloadResponse),
+            ("testValidateJSONCodablePayloadResponse", testValidateJSONCodablePayloadResponse),
+            ("testValidateJSONRawPayloadResponse", testValidateJSONRawPayloadResponse),
             ("testValidateJSONError", testValidateJSONError),
             ("testProcessHAL", testProcessHAL),
             ("testDataInJsonPayload", testDataInJsonPayload)
@@ -476,7 +478,7 @@ class AWSClientTests: XCTestCase {
         }
     }
 
-    func testValidateXMLPayloadResponse() {
+    func testValidateXMLCodablePayloadResponse() {
         class Output : AWSShape {
             static let payloadPath: String? = "name"
             let name : String
@@ -494,6 +496,27 @@ class AWSClientTests: XCTestCase {
         }
     }
 
+    func testValidateXMLRawPayloadResponse() {
+        class Output : AWSShape {
+            static let payloadPath: String? = "body"
+            public static var _members: [AWSShapeMember] = [
+                AWSShapeMember(label: "body", required: false, type: .blob)
+            ]
+            let body : Data
+        }
+        let response = AWSHTTPResponseImpl(
+            status: .ok,
+            headers: HTTPHeaders(),
+            bodyData: "{\"name\":\"hello\"}".data(using: .utf8)!
+        )
+        do {
+            let output : Output = try s3Client.validate(operation: "Output", response: response)
+            XCTAssertEqual(output.body, "{\"name\":\"hello\"}".data(using: .utf8))
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+    
     func testValidateXMLError() {
         let response = AWSHTTPResponseImpl(
             status: .notFound,
@@ -526,8 +549,8 @@ class AWSClientTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
     }
-
-    func testValidateJSONPayloadResponse() {
+    
+    func testValidateJSONCodablePayloadResponse() {
         class Output2 : AWSShape {
             let name : String
         }
@@ -543,6 +566,27 @@ class AWSClientTests: XCTestCase {
         do {
             let output : Output = try kinesisClient.validate(operation: "Output", response: response)
             XCTAssertEqual(output.output2.name, "hello")
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+    
+    func testValidateJSONRawPayloadResponse() {
+        struct Output : AWSShape {
+            static let payloadPath: String? = "body"
+            public static var _members: [AWSShapeMember] = [
+                AWSShapeMember(label: "body", required: false, type: .blob)
+            ]
+            let body : Data
+        }
+        let response = AWSHTTPResponseImpl(
+            status: .ok,
+            headers: HTTPHeaders(),
+            bodyData: "{\"name\":\"hello\"}".data(using: .utf8)!
+        )
+        do {
+            let output : Output = try kinesisClient.validate(operation: "Output", response: response)
+            XCTAssertEqual(output.body, "{\"name\":\"hello\"}".data(using: .utf8))
         } catch {
             XCTFail(error.localizedDescription)
         }

@@ -36,7 +36,7 @@ class AWSTestServer {
     struct Response {
         let httpStatus: HTTPResponseStatus
         let headers: [String: String]
-        let body: ByteBuffer
+        let body: ByteBuffer?
     }
     // result from process
     struct Result<Output>{
@@ -198,8 +198,8 @@ extension AWSTestServer {
         XCTAssertNoThrow(try web.writeOutbound(.head(.init(version: .init(major: 1, minor: 1),
                                                            status: response.httpStatus,
                                                            headers: HTTPHeaders(response.headers.map { ($0,$1) })))))
-        if response.body.writableBytes > 0 {
-            XCTAssertNoThrow(try web.writeOutbound(.body(.byteBuffer(response.body))))
+        if let body = response.body, body.readableBytes > 0 {
+            XCTAssertNoThrow(try web.writeOutbound(.body(.byteBuffer(body))))
         }
         XCTAssertNoThrow(try web.writeOutbound(.end(nil)))
     }

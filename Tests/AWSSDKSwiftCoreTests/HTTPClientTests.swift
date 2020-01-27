@@ -142,16 +142,11 @@ class HTTPClientTests {
     }
 
     let client: AWSHTTPClient
-    let awsServer: AWSTestServer
 
     init(_ client: AWSHTTPClient) {
         self.client = client
-        self.awsServer = AWSTestServer(serviceProtocol: .json)
     }
 
-    deinit {
-        XCTAssertNoThrow(try self.awsServer.stop())
-    }
     func execute(_ request: AWSHTTPRequest) throws -> EventLoopFuture<HTTPBinResponse> {
         return client.execute(request: request, timeout: .seconds(5))
             .flatMapThrowing { response in
@@ -162,6 +157,10 @@ class HTTPClientTests {
 
     func testGet() {
         do {
+            let awsServer = AWSTestServer(serviceProtocol: .json)
+            defer {
+                XCTAssertNoThrow(try awsServer.stop())
+            }
             let headers: HTTPHeaders = [:]
             let request = AWSHTTPRequest(url: awsServer.address.appendingPathComponent("get"), method: .GET, headers: headers, body: nil)
             let responseFuture = client.execute(request: request, timeout: .seconds(5))
@@ -191,6 +190,10 @@ class HTTPClientTests {
 
     func testHeaders() {
         do {
+            let awsServer = AWSTestServer(serviceProtocol: .json)
+            defer {
+                XCTAssertNoThrow(try awsServer.stop())
+            }
             let headers: HTTPHeaders = [
                 "Test-Header": "testValue"
             ]
@@ -211,6 +214,10 @@ class HTTPClientTests {
 
     func testBody() {
         do {
+            let awsServer = AWSTestServer(serviceProtocol: .json)
+            defer {
+                XCTAssertNoThrow(try awsServer.stop())
+            }
             let headers: HTTPHeaders = [
                 "Content-Type": "text/plain"
             ]

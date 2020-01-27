@@ -167,23 +167,6 @@ public final class AWSClient {
 }
 // invoker
 extension AWSClient {
-/*    fileprivate func invoke(_ nioRequest: HTTPClient.Request) -> EventLoopFuture<HTTPClient.Response> {
-        let client = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
-        let futureResponse = client.connect(nioRequest)
-
-        futureResponse.whenComplete { _ in
-            do {
-                try client.syncShutdown()
-            } catch {
-                print("Error closing connection: \(error)")
-            }
-        }*/
-
-    /// invoke AWS request, create HTTP request from AWS request and then make request. Return response.
-    fileprivate func invoke(_ awsRequest: AWSRequest, signer: AWSSigner) -> EventLoopFuture<AWSHTTPResponse> {
-        let request = createHTTPRequest(awsRequest, signer: signer)
-        return invoke(request)
-    }
 
     /// invoke HTTP request
     fileprivate func invoke(_ httpRequest: AWSHTTPRequest) -> EventLoopFuture<AWSHTTPResponse> {

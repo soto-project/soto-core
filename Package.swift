@@ -20,7 +20,7 @@ let package = Package(
             name: "AWSSDKSwiftCore",
             dependencies: [
                 "AsyncHTTPClient",
-                "AWSSigner",
+                "AWSSignerV4",
                 "CAWSSDKOpenSSL",
                 "HypertextApplicationLanguage",
                 "NIO",
@@ -30,10 +30,10 @@ let package = Package(
                 "NIOFoundationCompat",
                 "INIParser"
             ]),
-        .target(name: "AWSSigner", dependencies: ["CAWSSDKOpenSSL", "NIOHTTP1"]),
+        .target(name: "AWSSignerV4", dependencies: ["CAWSSDKOpenSSL", "NIOHTTP1"]),
         .target(name: "CAWSSDKOpenSSL", dependencies: []),
         .testTarget(name: "AWSSDKSwiftCoreTests", dependencies: ["AWSSDKSwiftCore", "NIOTestUtils"]),
-        .testTarget(name: "AWSSignerTests", dependencies: ["AWSSigner"])
+        .testTarget(name: "AWSSignerTests", dependencies: ["AWSSignerV4"])
     ]
 )
 

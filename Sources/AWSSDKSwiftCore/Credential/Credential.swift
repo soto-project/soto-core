@@ -6,7 +6,6 @@
 //
 //
 
-import AWSSigner
 import INIParser
 import struct Foundation.Date
 import class  Foundation.ProcessInfo

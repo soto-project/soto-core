@@ -7,8 +7,6 @@
 //
 
 import AsyncHTTPClient
-import AWSSigner
-import NIO
 import NIOHTTP1
 import NIOTransportServices
 import class  Foundation.ProcessInfo

@@ -6,7 +6,6 @@
 //
 
 import XCTest
-import AWSSigner
 @testable import AWSSDKSwiftCore
 
 class CredentialTests: XCTestCase {

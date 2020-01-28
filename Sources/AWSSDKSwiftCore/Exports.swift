@@ -1,2 +1,2 @@
-@_exported import AWSSigner
+@_exported import AWSSignerV4
 @_exported import NIO

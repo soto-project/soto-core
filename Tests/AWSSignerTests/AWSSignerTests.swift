@@ -1,6 +1,6 @@
 import XCTest
 import NIO
-@testable import AWSSigner
+@testable import AWSSignerV4
 
 final class AWSSignerTests: XCTestCase {
     let credentials : Credential = StaticCredential(accessKeyId: "MYACCESSKEY", secretAccessKey: "MYSECRETACCESSKEY")

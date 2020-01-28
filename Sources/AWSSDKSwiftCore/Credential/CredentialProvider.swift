@@ -5,7 +5,6 @@
 //  Created by Adam Fowler on 2019/12/5
 //
 //
-import AWSSigner
 import Foundation
 import NIO
 import NIOConcurrencyHelpers

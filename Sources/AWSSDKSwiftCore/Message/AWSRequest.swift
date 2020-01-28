@@ -8,7 +8,6 @@
 
 import NIO
 import NIOHTTP1
-import AWSSigner
 import struct Foundation.URL
 import struct Foundation.Date
 import struct Foundation.Data

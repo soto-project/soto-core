@@ -154,9 +154,9 @@ public class AWSClient {
 }
 // invoker
 extension AWSClient {
-    fileprivate func invoke(_ nioRequest: HTTPClient.Request) -> EventLoopFuture<HTTPClient.Response> {
+    fileprivate func invoke(_ nioRequest: HTTPClient.Request, timeout: TimeAmount = .seconds(5)) -> EventLoopFuture<HTTPClient.Response> {
         let client = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
-        let futureResponse = client.connect(nioRequest)
+        let futureResponse = client.connect(nioRequest, timeout: timeout)
 
         futureResponse.whenComplete { _ in
             do {
@@ -179,9 +179,10 @@ extension AWSClient {
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
     ///     - input: Input object
+    ///     - timeout: The timeout interval for the request. Defaults to 5 seconds.
     /// - returns:
     ///     Empty Future that completes when response is received
-    public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> EventLoopFuture<Void> {
+    public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input, timeout: TimeAmount = .seconds(5)) -> EventLoopFuture<Void> {
 
         return signer.manageCredential(eventLoopGroup: eventLoopGroup).flatMapThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
@@ -192,7 +193,7 @@ extension AWSClient {
                 )
                 return try self.createNioRequest(awsRequest)
             }.flatMap { nioRequest in
-                return self.invoke(nioRequest)
+                return self.invoke(nioRequest, timeout: timeout)
             }.flatMapThrowing { response in
                 return try self.validate(response: response)
             }
@@ -203,9 +204,10 @@ extension AWSClient {
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - timeout: The timeout interval for the request. Defaults to 5 seconds.
     /// - returns:
     ///     Empty Future that completes when response is received
-    public func send(operation operationName: String, path: String, httpMethod: String) -> EventLoopFuture<Void> {
+    public func send(operation operationName: String, path: String, httpMethod: String, timeout: TimeAmount = .seconds(5)) -> EventLoopFuture<Void> {
 
         return signer.manageCredential(eventLoopGroup: eventLoopGroup).flatMapThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
@@ -215,7 +217,7 @@ extension AWSClient {
                 )
                 return try self.createNioRequest(awsRequest)
             }.flatMap { nioRequest in
-                return self.invoke(nioRequest)
+                return self.invoke(nioRequest, timeout: timeout)
             }.flatMapThrowing { response in
                 return try self.validate(response: response)
             }
@@ -226,9 +228,10 @@ extension AWSClient {
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - timeout: The timeout interval for the request. Defaults to 5 seconds.
     /// - returns:
     ///     Future containing output object that completes when response is received
-    public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) -> EventLoopFuture<Output> {
+    public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String, timeout: TimeAmount = .seconds(5)) -> EventLoopFuture<Output> {
 
         return signer.manageCredential(eventLoopGroup: eventLoopGroup).flatMapThrowing { _ in
                 let awsRequest = try self.createAWSRequest(
@@ -238,7 +241,7 @@ extension AWSClient {
                 )
                 return try self.createNioRequest(awsRequest)
             }.flatMap { nioRequest in
-                return self.invoke(nioRequest)
+                return self.invoke(nioRequest, timeout: timeout)
             }.flatMapThrowing { response in
                 return try self.validate(operation: operationName, response: response)
             }
@@ -250,9 +253,10 @@ extension AWSClient {
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
     ///     - input: Input object
+    ///     - timeout: The timeout interval for the request. Defaults to 5 seconds.
     /// - returns:
     ///     Future containing output object that completes when response is received
-    public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> EventLoopFuture<Output> {
+    public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input, timeout: TimeAmount = .seconds(5)) -> EventLoopFuture<Output> {
 
             return signer.manageCredential(eventLoopGroup: eventLoopGroup).flatMapThrowing { _ in
                     let awsRequest = try self.createAWSRequest(
@@ -263,7 +267,7 @@ extension AWSClient {
                     )
                     return try self.createNioRequest(awsRequest)
                 }.flatMap { nioRequest in
-                    return self.invoke(nioRequest)
+                    return self.invoke(nioRequest, timeout: timeout)
                 }.flatMapThrowing { response in
                     return try self.validate(operation: operationName, response: response)
                 }

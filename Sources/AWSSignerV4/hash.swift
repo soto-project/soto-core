@@ -62,15 +62,11 @@ public func hmac(string: String, key: [UInt8]) -> [UInt8] {
     return digest
 }
 
-/// Calculate MD5 of Data
-public func md5(_ data: Data) -> [UInt8] {
-    return data.withUnsafeBytes { ptr in
-        var hash = [UInt8](repeating: 0, count: Int(CC_MD5_DIGEST_LENGTH))
-        if let bytes = ptr.baseAddress?.assumingMemoryBound(to: UInt8.self) {
-            CC_MD5(bytes, CC_LONG(data.count), &hash)
-        }
-        return hash
-    }
+/// Calculate MD5 of buffer
+public func md5(_ buffer: UnsafeBufferPointer<UInt8>) -> [UInt8] {
+    var hash = [UInt8](repeating: 0, count: Int(CC_MD5_DIGEST_LENGTH))
+    CC_MD5(buffer.baseAddress, CC_LONG(buffer.count), &hash)
+    return hash
 }
 
 #elseif canImport(CAWSSDKOpenSSL)
@@ -130,15 +126,11 @@ func hmac(string: String, key: [UInt8]) -> [UInt8] {
     return Array(digest[0..<Int(length)])
 }
 
-/// :nodoc: Calculate MD5 of Data
-public func md5(_ data: Data) -> [UInt8] {
-    return data.withUnsafeBytes { ptr in
-        var hash = [UInt8](repeating: 0, count: Int(MD5_DIGEST_LENGTH))
-        if let bytes = ptr.baseAddress?.assumingMemoryBound(to: UInt8.self) {
-            MD5(bytes, data.count, &hash)
-        }
-        return hash
-    }
+/// Calculate MD5 of buffer
+public func md5(_ buffer: UnsafeBufferPointer<UInt8>) -> [UInt8] {
+    var hash = [UInt8](repeating: 0, count: Int(MD5_DIGEST_LENGTH))
+    MD5(buffer.baseAddress, buffer.count, &hash)
+    return hash
 }
 
 #endif

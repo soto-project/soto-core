@@ -141,19 +141,3 @@ public func sha256(_ string: String) -> [UInt8] {
         return sha256(bytes)
     }! // UTF8View will return a value, so can force unwrap
 }
-
-/// Calculate SHA256 of buffer
-public func sha256(_ data: Data) -> [UInt8] {
-    return data.withUnsafeBytes { bytes in
-        return sha256(bytes.bindMemory(to: UInt8.self))
-    }
-}
-
-// Calculate SHA256 of two byte arrays
-public func sha256(_ bytes1: inout [UInt8], _ bytes2: inout [UInt8]) -> [UInt8] {
-    var context = sha256_Init()
-    sha256_Update(&context, bytes1)
-    sha256_Update(&context, bytes2)
-    return sha256_Final(&context)
-}
-

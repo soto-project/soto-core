@@ -36,18 +36,6 @@ extension Body {
         }
     }
 
-    /// return as a dictionary. Currently only works for JSON
-    public func asDictionary() throws -> [String: Any]? {
-        switch self {
-
-        case .json(let data):
-            return try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
-
-        default:
-            return nil
-        }
-    }
-
     /// return as a raw data buffer
     public func asString() -> String? {
         switch self {

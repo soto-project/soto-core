@@ -12,6 +12,7 @@ import NIOHTTP1
 import NIOTransportServices
 import class  Foundation.ProcessInfo
 import class  Foundation.JSONSerialization
+import class  Foundation.JSONDecoder
 import struct Foundation.Data
 import struct Foundation.Date
 import struct Foundation.URL
@@ -647,56 +648,87 @@ extension AWSClient {
     }
 
     private func createError(for response: AWSResponse) -> Error {
-        let bodyDict: [String: Any] = (try? response.body.asDictionary()) ?? [:]
+        struct XMLError: Codable, ErrorMessage {
+            var code: String?
+            var message: String
+            
+            private enum CodingKeys: String, CodingKey {
+                case code = "Code"
+                case message = "Message"
+            }
+        }
+        struct QueryError: Codable, ErrorMessage {
+            var code: String?
+            var message: String
+            
+            private enum CodingKeys: String, CodingKey {
+                case code = "Code"
+                case message = "Message"
+            }
+        }
+        struct JSONError: Codable, ErrorMessage {
+            var code: String?
+            var message: String
+            
+            private enum CodingKeys: String, CodingKey {
+                case code = "__type"
+                case message = "message"
+            }
+        }
 
-        var code: String?
-        var message: String?
+        var errorMessage: ErrorMessage? = nil
 
         switch serviceProtocol.type {
         case .query:
             guard case .xml(let element) = response.body else { break }
-            guard let error = element.elements(forName: "Error").first else { break }
-            code = error.elements(forName: "Code").first?.stringValue
-            message = error.elements(forName: "Message").first?.stringValue
+            guard let errorElement = element.elements(forName: "Error").first else { break }
+            errorMessage = try? XMLDecoder().decode(QueryError.self, from: errorElement)
 
         case .restxml:
             guard case .xml(let element) = response.body else { break }
-            code = element.elements(forName: "Code").first?.stringValue
-            message = element.children(of:.element)?.filter({$0.name != "Code"}).map({"\($0.name!): \($0.stringValue!)"}).joined(separator: ", ")
+            errorMessage = try? XMLDecoder().decode(XMLError.self, from: element)
 
         case .restjson:
-            code = response.headers["x-amzn-ErrorType"] as? String
-            message = bodyDict.filter({ $0.key.lowercased() == "message" }).first?.value as? String
+            guard case .json(let data) = response.body else { break }
+            errorMessage = try? JSONDecoder().decode(JSONError.self, from: data)
+            if errorMessage?.code == nil {
+                errorMessage?.code = response.headers["x-amzn-ErrorType"] as? String
+            }
 
         case .json:
-            code = bodyDict["__type"] as? String
-            message = bodyDict.filter({ $0.key.lowercased() == "message" }).first?.value as? String
+            guard case .json(let data) = response.body else { break }
+            errorMessage = try? JSONDecoder().decode(JSONError.self, from: data)
 
         default:
             break
         }
 
-        if let errorCode = code {
+        if let errorMessage = errorMessage, let code = errorMessage.code {
             for errorType in possibleErrorTypes {
-                if let error = errorType.init(errorCode: errorCode, message: message) {
+                if let error = errorType.init(errorCode: code, message: errorMessage.message) {
                     return error
                 }
             }
 
-            if let error = AWSClientError(errorCode: errorCode, message: message) {
+            if let error = AWSClientError(errorCode: code, message: errorMessage.message) {
                 return error
             }
 
-            if let error = AWSServerError(errorCode: errorCode, message: message) {
+            if let error = AWSServerError(errorCode: code, message: errorMessage.message) {
                 return error
             }
 
-            return AWSResponseError(errorCode: errorCode, message: message)
+            return AWSResponseError(errorCode: code, message: errorMessage.message)
         }
 
         let rawBodyString = response.body.asString()
-        return AWSError(message: message ?? "Unhandled Error. Response Code: \(response.status.code)", rawBody: rawBodyString ?? "")
+        return AWSError(message: errorMessage?.message ?? "Unhandled Error. Response Code: \(response.status.code)", rawBody: rawBodyString ?? "")
     }
+}
+
+protocol ErrorMessage { 
+    var code: String? {get set}
+    var message: String {get set}
 }
 
 extension AWSClient.RequestError: CustomStringConvertible {

@@ -527,7 +527,7 @@ class AWSClientTests: XCTestCase {
             try s3Client.validate(response: response)
             XCTFail("Should not get here")
         } catch S3ErrorType.noSuchKey(let message) {
-            XCTAssertEqual(message, "Message: It doesn't exist")
+            XCTAssertEqual(message, "It doesn't exist")
         } catch {
             XCTFail("Throwing the wrong error")
         }

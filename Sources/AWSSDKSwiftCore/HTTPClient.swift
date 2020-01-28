@@ -181,7 +181,7 @@ public final class HTTPClient {
                 clientBootstrap(hostname: hostname, port: port, headerHostname: headerHostname, request: request, response: response, timeout: timeout)
             }
         #else
-            clientBootstrap(hostname: hostname, port: port, headerHostname: headerHostname, request: request, response: response)
+        clientBootstrap(hostname: hostname, port: port, headerHostname: headerHostname, request: request, response: response, timeout: timeout)
         #endif
         
         return response.futureResult

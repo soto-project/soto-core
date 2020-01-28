@@ -8,13 +8,11 @@ final class AWSSignerTests: XCTestCase {
     func testSha256() {
         let testString = "This is a test string"
         let sha256_1 = sha256(testString)
-        let sha256_2 = sha256(testString.data(using: .utf8)!)
         var context = sha256_Init()
         sha256_Update(&context, Array(testString.utf8))
-        let sha256_3 = sha256_Final(&context)
+        let sha256_2 = sha256_Final(&context)
         
         XCTAssertEqual(sha256_1, sha256_2)
-        XCTAssertEqual(sha256_2, sha256_3)
     }
     
     func testSha256_InitUpdateFinal() {

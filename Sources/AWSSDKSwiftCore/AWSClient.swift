@@ -597,8 +597,10 @@ extension AWSClient {
             }
             return try XMLDecoder().decode(Output.self, from: outputNode)
 
-        case .buffer(let data):
+        case .buffer(let byteBuffer):
             if let payload = Output.payloadPath {
+                // convert ByteBuffer to Data
+                let data = byteBuffer.getData(at: byteBuffer.readerIndex, length: byteBuffer.readableBytes)
                 outputDict[payload] = data
             }
             decoder.dataDecodingStrategy = .raw

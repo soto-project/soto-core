@@ -7,16 +7,16 @@
 //
 
 import NIO
+import NIOFoundationCompat
 import struct Foundation.Data
 import class  Foundation.InputStream
-import class  Foundation.JSONSerialization
 
 /// Enumaration used to store request/response body in various forms
 public enum Body {
     /// text
     case text(String)
     /// raw data
-    case buffer(Data)
+    case buffer(ByteBuffer)
     /// json data
     case json(Data)
     /// xml
@@ -29,8 +29,14 @@ extension Body {
     /// initialize Body with Any. If it is Data, create .buffer() otherwise create a String describing the value
     init(anyValue: Any) {
         switch anyValue {
-        case let v as Data:
-            self = .buffer(v)
+        case let data as Data:
+            var byteBuffer = ByteBufferAllocator().buffer(capacity: data.count)
+            byteBuffer.writeBytes(data)
+            self = .buffer(byteBuffer)
+            
+        case let byteBuffer as ByteBuffer:
+            self = .buffer(byteBuffer)
+            
         default:
             self = .text("\(anyValue)")
         }
@@ -42,8 +48,8 @@ extension Body {
         case .text(let text):
             return text
 
-        case .buffer(let data):
-            return String(data: data, encoding: .utf8)
+        case .buffer(let byteBuffer):
+            return byteBuffer.getString(at: byteBuffer.readerIndex, length: byteBuffer.readableBytes, encoding: .utf8)
 
         case .json(let data):
             return String(data: data, encoding: .utf8)
@@ -65,10 +71,8 @@ extension Body {
             buffer.writeString(text)
             return buffer
 
-        case .buffer(let data):
-            var buffer = ByteBufferAllocator().buffer(capacity: data.count)
-            buffer.writeBytes(data)
-            return buffer
+        case .buffer(let byteBuffer):
+            return byteBuffer
 
         case .json(let data):
             if data.isEmpty {

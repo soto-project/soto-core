@@ -33,8 +33,14 @@ class AWSShapeEncoder {
         return try XMLEncoder().encode(input, name: overrideName)
     }
 
+    public func query<Input: AWSShape>(_ input: Input, flattenArrays: Bool = false) throws -> [String : Any] {
+        let encoder = QueryEncoder()
+        encoder.flattenContainers = flattenArrays
+        return try encoder.encode(input)
+    }
+
     /// Encode shape into query keys and values
-    public func query(_ input: AWSShape, flattenLists: Bool = false) -> [String : Any] {
+    public func queryOld(_ input: AWSShape, flattenLists: Bool = false) -> [String : Any] {
         var dictionary : [String : Any] = [:]
 
         func encodeToFlatDictionary(_ input: AWSShape, name: String? = nil) {

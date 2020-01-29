@@ -556,12 +556,25 @@ class _XMLEncoder : Encoder {
         }
         
         mutating func encode<T>(_ value: T) throws where T : Encodable {
+            // store containerCoding to reset at the exit of thie function
+            let prevContainerCoding = encoder.containerCoding
+            defer { encoder.containerCoding = prevContainerCoding }
+
             let collection = collectionElement()
             self.encoder.codingPath.append(_XMLKey(stringValue: collection.key, intValue: nil))
             defer { self.encoder.codingPath.removeLast() }
             // if element returned from collectionElement is different, then replace the top of the storage stack
             if element !== collection.element {
                 self.encoder.storage.push(container: collection.element)
+            }
+            
+            // set containerCoding
+            if value is _XMLDictionaryEncodableMarker {
+                encoder.containerCoding = encoder.options.dictionaryEncodingStrategy
+            } else if value is _XMLArrayEncodableMarker {
+                encoder.containerCoding = encoder.options.arrayEncodingStrategy
+            } else {
+                encoder.containerCoding = .default
             }
             
             try encoder.box(value)
@@ -681,6 +694,19 @@ extension _XMLEncoder : SingleValueEncodingContainer {
     }
     
     func encode<T>(_ value: T) throws where T : Encodable {
+        // store containerCoding to reset at the exit of thie function
+        let prevContainerCoding = containerCoding
+        defer { containerCoding = prevContainerCoding }
+
+        // set containerCoding
+        if value is _XMLDictionaryEncodableMarker {
+            containerCoding = options.dictionaryEncodingStrategy
+        } else if value is _XMLArrayEncodableMarker {
+            containerCoding = options.arrayEncodingStrategy
+        } else {
+            containerCoding = .default
+        }
+        
         try box(value)
     }
 }

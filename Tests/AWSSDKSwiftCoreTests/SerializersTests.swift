@@ -388,9 +388,25 @@ class SerializersTests: XCTestCase {
         }
         struct Shape : AWSShape {
             static let _members = [AWSShapeMember(label: "d", required: true, type: .map, encoding:.map(entry:"item", key: "key", value: "value"))]
-            let d : [KeyEnum:Int]
+            let d : [KeyEnum: Int]
         }
         let xmldata = "<Shape><d><item><key>member</key><value>4</value></item></d></Shape>"
+        testDecodeEncode(type: Shape.self, xml: xmldata)
+    }
+    
+    func testEnumShapeDictionaryEncodingDecodeEncode() {
+        enum KeyEnum : String, Codable {
+            case member = "member"
+            case member2 = "member2"
+        }
+        struct Shape2 : AWSShape {
+            let a: String
+        }
+        struct Shape : AWSShape {
+            static let _members = [AWSShapeMember(label: "d", required: true, type: .map, encoding:.map(entry:"item", key: "k", value: "v"))]
+            let d : [KeyEnum: Shape2]
+        }
+        let xmldata = "<Shape><d><item><k>member</k><v><a>thisisastring</a></v></item></d></Shape>"
         testDecodeEncode(type: Shape.self, xml: xmldata)
     }
     

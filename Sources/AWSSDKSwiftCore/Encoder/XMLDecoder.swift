@@ -373,9 +373,6 @@ fileprivate class _XMLDecoder : Decoder {
         }
 
         func decode<T>(_ type: T.Type, forKey key: Key) throws -> T where T : Decodable {
-            // store containerCoding to reset at the exit of thie function
-            let prevContainerCoding = decoder.containerCoding
-            defer { decoder.containerCoding = prevContainerCoding }
             self.decoder.codingPath.append(key)
             defer { self.decoder.codingPath.removeLast() }
 
@@ -441,6 +438,7 @@ fileprivate class _XMLDecoder : Decoder {
 
         init(_ element: XML.Node, decoder: _XMLDecoder) {
             var elements : [XML.Node]?
+            
             // build array of elements based on the container coding
             switch decoder.containerCoding {
             case .array(let member):
@@ -583,6 +581,15 @@ fileprivate class _XMLDecoder : Decoder {
         }
 
         mutating func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
+            // set containerCoding
+            if type is _XMLDictionaryDecodableMarker.Type {
+                decoder.containerCoding = decoder.options.dictionaryDecodingStrategy
+            } else if type is _XMLArrayDecodableMarker.Type {
+                decoder.containerCoding = decoder.options.arrayDecodingStrategy
+            } else {
+                decoder.containerCoding = .default
+            }
+
             let value = try decoder.unbox(elements[currentIndex], as:T.self)
             currentIndex += 1
             return value
@@ -694,6 +701,18 @@ fileprivate class _XMLDecoder : Decoder {
         }
 
         func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
+            // store containerCoding to reset at the exit of thie function
+            let prevContainerCoding = decoder.containerCoding
+            defer { decoder.containerCoding = prevContainerCoding }
+            // set containerCoding
+            if type is _XMLDictionaryDecodableMarker.Type {
+                decoder.containerCoding = decoder.options.dictionaryDecodingStrategy
+            } else if type is _XMLArrayDecodableMarker.Type {
+                decoder.containerCoding = decoder.options.arrayDecodingStrategy
+            } else {
+                decoder.containerCoding = .default
+            }
+
             return try decoder.unbox(element, as: T.self)
         }
 

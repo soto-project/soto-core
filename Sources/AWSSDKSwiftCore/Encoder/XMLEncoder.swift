@@ -220,22 +220,29 @@ class _XMLEncoder : Encoder {
         let encoder : _XMLEncoder
         let element : XML.Element
         var codingPath: [CodingKey] { return encoder.codingPath }
-        
+        let dictionaryElementNames: (entry: String, key: String, value: String)?
+
         init(_ element : XML.Element, referencing encoder: _XMLEncoder) {
             self.element = element
             self.encoder = encoder
+            
+            // extract dictionary element naming from container coding
+            if case .dictionary(let entryName, let keyName, let valueName) = encoder.containerCoding {
+                dictionaryElementNames = (entry: entryName ?? encoder.currentKey, key: keyName, value: valueName)
+            } else {
+                dictionaryElementNames = nil
+            }
         }
         
         /// returns the element to add value xml elements to and what to name those elements
         func collectionElement(forKey key: Key) -> (element:XML.Element, key:String) {
-            // create enclosing xmlelement for dictionary entry, then create key and value xmlelements under that element
-            if case .dictionary(let entryName, let keyName, let valueName) = encoder.containerCoding {
-                let entryName = entryName ?? encoder.currentKey
-                let entryElement = XML.Element(name: entryName)
-                let keyElement = XML.Element(name: keyName, stringValue:key.stringValue)
+            // if dictionary element names are available output as dictionary wth entry, key and value xml elements, otherwise output one element
+            if let dictionaryElementNames = self.dictionaryElementNames {
+                let entryElement = XML.Element(name: dictionaryElementNames.entry)
+                let keyElement = XML.Element(name: dictionaryElementNames.key, stringValue:key.stringValue)
                 entryElement.addChild(keyElement)
                 element.addChild(entryElement)
-                return (element:entryElement, key:valueName)
+                return (element:entryElement, key:dictionaryElementNames.value)
             }
             // return current element
             return (element:element, key:key.stringValue)
@@ -329,14 +336,11 @@ class _XMLEncoder : Encoder {
         }
         
         func encode<T>(_ value: T, forKey key: Key) throws where T : Encodable {
-            // store containerCoding to reset at the exit of thie function
-            let prevContainerCoding = encoder.containerCoding
-            defer { encoder.containerCoding = prevContainerCoding }
             // get element to attach child elements, also what to name those elements
             let dict = collectionElement(forKey: key)
             self.encoder.codingPath.append(_XMLKey(stringValue: dict.key, intValue: nil))
             defer { self.encoder.codingPath.removeLast() }
-            // if element returned from dictionaryElement is different, then replace the top of the storage stack
+            // if element returned from collectionElement is different, then replace the top of the storage stack
             if element !== dict.element {
                 self.encoder.storage.popContainer()
                 self.encoder.storage.push(container: dict.element)
@@ -390,6 +394,9 @@ class _XMLEncoder : Encoder {
     
     func unkeyedContainer() -> UnkeyedEncodingContainer {
         var createEnclosingElement = false
+        // Should I create an enclosing element. If the container has an entry element, then structure
+        // is `<array><entry>...</entry><entry>...</entry></array>` and we need to create the `array`
+        // element
         switch self.containerCoding {
         case .dictionary(let entry,_,_):
             // if entry is nil don't create enclosing element
@@ -423,33 +430,45 @@ class _XMLEncoder : Encoder {
         let element : XML.Element
         var codingPath: [CodingKey] { return encoder.codingPath }
         var count : Int
+        let entryElementName: String
+        let dictionaryElementNames: (key: String, value: String)?
 
         init(_ element : XML.Element, referencing encoder: _XMLEncoder) {
             self.element = element
             self.encoder = encoder
             self.count = 0
+            
+            // work out entry element name, and if we are outputting a dictionary the key/value element names
+            switch encoder.containerCoding {
+            case .dictionary(let entryName, let keyName, let valueName):
+                entryElementName = entryName ?? encoder.currentKey
+                dictionaryElementNames = (key: keyName, value: valueName)
+                
+            case .array(let member):
+                entryElementName = member ?? encoder.currentKey
+                dictionaryElementNames = nil
+
+            default:
+                entryElementName = encoder.currentKey
+                dictionaryElementNames = nil
+                break
+            }
         }
         
         /// returns the element to add value xml elements to, what to name those elements and whether we should pop the last element off the storage stack
         func collectionElement() -> (element:XML.Element, key:String, popElement: Bool) {
-            switch encoder.containerCoding {
-            case .dictionary(let entryName, let keyName, let valueName):
-                // key element
+            if let dictionaryElementNames = self.dictionaryElementNames {
                 if (count & 1 == 0) {
-                    // construct enclosing key element
-                    let entryName = entryName ?? encoder.currentKey
+                    // construct enclosing entry element
+                    let entryName = entryElementName
                     let entryElement = XML.Element(name: entryName)
                     element.addChild(entryElement)
-                    return (element:entryElement, key: keyName, popElement:false)
+                    return (element:entryElement, key: dictionaryElementNames.key, popElement:false)
                 } else {
-                    return (element:element, key: valueName, popElement:true)
+                    return (element:element, key: dictionaryElementNames.value, popElement:true)
                 }
-                
-            case .array(let member):
-                return (element:element, key: member ?? encoder.currentKey, popElement:false)
-                
-            default:
-                return (element:element, key: encoder.currentKey, popElement:false)
+            } else {
+                return (element:element, key: entryElementName, popElement:false)
             }
         }
         
@@ -559,9 +578,19 @@ class _XMLEncoder : Encoder {
             let collection = collectionElement()
             self.encoder.codingPath.append(_XMLKey(stringValue: collection.key, intValue: nil))
             defer { self.encoder.codingPath.removeLast() }
+            
             // if element returned from collectionElement is different, then replace the top of the storage stack
             if element !== collection.element {
                 self.encoder.storage.push(container: collection.element)
+            }
+            
+            // set containerCoding
+            if value is _XMLDictionaryEncodableMarker {
+                encoder.containerCoding = encoder.options.dictionaryEncodingStrategy
+            } else if value is _XMLArrayEncodableMarker {
+                encoder.containerCoding = encoder.options.arrayEncodingStrategy
+            } else {
+                encoder.containerCoding = .default
             }
             
             try encoder.box(value)
@@ -681,6 +710,19 @@ extension _XMLEncoder : SingleValueEncodingContainer {
     }
     
     func encode<T>(_ value: T) throws where T : Encodable {
+        // store containerCoding to reset at the exit of thie function
+        let prevContainerCoding = containerCoding
+        defer { containerCoding = prevContainerCoding }
+
+        // set containerCoding
+        if value is _XMLDictionaryEncodableMarker {
+            containerCoding = options.dictionaryEncodingStrategy
+        } else if value is _XMLArrayEncodableMarker {
+            containerCoding = options.arrayEncodingStrategy
+        } else {
+            containerCoding = .default
+        }
+        
         try box(value)
     }
 }

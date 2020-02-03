@@ -1,11 +1,11 @@
 name: CI
 
-on: 
+on:
   push:
-    branches: 
+    branches:
     - "*"
   pull_request:
-    branches: 
+    branches:
     - "*"
 
 jobs:
@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        tag: ['5.0', '5.1.5']
+        tag: ['5.1.5']
     container:
       image: swift:${{ matrix.tag }}
       volumes:

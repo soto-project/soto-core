@@ -12,7 +12,6 @@ XCTMain([
     testCase(PaginateTests.allTests),
     testCase(PerformanceTests.allTests),
     testCase(QueryEncoderTests.allTests),
-    testCase(SerializersTests.allTests),
     testCase(TimeStampTests.allTests),
     testCase(ValidationTests.allTests),
     testCase(XMLCoderTests.allTests),

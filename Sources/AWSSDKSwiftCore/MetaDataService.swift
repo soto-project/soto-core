@@ -6,7 +6,6 @@
 //
 //
 
-#if os(Linux)
 import NIO
 import NIOHTTP1
 
@@ -195,9 +194,12 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
 
     func getCredential(eventLoopGroup: EventLoopGroup) -> EventLoopFuture<CredentialProvider> {
         //  no point storing the session key as the credentials last as long
-        var sessionTokenHeader: [String: String] = [:]
+        let sessionTokenHeader: [String: String] = [:]
+        //
+        // TEMPORARILY DISABLING INSTANCE METADATA V2 until we have the Async HTTP Client
+        //
         // instance service expects absoluteString as uri...
-        return request(
+        /*return request(
             uri:InstanceMetaDataServiceProvider.apiTokenURL,
             method: .PUT,
             headers:["X-aws-ec2-metadata-token-ttl-seconds":"21600"],
@@ -221,7 +223,15 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
                 timeout: 2,
                 eventLoopGroup: eventLoopGroup
             )
-        }.flatMapThrowing { response in
+        }*/
+            // request rolename
+            return self.request(
+                uri:InstanceMetaDataServiceProvider.baseURLString,
+                headers:sessionTokenHeader,
+                timeout: 2,
+                eventLoopGroup: eventLoopGroup
+            )
+            .flatMapThrowing { response in
             // extract rolename
             guard response.head.status == .ok,
                 let roleName = String(data: response.body, encoding: .utf8) else {
@@ -239,4 +249,3 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
     }
 }
 
-#endif // os(Linux)

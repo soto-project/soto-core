@@ -27,11 +27,11 @@ public struct AWSResponse {
     ///     - raw: Whether Body should be treated as raw data
     init(from response: AWSHTTPResponse, serviceProtocolType: ServiceProtocolType, raw: Bool = false) throws {
         self.status = response.status
-        self.headers = AWSResponse.createHeaders(from: response)
-        self.body = try AWSResponse.createBody(from: response, serviceProtocolType: serviceProtocolType, raw: raw)
+        self.headers = AWSResponse.getHeaders(from: response)
+        self.body = try AWSResponse.getBody(from: response, serviceProtocolType: serviceProtocolType, raw: raw)
     }
 
-    private static func createHeaders(from response: AWSHTTPResponse) -> [String: String] {
+    private static func getHeaders(from response: AWSHTTPResponse) -> [String: String] {
         var responseHeaders: [String: String] = [:]
         for (key, value) in response.headers {
             responseHeaders[key.description] = value
@@ -40,7 +40,7 @@ public struct AWSResponse {
         return responseHeaders
     }
     
-    private static func createBody(from response: AWSHTTPResponse, serviceProtocolType: ServiceProtocolType, raw: Bool) throws -> Body {
+    private static func getBody(from response: AWSHTTPResponse, serviceProtocolType: ServiceProtocolType, raw: Bool) throws -> Body {
         var responseBody: Body = .empty
         
         guard let body = response.body,

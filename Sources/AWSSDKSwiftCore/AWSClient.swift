@@ -291,7 +291,7 @@ extension AWSClient {
     /// - returns:
     ///     A signed URL
     public func signURL(url: URL, httpMethod: String, expires: Int = 86400) -> EventLoopFuture<URL> {
-        return signer.map { signer in signer.signURL(url: url, method: HTTPMethod(from: httpMethod), expires: expires) }
+        return signer.map { signer in signer.signURL(url: url, method: HTTPMethod(rawValue: httpMethod), expires: expires) }
     }
 }
 

@@ -535,7 +535,7 @@ class AWSClientTests: XCTestCase {
                 headers: ["Content-Type":"application/hal+json"]
             ),
             body: """
-                {"_embedded": {"a": [{"s":"Hello", "i":1234}, {"s":"Hello2", "i":12345}]}, "d":3.14, "b":true}
+                {"_embedded": {"a": [{"s":"Hello", "i":1234}, {"s":"Hello2", "i":12345}], "d":3.14, "b":true}}
                 """.data(using: .utf8)!
         )
         do {

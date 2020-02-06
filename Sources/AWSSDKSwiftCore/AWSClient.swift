@@ -582,7 +582,7 @@ extension AWSClient {
 
         try validateCode(response: awsResponse)
 
-        awsResponse = try hypertextApplicationLanguageProcess(response: awsResponse, members: Output._members)
+        awsResponse = try hypertextApplicationLanguageProcess(response: awsResponse)
 
         let decoder = DictionaryDecoder()
 

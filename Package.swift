@@ -12,7 +12,6 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio-ssl.git", .upToNextMajor(from:"2.4.0")),
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", .upToNextMajor(from:"1.0.0")),
         .package(url: "https://github.com/swift-server/async-http-client.git", .upToNextMajor(from:"1.0.0")),
-        .package(url: "https://github.com/swift-aws/HypertextApplicationLanguage.git", .upToNextMinor(from: "1.1.0")),
         .package(url: "https://github.com/swift-aws/Perfect-INIParser.git", .upToNextMinor(from: "3.0.0")),
     ],
     targets: [
@@ -22,7 +21,6 @@ let package = Package(
                 "AsyncHTTPClient",
                 "AWSSignerV4",
                 "CAWSSDKOpenSSL",
-                "HypertextApplicationLanguage",
                 "NIO",
                 "NIOHTTP1",
                 "NIOSSL",

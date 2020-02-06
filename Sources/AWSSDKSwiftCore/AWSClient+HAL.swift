@@ -1,36 +1,29 @@
-import HypertextApplicationLanguage
 import Foundation
 
+// AWS HAL services I know of are APIGateway, Pinpoint, Greengrass
 extension AWSClient {
     /// process hal+json date. Extract properties from HAL
-    func hypertextApplicationLanguageProcess(response: AWSResponse, members: [AWSShapeMember]) throws -> AWSResponse {
+    func hypertextApplicationLanguageProcess(response: AWSResponse) throws -> AWSResponse {
         guard case .json(let data) = response.body,
             let contentType = response.headers["Content-Type"] as? String,
             contentType.contains("hal+json") else {
                 return response
         }
         
-        let representation = try Representation.from(json: data)
-        var dictionary = representation.properties
-        for rel in representation.rels {
-            guard let representations = representation.representations(for: rel) else {
-                continue
-            }
-
-            // get member type hint
-            guard let hint = members.filter({ $0.location?.name == rel }).first else {
-                continue
-            }
-
-            switch hint.type {
-            case .list:
-                dictionary[rel] = representations.map({ $0.properties })
-
-            default:
-                dictionary[rel] = representations.map({ $0.properties }).first
-            }
+        // extract embedded resources from HAL
+        let json = try JSONSerialization.jsonObject(with: data, options: [])
+        guard var dictionary = json as? [String: Any],
+            let embedded = dictionary["_embedded"],
+            let embeddedDictionary = embedded as? [String: Any] else {
+                return response
         }
+
         var response = response
+        // remove _links and _embedded elements of dictionary to reduce the size of the new dictionary
+        dictionary["_links"] = nil
+        dictionary["_embedded"] = nil
+        // merge embedded resources into original dictionary
+        dictionary.merge(embeddedDictionary) { first,_ in return first }
         response.body = .json(try JSONSerialization.data(withJSONObject: dictionary, options: []))
         return response
     }

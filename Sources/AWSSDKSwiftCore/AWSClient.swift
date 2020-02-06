@@ -413,7 +413,7 @@ extension AWSClient {
             }
 
         case .query:
-            var dict = AWSShapeEncoder().query(input)
+            var dict = try AWSShapeEncoder().query(input)
 
             dict["Action"] = operationName
             dict["Version"] = apiVersion
@@ -457,7 +457,7 @@ extension AWSClient {
         case .other(let proto):
             switch proto.lowercased() {
             case "ec2":
-                var params = AWSShapeEncoder().query(input, flattenLists: true)
+                var params = try AWSShapeEncoder().query(input, flattenArrays: true)
                 params["Action"] = operationName
                 params["Version"] = apiVersion
                 if let urlEncodedQueryParams = urlEncodeQueryParams(fromDictionary: params) {
@@ -557,7 +557,7 @@ extension AWSClient {
 
         try validateCode(response: awsResponse)
 
-        awsResponse = try hypertextApplicationLanguageProcess(response: awsResponse, members: Output._members)
+        awsResponse = try hypertextApplicationLanguageProcess(response: awsResponse)
 
         let decoder = DictionaryDecoder()
 

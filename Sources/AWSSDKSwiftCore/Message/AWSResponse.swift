@@ -8,7 +8,6 @@
 
 import NIO
 import NIOHTTP1
-import HypertextApplicationLanguage
 
 /// Structure encapsulating a processed HTTP Response
 public struct AWSResponse {

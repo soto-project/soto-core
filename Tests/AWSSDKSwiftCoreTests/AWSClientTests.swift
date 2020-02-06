@@ -630,7 +630,7 @@ class AWSClientTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
     }
-    
+
     func testClientNoInputNoOutput() {
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)
@@ -646,12 +646,12 @@ class AWSClientTests: XCTestCase {
                 eventLoopGroupProvider: .useAWSClientShared
             )
             let response = client.send(operation: "test", path: "/", httpMethod: "POST")
-            
+
             try awsServer.process { request in
                 let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
                 return AWSTestServer.Result(output: response, continueProcessing: false)
             }
-            
+
             try response.wait()
             try awsServer.stop()
         } catch {
@@ -688,7 +688,7 @@ class AWSClientTests: XCTestCase {
             )
             let input = Input(e:.second, i: [1,2,4,8])
             let response = client.send(operation: "test", path: "/", httpMethod: "POST", input: input)
-            
+
             try awsServer.process { request in
                 let receivedInput = try JSONDecoder().decode(Input.self, from: request.body)
                 XCTAssertEqual(receivedInput.e, .second)
@@ -696,7 +696,7 @@ class AWSClientTests: XCTestCase {
                 let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
                 return AWSTestServer.Result(output: response, continueProcessing: false)
             }
-            
+
             try response.wait()
             try awsServer.stop()
         } catch {
@@ -727,16 +727,16 @@ class AWSClientTests: XCTestCase {
                 eventLoopGroupProvider: .useAWSClientShared
             )
             let response: EventLoopFuture<Output> = client.send(operation: "test", path: "/", httpMethod: "POST")
-            
+
             try awsServer.process { request in
                 let output = Output(s: "TestOutputString", i: 547)
                 let byteBuffer = try JSONEncoder().encodeAsByteBuffer(output, allocator: ByteBufferAllocator())
                 let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
                 return AWSTestServer.Result(output: response, continueProcessing: false)
             }
-            
+
             let output = try response.wait()
-            
+
             XCTAssertEqual(output.s, "TestOutputString")
             XCTAssertEqual(output.i, 547)
             try awsServer.stop()

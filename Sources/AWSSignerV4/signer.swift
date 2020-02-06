@@ -26,7 +26,7 @@ public struct AWSSigner {
     /// AWS region you are working in
     public let region: String
     
-    static let hashedEmptyBody = AWSSigner.hexEncoded(sha256([UInt8]()))
+    static let hashedEmptyBody = sha256([UInt8]()).hexEncoded()
     
     static private let timeStampDateFormatter: DateFormatter = createTimeStampDateFormatter()
     
@@ -44,21 +44,35 @@ public struct AWSSigner {
         case byteBuffer(ByteBuffer)
     }
     
+    public func signHeaders<Buffer: Collection>(
+        url: URL,
+        method: HTTPMethod = .GET,
+        headers: HTTPHeaders = HTTPHeaders(),
+        body: Buffer,
+        date: Date = Date()
+    ) -> HTTPHeaders where Buffer.Element == UInt8 {
+        let payloadHash = AWSSigner.hashedPayload(body)
+        return signHeaders(url: url, method: method, headers: headers, payloadHash: payloadHash, date: date)
+    }
+    
+    public func signHeaders(url: URL, method: HTTPMethod = .GET, headers: HTTPHeaders = HTTPHeaders(), date: Date = Date()) -> HTTPHeaders {
+        return signHeaders(url: url, method: method, headers: headers, payloadHash: AWSSigner.hashedEmptyBody, date: date)
+    }
+    
     /// Generate signed headers, for a HTTP request
-    public func signHeaders(url: URL, method: HTTPMethod = .GET, headers: HTTPHeaders = HTTPHeaders(), body: BodyData? = nil, date: Date = Date()) -> HTTPHeaders {
-        let bodyHash = AWSSigner.hashedPayload(body)
+    private func signHeaders(url: URL, method: HTTPMethod, headers: HTTPHeaders, payloadHash: String, date: Date) -> HTTPHeaders {
         let dateString = AWSSigner.timestamp(date)
         var headers = headers
         // add date, host, sha256 and if available security token headers
         headers.add(name: "X-Amz-Date", value: dateString)
         headers.add(name: "host", value: url.host ?? "")
-        headers.add(name: "x-amz-content-sha256", value: bodyHash)
+        headers.add(name: "x-amz-content-sha256", value: payloadHash)
         if let sessionToken = credentials.sessionToken {
             headers.add(name: "x-amz-security-token", value: sessionToken)
         }
         
         // construct signing data. Do this after adding the headers as it uses data from the headers
-        let signingData = AWSSigner.SigningData(url: url, method: method, headers: headers, body: body, bodyHash: bodyHash, date: dateString, signer: self)
+        let signingData = AWSSigner.SigningData(url: url, method: method, headers: headers, payloadHash: payloadHash, date: dateString, signer: self)
         
         // construct authorization string
         let authorization = "AWS4-HMAC-SHA256 " +
@@ -72,11 +86,31 @@ public struct AWSSigner {
         return headers
     }
     
+    public func signURL<Buffer: Collection>(
+        url: URL,
+        method: HTTPMethod = .GET,
+        body: Buffer,
+        date: Date = Date(),
+        expires: Int = 86400
+    ) -> URL where Buffer.Element == UInt8 {
+        let payloadHash: String
+        if name == "s3" {
+            payloadHash = "UNSIGNED-PAYLOAD"
+        } else {
+            payloadHash = AWSSigner.hashedPayload(body)
+        }
+        return signURL(url: url, method: method, payloadHash: payloadHash, date: date, expires: expires)
+    }
+    
+    public func signURL(url: URL, method: HTTPMethod = .GET, headers: HTTPHeaders = HTTPHeaders(), date: Date = Date(), expires: Int = 86400) -> URL {
+        return signURL(url: url, method: method, payloadHash: AWSSigner.hashedEmptyBody, date: date, expires: expires)
+    }
+    
     /// Generate a signed URL, for a HTTP request
-    public func signURL(url: URL, method: HTTPMethod = .GET, body: BodyData? = nil, date: Date = Date(), expires: Int = 86400) -> URL {
+    public func signURL(url: URL, method: HTTPMethod, payloadHash: String, date: Date, expires: Int) -> URL {
         let headers = HTTPHeaders([("host", url.host ?? "")])
         // Create signing data
-        let signingData = AWSSigner.SigningData(url: url, method: method, headers: headers, body: body, date: AWSSigner.timestamp(date), signer: self)
+        let signingData = AWSSigner.SigningData(url: url, method: method, headers: headers, payloadHash: payloadHash, date: AWSSigner.timestamp(date), signer: self)
         
         // Construct query string. Start with original query strings and append all the signing info.
         var query = url.query ?? ""
@@ -111,7 +145,7 @@ public struct AWSSigner {
     class SigningData {
         let url : URL
         let method : HTTPMethod
-        let hashedPayload : String
+        let payloadHash : String
         let datetime : String
         let headersToSign: [String: String]
         let signedHeaders : String
@@ -119,20 +153,13 @@ public struct AWSSigner {
         
         var date : String { return String(datetime.prefix(8))}
         
-        init(url: URL, method: HTTPMethod = .GET, headers: HTTPHeaders = HTTPHeaders(), body: BodyData? = nil, bodyHash: String? = nil, date: String, signer: AWSSigner) {
+        init(url: URL, method: HTTPMethod, headers: HTTPHeaders, payloadHash: String, date: String, signer: AWSSigner) {
             self.url = url
             self.method = method
             self.datetime = date
             self.unsignedURL = self.url
+            self.payloadHash = payloadHash
 
-            if let hash = bodyHash {
-                self.hashedPayload = hash
-            } else if signer.name == "s3" {
-                self.hashedPayload = "UNSIGNED-PAYLOAD"
-            } else {
-                self.hashedPayload = AWSSigner.hashedPayload(body)
-            }
-            
             let headersNotToSign: Set<String> = [
                 "Authorization"
             ]
@@ -157,7 +184,7 @@ public struct AWSSigner {
         let kService = hmac(string: name, key: kRegion)
         let kSigning = hmac(string: "aws4_request", key: kService)
         let kSignature = hmac(string: stringToSign(signingData: signingData), key: kSigning)
-        return AWSSigner.hexEncoded(kSignature)
+        return kSignature.hexEncoded()
     }
     
     /// Stage 2 Create the string to sign as in https://docs.aws.amazon.com/general/latest/gr/sigv4-create-string-to-sign.html
@@ -165,7 +192,7 @@ public struct AWSSigner {
         let stringToSign = "AWS4-HMAC-SHA256\n" +
             "\(signingData.datetime)\n" +
             "\(signingData.date)/\(region)/\(name)/aws4_request\n" +
-            AWSSigner.hexEncoded(sha256(canonicalRequest(signingData: signingData)))
+            sha256(canonicalRequest(signingData: signingData)).hexEncoded()
         return stringToSign
     }
     
@@ -179,13 +206,17 @@ public struct AWSSigner {
             "\(signingData.unsignedURL.query ?? "")\n" +        // should really uriEncode all the query string values
             "\(canonicalHeaders)\n\n" +
             "\(signingData.signedHeaders)\n" +
-            signingData.hashedPayload
+            signingData.payloadHash
         return canonicalRequest
     }
     
     /// Create a SHA256 hash of the Requests body
-    static func hashedPayload(_ payload: BodyData?) -> String {
-        guard let payload = payload else { return hashedEmptyBody }
+    static func hashedPayload<Buffer: Collection>(_ payload: Buffer) -> String where Buffer.Element == UInt8 {
+        let hash = payload.withContiguousStorageIfAvailable { bytes in
+            return sha256(bytes)
+        }
+        return hash?.hexEncoded() ?? AWSSigner.hashedEmptyBody
+/*        guard let payload = payload else { return hashedEmptyBody }
         let hash : [UInt8]?
         switch payload {
         case .string(let string):
@@ -204,13 +235,13 @@ public struct AWSSigner {
             return AWSSigner.hexEncoded(hash)
         } else {
             return hashedEmptyBody
-        }
+        }*/
     }
     
     /// return a hexEncoded string buffer from an array of bytes
-    static func hexEncoded(_ buffer: [UInt8]) -> String {
+    /*static func hexEncoded(_ buffer: [UInt8]) -> String {
         return buffer.map{String(format: "%02x", $0)}.joined(separator: "")
-    }
+    }*/
     
     /// create timestamp dateformatter
     static private func createTimeStampDateFormatter() -> DateFormatter {
@@ -243,4 +274,10 @@ extension String {
     static let uriAllowedWithSlashCharacters = CharacterSet(charactersIn:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~/")
     static let uriAllowedCharacters = CharacterSet(charactersIn:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
     static let queryAllowedCharacters = CharacterSet(charactersIn:"/;+").inverted
+}
+
+extension Collection where Element == UInt8 {
+    func hexEncoded() -> String {
+        return self.map{String(format: "%02x", $0)}.joined(separator: "")
+    }
 }

@@ -1,9 +1,8 @@
-// swift-tools-version:5.1
+// swift-tools-version:5.0
 import PackageDescription
 
 let package = Package(
     name: "AWSSDKSwiftCore",
-    platforms: [.macOS(.v10_15), .iOS(.v13), .watchOS(.v6), .tvOS(.v13)],
     products: [
         .library(name: "AWSSDKSwiftCore", targets: ["AWSSDKSwiftCore"])
     ],
@@ -27,9 +26,25 @@ let package = Package(
                 "NIOFoundationCompat",
                 "INIParser"
             ]),
-        .target(name: "AWSSignerV4", dependencies: ["Crypto", "NIOHTTP1"]),
+        .target(name: "AWSSignerV4", dependencies: ["AWSCrypto", "NIOHTTP1"]),
         .target(name: "INIParser", dependencies: []),
+        .target(name: "AWSCrypto", dependencies: []),
+
+        .testTarget(name: "AWSCryptoTests", dependencies: ["AWSCrypto"]),
         .testTarget(name: "AWSSDKSwiftCoreTests", dependencies: ["AWSSDKSwiftCore", "NIOTestUtils"]),
         .testTarget(name: "AWSSignerTests", dependencies: ["AWSSignerV4"])
     ]
 )
+
+// switch for whether to use swift crypto. Swift crypto requires macOS10.15 or iOS13.I'd rather not pass this requirement on
+#if os(Linux)
+let useSwiftCrypto = true
+#else
+let useSwiftCrypto = false
+#endif
+
+// Use Swift cypto on Linux.
+if useSwiftCrypto {
+    package.dependencies.append(.package(url: "https://github.com/apple/swift-crypto.git", from: "1.0.0"))
+    package.targets.first{$0.name == "AWSCrypto"}?.dependencies.append("Crypto")
+}

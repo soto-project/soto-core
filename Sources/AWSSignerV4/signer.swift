@@ -14,7 +14,7 @@ import class Foundation.DateFormatter
 import struct Foundation.Locale
 import struct Foundation.TimeZone
 import struct Foundation.URL
-import Crypto
+import AWSCrypto
 import NIO
 import NIOHTTP1
 

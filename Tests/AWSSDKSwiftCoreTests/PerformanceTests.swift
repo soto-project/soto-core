@@ -30,13 +30,15 @@ struct StandardRequest: AWSShape {
         AWSShapeMember(label: "item1", location: .body(locationName: "item1"), required: true, type: .string),
         AWSShapeMember(label: "item2", location: .body(locationName: "item2"), required: true, type: .integer),
         AWSShapeMember(label: "item3", location: .body(locationName: "item3"), required: true, type: .double),
-        AWSShapeMember(label: "item4", location: .body(locationName: "item4"), required: true, type: .timestamp)
+        AWSShapeMember(label: "item4", location: .body(locationName: "item4"), required: true, type: .timestamp),
+        AWSShapeMember(label: "item5", location: .body(locationName: "item5"), required: true, type: .list)
     ]
 
     let item1: String
     let item2: Int
     let item3: Double
     let item4: TimeStamp
+    let item5: [Int]
 }
 
 struct PayloadRequest: AWSShape {
@@ -64,7 +66,7 @@ struct MixedRequest: AWSShape {
 
 
 class PerformanceTests: XCTestCase {
-    
+
     func testHeaderRequest() {
         let client = AWSClient(
             region: .useast1,
@@ -85,7 +87,7 @@ class PerformanceTests: XCTestCase {
             }
         }
     }
-    
+
     func testXMLRequest() {
         let client = AWSClient(
             region: .useast1,
@@ -95,7 +97,7 @@ class PerformanceTests: XCTestCase {
             eventLoopGroupProvider: .useAWSClientShared
         )
         let date = Date()
-        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date))
+        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1,2,3,4,5])
         measure {
             do {
                 for _ in 0..<1000 {
@@ -106,7 +108,7 @@ class PerformanceTests: XCTestCase {
             }
         }
     }
-    
+
     func testXMLPayloadRequest() {
         let client = AWSClient(
             region: .useast1,
@@ -116,7 +118,7 @@ class PerformanceTests: XCTestCase {
             eventLoopGroupProvider: .useAWSClientShared
         )
         let date = Date()
-        let request = PayloadRequest(payload: StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date)))
+        let request = PayloadRequest(payload: StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1,2,3,4,5]))
         measure {
             do {
                 for _ in 0..<1000 {
@@ -127,7 +129,7 @@ class PerformanceTests: XCTestCase {
             }
         }
     }
-    
+
     func testJSONRequest() {
         let client = AWSClient(
             region: .useast1,
@@ -137,7 +139,7 @@ class PerformanceTests: XCTestCase {
             eventLoopGroupProvider: .useAWSClientShared
         )
         let date = Date()
-        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date))
+        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1,2,3,4,5])
         measure {
             do {
                 for _ in 0..<1000 {
@@ -148,7 +150,7 @@ class PerformanceTests: XCTestCase {
             }
         }
     }
-    
+
     func testJSONPayloadRequest() {
         let client = AWSClient(
             region: .useast1,
@@ -158,7 +160,7 @@ class PerformanceTests: XCTestCase {
             eventLoopGroupProvider: .useAWSClientShared
         )
         let date = Date()
-        let request = PayloadRequest(payload: StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date)))
+        let request = PayloadRequest(payload: StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1,2,3,4,5]))
         measure {
             do {
                 for _ in 0..<1000 {
@@ -169,7 +171,7 @@ class PerformanceTests: XCTestCase {
             }
         }
     }
-    
+
     func testQueryRequest() {
         let client = AWSClient(
             region: .useast1,
@@ -179,7 +181,7 @@ class PerformanceTests: XCTestCase {
             eventLoopGroupProvider: .useAWSClientShared
         )
         let date = Date()
-        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date))
+        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1,2,3,4,5])
         measure {
             do {
                 for _ in 0..<1000 {
@@ -190,7 +192,7 @@ class PerformanceTests: XCTestCase {
             }
         }
     }
-    
+
     func testUnsignedRequest() {
         let client = AWSClient(
             accessKeyId: "",
@@ -240,7 +242,7 @@ class PerformanceTests: XCTestCase {
             eventLoopGroupProvider: .useAWSClientShared
         )
         let date = Date()
-        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date))
+        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1,2,3,4,5])
         let awsRequest = try! client.createAWSRequest(operation: "Test", path: "/", httpMethod: "POST", input: request)
         let signer = try! client.signer.wait()
         measure {
@@ -249,7 +251,7 @@ class PerformanceTests: XCTestCase {
             }
         }
     }
-    
+
     func testValidateXMLResponse() {
         let client = AWSClient(
             region: .useast1,
@@ -259,7 +261,7 @@ class PerformanceTests: XCTestCase {
             eventLoopGroupProvider: .useAWSClientShared
         )
         var buffer = ByteBufferAllocator().buffer(capacity: 0)
-        buffer.writeString("<Output><item1>Hello</item1><item2>5</item2><item3>3.141</item3><item4>2001-12-23T15:34:12.590Z</item4></Output>")
+        buffer.writeString("<Output><item1>Hello</item1><item2>5</item2><item3>3.141</item3><item4>2001-12-23T15:34:12.590Z</item4><item5>3</item5><item5>6</item5><item5>325</item5></Output>")
         let response = HTTPClient.Response(
             host: "localhost",
             status: .ok,
@@ -276,7 +278,7 @@ class PerformanceTests: XCTestCase {
             }
         }
     }
-    
+
     func testValidateJSONResponse() {
         let client = AWSClient(
             region: .useast1,
@@ -286,7 +288,7 @@ class PerformanceTests: XCTestCase {
             eventLoopGroupProvider: .useAWSClientShared
         )
         var buffer = ByteBufferAllocator().buffer(capacity: 0)
-        buffer.writeString("{\"item1\":\"Hello\", \"item2\":5, \"item3\":3.14, \"item4\":\"2001-12-23T15:34:12.590Z\"}")
+        buffer.writeString("{\"item1\":\"Hello\", \"item2\":5, \"item3\":3.14, \"item4\":\"2001-12-23T15:34:12.590Z\", \"item5\": [1,56,3,7]}")
         let response = HTTPClient.Response(
             host: "localhost",
             status: .ok,

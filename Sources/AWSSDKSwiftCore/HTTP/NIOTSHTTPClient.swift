@@ -78,21 +78,21 @@ public final class NIOTSHTTPClient {
         }
 
         bootstrap.channelInitializer { channel in
-                return channel.pipeline.addHTTPClientHandlers()
-                    .flatMap {
-                        let handlers : [ChannelHandler] = [
-                            HTTPClientRequestSerializer(hostname: headerHostname),
-                            HTTPClientResponseHandler(promise: response)
-                        ]
-                        return channel.pipeline.addHandlers(handlers)
-                }
+            return channel.pipeline.addHTTPClientHandlers()
+                .flatMap {
+                    let handlers : [ChannelHandler] = [
+                        HTTPClientRequestSerializer(hostname: headerHostname),
+                        HTTPClientResponseHandler(promise: response)
+                    ]
+                    return channel.pipeline.addHandlers(handlers)
             }
-            .connect(host: hostname, port: port)
-            .flatMap { channel -> EventLoopFuture<Void> in
-                return channel.writeAndFlush(request)
-            }
-            .whenFailure { error in
-                response.fail(error)
+        }
+        .connect(host: hostname, port: port)
+        .flatMap { channel -> EventLoopFuture<Void> in
+            return channel.writeAndFlush(request)
+        }
+        .whenFailure { error in
+            response.fail(error)
         }
 
         return response.futureResult

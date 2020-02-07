@@ -45,4 +45,4 @@ let package = Package(
 
 ## License
 
-`aws-sdk-swift-core` is released under the MIT license. See LICENSE for details.
+`aws-sdk-swift-core` is released under the Apache 2.0 license. See LICENSE for details.

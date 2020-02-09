@@ -47,7 +47,6 @@ class AWSClientTests: XCTestCase {
             ("testExpiredCredential", testExpiredCredential),
             ("testCreateAWSRequest", testCreateAWSRequest),
             ("testCreateNIORequest", testCreateNIORequest),
-            ("testValidateCode", testValidateCode),
             ("testUnsignedClient", testUnsignedClient),
             ("testHeaderEncoding", testHeaderEncoding),
             ("testQueryEncoding", testQueryEncoding),
@@ -57,13 +56,12 @@ class AWSClientTests: XCTestCase {
             ("testValidateXMLResponse", testValidateXMLResponse),
             ("testValidateXMLCodablePayloadResponse", testValidateXMLCodablePayloadResponse),
             ("testValidateXMLRawPayloadResponse", testValidateXMLRawPayloadResponse),
-            ("testValidateXMLError", testValidateXMLError),
-            ("testValidateRawResponseError", testValidateRawResponseError),
-            ("testValidateQueryError", testValidateQueryError),
+            ("testXMLError", testXMLError),
+            ("testValidateQueryError", testQueryError),
             ("testValidateJSONResponse", testValidateJSONResponse),
             ("testValidateJSONCodablePayloadResponse", testValidateJSONCodablePayloadResponse),
             ("testValidateJSONRawPayloadResponse", testValidateJSONRawPayloadResponse),
-            ("testValidateJSONError", testValidateJSONError),
+            ("testValidateJSONError", testJSONError),
             ("testProcessHAL", testProcessHAL),
             ("testDataInJsonPayload", testDataInJsonPayload),
             ("testPayloadDataInResponse", testPayloadDataInResponse),
@@ -611,33 +609,7 @@ class AWSClientTests: XCTestCase {
         }
     }
 
-    func testValidateCode() {
-        let response = AWSHTTPResponseImpl(
-            status: .ok,
-            headers: HTTPHeaders(),
-            body: nil
-        )
-        do {
-            try s3Client.validate(response: response)
-        } catch {
-            XCTFail(error.localizedDescription)
-        }
-
-        let failResponse = AWSHTTPResponseImpl(
-            status: .forbidden,
-            headers: HTTPHeaders(),
-            body: nil
-        )
-
-        do {
-            try s3Client.validate(response: failResponse)
-            XCTFail("call to validateCode should throw an error")
-        } catch {
-            XCTAssertTrue(true)
-        }
-    }
-
-    func testValidateXMLResponse() {
+   func testValidateXMLResponse() {
         class Output : AWSDecodableShape {
             let name : String
         }
@@ -702,56 +674,31 @@ class AWSClientTests: XCTestCase {
         }
     }
 
-    func testValidateXMLError() {
+    func testXMLError() {
         let response = AWSHTTPResponseImpl(
             status: .notFound,
             headers: HTTPHeaders(),
             bodyData: "<Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message></Error>".data(using: .utf8)!
         )
-        do {
-            try s3Client.validate(response: response)
-            XCTFail("Should not get here")
-        } catch S3ErrorType.noSuchKey(let message) {
+        let error = s3Client.createError(for: response)
+        if case S3ErrorType.noSuchKey(let message) = error {
             XCTAssertEqual(message, "It doesn't exist")
-        } catch {
-            XCTFail("Throwing the wrong error")
+        } else {
+            XCTFail("Creating the wrong error")
         }
     }
 
-    func testValidateRawResponseError() {
-        class Output : AWSDecodableShape & AWSShapeWithPayload {
-            static let payloadPath: String = "output"
-            public static var _members = [AWSMemberEncoding(label: "output", encoding: .blob)]
-            let output : Data
-        }
-        do {
-            let response = AWSHTTPResponseImpl(
-                status: .notFound,
-                headers: HTTPHeaders(),
-                bodyData: "<Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message></Error>".data(using: .utf8)!
-            )
-            let _: Output = try s3Client.validate(operation: "TestOperation", response: response)
-            XCTFail("Shouldn't get here")
-        } catch S3ErrorType.noSuchKey(let message) {
-            XCTAssertEqual(message, "It doesn't exist")
-        } catch {
-            XCTFail("Unexpected error: \(error)")
-        }
-    }
-
-    func testValidateQueryError() {
+    func testQueryError() {
         let response = AWSHTTPResponseImpl(
             status: .notFound,
             headers: HTTPHeaders(),
             bodyData: "<ErrorResponse><Error><Code>MessageRejected</Code><Message>Don't like it</Message></Error></ErrorResponse>".data(using: .utf8)!
         )
-        do {
-            try sesClient.validate(response: response)
-            XCTFail("Should not get here")
-        } catch SESErrorType.messageRejected(let message) {
+        let error = sesClient.createError(for: response)
+        if case SESErrorType.messageRejected(let message) = error {
             XCTAssertEqual(message, "Don't like it")
-        } catch {
-            XCTFail("Throwing the wrong error")
+        } else {
+            XCTFail("Creating the wrong error")
         }
     }
 
@@ -823,19 +770,17 @@ class AWSClientTests: XCTestCase {
         }
     }
 
-    func testValidateJSONError() {
+    func testJSONError() {
         let response = AWSHTTPResponseImpl(
             status: .notFound,
             headers: HTTPHeaders(),
             bodyData: "{\"__type\":\"ResourceNotFoundException\", \"message\": \"Donald Where's Your Troosers?\"}".data(using: .utf8)!
         )
-        do {
-            try kinesisClient.validate(response: response)
-            XCTFail("Should not get here")
-        } catch KinesisErrorType.resourceNotFoundException(let message) {
+        let error = kinesisClient.createError(for: response)
+        if case KinesisErrorType.resourceNotFoundException(let message) = error {
             XCTAssertEqual(message, "Donald Where's Your Troosers?")
-        } catch {
-            XCTFail("Throwing the wrong error")
+        } else {
+            XCTFail("Creating the wrong error")
         }
     }
 
@@ -1043,13 +988,10 @@ class AWSClientTests: XCTestCase {
             headers: HTTPHeaders(),
             bodyData: "<Errors><Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message></Error></Errors>".data(using: .utf8)!
         )
-        do {
-            try ec2Client.validate(response: response)
-            XCTFail("Should not get here")
-        } catch let error as AWSResponseError {
+        if let error = ec2Client.createError(for: response) as? AWSResponseError {
             XCTAssertEqual(error.errorCode, "NoSuchKey")
             XCTAssertEqual(error.message, "It doesn't exist")
-        } catch {
+        } else {
             XCTFail("Throwing the wrong error")
         }
     }

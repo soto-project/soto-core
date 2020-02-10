@@ -30,7 +30,7 @@ public struct AWSResponse {
         // headers
         var responseHeaders: [String: String] = [:]
         for (key, value) in response.headers {
-            responseHeaders[key.description] = value
+            responseHeaders[key] = value
         }
         self.headers = responseHeaders
         

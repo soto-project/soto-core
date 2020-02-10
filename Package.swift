@@ -7,7 +7,7 @@ let package = Package(
         .library(name: "AWSSDKSwiftCore", targets: ["AWSSDKSwiftCore"])
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-nio.git", from: "1.11.0"),
+        .package(url: "https://github.com/apple/swift-nio.git", from: "1.14.2"),
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "1.3.2"),
         .package(url: "https://github.com/swift-aws/HypertextApplicationLanguage.git", .upToNextMajor(from: "1.1.0")),
         .package(url: "https://github.com/swift-aws/Perfect-INIParser.git", .upToNextMajor(from: "3.0.0")),
@@ -43,5 +43,3 @@ if useAWSSDKOpenSSLShim {
     awsSdkSwiftCoreTarget?.dependencies.append("CAWSSDKOpenSSL")
     package.dependencies.append(.package(url: "https://github.com/apple/swift-nio-ssl-support.git", from: "1.0.0"))
 }
-
-

@@ -661,105 +661,108 @@ extension AWSClient {
     }
 
     internal func createError(for response: AWSHTTPResponse) -> Error {
-        let awsResponse = try? AWSResponse(from: response, serviceProtocolType: serviceProtocol.type)
-        struct XMLError: Codable, ErrorMessage {
-            var code: String?
-            var message: String
+        do {
+            let awsResponse = try AWSResponse(from: response, serviceProtocolType: serviceProtocol.type)
+            struct XMLError: Codable, ErrorMessage {
+                var code: String?
+                var message: String
 
-            private enum CodingKeys: String, CodingKey {
-                case code = "Code"
-                case message = "Message"
+                private enum CodingKeys: String, CodingKey {
+                    case code = "Code"
+                    case message = "Message"
+                }
             }
-        }
-        struct QueryError: Codable, ErrorMessage {
-            var code: String?
-            var message: String
+            struct QueryError: Codable, ErrorMessage {
+                var code: String?
+                var message: String
 
-            private enum CodingKeys: String, CodingKey {
-                case code = "Code"
-                case message = "Message"
+                private enum CodingKeys: String, CodingKey {
+                    case code = "Code"
+                    case message = "Message"
+                }
             }
-        }
-        struct JSONError: Codable, ErrorMessage {
-            var code: String?
-            var message: String
+            struct JSONError: Codable, ErrorMessage {
+                var code: String?
+                var message: String
 
-            private enum CodingKeys: String, CodingKey {
-                case code = "__type"
-                case message = "message"
+                private enum CodingKeys: String, CodingKey {
+                    case code = "__type"
+                    case message = "message"
+                }
             }
-        }
-        struct RESTJSONError: Codable, ErrorMessage {
-            var code: String?
-            var message: String
+            struct RESTJSONError: Codable, ErrorMessage {
+                var code: String?
+                var message: String
 
-            private enum CodingKeys: String, CodingKey {
-                case code = "code"
-                case message = "message"
-            }
-        }
-
-        var errorMessage: ErrorMessage? = nil
-
-        switch serviceProtocol.type {
-        case .query:
-            guard case .xml(var element) = awsResponse?.body else { break }
-            if let errors = element.elements(forName: "Errors").first {
-                element = errors
-            }
-            guard let errorElement = element.elements(forName: "Error").first else { break }
-            errorMessage = try? XMLDecoder().decode(QueryError.self, from: errorElement)
-
-        case .restxml:
-            guard case .xml(var element) = awsResponse?.body else { break }
-            if let error = element.elements(forName: "Error").first {
-                element = error
-            }
-            errorMessage = try? XMLDecoder().decode(XMLError.self, from: element)
-
-        case .restjson:
-            guard case .json(let data) = awsResponse?.body else { break }
-            errorMessage = try? JSONDecoder().decode(RESTJSONError.self, from: data)
-            if errorMessage?.code == nil {
-                errorMessage?.code = awsResponse?.headers["x-amzn-ErrorType"] as? String
+                private enum CodingKeys: String, CodingKey {
+                    case code = "code"
+                    case message = "message"
+                }
             }
 
-        case .json:
-            guard case .json(let data) = awsResponse?.body else { break }
-            errorMessage = try? JSONDecoder().decode(JSONError.self, from: data)
+            var errorMessage: ErrorMessage? = nil
 
-        case .other(let service):
-            if service == "ec2" {
-                guard case .xml(var element) = awsResponse?.body else { break }
+            switch serviceProtocol.type {
+            case .query:
+                guard case .xml(var element) = awsResponse.body else { break }
                 if let errors = element.elements(forName: "Errors").first {
                     element = errors
                 }
                 guard let errorElement = element.elements(forName: "Error").first else { break }
                 errorMessage = try? XMLDecoder().decode(QueryError.self, from: errorElement)
-            }
-            break
-        }
 
-        if let errorMessage = errorMessage, let code = errorMessage.code {
-            for errorType in possibleErrorTypes {
-                if let error = errorType.init(errorCode: code, message: errorMessage.message) {
+            case .restxml:
+                guard case .xml(var element) = awsResponse.body else { break }
+                if let error = element.elements(forName: "Error").first {
+                    element = error
+                }
+                errorMessage = try? XMLDecoder().decode(XMLError.self, from: element)
+
+            case .restjson:
+                guard case .json(let data) = awsResponse.body else { break }
+                errorMessage = try? JSONDecoder().decode(RESTJSONError.self, from: data)
+                if errorMessage?.code == nil {
+                    errorMessage?.code = awsResponse.headers["x-amzn-ErrorType"] as? String
+                }
+
+            case .json:
+                guard case .json(let data) = awsResponse.body else { break }
+                errorMessage = try? JSONDecoder().decode(JSONError.self, from: data)
+
+            case .other(let service):
+                if service == "ec2" {
+                    guard case .xml(var element) = awsResponse.body else { break }
+                    if let errors = element.elements(forName: "Errors").first {
+                        element = errors
+                    }
+                    guard let errorElement = element.elements(forName: "Error").first else { break }
+                    errorMessage = try? XMLDecoder().decode(QueryError.self, from: errorElement)
+                }
+                break
+            }
+
+            if let errorMessage = errorMessage, let code = errorMessage.code {
+                for errorType in possibleErrorTypes {
+                    if let error = errorType.init(errorCode: code, message: errorMessage.message) {
+                        return error
+                    }
+                }
+                if let error = AWSClientError(errorCode: code, message: errorMessage.message) {
                     return error
                 }
+
+                if let error = AWSServerError(errorCode: code, message: errorMessage.message) {
+                    return error
+                }
+
+                return AWSResponseError(errorCode: code, message: errorMessage.message)
             }
 
-            if let error = AWSClientError(errorCode: code, message: errorMessage.message) {
-                return error
-            }
-
-            if let error = AWSServerError(errorCode: code, message: errorMessage.message) {
-                return error
-            }
-
-            return AWSResponseError(errorCode: code, message: errorMessage.message)
+            let rawBodyString = awsResponse.body.asString()
+            return AWSError(statusCode: response.status, message: errorMessage?.message ?? "Unhandled Error. Response Code: \(response.status.code)", rawBody: rawBodyString ?? "")
+        } catch {
+            return error
         }
-
-        let rawBodyString = awsResponse?.body.asString()
-        return AWSError(statusCode: response.status, message: errorMessage?.message ?? "Unhandled Error. Response Code: \(response.status.code)", rawBody: rawBodyString ?? "")
     }
 }
 

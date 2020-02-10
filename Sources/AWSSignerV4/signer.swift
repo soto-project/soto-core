@@ -76,7 +76,7 @@ public struct AWSSigner {
     public func signURL(url: URL, method: HTTPMethod = .GET, body: BodyData? = nil, date: Date = Date(), expires: Int = 86400) -> URL {
         let headers = HTTPHeaders([("host", url.host ?? "")])
         // Create signing data
-        let signingData = AWSSigner.SigningData(url: url, method: method, headers: headers, body: body, date: AWSSigner.timestamp(date), signer: self)
+        var signingData = AWSSigner.SigningData(url: url, method: method, headers: headers, body: body, date: AWSSigner.timestamp(date), signer: self)
         
         // Construct query string. Start with original query strings and append all the signing info.
         var query = url.query ?? ""
@@ -108,7 +108,7 @@ public struct AWSSigner {
     }
     
     /// structure used to store data used throughout the signing process
-    class SigningData {
+    struct SigningData {
         let url : URL
         let method : HTTPMethod
         let hashedPayload : String

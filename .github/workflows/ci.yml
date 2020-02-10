@@ -1,39 +1,21 @@
 name: CI
 
-on: 
+on:
   push:
-    branches: 
+    branches:
     - "*"
   pull_request:
-    branches: 
+    branches:
     - "*"
 
 jobs:
-  macos:
-    runs-on: macOS-latest
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v1
-      with:
-        fetch-depth: 1
-    - name: SPM build
-      run: swift build
-    - name: SPM tests
-      run: swift test
-    - name: Generate xcode project
-      run: swift package generate-xcodeproj
-    - name: Xcode tests
-      run: xcodebuild -quiet -parallel-testing-enabled YES -scheme AWSSDKSwiftCore-Package -enableCodeCoverage YES build test
-    - name: Upload to codecov.io
-      run: bash <(curl -s https://codecov.io/bash) -J 'AWSSDKSwiftCore' -t ${{secrets.CODECOV_TOKEN}}
-
   linux:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        tag: ['5.0', '5.1']
+        image: ['swiftlang/swift:nightly-5.2']
     container:
-      image: swift:${{ matrix.tag }}
+      image: ${{ matrix.image }}
       volumes:
       - $GITHUB_WORKSPACE:/src
       options: --workdir /src
@@ -46,17 +28,7 @@ jobs:
       run: |
         apt-get update -qq
         apt-get install -q -y tzdata libssl-dev zlib1g-dev
+    - name: Build
+      run: swift build
     - name: Test
-      if: matrix.tag < 5.1
-      run: swift test --parallel --enable-code-coverage
-    - name: Test
-      if: matrix.tag >= 5.1
-      run: swift test --parallel --enable-code-coverage --enable-test-discovery
-    - name: Convert coverage files
-      if: matrix.tag >= 5.1
-      run: llvm-cov export -format="lcov" .build/debug/AWSSDKSwiftCorePackageTests.xctest -instr-profile .build/debug/codecov/default.profdata > info.lcov
-    - name: Upload to codecov.io
-      if: matrix.tag >= 5.1
-      uses: codecov/codecov-action@v1.0.3
-      with:
-        token: ${{secrets.CODECOV_TOKEN}}
+      run: swift test --parallel --enable-test-discovery

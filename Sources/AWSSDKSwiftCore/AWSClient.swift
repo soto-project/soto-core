@@ -38,30 +38,23 @@ public final class AWSClient {
         case useAWSClientShared
     }
 
+    let serviceConfig: ServiceConfig
+  
     let credentialProvider: CredentialProvider
-
-    let signingName: String
-
-    let apiVersion: String
-
-    let amzTarget: String?
-
-    let service: String
-
-    public let endpoint: String
-
-    public let region: Region
-
-    let serviceProtocol: ServiceProtocol
-
-    let serviceEndpoints: [String: String]
-
-    let partitionEndpoint: String?
-
+  
+    var signingName: String                     { return self.serviceConfig.signingName }
+    var apiVersion: String                      { return self.serviceConfig.apiVersion }
+    var amzTarget: String?                      { return self.serviceConfig.amzTarget }
+    var service: String                         { return self.serviceConfig.service }
+    public var endpoint: String                 { return self.serviceConfig.endpoint }
+    public var region: Region                   { return self.serviceConfig.region }
+    var serviceProtocol: ServiceProtocol        { return self.serviceConfig.serviceProtocol }
+    var serviceEndpoints: [String: String]      { return self.serviceConfig.serviceEndpoints }
+    var partitionEndpoint: String?              { return self.serviceConfig.signingName }
+    var possibleErrorTypes: [AWSErrorType.Type] { return self.serviceConfig.possibleErrorTypes }
+  
     let middlewares: [AWSServiceMiddleware]
-
-    var possibleErrorTypes: [AWSErrorType.Type]
-
+  
     let httpClient: AWSHTTPClient
 
     public let eventLoopGroup: EventLoopGroup
@@ -96,17 +89,6 @@ public final class AWSClient {
     ///     - possibleErrorTypes: Array of possible error types that the client can throw
     ///     - eventLoopGroupProvider: EventLoopGroup to use. Use `useAWSClientShared` if the client shall manage its own EventLoopGroup.
     public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, sessionToken: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, signingName: String? = nil, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSServiceMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil, eventLoopGroupProvider: EventLoopGroupProvider) {
-        if let _region = givenRegion {
-            region = _region
-        }
-        else if let partitionEndpoint = partitionEndpoint, let reg = Region(rawValue: partitionEndpoint) {
-            region = reg
-        } else if let defaultRegion = ProcessInfo.processInfo.environment["AWS_DEFAULT_REGION"], let reg = Region(rawValue: defaultRegion) {
-            region = reg
-        } else {
-            region = .useast1
-        }
-
         // setup eventLoopGroup and httpClient
         switch eventLoopGroupProvider {
         case .shared(let providedEventLoopGroup):
@@ -129,31 +111,20 @@ public final class AWSClient {
         } else {
             self.credentialProvider = MetaDataCredentialProvider(httpClient: self.httpClient)
         }
-
-        self.signingName = signingName ?? service
-        self.apiVersion = apiVersion
-        self.service = service
-        self.amzTarget = amzTarget
-        self.serviceProtocol = serviceProtocol
-        self.serviceEndpoints = serviceEndpoints
-        self.partitionEndpoint = partitionEndpoint
-        self.middlewares = middlewares
-        self.possibleErrorTypes = possibleErrorTypes ?? []
-
-        // work out endpoint, if provided use that otherwise
-        if let endpoint = endpoint {
-            self.endpoint = endpoint
-        } else {
-            let serviceHost: String
-            if let serviceEndpoint = serviceEndpoints[region.rawValue] {
-                serviceHost = serviceEndpoint
-            } else if let partitionEndpoint = partitionEndpoint, let globalEndpoint = serviceEndpoints[partitionEndpoint] {
-                serviceHost = globalEndpoint
-            } else {
-                serviceHost = "\(service).\(region.rawValue).amazonaws.com"
-            }
-            self.endpoint = "https://\(serviceHost)"
-        }
+      
+        // setup service config
+        self.middlewares   = middlewares
+        self.serviceConfig = ServiceConfig(
+            region: givenRegion,
+            amzTarget: amzTarget,
+            service: service,
+            signingName: signingName,
+            serviceProtocol: serviceProtocol,
+            apiVersion: apiVersion,
+            endpoint: endpoint,
+            serviceEndpoints: serviceEndpoints,
+            partitionEndpoint: partitionEndpoint,
+            possibleErrorTypes: possibleErrorTypes)
     }
 
     deinit {

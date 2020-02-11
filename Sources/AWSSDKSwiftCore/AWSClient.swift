@@ -71,7 +71,7 @@ public final class AWSClient {
     /// create an eventLoopGroup
     static func createEventLoopGroup() -> EventLoopGroup {
         #if canImport(Network)
-            if #available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *) {
+            if #available(OSX 10.15, iOS 12.0, tvOS 12.0, watchOS 6.0, *) {
                 return NIOTSEventLoopGroup()
             }
         #endif

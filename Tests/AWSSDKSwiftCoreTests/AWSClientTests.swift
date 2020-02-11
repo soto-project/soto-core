@@ -390,7 +390,7 @@ class AWSClientTests: XCTestCase {
                 input: input2
             )
 
-            let awsHTTPRequest: AWSHTTPRequest = kinesisClient.createHTTPRequest(awsRequest, signer: try kinesisClient.signer.wait())
+            let awsHTTPRequest: AWSHTTPRequest = awsRequest.createHTTPRequest(signer: try kinesisClient.signer.wait())
             XCTAssertEqual(awsHTTPRequest.method, HTTPMethod.POST)
             if let host = awsHTTPRequest.headers.first(where: { $0.name == "Host" }) {
                 XCTAssertEqual(host.value, "kinesis.us-east-1.amazonaws.com")
@@ -427,7 +427,7 @@ class AWSClientTests: XCTestCase {
                 input: input
             )
 
-            let request: AWSHTTPRequest = client.createHTTPRequest(awsRequest, signer: try client.signer.wait())
+            let request: AWSHTTPRequest = awsRequest.createHTTPRequest(signer: try client.signer.wait())
 
             XCTAssertNil(request.headers["Authorization"].first)
         } catch {

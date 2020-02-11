@@ -33,14 +33,14 @@ public final class NIOTSHTTPClient {
 
     /// Request structure to send
     public struct Request {
-        var head: HTTPRequestHead
-        var body: ByteBuffer?
+        public var head: HTTPRequestHead
+        public var body: ByteBuffer?
     }
 
     /// Response structure received back
     public struct Response {
-        let head: HTTPResponseHead
-        let body: ByteBuffer?
+        public let head: HTTPResponseHead
+        public let body: ByteBuffer?
     }
 
     /// Errors returned from HTTPClient when parsing responses
@@ -201,16 +201,16 @@ public final class NIOTSHTTPClient {
         }
     }
 
-    internal let eventLoopGroup: EventLoopGroup
+    public let eventLoopGroup: EventLoopGroup
 }
 
 /// comply with AWSHTTPClient protocol
 @available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)
 extension NIOTSHTTPClient: AWSHTTPClient {
     
-    func syncShutdown() throws {}
+    public func syncShutdown() throws {}
 
-    func execute(request: AWSHTTPRequest, timeout: TimeAmount) -> EventLoopFuture<AWSHTTPResponse> {
+    public func execute(request: AWSHTTPRequest, timeout: TimeAmount) -> EventLoopFuture<AWSHTTPResponse> {
         var head = HTTPRequestHead(
           version: HTTPVersion(major: 1, minor: 1),
           method: request.method,
@@ -225,8 +225,8 @@ extension NIOTSHTTPClient: AWSHTTPClient {
 
 @available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)
 extension NIOTSHTTPClient.Response: AWSHTTPResponse {
-    var status: HTTPResponseStatus { return head.status }
-    var headers: HTTPHeaders { return head.headers }
+    public var status: HTTPResponseStatus { return head.status }
+    public var headers: HTTPHeaders { return head.headers }
 }
 
 #endif

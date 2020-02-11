@@ -34,9 +34,9 @@ public final class AWSClient {
     }
 
     /// Specifies how `EventLoopGroup` will be created and establishes lifecycle ownership.
-    public enum EventLoopGroupProvider {
+    public enum HTTPClientProvider {
         /// `EventLoopGroup` will be provided by the user. Owner of this group is responsible for its lifecycle.
-        case shared(EventLoopGroup)
+        case shared(AWSHTTPClient)
         /// `EventLoopGroup` will be created by the client. When `syncShutdown` is called, created `EventLoopGroup` will be shut down as well.
         case useAWSClientShared
     }
@@ -69,16 +69,16 @@ public final class AWSClient {
 
     public let eventLoopGroup: EventLoopGroup
 
-    private static let sharedEventLoopGroup: EventLoopGroup = createEventLoopGroup()
+    private static let sharedHTTPClient: AWSHTTPClient = createSharedHTTPClient()
 
-    /// create an eventLoopGroup
-    static func createEventLoopGroup() -> EventLoopGroup {
+    /// create default HTTPClient
+    private static func createSharedHTTPClient() -> AWSHTTPClient {
         #if canImport(Network)
             if #available(OSX 10.15, iOS 12.0, tvOS 12.0, watchOS 6.0, *) {
-                return NIOTSEventLoopGroup()
+                return NIOTSHTTPClient(eventLoopGroup: NIOTSEventLoopGroup())
             }
         #endif
-        return MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+        return AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)))
     }
 
     /// Initialize an AWSClient struct
@@ -97,8 +97,24 @@ public final class AWSClient {
     ///     - partitionEndpoint: Default endpoint to use
     ///     - middlewares: Array of middlewares to apply to requests and responses
     ///     - possibleErrorTypes: Array of possible error types that the client can throw
-    ///     - eventLoopGroupProvider: EventLoopGroup to use. Use `useAWSClientShared` if the client shall manage its own EventLoopGroup.
-    public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, sessionToken: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, signingName: String? = nil, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSServiceMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil, eventLoopGroupProvider: EventLoopGroupProvider) {
+    ///     - httpClientProvider: HTTPClient to use. Use `useAWSClientShared` if the client shall manage its own HTTPClient.
+    public init(
+        accessKeyId: String? = nil,
+        secretAccessKey: String? = nil,
+        sessionToken: String? = nil,
+        region givenRegion: Region?,
+        amzTarget: String? = nil,
+        service: String,
+        signingName: String? = nil,
+        serviceProtocol: ServiceProtocol,
+        apiVersion: String,
+        endpoint: String? = nil,
+        serviceEndpoints: [String: String] = [:],
+        partitionEndpoint: String? = nil,
+        middlewares: [AWSServiceMiddleware] = [],
+        possibleErrorTypes: [AWSErrorType.Type]? = nil,
+        httpClientProvider: HTTPClientProvider
+    ) {
         if let _region = givenRegion {
             region = _region
         }
@@ -111,13 +127,13 @@ public final class AWSClient {
         }
 
         // setup eventLoopGroup and httpClient
-        switch eventLoopGroupProvider {
-        case .shared(let providedEventLoopGroup):
-            self.eventLoopGroup = providedEventLoopGroup
+        switch httpClientProvider {
+        case .shared(let providedHTTPClient):
+            self.httpClient = providedHTTPClient
         case .useAWSClientShared:
-            self.eventLoopGroup = AWSClient.sharedEventLoopGroup
+            self.httpClient = AWSClient.sharedHTTPClient
         }
-        self.httpClient = AWSClient.createHTTPClient(eventLoopGroup: eventLoopGroup)
+        self.eventLoopGroup = self.httpClient.eventLoopGroup
 
         // create credentialProvider
         if let accessKey = accessKeyId, let secretKey = secretAccessKey {
@@ -158,15 +174,8 @@ public final class AWSClient {
             self.endpoint = "https://\(serviceHost)"
         }
     }
-
-    deinit {
-        do {
-            try httpClient.syncShutdown()
-        } catch {
-            preconditionFailure("Error shutting down AWSClient: \(error.localizedDescription)")
-        }
-    }
 }
+
 // invoker
 extension AWSClient {
 

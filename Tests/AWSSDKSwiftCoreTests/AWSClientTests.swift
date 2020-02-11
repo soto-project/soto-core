@@ -108,9 +108,6 @@ class AWSClientTests: XCTestCase {
 
 
     func testGetCredential() {
-        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
-
         let sesClient = AWSClient(
             accessKeyId: "key",
             secretAccessKey: "secret",
@@ -119,7 +116,7 @@ class AWSClientTests: XCTestCase {
             serviceProtocol: ServiceProtocol(type: .query),
             apiVersion: "2013-12-01",
             middlewares: [],
-            eventLoopGroupProvider: .shared(eventLoopGroup)
+            httpClientProvider: .useAWSClientShared
         )
 
         do {
@@ -138,7 +135,7 @@ class AWSClientTests: XCTestCase {
             service: "email",
             serviceProtocol: ServiceProtocol(type: .query),
             apiVersion: "2013-12-01",
-            eventLoopGroupProvider: .useAWSClientShared)
+            httpClientProvider: .useAWSClientShared)
 
         do {
             let credentials = try client.credentialProvider.getCredential().wait()
@@ -163,7 +160,7 @@ class AWSClientTests: XCTestCase {
         apiVersion: "2013-12-01",
         middlewares: [AWSLoggingMiddleware()],
         possibleErrorTypes: [SESErrorType.self],
-        eventLoopGroupProvider: .useAWSClientShared
+        httpClientProvider: .useAWSClientShared
     )
 
     let kinesisClient = AWSClient(
@@ -176,7 +173,7 @@ class AWSClientTests: XCTestCase {
         apiVersion: "2013-12-02",
         middlewares: [AWSLoggingMiddleware()],
         possibleErrorTypes: [KinesisErrorType.self],
-        eventLoopGroupProvider: .useAWSClientShared
+        httpClientProvider: .useAWSClientShared
     )
 
     let s3Client = AWSClient(
@@ -191,7 +188,7 @@ class AWSClientTests: XCTestCase {
         partitionEndpoint: "us-east-1",
         middlewares: [AWSLoggingMiddleware()],
         possibleErrorTypes: [S3ErrorType.self],
-        eventLoopGroupProvider: .useAWSClientShared
+        httpClientProvider: .useAWSClientShared
     )
 
     let ec2Client = AWSClient(
@@ -202,13 +199,10 @@ class AWSClientTests: XCTestCase {
         serviceProtocol: ServiceProtocol(type: .other("ec2")),
         apiVersion: "2013-12-02",
         middlewares: [AWSLoggingMiddleware()],
-        eventLoopGroupProvider: .useAWSClientShared
+        httpClientProvider: .useAWSClientShared
     )
 
     func testCreateAWSRequest() {
-        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
-
         let input1 = C()
         let input2 = E()
         let input3 = F(fooParams: input2)
@@ -239,7 +233,7 @@ class AWSClientTests: XCTestCase {
             apiVersion: "2013-12-02",
             middlewares: [],
             possibleErrorTypes: [KinesisErrorType.self],
-            eventLoopGroupProvider: .shared(eventLoopGroup)
+            httpClientProvider: .useAWSClientShared
         )
 
         do {
@@ -367,9 +361,6 @@ class AWSClientTests: XCTestCase {
     }
 
     func testCreateNIORequest() {
-        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
-
         let input2 = E()
 
         let kinesisClient = AWSClient(
@@ -382,7 +373,7 @@ class AWSClientTests: XCTestCase {
             apiVersion: "2013-12-02",
             middlewares: [],
             possibleErrorTypes: [KinesisErrorType.self],
-            eventLoopGroupProvider: .shared(eventLoopGroup)
+            httpClientProvider: .useAWSClientShared
         )
 
         do {
@@ -419,7 +410,7 @@ class AWSClientTests: XCTestCase {
             serviceProtocol: ServiceProtocol(type: .restxml),
             apiVersion: "2013-12-02",
             middlewares: [],
-            eventLoopGroupProvider: .useAWSClientShared
+            httpClientProvider: .useAWSClientShared
         )
 
         do {
@@ -437,7 +428,7 @@ class AWSClientTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
     }
-    
+
     func testHeaderEncoding() {
         struct Input: AWSShape {
             static let _encoding = [AWSMemberEncoding(label: "h", location: .header(locationName: "header-member"))]
@@ -451,7 +442,7 @@ class AWSClientTests: XCTestCase {
             XCTFail("\(error)")
         }
     }
-    
+
     func testQueryEncoding() {
         struct Input: AWSShape {
             static let _encoding = [AWSMemberEncoding(label: "q", location: .querystring(locationName: "query"))]
@@ -465,7 +456,7 @@ class AWSClientTests: XCTestCase {
             XCTFail("\(error)")
         }
     }
-    
+
     func testURIEncoding() {
         struct Input: AWSShape {
             static let _encoding = [AWSMemberEncoding(label: "u", location: .uri(locationName: "key"))]
@@ -479,7 +470,7 @@ class AWSClientTests: XCTestCase {
             XCTFail("\(error)")
         }
     }
-    
+
     func testCreateWithXMLNamespace() {
         struct Input: AWSShape {
             public static let _xmlNamespace: String? = "https://test.amazonaws.com/doc/2020-03-11/"
@@ -497,8 +488,8 @@ class AWSClientTests: XCTestCase {
             XCTFail("\(error)")
         }
     }
-    
-    
+
+
     func testCreateWithPayloadAndXMLNamespace() {
         struct Payload: AWSShape {
             public static let _xmlNamespace: String? = "https://test.amazonaws.com/doc/2020-03-11/"
@@ -521,7 +512,7 @@ class AWSClientTests: XCTestCase {
             XCTFail("\(error)")
         }
     }
-    
+
     func testValidateCode() {
         let response = AWSHTTPResponseImpl(
             status: .ok,
@@ -572,7 +563,7 @@ class AWSClientTests: XCTestCase {
             static let payloadPath: String? = "name"
             let name : String
             let contentType: String
-            
+
             private enum CodingKeys: String, CodingKey {
                 case name = "name"
                 case contentType = "content-type"
@@ -612,7 +603,7 @@ class AWSClientTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
     }
-    
+
     func testValidateXMLError() {
         let response = AWSHTTPResponseImpl(
             status: .notFound,
@@ -683,7 +674,7 @@ class AWSClientTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
     }
-    
+
     func testValidateJSONCodablePayloadResponse() {
         class Output2 : AWSShape {
             let name : String
@@ -704,7 +695,7 @@ class AWSClientTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
     }
-    
+
     func testValidateJSONRawPayloadResponse() {
         struct Output : AWSShape {
             static let payloadPath: String? = "body"
@@ -714,7 +705,7 @@ class AWSClientTests: XCTestCase {
             ]
             let body : Data
             let contentType: String
-            
+
             private enum CodingKeys: String, CodingKey {
                 case body = "body"
                 case contentType = "content-type"
@@ -750,7 +741,7 @@ class AWSClientTests: XCTestCase {
         }
     }
 
-    
+
     func testProcessHAL() {
         class Output : AWSShape {
             let s: String
@@ -827,7 +818,7 @@ class AWSClientTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
     }
-    
+
     func testClientNoInputNoOutput() {
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)
@@ -840,7 +831,7 @@ class AWSClientTests: XCTestCase {
                 apiVersion: "2020-01-21",
                 endpoint: awsServer.address,
                 middlewares: [AWSLoggingMiddleware()],
-                eventLoopGroupProvider: .useAWSClientShared
+                httpClientProvider: .useAWSClientShared
             )
             let response = client.send(operation: "test", path: "/", httpMethod: "POST")
 
@@ -877,7 +868,7 @@ class AWSClientTests: XCTestCase {
                 apiVersion: "2020-01-21",
                 endpoint: awsServer.address,
                 middlewares: [AWSLoggingMiddleware()],
-                eventLoopGroupProvider: .useAWSClientShared
+                httpClientProvider: .useAWSClientShared
             )
             let input = Input(e:.second, i: [1,2,4,8])
             let response = client.send(operation: "test", path: "/", httpMethod: "POST", input: input)
@@ -913,7 +904,7 @@ class AWSClientTests: XCTestCase {
                 apiVersion: "2020-01-21",
                 endpoint: awsServer.address,
                 middlewares: [AWSLoggingMiddleware()],
-                eventLoopGroupProvider: .useAWSClientShared
+                httpClientProvider: .useAWSClientShared
             )
             let response: EventLoopFuture<Output> = client.send(operation: "test", path: "/", httpMethod: "POST")
 
@@ -933,7 +924,7 @@ class AWSClientTests: XCTestCase {
             XCTFail("Unexpected error: \(error)")
         }
     }
-    
+
     func testEC2ClientRequest() {
         struct Input: AWSShape {
             static let _encoding = [AWSMemberEncoding(label: "array", location: .body(locationName: "Array"), encoding: .list(member:"item"))]
@@ -947,7 +938,7 @@ class AWSClientTests: XCTestCase {
             XCTFail("\(error)")
         }
     }
-    
+
     func testEC2ValidateError() {
         let response = AWSHTTPResponseImpl(
             status: .notFound,
@@ -962,6 +953,44 @@ class AWSClientTests: XCTestCase {
             XCTAssertEqual(error.message, "It doesn't exist")
         } catch {
             XCTFail("Throwing the wrong error")
+        }
+    }
+
+    func testProvideHTTPClient() {
+        do {
+            // By default AsyncHTTPClient will follow redirects. This test creates an HTTP client that doesn't follow redirects and
+            // provides it to AWSClient
+            let awsServer = AWSTestServer(serviceProtocol: .json)
+            let httpClientConfig = AsyncHTTPClient.HTTPClient.Configuration(redirectConfiguration: .init(.disallow))
+            let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew, configuration: httpClientConfig)
+            defer {
+                try? httpClient.syncShutdown()
+            }
+            let client = AWSClient(
+                accessKeyId: "",
+                secretAccessKey: "",
+                region: .useast1,
+                service:"TestClient",
+                serviceProtocol: ServiceProtocol(type: .json, version: ServiceProtocol.Version(major: 1, minor: 1)),
+                apiVersion: "2020-01-21",
+                endpoint: awsServer.address,
+                middlewares: [AWSLoggingMiddleware()],
+                httpClientProvider: .shared(httpClient)
+            )
+            let response = client.send(operation: "test", path: "/", httpMethod: "POST")
+
+            try awsServer.process { request in
+                let response = AWSTestServer.Response(httpStatus: .temporaryRedirect, headers: ["Location":awsServer.address], body: nil)
+                return AWSTestServer.Result(output: response, continueProcessing: false)
+            }
+
+            try response.wait()
+            try awsServer.stop()
+            XCTFail("Shouldn't get here as the provided client doesn't follow redirects")
+        } catch let error as AWSError {
+            XCTAssertEqual(error.message, "Unhandled Error. Response Code: 307")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
         }
     }
 }
@@ -1034,4 +1063,3 @@ extension SESErrorType {
         }
     }
 }
-

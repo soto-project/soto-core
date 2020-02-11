@@ -24,32 +24,30 @@ public struct AWSResponse {
     ///     - from: Raw HTTP Response
     ///     - serviceProtocol: protocol of service (.json, .xml, .query etc)
     ///     - raw: Whether Body should be treated as raw data
-    init(from response: HTTPClient.Response, serviceProtocolType: ServiceProtocolType, raw: Bool = false) throws {
-        self.status = response.head.status
-        self.headers = AWSResponse.createHeaders(from: response)
-        self.body = try AWSResponse.createBody(from: response, serviceProtocolType: serviceProtocolType, raw: raw)
-    }
-
-    private static func createHeaders(from response: HTTPClient.Response) -> [String: String] {
-        var responseHeaders: [String: String] = [:]
-        for (key, value) in response.head.headers {
-            responseHeaders[key.description] = value
-        }
-
-        return responseHeaders
-    }
-    
-    private static func createBody(from response: HTTPClient.Response, serviceProtocolType: ServiceProtocolType, raw: Bool) throws -> Body {
-        var responseBody: Body = .empty
-        let data = response.body
+    init(from response: AWSHTTPResponse, serviceProtocolType: ServiceProtocolType, raw: Bool = false) throws {
+        self.status = response.status
         
-        if data.isEmpty {
-            return .empty
+        // headers
+        var responseHeaders: [String: String] = [:]
+        for (key, value) in response.headers {
+            responseHeaders[key] = value
+        }
+        self.headers = responseHeaders
+        
+        // body
+        guard let body = response.body,
+            body.readableBytes > 0,
+            let data = body.getData(at: body.readerIndex, length: body.readableBytes, byteTransferStrategy: .noCopy) else {
+                self.body = .empty
+                return
         }
         
         if raw {
-            return .buffer(data)
+            self.body = .buffer(data)
+            return
         }
+        
+        var responseBody: Body = .empty
         
         switch serviceProtocolType {
         case .json, .restjson:
@@ -73,8 +71,6 @@ public struct AWSResponse {
                 responseBody = .buffer(data)
             }
         }
-        
-        return responseBody
+        self.body = responseBody
     }
-    
 }

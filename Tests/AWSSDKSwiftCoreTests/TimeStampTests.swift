@@ -77,6 +77,8 @@ class TimeStampTests: XCTestCase {
         return [
             ("testDecodeISOFromJSON", testDecodeISOFromJSON),
             ("testDecodeISOFromXML", testDecodeISOFromXML),
+            ("testDecodeHttpFormattedTimestamp", testDecodeHttpFormattedTimestamp),
+            ("testDecodeUnixEpochTimestamp", testDecodeUnixEpochTimestamp),
             ("testEncodeToJSON", testEncodeToJSON),
         ]
     }

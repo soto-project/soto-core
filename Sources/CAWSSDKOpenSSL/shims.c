@@ -4,6 +4,7 @@
 //
 //  Created by Adam Fowler on 2019/08/08.
 //
+#ifdef __linux__
 
 // These are functions that shim over differences in different OpenSSL versions,
 // which are best handled by using the C preprocessor.
@@ -32,3 +33,6 @@ void AWSSDK_HMAC_CTX_free(HMAC_CTX* ctx) {
     HMAC_CTX_free(ctx);
 #endif
 }
+
+#endif // __linux__
+

@@ -4,9 +4,8 @@ on:
   push:
     branches:
     - "*"
-  pull_request:
-    branches:
-    - "*"
+  schedule:
+    - cron:  '0 9 * * 2'
 
 jobs:
   linux:

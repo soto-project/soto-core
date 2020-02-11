@@ -77,4 +77,41 @@ extension Body {
             return nil
         }
     }
+
+    /// return as bytebuffer
+    public func asByteBuffer() -> ByteBuffer? {
+        switch self {
+        case .text(let text):
+            var buffer = ByteBufferAllocator().buffer(capacity: text.utf8.count)
+            buffer.writeString(text)
+            return buffer
+
+        case .buffer(let data):
+            var buffer = ByteBufferAllocator().buffer(capacity: data.count)
+            buffer.writeBytes(data)
+            return buffer
+
+        case .json(let data):
+            if data.isEmpty {
+                return nil
+            } else {
+                var buffer = ByteBufferAllocator().buffer(capacity: data.count)
+                buffer.writeBytes(data)
+                return buffer
+            }
+
+        case .xml(let node):
+            let xmlDocument = XML.Document(rootElement: node)
+            let text = xmlDocument.xmlString
+            var buffer = ByteBufferAllocator().buffer(capacity: text.utf8.count)
+            buffer.writeString(text)
+            return buffer
+
+        case .stream(_):
+            return nil
+
+        case .empty:
+            return nil
+        }
+    }
 }

@@ -7,18 +7,42 @@
 //
 
 import XCTest
+import AsyncHTTPClient
 import NIO
 import NIOHTTP1
 @testable import AWSSDKSwiftCore
 
 class AWSClientTests: XCTestCase {
 
+    struct AWSHTTPResponseImpl: AWSHTTPResponse {
+        let status: HTTPResponseStatus
+        let headers: HTTPHeaders
+        let body: ByteBuffer?
+
+        init(status: HTTPResponseStatus, headers: HTTPHeaders, body: ByteBuffer?) {
+            self.status = status
+            self.headers = headers
+            self.body = body
+        }
+
+        init(status: HTTPResponseStatus, headers: HTTPHeaders, bodyData: Data?) {
+            var body: ByteBuffer? = nil
+            if let bodyData = bodyData {
+                body = ByteBufferAllocator().buffer(capacity: bodyData.count)
+                body?.writeBytes(bodyData)
+            }
+            self.init(status: status, headers: headers, body: body)
+        }
+    }
+
     static var allTests : [(String, (AWSClientTests) -> () throws -> Void)] {
         return [
             ("testGetCredential", testGetCredential),
+            ("testExpiredCredential", testExpiredCredential),
             ("testCreateAWSRequest", testCreateAWSRequest),
             ("testCreateNIORequest", testCreateNIORequest),
             ("testValidateCode", testValidateCode),
+            ("testUnsignedClient", testUnsignedClient),
             ("testValidateXMLResponse", testValidateXMLResponse),
             ("testValidateXMLPayloadResponse", testValidateXMLPayloadResponse),
             ("testValidateXMLError", testValidateXMLError),
@@ -86,16 +110,38 @@ class AWSClientTests: XCTestCase {
             serviceProtocol: ServiceProtocol(type: .query),
             apiVersion: "2013-12-01",
             middlewares: [],
-            possibleErrorTypes: [SESErrorType.self],
             eventLoopGroupProvider: .shared(eventLoopGroup)
         )
 
         do {
-            let credentialForSignature = try sesClient.signer.manageCredential(eventLoopGroup: eventLoopGroup).wait()
+            let credentialForSignature = try sesClient.credentialProvider.getCredential().wait()
             XCTAssertEqual(credentialForSignature.accessKeyId, "key")
             XCTAssertEqual(credentialForSignature.secretAccessKey, "secret")
         } catch {
             XCTFail(error.localizedDescription)
+        }
+    }
+
+    // this test only really works on Linux as it requires the MetaDataService. On mac it will just pass automatically
+    func testExpiredCredential() {
+        let client = AWSClient(
+            region: .useast1,
+            service: "email",
+            serviceProtocol: ServiceProtocol(type: .query),
+            apiVersion: "2013-12-01",
+            eventLoopGroupProvider: .useAWSClientShared)
+
+        do {
+            let credentials = try client.credentialProvider.getCredential().wait()
+            print(credentials)
+        } catch NIO.ChannelError.connectTimeout(_) {
+            // credentials request should fail. One possible error is a connectTimerout
+        } catch is NIOConnectionError {
+                // credentials request should fail. One possible error is a connection error
+        } catch MetaDataServiceError.couldNotGetInstanceRoleName {
+            // credentials request fails in a slightly different way if it finds the IP
+        } catch {
+            XCTFail("Unexpected error \(error)")
         }
     }
 
@@ -125,7 +171,6 @@ class AWSClientTests: XCTestCase {
         serviceProtocol: ServiceProtocol(type: .query),
         apiVersion: "2013-12-01",
         middlewares: [AWSLoggingMiddleware()],
-        possibleErrorTypes: [SESErrorType.self],
         eventLoopGroupProvider: .useAWSClientShared
     )
 
@@ -174,9 +219,9 @@ class AWSClientTests: XCTestCase {
             )
             XCTAssertEqual(awsRequest.url.absoluteString, "\(sesClient.endpoint)/")
             XCTAssertEqual(String(describing: awsRequest.body), "text(\"Action=SendEmail&Value=%3Chtml%3E%3Cbody%3E%3Ca%20href%3D%22https://redsox.com%22%3ETest%3C/a%3E%3C/body%3E%3C/html%3E&Version=2013-12-01\")")
-            let nioRequest = try awsRequest.toNIORequest()
-            XCTAssertEqual(nioRequest.head.headers["Content-Type"][0], "application/x-www-form-urlencoded; charset=utf-8")
-            XCTAssertEqual(nioRequest.head.method, HTTPMethod.POST)
+            let nioRequest: AWSHTTPRequest = awsRequest.toHTTPRequest()
+            XCTAssertEqual(nioRequest.headers["Content-Type"][0], "application/x-www-form-urlencoded; charset=utf-8")
+            XCTAssertEqual(nioRequest.method, HTTPMethod.POST)
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -219,9 +264,9 @@ class AWSClientTests: XCTestCase {
 
             }
 
-            let nioRequest = try awsRequest.toNIORequest()
-            XCTAssertEqual(nioRequest.head.headers["Content-Type"][0], "application/x-amz-json-1.1")
-            XCTAssertEqual(nioRequest.head.method, HTTPMethod.POST)
+            let nioRequest: AWSHTTPRequest = awsRequest.toHTTPRequest()
+            XCTAssertEqual(nioRequest.headers["Content-Type"][0], "application/x-amz-json-1.1")
+            XCTAssertEqual(nioRequest.method, HTTPMethod.POST)
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -235,9 +280,9 @@ class AWSClientTests: XCTestCase {
             )
 
             XCTAssertEqual(awsRequest.url.absoluteString, "https://s3.amazonaws.com/Bucket?list-type=2")
-            let nioRequest = try awsRequest.toNIORequest()
-            XCTAssertEqual(nioRequest.head.method, HTTPMethod.GET)
-            XCTAssertEqual(nioRequest.body, Data())
+            let nioRequest: AWSHTTPRequest = awsRequest.toHTTPRequest()
+            XCTAssertEqual(nioRequest.method, HTTPMethod.GET)
+            XCTAssertEqual(nioRequest.body, nil)
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -259,8 +304,8 @@ class AWSClientTests: XCTestCase {
                 let payload = try XMLDecoder().decode(E.self, from: document.rootElement()!)
                 XCTAssertEqual(payload.Member["memberKey2"], "memberValue2")
             }
-            let nioRequest = try awsRequest.toNIORequest()
-            XCTAssertEqual(nioRequest.head.method, HTTPMethod.POST)
+            let nioRequest: AWSHTTPRequest = awsRequest.toHTTPRequest()
+            XCTAssertEqual(nioRequest.method, HTTPMethod.POST)
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -345,30 +390,55 @@ class AWSClientTests: XCTestCase {
                 input: input2
             )
 
-            let nioRequest = try kinesisClient.createNioRequest(awsRequest)
-            XCTAssertEqual(nioRequest.head.method, HTTPMethod.POST)
-            if let host = nioRequest.head.headers.first(where: { $0.name == "Host" }) {
+            let awsHTTPRequest: AWSHTTPRequest = kinesisClient.createHTTPRequest(awsRequest, signer: try kinesisClient.signer.wait())
+            XCTAssertEqual(awsHTTPRequest.method, HTTPMethod.POST)
+            if let host = awsHTTPRequest.headers.first(where: { $0.name == "Host" }) {
                 XCTAssertEqual(host.value, "kinesis.us-east-1.amazonaws.com")
             }
-            if let contentType = nioRequest.head.headers.first(where: { $0.name == "Content-Type" }) {
+            if let contentType = awsHTTPRequest.headers.first(where: { $0.name == "Content-Type" }) {
                 XCTAssertEqual(contentType.value, "application/x-amz-json-1.1")
             }
-            if let xAmzTarget = nioRequest.head.headers.first(where: { $0.name == "x-amz-target" }) {
+            if let xAmzTarget = awsHTTPRequest.headers.first(where: { $0.name == "x-amz-target" }) {
                 XCTAssertEqual(xAmzTarget.value, "Kinesis_20131202.PutRecord")
             }
-
         } catch {
             XCTFail(error.localizedDescription)
         }
     }
 
+    func testUnsignedClient() {
+        let input = E()
+        let client = AWSClient(
+            accessKeyId: "",
+            secretAccessKey: "",
+            region: .useast1,
+            service: "s3",
+            serviceProtocol: ServiceProtocol(type: .restxml),
+            apiVersion: "2013-12-02",
+            middlewares: [],
+            eventLoopGroupProvider: .useAWSClientShared
+        )
+
+        do {
+            let awsRequest = try client.createAWSRequest(
+                operation: "CopyObject",
+                path: "/",
+                httpMethod: "PUT",
+                input: input
+            )
+
+            let request: AWSHTTPRequest = client.createHTTPRequest(awsRequest, signer: try client.signer.wait())
+
+            XCTAssertNil(request.headers["Authorization"].first)
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
     func testValidateCode() {
-        let response = HTTPClient.Response(
-            head: HTTPResponseHead(
-                version: HTTPVersion(major: 1, minor: 1),
-                status: HTTPResponseStatus(statusCode: 200)
-            ),
-            body: Data()
+        let response = AWSHTTPResponseImpl(
+            status: .ok,
+            headers: HTTPHeaders(),
+            body: nil
         )
         do {
             try s3Client.validate(response: response)
@@ -376,12 +446,10 @@ class AWSClientTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
 
-        let failResponse = HTTPClient.Response(
-            head: HTTPResponseHead(
-                version: HTTPVersion(major: 1, minor: 1),
-                status: HTTPResponseStatus(statusCode: 403)
-            ),
-            body: Data()
+        let failResponse = AWSHTTPResponseImpl(
+            status: .forbidden,
+            headers: HTTPHeaders(),
+            body: nil
         )
 
         do {
@@ -396,15 +464,14 @@ class AWSClientTests: XCTestCase {
         class Output : AWSShape {
             let name : String
         }
-        let response = HTTPClient.Response(
-            head: HTTPResponseHead(
-                version: HTTPVersion(major: 1, minor: 1),
-                status: HTTPResponseStatus(statusCode: 200)
-            ),
-            body: "<Output><name>hello</name></Output>".data(using: .utf8)!
+        let responseBody = "<Output><name>hello</name></Output>"
+        let awsHTTPResponse = AWSHTTPResponseImpl(
+            status: .ok,
+            headers: HTTPHeaders(),
+            bodyData: responseBody.data(using: .utf8)!
         )
         do {
-            let output : Output = try s3Client.validate(operation: "Output", response: response)
+            let output : Output = try s3Client.validate(operation: "Output", response: awsHTTPResponse)
             XCTAssertEqual(output.name, "hello")
         } catch {
             XCTFail(error.localizedDescription)
@@ -416,12 +483,10 @@ class AWSClientTests: XCTestCase {
             static let payloadPath: String? = "name"
             let name : String
         }
-        let response = HTTPClient.Response(
-            head: HTTPResponseHead(
-                version: HTTPVersion(major: 1, minor: 1),
-                status: HTTPResponseStatus(statusCode: 200)
-            ),
-            body: "<name>hello</name>".data(using: .utf8)!
+        let response = AWSHTTPResponseImpl(
+            status: .ok,
+            headers: HTTPHeaders(),
+            bodyData: "<name>hello</name>".data(using: .utf8)!
         )
         do {
             let output : Output = try s3Client.validate(operation: "Output", response: response)
@@ -432,12 +497,10 @@ class AWSClientTests: XCTestCase {
     }
 
     func testValidateXMLError() {
-        let response = HTTPClient.Response(
-            head: HTTPResponseHead(
-                version: HTTPVersion(major: 1, minor: 1),
-                status: HTTPResponseStatus(statusCode: 404)
-            ),
-            body: "<Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message></Error>".data(using: .utf8)!
+        let response = AWSHTTPResponseImpl(
+            status: .notFound,
+            headers: HTTPHeaders(),
+            bodyData: "<Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message></Error>".data(using: .utf8)!
         )
         do {
             try s3Client.validate(response: response)
@@ -453,12 +516,10 @@ class AWSClientTests: XCTestCase {
         class Output : AWSShape {
             let name : String
         }
-        let response = HTTPClient.Response(
-            head: HTTPResponseHead(
-                version: HTTPVersion(major: 1, minor: 1),
-                status: HTTPResponseStatus(statusCode: 200)
-            ),
-            body: "{\"name\":\"hello\"}".data(using: .utf8)!
+        let response = AWSHTTPResponseImpl(
+            status: .ok,
+            headers: HTTPHeaders(),
+            bodyData: "{\"name\":\"hello\"}".data(using: .utf8)!
         )
         do {
             let output : Output = try kinesisClient.validate(operation: "Output", response: response)
@@ -476,12 +537,10 @@ class AWSClientTests: XCTestCase {
             static let payloadPath: String? = "output2"
             let output2 : Output2
         }
-        let response = HTTPClient.Response(
-            head: HTTPResponseHead(
-                version: HTTPVersion(major: 1, minor: 1),
-                status: HTTPResponseStatus(statusCode: 200)
-            ),
-            body: "{\"name\":\"hello\"}".data(using: .utf8)!
+        let response = AWSHTTPResponseImpl(
+            status: .ok,
+            headers: HTTPHeaders(),
+            bodyData: "{\"name\":\"hello\"}".data(using: .utf8)!
         )
         do {
             let output : Output = try kinesisClient.validate(operation: "Output", response: response)
@@ -492,12 +551,10 @@ class AWSClientTests: XCTestCase {
     }
 
     func testValidateJSONError() {
-        let response = HTTPClient.Response(
-            head: HTTPResponseHead(
-                version: HTTPVersion(major: 1, minor: 1),
-                status: HTTPResponseStatus(statusCode: 404)
-            ),
-            body: "{\"__type\":\"ResourceNotFoundException\", \"message\": \"Donald Where's Your Troosers?\"}".data(using: .utf8)!
+        let response = AWSHTTPResponseImpl(
+            status: .notFound,
+            headers: HTTPHeaders(),
+            bodyData: "{\"__type\":\"ResourceNotFoundException\", \"message\": \"Donald Where's Your Troosers?\"}".data(using: .utf8)!
         )
         do {
             try kinesisClient.validate(response: response)
@@ -528,15 +585,17 @@ class AWSClientTests: XCTestCase {
             let d: Double
             let b: Bool
         }
+        var buffer = ByteBufferAllocator().buffer(capacity: 0)
+        buffer.writeString(
+            """
+            {"_embedded": {"a": [{"s":"Hello", "i":1234}, {"s":"Hello2", "i":12345}]}, "d":3.14, "b":true}
+            """
+        )
         let response = HTTPClient.Response(
-            head: HTTPResponseHead(
-                version: HTTPVersion(major: 1, minor: 1),
-                status: HTTPResponseStatus(statusCode: 200),
-                headers: ["Content-Type":"application/hal+json"]
-            ),
-            body: """
-                {"_embedded": {"a": [{"s":"Hello", "i":1234}, {"s":"Hello2", "i":12345}], "d":3.14, "b":true}}
-                """.data(using: .utf8)!
+            host: "localhost",
+            status: .ok,
+            headers: ["Content-Type":"application/hal+json"],
+            body: buffer
         )
         do {
             let output : Output2 = try kinesisClient.validate(operation: "Output", response: response)
@@ -571,6 +630,120 @@ class AWSClientTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
     }
+
+    func testClientNoInputNoOutput() {
+        do {
+            let awsServer = AWSTestServer(serviceProtocol: .json)
+            let client = AWSClient(
+                accessKeyId: "",
+                secretAccessKey: "",
+                region: .useast1,
+                service:"TestClient",
+                serviceProtocol: ServiceProtocol(type: .json, version: ServiceProtocol.Version(major: 1, minor: 1)),
+                apiVersion: "2020-01-21",
+                endpoint: awsServer.address,
+                middlewares: [AWSLoggingMiddleware()],
+                eventLoopGroupProvider: .useAWSClientShared
+            )
+            let response = client.send(operation: "test", path: "/", httpMethod: "POST")
+
+            try awsServer.process { request in
+                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
+                return AWSTestServer.Result(output: response, continueProcessing: false)
+            }
+
+            try response.wait()
+            try awsServer.stop()
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+    func testClientWithInputNoOutput() {
+        enum InputEnum: String, Codable {
+            case first
+            case second
+        }
+        struct Input : AWSShape {
+            public static var _members: [AWSShapeMember] = [
+                AWSShapeMember(label: "s", required: true, type: .string),
+                AWSShapeMember(label: "i", required: true, type: .list)
+            ]
+            let e: InputEnum
+            let i: [Int64]
+        }
+
+        do {
+            let awsServer = AWSTestServer(serviceProtocol: .json)
+            let client = AWSClient(
+                accessKeyId: "",
+                secretAccessKey: "",
+                region: .useast1,
+                service:"TestClient",
+                serviceProtocol: ServiceProtocol(type: .json, version: ServiceProtocol.Version(major: 1, minor: 1)),
+                apiVersion: "2020-01-21",
+                endpoint: awsServer.address,
+                middlewares: [AWSLoggingMiddleware()],
+                eventLoopGroupProvider: .useAWSClientShared
+            )
+            let input = Input(e:.second, i: [1,2,4,8])
+            let response = client.send(operation: "test", path: "/", httpMethod: "POST", input: input)
+
+            try awsServer.process { request in
+                let receivedInput = try JSONDecoder().decode(Input.self, from: request.body)
+                XCTAssertEqual(receivedInput.e, .second)
+                XCTAssertEqual(receivedInput.i, [1,2,4,8])
+                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
+                return AWSTestServer.Result(output: response, continueProcessing: false)
+            }
+
+            try response.wait()
+            try awsServer.stop()
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+    func testClientNoInputWithOutput() {
+        struct Output : AWSShape {
+            public static var _members: [AWSShapeMember] = [
+                AWSShapeMember(label: "s", required: true, type: .string),
+                AWSShapeMember(label: "i", required: true, type: .integer)
+            ]
+            let s: String
+            let i: Int64
+        }
+        do {
+            let awsServer = AWSTestServer(serviceProtocol: .json)
+            let client = AWSClient(
+                accessKeyId: "",
+                secretAccessKey: "",
+                region: .useast1,
+                service:"TestClient",
+                serviceProtocol: ServiceProtocol(type: .json, version: ServiceProtocol.Version(major: 1, minor: 1)),
+                apiVersion: "2020-01-21",
+                endpoint: awsServer.address,
+                middlewares: [AWSLoggingMiddleware()],
+                eventLoopGroupProvider: .useAWSClientShared
+            )
+            let response: EventLoopFuture<Output> = client.send(operation: "test", path: "/", httpMethod: "POST")
+
+            try awsServer.process { request in
+                let output = Output(s: "TestOutputString", i: 547)
+                let byteBuffer = try JSONEncoder().encodeAsByteBuffer(output, allocator: ByteBufferAllocator())
+                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
+                return AWSTestServer.Result(output: response, continueProcessing: false)
+            }
+
+            let output = try response.wait()
+
+            XCTAssertEqual(output.s, "TestOutputString")
+            XCTAssertEqual(output.i, 547)
+            try awsServer.stop()
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
 }
 
 /// Error enum for Kinesis
@@ -596,33 +769,6 @@ extension KinesisErrorType {
         switch self {
         case .resourceNotFoundException(let message):
             return "ResourceNotFoundException :\(message ?? "")"
-        }
-    }
-}
-
-/// Error enum for SES
-public enum SESErrorType: AWSErrorType {
-    case messageRejected(message: String?)
-}
-
-extension SESErrorType {
-    public init?(errorCode: String, message: String?){
-        var errorCode = errorCode
-        if let index = errorCode.firstIndex(of: "#") {
-            errorCode = String(errorCode[errorCode.index(index, offsetBy: 1)...])
-        }
-        switch errorCode {
-        case "MessageRejected":
-            self = .messageRejected(message: message)
-        default:
-            return nil
-        }
-    }
-
-    public var description : String {
-        switch self {
-        case .messageRejected(let message):
-            return "MessageRejected :\(message ?? "")"
         }
     }
 }

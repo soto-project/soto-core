@@ -14,14 +14,12 @@ class PaginateTests: XCTestCase {
     enum Error: Swift.Error {
         case didntFindToken
     }
-    var eventLoopGroup: EventLoopGroup!
     var awsServer: AWSTestServer!
     var client: AWSClient!
 
     override func setUp() {
         // create server and client
-        eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
-        awsServer = AWSTestServer(serviceProtocol: .json, eventLoopGroup: eventLoopGroup)
+        awsServer = AWSTestServer(serviceProtocol: .json)
         client = AWSClient(
             accessKeyId: "",
             secretAccessKey: "",
@@ -31,14 +29,12 @@ class PaginateTests: XCTestCase {
             apiVersion: "2020-01-21",
             endpoint: "http://localhost:\(awsServer.serverPort)",
             middlewares: [AWSLoggingMiddleware()],
-            eventLoopGroupProvider: .shared(eventLoopGroup)
+            eventLoopGroupProvider: .useAWSClientShared
         )
     }
     
     override func tearDown() {
         XCTAssertNoThrow(try self.awsServer.stop())
-        XCTAssertNoThrow(try self.eventLoopGroup.syncShutdownGracefully())
-        self.eventLoopGroup = nil
     }
     
     // test structures/functions

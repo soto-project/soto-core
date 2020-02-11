@@ -49,8 +49,7 @@ public struct AWSRequest {
         httpHeaders[field] = value
     }
 
-    /// Create HTTP Client request from AWSRequest
-    func toNIORequest() throws -> HTTPClient.Request {
+    func getHttpHeaders() -> HTTPHeaders {
         var headers: [String:String] = [:]
         for (key, value) in httpHeaders {
             //guard let value = value else { continue }
@@ -83,17 +82,30 @@ public struct AWSRequest {
             headers["Content-Type"] = headers["Content-Type"] ?? "application/octet-stream"
         }
 
-        var head = HTTPRequestHead(
-          version: HTTPVersion(major: 1, minor: 1),
-          method: nioHTTPMethod(from: httpMethod),
-          uri: url.absoluteString
-        )
-        let generatedHeaders = headers.map { ($0, $1) }
-        head.headers = HTTPHeaders(generatedHeaders)
-
-        return HTTPClient.Request(head: head, body: body.asData() ?? Data())
+        return HTTPHeaders(headers.map { ($0, $1) })
     }
-    
+
+    /// Create HTTP Client request from AWSRequest
+    func toHTTPRequest() -> AWSHTTPRequest {
+        return AWSHTTPRequest.init(url: url, method: HTTPMethod(rawValue: httpMethod), headers: getHttpHeaders(), body: body.asByteBuffer())
+    }
+
+    /// Create HTTP Client request with signed URL from AWSRequest
+    func toHTTPRequestWithSignedURL(signer: AWSSigner) -> AWSHTTPRequest {
+        let method = HTTPMethod(rawValue: httpMethod)
+        let bodyData = body.asByteBuffer()
+        let signedURL = signer.signURL(url: url, method: method, body: bodyData != nil ? .byteBuffer(bodyData!) : nil, date: Date(), expires: 86400)
+        return AWSHTTPRequest.init(url: signedURL, method: method, headers: getHttpHeaders(), body: bodyData)
+    }
+
+    /// Create HTTP Client request with signed headers from AWSRequest
+    func toHTTPRequestWithSignedHeader(signer: AWSSigner) -> AWSHTTPRequest {
+        let method = HTTPMethod(rawValue: httpMethod)
+        let bodyData = body.asByteBuffer()
+        let signedHeaders = signer.signHeaders(url: url, method: method, headers: getHttpHeaders(), body: bodyData != nil ? .byteBuffer(bodyData!) : nil, date: Date())
+        return AWSHTTPRequest.init(url: url, method: method, headers: signedHeaders, body: bodyData)
+    }
+
     // return new request with middleware applied
     func applyMiddlewares(_ middlewares: [AWSServiceMiddleware]) throws -> AWSRequest {
         var awsRequest = self
@@ -102,25 +114,5 @@ public struct AWSRequest {
             awsRequest = try middleware.chain(request: awsRequest)
         }
         return awsRequest
-    }
-
-    // Convert string to NIO HTTP Method
-    fileprivate func nioHTTPMethod(from: String) -> HTTPMethod {
-        switch from {
-        case "HEAD":
-            return .HEAD
-        case "GET":
-            return .GET
-        case "POST":
-            return .POST
-        case "PUT":
-            return .PUT
-        case "PATCH":
-            return .PATCH
-        case "DELETE":
-            return .DELETE
-        default:
-            return .GET
-        }
     }
 }

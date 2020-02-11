@@ -8,15 +8,19 @@ let package = Package(
         .library(name: "AWSSDKSwiftCore", targets: ["AWSSDKSwiftCore"])
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-nio.git", .upToNextMajor(from:"2.11.0")),
-        .package(url: "https://github.com/apple/swift-nio-ssl.git", .upToNextMajor(from:"2.4.0")),
+        .package(url: "https://github.com/apple/swift-nio.git", .upToNextMajor(from:"2.13.1")),
+        .package(url: "https://github.com/apple/swift-nio-ssl.git", .upToNextMajor(from:"2.4.1")),
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", .upToNextMajor(from:"1.0.0")),
+        .package(url: "https://github.com/swift-server/async-http-client.git", .upToNextMajor(from:"1.0.0")),
         .package(url: "https://github.com/swift-aws/Perfect-INIParser.git", .upToNextMinor(from: "3.0.0")),
     ],
     targets: [
         .target(
             name: "AWSSDKSwiftCore",
             dependencies: [
+                "AsyncHTTPClient",
+                "AWSSignerV4",
+                "CAWSSDKOpenSSL",
                 "NIO",
                 "NIOHTTP1",
                 "NIOSSL",
@@ -24,23 +28,21 @@ let package = Package(
                 "NIOFoundationCompat",
                 "INIParser"
             ]),
-        .testTarget(name: "AWSSDKSwiftCoreTests", dependencies: ["AWSSDKSwiftCore", "NIOTestUtils"])
+        .target(name: "AWSSignerV4", dependencies: ["CAWSSDKOpenSSL", "NIOHTTP1"]),
+        .target(name: "CAWSSDKOpenSSL", dependencies: []),
+        .testTarget(name: "AWSSDKSwiftCoreTests", dependencies: ["AWSSDKSwiftCore", "NIOTestUtils"]),
+        .testTarget(name: "AWSSignerTests", dependencies: ["AWSSignerV4"])
     ]
 )
 
 // switch for whether to use CAWSSDKOpenSSL to shim between OpenSSL versions
 #if os(Linux)
-let useAWSSDKOpenSSLShim = true
+let useOpenSSL = true
 #else
-let useAWSSDKOpenSSLShim = false
+let useOpenSSL = false
 #endif
 
-// AWSSDKSwiftCore target
-let awsSdkSwiftCoreTarget = package.targets.first(where: {$0.name == "AWSSDKSwiftCore"})
-
 // Decide on where we get our SSL support from. Linux usses NIOSSL to provide SSL. Linux also needs CAWSSDKOpenSSL to shim across different OpenSSL versions for the HMAC functions.
-if useAWSSDKOpenSSLShim {
-    package.targets.append(.target(name: "CAWSSDKOpenSSL"))
-    awsSdkSwiftCoreTarget?.dependencies.append("CAWSSDKOpenSSL")
+if useOpenSSL {
     package.dependencies.append(.package(url: "https://github.com/apple/swift-nio-ssl-support.git", from: "1.0.0"))
 }

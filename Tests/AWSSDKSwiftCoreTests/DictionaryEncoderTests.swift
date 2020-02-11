@@ -12,7 +12,6 @@ class DictionaryEncoderTests: XCTestCase {
     
     
     func assertEqual(_ e1: Any, _ e2: Any) {
-        print("\(type(of:e1)) == \(type(of:e2))")
         if let number1 = e1 as? NSNumber, let number2 = e2 as? NSNumber {
             XCTAssertEqual(number1, number2)
         } else if let string1 = e1 as? NSString, let string2 = e2 as? NSString {
@@ -510,3 +509,4 @@ class DictionaryEncoderTests: XCTestCase {
         ]
     }
 }
+

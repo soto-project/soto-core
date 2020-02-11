@@ -27,6 +27,8 @@ class AWSTestServer {
     }
     // http incoming request
     struct Request {
+        let method: HTTPMethod
+        let uri: String
         let headers: [String: String]
         let body: ByteBuffer
     }
@@ -34,24 +36,36 @@ class AWSTestServer {
     struct Response {
         let httpStatus: HTTPResponseStatus
         let headers: [String: String]
-        let body: ByteBuffer
+        let body: ByteBuffer?
     }
     // result from process
     struct Result<Output>{
         let output: Output
         let continueProcessing: Bool
     }
-    
+    // httpBin function response
+    struct HTTPBinResponse: Codable {
+        let method: String?
+        let data: String?
+        let headers: [String: String]
+        let url: String
+    }
+
+    let eventLoopGroup: EventLoopGroup
     let web: NIOHTTP1TestServer
     let serviceProtocol: ServiceProtocol
     var serverPort: Int { return web.serverPort }
+    var address: String { return "http://localhost:\(web.serverPort)"}
+    var addressURL: URL { return URL(string: "http://localhost:\(web.serverPort)")!}
     let byteBufferAllocator: ByteBufferAllocator
 
     
-    init(serviceProtocol: ServiceProtocol, eventLoopGroup: EventLoopGroup) {
-        self.web = NIOHTTP1TestServer(group: eventLoopGroup)
+    init(serviceProtocol: ServiceProtocol) {
+        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        self.web = NIOHTTP1TestServer(group: self.eventLoopGroup)
         self.serviceProtocol = serviceProtocol
         self.byteBufferAllocator = ByteBufferAllocator()
+        print("Starting serving on localhost:\(serverPort)")
     }
     
     /// run server reading request, convert from to an input shape processing them and converting the result back to a response.
@@ -91,14 +105,24 @@ class AWSTestServer {
     }
     
 
-    /// read one request and return it back
-    func echo() throws {
+    /// read one request and return details back in body
+    func httpBin() throws {
         let request = try readRequest()
-        try writeResponse(Response(httpStatus: .ok, headers: request.headers, body: request.body))
+        
+        let data = request.body.getString(at: 0, length: request.body.readableBytes, encoding: .utf8)
+        let httpBinResponse = HTTPBinResponse(
+            method: request.method.rawValue,
+            data: data,
+            headers: request.headers,
+            url: request.uri)
+        let responseBody = try JSONEncoder().encodeAsByteBuffer(httpBinResponse, allocator: ByteBufferAllocator())
+        try writeResponse(Response(httpStatus: .ok, headers: [:], body: responseBody))
     }
     
     func stop() throws {
+        print("Stop serving on localhost:\(serverPort)")
         try web.stop()
+        try eventLoopGroup.syncShutdownGracefully()
     }
 }
 
@@ -179,7 +203,7 @@ extension AWSTestServer {
         for (key, value) in head.headers {
             requestHeaders[key.description] = value
         }
-        return Request(headers: requestHeaders, body: byteBuffer)
+        return Request(method: head.method, uri: head.uri, headers: requestHeaders, body: byteBuffer)
     }
     
     /// write outbound response
@@ -187,7 +211,9 @@ extension AWSTestServer {
         XCTAssertNoThrow(try web.writeOutbound(.head(.init(version: .init(major: 1, minor: 1),
                                                            status: response.httpStatus,
                                                            headers: HTTPHeaders(response.headers.map { ($0,$1) })))))
-        XCTAssertNoThrow(try web.writeOutbound(.body(.byteBuffer(response.body))))
+        if let body = response.body, body.readableBytes > 0 {
+            XCTAssertNoThrow(try web.writeOutbound(.body(.byteBuffer(body))))
+        }
         XCTAssertNoThrow(try web.writeOutbound(.end(nil)))
     }
     

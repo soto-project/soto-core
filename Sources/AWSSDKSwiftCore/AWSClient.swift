@@ -184,35 +184,36 @@ extension AWSClient {
 
     /// invoke HTTP request
     fileprivate func invoke(_ httpRequest: AWSHTTPRequest) -> EventLoopFuture<AWSHTTPResponse> {
+        let eventloop = self.eventLoopGroup.next()
+        let promise = eventloop.makePromise(of: AWSHTTPResponse.self)
 
-        func execute(_ httpRequest: AWSHTTPRequest, attempt: Int) -> EventLoopFuture<AWSHTTPResponse> {
+        func execute(_ httpRequest: AWSHTTPRequest, attempt: Int) {
             // execute HTTP request
-            let futureResponse = httpClient.execute(request: httpRequest, timeout: .seconds(5))
-                .flatMapThrowing { (response) throws -> AWSHTTPResponse in
+            _ = httpClient.execute(request: httpRequest, timeout: .seconds(5))
+                .flatMapThrowing { (response) throws -> Void in
                     // if it returns an HTTP status code outside 2xx then throw an error
                     guard (200..<300).contains(response.status.code) else { throw AWSClient.InternalError.httpResponseError(response) }
-                    return response
+                    promise.succeed(response)
                 }
-                .flatMapError { error in
+                .flatMapErrorThrowing { (error)->Void in
                     // If I get a retry wait time for this error then attempt to retry request
                     if let retryTime = self.retryController.getRetryWaitTime(error: error, attempt: attempt) {
                         // schedule task for retrying AWS request
-                        return self.eventLoopGroup.next().scheduleTask(in: retryTime) {
-                            return execute(httpRequest, attempt: attempt + 1)
-                            }.futureResult.flatMap { response in
-                                // scheduled task returns a Future of a Future, so need to extract the Future
-                                return response
+                        eventloop.scheduleTask(in: retryTime) {
+                            execute(httpRequest, attempt: attempt + 1)
                         }
                     } else if case AWSClient.InternalError.httpResponseError(let response) = error {
                         // if there was no retry and error was a response status code then attempt to convert to AWS error
-                        return self.eventLoopGroup.next().makeFailedFuture(self.createError(for: response))
+                        promise.fail(self.createError(for: response))
+                    } else {
+                        promise.fail(error)
                     }
-                    return self.eventLoopGroup.next().makeFailedFuture(error)
             }
-            return futureResponse
         }
 
-        return execute(httpRequest, attempt: 0)
+        execute(httpRequest, attempt: 0)
+
+        return promise.futureResult
     }
 
     /// create HTTPClient

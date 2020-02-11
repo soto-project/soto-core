@@ -205,7 +205,7 @@ extension AWSClient {
                         path: path,
                         httpMethod: httpMethod,
                         input: input)
-            return self.createHTTPRequest(awsRequest, signer: signer)
+            return awsRequest.createHTTPRequest(signer: signer)
         }.flatMap { request in
             return self.invoke(request)
         }.flatMapThrowing { response in
@@ -228,7 +228,7 @@ extension AWSClient {
                         operation: operationName,
                         path: path,
                         httpMethod: httpMethod)
-            return self.createHTTPRequest(awsRequest, signer: signer)
+            return awsRequest.createHTTPRequest(signer: signer)
         }.flatMap { request in
             return self.invoke(request)
         }.flatMapThrowing { response in
@@ -251,7 +251,7 @@ extension AWSClient {
                         operation: operationName,
                         path: path,
                         httpMethod: httpMethod)
-            return self.createHTTPRequest(awsRequest, signer: signer)
+            return awsRequest.createHTTPRequest(signer: signer)
         }.flatMap { request in
             return self.invoke(request)
         }.flatMapThrowing { response in
@@ -276,7 +276,7 @@ extension AWSClient {
                         path: path,
                         httpMethod: httpMethod,
                         input: input)
-            return self.createHTTPRequest(awsRequest, signer: signer)
+            return awsRequest.createHTTPRequest(signer: signer)
         }.flatMap { request in
             return self.invoke(request)
         }.flatMapThrowing { response in
@@ -302,27 +302,6 @@ extension AWSClient {
     var signer: EventLoopFuture<AWSSigner> {
         return credentialProvider.getCredential().map { credential in
             return AWSSigner(credentials: credential, name: self.signingName, region: self.region.rawValue)
-        }
-    }
-
-    func createHTTPRequest(_ awsRequest: AWSRequest, signer: AWSSigner) -> AWSHTTPRequest {
-        // if credentials are empty don't sign request
-        if signer.credentials.isEmpty() {
-            return awsRequest.toHTTPRequest()
-        }
-
-        switch (awsRequest.httpMethod, self.serviceProtocol.type) {
-        case ("GET",  .restjson), ("HEAD", .restjson):
-            return awsRequest.toHTTPRequestWithSignedHeader(signer: signer)
-
-        case ("GET",  _), ("HEAD", _):
-            if awsRequest.httpHeaders.count > 0 {
-                return awsRequest.toHTTPRequestWithSignedHeader(signer: signer)
-            }
-            return awsRequest.toHTTPRequestWithSignedURL(signer: signer)
-
-        default:
-            return awsRequest.toHTTPRequestWithSignedHeader(signer: signer)
         }
     }
 

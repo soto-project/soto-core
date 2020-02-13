@@ -98,21 +98,6 @@ extension AWSShape {
         }
         return params
     }
-
-    /// returns whether the shape has any members being serialized into the request/response body
-    public static var hasEncodableBody: Bool {
-        for member in _members {
-            if let location = member.location {
-                if case .body(_) = location {
-                    return true
-                }
-            } else {
-                return true
-            }
-        }
-        return false
-    }
-
 }
 
 /// Validation code to add to AWSShape
@@ -190,7 +175,7 @@ extension AWSShape {
 extension AWSShapeMember.ShapeEncoding {
     public var xmlEncoding : XMLContainerCoding? {
         switch self {
-        case .default:
+        case .default, .blob:
             return nil
         case .flatList:
             return .default

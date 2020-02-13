@@ -58,24 +58,20 @@ public struct AWSShapeMember {
         case flatMap(key: String, value: String)
         /// encode dictionary with multiple pairs of `key` and `value` entries, enclosed by element `entry`
         case map(entry: String, key: String, value: String)
+        /// shape is stored as data blob in body
+        case blob
     }
     
     /// name of member
     public let label: String
     /// where to find or place member
     public let location: Location?
-    /// Is this member required
-    public let required: Bool
-    /// Type of shape member is
-    public let type: Shape
     /// How shape is serialized
     public let shapeEncoding: ShapeEncoding
 
-    public init(label: String, location: Location? = nil, required: Bool, type: Shape, encoding: ShapeEncoding = .default) {
+    public init(label: String, location: Location? = nil, encoding: ShapeEncoding = .default) {
         self.label = label
         self.location = location
-        self.required = required
-        self.type = type
         self.shapeEncoding = encoding
     }
 }

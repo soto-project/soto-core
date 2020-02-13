@@ -68,7 +68,7 @@ class PerformanceTests: XCTestCase {
             service:"Test",
             serviceProtocol: ServiceProtocol(type: .restxml),
             apiVersion: "1.0",
-            httpClientProvider: .useAWSClientShared
+            httpClientProvider: .createNew
         )
         let date = Date()
         let request = HeaderRequest(header1: "Header1", header2: "Header2", header3: "Header3", header4: TimeStamp(date))
@@ -90,7 +90,7 @@ class PerformanceTests: XCTestCase {
             service:"Test",
             serviceProtocol: ServiceProtocol(type: .restxml),
             apiVersion: "1.0",
-            httpClientProvider: .useAWSClientShared
+            httpClientProvider: .createNew
         )
         let date = Date()
         let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1,2,3,4,5])
@@ -112,7 +112,7 @@ class PerformanceTests: XCTestCase {
             service:"Test",
             serviceProtocol: ServiceProtocol(type: .restxml),
             apiVersion: "1.0",
-            httpClientProvider: .useAWSClientShared
+            httpClientProvider: .createNew
         )
         let date = Date()
         let request = PayloadRequest(payload: StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1,2,3,4,5]))
@@ -134,7 +134,7 @@ class PerformanceTests: XCTestCase {
             service:"Test",
             serviceProtocol: ServiceProtocol(type: .restjson),
             apiVersion: "1.0",
-            httpClientProvider: .useAWSClientShared
+            httpClientProvider: .createNew
         )
         let date = Date()
         let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1,2,3,4,5])
@@ -156,7 +156,7 @@ class PerformanceTests: XCTestCase {
             service:"Test",
             serviceProtocol: ServiceProtocol(type: .restjson),
             apiVersion: "1.0",
-            httpClientProvider: .useAWSClientShared
+            httpClientProvider: .createNew
         )
         let date = Date()
         let request = PayloadRequest(payload: StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1,2,3,4,5]))
@@ -178,7 +178,7 @@ class PerformanceTests: XCTestCase {
             service:"Test",
             serviceProtocol: ServiceProtocol(type: .query),
             apiVersion: "1.0",
-            httpClientProvider: .useAWSClientShared
+            httpClientProvider: .createNew
         )
         let date = Date()
         let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1,2,3,4,5])
@@ -202,7 +202,7 @@ class PerformanceTests: XCTestCase {
             service:"Test",
             serviceProtocol: ServiceProtocol(type: .json),
             apiVersion: "1.0",
-            httpClientProvider: .useAWSClientShared
+            httpClientProvider: .createNew
         )
         let awsRequest = try! client.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET")
         let signer = try! client.signer.wait()
@@ -222,7 +222,7 @@ class PerformanceTests: XCTestCase {
             service:"Test",
             serviceProtocol: ServiceProtocol(type: .json),
             apiVersion: "1.0",
-            httpClientProvider: .useAWSClientShared
+            httpClientProvider: .createNew
         )
         let awsRequest = try! client.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET")
         let signer = try! client.signer.wait()
@@ -242,7 +242,7 @@ class PerformanceTests: XCTestCase {
             service:"Test",
             serviceProtocol: ServiceProtocol(type: .json),
             apiVersion: "1.0",
-            httpClientProvider: .useAWSClientShared
+            httpClientProvider: .createNew
         )
         let date = Date()
         let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1,2,3,4,5])
@@ -262,7 +262,7 @@ class PerformanceTests: XCTestCase {
             service:"Test",
             serviceProtocol: ServiceProtocol(type: .restxml),
             apiVersion: "1.0",
-            httpClientProvider: .useAWSClientShared
+            httpClientProvider: .createNew
         )
         var buffer = ByteBufferAllocator().buffer(capacity: 0)
         buffer.writeString("<Output><item1>Hello</item1><item2>5</item2><item3>3.141</item3><item4>2001-12-23T15:34:12.590Z</item4><item5>3</item5><item5>6</item5><item5>325</item5></Output>")
@@ -290,7 +290,7 @@ class PerformanceTests: XCTestCase {
             service:"Test",
             serviceProtocol: ServiceProtocol(type: .restjson),
             apiVersion: "1.0",
-            httpClientProvider: .useAWSClientShared
+            httpClientProvider: .createNew
         )
         var buffer = ByteBufferAllocator().buffer(capacity: 0)
         buffer.writeString("{\"item1\":\"Hello\", \"item2\":5, \"item3\":3.14, \"item4\":\"2001-12-23T15:34:12.590Z\", \"item5\": [1,56,3,7]}")

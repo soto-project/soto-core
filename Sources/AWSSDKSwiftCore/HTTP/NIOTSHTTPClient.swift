@@ -31,6 +31,14 @@ import NIOTransportServices
 @available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)
 public final class NIOTSHTTPClient {
 
+    /// Specifies how `EventLoopGroup` will be created and establishes lifecycle ownership.
+    public enum EventLoopGroupProvider {
+        /// `EventLoopGroup` will be provided by the user. Owner of this group is responsible for its lifecycle.
+        case shared(NIOTSEventLoopGroup)
+        /// `EventLoopGroup` will be created by the client. When `syncShutdown` is called, created `EventLoopGroup` will be shut down as well.
+        case createNew
+    }
+
     /// Request structure to send
     public struct Request {
         public var head: HTTPRequestHead
@@ -52,8 +60,33 @@ public final class NIOTSHTTPClient {
     }
 
     /// Initialise HTTPClient
-    public init(eventLoopGroup: NIOTSEventLoopGroup) {
-        self.eventLoopGroup = eventLoopGroup
+    public init(eventLoopGroupProvider: EventLoopGroupProvider) {
+        self.eventLoopGroupProvider = eventLoopGroupProvider
+        switch self.eventLoopGroupProvider {
+        case .shared(let group):
+            self.eventLoopGroup = group
+        case .createNew:
+            self.eventLoopGroup = NIOTSEventLoopGroup()
+        }
+    }
+
+    deinit {
+        assert(self.isShutdown.load(), "Client not shut down before the deinit. Please call client.syncShutdown() when no longer needed.")
+    }
+
+    /// Shuts down the client and `EventLoopGroup` if it was created by the client.
+    public func syncShutdown() throws {
+        switch self.eventLoopGroupProvider {
+        case .shared:
+            self.isShutdown.store(true)
+            return
+        case .createNew:
+            if self.isShutdown.compareAndExchange(expected: false, desired: true) {
+                try self.eventLoopGroup.syncShutdownGracefully()
+            } else {
+                throw HTTPError.alreadyShutdown
+            }
+        }
     }
 
     /// send request to HTTP client, return a future holding the Response
@@ -202,14 +235,14 @@ public final class NIOTSHTTPClient {
     }
 
     public let eventLoopGroup: EventLoopGroup
+    let eventLoopGroupProvider: EventLoopGroupProvider
+    let isShutdown = NIOAtomic<Bool>.makeAtomic(value: false)
 }
 
 /// comply with AWSHTTPClient protocol
 @available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)
 extension NIOTSHTTPClient: AWSHTTPClient {
     
-    public func syncShutdown() throws {}
-
     public func execute(request: AWSHTTPRequest, timeout: TimeAmount) -> EventLoopFuture<AWSHTTPResponse> {
         var head = HTTPRequestHead(
           version: HTTPVersion(major: 1, minor: 1),

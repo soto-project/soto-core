@@ -33,12 +33,13 @@ public final class AWSClient {
         case invalidURL(String)
     }
 
-    /// Specifies how `EventLoopGroup` will be created and establishes lifecycle ownership.
+    /// Specifies how `HTTPClient` will be created and establishes lifecycle ownership.
     public enum HTTPClientProvider {
-        /// `EventLoopGroup` will be provided by the user. Owner of this group is responsible for its lifecycle.
+        /// `HTTPClient` will be provided by the user. Owner of this group is responsible for its lifecycle. Any HTTPClient that conforms to
+        /// `AWSHTTPClient` can be specified here including AsyncHTTPClient
         case shared(AWSHTTPClient)
-        /// `EventLoopGroup` will be created by the client. When `syncShutdown` is called, created `EventLoopGroup` will be shut down as well.
-        case useAWSClientShared
+        /// `HTTPClient` will be created by the client. When `deinit` is called, created `HTTPClient` will be shut down as well.
+        case createNew
     }
 
     let credentialProvider: CredentialProvider
@@ -65,21 +66,13 @@ public final class AWSClient {
 
     var possibleErrorTypes: [AWSErrorType.Type]
 
-    let httpClient: AWSHTTPClient
+    /// HTTP client used by AWSClient
+    public let httpClient: AWSHTTPClient
 
-    public let eventLoopGroup: EventLoopGroup
+    let httpClientProvider: HTTPClientProvider
 
-    private static let sharedHTTPClient: AWSHTTPClient = createSharedHTTPClient()
-
-    /// create default HTTPClient
-    private static func createSharedHTTPClient() -> AWSHTTPClient {
-        #if canImport(Network)
-            if #available(OSX 10.15, iOS 12.0, tvOS 12.0, watchOS 6.0, *) {
-                return NIOTSHTTPClient(eventLoopGroup: NIOTSEventLoopGroup())
-            }
-        #endif
-        return AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)))
-    }
+    /// EventLoopGroup used by AWSClient
+    public var eventLoopGroup: EventLoopGroup { return httpClient.eventLoopGroup }
 
     /// Initialize an AWSClient struct
     /// - parameters:
@@ -126,25 +119,26 @@ public final class AWSClient {
             region = .useast1
         }
 
-        // setup eventLoopGroup and httpClient
+        // setup httpClient
+        self.httpClientProvider = httpClientProvider
         switch httpClientProvider {
         case .shared(let providedHTTPClient):
             self.httpClient = providedHTTPClient
-        case .useAWSClientShared:
-            self.httpClient = AWSClient.sharedHTTPClient
+        case .createNew:
+            self.httpClient = AWSClient.createHTTPClient()
         }
-        self.eventLoopGroup = self.httpClient.eventLoopGroup
 
+        let eventLoopGroup = self.httpClient.eventLoopGroup
         // create credentialProvider
         if let accessKey = accessKeyId, let secretKey = secretAccessKey {
             let credential = StaticCredential(accessKeyId: accessKey, secretAccessKey: secretKey, sessionToken: sessionToken)
-            self.credentialProvider = StaticCredentialProvider(credential: credential, eventLoopGroup: self.eventLoopGroup)
+            self.credentialProvider = StaticCredentialProvider(credential: credential, eventLoopGroup: eventLoopGroup)
         } else if let ecredential = EnvironmentCredential() {
             let credential = ecredential
-            self.credentialProvider = StaticCredentialProvider(credential: credential, eventLoopGroup: self.eventLoopGroup)
+            self.credentialProvider = StaticCredentialProvider(credential: credential, eventLoopGroup: eventLoopGroup)
         } else if let scredential = try? SharedCredential() {
             let credential = scredential
-            self.credentialProvider = StaticCredentialProvider(credential: credential, eventLoopGroup: self.eventLoopGroup)
+            self.credentialProvider = StaticCredentialProvider(credential: credential, eventLoopGroup: eventLoopGroup)
         } else {
             self.credentialProvider = MetaDataCredentialProvider(httpClient: self.httpClient)
         }
@@ -174,6 +168,17 @@ public final class AWSClient {
             self.endpoint = "https://\(serviceHost)"
         }
     }
+    
+    deinit {
+        // if httpClient was created by AWSClient then it is required to shutdown the httpClient
+        if case .createNew = httpClientProvider {
+            do {
+                try httpClient.syncShutdown()
+            } catch {
+                print("Error shutting down HTTP client: \(error)")
+            }
+        }
+    }
 }
 
 // invoker
@@ -186,13 +191,13 @@ extension AWSClient {
     }
 
     /// create HTTPClient
-    fileprivate static func createHTTPClient(eventLoopGroup: EventLoopGroup) -> AWSHTTPClient {
+    fileprivate static func createHTTPClient() -> AWSHTTPClient {
         #if canImport(Network)
-        if #available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *), let nioTSEventLoopGroup = eventLoopGroup as? NIOTSEventLoopGroup {
-            return NIOTSHTTPClient(eventLoopGroup: nioTSEventLoopGroup)
+        if #available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *) {
+            return NIOTSHTTPClient(eventLoopGroupProvider: .createNew)
         }
         #endif
-        return AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
+        return AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew)
     }
 
 }

@@ -208,7 +208,7 @@ class PerformanceTests: XCTestCase {
         let signer = try! client.signer.wait()
         measure {
             for _ in 0..<1000 {
-                _ = client.createHTTPRequest(awsRequest, signer: signer)
+                _ = awsRequest.createHTTPRequest(signer: signer)
             }
         }
     }
@@ -227,7 +227,7 @@ class PerformanceTests: XCTestCase {
         let signer = try! client.signer.wait()
         measure {
             for _ in 0..<1000 {
-                _ = client.createHTTPRequest(awsRequest, signer: signer)
+                _ = awsRequest.createHTTPRequest(signer: signer)
             }
         }
     }
@@ -248,7 +248,7 @@ class PerformanceTests: XCTestCase {
         let signer = try! client.signer.wait()
         measure {
             for _ in 0..<1000 {
-                _ = client.createHTTPRequest(awsRequest, signer: signer)
+                _ = awsRequest.createHTTPRequest(signer: signer)
             }
         }
     }

@@ -420,8 +420,9 @@ extension AWSClient {
                     switch payloadBody {
                     case is AWSShape:
                         let node = try AWSShapeEncoder().xml(input)
-                        let member = Input.getMember(named: payload)
-                        guard let element = node.elements(forName: member?.location?.name ?? payload).first else { throw AWSClientError.missingParameter(message: "Payload is missing")}
+                        let encoding = Input.getEncoding(for: payload)
+                        guard let element = node.elements(forName: encoding?.location?.name ?? payload).first else { throw AWSClientError.missingParameter(message: "Payload is missing")
+                        }
                         // if shape has an xml namespace apply it to the element
                         if let xmlNamespace = Input._xmlNamespace {
                             element.addNamespace(XML.Node.namespace(stringValue: xmlNamespace))
@@ -529,8 +530,8 @@ extension AWSClient {
     internal func validate<Output: AWSShape>(operation operationName: String, response: AWSHTTPResponse) throws -> Output {
         let raw: Bool
         if let payloadPath = Output.payloadPath,
-            let member = Output.getMember(named: payloadPath),
-            case .blob = member.shapeEncoding,
+            let encoding = Output.getEncoding(named: payloadPath),
+            case .blob = encoding.shapeEncoding,
             (200..<300).contains(response.status.code) {
             raw = true
         } else {

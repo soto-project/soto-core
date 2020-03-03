@@ -6,6 +6,13 @@
 //
 
 /// Structure defining how to serialize member of AWSShape.
+/// Below is the list of possible encodings and how they are setup
+/// - Encode in header (label set to member name in json model, location set to .header(header name))
+/// - Encode as part of uri (label set to member name in json model, location set to .uri(uri part to replace))
+/// - Encode as uri query (label set to member name in json model, location set to .querystring(query string name))
+/// - While encoding a Collection as XML or query string define additional element names (label set to member name in json model,
+///     shapeEncoding set to one of collection encoding types, if codingkey is different to label then set it to .body(codingkey))
+/// - When encoding payload data blob (label set to member name in json model, shapeEncoding set to .blob)
 public struct AWSMemberEncoding {
     
     /// Location of AWSMemberEncoding.

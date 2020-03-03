@@ -39,26 +39,26 @@ extension AWSShape {
     }
 
     /// return member with provided name
-    public static func getMember(named: String) -> AWSMemberEncoding? {
-        return _encoding.first {$0.label == named}
+    public static func getEncoding(for: String) -> AWSMemberEncoding? {
+        return _encoding.first {$0.label == `for`}
     }
 
     /// return member with provided location name
-    public static func getMember(locationNamed: String) -> AWSMemberEncoding? {
+    public static func getEncoding(forLocation: String) -> AWSMemberEncoding? {
         return _encoding.first {
             if let location = $0.location {
                 switch location {
                 case .body(let name):
-                    return name == locationNamed
+                    return name == forLocation
                 case .uri(let name):
-                    return name == locationNamed
+                    return name == forLocation
                 case .header(let name):
-                    return name == locationNamed
+                    return name == forLocation
                 case .querystring(let name):
-                    return name == locationNamed
+                    return name == forLocation
                 }
             } else {
-                return $0.label == locationNamed
+                return $0.label == forLocation
             }
         }
     }
@@ -192,8 +192,8 @@ extension AWSMemberEncoding.ShapeEncoding {
 /// extension to AWSShape that returns XML container encoding for members of it
 extension AWSShape {
     public static func getXMLContainerCoding(for key: CodingKey) -> XMLContainerCoding? {
-        if let member = getMember(locationNamed: key.stringValue) {
-            return member.shapeEncoding.xmlEncoding
+        if let encoding = getEncoding(forLocation: key.stringValue) {
+            return encoding.shapeEncoding.xmlEncoding
         }
         return nil
     }

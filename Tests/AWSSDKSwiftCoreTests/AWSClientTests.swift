@@ -674,7 +674,7 @@ class AWSClientTests: XCTestCase {
     func testPayloadDataInResponse() {
         struct Response: AWSShape {
             public static let payloadPath: String? = "data"
-            public static var _encoding: [AWSMemberEncoding] = [
+            public static var _encoding = [
                 AWSMemberEncoding(label: "data", encoding: .blob),
             ]
             let data: Data

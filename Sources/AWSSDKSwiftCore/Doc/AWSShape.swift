@@ -174,7 +174,7 @@ extension AWSShape {
     /// return member for CodingKey
     public static func getEncoding(forKey: CodingKey) -> AWSMemberEncoding? {
         return _encoding.first {
-            if case .body(let name) = $0.location {
+            if let location = $0.location, case .body(let name) = location {
                 return name == forKey.stringValue
             } else {
                 return $0.label == forKey.stringValue

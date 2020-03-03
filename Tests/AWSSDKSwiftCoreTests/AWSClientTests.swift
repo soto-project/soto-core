@@ -59,8 +59,8 @@ class AWSClientTests: XCTestCase {
     }
 
     struct C: AWSShape {
-        public static var _members: [AWSShapeMember] = [
-             AWSShapeMember(label: "value", location: .header(locationName: "value"))
+        public static var _encoding: [AWSMemberEncoding] = [
+             AWSMemberEncoding(label: "value", location: .header(locationName: "value"))
         ]
         let value = "<html><body><a href=\"https://redsox.com\">Test</a></body></html>"
 
@@ -309,8 +309,8 @@ class AWSClientTests: XCTestCase {
 
     func testCreateAwsRequestWithKeywordInHeader() {
         struct KeywordRequest: AWSShape {
-            static var _members: [AWSShapeMember] = [
-                AWSShapeMember(label: "repeat", location: .header(locationName: "repeat")),
+            static var _encoding: [AWSMemberEncoding] = [
+                AWSMemberEncoding(label: "repeat", location: .header(locationName: "repeat")),
             ]
             let `repeat`: String
         }
@@ -326,8 +326,8 @@ class AWSClientTests: XCTestCase {
 
     func testCreateAwsRequestWithKeywordInQuery() {
         struct KeywordRequest: AWSShape {
-            static var _members: [AWSShapeMember] = [
-                AWSShapeMember(label: "self", location: .querystring(locationName: "self")),
+            static var _encoding: [AWSMemberEncoding] = [
+                AWSMemberEncoding(label: "self", location: .querystring(locationName: "self")),
             ]
             let `self`: String
         }
@@ -674,8 +674,8 @@ class AWSClientTests: XCTestCase {
     func testPayloadDataInResponse() {
         struct Response: AWSShape {
             public static let payloadPath: String? = "data"
-            public static var _members: [AWSShapeMember] = [
-                AWSShapeMember(label: "data", encoding: .blob),
+            public static var _encoding: [AWSMemberEncoding] = [
+                AWSMemberEncoding(label: "data", encoding: .blob),
             ]
             let data: Data
         }

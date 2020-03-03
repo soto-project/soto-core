@@ -1,31 +1,14 @@
 //
-//  AWSShapeProperty.swift
-//  Hexaville
+//  AWSMemberEncoding.swift
 //
 //  Created by Yuki Takei on 2017/05/18.
 //
 //
 
 /// Structure defining how to serialize member of AWSShape.
-public struct AWSShapeMember {
-    /// Type of AWSShapeMember
-    public indirect enum Shape {
-        case structure
-        case `enum`
-        case map
-        case list
-        case string
-        case integer
-        case blob
-        case long
-        case double
-        case float
-        case boolean
-        case timestamp
-        case any
-    }
+public struct AWSMemberEncoding {
     
-    /// Location of AWSShapeMember.
+    /// Location of AWSMemberEncoding.
     public enum Location {
         case uri(locationName: String)
         case querystring(locationName: String)
@@ -46,7 +29,7 @@ public struct AWSShapeMember {
         }
     }
     
-    /// How the AWSShapeMember is serialized in XML and Query formats. Used for collection elements.
+    /// How the AWSMemberEncoding is serialized in XML and Query formats. Used for collection elements.
     public enum ShapeEncoding {
         /// default case, flat arrays and serializing dictionaries like all other codable structures
         case `default`

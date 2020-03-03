@@ -13,11 +13,11 @@ import AsyncHTTPClient
 @testable import AWSSDKSwiftCore
 
 struct HeaderRequest: AWSShape {
-    static var _members: [AWSShapeMember] = [
-        AWSShapeMember(label: "Header1", location: .header(locationName: "Header1")),
-        AWSShapeMember(label: "Header2", location: .header(locationName: "Header2")),
-        AWSShapeMember(label: "Header3", location: .header(locationName: "Header3")),
-        AWSShapeMember(label: "Header4", location: .header(locationName: "Header4"))
+    static var _encoding: [AWSMemberEncoding] = [
+        AWSMemberEncoding(label: "Header1", location: .header(locationName: "Header1")),
+        AWSMemberEncoding(label: "Header2", location: .header(locationName: "Header2")),
+        AWSMemberEncoding(label: "Header3", location: .header(locationName: "Header3")),
+        AWSMemberEncoding(label: "Header4", location: .header(locationName: "Header4"))
     ]
 
     let header1: String
@@ -41,8 +41,8 @@ struct PayloadRequest: AWSShape {
 }
 
 struct MixedRequest: AWSShape {
-    static var _members: [AWSShapeMember] = [
-        AWSShapeMember(label: "item1", location: .header(locationName: "item1")),
+    static var _encoding: [AWSMemberEncoding] = [
+        AWSMemberEncoding(label: "item1", location: .header(locationName: "item1")),
     ]
 
     let item1: String

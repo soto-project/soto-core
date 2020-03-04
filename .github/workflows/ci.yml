@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: ['swiftlang/swift:nightly-5.2']
+        image: ['vapor/swift:5.2-xenial', 'vapor/swift:5.2-bionic']
     container:
       image: ${{ matrix.image }}
       volumes:

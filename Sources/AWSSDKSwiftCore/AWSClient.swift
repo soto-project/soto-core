@@ -541,7 +541,7 @@ extension AWSClient {
                 raw = true
             }
             // get CodingKey string for payload to insert in output
-            if case .body(let name) = encoding.location {
+            if let location = encoding.location, case .body(let name) = location {
                 payloadKey = name
             }
         }

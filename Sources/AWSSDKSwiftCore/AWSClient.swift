@@ -352,7 +352,7 @@ extension AWSClient {
         let headerMemberParams = Input.headerParams
         memberVariablesCount -= headerMemberParams.count
         for (key, value) in headerMemberParams {
-            if let attr = mirror.getAttribute(forKey: value.toSwiftVariableCase()) {
+            if let attr = mirror.getAttribute(forKey: value) {
                 headers[key] = attr
             }
         }
@@ -360,7 +360,7 @@ extension AWSClient {
         let queryMemberParams = Input.queryParams
         memberVariablesCount -= queryMemberParams.count
         for (key, value) in queryMemberParams {
-            if let attr = mirror.getAttribute(forKey: value.toSwiftVariableCase()) {
+            if let attr = mirror.getAttribute(forKey: value) {
                 queryParams[key] = "\(attr)"
             }
         }
@@ -368,7 +368,7 @@ extension AWSClient {
         let pathMemberParams = Input.pathParams
         memberVariablesCount -= pathMemberParams.count
         for (key, value) in pathMemberParams {
-            if let attr = mirror.getAttribute(forKey: value.toSwiftVariableCase()) {
+            if let attr = mirror.getAttribute(forKey: value) {
                 path = path
                     .replacingOccurrences(of: "{\(key)}", with: "\(attr)")
                     // percent-encode key which is part of the path
@@ -383,9 +383,11 @@ extension AWSClient {
                     switch payloadBody {
                     case is AWSShape:
                         let inputDictionary = try AWSShapeEncoder().dictionary(input)
-                        if let payloadDict = inputDictionary[payload] {
-                            body = .json(try JSONSerialization.data(withJSONObject: payloadDict))
+                        let encoding = Input.getEncoding(for: payload)
+                        guard let payloadDict = inputDictionary[encoding?.location?.name ?? payload] else {
+                            throw AWSClientError.missingParameter(message: "Payload is missing")
                         }
+                        body = .json(try JSONSerialization.data(withJSONObject: payloadDict))
                     default:
                         body = Body(anyValue: payloadBody)
                     }
@@ -416,12 +418,13 @@ extension AWSClient {
 
         case .restxml:
             if let payload = Input.payloadPath {
-                if let payloadBody = mirror.getAttribute(forKey: payload.toSwiftVariableCase()) {
+                if let payloadBody = mirror.getAttribute(forKey: payload) {
                     switch payloadBody {
                     case is AWSShape:
                         let node = try AWSShapeEncoder().xml(input)
                         let encoding = Input.getEncoding(for: payload)
-                        guard let element = node.elements(forName: encoding?.location?.name ?? payload).first else { throw AWSClientError.missingParameter(message: "Payload is missing")
+                        guard let element = node.elements(forName: encoding?.location?.name ?? payload).first else {
+                            throw AWSClientError.missingParameter(message: "Payload is missing")
                         }
                         // if shape has an xml namespace apply it to the element
                         if let xmlNamespace = Input._xmlNamespace {
@@ -528,14 +531,19 @@ extension AWSClient {
 
     /// Validate the operation response and return a response shape
     internal func validate<Output: AWSShape>(operation operationName: String, response: AWSHTTPResponse) throws -> Output {
-        let raw: Bool
-        if let payloadPath = Output.payloadPath,
-            let encoding = Output.getEncoding(named: payloadPath),
-            case .blob = encoding.shapeEncoding,
-            (200..<300).contains(response.status.code) {
-            raw = true
-        } else {
-            raw = false
+        var raw: Bool = false
+        var payloadKey: String? = Output.payloadPath
+
+        // if response has a payload with encoding info
+        if let payloadPath = Output.payloadPath, let encoding = Output.getEncoding(for: payloadPath) {
+            // is payload raw
+            if case .blob = encoding.shapeEncoding, (200..<300).contains(response.status.code) {
+                raw = true
+            }
+            // get CodingKey string for payload to insert in output
+            if case .body(let name) = encoding.location {
+                payloadKey = name
+            }
         }
 
         var awsResponse = try AWSResponse(from: response, serviceProtocolType: serviceProtocol.type, raw: raw)
@@ -556,16 +564,16 @@ extension AWSClient {
         case .json(let data):
             outputDict = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] ?? [:]
             // if payload path is set then the decode will expect the payload to decode to the relevant member variable
-            if let payloadPath = Output.payloadPath {
-                outputDict = [payloadPath : outputDict]
+            if let payloadKey = payloadKey {
+                outputDict = [payloadKey : outputDict]
             }
 
         case .xml(let node):
             var outputNode = node
             // if payload path is set then the decode will expect the payload to decode to the relevant member variable. Most CloudFront responses have this.
-            if let payloadPath = Output.payloadPath {
+            if let payloadKey = payloadKey {
                 // set output node name
-                outputNode.name = payloadPath
+                outputNode.name = payloadKey
                 // create parent node and add output node and set output node to parent
                 let parentNode = XML.Element(name: "Container")
                 parentNode.addChild(outputNode)
@@ -586,14 +594,14 @@ extension AWSClient {
             return try XMLDecoder().decode(Output.self, from: outputNode)
 
         case .buffer(let data):
-            if let payload = Output.payloadPath {
-                outputDict[payload] = data
+            if let payloadKey = payloadKey {
+                outputDict[payloadKey] = data
             }
             decoder.dataDecodingStrategy = .raw
 
         case .text(let text):
-            if let payload = Output.payloadPath {
-                outputDict[payload] = text
+            if let payloadKey = payloadKey {
+                outputDict[payloadKey] = text
             }
 
         default:

@@ -1,0 +1,20 @@
+//===----------------------------------------------------------------------===//
+//
+// This source file is part of the AWSSDKSwift open source project
+//
+// Copyright (c) 2020 the AWSSDKSwift project authors
+// Licensed under Apache License v2.0
+//
+// See LICENSE.txt for license information
+// See CONTRIBUTORS.txt for the list of APNSwift project authors
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+//===----------------------------------------------------------------------===//
+
+This product contains a copy of INIParser from PerfectlySoft
+
+  * LICENSE (Apache License 2.0):
+    * https://github.com/PerfectlySoft/Perfect-INIParser/blob/master/LICENSE
+  * HOMEPAGE:
+    * https://github.com/PerfectlySoft/Perfect-INIParser

@@ -11,8 +11,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio.git", .upToNextMajor(from:"2.13.1")),
         .package(url: "https://github.com/apple/swift-nio-ssl.git", .upToNextMajor(from:"2.4.1")),
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", .upToNextMajor(from:"1.0.0")),
-        .package(url: "https://github.com/swift-server/async-http-client.git", .upToNextMajor(from:"1.0.0")),
-        .package(url: "https://github.com/swift-aws/Perfect-INIParser.git", .upToNextMinor(from: "3.0.0")),
+        .package(url: "https://github.com/swift-server/async-http-client.git", .upToNextMajor(from:"1.0.0"))
     ],
     targets: [
         .target(
@@ -30,6 +29,7 @@ let package = Package(
             ]),
         .target(name: "AWSSignerV4", dependencies: ["CAWSSDKOpenSSL", "NIOHTTP1"]),
         .target(name: "CAWSSDKOpenSSL", dependencies: []),
+        .target(name: "INIParser", dependencies: []),
         .testTarget(name: "AWSSDKSwiftCoreTests", dependencies: ["AWSSDKSwiftCore", "NIOTestUtils"]),
         .testTarget(name: "AWSSignerTests", dependencies: ["AWSSignerV4"])
     ]

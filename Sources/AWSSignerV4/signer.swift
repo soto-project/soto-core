@@ -152,25 +152,25 @@ public struct AWSSigner {
 
     // Stage 3 Calculating signature as in https://docs.aws.amazon.com/general/latest/gr/sigv4-calculate-signature.html
     func signature(signingData: SigningData) -> String {
-        let kDate = HMAC<SHA256>.authenticationCode(for: Data(signingData.date.utf8), using: SymmetricKey(data: Array("AWS4\(credentials.secretAccessKey)".utf8)))
-        let kRegion = HMAC<SHA256>.authenticationCode(for: Data(region.utf8), using: SymmetricKey(data: kDate))
-        let kService = HMAC<SHA256>.authenticationCode(for: Data(name.utf8), using: SymmetricKey(data: kRegion))
-        let kSigning = HMAC<SHA256>.authenticationCode(for: Data("aws4_request".utf8), using: SymmetricKey(data: kService))
-        let kSignature = HMAC<SHA256>.authenticationCode(for: stringToSign(signingData: signingData), using: SymmetricKey(data: kSigning))
+        let kDate = HMAC<SHA256>.authenticationCode(for: [UInt8](signingData.date.utf8), using: SymmetricKey(data: Array("AWS4\(credentials.secretAccessKey)".utf8)))
+        let kRegion = HMAC<SHA256>.authenticationCode(for: [UInt8](region.utf8), using: SymmetricKey(data: kDate))
+        let kService = HMAC<SHA256>.authenticationCode(for: [UInt8](name.utf8), using: SymmetricKey(data: kRegion))
+        let kSigning = HMAC<SHA256>.authenticationCode(for: [UInt8]("aws4_request".utf8), using: SymmetricKey(data: kService))
+        let kSignature = HMAC<SHA256>.authenticationCode(for: [UInt8](stringToSign(signingData: signingData).utf8), using: SymmetricKey(data: kSigning))
         return kSignature.hexDigest()
     }
 
     /// Stage 2 Create the string to sign as in https://docs.aws.amazon.com/general/latest/gr/sigv4-create-string-to-sign.html
-    func stringToSign(signingData: SigningData) -> Data {
+    func stringToSign(signingData: SigningData) -> String {
         let stringToSign = "AWS4-HMAC-SHA256\n" +
             "\(signingData.datetime)\n" +
             "\(signingData.date)/\(region)/\(name)/aws4_request\n" +
-            SHA256.hash(data: canonicalRequest(signingData: signingData)).hexDigest()
-        return Data(stringToSign.utf8)
+            SHA256.hash(data: [UInt8](canonicalRequest(signingData: signingData).utf8)).hexDigest()
+        return stringToSign
     }
 
     /// Stage 1 Create the canonical request as in https://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
-    func canonicalRequest(signingData: SigningData) -> Data {
+    func canonicalRequest(signingData: SigningData) -> String {
         let canonicalHeaders = signingData.headersToSign.map { return "\($0.key.lowercased()):\($0.value.trimmingCharacters(in: CharacterSet.whitespaces))" }
             .sorted()
             .joined(separator: "\n")
@@ -180,7 +180,7 @@ public struct AWSSigner {
             "\(canonicalHeaders)\n\n" +
             "\(signingData.signedHeaders)\n" +
             signingData.hashedPayload
-        return Data(canonicalRequest.utf8)
+        return canonicalRequest
     }
 
     /// Create a SHA256 hash of the Requests body
@@ -189,7 +189,7 @@ public struct AWSSigner {
         let hash : String?
         switch payload {
         case .string(let string):
-            hash = SHA256.hash(data: Data(string.utf8)).hexDigest()
+            hash = SHA256.hash(data: [UInt8](string.utf8)).hexDigest()
         case .data(let data):
             hash = SHA256.hash(data: data).hexDigest()
         case .byteBuffer(let byteBuffer):

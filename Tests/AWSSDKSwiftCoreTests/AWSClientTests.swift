@@ -449,6 +449,27 @@ class AWSClientTests: XCTestCase {
         }
     }
 
+    func testValidateRawResponseError() {
+        class Output : AWSShape {
+            static let payloadPath: String? = "output"
+            public static var _members: [AWSShapeMember] = [AWSShapeMember(label: "output", required: true, type: .blob)]
+            let output : Data
+        }
+        do {
+            let response = AWSHTTPResponseImpl(
+                status: .notFound,
+                headers: HTTPHeaders(),
+                bodyData: "<Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message></Error>".data(using: .utf8)!
+            )
+            let _: Output = try s3Client.validate(operation: "TestOperation", response: response)
+            XCTFail("Shouldn't get here")
+        } catch S3ErrorType.noSuchKey(_) {
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+
     func testValidateJSONResponse() {
         class Output : AWSShape {
             let name : String
@@ -509,6 +530,7 @@ class AWSClientTests: XCTestCase {
         }
     }
 
+    
     func testProcessHAL() {
         class Output : AWSShape {
             public static var _members: [AWSShapeMember] = [

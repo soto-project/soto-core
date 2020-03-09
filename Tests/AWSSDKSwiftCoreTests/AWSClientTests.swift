@@ -456,10 +456,12 @@ class AWSClientTests: XCTestCase {
             let output : Data
         }
         do {
-            let response = AWSHTTPResponseImpl(
-                status: .notFound,
-                headers: HTTPHeaders(),
-                bodyData: "<Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message></Error>".data(using: .utf8)!
+            let response = HTTPClient.Response(
+                head: HTTPResponseHead(
+                    version: HTTPVersion(major: 1, minor: 1),
+                    status: HTTPResponseStatus(statusCode: 404)
+                ),
+                body: "<Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message></Error>".data(using: .utf8)!
             )
             let _: Output = try s3Client.validate(operation: "TestOperation", response: response)
             XCTFail("Shouldn't get here")

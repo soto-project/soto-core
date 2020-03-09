@@ -570,7 +570,7 @@ extension AWSClient {
         if let payloadPath = Output.payloadPath,
             let member = Output.getMember(named: payloadPath),
             member.type == .blob,
-            (200..<300).contains(response.status.code) {
+            (200..<300).contains(response.head.status.code) {
             raw = true
         } else {
             raw = false

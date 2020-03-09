@@ -522,7 +522,10 @@ extension AWSClient {
     /// Validate the operation response and return a response shape
     internal func validate<Output: AWSShape>(operation operationName: String, response: AWSHTTPResponse) throws -> Output {
         let raw: Bool
-        if let payloadPath = Output.payloadPath, let member = Output.getMember(named: payloadPath), member.type == .blob {
+        if let payloadPath = Output.payloadPath,
+            let member = Output.getMember(named: payloadPath),
+            member.type == .blob,
+            (200..<300).contains(response.status.code) {
             raw = true
         } else {
             raw = false
@@ -679,7 +682,7 @@ extension AWSClient {
         } else {
             rawBodyString = nil
         }
-        return AWSError(message: message ?? "Unhandled Error. Response Code: \(response.status.code)", rawBody: rawBodyString ?? "")
+        return AWSError(statusCode: response.status, message: message ?? "Unhandled Error. Response Code: \(response.status.code)", rawBody: rawBodyString ?? "")
     }
 }
 

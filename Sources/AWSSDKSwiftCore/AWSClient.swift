@@ -682,7 +682,7 @@ extension AWSClient {
         } else {
             rawBodyString = nil
         }
-        return AWSError(message: message ?? "Unhandled Error. Response Code: \(response.status.code)", rawBody: rawBodyString ?? "")
+        return AWSError(statusCode: response.status, message: message ?? "Unhandled Error. Response Code: \(response.status.code)", rawBody: rawBodyString ?? "")
     }
 }
 

@@ -39,7 +39,7 @@ public struct AWSError: Error, CustomStringConvertible {
     public let rawBody: String
     public let statusCode: HTTPResponseStatus
 
-    public init(statusCode: HTTPResponseStatus, message: String, rawBody: String){
+    init(statusCode: HTTPResponseStatus, message: String, rawBody: String){
         self.statusCode = statusCode
         self.message = message
         self.rawBody = rawBody

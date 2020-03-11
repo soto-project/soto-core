@@ -30,7 +30,11 @@ class AWSShapeEncoder {
     }
     
     public func xml<Input: AWSShape>(_ input: Input, overrideName: String? = nil) throws -> XML.Element {
-        return try XMLEncoder().encode(input, name: overrideName)
+        let xml = try XMLEncoder().encode(input, name: overrideName)
+        if let xmlNamespace = Input._xmlNamespace {
+            xml.addNamespace(XML.Node.namespace(stringValue: xmlNamespace))
+        }
+        return xml
     }
 
     public func query<Input: AWSShape>(_ input: Input, flattenArrays: Bool = false) throws -> [String : Any] {

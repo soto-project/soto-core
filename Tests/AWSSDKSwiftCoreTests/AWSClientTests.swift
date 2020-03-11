@@ -434,6 +434,28 @@ class AWSClientTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
     }
+    
+    func testCreateWithXMLNamespace() {
+        struct Input: AWSShape {
+            public static let _xmlNamespace: String? = "https://test.amazonaws.com/doc/2020-03-11/"
+            public static var _members: [AWSShapeMember] = [
+                AWSShapeMember(label: "number", required: true, type: .integer)
+            ]
+            let number: Int
+        }
+        do {
+            let input = Input(number: 5)
+            let request = try s3Client.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input)
+            if case .xml(let element) = request.body {
+                XCTAssertEqual(element.xmlString, "<Input xmlns=\"https://test.amazonaws.com/doc/2020-03-11/\"><number>5</number></Input>")
+            } else {
+                XCTFail("Shouldn't get here")
+            }
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+    
     func testValidateCode() {
         let response = AWSHTTPResponseImpl(
             status: .ok,

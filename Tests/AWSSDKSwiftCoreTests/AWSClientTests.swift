@@ -416,9 +416,6 @@ class AWSClientTests: XCTestCase {
     func testCreateWithXMLNamespace() {
         struct Input: AWSShape {
             public static let _xmlNamespace: String? = "https://test.amazonaws.com/doc/2020-03-11/"
-            public static var _members: [AWSShapeMember] = [
-                AWSShapeMember(label: "number", required: true, type: .integer)
-            ]
             let number: Int
         }
         do {
@@ -437,17 +434,11 @@ class AWSClientTests: XCTestCase {
     
     func testCreateWithPayloadAndXMLNamespace() {
         struct Payload: AWSShape {
-            public static var _members: [AWSShapeMember] = [
-                AWSShapeMember(label: "number", required: true, type: .integer)
-            ]
             let number: Int
         }
         struct Input: AWSShape {
             public static let _xmlNamespace: String? = "https://test.amazonaws.com/doc/2020-03-11/"
             public static let payloadPath: String? = "payload"
-            public static var _members: [AWSShapeMember] = [
-                AWSShapeMember(label: "payload", required: true, type: .structure)
-            ]
             let payload: Payload
         }
 
@@ -545,7 +536,7 @@ class AWSClientTests: XCTestCase {
     func testValidateRawResponseError() {
         class Output : AWSShape {
             static let payloadPath: String? = "output"
-            public static var _members: [AWSShapeMember] = [AWSShapeMember(label: "output", required: true, type: .blob)]
+            public static var _members = [AWSMemberEncoding(label: "output", encoding: .blob)]
             let output : Data
         }
         do {

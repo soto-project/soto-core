@@ -520,8 +520,8 @@ class AWSClientTests: XCTestCase {
     func testValidateXMLRawPayloadResponse() {
         class Output : AWSShape {
             static let payloadPath: String? = "body"
-            public static var _members: [AWSShapeMember] = [
-                AWSShapeMember(label: "body", required: false, type: .blob)
+            public static var _encoding = [
+                AWSMemberEncoding(label: "body", encoding: .blob)
             ]
             let body : Data
         }
@@ -616,8 +616,8 @@ class AWSClientTests: XCTestCase {
     func testValidateJSONRawPayloadResponse() {
         struct Output : AWSShape {
             static let payloadPath: String? = "body"
-            public static var _members: [AWSShapeMember] = [
-                AWSShapeMember(label: "body", required: false, type: .blob)
+            public static var _encoding = [
+                AWSMemberEncoding(label: "body", encoding: .blob)
             ]
             let body : Data
         }

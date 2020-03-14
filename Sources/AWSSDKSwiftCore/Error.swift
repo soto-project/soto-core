@@ -5,6 +5,7 @@
 //  Created by Yuki Takei on 2017/04/04.
 //
 //
+import NIOHTTP1
 
 /// Standard Error type returned by aws-sdk-swift. Initialized with error code and message. Must provide an implementation of var description : String
 public protocol AWSErrorType: Error, CustomStringConvertible {
@@ -36,8 +37,10 @@ public struct AWSResponseError: AWSErrorType {
 public struct AWSError: Error, CustomStringConvertible {
     public let message: String
     public let rawBody: String
-    
-    public init(message: String, rawBody: String){
+    public let statusCode: HTTPResponseStatus
+
+    init(statusCode: HTTPResponseStatus, message: String, rawBody: String){
+        self.statusCode = statusCode
         self.message = message
         self.rawBody = rawBody
     }

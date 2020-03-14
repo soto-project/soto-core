@@ -84,6 +84,27 @@ public struct AWSRequest {
 
         return HTTPHeaders(headers.map { ($0, $1) })
     }
+  
+    func createHTTPRequest(signer: AWSSigner) -> AWSHTTPRequest {
+        // if credentials are empty don't sign request
+        if signer.credentials.isEmpty() {
+            return self.toHTTPRequest()
+        }
+
+        switch (self.httpMethod, self.serviceProtocol.type) {
+        case ("GET",  .restjson), ("HEAD", .restjson):
+            return self.toHTTPRequestWithSignedHeader(signer: signer)
+
+        case ("GET",  _), ("HEAD", _):
+            if self.httpHeaders.count > 0 {
+                return self.toHTTPRequestWithSignedHeader(signer: signer)
+            }
+            return self.toHTTPRequestWithSignedURL(signer: signer)
+
+        default:
+            return self.toHTTPRequestWithSignedHeader(signer: signer)
+        }
+    }
 
     /// Create HTTP Client request from AWSRequest
     func toHTTPRequest() -> AWSHTTPRequest {

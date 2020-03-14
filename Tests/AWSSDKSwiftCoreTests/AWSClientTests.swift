@@ -52,15 +52,18 @@ class AWSClientTests: XCTestCase {
             ("testValidateJSONRawPayloadResponse", testValidateJSONRawPayloadResponse),
             ("testValidateJSONError", testValidateJSONError),
             ("testProcessHAL", testProcessHAL),
-            ("testDataInJsonPayload", testDataInJsonPayload)
+            ("testDataInJsonPayload", testDataInJsonPayload),
+            ("testPayloadDataInResponse", testPayloadDataInResponse),
+            ("testClientNoInputNoOutput", testClientNoInputNoOutput),
+            ("testClientWithInputNoOutput", testClientWithInputNoOutput),
+            ("testClientNoInputWithOutput", testClientNoInputWithOutput)
         ]
     }
 
     struct C: AWSShape {
-        public static var _members: [AWSShapeMember] = [
-            AWSShapeMember(label: "value", location: .header(locationName: "value"), required: true, type: .string)
+        public static var _encoding: [AWSMemberEncoding] = [
+             AWSMemberEncoding(label: "value", location: .header(locationName: "value"))
         ]
-
         let value = "<html><body><a href=\"https://redsox.com\">Test</a></body></html>"
 
         private enum CodingKeys: String, CodingKey {
@@ -69,10 +72,6 @@ class AWSClientTests: XCTestCase {
     }
 
     struct E: AWSShape {
-        public static var _members: [AWSShapeMember] = [
-            AWSShapeMember(label: "Member", required: true, type: .list),
-        ]
-
         let Member = ["memberKey": "memberValue", "memberKey2" : "memberValue2"]
 
         private enum CodingKeys: String, CodingKey {
@@ -82,11 +81,6 @@ class AWSClientTests: XCTestCase {
 
     struct F: AWSShape {
         public static let payloadPath: String? = "fooParams"
-
-        public static var _members: [AWSShapeMember] = [
-            AWSShapeMember(label: "Member", required: true, type: .list),
-            AWSShapeMember(label: "fooParams", required: false, type: .structure),
-        ]
 
         public let fooParams: E?
 
@@ -147,24 +141,6 @@ class AWSClientTests: XCTestCase {
         }
     }
 
-    struct G: AWSShape {
-        public static let payloadPath: String? = "data"
-
-        public static var members: [AWSShapeMember] = [
-            AWSShapeMember(label: "data", required: true, type: .blob)
-        ]
-
-        public let data: Data
-
-        public init(data: Data) {
-            self.data = data
-        }
-
-        private enum CodingKeys: String, CodingKey {
-        case data = "data"
-        }
-    }
-
     let sesClient = AWSClient(
         accessKeyId: "foo",
         secretAccessKey: "bar",
@@ -220,8 +196,8 @@ class AWSClientTests: XCTestCase {
                 input: input1
             )
             XCTAssertEqual(awsRequest.url.absoluteString, "\(sesClient.endpoint)/")
-            XCTAssertEqual(String(describing: awsRequest.body), "text(\"Action=SendEmail&Value=%3Chtml%3E%3Cbody%3E%3Ca%20href%3D%22https://redsox.com%22%3ETest%3C/a%3E%3C/body%3E%3C/html%3E&Version=2013-12-01\")")
             let nioRequest: AWSHTTPRequest = awsRequest.toHTTPRequest()
+            XCTAssertEqual(nioRequest.headers["value"][0], "<html><body><a href=\"https://redsox.com\">Test</a></body></html>")
             XCTAssertEqual(nioRequest.headers["Content-Type"][0], "application/x-www-form-urlencoded; charset=utf-8")
             XCTAssertEqual(nioRequest.method, HTTPMethod.POST)
         } catch {
@@ -333,8 +309,8 @@ class AWSClientTests: XCTestCase {
 
     func testCreateAwsRequestWithKeywordInHeader() {
         struct KeywordRequest: AWSShape {
-            static var _members: [AWSShapeMember] = [
-                AWSShapeMember(label: "repeat", location: .header(locationName: "repeat"), required: true, type: .string),
+            static var _encoding: [AWSMemberEncoding] = [
+                AWSMemberEncoding(label: "repeat", location: .header(locationName: "repeat")),
             ]
             let `repeat`: String
         }
@@ -342,6 +318,7 @@ class AWSClientTests: XCTestCase {
             let request = KeywordRequest(repeat: "Repeat")
             let awsRequest = try s3Client.createAWSRequest(operation: "Keyword", path: "/", httpMethod: "POST", input: request)
             XCTAssertEqual(awsRequest.httpHeaders["repeat"] as? String, "Repeat")
+            XCTAssertEqual(awsRequest.body.asByteBuffer(), nil)
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -349,8 +326,8 @@ class AWSClientTests: XCTestCase {
 
     func testCreateAwsRequestWithKeywordInQuery() {
         struct KeywordRequest: AWSShape {
-            static var _members: [AWSShapeMember] = [
-                AWSShapeMember(label: "self", location: .querystring(locationName: "self"), required: true, type: .string),
+            static var _encoding: [AWSMemberEncoding] = [
+                AWSMemberEncoding(label: "self", location: .querystring(locationName: "self")),
             ]
             let `self`: String
         }
@@ -358,6 +335,7 @@ class AWSClientTests: XCTestCase {
             let request = KeywordRequest(self: "KeywordRequest")
             let awsRequest = try s3Client.createAWSRequest(operation: "Keyword", path: "/", httpMethod: "POST", input: request)
             XCTAssertEqual(awsRequest.url, URL(string:"https://s3.amazonaws.com/?self=KeywordRequest")!)
+            XCTAssertEqual(awsRequest.body.asByteBuffer(), nil)
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -390,7 +368,7 @@ class AWSClientTests: XCTestCase {
                 input: input2
             )
 
-            let awsHTTPRequest: AWSHTTPRequest = kinesisClient.createHTTPRequest(awsRequest, signer: try kinesisClient.signer.wait())
+            let awsHTTPRequest: AWSHTTPRequest = awsRequest.createHTTPRequest(signer: try kinesisClient.signer.wait())
             XCTAssertEqual(awsHTTPRequest.method, HTTPMethod.POST)
             if let host = awsHTTPRequest.headers.first(where: { $0.name == "Host" }) {
                 XCTAssertEqual(host.value, "kinesis.us-east-1.amazonaws.com")
@@ -427,13 +405,56 @@ class AWSClientTests: XCTestCase {
                 input: input
             )
 
-            let request: AWSHTTPRequest = client.createHTTPRequest(awsRequest, signer: try client.signer.wait())
+            let request: AWSHTTPRequest = awsRequest.createHTTPRequest(signer: try client.signer.wait())
 
             XCTAssertNil(request.headers["Authorization"].first)
         } catch {
             XCTFail(error.localizedDescription)
         }
     }
+    
+    func testCreateWithXMLNamespace() {
+        struct Input: AWSShape {
+            public static let _xmlNamespace: String? = "https://test.amazonaws.com/doc/2020-03-11/"
+            let number: Int
+        }
+        do {
+            let input = Input(number: 5)
+            let request = try s3Client.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input)
+            if case .xml(let element) = request.body {
+                XCTAssertEqual(element.xmlString, "<Input xmlns=\"https://test.amazonaws.com/doc/2020-03-11/\"><number>5</number></Input>")
+            } else {
+                XCTFail("Shouldn't get here")
+            }
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+    
+    
+    func testCreateWithPayloadAndXMLNamespace() {
+        struct Payload: AWSShape {
+            let number: Int
+        }
+        struct Input: AWSShape {
+            public static let _xmlNamespace: String? = "https://test.amazonaws.com/doc/2020-03-11/"
+            public static let payloadPath: String? = "payload"
+            let payload: Payload
+        }
+
+        do {
+            let input = Input(payload: Payload(number: 5))
+            let request = try s3Client.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input)
+            if case .xml(let element) = request.body {
+                XCTAssertEqual(element.xmlString, "<payload xmlns=\"https://test.amazonaws.com/doc/2020-03-11/\"><number>5</number></payload>")
+            } else {
+                XCTFail("Shouldn't get here")
+            }
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+    
     func testValidateCode() {
         let response = AWSHTTPResponseImpl(
             status: .ok,
@@ -533,6 +554,27 @@ class AWSClientTests: XCTestCase {
         }
     }
 
+    func testValidateRawResponseError() {
+        class Output : AWSShape {
+            static let payloadPath: String? = "output"
+            public static var _members = [AWSMemberEncoding(label: "output", encoding: .blob)]
+            let output : Data
+        }
+        do {
+            let response = AWSHTTPResponseImpl(
+                status: .notFound,
+                headers: HTTPHeaders(),
+                bodyData: "<Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message></Error>".data(using: .utf8)!
+            )
+            let _: Output = try s3Client.validate(operation: "TestOperation", response: response)
+            XCTFail("Shouldn't get here")
+        } catch S3ErrorType.noSuchKey(_) {
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+
     func testValidateJSONResponse() {
         class Output : AWSShape {
             let name : String
@@ -608,21 +650,13 @@ class AWSClientTests: XCTestCase {
         }
     }
 
+    
     func testProcessHAL() {
         class Output : AWSShape {
-            public static var _members: [AWSShapeMember] = [
-                AWSShapeMember(label: "s", required: true, type: .string),
-                AWSShapeMember(label: "i", required: true, type: .integer)
-            ]
             let s: String
             let i: Int
         }
         class Output2 : AWSShape {
-            public static var _members: [AWSShapeMember] = [
-                AWSShapeMember(label: "a", location: .body(locationName: "a"), required: true, type: .list),
-                AWSShapeMember(label: "d", required: true, type: .double),
-                AWSShapeMember(label: "b", required: true, type: .boolean),
-            ]
             let a: [Output]
             let d: Double
             let b: Bool
@@ -655,9 +689,6 @@ class AWSClientTests: XCTestCase {
         }
         struct J: AWSShape {
             public static let payloadPath: String? = "dataContainer"
-            public static var _members: [AWSShapeMember] = [
-                AWSShapeMember(label: "dataContainer", required: false, type: .structure),
-            ]
             let dataContainer: DataContainer
         }
         let input = J(dataContainer: DataContainer(data: Data("test data".utf8)))
@@ -673,6 +704,30 @@ class AWSClientTests: XCTestCase {
         }
     }
 
+    func testPayloadDataInResponse() {
+        struct Response: AWSShape {
+            public static let payloadPath: String? = "data"
+            public static var _encoding = [
+                AWSMemberEncoding(label: "data", encoding: .blob),
+            ]
+            let data: Data
+        }
+        var buffer = ByteBufferAllocator().buffer(capacity: 0)
+        buffer.writeString("TestString")
+        let response = HTTPClient.Response(
+            host: "localhost",
+            status: .ok,
+            headers: ["Content-Type":"application/hal+json"],
+            body: buffer
+        )
+        do {
+            let output : Response = try kinesisClient.validate(operation: "Output", response: response)
+            XCTAssertEqual(String(data: output.data, encoding: .utf8), "TestString")
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+    
     func testClientNoInputNoOutput() {
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)
@@ -707,10 +762,6 @@ class AWSClientTests: XCTestCase {
             case second
         }
         struct Input : AWSShape {
-            public static var _members: [AWSShapeMember] = [
-                AWSShapeMember(label: "s", required: true, type: .string),
-                AWSShapeMember(label: "i", required: true, type: .list)
-            ]
             let e: InputEnum
             let i: [Int64]
         }
@@ -748,10 +799,6 @@ class AWSClientTests: XCTestCase {
 
     func testClientNoInputWithOutput() {
         struct Output : AWSShape {
-            public static var _members: [AWSShapeMember] = [
-                AWSShapeMember(label: "s", required: true, type: .string),
-                AWSShapeMember(label: "i", required: true, type: .integer)
-            ]
             let s: String
             let i: Int64
         }

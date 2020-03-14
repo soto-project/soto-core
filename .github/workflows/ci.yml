@@ -1,11 +1,11 @@
 name: CI
 
-on: 
+on:
   push:
-    branches: 
+    branches:
     - "*"
   pull_request:
-    branches: 
+    branches:
     - "*"
 
 jobs:
@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        tag: ['5.0', '5.1']
+        tag: ['5.1.5']
     container:
       image: swift:${{ matrix.tag }}
       volumes:
@@ -47,16 +47,10 @@ jobs:
         apt-get update -qq
         apt-get install -q -y tzdata libssl-dev zlib1g-dev
     - name: Test
-      if: matrix.tag < 5.1
-      run: swift test --parallel --enable-code-coverage
-    - name: Test
-      if: matrix.tag >= 5.1
       run: swift test --parallel --enable-code-coverage --enable-test-discovery
     - name: Convert coverage files
-      if: matrix.tag >= 5.1
       run: llvm-cov export -format="lcov" .build/debug/AWSSDKSwiftCorePackageTests.xctest -instr-profile .build/debug/codecov/default.profdata > info.lcov
     - name: Upload to codecov.io
-      if: matrix.tag >= 5.1
       uses: codecov/codecov-action@v1.0.3
       with:
         token: ${{secrets.CODECOV_TOKEN}}

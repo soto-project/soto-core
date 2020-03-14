@@ -12,6 +12,22 @@ services:
     <<: *common
     command: /bin/bash -xcl "swift test"
 
+  test-thread:
+    <<: *common
+    command: /bin/bash -xcl "swift test --sanitize=thread"
+
+  test-address:
+    <<: *common
+    command: /bin/bash -xcl "swift test --sanitize=address -Xswiftc -g"
+
+  test-release:
+    <<: *common
+    command: /bin/bash -xcl "swift test --sanitize=address -c release -Xswiftc -enable-testing"
+
+  clean:
+    <<: *common
+    command: /bin/bash -xcl "swift package clean"
+
   shell:
     <<: *common
     entrypoint: /bin/bash

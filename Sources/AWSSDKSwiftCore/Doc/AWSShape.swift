@@ -19,7 +19,7 @@ public protocol AWSShape: XMLCodable {
     /// The XML namespace for the object
     static var _xmlNamespace: String? { get }
     /// The array of members serialization helpers
-    static var _members: [AWSShapeMember] { get }
+    static var _encoding: [AWSMemberEncoding] { get }
 
     /// returns if a shape is valid. The checks for validity are defined by the AWS model files we get from http://github.com/aws/aws-sdk-go
     func validate(name: String) throws
@@ -34,39 +34,19 @@ extension AWSShape {
         return nil
     }
 
-    public static var _members: [AWSShapeMember] {
+    public static var _encoding: [AWSMemberEncoding] {
         return []
     }
 
     /// return member with provided name
-    public static func getMember(named: String) -> AWSShapeMember? {
-        return _members.first {$0.label == named}
-    }
-
-    /// return member with provided location name
-    public static func getMember(locationNamed: String) -> AWSShapeMember? {
-        return _members.first {
-            if let location = $0.location {
-                switch location {
-                case .body(let name):
-                    return name == locationNamed
-                case .uri(let name):
-                    return name == locationNamed
-                case .header(let name):
-                    return name == locationNamed
-                case .querystring(let name):
-                    return name == locationNamed
-                }
-            } else {
-                return $0.label == locationNamed
-            }
-        }
+    public static func getEncoding(for: String) -> AWSMemberEncoding? {
+        return _encoding.first {$0.label == `for`}
     }
 
     /// return list of member variables serialized in the URL path
     public static var pathParams: [String: String] {
         var params: [String: String] = [:]
-        for member in _members {
+        for member in _encoding {
             guard let location = member.location else { continue }
             if case .uri(let name) = location {
                 params[name] = member.label
@@ -78,7 +58,7 @@ extension AWSShape {
     /// return list of member variables serialized in the headers
     public static var headerParams: [String: String] {
         var params: [String: String] = [:]
-        for member in _members {
+        for member in _encoding {
             guard let location = member.location else { continue }
             if case .header(let name) = location {
                 params[name] = member.label
@@ -90,7 +70,7 @@ extension AWSShape {
     /// return list of member variables serialized as query parameters
     public static var queryParams: [String: String] {
         var params: [String: String] = [:]
-        for member in _members {
+        for member in _encoding {
             guard let location = member.location else { continue }
             if case .querystring(let name) = location {
                 params[name] = member.label
@@ -98,21 +78,6 @@ extension AWSShape {
         }
         return params
     }
-
-    /// returns whether the shape has any members being serialized into the request/response body
-    public static var hasEncodableBody: Bool {
-        for member in _members {
-            if let location = member.location {
-                if case .body(_) = location {
-                    return true
-                }
-            } else {
-                return true
-            }
-        }
-        return false
-    }
-
 }
 
 /// Validation code to add to AWSShape
@@ -187,10 +152,10 @@ extension AWSShape {
 }
 
 /// extension to CollectionEncoding to produce the XML equivalent class
-extension AWSShapeMember.ShapeEncoding {
+extension AWSMemberEncoding.ShapeEncoding {
     public var xmlEncoding : XMLContainerCoding? {
         switch self {
-        case .default:
+        case .default, .blob:
             return nil
         case .flatList:
             return .default
@@ -206,9 +171,20 @@ extension AWSShapeMember.ShapeEncoding {
 
 /// extension to AWSShape that returns XML container encoding for members of it
 extension AWSShape {
+    /// return member for CodingKey
+    public static func getEncoding(forKey: CodingKey) -> AWSMemberEncoding? {
+        return _encoding.first {
+            if let location = $0.location, case .body(let name) = location {
+                return name == forKey.stringValue
+            } else {
+                return $0.label == forKey.stringValue
+            }
+        }
+    }
+
     public static func getXMLContainerCoding(for key: CodingKey) -> XMLContainerCoding? {
-        if let member = getMember(locationNamed: key.stringValue) {
-            return member.shapeEncoding.xmlEncoding
+        if let encoding = getEncoding(forKey: key) {
+            return encoding.shapeEncoding.xmlEncoding
         }
         return nil
     }

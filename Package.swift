@@ -1,9 +1,8 @@
-// swift-tools-version:5.0
+// swift-tools-version:5.1
 import PackageDescription
 
 let package = Package(
     name: "AWSSDKSwiftCore",
-    platforms: [.iOS(.v12), .tvOS(.v12), .watchOS(.v5)],
     products: [
         .library(name: "AWSSDKSwiftCore", targets: ["AWSSDKSwiftCore"])
     ],
@@ -11,8 +10,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio.git", .upToNextMajor(from:"2.13.1")),
         .package(url: "https://github.com/apple/swift-nio-ssl.git", .upToNextMajor(from:"2.4.1")),
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", .upToNextMajor(from:"1.0.0")),
-        .package(url: "https://github.com/swift-server/async-http-client.git", .upToNextMajor(from:"1.0.0")),
-        .package(url: "https://github.com/swift-aws/Perfect-INIParser.git", .upToNextMinor(from: "3.0.0")),
+        .package(url: "https://github.com/swift-server/async-http-client.git", .upToNextMajor(from:"1.0.0"))
     ],
     targets: [
         .target(
@@ -20,7 +18,6 @@ let package = Package(
             dependencies: [
                 "AsyncHTTPClient",
                 "AWSSignerV4",
-                "CAWSSDKOpenSSL",
                 "NIO",
                 "NIOHTTP1",
                 "NIOSSL",
@@ -28,21 +25,25 @@ let package = Package(
                 "NIOFoundationCompat",
                 "INIParser"
             ]),
-        .target(name: "AWSSignerV4", dependencies: ["CAWSSDKOpenSSL", "NIOHTTP1"]),
-        .target(name: "CAWSSDKOpenSSL", dependencies: []),
+        .target(name: "AWSSignerV4", dependencies: ["AWSCrypto", "NIOHTTP1"]),
+        .target(name: "INIParser", dependencies: []),
+        .target(name: "AWSCrypto", dependencies: []),
+
+        .testTarget(name: "AWSCryptoTests", dependencies: ["AWSCrypto"]),
         .testTarget(name: "AWSSDKSwiftCoreTests", dependencies: ["AWSSDKSwiftCore", "NIOTestUtils"]),
         .testTarget(name: "AWSSignerTests", dependencies: ["AWSSignerV4"])
     ]
 )
 
-// switch for whether to use CAWSSDKOpenSSL to shim between OpenSSL versions
+// switch for whether to use swift crypto. Swift crypto requires macOS10.15 or iOS13.I'd rather not pass this requirement on
 #if os(Linux)
-let useOpenSSL = true
+let useSwiftCrypto = true
 #else
-let useOpenSSL = false
+let useSwiftCrypto = false
 #endif
 
-// Decide on where we get our SSL support from. Linux usses NIOSSL to provide SSL. Linux also needs CAWSSDKOpenSSL to shim across different OpenSSL versions for the HMAC functions.
-if useOpenSSL {
-    package.dependencies.append(.package(url: "https://github.com/apple/swift-nio-ssl-support.git", from: "1.0.0"))
+// Use Swift cypto on Linux.
+if useSwiftCrypto {
+    package.dependencies.append(.package(url: "https://github.com/apple/swift-crypto.git", from: "1.0.0"))
+    package.targets.first{$0.name == "AWSCrypto"}?.dependencies.append("Crypto")
 }

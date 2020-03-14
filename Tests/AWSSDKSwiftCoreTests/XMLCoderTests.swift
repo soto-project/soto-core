@@ -64,9 +64,8 @@ class XMLCoderTests: XCTestCase {
     }
 
     struct Arrays : AWSShape {
-       public static var _members: [AWSShapeMember] = [
-           AWSShapeMember(label: "ArrayOfNatives", location: .body(locationName: "ArrayOfNatives"), required: true, type: .list, encoding: .list(member: "member")),
-           AWSShapeMember(label: "ArrayOfShapes", location: .body(locationName: "ArrayOfShapes"), required: true, type: .list)
+       public static var _encoding: [AWSMemberEncoding] = [
+           AWSMemberEncoding(label: "ArrayOfNatives", encoding: .list(member: "member"))
        ]
        
        let arrayOfNatives : [Int]
@@ -74,9 +73,9 @@ class XMLCoderTests: XCTestCase {
     }
 
     struct Dictionaries : AWSShape {
-       public static var _members: [AWSShapeMember] = [
-           AWSShapeMember(label: "DictionaryOfNatives", location: .body(locationName: "Natives"), required: true, type: .list, encoding: .map(entry: "entry", key: "key", value: "value")),
-           AWSShapeMember(label: "DictionaryOfShapes", location: .body(locationName: "Shapes"), required: true, type: .list, encoding: .flatMap(key: "key", value: "value"))
+       public static var _encoding: [AWSMemberEncoding] = [
+           AWSMemberEncoding(label: "natives", encoding: .map(entry: "entry", key: "key", value: "value")),
+           AWSMemberEncoding(label: "shapes", encoding: .flatMap(key: "key", value: "value"))
        ]
        let dictionaryOfNatives : [String:Int]
        let dictionaryOfShapes : [String:StringShape]
@@ -242,7 +241,7 @@ class XMLCoderTests: XCTestCase {
             case no
         }
         struct Test: Codable {
-          //  static let _members = [AWSShapeMember(label: "type", required: true, type: .map, encoding:.attribute)]
+          //  static let _encoding = [AWSMemberEncoding(label: "type", required: true, type: .map, encoding:.attribute)]
             let type: Answer
         }
         let xml = "<Test type=\"yes\" />"
@@ -273,8 +272,8 @@ class XMLCoderTests: XCTestCase {
         let missingEnum = "<Numbers><b>true</b><i>45</i><s>3.4</s><d>7.89234</d></Numbers>"
         let wrongEnum = "<Strings><string>String1</string><optionalString>String2</optionalString><stringEnum>twenty</stringEnum></Strings>"
         let missingShape = "<Shape><Numbers><b>true</b><i>45</i><s>3.4</s><d>7.89234</d><enum>1</enum><int8>4</int8><uint16>5</uint16><int32>7</int32><uint64>90</uint64></Numbers><Strings><string>String1</string><optionalString>String2</optionalString><stringEnum>third</stringEnum></Strings></Shape>"
-        let stringNotShape = "<Dictionaries><natives></natives><shapes><first>test</first></shapes></Dictionaries>"
-        let notANumber = "<Dictionaries><natives><test>notANumber</test></natives><shapes></shapes></Dictionaries>"
+        let stringNotShape = "<Dictionaries><natives></natives><shapes><key>first</key><value>test</value></shapes></Dictionaries>"
+        let notANumber = "<Dictionaries><natives><entry><key>first</key><value>test</value></entry></natives><shapes></shapes></Dictionaries>"
 
         do {
             var xmlDocument = try XML.Document(data: missingNative.data(using: .utf8)!)
@@ -314,9 +313,9 @@ class XMLCoderTests: XCTestCase {
 
     func testDecodeExpandedContainers() {
         struct Shape : AWSShape {
-            static let _members = [
-                AWSShapeMember(label: "array", required: true, type: .list, encoding:.list(member: "member")),
-                AWSShapeMember(label: "dictionary", required: true, type: .map, encoding:.map(entry: "entry", key: "key", value: "value"))
+            static let _encoding = [
+                AWSMemberEncoding(label: "array", encoding:.list(member: "member")),
+                AWSMemberEncoding(label: "dictionary", encoding:.map(entry: "entry", key: "key", value: "value"))
             ]
             let array : [Int]
             let dictionary : [String: Int]
@@ -330,7 +329,7 @@ class XMLCoderTests: XCTestCase {
 
     func testArrayEncodingDecodeEncode() {
         struct Shape : AWSShape {
-            static let _members = [AWSShapeMember(label: "array", required: true, type: .list, encoding:.list(member: "member"))]
+            static let _encoding = [AWSMemberEncoding(label: "array", encoding:.list(member: "member"))]
             let array : [Int]
         }
         let xmldata = "<Shape><array><member>3</member><member>2</member><member>1</member></array></Shape>"
@@ -342,7 +341,7 @@ class XMLCoderTests: XCTestCase {
             let value : String
         }
         struct Shape : AWSShape {
-            static let _members = [AWSShapeMember(label: "array", required: true, type: .list, encoding:.list(member: "member"))]
+            static let _encoding = [AWSMemberEncoding(label: "array", encoding:.list(member: "member"))]
             let array : [Shape2]
         }
         let xmldata = "<Shape><array><member><value>test</value></member><member><value>test2</value></member><member><value>test3</value></member></array></Shape>"
@@ -351,7 +350,7 @@ class XMLCoderTests: XCTestCase {
     
     func testDictionaryEncodingDecodeEncode() {
         struct Shape : AWSShape {
-            static let _members = [AWSShapeMember(label: "d", required: true, type: .map, encoding:.map(entry:"item", key: "key", value: "value"))]
+            static let _encoding = [AWSMemberEncoding(label: "d", encoding:.map(entry:"item", key: "key", value: "value"))]
             let d : [String:Int]
         }
         let xmldata = "<Shape><d><item><key>member</key><value>4</value></item></d></Shape>"
@@ -363,7 +362,7 @@ class XMLCoderTests: XCTestCase {
             let float : Float
         }
         struct Shape : AWSShape {
-            static let _members = [AWSShapeMember(label: "d", required: true, type: .map, encoding:.map(entry:"item", key: "key", value: "value"))]
+            static let _encoding = [AWSMemberEncoding(label: "d", encoding:.map(entry:"item", key: "key", value: "value"))]
             let d : [String:Shape2]
         }
         let xmldata = "<Shape><d><item><key>member</key><value><float>1.5</float></value></item></d></Shape>"
@@ -372,7 +371,7 @@ class XMLCoderTests: XCTestCase {
     
     func testFlatDictionaryEncodingDecodeEncode() {
         struct Shape : AWSShape {
-            static let _members = [AWSShapeMember(label: "d", required: true, type: .map, encoding:.flatMap(key: "key", value: "value"))]
+            static let _encoding = [AWSMemberEncoding(label: "d", encoding:.flatMap(key: "key", value: "value"))]
             let d : [String:Int]
         }
         let xmldata = "<Shape><d><key>member</key><value>4</value></d></Shape>"
@@ -385,7 +384,7 @@ class XMLCoderTests: XCTestCase {
             case member2 = "member2"
         }
         struct Shape : AWSShape {
-            static let _members = [AWSShapeMember(label: "d", required: true, type: .map, encoding:.map(entry:"item", key: "key", value: "value"))]
+            static let _encoding = [AWSMemberEncoding(label: "d", encoding:.map(entry:"item", key: "key", value: "value"))]
             let d : [KeyEnum: Int]
         }
         let xmldata = "<Shape><d><item><key>member</key><value>4</value></item></d></Shape>"
@@ -401,7 +400,7 @@ class XMLCoderTests: XCTestCase {
             let a: String
         }
         struct Shape : AWSShape {
-            static let _members = [AWSShapeMember(label: "d", required: true, type: .map, encoding:.map(entry:"item", key: "k", value: "v"))]
+            static let _encoding = [AWSMemberEncoding(label: "d", encoding:.map(entry:"item", key: "k", value: "v"))]
             let d : [KeyEnum: Shape2]
         }
         let xmldata = "<Shape><d><item><k>member</k><v><a>thisisastring</a></v></item></d></Shape>"
@@ -414,7 +413,7 @@ class XMLCoderTests: XCTestCase {
             case member2 = "member2"
         }
         struct Shape : AWSShape {
-            static let _members = [AWSShapeMember(label: "d", required: true, type: .map, encoding:.flatMap(key: "key", value: "value"))]
+            static let _encoding = [AWSMemberEncoding(label: "d", encoding:.flatMap(key: "key", value: "value"))]
             let d : [KeyEnum:Int]
         }
         let xmldata = "<Shape><d><key>member</key><value>4</value></d></Shape>"

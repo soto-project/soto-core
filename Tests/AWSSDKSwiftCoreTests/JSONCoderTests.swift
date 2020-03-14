@@ -63,20 +63,11 @@ class JSONCoderTests: XCTestCase {
     }
 
     struct Arrays : AWSShape {
-       public static var _members: [AWSShapeMember] = [
-           AWSShapeMember(label: "ArrayOfNatives", location: .body(locationName: "ArrayOfNatives"), required: true, type: .list, encoding: .list(member: "member")),
-           AWSShapeMember(label: "ArrayOfShapes", location: .body(locationName: "ArrayOfShapes"), required: true, type: .list)
-       ]
-       
        let arrayOfNatives : [Int]
        let arrayOfShapes : [Numbers]
     }
 
     struct Dictionaries : AWSShape {
-       public static var _members: [AWSShapeMember] = [
-           AWSShapeMember(label: "DictionaryOfNatives", location: .body(locationName: "Natives"), required: true, type: .list, encoding: .map(entry: "entry", key: "key", value: "value")),
-           AWSShapeMember(label: "DictionaryOfShapes", location: .body(locationName: "Shapes"), required: true, type: .list, encoding: .flatMap(key: "key", value: "value"))
-       ]
        let dictionaryOfNatives : [String:Int]
        let dictionaryOfShapes : [String:StringShape]
 

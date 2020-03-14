@@ -13,11 +13,11 @@ import AsyncHTTPClient
 @testable import AWSSDKSwiftCore
 
 struct HeaderRequest: AWSShape {
-    static var _members: [AWSShapeMember] = [
-        AWSShapeMember(label: "Header1", location: .header(locationName: "Header1"), required: true, type: .string),
-        AWSShapeMember(label: "Header2", location: .header(locationName: "Header2"), required: true, type: .string),
-        AWSShapeMember(label: "Header3", location: .header(locationName: "Header3"), required: true, type: .string),
-        AWSShapeMember(label: "Header4", location: .header(locationName: "Header4"), required: true, type: .timestamp)
+    static var _encoding: [AWSMemberEncoding] = [
+        AWSMemberEncoding(label: "Header1", location: .header(locationName: "Header1")),
+        AWSMemberEncoding(label: "Header2", location: .header(locationName: "Header2")),
+        AWSMemberEncoding(label: "Header3", location: .header(locationName: "Header3")),
+        AWSMemberEncoding(label: "Header4", location: .header(locationName: "Header4"))
     ]
 
     let header1: String
@@ -27,14 +27,6 @@ struct HeaderRequest: AWSShape {
 }
 
 struct StandardRequest: AWSShape {
-    static var _members: [AWSShapeMember] = [
-        AWSShapeMember(label: "item1", location: .body(locationName: "item1"), required: true, type: .string),
-        AWSShapeMember(label: "item2", location: .body(locationName: "item2"), required: true, type: .integer),
-        AWSShapeMember(label: "item3", location: .body(locationName: "item3"), required: true, type: .double),
-        AWSShapeMember(label: "item4", location: .body(locationName: "item4"), required: true, type: .timestamp),
-        AWSShapeMember(label: "item5", location: .body(locationName: "item5"), required: true, type: .list)
-    ]
-
     let item1: String
     let item2: Int
     let item3: Double
@@ -44,19 +36,13 @@ struct StandardRequest: AWSShape {
 
 struct PayloadRequest: AWSShape {
     public static let payloadPath: String? = "payload"
-    static var _members: [AWSShapeMember] = [
-        AWSShapeMember(label: "payload", location: .body(locationName: "payload"), required: true, type: .structure)
-    ]
 
     let payload: StandardRequest
 }
 
 struct MixedRequest: AWSShape {
-    static var _members: [AWSShapeMember] = [
-        AWSShapeMember(label: "item1", location: .header(locationName: "item1"), required: true, type: .string),
-        AWSShapeMember(label: "item2", location: .body(locationName: "item2"), required: true, type: .integer),
-        AWSShapeMember(label: "item3", location: .body(locationName: "item3"), required: true, type: .double),
-        AWSShapeMember(label: "item4", location: .body(locationName: "item4"), required: true, type: .timestamp)
+    static var _encoding: [AWSMemberEncoding] = [
+        AWSMemberEncoding(label: "item1", location: .header(locationName: "item1")),
     ]
 
     let item1: String

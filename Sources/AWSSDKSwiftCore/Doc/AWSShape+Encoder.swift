@@ -16,8 +16,8 @@ internal extension AWSShape {
     }
     
     /// Encode AWSShape as XML
-    func encodeAsXML() throws -> XML.Element {
-        let xml = try XMLEncoder().encode(self)
+    func encodeAsXML(rootName: String? = nil) throws -> XML.Element {
+        let xml = try XMLEncoder().encode(self, name: rootName)
         if let xmlNamespace = Self._xmlNamespace {
             xml.addNamespace(XML.Node.namespace(stringValue: xmlNamespace))
         }

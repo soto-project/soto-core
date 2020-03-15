@@ -416,7 +416,12 @@ extension AWSClient {
                 if let payloadBody = mirror.getAttribute(forKey: payload) {
                     switch payloadBody {
                     case let shape as AWSShape:
-                        body = .xml(try shape.encodeAsXML())
+                        var rootName: String? = nil
+                        // extract custom payload name
+                        if let encoding = Input.getEncoding(for: payload), case .body(let locationName) = encoding.location {
+                            rootName = locationName
+                        }
+                        body = .xml(try shape.encodeAsXML(rootName: rootName))
                     default:
                         body = Body(anyValue: payloadBody)
                     }

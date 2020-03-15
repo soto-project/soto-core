@@ -199,7 +199,7 @@ extension AWSClient {
     ///     - input: Input object
     /// - returns:
     ///     Empty Future that completes when response is received
-    public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> EventLoopFuture<Void> {
+    public func send<Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> EventLoopFuture<Void> {
 
         return credentialProvider.getCredential().flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: self.signingName, region: self.region.rawValue)
@@ -246,7 +246,7 @@ extension AWSClient {
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
     /// - returns:
     ///     Future containing output object that completes when response is received
-    public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) -> EventLoopFuture<Output> {
+    public func send<Output: AWSDecodableShape>(operation operationName: String, path: String, httpMethod: String) -> EventLoopFuture<Output> {
 
         return credentialProvider.getCredential().flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: self.signingName, region: self.region.rawValue)
@@ -270,7 +270,7 @@ extension AWSClient {
     ///     - input: Input object
     /// - returns:
     ///     Future containing output object that completes when response is received
-    public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> EventLoopFuture<Output> {
+    public func send<Output: AWSDecodableShape, Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> EventLoopFuture<Output> {
 
         return credentialProvider.getCredential().flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: self.signingName, region: self.region.rawValue)
@@ -325,7 +325,7 @@ extension AWSClient {
         ).applyMiddlewares(middlewares)
     }
 
-    internal func createAWSRequest<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
+    internal func createAWSRequest<Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
         var headers: [String: Any] = [:]
         var path = path
         var body: Body = .empty
@@ -380,10 +380,10 @@ extension AWSClient {
 
         switch serviceProtocol.type {
         case .json, .restjson:
-            if let payload = Input.payloadPath {
+            if let payload = (Input.self as? AWSShapeWithPayload.Type)?.payloadPath {
                 if let payloadBody = mirror.getAttribute(forKey: payload) {
                     switch payloadBody {
-                    case let shape as AWSShape:
+                    case let shape as AWSEncodableShape:
                         body = .json(try shape.encodeAsJSON())
                     default:
                         body = Body(anyValue: payloadBody)
@@ -414,10 +414,10 @@ extension AWSClient {
             }
 
         case .restxml:
-            if let payload = Input.payloadPath {
+            if let payload = (Input.self as? AWSShapeWithPayload.Type)?.payloadPath {
                 if let payloadBody = mirror.getAttribute(forKey: payload) {
                     switch payloadBody {
-                    case let shape as AWSShape:
+                    case let shape as AWSEncodableShape:
                         var rootName: String? = nil
                         // extract custom payload name
                         if let encoding = Input.getEncoding(for: payload), case .body(let locationName) = encoding.location {
@@ -510,12 +510,12 @@ extension AWSClient {
 extension AWSClient {
 
     /// Validate the operation response and return a response shape
-    internal func validate<Output: AWSShape>(operation operationName: String, response: AWSHTTPResponse) throws -> Output {
+    internal func validate<Output: AWSDecodableShape>(operation operationName: String, response: AWSHTTPResponse) throws -> Output {
         var raw: Bool = false
-        var payloadKey: String? = Output.payloadPath
+        var payloadKey: String? = (Output.self as? AWSShapeWithPayload.Type)?.payloadPath
 
         // if response has a payload with encoding info
-        if let payloadPath = Output.payloadPath, let encoding = Output.getEncoding(for: payloadPath) {
+        if let payloadPath = payloadKey, let encoding = Output.getEncoding(for: payloadPath) {
             // is payload raw
             if case .blob = encoding.shapeEncoding, (200..<300).contains(response.status.code) {
                 raw = true

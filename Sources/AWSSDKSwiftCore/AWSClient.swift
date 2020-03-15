@@ -468,7 +468,7 @@ extension AWSClient {
             urlString.append("?")
             urlString.append(queryParams.map{"\($0.key)=\(urlEncodeQueryParam("\($0.value)"))"}.sorted().joined(separator:"&"))
         }
-        
+
         guard let url = URL(string: urlString) else {
             throw RequestError.invalidURL("\(urlString)")
         }
@@ -485,7 +485,7 @@ extension AWSClient {
     }
 
     static let queryAllowedCharacters = CharacterSet(charactersIn:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/")
-    
+
     fileprivate func urlEncodeQueryParam(_ value: String) -> String {
         return value.addingPercentEncoding(withAllowedCharacters: AWSClient.queryAllowedCharacters) ?? value
     }

@@ -22,6 +22,16 @@ func unwrap(any: Any) -> Any? {
     return some
 }
 
+func unwrap(any: Any) -> Any? {
+    let mi = Mirror(reflecting: any)
+    if mi.displayStyle != .optional {
+        return any
+    }
+    if mi.children.count == 0 { return nil }
+    let (_, some) = mi.children.first!
+    return some
+}
+
 extension Mirror {
     func getAttribute(forKey key: String) -> Any? {
         guard let matched = children.filter({ $0.label == key }).first else {

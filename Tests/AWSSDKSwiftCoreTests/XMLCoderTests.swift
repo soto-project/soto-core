@@ -140,7 +140,7 @@ class XMLCoderTests: XCTestCase {
             //let xmlElement = try XMLEncoder().encode(instance)
             //XCTAssertEqual(xml, xmlElement.xmlString)
         } catch {
-            XCTFail(error.localizedDescription)
+            XCTFail("\(error)")
         }
         return nil
     }
@@ -155,8 +155,48 @@ class XMLCoderTests: XCTestCase {
             let xmlElement = try XMLEncoder().encode(instance)
             XCTAssertEqual(xml, xmlElement.xmlString)
         } catch {
-            XCTFail(error.localizedDescription)
+            XCTFail("\(error)")
         }
+    }
+    
+    func testArrayUserProperty() {
+        struct ArrayMember: ArrayEncodingProperties { static let member = "member2" }
+        struct Test: Codable {
+            @ArrayEncoding<ArrayMember, String> var a: [String]
+        }
+        let test = Test(a: ["one", "two", "three"])
+        do {
+            let xml = try XMLEncoder().encode(test).xmlString
+            XCTAssertEqual(xml, "<Test><a><member2>one</member2><member2>two</member2><member2>three</member2></a></Test>")
+        } catch {
+            XCTFail("\(error)")
+        }
+        let xml = "<Test><a><member2>one</member2><member2>two</member2><member2>three</member2></a></Test>"
+        testDecodeEncode(type: Test.self, xml: xml)
+    }
+    
+    func testDictionaryUserProperty() {
+        struct DictionaryEntryKeyValue: DictionaryEncodingProperties { static let entry: String? = "entry"; static let key = "key"; static let value = "value";  }
+        struct Test: Codable {
+            @DictionaryEncoding<DictionaryEntryKeyValue, String, Int> var a: [String: Int]
+        }
+        let test = Test(a: ["one":1])
+        do {
+            let xml = try XMLEncoder().encode(test).xmlString
+            XCTAssertEqual(xml, "<Test><a><entry><key>one</key><value>1</value></entry></a></Test>")
+        } catch {
+            XCTFail("\(error)")
+        }
+        let xml = "<Test><a><entry><key>one</key><value>1</value></entry><entry><key>two</key><value>2</value></entry></a></Test>"
+        testDecodeEncode(type: Test.self, xml: xml)
+    }
+    
+    func testNoUserProperty() {
+        struct Test: Codable {
+            var a: [String]
+        }
+        let xml = "<Test><a>one</a><a>two</a><a>three</a></Test>"
+        testDecodeEncode(type: Test.self, xml: xml)
     }
     
     func testSimpleStructureDecodeEncode() {
@@ -322,86 +362,87 @@ class XMLCoderTests: XCTestCase {
     }
 
     func testDecodeExpandedContainers() {
+        struct ArrayMember: ArrayEncodingProperties { static let member = "member" }
+        struct DictionaryEntryKeyValue: DictionaryEncodingProperties { static let entry: String? = "entry"; static let key = "key"; static let value = "value";  }
         struct Shape : AWSShape {
-            static let _encoding = [
-                AWSMemberEncoding(label: "array", encoding:.list(member: "member")),
-                AWSMemberEncoding(label: "dictionary", encoding:.map(entry: "entry", key: "key", value: "value"))
-            ]
-            let array : [Int]
-            let dictionary : [String: Int]
+            @ArrayEncoding<ArrayMember, Int> var array : [Int]
+            @DictionaryEncoding<DictionaryEntryKeyValue, String, Int> var dictionary : [String: Int]
         }
         let xmldata = "<Shape><array><member>3</member><member>2</member><member>1</member></array><dictionary><entry><key>one</key><value>1</value></entry><entry><key>two</key><value>2</value></entry><entry><key>three</key><value>3</value></entry></dictionary></Shape>"
         if let shape = testDecode(type: Shape.self, xml: xmldata) {
             XCTAssertEqual(shape.array[0], 3)
             XCTAssertEqual(shape.dictionary["two"], 2)
+        } else {
+            XCTFail("Failed to decode")
         }
     }
 
     func testArrayEncodingDecodeEncode() {
+        struct ArrayMember: ArrayEncodingProperties { static let member = "member" }
         struct Shape : AWSShape {
-            static let _encoding = [AWSMemberEncoding(label: "array", encoding:.list(member: "member"))]
-            let array : [Int]
+            @ArrayEncoding<ArrayMember, Int> var array : [Int]
         }
         let xmldata = "<Shape><array><member>3</member><member>2</member><member>1</member></array></Shape>"
         testDecodeEncode(type: Shape.self, xml: xmldata)
     }
     
     func testArrayOfStructuresEncodingDecodeEncode() {
+        struct ArrayMember: ArrayEncodingProperties { static let member = "member" }
         struct Shape2 : AWSShape {
             let value : String
         }
         struct Shape : AWSShape {
-            static let _encoding = [AWSMemberEncoding(label: "array", encoding:.list(member: "member"))]
-            let array : [Shape2]
+            @ArrayEncoding<ArrayMember, Shape2> var array : [Shape2]
         }
         let xmldata = "<Shape><array><member><value>test</value></member><member><value>test2</value></member><member><value>test3</value></member></array></Shape>"
         testDecodeEncode(type: Shape.self, xml: xmldata)
     }
     
     func testDictionaryEncodingDecodeEncode() {
+        struct DictionaryItemKeyValue: DictionaryEncodingProperties { static let entry: String? = "item"; static let key = "key"; static let value = "value";  }
         struct Shape : AWSShape {
-            static let _encoding = [AWSMemberEncoding(label: "d", encoding:.map(entry:"item", key: "key", value: "value"))]
-            let d : [String:Int]
+            @DictionaryEncoding<DictionaryItemKeyValue, String, Int> var d : [String:Int]
         }
         let xmldata = "<Shape><d><item><key>member</key><value>4</value></item></d></Shape>"
         testDecodeEncode(type: Shape.self, xml: xmldata)
     }
     
     func testDictionaryOfStructuresEncodingDecodeEncode() {
+        struct DictionaryItemKeyValue: DictionaryEncodingProperties { static let entry: String? = "item"; static let key = "key"; static let value = "value";  }
         struct Shape2 : AWSShape {
             let float : Float
         }
         struct Shape : AWSShape {
-            static let _encoding = [AWSMemberEncoding(label: "d", encoding:.map(entry:"item", key: "key", value: "value"))]
-            let d : [String:Shape2]
+            @DictionaryEncoding<DictionaryItemKeyValue, String, Shape2> var d : [String:Shape2]
         }
         let xmldata = "<Shape><d><item><key>member</key><value><float>1.5</float></value></item></d></Shape>"
         testDecodeEncode(type: Shape.self, xml: xmldata)
     }
     
     func testFlatDictionaryEncodingDecodeEncode() {
+        struct DictionaryKeyValue: DictionaryEncodingProperties { static let entry: String? = nil; static let key = "key"; static let value = "value";  }
         struct Shape : AWSShape {
-            static let _encoding = [AWSMemberEncoding(label: "d", encoding:.flatMap(key: "key", value: "value"))]
-            let d : [String:Int]
+            @DictionaryEncoding<DictionaryKeyValue, String, Int> var d : [String:Int]
         }
         let xmldata = "<Shape><d><key>member</key><value>4</value></d></Shape>"
         testDecodeEncode(type: Shape.self, xml: xmldata)
     }
     
     func testEnumDictionaryEncodingDecodeEncode() {
+        struct DictionaryItemKeyValue: DictionaryEncodingProperties { static let entry: String? = "item"; static let key = "key"; static let value = "value";  }
         enum KeyEnum : String, Codable {
             case member = "member"
             case member2 = "member2"
         }
         struct Shape : AWSShape {
-            static let _encoding = [AWSMemberEncoding(label: "d", encoding:.map(entry:"item", key: "key", value: "value"))]
-            let d : [KeyEnum: Int]
+            @DictionaryEncoding<DictionaryItemKeyValue, KeyEnum, Int> var d : [KeyEnum: Int]
         }
         let xmldata = "<Shape><d><item><key>member</key><value>4</value></item></d></Shape>"
         testDecodeEncode(type: Shape.self, xml: xmldata)
     }
     
     func testEnumShapeDictionaryEncodingDecodeEncode() {
+        struct DictionaryItemKV: DictionaryEncodingProperties { static let entry: String? = "item"; static let key = "k"; static let value = "v";  }
         enum KeyEnum : String, Codable {
             case member = "member"
             case member2 = "member2"
@@ -410,23 +451,25 @@ class XMLCoderTests: XCTestCase {
             let a: String
         }
         struct Shape : AWSShape {
-            static let _encoding = [AWSMemberEncoding(label: "d", encoding:.map(entry:"item", key: "k", value: "v"))]
-            let d : [KeyEnum: Shape2]
+            @DictionaryEncoding<DictionaryItemKV, KeyEnum, Shape2> var d : [KeyEnum: Shape2]
         }
         let xmldata = "<Shape><d><item><k>member</k><v><a>thisisastring</a></v></item></d></Shape>"
         testDecodeEncode(type: Shape.self, xml: xmldata)
     }
     
     func testEnumFlatDictionaryEncodingDecodeEncode() {
+        struct DictionaryKeyValue: DictionaryEncodingProperties { static let entry: String? = nil; static let key = "key"; static let value = "value";  }
         enum KeyEnum : String, Codable {
             case member = "member"
             case member2 = "member2"
         }
-        struct Shape : AWSShape {
-            static let _encoding = [AWSMemberEncoding(label: "d", encoding:.flatMap(key: "key", value: "value"))]
-            let d : [KeyEnum:Int]
+        struct Shape2 : AWSShape {
+            let a: String
         }
-        let xmldata = "<Shape><d><key>member</key><value>4</value></d></Shape>"
+        struct Shape : AWSShape {
+            @DictionaryEncoding<DictionaryKeyValue, KeyEnum, Shape2> var d : [KeyEnum:Shape2]
+        }
+        let xmldata = "<Shape><d><key>member</key><value><a>hello</a></value></d></Shape>"
         testDecodeEncode(type: Shape.self, xml: xmldata)
     }
     

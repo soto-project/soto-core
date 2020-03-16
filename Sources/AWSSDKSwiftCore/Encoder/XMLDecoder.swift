@@ -218,74 +218,30 @@ fileprivate class _XMLDecoder : Decoder {
     struct KDC<Key: CodingKey> : KeyedDecodingContainerProtocol {
         var codingPath: [CodingKey] { return decoder.codingPath }
         var allKeys: [Key] = []
-        var allValueNodes: [String : XML.Node] = [:]
         let element : XML.Node
         let decoder : _XMLDecoder
-        let expandedDictionary : Bool // are we decoding a dictionary of the form <entry><key></key><value></value></entry><entry>...
 
         public init(_ element : XML.Node, decoder: _XMLDecoder) {
             self.element = element
             self.decoder = decoder
             
-            // based on the containerCoding, select the key and value XML elements
-            switch decoder.containerCoding {
-            case .dictionary(var entryName, let keyName, let valueName):
-                var element = element
-                
-                // if entry name is NULL, set enclosing xml element to be the parent element and set the name to look for to be the name of the current element. Otherwise the code will look for xml elements named entryName under the current element
-                if entryName == nil {
-                    entryName = decoder.codingPath.last?.stringValue
-                    if let parent = element.parent {
-                        decoder.storage.popContainer()
-                        decoder.storage.push(container: parent)
-                        element = parent
-                    }
+            // all elements directly under the container xml element are considered. THe key is the name of the element and the value is the text attached to the element
+            allKeys = element.children?.compactMap { (element: XML.Node)->Key? in
+                if let name = element.name {
+                    return Key(stringValue: name)
                 }
-                if let entryName = entryName, let entries = (element as? XML.Element)?.elements(forName: entryName) {
-                    for entry in entries {
-                        guard let keyNode = entry.child(for: keyName),
-                            let valueNode = entry.child(for: valueName),
-                            let keyString = keyNode.stringValue,
-                            let key = Key(stringValue: keyString) else {
-                            continue
-                        }
-                        allKeys.append(key)
-                        // store value elements for later
-                        allValueNodes[keyString] = valueNode
-                    }
-                }
-
-                expandedDictionary = true
-                
-            default:
-                // all elements directly under the container xml element are considered. THe key is the name of the element and the value is the text attached to the element
-                allKeys = element.children?.compactMap { (element: XML.Node)->Key? in
-                    if let name = element.name {
-                        return Key(stringValue: name)
-                    }
-                    return nil
-                    } ?? []
-                expandedDictionary = false
-            }
+                return nil
+            } ?? []
         }
 
         /// return if decoder has a value for a key
         func contains(_ key: Key) -> Bool {
-            if expandedDictionary {
-                return allValueNodes[key.stringValue] != nil
-            } else {
-                return element.child(for: key) != nil
-            }
+            return element.child(for: key) != nil
         }
 
         /// get the XMLElment for a particular key
         func child(for key: CodingKey) throws -> XML.Node {
-            if expandedDictionary {
-                guard let child = allValueNodes[key.stringValue] else {
-                    throw DecodingError.keyNotFound(key, DecodingError.Context(codingPath: codingPath, debugDescription:"Failed to find key value in expanded dictionary. Should not get here"))
-                }
-                return child
-            } else if let child = element.child(for: key) {
+            if let child = element.child(for: key) {
                 return child
             } else if let attribute = (element as? XML.Element)?.attribute(for: key) {
                 return attribute
@@ -372,17 +328,6 @@ fileprivate class _XMLDecoder : Decoder {
             self.decoder.codingPath.append(key)
             defer { self.decoder.codingPath.removeLast() }
 
-            // set containerCoding
-            if let containerCoding = decoder.containerCodingMapType?.getXMLContainerCoding(for:key) {
-                decoder.containerCoding = containerCoding
-            } else if type is _XMLDictionaryDecodableMarker.Type {
-                decoder.containerCoding = decoder.options.dictionaryDecodingStrategy
-            } else if type is _XMLArrayDecodableMarker.Type {
-                decoder.containerCoding = decoder.options.arrayDecodingStrategy
-            } else {
-                decoder.containerCoding = .default
-            }
-
             let element = try self.child(for:key)
             return try decoder.unbox(element, as:T.self)
         }
@@ -401,7 +346,9 @@ fileprivate class _XMLDecoder : Decoder {
             self.decoder.codingPath.append(key)
             defer { self.decoder.codingPath.removeLast() }
             
-            return UKDC(element, decoder: self.decoder)
+            let child = try self.child(for: key)
+            
+            return UKDC(child, decoder: self.decoder)
         }
 
         private func _superDecoder(forKey key: __owned CodingKey) throws -> Decoder {
@@ -433,43 +380,7 @@ fileprivate class _XMLDecoder : Decoder {
         let decoder : _XMLDecoder
 
         init(_ element: XML.Node, decoder: _XMLDecoder) {
-            var elements : [XML.Node]?
-            
-            // build array of elements based on the container coding
-            switch decoder.containerCoding {
-            case .array(let member):
-                // array is built from child xmlelements with name member
-                if let member = member {
-                    elements = (element as? XML.Element)?.elements(forName: member) ?? []
-                }
-                
-            case .dictionary(let entry, let key, let value):
-                // dictionaries with non string keys (eg enums) are processed with an UnkeyedDecodingContainer. With elements alternating between key and value
-                var elements2 : [XML.Node] = []
-                if let entry = entry {
-                    for entryChild in (element as? XML.Element)?.elements(forName: entry) ?? [] {
-                        let keyNode = entryChild.child(for: key)
-                        let entryNode = entryChild.child(for: value)
-                        if keyNode != nil && entryNode != nil {
-                            elements2.append(keyNode!)
-                            elements2.append(entryNode!)
-                        }
-                    }
-                } else {
-                    for child in element.children ?? [] {
-                        if child.name == key || child.name == value {
-                            elements2.append(child)
-                        }
-                    }
-                }
-                elements = elements2
-
-            default:
-                break
-            }
-            if let elements = elements {
-                self.elements = elements
-            } else if let parent = element.parent {
+            if let parent = element.parent {
                 decoder.storage.popContainer()
                 decoder.storage.push(container: parent)
                 self.elements = (parent as? XML.Element)?.elements(forName: decoder.codingPath.last!.stringValue) ?? []
@@ -577,15 +488,6 @@ fileprivate class _XMLDecoder : Decoder {
         }
 
         mutating func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
-            // set containerCoding
-            if type is _XMLDictionaryDecodableMarker.Type {
-                decoder.containerCoding = decoder.options.dictionaryDecodingStrategy
-            } else if type is _XMLArrayDecodableMarker.Type {
-                decoder.containerCoding = decoder.options.arrayDecodingStrategy
-            } else {
-                decoder.containerCoding = .default
-            }
-
             let value = try decoder.unbox(elements[currentIndex], as:T.self)
             currentIndex += 1
             return value

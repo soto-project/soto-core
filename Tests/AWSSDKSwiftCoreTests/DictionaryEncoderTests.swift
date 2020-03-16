@@ -48,16 +48,16 @@ class DictionaryEncoderTests: XCTestCase {
         }
     }
     
-    /// helper test function to use throughout all the decode/encode tests
-    func testDecodeEncode<T : Codable>(type: T.Type, dictionary: [String:Any], decoder: DictionaryDecoder = DictionaryDecoder(), encoder: DictionaryEncoder = DictionaryEncoder()) {
+    func testDecode<T: Decodable>(
+        type: T.Type,
+        dictionary: [String: Any],
+        decoder: DictionaryDecoder = DictionaryDecoder(),
+        test: (T) -> ()) {
         do {
             let instance = try decoder.decode(T.self, from: dictionary)
-            let newDictionary = try encoder.encode(instance)
-            
-            // check dictionaries are the same
-            assertEqual(dictionary, newDictionary)
+            test(instance)
         } catch {
-            XCTFail(error.localizedDescription)
+            XCTFail("\(error)")
         }
     }
     
@@ -67,7 +67,10 @@ class DictionaryEncoderTests: XCTestCase {
             let b : String
         }
         let dictionary: [String:Any] = ["a":4, "b":"Hello"]
-        testDecodeEncode(type: Test.self, dictionary: dictionary)
+        testDecode(type: Test.self, dictionary: dictionary) {
+            XCTAssertEqual($0.a, 4)
+            XCTAssertEqual($0.b, "Hello")
+        }
     }
     
     func testBaseTypesDecodeEncode() {
@@ -87,7 +90,21 @@ class DictionaryEncoderTests: XCTestCase {
             let double : Double
         }
         let dictionary: [String:Any] = ["bool":true, "int":0, "int8":1, "int16":2, "int32":-3, "int64":4, "uint":10, "uint8":11, "uint16":12, "uint32":13, "uint64":14, "float":1.25, "double":0.23]
-        testDecodeEncode(type: Test.self, dictionary: dictionary)
+        testDecode(type: Test.self, dictionary: dictionary) {
+            XCTAssertEqual($0.bool, true)
+            XCTAssertEqual($0.int, 0)
+            XCTAssertEqual($0.int8, 1)
+            XCTAssertEqual($0.int16, 2)
+            XCTAssertEqual($0.int32, -3)
+            XCTAssertEqual($0.int64, 4)
+            XCTAssertEqual($0.uint, 10)
+            XCTAssertEqual($0.uint8, 11)
+            XCTAssertEqual($0.uint16, 12)
+            XCTAssertEqual($0.uint32, 13)
+            XCTAssertEqual($0.uint64, 14)
+            XCTAssertEqual($0.float, 1.25)
+            XCTAssertEqual($0.double, 0.23)
+        }
     }
     
     func testContainingStructureDecodeEncode() {
@@ -99,7 +116,10 @@ class DictionaryEncoderTests: XCTestCase {
             let t : Test2
         }
         let dictionary: [String:Any] = ["t": ["a":4, "b":"Hello"]]
-        testDecodeEncode(type: Test.self, dictionary: dictionary)
+        testDecode(type: Test.self, dictionary: dictionary) {
+            XCTAssertEqual($0.t.a, 4)
+            XCTAssertEqual($0.t.b, "Hello")
+        }
     }
     
     func testEnumDecodeEncode() {
@@ -111,7 +131,9 @@ class DictionaryEncoderTests: XCTestCase {
             let a : TestEnum
         }
         let dictionary: [String:Any] = ["a":"First"]
-        testDecodeEncode(type: Test.self, dictionary: dictionary)
+        testDecode(type: Test.self, dictionary: dictionary) {
+            XCTAssertEqual($0.a, .first)
+        }
     }
     
     func testArrayDecodeEncode() {
@@ -119,7 +141,9 @@ class DictionaryEncoderTests: XCTestCase {
             let a : [Int]
         }
         let dictionary: [String:Any] = ["a":[1,2,3,4,5]]
-        testDecodeEncode(type: Test.self, dictionary: dictionary)
+        testDecode(type: Test.self, dictionary: dictionary) {
+            XCTAssertEqual($0.a, [1,2,3,4,5])
+        }
     }
     
     func testArrayOfStructuresDecodeEncode() {
@@ -130,7 +154,10 @@ class DictionaryEncoderTests: XCTestCase {
             let a : [Test2]
         }
         let dictionary: [String:Any] = ["a":[["b":"hello"], ["b":"goodbye"]]]
-        testDecodeEncode(type: Test.self, dictionary: dictionary)
+        testDecode(type: Test.self, dictionary: dictionary) {
+            XCTAssertEqual($0.a[0].b, "hello")
+            XCTAssertEqual($0.a[1].b, "goodbye")
+        }
     }
     
     func testDictionaryDecodeEncode() {
@@ -138,7 +165,9 @@ class DictionaryEncoderTests: XCTestCase {
             let a : [String:Int]
         }
         let dictionary: [String:Any] = ["a":["key":45]]
-        testDecodeEncode(type: Test.self, dictionary: dictionary)
+        testDecode(type: Test.self, dictionary: dictionary) {
+            XCTAssertEqual($0.a["key"], 45)
+        }
     }
     
     func testEnumDictionaryDecodeEncode() {
@@ -151,27 +180,31 @@ class DictionaryEncoderTests: XCTestCase {
         }
         // at the moment dictionaries with enums return an array.
         let dictionary: [String:Any] = ["a":["First",45]]
-        testDecodeEncode(type: Test.self, dictionary: dictionary)
+        testDecode(type: Test.self, dictionary: dictionary) {
+            XCTAssertEqual($0.a[.first], 45)
+        }
     }
     
     func testDateDecodeEncode() {
         struct Test : Codable {
             let date : Date
         }
-        let dictionary: [String:Any] = ["date":29872384673]
-        testDecodeEncode(type: Test.self, dictionary: dictionary)
-        
+        let dictionary: [String:Any] = ["date":0]
+        testDecode(type: Test.self, dictionary: dictionary) {
+            XCTAssertEqual($0.date, Date(timeIntervalSinceReferenceDate: 0))
+        }
+
         let dateFormatter = DateFormatter()
         dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
         
         let decoder = DictionaryDecoder()
         decoder.dateDecodingStrategy = .formatted(dateFormatter)
-        let encoder = DictionaryEncoder()
-        encoder.dateEncodingStrategy = .formatted(dateFormatter)
         
         let dictionary2: [String:Any] = ["date":"2001-07-21T14:31:45.100Z"]
-        testDecodeEncode(type: Test.self, dictionary: dictionary2, decoder: decoder, encoder: encoder)
+        testDecode(type: Test.self, dictionary: dictionary2, decoder: decoder) {
+            XCTAssertEqual($0.date, dateFormatter.date(from: "2001-07-21T14:31:45.100Z"))
+        }
     }
     
     func testDataDecodeEncode() {
@@ -179,15 +212,17 @@ class DictionaryEncoderTests: XCTestCase {
             let data : Data
         }
         let dictionary: [String:Any] = ["data":"Hello, world".data(using:.utf8)!.base64EncodedString()]
-        testDecodeEncode(type: Test.self, dictionary: dictionary)
-        
+        testDecode(type: Test.self, dictionary: dictionary) {
+            XCTAssertEqual($0.data, "Hello, world".data(using:.utf8)!)
+        }
+
         let decoder = DictionaryDecoder()
         decoder.dataDecodingStrategy = .raw
-        let encoder = DictionaryEncoder()
-        encoder.dataEncodingStrategy = .raw
 
         let dictionary2: [String:Any] = ["data":"Hello, world".data(using:.utf8)!]
-        testDecodeEncode(type: Test.self, dictionary: dictionary2, decoder: decoder, encoder: encoder)
+        testDecode(type: Test.self, dictionary: dictionary2, decoder: decoder) {
+            XCTAssertEqual($0.data, "Hello, world".data(using:.utf8)!)
+        }
     }
     
     func testUrlDecodeEncode() {
@@ -195,7 +230,9 @@ class DictionaryEncoderTests: XCTestCase {
             let url : URL
         }
         let dictionary: [String:Any] = ["url":"www.google.com"]
-        testDecodeEncode(type: Test.self, dictionary: dictionary)
+        testDecode(type: Test.self, dictionary: dictionary) {
+            XCTAssertEqual($0.url, URL(string: "www.google.com")!)
+        }
     }
     
     func testDecodeErrors<T : Codable>(type: T.Type, dictionary: [String:Any], decoder: DictionaryDecoder = DictionaryDecoder()) {
@@ -233,7 +270,7 @@ class DictionaryEncoderTests: XCTestCase {
     }
     
     func testNestedContainer() {
-        struct Test : Codable {
+        struct Test : Decodable {
             let firstname : String
             let surname : String
             let age : Int
@@ -244,14 +281,6 @@ class DictionaryEncoderTests: XCTestCase {
                 let fullname = try container.nestedContainer(keyedBy: AdditionalKeys.self, forKey: .name)
                 firstname = try fullname.decode(String.self, forKey: .firstname)
                 surname = try fullname.decode(String.self, forKey: .surname)
-            }
-            
-            func encode(to encoder: Encoder) throws {
-                var container = encoder.container(keyedBy: CodingKeys.self)
-                try container.encode(age, forKey: .age)
-                var fullname = container.nestedContainer(keyedBy: AdditionalKeys.self, forKey: .name)
-                try fullname.encode(firstname, forKey: .firstname)
-                try fullname.encode(surname, forKey: .surname)
             }
             
             private enum CodingKeys : String, CodingKey {
@@ -266,11 +295,15 @@ class DictionaryEncoderTests: XCTestCase {
         }
         
         let dictionary: [String:Any] = ["age":25, "name":["firstname":"John", "surname":"Smith"]]
-        testDecodeEncode(type: Test.self, dictionary: dictionary)
+        testDecode(type: Test.self, dictionary: dictionary) {
+            XCTAssertEqual($0.age, 25)
+            XCTAssertEqual($0.firstname, "John")
+            XCTAssertEqual($0.surname, "Smith")
+        }
     }
     
     func testSupercoder() {
-        class Base : Codable {
+        class Base : Decodable {
             let a : Int
         }
         class Test : Base {
@@ -281,12 +314,6 @@ class DictionaryEncoderTests: XCTestCase {
                 try super.init(from: superDecoder)
             }
             
-            override func encode(to encoder: Encoder) throws {
-                var container = encoder.container(keyedBy: CodingKeys.self)
-                try container.encode(b, forKey: .b)
-                let superEncoder = container.superEncoder(forKey: .super)
-                try super.encode(to: superEncoder)
-            }
             let b : String
             
             private enum CodingKeys : String, CodingKey {
@@ -296,7 +323,10 @@ class DictionaryEncoderTests: XCTestCase {
         }
         
         let dictionary: [String:Any] = ["B":"Test", "Super":["a":648]]
-        testDecodeEncode(type: Test.self, dictionary: dictionary)
+        testDecode(type: Test.self, dictionary: dictionary) {
+            XCTAssertEqual($0.b, "Test")
+            XCTAssertEqual($0.a, 648)
+        }
     }
     
     struct B: Codable {
@@ -401,95 +431,10 @@ class DictionaryEncoderTests: XCTestCase {
         }
     }
     
-    let a = A(b: B(int: 1,
-                   int8: 2,
-                   int16: 3,
-                   int32: 4,
-                   int64: 5,
-                   uint: 6,
-                   uint8: 7,
-                   uint16: 8,
-                   uint32: 9,
-                   uint64: 1234567890,
-                   double: 0.5,
-                   float: 0.6,
-                   string: "string",
-                   data: "hello".data(using: .utf8)!,
-                   bool: true,
-                   optional: "goodbye"),
-              dictionary: ["foo": "bar"],
-              array: ["a", "b", "c"])
-    
-    func testEncode() {
-        do {
-            let encoded = try DictionaryEncoder().encode(a)
-            let b = encoded["b"] as? [String:Any]
-            
-            XCTAssertNotNil(b)
-            XCTAssertEqual(b!["int"] as? Int, 1)
-            XCTAssertEqual(b!["int8"] as? Int8, 2)
-            XCTAssertEqual(b!["int16"] as? Int16, 3)
-            XCTAssertEqual(b!["int32"] as? Int32, 4)
-            XCTAssertEqual(b!["int64"] as? Int64, 5)
-            XCTAssertEqual(b!["uint"] as? UInt, 6)
-            XCTAssertEqual(b!["uint8"] as? UInt8, 7)
-            XCTAssertEqual(b!["uint16"] as? UInt16, 8)
-            XCTAssertEqual(b!["uint32"] as? UInt32, 9)
-            XCTAssertEqual(b!["uint64"] as? UInt64, 1234567890)
-            XCTAssertEqual(b!["double"] as? Double, 0.5)
-            XCTAssertEqual(b!["float"] as? Float, 0.6)
-            XCTAssertEqual(b!["string"] as? String, "string")
-            let data = Data(base64Encoded: b!["data"] as! String)
-            XCTAssertNotNil(data)
-            XCTAssertEqual(String(data: data!, encoding: .utf8), "hello")
-            XCTAssertEqual(b!["optional"] as? String, "goodbye")
-            XCTAssertEqual(b!["bool"] as? Bool, true)
-            let dictionary = encoded["dictionary"] as? [String:Any]
-            XCTAssertNotNil(dictionary)
-            XCTAssertEqual(dictionary!["foo"] as? String, "bar")
-            let array = encoded["array"] as? [Any]
-            XCTAssertNotNil(array)
-            XCTAssertEqual(array![1] as? String, "b")
-            
-        } catch {
-            XCTFail(error.localizedDescription)
-        }
-    }
-    
-    func testEncodeDecode() {
-        do {
-            let encoded = try DictionaryEncoder().encode(a)
-            let decoded = try DictionaryDecoder().decode(A.self, from: encoded)
-            
-            XCTAssertEqual(a.b.int, decoded.b.int)
-            XCTAssertEqual(a.b.int8, decoded.b.int8)
-            XCTAssertEqual(a.b.int16, decoded.b.int16)
-            XCTAssertEqual(a.b.int32, decoded.b.int32)
-            XCTAssertEqual(a.b.int64, decoded.b.int64)
-            XCTAssertEqual(a.b.uint, decoded.b.uint)
-            XCTAssertEqual(a.b.uint8, decoded.b.uint8)
-            XCTAssertEqual(a.b.uint16, decoded.b.uint16)
-            XCTAssertEqual(a.b.uint32, decoded.b.uint32)
-            XCTAssertEqual(a.b.uint64, decoded.b.uint64)
-            XCTAssertEqual(a.b.float, decoded.b.float)
-            XCTAssertEqual(a.b.double, decoded.b.double)
-            XCTAssertEqual(a.b.string, decoded.b.string)
-            XCTAssertEqual(a.b.optional, decoded.b.optional)
-            XCTAssertEqual(a.b.bool, decoded.b.bool)
-            XCTAssertEqual(a.dictionary, decoded.dictionary)
-            XCTAssertEqual(a.array, decoded.array)
-            
-        } catch {
-            XCTFail(error.localizedDescription)
-        }
-    }
-    
     static var allTests : [(String, (DictionaryEncoderTests) -> () throws -> Void)] {
         return [
             ("testDecode", testDecode),
             ("testDecodeFail", testDecodeFail),
-            ("testEncode", testEncode),
-            ("testEncodeDecode", testEncodeDecode),
             ("testSimpleStructureDecodeEncode", testSimpleStructureDecodeEncode),
             ("testBaseTypesDecodeEncode", testBaseTypesDecodeEncode),
             ("testContainingStructureDecodeEncode", testContainingStructureDecodeEncode),

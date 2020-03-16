@@ -381,13 +381,8 @@ extension AWSClient {
             if let payload = Input.payloadPath {
                 if let payloadBody = mirror.getAttribute(forKey: payload) {
                     switch payloadBody {
-                    case is AWSShape:
-                        let inputDictionary = try AWSShapeEncoder().dictionary(input)
-                        let encoding = Input.getEncoding(for: payload)
-                        guard let payloadDict = inputDictionary[encoding?.location?.name ?? payload] else {
-                            throw AWSClientError.missingParameter(message: "Payload is missing")
-                        }
-                        body = .json(try JSONSerialization.data(withJSONObject: payloadDict))
+                    case let shape as AWSShape:
+                        body = .json(try shape.encodeAsJSON())
                     default:
                         body = Body(anyValue: payloadBody)
                     }
@@ -397,12 +392,12 @@ extension AWSClient {
             } else {
                 // only include the body if there are members that are output in the body.
                 if memberVariablesCount > 0 {
-                    body = .json(try AWSShapeEncoder().json(input))
+                    body = .json(try input.encodeAsJSON())
                 }
             }
 
         case .query:
-            var dict = try AWSShapeEncoder().query(input)
+            var dict = try input.encodeAsQuery()
 
             dict["Action"] = operationName
             dict["Version"] = apiVersion
@@ -420,17 +415,13 @@ extension AWSClient {
             if let payload = Input.payloadPath {
                 if let payloadBody = mirror.getAttribute(forKey: payload) {
                     switch payloadBody {
-                    case is AWSShape:
-                        let node = try AWSShapeEncoder().xml(input)
-                        let encoding = Input.getEncoding(for: payload)
-                        guard let element = node.elements(forName: encoding?.location?.name ?? payload).first else {
-                            throw AWSClientError.missingParameter(message: "Payload is missing")
+                    case let shape as AWSShape:
+                        var rootName: String? = nil
+                        // extract custom payload name
+                        if let encoding = Input.getEncoding(for: payload), case .body(let locationName) = encoding.location {
+                            rootName = locationName
                         }
-                        // if shape has an xml namespace apply it to the element
-                        if let xmlNamespace = Input._xmlNamespace {
-                            element.addNamespace(XML.Node.namespace(stringValue: xmlNamespace))
-                        }
-                        body = .xml(element)
+                        body = .xml(try shape.encodeAsXML(rootName: rootName))
                     default:
                         body = Body(anyValue: payloadBody)
                     }
@@ -440,14 +431,14 @@ extension AWSClient {
             } else {
                 // only include the body if there are members that are output in the body.
                 if memberVariablesCount > 0 {
-                    body = .xml(try AWSShapeEncoder().xml(input))
+                    body = .xml(try input.encodeAsXML())
                 }
             }
 
         case .other(let proto):
             switch proto.lowercased() {
             case "ec2":
-                var params = try AWSShapeEncoder().query(input, flattenArrays: true)
+                var params = try input.encodeAsQuery(flattenArrays: true)
                 params["Action"] = operationName
                 params["Version"] = apiVersion
                 if let urlEncodedQueryParams = urlEncodeQueryParams(fromDictionary: params) {

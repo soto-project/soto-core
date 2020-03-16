@@ -434,10 +434,10 @@ class AWSClientTests: XCTestCase {
     
     func testCreateWithPayloadAndXMLNamespace() {
         struct Payload: AWSShape {
+            public static let _xmlNamespace: String? = "https://test.amazonaws.com/doc/2020-03-11/"
             let number: Int
         }
         struct Input: AWSShape {
-            public static let _xmlNamespace: String? = "https://test.amazonaws.com/doc/2020-03-11/"
             public static let payloadPath: String? = "payload"
             let payload: Payload
         }
@@ -446,7 +446,7 @@ class AWSClientTests: XCTestCase {
             let input = Input(payload: Payload(number: 5))
             let request = try s3Client.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input)
             if case .xml(let element) = request.body {
-                XCTAssertEqual(element.xmlString, "<payload xmlns=\"https://test.amazonaws.com/doc/2020-03-11/\"><number>5</number></payload>")
+                XCTAssertEqual(element.xmlString, "<Payload xmlns=\"https://test.amazonaws.com/doc/2020-03-11/\"><number>5</number></Payload>")
             } else {
                 XCTFail("Shouldn't get here")
             }

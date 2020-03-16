@@ -112,7 +112,7 @@ class JSONCoderTests: XCTestCase {
     }
 
     func testSerializeToDictionaryAndJSON() {
-        let json = try! AWSShapeEncoder().json(testShapeWithDictionaries)
+        let json = try! testShapeWithDictionaries.encodeAsJSON()
         let dict = try! JSONSerialization.jsonObject(with: json, options: []) as? [String: Any] ?? [:]
 
         let dict2 = dict["s"] as? [String:Any]

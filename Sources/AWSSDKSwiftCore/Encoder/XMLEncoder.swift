@@ -295,10 +295,6 @@ class _XMLEncoder : Encoder {
             self.encoder.codingPath.append(key)
             defer { self.encoder.codingPath.removeLast() }
             
-            /*let newElement = XML.Element(name: key.stringValue)
-            encoder.storage.topContainer?.addChild(newElement)
-            encoder.storage.push(container: newElement)*/
-            
             return UKEC(element, referencing: self.encoder)
         }
         

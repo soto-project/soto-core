@@ -1,4 +1,10 @@
+// EncoderProperties.swift
+// Encoder Property Wrappers that control how arrays and dictionaries are output
+// Written by Adam Fowler 2020/03/16
+//
 
+
+/// CodingKey used by Encoder property wrappers
 internal struct _EncodingWrapperKey : CodingKey {
     public var stringValue: String
     public var intValue: Int?
@@ -17,22 +23,24 @@ internal struct _EncodingWrapperKey : CodingKey {
         self.stringValue = stringValue
         self.intValue = intValue
     }
-    
-    fileprivate init(index: Int) {
-        self.stringValue = "Index \(index)"
-        self.intValue = index
-    }
 }
 
-/// Array encoding property wrapper
+/// Protocol for array encoding properties. The only property required is the array element name `member`
 public protocol ArrayEncodingProperties {
     static var member: String { get }
 }
 
 extension ArrayEncodingProperties {
+    /// array element name as CodingKey
     static var memberCodingKey: _EncodingWrapperKey { return  _EncodingWrapperKey(stringValue: member, intValue: nil) }
 }
-    
+
+/// The most common array encoding property is an element name "member"
+public struct ArrayMember: ArrayEncodingProperties {
+    public static let member = "member"
+}
+
+/// Array encoding propertyWrapper. Implements Codable functions to include an extra level of container.
 @propertyWrapper public struct ArrayEncoding<Properties: ArrayEncodingProperties, Value: Codable>: Codable {
     var array: [Value]
 
@@ -68,19 +76,28 @@ extension ArrayEncodingProperties {
     }
 }
 
-/// Array encoding property wrapper
+/// Protocol for dictionary encoding properties. The property required are the dictionary element name `entry`, the key name `key` and the value name `value`
 public protocol DictionaryEncodingProperties {
     static var entry: String? { get }
     static var key: String { get }
     static var value: String { get }
 }
 
+/// dictionary encoding properties as CodingKeys
 extension DictionaryEncodingProperties {
     static var entryCodingKey: _EncodingWrapperKey? { return  entry.map { _EncodingWrapperKey(stringValue: $0, intValue: nil) } }
     static var keyCodingKey: _EncodingWrapperKey { return  _EncodingWrapperKey(stringValue: key, intValue: nil) }
     static var valueCodingKey: _EncodingWrapperKey { return  _EncodingWrapperKey(stringValue: value, intValue: nil) }
 }
-    
+
+/// The most common dictionary encoding properties are element name "entry", key name "key", value name "value"
+public struct DictionaryEntryKeyValue: DictionaryEncodingProperties {
+    public static let entry: String? = "entry"
+    public static let key = "key"
+    public static let value = "value"
+}
+
+/// Dictinoary encoding propertyWrapper. Implements Codable functions to include an extra level of container for each entry (if entry is set), plus containers for each key and each value.
 @propertyWrapper public struct DictionaryEncoding<Properties: DictionaryEncodingProperties, Key: Codable & Hashable, Value: Codable>: Codable {
     var dictionary: [Key: Value]
 

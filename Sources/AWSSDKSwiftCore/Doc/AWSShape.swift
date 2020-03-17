@@ -18,7 +18,7 @@ import var    Foundation.NSNotFound
 import func   Foundation.NSMakeRange
 
 /// Protocol for the input and output objects for all AWS service commands. They need to be Codable so they can be serialized. They also need to provide details on how their container classes are coded when serializing XML.
-public protocol AWSShape: XMLCodable {
+public protocol AWSShape: Codable {
     /// The path to the object that is included in the request/response body
     static var payloadPath: String? { get }
     /// The XML namespace for the object
@@ -153,44 +153,5 @@ extension AWSShape {
     /// Return an idempotencyToken 
     public static func idempotencyToken() -> String {
         return UUID().uuidString
-    }
-}
-
-/// extension to CollectionEncoding to produce the XML equivalent class
-extension AWSMemberEncoding.ShapeEncoding {
-    public var xmlEncoding : XMLContainerCoding? {
-        switch self {
-        case .default, .blob:
-            return nil
-        case .flatList:
-            return .default
-        case .list(let entry):
-            return .array(entry: entry)
-        case .flatMap(let key, let value):
-            return .dictionary(entry: nil, key: key, value: value)
-        case .map(let entry, let key, let value):
-            return .dictionary(entry: entry, key: key, value: value)
-        }
-    }
-}
-
-/// extension to AWSShape that returns XML container encoding for members of it
-extension AWSShape {
-    /// return member for CodingKey
-    public static func getEncoding(forKey: CodingKey) -> AWSMemberEncoding? {
-        return _encoding.first {
-            if let location = $0.location, case .body(let name) = location {
-                return name == forKey.stringValue
-            } else {
-                return $0.label == forKey.stringValue
-            }
-        }
-    }
-
-    public static func getXMLContainerCoding(for key: CodingKey) -> XMLContainerCoding? {
-        if let encoding = getEncoding(forKey: key) {
-            return encoding.shapeEncoding.xmlEncoding
-        }
-        return nil
     }
 }

@@ -111,11 +111,8 @@ class XMLEncoder {
     public init() {}
     
     open func encode<T : Encodable>(_ value: T, name: String? = nil) throws -> XML.Element {
-        // set the current container coding map
-        let containerCodingMap = value as? XMLCodable
-        let containerCodingMapType = containerCodingMap != nil ? type(of:containerCodingMap!) : nil
         let rootName = name ?? "\(type(of: value))"
-        let encoder = _XMLEncoder(options: options, codingPath: [_XMLKey(stringValue: rootName, intValue: nil)], containerCodingMapType: containerCodingMapType)
+        let encoder = _XMLEncoder(options: options, codingPath: [_XMLKey(stringValue: rootName, intValue: nil)])
         try value.encode(to: encoder)
         
         guard let element = encoder.element else { throw EncodingError.invalidValue(T.self, EncodingError.Context(codingPath: [], debugDescription: "Failed to create any XML elements"))}
@@ -163,18 +160,11 @@ class _XMLEncoder : Encoder {
     /// the top level xml element
     var element : XML.Element? { return storage.topContainer }
 
-    /// the container coding map for the current element
-    var containerCodingMapType : XMLCodable.Type?
-    
-    /// the container encoding for the current element
-    var containerCoding : XMLContainerCoding = .default
-    
     // MARK: - Initialization
-    fileprivate init(options: XMLEncoder._Options, codingPath: [CodingKey] = [], containerCodingMapType: XMLCodable.Type?) {
+    fileprivate init(options: XMLEncoder._Options, codingPath: [CodingKey] = []) {
         self.storage = _XMLEncoderStorage()
         self.options = options
         self.codingPath = codingPath
-        self.containerCodingMapType = containerCodingMapType
     }
     
     // MARK: - Encoder methods
@@ -667,7 +657,7 @@ fileprivate class _XMLReferencingEncoder : _XMLEncoder {
     fileprivate init(referencing encoder: _XMLEncoder, key: CodingKey, wrapping element: XML.Element) {
         self.encoder = encoder
         self.reference = element
-        super.init(options: encoder.options, codingPath: encoder.codingPath, containerCodingMapType: encoder.containerCodingMapType)
+        super.init(options: encoder.options, codingPath: encoder.codingPath)
         
         self.codingPath.append(key)
     }

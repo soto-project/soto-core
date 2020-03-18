@@ -68,7 +68,6 @@ public struct ArrayMember: ArrayEncodingProperties {
 
     public var wrappedValue: [Value] {
         get { return self.array }
-        set { self.array = newValue }
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -149,6 +148,5 @@ public struct DictionaryEntryKeyValue: DictionaryEncodingProperties {
     
     public var wrappedValue: [Key: Value] {
         get { return self.dictionary }
-        set { self.dictionary = newValue }
     }
 }

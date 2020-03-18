@@ -4,7 +4,7 @@
 //
 
 /// Protocol for object that will encode and decode a value
-public protocol Coder {
+public protocol CustomCoder {
     associatedtype CodableValue: Codable
     
     static func encode(value: CodableValue, to encoder: Encoder) throws
@@ -12,45 +12,47 @@ public protocol Coder {
 }
 
 /// Property wrapper that applies a custom encoder and decoder to its wrapped value
-@propertyWrapper public struct Coding<CustomCoder: Coder>: Codable {
-    var value: CustomCoder.CodableValue
+@propertyWrapper public struct Coding<Coder: CustomCoder>: Codable {
+    var value: Coder.CodableValue
 
-    public init(wrappedValue value: CustomCoder.CodableValue) {
+    public init(wrappedValue value: Coder.CodableValue) {
         self.value = value
     }
 
     public init(from decoder: Decoder) throws {
-        self.value = try CustomCoder.decode(from: decoder)
+        self.value = try Coder.decode(from: decoder)
     }
 
     public func encode(to encoder: Encoder) throws {
-        try CustomCoder.encode(value: value, to: encoder)
+        try Coder.encode(value: value, to: encoder)
     }
     
-    public var wrappedValue: CustomCoder.CodableValue {
+    public var wrappedValue: Coder.CodableValue {
         get { return self.value }
+        set { self.value = newValue }
     }
 }
 
-/// Property wrapper that applies a custom encoder and decoder to its wrapped optional value 
-@propertyWrapper public struct OptionalCoding<CustomCoder: Coder>: Codable {
-    var value: CustomCoder.CodableValue?
+/// Property wrapper that applies a custom encoder and decoder to its wrapped optional value
+@propertyWrapper public struct OptionalCoding<Coder: CustomCoder>: Codable {
+    var value: Coder.CodableValue?
 
-    public init(wrappedValue value: CustomCoder.CodableValue?) {
+    public init(wrappedValue value: Coder.CodableValue?) {
         self.value = value
     }
 
     public init(from decoder: Decoder) throws {
-        self.value = try CustomCoder.decode(from: decoder)
+        self.value = try Coder.decode(from: decoder)
     }
 
     public func encode(to encoder: Encoder) throws {
         guard let value = self.value else { return }
-        try CustomCoder.encode(value: value, to: encoder)
+        try Coder.encode(value: value, to: encoder)
     }
     
-    public var wrappedValue: CustomCoder.CodableValue? {
+    public var wrappedValue: Coder.CodableValue? {
         get { return self.value }
+        set { self.value = newValue }
     }
 }
 

@@ -15,7 +15,7 @@ public struct ArrayMember: ArrayCoderProperties {
     public static let member = "member"
 }
 
-public struct ArrayCoder<Properties: ArrayCoderProperties, Element: Codable>: Coder {
+public struct ArrayCoder<Properties: ArrayCoderProperties, Element: Codable>: CustomCoder {
     public typealias CodableValue = [Element]
     public static func decode(from decoder: Decoder) throws -> CodableValue {
         let topLevelContainter = try decoder.container(keyedBy: _EncodingWrapperKey.self)
@@ -52,7 +52,7 @@ public struct DictionaryEntryKeyValue: DictionaryCoderProperties {
     public static let value = "value"
 }
 
-public struct DictionaryCoder<Properties: DictionaryCoderProperties, Key: Codable & Hashable, Value: Codable>: Coder {
+public struct DictionaryCoder<Properties: DictionaryCoderProperties, Key: Codable & Hashable, Value: Codable>: CustomCoder {
     public typealias CodableValue = [Key: Value]
 
     public static func decode(from decoder: Decoder) throws -> CodableValue {

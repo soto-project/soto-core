@@ -3,7 +3,6 @@
 // Written by Adam Fowler 2020/03/16
 //
 
-
 /// CodingKey used by Encoder property wrappers
 internal struct _EncodingWrapperKey : CodingKey {
     public var stringValue: String
@@ -25,128 +24,166 @@ internal struct _EncodingWrapperKey : CodingKey {
     }
 }
 
-/// Protocol for array encoding properties. The only property required is the array element name `member`
-public protocol ArrayEncodingProperties {
-    static var member: String { get }
+public protocol Coder {
+    associatedtype CodableValue: Codable
+    
+    static func encode(value: CodableValue, to encoder: Encoder) throws
+    static func decode(from decoder: Decoder) throws -> CodableValue
 }
 
-extension ArrayEncodingProperties {
-    /// array element name as CodingKey
-    static var memberCodingKey: _EncodingWrapperKey { return  _EncodingWrapperKey(stringValue: member, intValue: nil) }
-}
+@propertyWrapper public struct Coding<CustomCoder: Coder>: Codable {
+    var value: CustomCoder.CodableValue
 
-/// The most common array encoding property is an element name "member"
-public struct ArrayMember: ArrayEncodingProperties {
-    public static let member = "member"
-}
-
-/// Array encoding propertyWrapper. Implements Codable functions to include an extra level of container.
-@propertyWrapper public struct ArrayEncoding<Properties: ArrayEncodingProperties, Value: Codable>: Codable {
-    var array: [Value]
-
-    public init(wrappedValue value: [Value]) {
-        self.array = value
+    public init(wrappedValue value: CustomCoder.CodableValue) {
+        self.value = value
     }
 
     public init(from decoder: Decoder) throws {
-        let topLevelContainter = try decoder.container(keyedBy: _EncodingWrapperKey.self)
-        var container = try topLevelContainter.nestedUnkeyedContainer(forKey: Properties.memberCodingKey)
-        var values: [Value] = []
-        while !container.isAtEnd {
-            values.append(try container.decode(Value.self))
-        }
-        self.array = values
+        self.value = try CustomCoder.decode(from: decoder)
     }
 
     public func encode(to encoder: Encoder) throws {
+        try CustomCoder.encode(value: value, to: encoder)
+    }
+    
+    public var wrappedValue: CustomCoder.CodableValue {
+        get { return self.value }
+    }
+}
+
+@propertyWrapper public struct OptionalCoding<CustomCoder: Coder>: Codable {
+    var value: CustomCoder.CodableValue?
+
+    public init(wrappedValue value: CustomCoder.CodableValue?) {
+        self.value = value
+    }
+
+    public init(from decoder: Decoder) throws {
+        self.value = try CustomCoder.decode(from: decoder)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        guard let value = self.value else { return }
+        try CustomCoder.encode(value: value, to: encoder)
+    }
+    
+    public var wrappedValue: CustomCoder.CodableValue? {
+        get { return self.value }
+    }
+}
+
+/// Protocol for a PropertyWrapper to properly handle Coding when the wrappedValue is Optional
+public protocol OptionalCodingWrapper {
+    associatedtype WrappedType
+    var wrappedValue: WrappedType? { get }
+    init(wrappedValue: WrappedType?)
+}
+
+
+extension KeyedDecodingContainer {
+    // This is used to override the default decoding behavior for OptionalCodingWrapper to allow a value to avoid a missing key Error
+    public func decode<T>(_ type: T.Type, forKey key: KeyedDecodingContainer<K>.Key) throws -> T where T : Decodable, T: OptionalCodingWrapper {
+        return try decodeIfPresent(T.self, forKey: key) ?? T(wrappedValue: nil)
+    }
+}
+
+extension KeyedEncodingContainer {
+    // Used to make make sure OptionalCodingWrappers encode no value when it's wrappedValue is nil.
+    public mutating func encode<T>(_ value: T, forKey key: KeyedEncodingContainer<K>.Key) throws where T: Encodable, T: OptionalCodingWrapper {
+        guard value.wrappedValue != nil else {return}
+        try encodeIfPresent(value, forKey: key)
+    }
+}
+
+extension OptionalCoding: OptionalCodingWrapper {}
+
+/// Protocol for array encoding properties. The only property required is the array element name `member`
+public protocol ArrayCoderProperties {
+    static var member: String { get }
+}
+
+/// The most common array encoding property is an element name "member"
+public struct ArrayMember: ArrayCoderProperties {
+    public static let member = "member"
+}
+
+public struct ArrayCoder<Properties: ArrayCoderProperties, Element: Codable>: Coder {
+    public typealias CodableValue = [Element]
+    public static func decode(from decoder: Decoder) throws -> CodableValue {
+        let topLevelContainter = try decoder.container(keyedBy: _EncodingWrapperKey.self)
+        var container = try topLevelContainter.nestedUnkeyedContainer(forKey: _EncodingWrapperKey(stringValue: Properties.member, intValue: nil))
+        var values: [Element] = []
+        while !container.isAtEnd {
+            values.append(try container.decode(Element.self))
+        }
+        return values
+    }
+
+    public static func encode(value: CodableValue, to encoder: Encoder) throws {
         var topLevelContainter = encoder.container(keyedBy: _EncodingWrapperKey.self)
-        var container = topLevelContainter.nestedUnkeyedContainer(forKey: Properties.memberCodingKey)
-        for entry in array {
+        var container = topLevelContainter.nestedUnkeyedContainer(forKey: _EncodingWrapperKey(stringValue: Properties.member, intValue: nil))
+        for entry in value {
             try container.encode(entry)
         }
-    }
-
-    public var wrappedValue: [Value] {
-        get { return self.array }
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case member = "member"
     }
 }
 
 /// Protocol for dictionary encoding properties. The property required are the dictionary element name `entry`, the key name `key` and the value name `value`
-public protocol DictionaryEncodingProperties {
+public protocol DictionaryCoderProperties {
     static var entry: String? { get }
     static var key: String { get }
     static var value: String { get }
 }
 
-/// dictionary encoding properties as CodingKeys
-extension DictionaryEncodingProperties {
-    static var entryCodingKey: _EncodingWrapperKey? { return  entry.map { _EncodingWrapperKey(stringValue: $0, intValue: nil) } }
-    static var keyCodingKey: _EncodingWrapperKey { return  _EncodingWrapperKey(stringValue: key, intValue: nil) }
-    static var valueCodingKey: _EncodingWrapperKey { return  _EncodingWrapperKey(stringValue: value, intValue: nil) }
-}
-
 /// The most common dictionary encoding properties are element name "entry", key name "key", value name "value"
-public struct DictionaryEntryKeyValue: DictionaryEncodingProperties {
+public struct DictionaryEntryKeyValue: DictionaryCoderProperties {
     public static let entry: String? = "entry"
     public static let key = "key"
     public static let value = "value"
 }
 
-/// Dictinoary encoding propertyWrapper. Implements Codable functions to include an extra level of container for each entry (if entry is set), plus containers for each key and each value.
-@propertyWrapper public struct DictionaryEncoding<Properties: DictionaryEncodingProperties, Key: Codable & Hashable, Value: Codable>: Codable {
-    var dictionary: [Key: Value]
+public struct DictionaryCoder<Properties: DictionaryCoderProperties, Key: Codable & Hashable, Value: Codable>: Coder {
+    public typealias CodableValue = [Key: Value]
 
-    public init(wrappedValue value: [Key: Value]) {
-        self.dictionary = value
-    }
-
-    public init(from decoder: Decoder) throws {
+    public static func decode(from decoder: Decoder) throws -> CodableValue {
         var values: [Key: Value] = [:]
-        if let entryCodingKey = Properties.entryCodingKey {
+        if let entry = Properties.entry {
             let topLevelContainer = try decoder.container(keyedBy: _EncodingWrapperKey.self)
-            var container = try topLevelContainer.nestedUnkeyedContainer(forKey: entryCodingKey)
+            var container = try topLevelContainer.nestedUnkeyedContainer(forKey: _EncodingWrapperKey(stringValue: entry, intValue: nil))
             while !container.isAtEnd {
                 let container2 = try container.nestedContainer(keyedBy: _EncodingWrapperKey.self)
-                let key = try container2.decode(Key.self, forKey: Properties.keyCodingKey)
-                let value = try container2.decode(Value.self, forKey: Properties.valueCodingKey)
+                let key = try container2.decode(Key.self, forKey: _EncodingWrapperKey(stringValue: Properties.key, intValue: nil))
+                let value = try container2.decode(Value.self, forKey: _EncodingWrapperKey(stringValue: Properties.value, intValue: nil))
                 values[key] = value
             }
         } else {
             var container = try decoder.unkeyedContainer()
             while !container.isAtEnd {
                 let container2 = try container.nestedContainer(keyedBy: _EncodingWrapperKey.self)
-                let key = try container2.decode(Key.self, forKey: Properties.keyCodingKey)
-                let value = try container2.decode(Value.self, forKey: Properties.valueCodingKey)
+                let key = try container2.decode(Key.self, forKey: _EncodingWrapperKey(stringValue: Properties.key, intValue: nil))
+                let value = try container2.decode(Value.self, forKey: _EncodingWrapperKey(stringValue: Properties.value, intValue: nil))
                 values[key] = value
             }
         }
-        self.dictionary = values
+        return values
     }
 
-    public func encode(to encoder: Encoder) throws {
-        if let entryCodingKey = Properties.entryCodingKey {
+    public static func encode(value: CodableValue, to encoder: Encoder) throws {
+        if let entry = Properties.entry {
             var topLevelContainter = encoder.container(keyedBy: _EncodingWrapperKey.self)
-            var container = topLevelContainter.nestedUnkeyedContainer(forKey: entryCodingKey)
-            for (key, value) in dictionary {
+            var container = topLevelContainter.nestedUnkeyedContainer(forKey: _EncodingWrapperKey(stringValue: entry, intValue: nil))
+            for (key, value) in value {
                 var container2 = container.nestedContainer(keyedBy: _EncodingWrapperKey.self)
-                try container2.encode(key, forKey: Properties.keyCodingKey)
-                try container2.encode(value, forKey: Properties.valueCodingKey)
+                try container2.encode(key, forKey: _EncodingWrapperKey(stringValue: Properties.key, intValue: nil))
+                try container2.encode(value, forKey: _EncodingWrapperKey(stringValue: Properties.value, intValue: nil))
             }
         } else {
             var container = encoder.unkeyedContainer()
-            for (key, value) in dictionary {
+            for (key, value) in value {
                 var container2 = container.nestedContainer(keyedBy: _EncodingWrapperKey.self)
-                try container2.encode(key, forKey: Properties.keyCodingKey)
-                try container2.encode(value, forKey: Properties.valueCodingKey)
+                try container2.encode(key, forKey: _EncodingWrapperKey(stringValue: Properties.key, intValue: nil))
+                try container2.encode(value, forKey: _EncodingWrapperKey(stringValue: Properties.value, intValue: nil))
             }
         }
-    }
-    
-    public var wrappedValue: [Key: Value] {
-        get { return self.dictionary }
     }
 }

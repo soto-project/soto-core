@@ -177,7 +177,7 @@ class XMLCoderTests: XCTestCase {
     
     func testOptionalDictionary() {
         struct Test: Codable {
-            @OptionalCoding<DictionaryCoder<DictionaryEntryKeyValue, String, Int>> var a: [String: Int]?
+            @OptionalCoding<DefaultDictionaryCoder> var a: [String: Int]?
         }
         let xml = "<Test><a><entry><key>one</key><value>1</value></entry></a></Test>"
         testDecodeEncode(type: Test.self, xml: xml)
@@ -357,8 +357,8 @@ class XMLCoderTests: XCTestCase {
 
     func testDecodeExpandedContainers() {
         struct Shape : AWSShape {
-            @Coding<ArrayCoder<ArrayMember, Int>> var array : [Int]
-            @Coding<DictionaryCoder<DictionaryEntryKeyValue, String, Int>> var dictionary : [String: Int]
+            @Coding<DefaultArrayCoder> var array : [Int]
+            @Coding<DefaultDictionaryCoder> var dictionary : [String: Int]
         }
         let xmldata = "<Shape><array><member>3</member><member>2</member><member>1</member></array><dictionary><entry><key>one</key><value>1</value></entry><entry><key>two</key><value>2</value></entry><entry><key>three</key><value>3</value></entry></dictionary></Shape>"
         if let shape = testDecode(type: Shape.self, xml: xmldata) {
@@ -371,7 +371,7 @@ class XMLCoderTests: XCTestCase {
 
     func testArrayEncodingDecodeEncode() {
         struct Shape : AWSShape {
-            @Coding<ArrayCoder<ArrayMember, Int>> var array : [Int]
+            @Coding<DefaultArrayCoder> var array : [Int]
         }
         let xmldata = "<Shape><array><member>3</member><member>2</member><member>1</member></array></Shape>"
         testDecodeEncode(type: Shape.self, xml: xmldata)
@@ -382,7 +382,7 @@ class XMLCoderTests: XCTestCase {
             let value : String
         }
         struct Shape : AWSShape {
-            @Coding<ArrayCoder<ArrayMember, Shape2>> var array : [Shape2]
+            @Coding<DefaultArrayCoder> var array : [Shape2]
         }
         let xmldata = "<Shape><array><member><value>test</value></member><member><value>test2</value></member><member><value>test3</value></member></array></Shape>"
         testDecodeEncode(type: Shape.self, xml: xmldata)

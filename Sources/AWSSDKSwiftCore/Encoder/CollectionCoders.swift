@@ -10,11 +10,6 @@ public protocol ArrayCoderProperties {
     static var member: String { get }
 }
 
-/// The most common array encoding property is an element name "member"
-public struct ArrayMember: ArrayCoderProperties {
-    public static let member = "member"
-}
-
 public struct ArrayCoder<Properties: ArrayCoderProperties, Element: Codable>: CustomCoder {
     public typealias CodableValue = [Element]
     public static func decode(from decoder: Decoder) throws -> CodableValue {
@@ -43,13 +38,6 @@ public protocol DictionaryCoderProperties {
     static var entry: String? { get }
     static var key: String { get }
     static var value: String { get }
-}
-
-/// The most common dictionary encoding properties are element name "entry", key name "key", value name "value"
-public struct DictionaryEntryKeyValue: DictionaryCoderProperties {
-    public static let entry: String? = "entry"
-    public static let key = "key"
-    public static let value = "value"
 }
 
 public struct DictionaryCoder<Properties: DictionaryCoderProperties, Key: Codable & Hashable, Value: Codable>: CustomCoder {
@@ -97,3 +85,20 @@ public struct DictionaryCoder<Properties: DictionaryCoderProperties, Key: Codabl
         }
     }
 }
+
+//MARK: Default Collection Coders
+
+/// The most common array encoding property is an element name "member"
+public struct DefaultArrayCoderProperties: ArrayCoderProperties {
+    public static let member = "member"
+}
+
+/// The most common dictionary encoding properties are element name "entry", key name "key", value name "value"
+public struct DefaultDictionaryCoderProperties: DictionaryCoderProperties {
+    public static let entry: String? = "entry"
+    public static let key = "key"
+    public static let value = "value"
+}
+
+public typealias DefaultArrayCoder<Element: Codable> = ArrayCoder<DefaultArrayCoderProperties, Element>
+public typealias DefaultDictionaryCoder<Key: Codable & Hashable, Value: Codable> = DictionaryCoder<DefaultDictionaryCoderProperties, Key, Value>

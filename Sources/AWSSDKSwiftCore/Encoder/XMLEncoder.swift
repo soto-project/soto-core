@@ -152,7 +152,7 @@ class _XMLEncoder : Encoder {
     var codingPath: [CodingKey]
     
     /// contextual user-provided information for use during encoding
-    var userInfo: [CodingUserInfoKey : Any] = [:]
+    var userInfo: [CodingUserInfoKey : Any] { return self.options.userInfo }
     
     /// the top level key
     var currentKey : String { return codingPath.last!.stringValue }

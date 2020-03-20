@@ -5,6 +5,8 @@
 //  Created by Adam Fowler on 2020/01/28.
 //
 //
+import struct Foundation.Data
+import class Foundation.NSData
 
 /// A marker protocols used to determine whether a value is a `Dictionary` or an `Array`
 fileprivate protocol _QueryDictionaryEncodableMarker { }
@@ -335,6 +337,10 @@ extension _QueryEncoder {
         }
     }
 
+    func box(_ data: Data) throws {
+        try encode(data.base64EncodedString())
+    }
+    
     func box(_ value: Encodable) throws {
         // store previous container coding map to revert on function exit
         let prevContainerCodingOwner = self.containerCodingMapType
@@ -342,6 +348,11 @@ extension _QueryEncoder {
         // set the current container coding map
         let containerCodingMap = value as? XMLCodable
         containerCodingMapType = containerCodingMap != nil ? Swift.type(of:containerCodingMap!) : nil
+
+        let type = Swift.type(of: value)
+        if type == Data.self || type == NSData.self {
+            return try self.box((value as! Data))
+        }
         
         try value.encode(to: self)
     }

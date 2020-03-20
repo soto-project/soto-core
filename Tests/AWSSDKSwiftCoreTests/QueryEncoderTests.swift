@@ -206,6 +206,18 @@ class QueryEncoderTests: XCTestCase {
         }
     }
     
+    func testDataBlobEncode() {
+        struct Test : AWSShape {
+            let a : Data
+        }
+        let data = Data("Testing".utf8)
+        let test = Test(a:data)
+        
+        var components = URLComponents()
+        components.queryItems = [URLQueryItem(name: "a", value: data.base64EncodedString())]
+        testQuery(test, query: components.url!.query!)
+    }
+
     static var allTests : [(String, (QueryEncoderTests) -> () throws -> Void)] {
         return [
             ("testSimpleStructureEncode", testSimpleStructureEncode),
@@ -218,6 +230,7 @@ class QueryEncoderTests: XCTestCase {
             ("testArrayEncodingEncode", testArrayEncodingEncode),
             ("testDictionaryEncodingEncode", testDictionaryEncodingEncode),
             ("testDictionaryEncodingEncode2", testDictionaryEncodingEncode2),
+            ("testDataBlobEncode", testDataBlobEncode)
         ]
     }
 }

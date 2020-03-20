@@ -26,14 +26,14 @@ public struct AWSResponse {
     ///     - raw: Whether Body should be treated as raw data
     init(from response: AWSHTTPResponse, serviceProtocolType: ServiceProtocolType, raw: Bool = false) throws {
         self.status = response.status
-        
+
         // headers
         var responseHeaders: [String: String] = [:]
         for (key, value) in response.headers {
             responseHeaders[key] = value
         }
         self.headers = responseHeaders
-        
+
         // body
         guard let body = response.body,
             body.readableBytes > 0,
@@ -41,24 +41,24 @@ public struct AWSResponse {
                 self.body = .empty
                 return
         }
-        
+
         if raw {
-            self.body = .buffer(data)
+            self.body = .buffer(body)
             return
         }
-        
+
         var responseBody: Body = .empty
-        
+
         switch serviceProtocolType {
         case .json, .restjson:
             responseBody = .json(data)
-            
+
         case .restxml, .query:
             let xmlDocument = try XML.Document(data: data)
             if let element = xmlDocument.rootElement() {
                 responseBody = .xml(element)
             }
-            
+
         case .other(let proto):
             switch proto.lowercased() {
             case "ec2":
@@ -66,9 +66,9 @@ public struct AWSResponse {
                 if let element = xmlDocument.rootElement() {
                     responseBody = .xml(element)
                 }
-                
+
             default:
-                responseBody = .buffer(data)
+                responseBody = .buffer(body)
             }
         }
         self.body = responseBody

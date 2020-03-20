@@ -44,10 +44,12 @@ class AWSClientTests: XCTestCase {
             ("testValidateCode", testValidateCode),
             ("testUnsignedClient", testUnsignedClient),
             ("testValidateXMLResponse", testValidateXMLResponse),
-            ("testValidateXMLPayloadResponse", testValidateXMLPayloadResponse),
+            ("testValidateXMLCodablePayloadResponse", testValidateXMLCodablePayloadResponse),
+            ("testValidateXMLRawPayloadResponse", testValidateXMLRawPayloadResponse),
             ("testValidateXMLError", testValidateXMLError),
             ("testValidateJSONResponse", testValidateJSONResponse),
-            ("testValidateJSONPayloadResponse", testValidateJSONPayloadResponse),
+            ("testValidateJSONCodablePayloadResponse", testValidateJSONCodablePayloadResponse),
+            ("testValidateJSONRawPayloadResponse", testValidateJSONRawPayloadResponse),
             ("testValidateJSONError", testValidateJSONError),
             ("testProcessHAL", testProcessHAL),
             ("testDataInJsonPayload", testDataInJsonPayload),
@@ -224,7 +226,7 @@ class AWSClientTests: XCTestCase {
             )
             XCTAssertEqual(awsRequest.url.absoluteString, "\(kinesisClient.endpoint)/")
 
-            if let bodyAsData = awsRequest.body.asData(), let parsedBody = try JSONSerialization.jsonObject(with: bodyAsData, options: []) as? [String:Any] {
+            if case .json(let data) = awsRequest.body, let parsedBody = try JSONSerialization.jsonObject(with: data, options: []) as? [String:Any] {
                 if let member = parsedBody["Member"] as? [String:Any] {
                     if let memberKey = member["memberKey"] {
                         XCTAssertEqual(String(describing: memberKey), "memberValue")
@@ -274,10 +276,8 @@ class AWSClientTests: XCTestCase {
             )
 
             XCTAssertNotNil(awsRequest.body)
-            if let xmlData = awsRequest.body.asData() {
-                let document = try XML.Document(data:xmlData)
-                XCTAssertNotNil(document.rootElement())
-                let payload = try XMLDecoder().decode(E.self, from: document.rootElement()!)
+            if case .xml(let element) = awsRequest.body {
+                let payload = try XMLDecoder().decode(E.self, from: element)
                 XCTAssertEqual(payload.Member["memberKey2"], "memberValue2")
             }
             let nioRequest: AWSHTTPRequest = awsRequest.toHTTPRequest()
@@ -296,8 +296,8 @@ class AWSClientTests: XCTestCase {
                 input: input3
             )
             XCTAssertNotNil(awsRequest.body)
-            if let jsonData = awsRequest.body.asData() {
-                let jsonBody = try! JSONSerialization.jsonObject(with: jsonData, options: .allowFragments) as! [String:Any]
+            if case .json(let data) = awsRequest.body {
+                let jsonBody = try! JSONSerialization.jsonObject(with: data, options: .allowFragments) as! [String:Any]
                 let fromJson = jsonBody["Member"]! as! [String: String]
                 XCTAssertEqual(fromJson["memberKey"], "memberValue")
             }
@@ -499,7 +499,7 @@ class AWSClientTests: XCTestCase {
         }
     }
 
-    func testValidateXMLPayloadResponse() {
+    func testValidateXMLCodablePayloadResponse() {
         class Output : AWSShape {
             static let payloadPath: String? = "name"
             let name : String
@@ -517,6 +517,27 @@ class AWSClientTests: XCTestCase {
         }
     }
 
+    func testValidateXMLRawPayloadResponse() {
+        class Output : AWSShape {
+            static let payloadPath: String? = "body"
+            public static var _encoding = [
+                AWSMemberEncoding(label: "body", encoding: .blob)
+            ]
+            let body : Data
+        }
+        let response = AWSHTTPResponseImpl(
+            status: .ok,
+            headers: HTTPHeaders(),
+            bodyData: "{\"name\":\"hello\"}".data(using: .utf8)!
+        )
+        do {
+            let output : Output = try s3Client.validate(operation: "Output", response: response)
+            XCTAssertEqual(output.body, "{\"name\":\"hello\"}".data(using: .utf8))
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+    
     func testValidateXMLError() {
         let response = AWSHTTPResponseImpl(
             status: .notFound,
@@ -527,7 +548,7 @@ class AWSClientTests: XCTestCase {
             try s3Client.validate(response: response)
             XCTFail("Should not get here")
         } catch S3ErrorType.noSuchKey(let message) {
-            XCTAssertEqual(message, "Message: It doesn't exist")
+            XCTAssertEqual(message, "It doesn't exist")
         } catch {
             XCTFail("Throwing the wrong error")
         }
@@ -570,8 +591,8 @@ class AWSClientTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
     }
-
-    func testValidateJSONPayloadResponse() {
+    
+    func testValidateJSONCodablePayloadResponse() {
         class Output2 : AWSShape {
             let name : String
         }
@@ -587,6 +608,27 @@ class AWSClientTests: XCTestCase {
         do {
             let output : Output = try kinesisClient.validate(operation: "Output", response: response)
             XCTAssertEqual(output.output2.name, "hello")
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+    
+    func testValidateJSONRawPayloadResponse() {
+        struct Output : AWSShape {
+            static let payloadPath: String? = "body"
+            public static var _encoding = [
+                AWSMemberEncoding(label: "body", encoding: .blob)
+            ]
+            let body : Data
+        }
+        let response = AWSHTTPResponseImpl(
+            status: .ok,
+            headers: HTTPHeaders(),
+            bodyData: "{\"name\":\"hello\"}".data(using: .utf8)!
+        )
+        do {
+            let output : Output = try kinesisClient.validate(operation: "Output", response: response)
+            XCTAssertEqual(output.body, "{\"name\":\"hello\"}".data(using: .utf8))
         } catch {
             XCTFail(error.localizedDescription)
         }

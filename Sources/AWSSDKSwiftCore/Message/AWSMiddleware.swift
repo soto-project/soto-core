@@ -45,14 +45,12 @@ public class AWSLoggingMiddleware : AWSServiceMiddleware {
         case .json(let data):
             output += "\n  "
             output += String(data: data, encoding: .utf8) ?? "Failed to convert JSON response to UTF8"
-        case .buffer(let data):
-            output += "data (\(data.count) bytes)"
+        case .buffer(let byteBuffer):
+            output += "data (\(byteBuffer.readableBytes) bytes)"
         case .text(let string):
             output += "\n  \(string)"
         case .empty:
             output += "empty"
-        default:
-            break
         }
         return output
     }

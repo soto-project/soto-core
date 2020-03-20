@@ -120,7 +120,8 @@ class AWSShapeEncoder {
                         dictionary["\(fullLabel).\(entryString)\(iterator.offset+1).\(keyString)"] = iterator.element.key
                         dictionary["\(fullLabel).\(entryString)\(iterator.offset+1).\(valueString)"] = iterator.element.value
                     }
-                
+                case let v as Data:
+                    dictionary[fullLabel] = String(decoding: v, as: UTF8.self)
                 default:
                     dictionary[fullLabel] = value
                 }

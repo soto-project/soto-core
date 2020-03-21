@@ -13,7 +13,7 @@ class QueryEncoderTests: XCTestCase {
 
     func queryString(dictionary:[String:Any]) -> String? {
         var components = URLComponents()
-        components.queryItems = dictionary.map( {URLQueryItem(name:$0.key, value:String(describing: $0.value))} ).sorted(by: { $0.name < $1.name })
+        components.queryItems = dictionary.map( {URLQueryItem(name:$0.key, value:String(describing: $0.value).addingPercentEncoding(withAllowedCharacters: AWSClient.queryAllowedCharacters)!)} ).sorted(by: { $0.name < $1.name })
         if components.queryItems != nil, let url = components.url {
             return url.query
         }
@@ -134,7 +134,7 @@ class QueryEncoderTests: XCTestCase {
             let a : Data
         }
         let test = Test(a:Data("Testing".utf8))
-        testQuery(test, query:"A=Testing")
+        testQuery(test, query:"A=VGVzdGluZw%253D%253D")
     }
 
     static var allTests : [(String, (QueryEncoderTests) -> () throws -> Void)] {

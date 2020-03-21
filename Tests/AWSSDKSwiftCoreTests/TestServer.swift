@@ -47,7 +47,16 @@ class AWSTestServer {
         let httpStatus: HTTPResponseStatus
         let headers: [String: String]
         let body: ByteBuffer?
+        
+        init(httpStatus: HTTPResponseStatus, headers: [String: String] = [:], body: ByteBuffer? = nil) {
+            self.httpStatus = httpStatus
+            self.headers = headers
+            self.body = body
+        }
+        
+        static let ok = Response(httpStatus: .ok)
     }
+
     // result from process
     struct Result<Output>{
         let output: Output

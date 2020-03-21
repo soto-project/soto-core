@@ -383,10 +383,12 @@ extension AWSClient {
             if let payload = (Input.self as? AWSShapeWithPayload.Type)?.payloadPath {
                 if let payloadBody = mirror.getAttribute(forKey: payload) {
                     switch payloadBody {
+                    case let awsPayload as AWSPayload:
+                        body = Body(awsPayload)
                     case let shape as AWSEncodableShape:
                         body = .json(try shape.encodeAsJSON())
                     default:
-                        body = Body(anyValue: payloadBody)
+                        preconditionFailure("Cannot add this as a payload")
                     }
                 } else {
                     body = .empty
@@ -417,6 +419,8 @@ extension AWSClient {
             if let payload = (Input.self as? AWSShapeWithPayload.Type)?.payloadPath {
                 if let payloadBody = mirror.getAttribute(forKey: payload) {
                     switch payloadBody {
+                    case let awsPayload as AWSPayload:
+                        body = Body(awsPayload)
                     case let shape as AWSEncodableShape:
                         var rootName: String? = nil
                         // extract custom payload name
@@ -425,7 +429,7 @@ extension AWSClient {
                         }
                         body = .xml(try shape.encodeAsXML(rootName: rootName))
                     default:
-                        body = Body(anyValue: payloadBody)
+                        preconditionFailure("Cannot add this as a payload")
                     }
                 } else {
                     body = .empty
@@ -468,7 +472,7 @@ extension AWSClient {
             urlString.append("?")
             urlString.append(queryParams.map{"\($0.key)=\(urlEncodeQueryParam("\($0.value)"))"}.sorted().joined(separator:"&"))
         }
-        
+
         guard let url = URL(string: urlString) else {
             throw RequestError.invalidURL("\(urlString)")
         }
@@ -485,7 +489,7 @@ extension AWSClient {
     }
 
     static let queryAllowedCharacters = CharacterSet(charactersIn:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/")
-    
+
     fileprivate func urlEncodeQueryParam(_ value: String) -> String {
         return value.addingPercentEncoding(withAllowedCharacters: AWSClient.queryAllowedCharacters) ?? value
     }

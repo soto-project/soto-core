@@ -16,10 +16,10 @@ class PayloadTests: XCTestCase {
         struct DataPayload: AWSEncodableShape & AWSShapeWithPayload {
             static var payloadPath: String = "data"
             let data: AWSPayload
-            
+
             private enum CodingKeys: CodingKey {}
         }
-        
+
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let client = AWSClient(
@@ -47,22 +47,22 @@ class PayloadTests: XCTestCase {
             XCTFail("Unexpected error: \(error)")
         }
     }
-    
+
     func testDataRequestPayload() {
         testRequestPayload(.data(Data("testDataPayload".utf8)), expectedResult: "testDataPayload")
     }
-    
+
     func testStringRequestPayload() {
         testRequestPayload(.string("testStringPayload"), expectedResult: "testStringPayload")
     }
-    
+
     func testByteBufferRequestPayload() {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: 32)
         byteBuffer.writeString("testByteBufferPayload")
         testRequestPayload(.byteBuffer(byteBuffer), expectedResult: "testByteBufferPayload")
     }
-    
-    
+
+
     static var allTests : [(String, (PayloadTests) -> () throws -> Void)] {
         return [
             ("testStringRequestPayload", testStringRequestPayload),

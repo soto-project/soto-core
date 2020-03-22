@@ -665,12 +665,24 @@ extension AWSClient {
                 case message = "message"
             }
         }
+        struct RESTJSONError: Codable, ErrorMessage {
+            var code: String?
+            var message: String
+
+            private enum CodingKeys: String, CodingKey {
+                case code = "code"
+                case message = "message"
+            }
+        }
 
         var errorMessage: ErrorMessage? = nil
 
         switch serviceProtocol.type {
         case .query:
-            guard case .xml(let element) = response.body else { break }
+            guard case .xml(var element) = response.body else { break }
+            if let errors = element.elements(forName: "Errors").first {
+                element = errors
+            }
             guard let errorElement = element.elements(forName: "Error").first else { break }
             errorMessage = try? XMLDecoder().decode(QueryError.self, from: errorElement)
 
@@ -680,7 +692,7 @@ extension AWSClient {
 
         case .restjson:
             guard case .json(let data) = response.body else { break }
-            errorMessage = try? JSONDecoder().decode(JSONError.self, from: data)
+            errorMessage = try? JSONDecoder().decode(RESTJSONError.self, from: data)
             if errorMessage?.code == nil {
                 errorMessage?.code = response.headers["x-amzn-ErrorType"] as? String
             }
@@ -689,7 +701,15 @@ extension AWSClient {
             guard case .json(let data) = response.body else { break }
             errorMessage = try? JSONDecoder().decode(JSONError.self, from: data)
 
-        default:
+        case .other(let service):
+            if service == "ec2" {
+                guard case .xml(var element) = response.body else { break }
+                if let errors = element.elements(forName: "Errors").first {
+                    element = errors
+                }
+                guard let errorElement = element.elements(forName: "Error").first else { break }
+                errorMessage = try? XMLDecoder().decode(QueryError.self, from: errorElement)
+            }
             break
         }
 

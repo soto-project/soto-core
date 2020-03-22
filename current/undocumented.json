@@ -37,7 +37,7 @@
     },
     {
       "file": "/Users/runner/runners/2.165.2/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSClient.swift",
-      "line": 734,
+      "line": 743,
       "symbol": "AWSClient.RequestError",
       "symbol_kind": "source.lang.swift.decl.extension",
       "warning": "undocumented"

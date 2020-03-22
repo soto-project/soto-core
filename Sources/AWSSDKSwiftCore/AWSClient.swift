@@ -699,8 +699,14 @@ extension AWSClient {
             code = bodyDict["__type"] as? String
             message = bodyDict.filter({ $0.key.lowercased() == "message" }).first?.value as? String
 
-        default:
-            break
+        case .other(let service):
+            if service == "ec2" {
+                guard case .xml(let element) = response.body else { break }
+                guard let errors = element.elements(forName: "Errors").first else { break }
+                guard let error = errors.elements(forName: "Error").first else { break }
+                code = error.elements(forName: "Code").first?.stringValue
+                message = error.elements(forName: "Message").first?.stringValue
+            }
         }
 
         if let errorCode = code {

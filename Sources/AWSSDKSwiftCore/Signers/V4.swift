@@ -192,22 +192,12 @@ extension Signers {
         }
 
         func signedHeaders(_ headers: [String:String]) -> String {
-            var list = Array(headers.keys).map { $0.lowercased() }.sorted()
-            if let index = list.firstIndex(of: "authorization") {
-                list.remove(at: index)
-            }
+            let list = Array(headers.keys).map { $0.lowercased() }.sorted()
             return list.joined(separator: ";")
         }
 
         func canonicalHeaders(_ headers: [String: String]) -> String {
-            var list = [String]()
-            let keys = Array(headers.keys).sorted()
-
-            for key in keys {
-                if key.caseInsensitiveCompare("authorization") != ComparisonResult.orderedSame {
-                    list.append("\(key.lowercased()):\(headers[key]!)")
-                }
-            }
+            let list = headers.map { "\($0.key.lowercased()):\($0.value)" }.sorted()
             return list.joined(separator: "\n")
         }
 
@@ -260,7 +250,7 @@ extension Signers {
         }
 
         func canonicalRequest(url: URLComponents, headers: [String: String], method: String, bodyDigest: String) -> String {
-            return [
+            let request = [
                 method,
                 V4.awsUriEncode(url.path, encodeSlash: false),
                 url.percentEncodedQuery ?? "",
@@ -268,6 +258,7 @@ extension Signers {
                 signedHeaders(headers),
                 bodyDigest
             ].joined(separator: "\n")
+            return request
         }
 
         private static let awsUriAllowed: [String] = [

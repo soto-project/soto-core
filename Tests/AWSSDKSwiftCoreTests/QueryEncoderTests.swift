@@ -128,6 +128,15 @@ class QueryEncoderTests: XCTestCase {
         testQuery(test, query:"A.1.entry=1&A.1.name=first")
     }
     
+    func testDataBlobEncode() {
+        struct Test : AWSShape {
+            static let _members = [AWSShapeMember(label: "A", required: true, type: .blob)]
+            let a : Data
+        }
+        let test = Test(a:Data("Testing".utf8))
+        testQuery(test, query:"A=VGVzdGluZw%3D%3D")
+    }
+
     static var allTests : [(String, (QueryEncoderTests) -> () throws -> Void)] {
         return [
             ("testSimpleStructureEncode", testSimpleStructureEncode),
@@ -140,6 +149,7 @@ class QueryEncoderTests: XCTestCase {
             ("testArrayEncodingEncode", testArrayEncodingEncode),
             ("testDictionaryEncodingEncode", testDictionaryEncodingEncode),
             ("testDictionaryEncodingEncode2", testDictionaryEncodingEncode2),
+            ("testDataBlobEncode", testDataBlobEncode),
         ]
     }
 }

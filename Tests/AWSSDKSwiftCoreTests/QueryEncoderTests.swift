@@ -212,10 +212,8 @@ class QueryEncoderTests: XCTestCase {
         }
         let data = Data("Testing".utf8)
         let test = Test(a:data)
-        
-        var components = URLComponents()
-        components.queryItems = [URLQueryItem(name: "a", value: data.base64EncodedString())]
-        testQuery(test, query: components.url!.query!)
+        let result = queryString(dictionary: ["a": data.base64EncodedString()])!
+        testQuery(test, query: result)
     }
 
     static var allTests : [(String, (QueryEncoderTests) -> () throws -> Void)] {

@@ -693,6 +693,9 @@ extension AWSClient {
 
         case .restjson:
             code = response.headers["x-amzn-ErrorType"] as? String
+            if code == nil {
+                code = bodyDict.filter({ $0.key.lowercased() == "code" }).first?.value as? String
+            }
             message = bodyDict.filter({ $0.key.lowercased() == "message" }).first?.value as? String
 
         case .json:

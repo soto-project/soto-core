@@ -687,7 +687,10 @@ extension AWSClient {
             errorMessage = try? XMLDecoder().decode(QueryError.self, from: errorElement)
 
         case .restxml:
-            guard case .xml(let element) = response.body else { break }
+            guard case .xml(var element) = response.body else { break }
+            if let error = element.elements(forName: "Error").first {
+                element = error
+            }
             errorMessage = try? XMLDecoder().decode(XMLError.self, from: element)
 
         case .restjson:

@@ -326,7 +326,6 @@ extension AWSClient {
     internal func createAWSRequest<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
         var headers: [String: Any] = [:]
         var path = path
-        var urlComponents = URLComponents()
         var body: Body = .empty
         var queryParams: [String: Any] = [:]
 
@@ -336,10 +335,6 @@ extension AWSClient {
         guard let baseURL = URL(string: "\(endpoint)"), let _ = baseURL.hostWithPort else {
             throw RequestError.invalidURL("\(endpoint) must specify url host and scheme")
         }
-
-        urlComponents.scheme = baseURL.scheme
-        urlComponents.host = baseURL.host
-        urlComponents.port = baseURL.port
 
         // set x-amz-target header
         if let target = amzTarget {
@@ -362,7 +357,7 @@ extension AWSClient {
         memberVariablesCount -= queryMemberParams.count
         for (key, value) in queryMemberParams {
             if let attr = mirror.getAttribute(forKey: value) {
-                queryParams[key] = "\(attr)"
+                queryParams[key] = (attr as? QueryEncodable)?.queryEncoded ?? "\(attr)"
             }
         }
 
@@ -453,27 +448,27 @@ extension AWSClient {
         guard let parsedPath = URLComponents(string: path) else {
             throw RequestError.invalidURL("\(endpoint)\(path)")
         }
-        urlComponents.path = parsedPath.path
-
-        // construct query array
-        var queryItems = urlQueryItems(fromDictionary: queryParams) ?? []
 
         // add new queries to query item array. These need to be added to the queryItems list instead of the queryParams dictionary as added nil items to a dictionary doesn't add a value.
         if let pathQueryItems = parsedPath.queryItems {
             for item in pathQueryItems {
                 if let value = item.value {
-                    queryItems.append(URLQueryItem(name:item.name, value:value))
+                    queryParams[item.name] = value
                 } else {
-                    queryItems.append(URLQueryItem(name:item.name, value:""))
+                    queryParams[item.name] = ""
                 }
             }
         }
 
-        // only set queryItems if there exist any
-        urlComponents.queryItems = queryItems.count == 0 ? nil : queryItems
-
-        guard let url = urlComponents.url else {
-            throw RequestError.invalidURL("\(endpoint)\(path)")
+        // Build URL
+        var urlString = "\(baseURL.absoluteString)\(parsedPath.path)"
+        if queryParams.count > 0 {
+            urlString.append("?")
+            urlString.append(queryParams.map{"\($0.key)=\(urlEncodeQueryParam("\($0.value)"))"}.sorted().joined(separator:"&"))
+        }
+        
+        guard let url = URL(string: urlString) else {
+            throw RequestError.invalidURL("\(urlString)")
         }
 
         return try AWSRequest(
@@ -488,6 +483,10 @@ extension AWSClient {
     }
 
     static let queryAllowedCharacters = CharacterSet(charactersIn:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/")
+    fileprivate func urlEncodeQueryParam(_ value: String) -> String {
+        return value.addingPercentEncoding(withAllowedCharacters: AWSClient.queryAllowedCharacters) ?? value
+    }
+
     fileprivate func urlEncodeQueryParams(fromDictionary dict: [String:Any]) -> String? {
         guard dict.count > 0 else {return nil}
         var query = ""
@@ -495,26 +494,12 @@ extension AWSClient {
 
         for iterator in keys.enumerated() {
             let value = dict[iterator.element]
-            query += iterator.element + "=" + (String(describing: value ?? "").addingPercentEncoding(withAllowedCharacters: AWSClient.queryAllowedCharacters) ?? "")
+            query += iterator.element + "=" + (urlEncodeQueryParam(String(describing: value ?? "")))
             if iterator.offset < dict.count - 1 {
                 query += "&"
             }
         }
         return query
-    }
-
-    fileprivate func urlQueryItems(fromDictionary dict: [String:Any]) -> [URLQueryItem]? {
-        var queryItems: [URLQueryItem] = []
-        let keys = Array(dict.keys).sorted()
-
-        for key in keys {
-            if let value = dict[key] {
-                queryItems.append(URLQueryItem(name: key, value: String(describing: value)))
-            } else {
-                queryItems.append(URLQueryItem(name: key, value: ""))
-            }
-        }
-        return queryItems.isEmpty ? nil : queryItems
     }
 }
 
@@ -766,4 +751,12 @@ extension URL {
         }
         return host
     }
+}
+
+protocol QueryEncodable {
+    var queryEncoded: String { get }
+}
+
+extension Array : QueryEncodable {
+    var queryEncoded: String { return self.map{ "\($0)" }.joined(separator:",")}
 }

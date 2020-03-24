@@ -10,6 +10,7 @@ import XCTest
 @testable import AWSSDKSwiftCore
 
 class QueryEncoderTests: XCTestCase {
+    @EnvironmentVariable("ENABLE_TIMING_TESTS", default: true) static var enableTimingTests: Bool
 
     func queryString(dictionary:[String:Any]) -> String? {
         var components = URLComponents()
@@ -187,6 +188,7 @@ class QueryEncoderTests: XCTestCase {
     
     // array performance in QueryEncoder is slower than expected
     func testQueryArrayPerformance() {
+        guard Self.enableTimingTests == true else { return }
         struct Test : AWSShape {
             let a : [Int]
             

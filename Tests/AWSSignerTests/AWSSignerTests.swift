@@ -2,7 +2,25 @@ import XCTest
 import NIO
 @testable import AWSSignerV4
 
+@propertyWrapper struct EnvironmentVariable<Value: LosslessStringConvertible> {
+    var defaultValue: Value
+    var variableName: String
+
+    public init(_ variableName: String, default: Value) {
+        self.defaultValue = `default`
+        self.variableName = variableName
+    }
+    
+    public var wrappedValue: Value {
+        get {
+            guard let value = ProcessInfo.processInfo.environment[variableName] else { return defaultValue }
+            return Value(value) ?? defaultValue
+        }
+    }
+}
+
 final class AWSSignerTests: XCTestCase {
+    @EnvironmentVariable("ENABLE_TIMING_TESTS", default: true) static var enableTimingTests: Bool
     let credentials : Credential = StaticCredential(accessKeyId: "MYACCESSKEY", secretAccessKey: "MYSECRETACCESSKEY")
 
     func testSignGetHeaders() {
@@ -46,6 +64,8 @@ final class AWSSignerTests: XCTestCase {
     }
 
     func testPerformanceSignedURL() {
+        guard Self.enableTimingTests == true else { return }
+        
         let signer = AWSSigner(credentials: credentials, name: "s3", region:"eu-west-1")
 
         measure {
@@ -56,6 +76,8 @@ final class AWSSignerTests: XCTestCase {
     }
 
     func testPerformanceSignedHeaders() {
+        guard Self.enableTimingTests == true else { return }
+        
         let string = "testing, testing, 1,2,1,2"
         let signer = AWSSigner(credentials: credentials, name: "s3", region:"eu-west-1")
 

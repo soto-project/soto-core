@@ -53,8 +53,10 @@ struct MixedRequest: AWSShape {
 
 
 class PerformanceTests: XCTestCase {
-
+    @EnvironmentVariable("ENABLE_TIMING_TESTS", default: true) static var enableTimingTests: Bool
+    
     func testHeaderRequest() {
+        guard Self.enableTimingTests == true else { return }
         let client = AWSClient(
             region: .useast1,
             service:"Test",
@@ -76,6 +78,7 @@ class PerformanceTests: XCTestCase {
     }
 
     func testXMLRequest() {
+        guard Self.enableTimingTests == true else { return }
         let client = AWSClient(
             region: .useast1,
             service:"Test",
@@ -97,6 +100,7 @@ class PerformanceTests: XCTestCase {
     }
 
     func testXMLPayloadRequest() {
+        guard Self.enableTimingTests == true else { return }
         let client = AWSClient(
             region: .useast1,
             service:"Test",
@@ -118,6 +122,7 @@ class PerformanceTests: XCTestCase {
     }
 
     func testJSONRequest() {
+        guard Self.enableTimingTests == true else { return }
         let client = AWSClient(
             region: .useast1,
             service:"Test",
@@ -139,6 +144,7 @@ class PerformanceTests: XCTestCase {
     }
 
     func testJSONPayloadRequest() {
+        guard Self.enableTimingTests == true else { return }
         let client = AWSClient(
             region: .useast1,
             service:"Test",
@@ -160,6 +166,7 @@ class PerformanceTests: XCTestCase {
     }
 
     func testQueryRequest() {
+        guard Self.enableTimingTests == true else { return }
         let client = AWSClient(
             region: .useast1,
             service:"Test",
@@ -181,6 +188,7 @@ class PerformanceTests: XCTestCase {
     }
 
     func testUnsignedRequest() {
+        guard Self.enableTimingTests == true else { return }
         let client = AWSClient(
             accessKeyId: "",
             secretAccessKey: "",
@@ -200,6 +208,7 @@ class PerformanceTests: XCTestCase {
     }
 
     func testSignedURLRequest() {
+        guard Self.enableTimingTests == true else { return }
         let client = AWSClient(
             accessKeyId: "MyAccessKeyId",
             secretAccessKey: "MySecretAccessKey",
@@ -219,6 +228,7 @@ class PerformanceTests: XCTestCase {
     }
 
     func testSignedHeadersRequest() {
+        guard Self.enableTimingTests == true else { return }
         let client = AWSClient(
             accessKeyId: "MyAccessKeyId",
             secretAccessKey: "MySecretAccessKey",
@@ -240,6 +250,7 @@ class PerformanceTests: XCTestCase {
     }
 
     func testValidateXMLResponse() {
+        guard Self.enableTimingTests == true else { return }
         let client = AWSClient(
             region: .useast1,
             service:"Test",
@@ -267,6 +278,7 @@ class PerformanceTests: XCTestCase {
     }
 
     func testValidateJSONResponse() {
+        guard Self.enableTimingTests == true else { return }
         let client = AWSClient(
             region: .useast1,
             service:"Test",

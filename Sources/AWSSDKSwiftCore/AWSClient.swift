@@ -57,8 +57,12 @@ public class AWSClient {
 
     var possibleErrorTypes: [AWSErrorType.Type]
 
+    /// eventLoopGroup used by client
     public let eventLoopGroup: EventLoopGroup
 
+    /// client region
+    public var region: Region { return signer.region }
+    
     /// endpoint URL
     public var endpoint: String {
         if let givenEndpoint = self._endpoint {

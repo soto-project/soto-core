@@ -685,13 +685,19 @@ extension AWSClient {
 
         switch serviceProtocol.type {
         case .query:
-            guard case .xml(let element) = response.body else { break }
+            guard case .xml(var element) = response.body else { break }
+            if let errors = element.elements(forName: "Errors").first {
+                element = errors
+            }
             guard let error = element.elements(forName: "Error").first else { break }
             code = error.elements(forName: "Code").first?.stringValue
             message = error.elements(forName: "Message").first?.stringValue
 
         case .restxml:
-            guard case .xml(let element) = response.body else { break }
+            guard case .xml(var element) = response.body else { break }
+            if let error = element.elements(forName: "Error").first {
+                element = error
+            }
             code = element.elements(forName: "Code").first?.stringValue
             message = element.children(of:.element)?.filter({$0.name != "Code"}).map({"\($0.name!): \($0.stringValue!)"}).joined(separator: ", ")
 
@@ -708,9 +714,11 @@ extension AWSClient {
 
         case .other(let service):
             if service == "ec2" {
-                guard case .xml(let element) = response.body else { break }
-                guard let errors = element.elements(forName: "Errors").first else { break }
-                guard let error = errors.elements(forName: "Error").first else { break }
+                guard case .xml(var element) = response.body else { break }
+                if let errors = element.elements(forName: "Errors").first {
+                    element = errors
+                }
+                guard let error = element.elements(forName: "Error").first else { break }
                 code = error.elements(forName: "Code").first?.stringValue
                 message = error.elements(forName: "Message").first?.stringValue
             }

@@ -218,7 +218,6 @@ public final class HTTPClient {
 
             head.headers.replaceOrAdd(name: "Host", value: hostname)
             head.headers.replaceOrAdd(name: "User-Agent", value: "AWS SDK Swift Core")
-            head.headers.replaceOrAdd(name: "Accept", value: "*/*")
             head.headers.replaceOrAdd(name: "Content-Length", value: request.body.count.description)
             // TODO implement keep-alive
             head.headers.replaceOrAdd(name: "Connection", value: "Close")

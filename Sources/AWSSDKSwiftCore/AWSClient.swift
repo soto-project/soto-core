@@ -327,7 +327,7 @@ extension AWSClient {
         var headers: [String: Any] = [:]
         var path = path
         var body: Body = .empty
-        var queryParams: [String: Any] = [:]
+        var queryParams: [(key:String, value:Any)] = []
 
         // validate input parameters
         try input.validate()
@@ -357,7 +357,11 @@ extension AWSClient {
         memberVariablesCount -= queryMemberParams.count
         for (key, value) in queryMemberParams {
             if let attr = mirror.getAttribute(forKey: value) {
-                queryParams[key] = (attr as? QueryEncodable)?.queryEncoded ?? "\(attr)"
+                if let array = attr as? QueryEncodableArray {
+                    array.queryEncoded.forEach { queryParams.append((key:key, value:$0)) }
+                } else {
+                    queryParams.append((key:key, value:"\(attr)"))
+                }
             }
         }
 
@@ -400,7 +404,7 @@ extension AWSClient {
 
             switch httpMethod {
             case "GET":
-                queryParams = queryParams.merging(dict) { $1 }
+                queryParams.append(contentsOf: dict.map {(key:$0.key, value:$0)})
             default:
                 if let urlEncodedQueryParams = urlEncodeQueryParams(fromDictionary: dict) {
                     body = .text(urlEncodedQueryParams)
@@ -449,18 +453,14 @@ extension AWSClient {
             throw RequestError.invalidURL("\(endpoint)\(path)")
         }
 
-        // add new queries to query item array. These need to be added to the queryItems list instead of the queryParams dictionary as added nil items to a dictionary doesn't add a value.
+        // add queries from the parsed path to the query params list
         if let pathQueryItems = parsedPath.queryItems {
             for item in pathQueryItems {
-                if let value = item.value {
-                    queryParams[item.name] = value
-                } else {
-                    queryParams[item.name] = ""
-                }
+                queryParams.append((key:item.name, value: item.value ?? ""))
             }
         }
 
-        // Build URL
+        // Build URL. Don't use URLComponents as Foundation and AWS disagree on what should be percent encoded in the query values
         var urlString = "\(baseURL.absoluteString)\(parsedPath.path)"
         if queryParams.count > 0 {
             urlString.append("?")
@@ -483,6 +483,7 @@ extension AWSClient {
     }
 
     static let queryAllowedCharacters = CharacterSet(charactersIn:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/")
+    
     fileprivate func urlEncodeQueryParam(_ value: String) -> String {
         return value.addingPercentEncoding(withAllowedCharacters: AWSClient.queryAllowedCharacters) ?? value
     }
@@ -753,10 +754,10 @@ extension URL {
     }
 }
 
-protocol QueryEncodable {
-    var queryEncoded: String { get }
+protocol QueryEncodableArray {
+    var queryEncoded: [String] { get }
 }
 
-extension Array : QueryEncodable {
-    var queryEncoded: String { return self.map{ "\($0)" }.joined(separator:",")}
+extension Array : QueryEncodableArray {
+    var queryEncoded: [String] { return self.map{ "\($0)" }}
 }

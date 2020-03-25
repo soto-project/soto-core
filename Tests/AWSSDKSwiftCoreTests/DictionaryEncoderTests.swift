@@ -395,8 +395,8 @@ class DictionaryEncoderTests: XCTestCase {
             let _ = try DictionaryDecoder().decode(A.self, from: dictionary)
             XCTFail("Never reached here")
             
-        } catch DecodingError.keyNotFound(let key) {
-            XCTAssertEqual(key.0.stringValue, "int8")
+        } catch DecodingError.keyNotFound(let key, _) {
+            XCTAssertEqual(key.stringValue, "int8")
         } catch {
             XCTFail("\(error)")
         }

@@ -142,6 +142,17 @@ class DictionaryEncoderTests: XCTestCase {
         testDecodeEncode(type: Test.self, dictionary: dictionary)
     }
     
+    func testDictionaryObjectDecodeEncode() {
+        struct Test2: Codable {
+            let int: Int
+        }
+        struct Test : Codable {
+            let a : [String:Test2]
+        }
+        let dictionary: [String:Any] = ["a":["key": ["int": 45]]]
+        testDecodeEncode(type: Test.self, dictionary: dictionary)
+    }
+    
     func testEnumDictionaryDecodeEncode() {
         struct Test : Codable {
             enum TestEnum : String, Codable {

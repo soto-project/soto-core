@@ -870,32 +870,6 @@ extension __DictionaryEncoder {
         }
     }
     
-    fileprivate func box(_ dict: [String : Encodable]) throws -> NSObject? {
-        let depth = self.storage.count
-        let result = self.storage.pushKeyedContainer()
-        do {
-            for (key, value) in dict {
-                self.codingPath.append(_DictionaryKey(stringValue: key, intValue: nil))
-                defer { self.codingPath.removeLast() }
-                result[key] = try box(value)
-            }
-        } catch {
-            // If the value pushed a container before throwing, pop it back off to restore state.
-            if self.storage.count > depth {
-                let _ = self.storage.popContainer()
-            }
-            
-            throw error
-        }
-        
-        // The top container should be a new container.
-        guard self.storage.count > depth else {
-            return nil
-        }
-        
-        return self.storage.popContainer()
-    }
-    
     fileprivate func box(_ value: Encodable) throws -> NSObject {
         return try self.box_(value) ?? NSDictionary()
     }
@@ -917,8 +891,6 @@ extension __DictionaryEncoder {
         } else if type == Decimal.self || type == NSDecimalNumber.self {
             // JSONSerialization can natively handle NSDecimalNumber.
             return (value as! NSDecimalNumber)
-        } else if value is _DictionaryStringDictionaryEncodableMarker {
-            return try self.box(value as! [String : Encodable])
         }
         
         // The value should request a container from the __DictionaryEncoder.
@@ -2444,25 +2416,6 @@ extension __DictionaryDecoder {
         }
     }
     
-    fileprivate func unbox<T>(_ value: Any, as type: _DictionaryStringDictionaryDecodableMarker.Type) throws -> T? {
-        guard !(value is NSNull) else { return nil }
-        
-        var result = [String : Any]()
-        guard let dict = value as? NSDictionary else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
-        }
-        let elementType = type.elementType
-        for (key, value) in dict {
-            let key = key as! String
-            self.codingPath.append(_DictionaryKey(stringValue: key, intValue: nil))
-            defer { self.codingPath.removeLast() }
-            
-            result[key] = try unbox_(value, as: elementType)
-        }
-        
-        return result as? T
-    }
-    
     fileprivate func unbox<T : Decodable>(_ value: Any, as type: T.Type) throws -> T? {
         return try unbox_(value, as: type) as? T
     }
@@ -2484,8 +2437,6 @@ extension __DictionaryDecoder {
             return url
         } else if type == Decimal.self || type == NSDecimalNumber.self {
             return try self.unbox(value, as: Decimal.self)
-        } else if let stringKeyedDictType = type as? _DictionaryStringDictionaryDecodableMarker.Type {
-            return try self.unbox(value, as: stringKeyedDictType)
         } else {
             self.storage.push(container: value)
             defer { self.storage.popContainer() }

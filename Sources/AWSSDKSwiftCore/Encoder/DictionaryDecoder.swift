@@ -1397,6 +1397,8 @@ extension __DictionaryDecoder {
             return try self.unbox(value, as: Date.self)
         } else if type == Data.self || type == NSData.self {
             return try self.unbox(value, as: Data.self)
+        } else if type == AWSPayload.self {
+            return value
         } else if type == URL.self || type == NSURL.self {
             guard let urlString = try self.unbox(value, as: String.self) else {
                 return nil

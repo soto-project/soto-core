@@ -626,15 +626,7 @@ extension AWSClient {
 
         case .buffer(let byteBuffer):
             if let payloadKey = payloadKey {
-                // convert ByteBuffer to Data
-                let data = byteBuffer.getData(at: byteBuffer.readerIndex, length: byteBuffer.readableBytes)
-                outputDict[payloadKey] = data
-            }
-            decoder.dataDecodingStrategy = .raw
-
-        case .text(let text):
-            if let payloadKey = payloadKey {
-                outputDict[payloadKey] = text
+                outputDict[payloadKey] = AWSPayload.byteBuffer(byteBuffer)
             }
 
         default:

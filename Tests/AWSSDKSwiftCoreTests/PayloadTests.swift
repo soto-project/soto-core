@@ -62,6 +62,45 @@ class PayloadTests: XCTestCase {
         testRequestPayload(.byteBuffer(byteBuffer), expectedResult: "testByteBufferPayload")
     }
 
+    func testResponsePayload() {
+        struct Output : AWSDecodableShape {
+            static let payloadPath: String? = "payload"
+            public static var _encoding = [
+                AWSMemberEncoding(label: "payload", encoding: .blob)
+            ]
+            let payload: AWSPayload
+        }
+        do {
+            let awsServer = AWSTestServer(serviceProtocol: .json)
+            let client = AWSClient(
+                accessKeyId: "",
+                secretAccessKey: "",
+                region: .useast1,
+                service:"TestClient",
+                serviceProtocol: ServiceProtocol(type: .json, version: ServiceProtocol.Version(major: 1, minor: 1)),
+                apiVersion: "2020-01-21",
+                endpoint: awsServer.address,
+                middlewares: [AWSLoggingMiddleware()],
+                eventLoopGroupProvider: .useAWSClientShared
+            )
+            let response: EventLoopFuture<Output> = client.send(operation: "test", path: "/", httpMethod: "POST")
+
+            try awsServer.process { request in
+                var byteBuffer = ByteBufferAllocator().buffer(capacity: 0)
+                byteBuffer.writeString("testResponsePayload")
+                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
+                return AWSTestServer.Result(output: response, continueProcessing: false)
+            }
+
+            let output = try response.wait()
+
+            XCTAssertEqual(output.payload.byteBuffer.getString(at:0, length: output.payload.byteBuffer.readableBytes), "testResponsePayload")
+            //XCTAssertEqual(output.i, 547)
+            try awsServer.stop()
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
 
     static var allTests : [(String, (PayloadTests) -> () throws -> Void)] {
         return [

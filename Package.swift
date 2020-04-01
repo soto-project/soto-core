@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "AWSSDKSwiftCore",
+    name: "aws-sdk-swift-core",
     products: [
         .library(name: "AWSSDKSwiftCore", targets: ["AWSSDKSwiftCore"])
     ],

@@ -21,9 +21,7 @@ jobs:
     - name: SPM tests
       run: swift test --enable-code-coverage
     - name: Convert coverage files
-      run: xcrun llvm-cov export -format "lcov" \
-        .build/debug/aws-sdk-swift-corePackageTests.xctest/Contents/MacOs/aws-sdk-swift-corePackageTests \
-        -instr-profile=.build/debug/codecov/default.profdata > info.lcov  
+      run: xcrun llvm-cov export -format "lcov" .build/debug/aws-sdk-swift-corePackageTests.xctest/Contents/MacOs/aws-sdk-swift-corePackageTests -instr-profile=.build/debug/codecov/default.profdata > info.lcov  
 #    - name: Generate xcode project
 #      run: swift package generate-xcodeproj
 #    - name: Xcode tests

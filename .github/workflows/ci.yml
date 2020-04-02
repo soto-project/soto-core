@@ -22,16 +22,8 @@ jobs:
       run: swift test --enable-code-coverage
     - name: Convert coverage files
       run: xcrun llvm-cov export -format "lcov" .build/debug/aws-sdk-swift-corePackageTests.xctest/Contents/MacOs/aws-sdk-swift-corePackageTests -instr-profile=.build/debug/codecov/default.profdata > info.lcov  
-#    - name: Generate xcode project
-#      run: swift package generate-xcodeproj
-#    - name: Xcode tests
-#      run: xcodebuild -quiet -parallel-testing-enabled YES -scheme aws-sdk-swift-core-Package -enableCodeCoverage YES build test
-#    - name: Upload to codecov.io
-#      run: bash <(curl -s https://codecov.io/bash) -J 'aws-sdk-swift-core' -t ${{secrets.CODECOV_TOKEN}}
     - name: Upload to codecov.io
-      uses: codecov/codecov-action@v1.0.3
-      with:
-        token: ${{secrets.CODECOV_TOKEN}}
+      run: bash <(curl -s https://codecov.io/bash) -J 'aws-sdk-swift-core' -t ${{secrets.CODECOV_TOKEN}}
 
   linux:
     runs-on: ubuntu-latest

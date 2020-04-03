@@ -493,7 +493,7 @@ class AWSClientTests: XCTestCase {
             headers: ["header-member": "test-header"],
             bodyData: nil
         )
-        
+
         // XML
         do {
             let result: Output = try sesClient.validate(operation: "Test", response: response)
@@ -501,7 +501,7 @@ class AWSClientTests: XCTestCase {
         } catch {
             XCTFail("\(error)")
         }
-        
+
         // JSON
         do {
             let result: Output = try kinesisClient.validate(operation: "Test", response: response)
@@ -521,7 +521,7 @@ class AWSClientTests: XCTestCase {
             headers: HTTPHeaders(),
             bodyData: nil
         )
-        
+
         // XML
         do {
             let result: Output = try s3Client.validate(operation: "Test", response: response)
@@ -1020,6 +1020,44 @@ class AWSClientTests: XCTestCase {
             XCTAssertEqual(error.message, "It doesn't exist")
         } catch {
             XCTFail("Throwing the wrong error")
+        }
+    }
+
+    func testRegionEnum() {
+        let regions = [
+            "us-east-1",
+            "us-east-2",
+            "us-west-1",
+            "us-west-2",
+            "ap-south-1",
+            "ap-northeast-2",
+            "ap-southeast-1",
+            "ap-southeast-2",
+            "ap-northeast-1",
+            "ap-east-1",
+            "ca-central-1",
+            "eu-west-1",
+            "eu-west-3",
+            "eu-west-2",
+            "eu-central-1",
+            "eu-north-1",
+            "sa-east-1",
+            "me-south-1"
+        ]
+        regions.forEach {
+            let region = Region(rawValue: $0)
+            if case .other(_) = region {
+                XCTFail("\($0) is not a region")
+            }
+            let rawValue = region.rawValue
+            XCTAssertEqual(rawValue, $0)
+        }
+
+        let region = Region(rawValue: "my-region")
+        if case .other(let regionName) = region {
+            XCTAssertEqual(regionName, "my-region")
+        } else {
+            XCTFail("Did not construct Region.other()")
         }
     }
 }

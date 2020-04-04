@@ -1,8 +1,8 @@
 sourcekitten_sourcefile:
   - sourcekitten/AWSSDKSwiftCore.json
-  - sourcekitten/AWSSigner.json
-author: Yuki Takei, Joe Smith, Jonathan McAllister, Adam Fowler
+  - sourcekitten/AWSSignerV4.json
+author: Yuki Takei, Joe Smith, Jonathan McAllister, Adam Fowler, Fabian Fett
 author_url: https://github.com/swift-aws
 github_url: https://github.com/swift-aws/aws-sdk-swift-core
-copyright: '© Copyright (c) 2019 Yuki Takei(noppoMan), Joe Smith(Yasumoto), Jonathan McAllister(jonnymacs), Adam Fowler (adam-fowler)'
+copyright: '© Copyright (c) 2019 Yuki Takei(noppoMan), Joe Smith(Yasumoto), Jonathan McAllister(jonnymacs), Adam Fowler (adam-fowler), Fabian Fett (fabianfett)'
 readme: README.md

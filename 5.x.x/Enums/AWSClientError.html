@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>AWSClientError Enumeration Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+  </head>
+  <body>
+    <a name="//apple_ref/swift/Enum/AWSClientError" class="dashAnchor"></a>
+    <a title="AWSClientError Enumeration Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="../index.html"> Docs</a> (62% documented)</p>
+        <p class="header-right"><a href="https://github.com/swift-aws/aws-sdk-swift-core"><img src="../img/gh.png"/>View on GitHub</a></p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="../index.html"> Reference</a>
+        <img id="carat" src="../img/carat.png" />
+        AWSClientError Enumeration Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="../Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/AWSClient.html">AWSClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AWSClient/RequestError.html">– RequestError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AWSClient/EventLoopGroupProvider.html">– EventLoopGroupProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AWSLoggingMiddleware.html">AWSLoggingMiddleware</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/NIOTSHTTPClient.html">NIOTSHTTPClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/NIOTSHTTPClient.html#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC7RequestV">– Request</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/NIOTSHTTPClient/Response.html">– Response</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/NIOTSHTTPClient/HTTPError.html">– HTTPError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/QueryEncoder.html">QueryEncoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/XML.html">XML</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/XML/Node.html">– Node</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/XML/Document.html">– Document</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/XML/Element.html">– Element</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/XMLDecoder.html">XMLDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/XMLDecoder/DateDecodingStrategy.html">– DateDecodingStrategy</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/XMLDecoder/DataDecodingStrategy.html">– DataDecodingStrategy</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/XMLDecoder/NonConformingFloatDecodingStrategy.html">– NonConformingFloatDecodingStrategy</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/XMLEncoder.html">XMLEncoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/XMLEncoder/DateEncodingStrategy.html">– DateEncodingStrategy</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/XMLEncoder/DataEncodingStrategy.html">– DataEncodingStrategy</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/XMLEncoder/NonConformingFloatEncodingStrategy.html">– NonConformingFloatEncodingStrategy</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Enums.html">Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/AWSClientError.html">AWSClientError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/AWSServerError.html">AWSServerError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/Body.html">Body</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/Region.html">Region</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ServiceProtocolType.html">ServiceProtocolType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/XMLContainerCoding.html">XMLContainerCoding</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Extensions/Array.html">Array</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/AsyncHTTPClient.html">AsyncHTTPClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/AsyncHTTPClient/HTTPClient.html">– HTTPClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Dictionary.html">Dictionary</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/MetaDataServiceProvider.html">MetaDataServiceProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Mirror.html">Mirror</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Sequence.html">Sequence</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/String.html">String</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/URL.html">URL</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/_QueryEncoder.html">_QueryEncoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/_XMLEncoder.html">_XMLEncoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/__DictionaryDecoder.html">__DictionaryDecoder</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSErrorType.html">AWSErrorType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSPaginateIntToken.html">AWSPaginateIntToken</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSPaginateStringToken.html">AWSPaginateStringToken</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSServiceMiddleware.html">AWSServiceMiddleware</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSShape.html">AWSShape</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/Credential.html">Credential</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/XMLCodable.html">XMLCodable</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Structs.html">Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Structs/AWSError.html">AWSError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSMemberEncoding.html">AWSMemberEncoding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSMemberEncoding/Location.html">– Location</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSMemberEncoding/ShapeEncoding.html">– ShapeEncoding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSRequest.html">AWSRequest</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSResponse.html">AWSResponse</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSResponseError.html">AWSResponseError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSSigner.html">AWSSigner</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSSigner/BodyData.html">– BodyData</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/EnvironmentCredential.html">EnvironmentCredential</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/ExpiringCredential.html">ExpiringCredential</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/ServiceProtocol.html">ServiceProtocol</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/ServiceProtocol/Version.html">– Version</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/SharedCredential.html">SharedCredential</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/SharedCredential/SharedCredentialError.html">– SharedCredentialError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/StaticCredential.html">StaticCredential</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/TimeStamp.html">TimeStamp</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>AWSClientError</h1>
+              <div class="declaration">
+                <div class="language">
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">AWSClientError</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/AWSErrorType.html">AWSErrorType</a></span></code></pre>
+
+                </div>
+              </div>
+            <p>Error type for standard client errors returned by AWS</p>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO11authFailureyACSSSg_tcACmF"></a>
+                    <a name="//apple_ref/swift/Element/authFailure(message:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO11authFailureyACSSSg_tcACmF">authFailure(message:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The provided credentials could not be validated. You may not be authorized to carry out the request; for example, associating an Elastic IP address that is not yours, or trying to use an AMI for which you do not have permissions. Ensure that your account is authorized to use the Amazon EC2 service, that your credit card details are correct, and that you are using the correct access keys.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">authFailure</span><span class="p">(</span><span class="nv">message</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO7blockedyACSSSg_tcACmF"></a>
+                    <a name="//apple_ref/swift/Element/blocked(message:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO7blockedyACSSSg_tcACmF">blocked(message:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Your account is currently blocked. Contact <a href="mailto:aws-verification@amazon.com">aws-verification@amazon.com</a> if you have questions.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">blocked</span><span class="p">(</span><span class="nv">message</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO15dryRunOperationyACSSSg_tcACmF"></a>
+                    <a name="//apple_ref/swift/Element/dryRunOperation(message:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO15dryRunOperationyACSSSg_tcACmF">dryRunOperation(message:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The user has the required permissions, so the request would have succeeded, but the DryRun parameter was used.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">dryRunOperation</span><span class="p">(</span><span class="nv">message</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO27idempotentParameterMismatchyACSSSg_tcACmF"></a>
+                    <a name="//apple_ref/swift/Element/idempotentParameterMismatch(message:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO27idempotentParameterMismatchyACSSSg_tcACmF">idempotentParameterMismatch(message:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The request uses the same client token as a previous, but non-identical request. Do not reuse a client token with different requests, unless the requests are identical.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">idempotentParameterMismatch</span><span class="p">(</span><span class="nv">message</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO19incompleteSignatureyACSSSg_tcACmF"></a>
+                    <a name="//apple_ref/swift/Element/incompleteSignature(message:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO19incompleteSignatureyACSSSg_tcACmF">incompleteSignature(message:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The request signature does not conform to AWS standards.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">incompleteSignature</span><span class="p">(</span><span class="nv">message</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO13invalidActionyACSSSg_tcACmF"></a>
+                    <a name="//apple_ref/swift/Element/invalidAction(message:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO13invalidActionyACSSSg_tcACmF">invalidAction(message:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The action or operation requested is not valid. Verify that the action is typed correctly.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">invalidAction</span><span class="p">(</span><span class="nv">message</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO16invalidCharacteryACSSSg_tcACmF"></a>
+                    <a name="//apple_ref/swift/Element/invalidCharacter(message:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO16invalidCharacteryACSSSg_tcACmF">invalidCharacter(message:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A specified character is invalid.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">invalidCharacter</span><span class="p">(</span><span class="nv">message</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO20invalidClientTokenIdyACSSSg_tcACmF"></a>
+                    <a name="//apple_ref/swift/Element/invalidClientTokenId(message:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO20invalidClientTokenIdyACSSSg_tcACmF">invalidClientTokenId(message:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The X.509 certificate or AWS access key ID provided does not exist in our records.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">invalidClientTokenId</span><span class="p">(</span><span class="nv">message</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO22invalidPaginationTokenyACSSSg_tcACmF"></a>
+                    <a name="//apple_ref/swift/Element/invalidPaginationToken(message:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO22invalidPaginationTokenyACSSSg_tcACmF">invalidPaginationToken(message:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The specified pagination token is not valid or is expired.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">invalidPaginationToken</span><span class="p">(</span><span class="nv">message</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO16invalidParameteryACSSSg_tcACmF"></a>
+                    <a name="//apple_ref/swift/Element/invalidParameter(message:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO16invalidParameteryACSSSg_tcACmF">invalidParameter(message:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A parameter specified in a request is not valid, is unsupported, or cannot be used. The returned message provides an explanation of the error value. For example, if you are launching an instance, you can&rsquo;t specify a security group and subnet that are in different VPCs.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">invalidParameter</span><span class="p">(</span><span class="nv">message</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO27invalidParameterCombinationyACSSSg_tcACmF"></a>
+                    <a name="//apple_ref/swift/Element/invalidParameterCombination(message:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO27invalidParameterCombinationyACSSSg_tcACmF">invalidParameterCombination(message:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Indicates an incorrect combination of parameters, or a missing parameter. For example, trying to terminate an instance without specifying the instance ID.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">invalidParameterCombination</span><span class="p">(</span><span class="nv">message</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO21invalidParameterValueyACSSSg_tcACmF"></a>
+                    <a name="//apple_ref/swift/Element/invalidParameterValue(message:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO21invalidParameterValueyACSSSg_tcACmF">invalidParameterValue(message:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A value specified in a parameter is not valid, is unsupported, or cannot be used. Ensure that you specify a resource by using its full ID. The returned message provides an explanation of the error value.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">invalidParameterValue</span><span class="p">(</span><span class="nv">message</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO21invalidQueryParameteryACSSSg_tcACmF"></a>
+                    <a name="//apple_ref/swift/Element/invalidQueryParameter(message:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO21invalidQueryParameteryACSSSg_tcACmF">invalidQueryParameter(message:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The AWS query string is malformed or does not adhere to AWS standards.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">invalidQueryParameter</span><span class="p">(</span><span class="nv">message</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO20malformedQueryStringyACSSSg_tcACmF"></a>
+                    <a name="//apple_ref/swift/Element/malformedQueryString(message:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO20malformedQueryStringyACSSSg_tcACmF">malformedQueryString(message:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The query string contains a syntax error.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">malformedQueryString</span><span class="p">(</span><span class="nv">message</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO13missingActionyACSSSg_tcACmF"></a>
+                    <a name="//apple_ref/swift/Element/missingAction(message:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO13missingActionyACSSSg_tcACmF">missingAction(message:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The request is missing an action or a required parameter.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">missingAction</span><span class="p">(</span><span class="nv">message</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO26missingAuthenticationTokenyACSSSg_tcACmF"></a>
+                    <a name="//apple_ref/swift/Element/missingAuthenticationToken(message:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO26missingAuthenticationTokenyACSSSg_tcACmF">missingAuthenticationToken(message:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The request must contain either a valid (registered) AWS access key ID or X.509 certificate.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">missingAuthenticationToken</span><span class="p">(</span><span class="nv">message</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO16missingParameteryACSSSg_tcACmF"></a>
+                    <a name="//apple_ref/swift/Element/missingParameter(message:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO16missingParameteryACSSSg_tcACmF">missingParameter(message:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The request is missing a required parameter. Ensure that you have supplied all the required parameters for the request; for example, the resource ID.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">missingParameter</span><span class="p">(</span><span class="nv">message</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO13optInRequiredyACSSSg_tcACmF"></a>
+                    <a name="//apple_ref/swift/Element/optInRequired(message:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO13optInRequiredyACSSSg_tcACmF">optInRequired(message:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>You are not authorized to use the requested service. Ensure that you have subscribed to the service you are trying to use. If you are new to AWS, your account might take some time to be activated while your credit card details are being verified.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">optInRequired</span><span class="p">(</span><span class="nv">message</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO19pendingVerificationyACSSSg_tcACmF"></a>
+                    <a name="//apple_ref/swift/Element/pendingVerification(message:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO19pendingVerificationyACSSSg_tcACmF">pendingVerification(message:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Your account is pending verification. Until the verification process is complete, you may not be able to carry out requests with this account. If you have questions, contact AWS Support.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">pendingVerification</span><span class="p">(</span><span class="nv">message</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO14requestExpiredyACSSSg_tcACmF"></a>
+                    <a name="//apple_ref/swift/Element/requestExpired(message:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO14requestExpiredyACSSSg_tcACmF">requestExpired(message:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The request reached the service more than 15 minutes after the date stamp on the request or more than 15 minutes after the request expiration date (such as for pre-signed URLs), or the date stamp on the request is more than 15 minutes in the future. If you&rsquo;re using temporary security credentials, this error can also occur if the credentials have expired. For more information, see Temporary Security Credentials in the IAM User Guide.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">requestExpired</span><span class="p">(</span><span class="nv">message</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO21unauthorizedOperationyACSSSg_tcACmF"></a>
+                    <a name="//apple_ref/swift/Element/unauthorizedOperation(message:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO21unauthorizedOperationyACSSSg_tcACmF">unauthorizedOperation(message:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>You are not authorized to perform this operation. Check your IAM policies, and ensure that you are using the correct access keys. For more information, see Controlling Access. If the returned message is encoded, you can decode it using the DecodeAuthorizationMessage action. For more information, see DecodeAuthorizationMessage in the AWS Security Token Service API Reference.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">unauthorizedOperation</span><span class="p">(</span><span class="nv">message</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO16unknownParameteryACSSSg_tcACmF"></a>
+                    <a name="//apple_ref/swift/Element/unknownParameter(message:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO16unknownParameteryACSSSg_tcACmF">unknownParameter(message:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>An unknown or unrecognized parameter was supplied. Requests that could cause this error include supplying a misspelled parameter or a parameter that is not supported for the specified API version.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">unknownParameter</span><span class="p">(</span><span class="nv">message</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO28unsupportedInstanceAttributeyACSSSg_tcACmF"></a>
+                    <a name="//apple_ref/swift/Element/unsupportedInstanceAttribute(message:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO28unsupportedInstanceAttributeyACSSSg_tcACmF">unsupportedInstanceAttribute(message:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The specified attribute cannot be modified.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">unsupportedInstanceAttribute</span><span class="p">(</span><span class="nv">message</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO20unsupportedOperationyACSSSg_tcACmF"></a>
+                    <a name="//apple_ref/swift/Element/unsupportedOperation(message:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO20unsupportedOperationyACSSSg_tcACmF">unsupportedOperation(message:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The specified request includes an unsupported operation. For example, you can&rsquo;t stop an instance that&rsquo;s instance store-backed. Or you might be trying to launch an instance type that is not supported by the specified AMI. The returned message provides details of the unsupported operation.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">unsupportedOperation</span><span class="p">(</span><span class="nv">message</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO19unsupportedProtocolyACSSSg_tcACmF"></a>
+                    <a name="//apple_ref/swift/Element/unsupportedProtocol(message:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO19unsupportedProtocolyACSSSg_tcACmF">unsupportedProtocol(message:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>SOAP has been deprecated and is no longer supported. For more information, see SOAP Requests.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">unsupportedProtocol</span><span class="p">(</span><span class="nv">message</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO010validationD0yACSSSg_tcACmF"></a>
+                    <a name="//apple_ref/swift/Element/validationError(message:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO010validationD0yACSSSg_tcACmF">validationError(message:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The input fails to satisfy the constraints specified by an AWS service.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">validationError</span><span class="p">(</span><span class="nv">message</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO12accessDeniedyACSSSg_tcACmF"></a>
+                    <a name="//apple_ref/swift/Element/accessDenied(message:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO12accessDeniedyACSSSg_tcACmF">accessDenied(message:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">accessDenied</span><span class="p">(</span><span class="nv">message</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO21signatureDoesNotMatchyACSSSg_tcACmF"></a>
+                    <a name="//apple_ref/swift/Element/signatureDoesNotMatch(message:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO21signatureDoesNotMatchyACSSSg_tcACmF">signatureDoesNotMatch(message:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">signatureDoesNotMatch</span><span class="p">(</span><span class="nv">message</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO9errorCode7messageACSgSS_SSSgtcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(errorCode:message:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO9errorCode7messageACSgSS_SSSgtcfc">init(errorCode:message:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">?(</span><span class="nv">errorCode</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">message</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:s23CustomStringConvertibleP11descriptionSSvp"></a>
+                    <a name="//apple_ref/swift/Property/description" class="dashAnchor"></a>
+                    <a class="token" href="#/s:s23CustomStringConvertibleP11descriptionSSvp">description</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">description</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>© Copyright (c) 2019 Yuki Takei(noppoMan), Joe Smith(Yasumoto), Jonathan McAllister(jonnymacs), Adam Fowler (adam-fowler), Fabian Fett (fabianfett)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.12.0</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>

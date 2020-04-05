@@ -695,20 +695,6 @@
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/QueryEncoder.swift",
-      "line": 49,
-      "symbol": "QueryEncoder.init()",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/QueryEncoder.swift",
-      "line": 51,
-      "symbol": "QueryEncoder.encode(_:name:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/QueryEncoder.swift",
       "line": 340,
       "symbol": "_QueryEncoder.box(_:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",

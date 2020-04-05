@@ -1,6 +1,6 @@
 # aws-sdk-swift-core
 
-[<img src="http://img.shields.io/badge/swift-5.0-brightgreen.svg" alt="Swift 5.0" />](https://swift.org)
+[<img src="http://img.shields.io/badge/swift-5.1-brightgreen.svg" alt="Swift 5.1" />](https://swift.org)
 [<img src="https://github.com/swift-aws/aws-sdk-swift-core/workflows/CI/badge.svg" />](https://github.com/swift-aws/aws-sdk-swift-core/actions)
 [<img src="https://codecov.io/gh/swift-aws/aws-sdk-swift-core/branch/master/graph/badge.svg" alt="Codecov Result" />](https://codecov.io/gh/swift-aws/aws-sdk-swift-core)
 

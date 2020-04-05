@@ -36,20 +36,9 @@ import class  Foundation.NSDate
 
 /// A marker protocol used to determine whether a value is a `String`-keyed `Dictionary`
 /// containing `Decodable` values (in which case it should be exempt from key conversion strategies).
-///
-/// The marker protocol also provides access to the type of the `Decodable` values,
-/// which is needed for the implementation of the key conversion strategy exemption.
-///
-/// NOTE: Please see comment above regarding SR-8276
-#if arch(i386) || arch(arm)
-internal protocol _DictionaryStringDictionaryDecodableMarker {
-    static var elementType: Decodable.Type { get }
-}
-#else
 fileprivate protocol _DictionaryStringDictionaryDecodableMarker {
     static var elementType: Decodable.Type { get }
 }
-#endif
 
 extension Dictionary : _DictionaryStringDictionaryDecodableMarker where Key == String, Value: Decodable {
     static var elementType: Decodable.Type { return Value.self }
@@ -60,7 +49,7 @@ extension Dictionary : _DictionaryStringDictionaryDecodableMarker where Key == S
 //===----------------------------------------------------------------------===//
 
 /// `DictionaryDecoder` facilitates the decoding of Dictionaries into semantic `Decodable` types.
-open class DictionaryDecoder {
+class DictionaryDecoder {
     // MARK: Options
     
     /// The strategy to use for decoding `Date` values.

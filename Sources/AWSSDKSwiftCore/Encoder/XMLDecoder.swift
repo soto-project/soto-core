@@ -37,24 +37,14 @@ public protocol XMLCodable: Codable {
 }
 
 /// A marker protocols used to determine whether a value is a `Dictionary` or an `Array`
-///
-/// NOTE: The architecture and environment check is due to a bug in the current (2018-08-08) Swift 4.2
-/// runtime when running on i386 simulator. The issue is tracked in https://bugs.swift.org/browse/SR-8276
-/// Making the protocol `internal` instead of `fileprivate` works around this issue.
-/// Once SR-8276 is fixed, this check can be removed and the protocol always be made fileprivate.
-#if arch(i386) || arch(arm)
-internal protocol _XMLDictionaryDecodableMarker { }
-internal protocol _XMLArrayDecodableMarker { }
-#else
 fileprivate protocol _XMLDictionaryDecodableMarker { }
 fileprivate protocol _XMLArrayDecodableMarker { }
-#endif
 
 extension Dictionary : _XMLDictionaryDecodableMarker where Value: Decodable { }
 extension Array : _XMLArrayDecodableMarker where Element: Decodable { }
 
 /// The wrapper class for decoding Codable classes from XMLNodes
-public class XMLDecoder {
+class XMLDecoder {
     
     /// The strategy to use for decoding `Date` values.
     public enum DateDecodingStrategy {

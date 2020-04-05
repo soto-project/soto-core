@@ -16,7 +16,7 @@ extension Dictionary : _QueryDictionaryEncodableMarker where Value: Decodable { 
 extension Array : _QueryArrayEncodableMarker where Element: Decodable { }
 
 /// The wrapper class for encoding Codable classes to Query dictionary
-public class QueryEncoder {
+class QueryEncoder {
 
     /// The strategy to use for encoding Arrays
     open var arrayEncodingStrategy: XMLContainerCoding = .array(entry:nil)

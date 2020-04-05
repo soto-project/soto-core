@@ -14,7 +14,7 @@
     <a title="AWSClientError Enumeration Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> Docs</a> (59% documented)</p>
+        <p><a href="../index.html"> Docs</a> (57% documented)</p>
         <p class="header-right"><a href="https://github.com/swift-aws/aws-sdk-swift-core"><img src="../img/gh.png"/>View on GitHub</a></p>
       </div>
     </header>
@@ -47,7 +47,7 @@
                 <a href="../Classes/NIOTSHTTPClient.html#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC7RequestV">– Request</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/NIOTSHTTPClient/Response.html">– Response</a>
+                <a href="../Classes/NIOTSHTTPClient.html#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC8ResponseV">– Response</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/NIOTSHTTPClient/HTTPError.html">– HTTPError</a>
@@ -93,34 +93,13 @@
             <a href="../Extensions.html">Extensions</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a href="../Extensions/Array.html">Array</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Extensions/AsyncHTTPClient.html">AsyncHTTPClient</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Extensions/AsyncHTTPClient/HTTPClient.html">– HTTPClient</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Extensions/Dictionary.html">Dictionary</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Extensions/MetaDataServiceProvider.html">MetaDataServiceProvider</a>
+                <a href="../Extensions/AsyncHTTPClient.html#/HTTPClient">– HTTPClient</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Extensions/Sequence.html">Sequence</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Extensions/String.html">String</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Extensions/_QueryEncoder.html">_QueryEncoder</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Extensions/_XMLEncoder.html">_XMLEncoder</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Extensions/__DictionaryDecoder.html">__DictionaryDecoder</a>
               </li>
             </ul>
           </li>
@@ -218,6 +197,7 @@
               <div class="declaration">
                 <div class="language">
                   <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">AWSClientError</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/AWSErrorType.html">AWSErrorType</a></span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">AWSClientError</span> <span class="p">:</span> <span class="kt">CustomStringConvertible</span></code></pre>
 
                 </div>
               </div>
@@ -232,7 +212,7 @@
                     <code>
                     <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO11authFailureyACSSSg_tcACmF"></a>
                     <a name="//apple_ref/swift/Element/authFailure(message:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO11authFailureyACSSSg_tcACmF">authFailure(message:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO11authFailureyACSSSg_tcACmF">authFailure(message:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -259,7 +239,7 @@
                     <code>
                     <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO7blockedyACSSSg_tcACmF"></a>
                     <a name="//apple_ref/swift/Element/blocked(message:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO7blockedyACSSSg_tcACmF">blocked(message:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO7blockedyACSSSg_tcACmF">blocked(message:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -286,7 +266,7 @@
                     <code>
                     <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO15dryRunOperationyACSSSg_tcACmF"></a>
                     <a name="//apple_ref/swift/Element/dryRunOperation(message:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO15dryRunOperationyACSSSg_tcACmF">dryRunOperation(message:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO15dryRunOperationyACSSSg_tcACmF">dryRunOperation(message:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -313,7 +293,7 @@
                     <code>
                     <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO27idempotentParameterMismatchyACSSSg_tcACmF"></a>
                     <a name="//apple_ref/swift/Element/idempotentParameterMismatch(message:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO27idempotentParameterMismatchyACSSSg_tcACmF">idempotentParameterMismatch(message:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO27idempotentParameterMismatchyACSSSg_tcACmF">idempotentParameterMismatch(message:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -340,7 +320,7 @@
                     <code>
                     <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO19incompleteSignatureyACSSSg_tcACmF"></a>
                     <a name="//apple_ref/swift/Element/incompleteSignature(message:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO19incompleteSignatureyACSSSg_tcACmF">incompleteSignature(message:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO19incompleteSignatureyACSSSg_tcACmF">incompleteSignature(message:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -367,7 +347,7 @@
                     <code>
                     <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO13invalidActionyACSSSg_tcACmF"></a>
                     <a name="//apple_ref/swift/Element/invalidAction(message:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO13invalidActionyACSSSg_tcACmF">invalidAction(message:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO13invalidActionyACSSSg_tcACmF">invalidAction(message:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -394,7 +374,7 @@
                     <code>
                     <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO16invalidCharacteryACSSSg_tcACmF"></a>
                     <a name="//apple_ref/swift/Element/invalidCharacter(message:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO16invalidCharacteryACSSSg_tcACmF">invalidCharacter(message:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO16invalidCharacteryACSSSg_tcACmF">invalidCharacter(message:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -421,7 +401,7 @@
                     <code>
                     <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO20invalidClientTokenIdyACSSSg_tcACmF"></a>
                     <a name="//apple_ref/swift/Element/invalidClientTokenId(message:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO20invalidClientTokenIdyACSSSg_tcACmF">invalidClientTokenId(message:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO20invalidClientTokenIdyACSSSg_tcACmF">invalidClientTokenId(message:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -448,7 +428,7 @@
                     <code>
                     <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO22invalidPaginationTokenyACSSSg_tcACmF"></a>
                     <a name="//apple_ref/swift/Element/invalidPaginationToken(message:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO22invalidPaginationTokenyACSSSg_tcACmF">invalidPaginationToken(message:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO22invalidPaginationTokenyACSSSg_tcACmF">invalidPaginationToken(message:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -475,7 +455,7 @@
                     <code>
                     <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO16invalidParameteryACSSSg_tcACmF"></a>
                     <a name="//apple_ref/swift/Element/invalidParameter(message:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO16invalidParameteryACSSSg_tcACmF">invalidParameter(message:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO16invalidParameteryACSSSg_tcACmF">invalidParameter(message:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -502,7 +482,7 @@
                     <code>
                     <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO27invalidParameterCombinationyACSSSg_tcACmF"></a>
                     <a name="//apple_ref/swift/Element/invalidParameterCombination(message:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO27invalidParameterCombinationyACSSSg_tcACmF">invalidParameterCombination(message:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO27invalidParameterCombinationyACSSSg_tcACmF">invalidParameterCombination(message:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -529,7 +509,7 @@
                     <code>
                     <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO21invalidParameterValueyACSSSg_tcACmF"></a>
                     <a name="//apple_ref/swift/Element/invalidParameterValue(message:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO21invalidParameterValueyACSSSg_tcACmF">invalidParameterValue(message:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO21invalidParameterValueyACSSSg_tcACmF">invalidParameterValue(message:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -556,7 +536,7 @@
                     <code>
                     <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO21invalidQueryParameteryACSSSg_tcACmF"></a>
                     <a name="//apple_ref/swift/Element/invalidQueryParameter(message:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO21invalidQueryParameteryACSSSg_tcACmF">invalidQueryParameter(message:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO21invalidQueryParameteryACSSSg_tcACmF">invalidQueryParameter(message:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -583,7 +563,7 @@
                     <code>
                     <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO20malformedQueryStringyACSSSg_tcACmF"></a>
                     <a name="//apple_ref/swift/Element/malformedQueryString(message:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO20malformedQueryStringyACSSSg_tcACmF">malformedQueryString(message:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO20malformedQueryStringyACSSSg_tcACmF">malformedQueryString(message:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -610,7 +590,7 @@
                     <code>
                     <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO13missingActionyACSSSg_tcACmF"></a>
                     <a name="//apple_ref/swift/Element/missingAction(message:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO13missingActionyACSSSg_tcACmF">missingAction(message:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO13missingActionyACSSSg_tcACmF">missingAction(message:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -637,7 +617,7 @@
                     <code>
                     <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO26missingAuthenticationTokenyACSSSg_tcACmF"></a>
                     <a name="//apple_ref/swift/Element/missingAuthenticationToken(message:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO26missingAuthenticationTokenyACSSSg_tcACmF">missingAuthenticationToken(message:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO26missingAuthenticationTokenyACSSSg_tcACmF">missingAuthenticationToken(message:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -664,7 +644,7 @@
                     <code>
                     <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO16missingParameteryACSSSg_tcACmF"></a>
                     <a name="//apple_ref/swift/Element/missingParameter(message:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO16missingParameteryACSSSg_tcACmF">missingParameter(message:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO16missingParameteryACSSSg_tcACmF">missingParameter(message:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -691,7 +671,7 @@
                     <code>
                     <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO13optInRequiredyACSSSg_tcACmF"></a>
                     <a name="//apple_ref/swift/Element/optInRequired(message:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO13optInRequiredyACSSSg_tcACmF">optInRequired(message:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO13optInRequiredyACSSSg_tcACmF">optInRequired(message:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -718,7 +698,7 @@
                     <code>
                     <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO19pendingVerificationyACSSSg_tcACmF"></a>
                     <a name="//apple_ref/swift/Element/pendingVerification(message:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO19pendingVerificationyACSSSg_tcACmF">pendingVerification(message:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO19pendingVerificationyACSSSg_tcACmF">pendingVerification(message:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -745,7 +725,7 @@
                     <code>
                     <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO14requestExpiredyACSSSg_tcACmF"></a>
                     <a name="//apple_ref/swift/Element/requestExpired(message:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO14requestExpiredyACSSSg_tcACmF">requestExpired(message:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO14requestExpiredyACSSSg_tcACmF">requestExpired(message:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -772,7 +752,7 @@
                     <code>
                     <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO21unauthorizedOperationyACSSSg_tcACmF"></a>
                     <a name="//apple_ref/swift/Element/unauthorizedOperation(message:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO21unauthorizedOperationyACSSSg_tcACmF">unauthorizedOperation(message:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO21unauthorizedOperationyACSSSg_tcACmF">unauthorizedOperation(message:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -799,7 +779,7 @@
                     <code>
                     <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO16unknownParameteryACSSSg_tcACmF"></a>
                     <a name="//apple_ref/swift/Element/unknownParameter(message:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO16unknownParameteryACSSSg_tcACmF">unknownParameter(message:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO16unknownParameteryACSSSg_tcACmF">unknownParameter(message:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -826,7 +806,7 @@
                     <code>
                     <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO28unsupportedInstanceAttributeyACSSSg_tcACmF"></a>
                     <a name="//apple_ref/swift/Element/unsupportedInstanceAttribute(message:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO28unsupportedInstanceAttributeyACSSSg_tcACmF">unsupportedInstanceAttribute(message:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO28unsupportedInstanceAttributeyACSSSg_tcACmF">unsupportedInstanceAttribute(message:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -853,7 +833,7 @@
                     <code>
                     <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO20unsupportedOperationyACSSSg_tcACmF"></a>
                     <a name="//apple_ref/swift/Element/unsupportedOperation(message:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO20unsupportedOperationyACSSSg_tcACmF">unsupportedOperation(message:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO20unsupportedOperationyACSSSg_tcACmF">unsupportedOperation(message:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -880,7 +860,7 @@
                     <code>
                     <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO19unsupportedProtocolyACSSSg_tcACmF"></a>
                     <a name="//apple_ref/swift/Element/unsupportedProtocol(message:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO19unsupportedProtocolyACSSSg_tcACmF">unsupportedProtocol(message:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO19unsupportedProtocolyACSSSg_tcACmF">unsupportedProtocol(message:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -907,7 +887,7 @@
                     <code>
                     <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO010validationD0yACSSSg_tcACmF"></a>
                     <a name="//apple_ref/swift/Element/validationError(message:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO010validationD0yACSSSg_tcACmF">validationError(message:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO010validationD0yACSSSg_tcACmF">validationError(message:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -934,7 +914,7 @@
                     <code>
                     <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO12accessDeniedyACSSSg_tcACmF"></a>
                     <a name="//apple_ref/swift/Element/accessDenied(message:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO12accessDeniedyACSSSg_tcACmF">accessDenied(message:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO12accessDeniedyACSSSg_tcACmF">accessDenied(message:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -960,7 +940,7 @@
                     <code>
                     <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO21signatureDoesNotMatchyACSSSg_tcACmF"></a>
                     <a name="//apple_ref/swift/Element/signatureDoesNotMatch(message:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO21signatureDoesNotMatchyACSSSg_tcACmF">signatureDoesNotMatch(message:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO21signatureDoesNotMatchyACSSSg_tcACmF">signatureDoesNotMatch(message:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -981,16 +961,12 @@
                     </section>
                   </div>
                 </li>
-              </ul>
-            </div>
-            <div class="task-group">
-              <ul>
                 <li class="item">
                   <div>
                     <code>
                     <a name="/s:15AWSSDKSwiftCore14AWSClientErrorO9errorCode7messageACSgSS_SSSgtcfc"></a>
                     <a name="//apple_ref/swift/Method/init(errorCode:message:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO9errorCode7messageACSgSS_SSSgtcfc">init(errorCode:message:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore14AWSClientErrorO9errorCode7messageACSgSS_SSSgtcfc">init(errorCode:<wbr>message:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1012,10 +988,6 @@
                     </section>
                   </div>
                 </li>
-              </ul>
-            </div>
-            <div class="task-group">
-              <ul>
                 <li class="item">
                   <div>
                     <code>
@@ -1048,7 +1020,7 @@
         </section>
         <section id="footer">
           <p>© Copyright (c) 2019 Yuki Takei(noppoMan), Joe Smith(Yasumoto), Jonathan McAllister(jonnymacs), Adam Fowler (adam-fowler), Fabian Fett (fabianfett)</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.12.0</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.2</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
     </div>

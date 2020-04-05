@@ -51,30 +51,9 @@
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSClient.swift",
-      "line": 299,
-      "symbol": "AWSClient.signer",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSClient.swift",
-      "line": 481,
-      "symbol": "AWSClient.queryAllowedCharacters",
-      "symbol_kind": "source.lang.swift.decl.var.static",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSClient.swift",
       "line": 729,
       "symbol": "AWSClient.RequestError",
       "symbol_kind": "source.lang.swift.decl.extension",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSClient.swift",
-      "line": 746,
-      "symbol": "Array.queryEncoded",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
@@ -109,13 +88,6 @@
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSShapes/TimeStamp.swift",
       "line": 31,
       "symbol": "TimeStamp.init(_:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 15,
-      "symbol": "Credential.isEmpty()",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
@@ -659,94 +631,10 @@
       "warning": "undocumented"
     },
     {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
-      "line": 85,
-      "symbol": "ServiceProtocol.contentTypeString",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/DictionaryDecoder.swift",
-      "line": 44,
-      "symbol": "Dictionary.elementType",
-      "symbol_kind": "source.lang.swift.decl.var.static",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/DictionaryDecoder.swift",
-      "line": 936,
-      "symbol": "__DictionaryDecoder",
-      "symbol_kind": "source.lang.swift.decl.extension",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/QueryEncoder.swift",
-      "line": 340,
-      "symbol": "_QueryEncoder.box(_:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/QueryEncoder.swift",
-      "line": 344,
-      "symbol": "_QueryEncoder.box(_:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/XMLDecoder.swift",
       "line": 36,
       "symbol": "XMLCodable.getXMLContainerCoding(for:)",
       "symbol_kind": "source.lang.swift.decl.function.method.static",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/XMLDecoder.swift",
-      "line": 143,
-      "symbol": "XML.Node.child(for:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/XMLDecoder.swift",
-      "line": 147,
-      "symbol": "XML.Node.child(for:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/XMLDecoder.swift",
-      "line": 153,
-      "symbol": "XML.Element.attribute(for:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/XMLEncoder.swift",
-      "line": 776,
-      "symbol": "_XMLEncoder.box(_:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/XMLEncoder.swift",
-      "line": 809,
-      "symbol": "_XMLEncoder.box(_:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/XMLEncoder.swift",
-      "line": 824,
-      "symbol": "_XMLEncoder.box(_:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/XMLEncoder.swift",
-      "line": 829,
-      "symbol": "_XMLEncoder.box(_:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
@@ -915,20 +803,6 @@
       "line": 43,
       "symbol": "NIOTSHTTPClient.HTTPError.alreadyShutdown",
       "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTP/NIOTSHTTPClient.swift",
-      "line": 220,
-      "symbol": "NIOTSHTTPClient.Response.status",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTP/NIOTSHTTPClient.swift",
-      "line": 221,
-      "symbol": "NIOTSHTTPClient.Response.headers",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
@@ -1181,48 +1055,6 @@
       "line": 45,
       "symbol": "AWSSigner.BodyData.byteBuffer(_:)",
       "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSignerV4/signer.swift",
-      "line": 228,
-      "symbol": "String.queryEncode()",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSignerV4/signer.swift",
-      "line": 232,
-      "symbol": "String.uriEncode()",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSignerV4/signer.swift",
-      "line": 236,
-      "symbol": "String.uriEncodeWithSlash()",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSignerV4/signer.swift",
-      "line": 240,
-      "symbol": "String.uriAllowedWithSlashCharacters",
-      "symbol_kind": "source.lang.swift.decl.var.static",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSignerV4/signer.swift",
-      "line": 241,
-      "symbol": "String.uriAllowedCharacters",
-      "symbol_kind": "source.lang.swift.decl.var.static",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSignerV4/signer.swift",
-      "line": 242,
-      "symbol": "String.queryAllowedCharacters",
-      "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     }
   ],

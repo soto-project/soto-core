@@ -14,7 +14,7 @@
     <a title="AWSClient Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> Docs</a> (59% documented)</p>
+        <p><a href="../index.html"> Docs</a> (57% documented)</p>
         <p class="header-right"><a href="https://github.com/swift-aws/aws-sdk-swift-core"><img src="../img/gh.png"/>View on GitHub</a></p>
       </div>
     </header>
@@ -47,7 +47,7 @@
                 <a href="../Classes/NIOTSHTTPClient.html#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC7RequestV">– Request</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/NIOTSHTTPClient/Response.html">– Response</a>
+                <a href="../Classes/NIOTSHTTPClient.html#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC8ResponseV">– Response</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/NIOTSHTTPClient/HTTPError.html">– HTTPError</a>
@@ -93,34 +93,13 @@
             <a href="../Extensions.html">Extensions</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a href="../Extensions/Array.html">Array</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Extensions/AsyncHTTPClient.html">AsyncHTTPClient</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Extensions/AsyncHTTPClient/HTTPClient.html">– HTTPClient</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Extensions/Dictionary.html">Dictionary</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Extensions/MetaDataServiceProvider.html">MetaDataServiceProvider</a>
+                <a href="../Extensions/AsyncHTTPClient.html#/HTTPClient">– HTTPClient</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Extensions/Sequence.html">Sequence</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Extensions/String.html">String</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Extensions/_QueryEncoder.html">_QueryEncoder</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Extensions/_XMLEncoder.html">_XMLEncoder</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Extensions/__DictionaryDecoder.html">__DictionaryDecoder</a>
               </li>
             </ul>
           </li>
@@ -249,6 +228,7 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">RequestError</span> <span class="p">:</span> <span class="kt">Error</span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt"><a href="../Classes/AWSClient.html">AWSClient</a></span><span class="o">.</span><span class="kt">RequestError</span><span class="p">:</span> <span class="kt">CustomStringConvertible</span></code></pre>
 
                         </div>
                       </div>
@@ -369,7 +349,7 @@
                     <code>
                     <a name="/s:15AWSSDKSwiftCore9AWSClientC11accessKeyId012secretAccessE012sessionToken6region9amzTarget7service11signingName0N8Protocol10apiVersion8endpoint0N9Endpoints17partitionEndpoint11middlewares18possibleErrorTypes22eventLoopGroupProviderACSSSg_A2sA6RegionOSgASSSAsA07ServiceQ0VSSASSDyS2SGASSayAA20AWSServiceMiddleware_pGSayAA12AWSErrorType_pXpGSgAC22EventLoopGroupProviderOtcfc"></a>
                     <a name="//apple_ref/swift/Method/init(accessKeyId:secretAccessKey:sessionToken:region:amzTarget:service:signingName:serviceProtocol:apiVersion:endpoint:serviceEndpoints:partitionEndpoint:middlewares:possibleErrorTypes:eventLoopGroupProvider:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore9AWSClientC11accessKeyId012secretAccessE012sessionToken6region9amzTarget7service11signingName0N8Protocol10apiVersion8endpoint0N9Endpoints17partitionEndpoint11middlewares18possibleErrorTypes22eventLoopGroupProviderACSSSg_A2sA6RegionOSgASSSAsA07ServiceQ0VSSASSDyS2SGASSayAA20AWSServiceMiddleware_pGSayAA12AWSErrorType_pXpGSgAC22EventLoopGroupProviderOtcfc">init(accessKeyId:secretAccessKey:sessionToken:region:amzTarget:service:signingName:serviceProtocol:apiVersion:endpoint:serviceEndpoints:partitionEndpoint:middlewares:possibleErrorTypes:eventLoopGroupProvider:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore9AWSClientC11accessKeyId012secretAccessE012sessionToken6region9amzTarget7service11signingName0N8Protocol10apiVersion8endpoint0N9Endpoints17partitionEndpoint11middlewares18possibleErrorTypes22eventLoopGroupProviderACSSSg_A2sA6RegionOSgASSSAsA07ServiceQ0VSSASSDyS2SGASSayAA20AWSServiceMiddleware_pGSayAA12AWSErrorType_pXpGSgAC22EventLoopGroupProviderOtcfc">init(accessKeyId:<wbr>secretAccessKey:<wbr>sessionToken:<wbr>region:<wbr>amzTarget:<wbr>service:<wbr>signingName:<wbr>serviceProtocol:<wbr>apiVersion:<wbr>endpoint:<wbr>serviceEndpoints:<wbr>partitionEndpoint:<wbr>middlewares:<wbr>possibleErrorTypes:<wbr>eventLoopGroupProvider:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -448,7 +428,7 @@
                               </td>
                               <td>
                                 <div>
-                                  <p><q>x-amz-target</q> header value</p>
+                                  <p>&ldquo;x-amz-target&rdquo; header value</p>
                                 </div>
                               </td>
                             </tr>
@@ -496,7 +476,7 @@
                               </td>
                               <td>
                                 <div>
-                                  <p><q>Version</q> header value</p>
+                                  <p>&ldquo;Version&rdquo; header value</p>
                                 </div>
                               </td>
                             </tr>
@@ -578,47 +558,12 @@
                     </section>
                   </div>
                 </li>
-              </ul>
-            </div>
-            <div class="task-group">
-              <ul>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:15AWSSDKSwiftCore9AWSClientC35hypertextApplicationLanguageProcess8responseAA11AWSResponseVAG_tKF"></a>
-                    <a name="//apple_ref/swift/Method/hypertextApplicationLanguageProcess(response:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore9AWSClientC35hypertextApplicationLanguageProcess8responseAA11AWSResponseVAG_tKF">hypertextApplicationLanguageProcess(response:)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>process hal+json date. Extract properties from HAL</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">hypertextApplicationLanguageProcess</span><span class="p">(</span><span class="nv">response</span><span class="p">:</span> <span class="kt"><a href="../Structs/AWSResponse.html">AWSResponse</a></span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Structs/AWSResponse.html">AWSResponse</a></span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-              </ul>
-            </div>
-            <div class="task-group">
-              <ul>
                 <li class="item">
                   <div>
                     <code>
                     <a name="/s:15AWSSDKSwiftCore9AWSClientC8paginate5input7command8tokenKey6onPage3NIO15EventLoopFutureCyytGx_AKyq_Gxcs0H4PathCyq_SSSgGAKySbGq__AI0lM0_ptctAA22AWSPaginateStringTokenRzAA8AWSShapeR_r0_lF"></a>
                     <a name="//apple_ref/swift/Method/paginate(input:command:tokenKey:onPage:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore9AWSClientC8paginate5input7command8tokenKey6onPage3NIO15EventLoopFutureCyytGx_AKyq_Gxcs0H4PathCyq_SSSgGAKySbGq__AI0lM0_ptctAA22AWSPaginateStringTokenRzAA8AWSShapeR_r0_lF">paginate(input:command:tokenKey:onPage:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore9AWSClientC8paginate5input7command8tokenKey6onPage3NIO15EventLoopFutureCyytGx_AKyq_Gxcs0H4PathCyq_SSSgGAKySbGq__AI0lM0_ptctAA22AWSPaginateStringTokenRzAA8AWSShapeR_r0_lF">paginate(input:<wbr>command:<wbr>tokenKey:<wbr>onPage:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -719,7 +664,7 @@ the next block. This function loads each block and calls a closure with each blo
                     <code>
                     <a name="/s:15AWSSDKSwiftCore9AWSClientC8paginate5input7command8tokenKey6onPage3NIO15EventLoopFutureCyytGx_AKyq_Gxcs0H4PathCyq_SiSgGAKySbGq__AI0lM0_ptctAA19AWSPaginateIntTokenRzAA8AWSShapeR_r0_lF"></a>
                     <a name="//apple_ref/swift/Method/paginate(input:command:tokenKey:onPage:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore9AWSClientC8paginate5input7command8tokenKey6onPage3NIO15EventLoopFutureCyytGx_AKyq_Gxcs0H4PathCyq_SiSgGAKySbGq__AI0lM0_ptctAA19AWSPaginateIntTokenRzAA8AWSShapeR_r0_lF">paginate(input:command:tokenKey:onPage:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore9AWSClientC8paginate5input7command8tokenKey6onPage3NIO15EventLoopFutureCyytGx_AKyq_Gxcs0H4PathCyq_SiSgGAKySbGq__AI0lM0_ptctAA19AWSPaginateIntTokenRzAA8AWSShapeR_r0_lF">paginate(input:<wbr>command:<wbr>tokenKey:<wbr>onPage:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -817,16 +762,12 @@ the next block. This function loads each block and calls a closure with each blo
                     </section>
                   </div>
                 </li>
-              </ul>
-            </div>
-            <div class="task-group">
-              <ul>
                 <li class="item">
                   <div>
                     <code>
                     <a name="/s:15AWSSDKSwiftCore9AWSClientC4send9operation4path10httpMethod5input3NIO15EventLoopFutureCyytGSS_S2SxtAA8AWSShapeRzlF"></a>
                     <a name="//apple_ref/swift/Method/send(operation:path:httpMethod:input:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore9AWSClientC4send9operation4path10httpMethod5input3NIO15EventLoopFutureCyytGSS_S2SxtAA8AWSShapeRzlF">send(operation:path:httpMethod:input:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore9AWSClientC4send9operation4path10httpMethod5input3NIO15EventLoopFutureCyytGSS_S2SxtAA8AWSShapeRzlF">send(operation:<wbr>path:<wbr>httpMethod:<wbr>input:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -881,7 +822,7 @@ the next block. This function loads each block and calls a closure with each blo
                               </td>
                               <td>
                                 <div>
-                                  <p>HTTP method to use (<q>GET</q>, <q>PUT</q>, <q>PUSH</q> etc)</p>
+                                  <p>HTTP method to use (&ldquo;GET&rdquo;, &ldquo;PUT&rdquo;, &ldquo;PUSH&rdquo; etc)</p>
                                 </div>
                               </td>
                             </tr>
@@ -912,7 +853,7 @@ the next block. This function loads each block and calls a closure with each blo
                     <code>
                     <a name="/s:15AWSSDKSwiftCore9AWSClientC4send9operation4path10httpMethod3NIO15EventLoopFutureCyytGSS_S2StF"></a>
                     <a name="//apple_ref/swift/Method/send(operation:path:httpMethod:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore9AWSClientC4send9operation4path10httpMethod3NIO15EventLoopFutureCyytGSS_S2StF">send(operation:path:httpMethod:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore9AWSClientC4send9operation4path10httpMethod3NIO15EventLoopFutureCyytGSS_S2StF">send(operation:<wbr>path:<wbr>httpMethod:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -967,7 +908,7 @@ the next block. This function loads each block and calls a closure with each blo
                               </td>
                               <td>
                                 <div>
-                                  <p>HTTP method to use (<q>GET</q>, <q>PUT</q>, <q>PUSH</q> etc)</p>
+                                  <p>HTTP method to use (&ldquo;GET&rdquo;, &ldquo;PUT&rdquo;, &ldquo;PUSH&rdquo; etc)</p>
                                 </div>
                               </td>
                             </tr>
@@ -986,7 +927,7 @@ the next block. This function loads each block and calls a closure with each blo
                     <code>
                     <a name="/s:15AWSSDKSwiftCore9AWSClientC4send9operation4path10httpMethod3NIO15EventLoopFutureCyxGSS_S2StAA8AWSShapeRzlF"></a>
                     <a name="//apple_ref/swift/Method/send(operation:path:httpMethod:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore9AWSClientC4send9operation4path10httpMethod3NIO15EventLoopFutureCyxGSS_S2StAA8AWSShapeRzlF">send(operation:path:httpMethod:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore9AWSClientC4send9operation4path10httpMethod3NIO15EventLoopFutureCyxGSS_S2StAA8AWSShapeRzlF">send(operation:<wbr>path:<wbr>httpMethod:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1041,7 +982,7 @@ the next block. This function loads each block and calls a closure with each blo
                               </td>
                               <td>
                                 <div>
-                                  <p>HTTP method to use (<q>GET</q>, <q>PUT</q>, <q>PUSH</q> etc)</p>
+                                  <p>HTTP method to use (&ldquo;GET&rdquo;, &ldquo;PUT&rdquo;, &ldquo;PUSH&rdquo; etc)</p>
                                 </div>
                               </td>
                             </tr>
@@ -1060,7 +1001,7 @@ the next block. This function loads each block and calls a closure with each blo
                     <code>
                     <a name="/s:15AWSSDKSwiftCore9AWSClientC4send9operation4path10httpMethod5input3NIO15EventLoopFutureCyxGSS_S2Sq_tAA8AWSShapeRzAaMR_r0_lF"></a>
                     <a name="//apple_ref/swift/Method/send(operation:path:httpMethod:input:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore9AWSClientC4send9operation4path10httpMethod5input3NIO15EventLoopFutureCyxGSS_S2Sq_tAA8AWSShapeRzAaMR_r0_lF">send(operation:path:httpMethod:input:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore9AWSClientC4send9operation4path10httpMethod5input3NIO15EventLoopFutureCyxGSS_S2Sq_tAA8AWSShapeRzAaMR_r0_lF">send(operation:<wbr>path:<wbr>httpMethod:<wbr>input:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1115,7 +1056,7 @@ the next block. This function loads each block and calls a closure with each blo
                               </td>
                               <td>
                                 <div>
-                                  <p>HTTP method to use (<q>GET</q>, <q>PUT</q>, <q>PUSH</q> etc)</p>
+                                  <p>HTTP method to use (&ldquo;GET&rdquo;, &ldquo;PUT&rdquo;, &ldquo;PUSH&rdquo; etc)</p>
                                 </div>
                               </td>
                             </tr>
@@ -1146,7 +1087,7 @@ the next block. This function loads each block and calls a closure with each blo
                     <code>
                     <a name="/s:15AWSSDKSwiftCore9AWSClientC7signURL3url10httpMethod7expires3NIO15EventLoopFutureCy10Foundation0E0VGAM_SSSitF"></a>
                     <a name="//apple_ref/swift/Method/signURL(url:httpMethod:expires:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore9AWSClientC7signURL3url10httpMethod7expires3NIO15EventLoopFutureCy10Foundation0E0VGAM_SSSitF">signURL(url:httpMethod:expires:)</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore9AWSClientC7signURL3url10httpMethod7expires3NIO15EventLoopFutureCy10Foundation0E0VGAM_SSSitF">signURL(url:<wbr>httpMethod:<wbr>expires:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1189,7 +1130,7 @@ the next block. This function loads each block and calls a closure with each blo
                               </td>
                               <td>
                                 <div>
-                                  <p>HTTP method to use (<q>GET</q>, <q>PUT</q>, <q>PUSH</q> etc)</p>
+                                  <p>HTTP method to use (&ldquo;GET&rdquo;, &ldquo;PUT&rdquo;, &ldquo;PUSH&rdquo; etc)</p>
                                 </div>
                               </td>
                             </tr>
@@ -1217,69 +1158,11 @@ the next block. This function loads each block and calls a closure with each blo
                 </li>
               </ul>
             </div>
-            <div class="task-group">
-              <ul>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:15AWSSDKSwiftCore9AWSClientC6signer3NIO15EventLoopFutureCy11AWSSignerV40I0VGvp"></a>
-                    <a name="//apple_ref/swift/Property/signer" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore9AWSClientC6signer3NIO15EventLoopFutureCy11AWSSignerV40I0VGvp">signer</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Undocumented</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">signer</span><span class="p">:</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt"><a href="../Structs/AWSSigner.html">AWSSigner</a></span><span class="o">&gt;</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:15AWSSDKSwiftCore9AWSClientC22queryAllowedCharacters10Foundation12CharacterSetVvpZ"></a>
-                    <a name="//apple_ref/swift/Variable/queryAllowedCharacters" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore9AWSClientC22queryAllowedCharacters10Foundation12CharacterSetVvpZ">queryAllowedCharacters</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Undocumented</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="k">let</span> <span class="nv">queryAllowedCharacters</span><span class="p">:</span> <span class="kt">CharacterSet</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-              </ul>
-            </div>
           </section>
         </section>
         <section id="footer">
           <p>© Copyright (c) 2019 Yuki Takei(noppoMan), Joe Smith(Yasumoto), Jonathan McAllister(jonnymacs), Adam Fowler (adam-fowler), Fabian Fett (fabianfett)</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.12.0</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.2</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
     </div>

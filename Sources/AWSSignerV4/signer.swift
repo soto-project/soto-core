@@ -1,11 +1,16 @@
+//===----------------------------------------------------------------------===//
 //
-//  signer.swift
-//  AWSSigner
+// This source file is part of the AWSSDKSwift open source project
 //
-//  Created by Adam Fowler on 2019/08/29.
-//  Amazon Web Services V4 Signer
-//  AWS documentation about signing requests is here https://docs.aws.amazon.com/general/latest/gr/signing_aws_api_requests.html
+// Copyright (c) 2017-2020 the AWSSDKSwift project authors
+// Licensed under Apache License v2.0
 //
+// See LICENSE.txt for license information
+// See CONTRIBUTORS.txt for the list of AWSSDKSwift project authors
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+//===----------------------------------------------------------------------===//
 
 import struct Foundation.CharacterSet
 import struct Foundation.Data

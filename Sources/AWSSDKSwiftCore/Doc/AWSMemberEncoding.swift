@@ -1,9 +1,16 @@
+//===----------------------------------------------------------------------===//
 //
-//  AWSMemberEncoding.swift
+// This source file is part of the AWSSDKSwift open source project
 //
-//  Created by Yuki Takei on 2017/05/18.
+// Copyright (c) 2017-2020 the AWSSDKSwift project authors
+// Licensed under Apache License v2.0
 //
+// See LICENSE.txt for license information
+// See CONTRIBUTORS.txt for the list of AWSSDKSwift project authors
 //
+// SPDX-License-Identifier: Apache-2.0
+//
+//===----------------------------------------------------------------------===//
 
 /// Structure defining how to serialize member of AWSShape.
 /// Below is the list of possible encodings and how they are setup

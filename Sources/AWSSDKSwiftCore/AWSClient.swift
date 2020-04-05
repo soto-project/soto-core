@@ -304,7 +304,7 @@ extension AWSClient {
 
     internal func createAWSRequest(operation operationName: String, path: String, httpMethod: String) throws -> AWSRequest {
 
-        guard let url = URL(string: "\(endpoint)\(path)"), let _ = url.hostWithPort else {
+        guard let url = URL(string: "\(endpoint)\(path)"), let _ = url.host else {
             throw RequestError.invalidURL("\(endpoint)\(path) must specify url host and scheme")
         }
 
@@ -328,7 +328,7 @@ extension AWSClient {
         // validate input parameters
         try input.validate()
 
-        guard let baseURL = URL(string: "\(endpoint)"), let _ = baseURL.hostWithPort else {
+        guard let baseURL = URL(string: "\(endpoint)"), let _ = baseURL.host else {
             throw RequestError.invalidURL("\(endpoint) must specify url host and scheme")
         }
 
@@ -735,18 +735,6 @@ extension AWSClient.RequestError: CustomStringConvertible {
             This error is internal. So please make a issue on https://github.com/noppoMan/aws-sdk-swift/issues to solve it.
             """
         }
-    }
-}
-
-extension URL {
-    var hostWithPort: String? {
-        guard var host = self.host else {
-            return nil
-        }
-        if let port = self.port {
-            host+=":\(port)"
-        }
-        return host
     }
 }
 

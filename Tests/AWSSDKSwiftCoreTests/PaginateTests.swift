@@ -38,7 +38,7 @@ class PaginateTests: XCTestCase {
     }
     
     // test structures/functions
-    struct CounterInput: AWSShape, AWSPaginateIntToken {
+    struct CounterInput: AWSShape, AWSPaginateToken {
         let inputToken: Int?
         let pageSize: Int
         
@@ -105,7 +105,7 @@ class PaginateTests: XCTestCase {
     }
     
     // test structures/functions
-    struct StringListInput: AWSShape, AWSPaginateStringToken {
+    struct StringListInput: AWSShape, AWSPaginateToken {
         let inputToken: String?
         let pageSize: Int
         

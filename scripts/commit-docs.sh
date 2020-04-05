@@ -2,8 +2,7 @@
 
 set -eux
 
-swift package generate-xcodeproj
-jazzy --clean
+FOLDER=5.x.x
 
 # stash everything that isn't in docs, store result in STASH_RESULT
 STASH_RESULT=$(git stash push -- ":(exclude)docs")
@@ -13,10 +12,10 @@ REVISION_HASH=$(git rev-parse HEAD)
 
 git checkout gh-pages
 # copy contents of docs to docs/current replacing the ones that are already there
-rm -rf current
-mv docs/ current/
+rm -rf "$FOLDER"
+mv docs/ "$FOLDER"/
 # commit
-git add --all current
+git add --all "$FOLDER"
 git commit -m "Documentation for https://github.com/swift-aws/aws-sdk-swift-core/tree/$REVISION_HASH"
 git push
 # return to branch

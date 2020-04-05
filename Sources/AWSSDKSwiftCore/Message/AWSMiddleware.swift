@@ -32,8 +32,8 @@ public extension AWSServiceMiddleware {
     }
 }
 
-/// Middleware class that outputs the contents of requests being sent to AWS and the bodies of the responses received
-public class AWSLoggingMiddleware : AWSServiceMiddleware {
+/// Middleware struct that outputs the contents of requests being sent to AWS and the bodies of the responses received
+public struct AWSLoggingMiddleware : AWSServiceMiddleware {
     
     /// initialize AWSLoggingMiddleware class
     /// - parameters:

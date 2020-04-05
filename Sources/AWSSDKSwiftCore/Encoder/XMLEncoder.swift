@@ -24,24 +24,14 @@ import class  Foundation.NSDate
 import class  Foundation.NSData
 
 /// A marker protocols used to determine whether a value is a `Dictionary` or an `Array`
-///
-/// NOTE: The architecture and environment check is due to a bug in the current (2018-08-08) Swift 4.2
-/// runtime when running on i386 simulator. The issue is tracked in https://bugs.swift.org/browse/SR-8276
-/// Making the protocol `internal` instead of `fileprivate` works around this issue.
-/// Once SR-8276 is fixed, this check can be removed and the protocol always be made fileprivate.
-#if arch(i386) || arch(arm)
-internal protocol _XMLDictionaryEncodableMarker { }
-internal protocol _XMLArrayEncodableMarker { }
-#else
 fileprivate protocol _XMLDictionaryEncodableMarker { }
 fileprivate protocol _XMLArrayEncodableMarker { }
-#endif
 
 extension Dictionary : _XMLDictionaryEncodableMarker where Value: Decodable { }
 extension Array : _XMLArrayEncodableMarker where Element: Decodable { }
 
 /// The wrapper class for encoding Codable classes to XMLElements
-public class XMLEncoder {
+class XMLEncoder {
     
     /// The strategy to use for encoding `Date` values.
     public enum DateEncodingStrategy {

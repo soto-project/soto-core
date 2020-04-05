@@ -8,6 +8,9 @@ on:
     branches:
     - "*"
 
+env:
+  ENABLE_TIMING_TESTS: "false"
+
 jobs:
   macos:
     runs-on: macOS-latest
@@ -29,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        tag: ['swift:5.1.5', 'swift:5.2']
+        tag: ['swift:5.1.5', 'swift:5.2.1']
     container:
       image: ${{ matrix.tag }}
       volumes:

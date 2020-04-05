@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Node Class Reference</title>
+    <title>Element Class Reference</title>
     <link rel="stylesheet" type="text/css" href="../../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../../css/highlight.css" />
     <meta charset='utf-8'>
@@ -10,8 +10,8 @@
     
   </head>
   <body>
-    <a name="//apple_ref/swift/Class/Node" class="dashAnchor"></a>
-    <a title="Node Class Reference"></a>
+    <a name="//apple_ref/swift/Class/Element" class="dashAnchor"></a>
+    <a title="Element Class Reference"></a>
     <header>
       <div class="content-wrapper">
         <p><a href="../../index.html"> Docs</a> (59% documented)</p>
@@ -22,7 +22,7 @@
       <p id="breadcrumbs">
         <a href="../../index.html"> Reference</a>
         <img id="carat" src="../../img/carat.png" />
-        Node Class Reference
+        Element Class Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -41,9 +41,6 @@
                 <a href="../../Classes/AWSClient/EventLoopGroupProvider.html">– EventLoopGroupProvider</a>
               </li>
               <li class="nav-group-task">
-                <a href="../../Classes/AWSLoggingMiddleware.html">AWSLoggingMiddleware</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../../Classes/NIOTSHTTPClient.html">NIOTSHTTPClient</a>
               </li>
               <li class="nav-group-task">
@@ -54,18 +51,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="../../Classes/NIOTSHTTPClient/HTTPError.html">– HTTPError</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../../Classes/XML.html">XML</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../../Classes/XML/Node.html">– Node</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../../Classes/XML/Document.html">– Document</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../../Classes/XML/Element.html">– Element</a>
               </li>
             </ul>
           </li>
@@ -86,6 +71,18 @@
               </li>
               <li class="nav-group-task">
                 <a href="../../Enums/ServiceProtocolType.html">ServiceProtocolType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Enums/XML.html">XML</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Enums/XML/Node.html">– Node</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Enums/XML/Document.html">– Document</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Enums/XML/Element.html">– Element</a>
               </li>
               <li class="nav-group-task">
                 <a href="../../Enums/XMLContainerCoding.html">XMLContainerCoding</a>
@@ -111,16 +108,10 @@
                 <a href="../../Extensions/MetaDataServiceProvider.html">MetaDataServiceProvider</a>
               </li>
               <li class="nav-group-task">
-                <a href="../../Extensions/Mirror.html">Mirror</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../../Extensions/Sequence.html">Sequence</a>
               </li>
               <li class="nav-group-task">
                 <a href="../../Extensions/String.html">String</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../../Extensions/URL.html">URL</a>
               </li>
               <li class="nav-group-task">
                 <a href="../../Extensions/_QueryEncoder.html">_QueryEncoder</a>
@@ -164,6 +155,9 @@
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
                 <a href="../../Structs/AWSError.html">AWSError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Structs/AWSLoggingMiddleware.html">AWSLoggingMiddleware</a>
               </li>
               <li class="nav-group-task">
                 <a href="../../Structs/AWSMemberEncoding.html">AWSMemberEncoding</a>
@@ -220,14 +214,14 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>Node</h1>
+            <h1>Element</h1>
               <div class="declaration">
                 <div class="language">
-                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">Node</span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">Element</span> <span class="p">:</span> <span class="kt"><a href="../../Enums/XML.html">XML</a></span><span class="o">.</span><span class="kt"><a href="../../Enums/XML/Node.html">Node</a></span></code></pre>
 
                 </div>
               </div>
-            <p>base class for all types of XML.Node</p>
+            <p>XML Element class</p>
 
           </section>
           <section class="section task-group-section">
@@ -236,9 +230,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore3XMLC4NodeC4KindO"></a>
-                    <a name="//apple_ref/swift/Enum/Kind" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLC4NodeC4KindO">Kind</a>
+                    <a name="/s:15AWSSDKSwiftCore3XMLO7ElementC10attributesSayAC4NodeCGSgvp"></a>
+                    <a name="//apple_ref/swift/Property/attributes" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLO7ElementC10attributesSayAC4NodeCGSgvp">attributes</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -246,15 +240,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>XML node type</p>
+                        <p>array of attributes attached to XML ELement</p>
 
-                        <a href="../../Classes/XML/Node/Kind.html" class="slightly-smaller">See more</a>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">Kind</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">fileprivate</span><span class="p">(</span><span class="k">set</span><span class="p">)</span> <span class="k">var</span> <span class="nv">attributes</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../../Enums/XML.html">XML</a></span><span class="o">.</span><span class="kt"><a href="../../Enums/XML/Node.html">Node</a></span><span class="p">]?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
@@ -264,9 +257,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore3XMLC4NodeC4kindAE4KindOvp"></a>
-                    <a name="//apple_ref/swift/Property/kind" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLC4NodeC4kindAE4KindOvp">kind</a>
+                    <a name="/s:15AWSSDKSwiftCore3XMLO7ElementC10namespacesSayAC4NodeCGSgvp"></a>
+                    <a name="//apple_ref/swift/Property/namespaces" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLO7ElementC10namespacesSayAC4NodeCGSgvp">namespaces</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -274,14 +267,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>defines the type of xml node</p>
+                        <p>array of namespaces attached to XML ELement</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">kind</span><span class="p">:</span> <span class="kt"><a href="../../Classes/XML/Node/Kind.html">Kind</a></span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">fileprivate</span><span class="p">(</span><span class="k">set</span><span class="p">)</span> <span class="k">var</span> <span class="nv">namespaces</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../../Enums/XML.html">XML</a></span><span class="o">.</span><span class="kt"><a href="../../Enums/XML/Node.html">Node</a></span><span class="p">]?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
@@ -291,9 +284,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore3XMLC4NodeC4nameSSSgvp"></a>
-                    <a name="//apple_ref/swift/Property/name" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLC4NodeC4nameSSSgvp">name</a>
+                    <a name="/s:15AWSSDKSwiftCore3XMLO7ElementC4name11stringValueAESS_SSSgtcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(name:stringValue:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLO7ElementC4name11stringValueAESS_SSSgtcfc">init(name:stringValue:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -308,7 +301,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">stringValue</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -318,9 +311,90 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore3XMLC4NodeC11stringValueSSSgvp"></a>
+                    <a name="/s:15AWSSDKSwiftCore3XMLO7ElementC7xmlDataAE10Foundation0F0V_tKcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(xmlData:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLO7ElementC7xmlDataAE10Foundation0F0V_tKcfc">init(xmlData:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>initialise XML.Element from xml data</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">xmlData</span><span class="p">:</span> <span class="kt">Data</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore3XMLO7ElementC9xmlStringAESS_tKcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(xmlString:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLO7ElementC9xmlStringAESS_tKcfc">init(xmlString:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>initialise XML.Element from xml string</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">convenience</span> <span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">xmlString</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore3XMLO7ElementC8elements7forNameSayAEGSS_tF"></a>
+                    <a name="//apple_ref/swift/Method/elements(forName:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLO7ElementC8elements7forNameSayAEGSS_tF">elements(forName:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>return children XML elements</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">elements</span><span class="p">(</span><span class="nv">forName</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="kt"><a href="../../Enums/XML.html">XML</a></span><span class="o">.</span><span class="kt">Element</span><span class="p">]</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore3XMLO7ElementC11stringValueSSSgvp"></a>
                     <a name="//apple_ref/swift/Property/stringValue" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLC4NodeC11stringValueSSSgvp">stringValue</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLO7ElementC11stringValueSSSgvp">stringValue</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -328,14 +402,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>return child text nodes all concatenated together</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">stringValue</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">override</span> <span class="k">var</span> <span class="nv">stringValue</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
@@ -345,9 +419,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore3XMLC4NodeC8childrenSayAEGSgvp"></a>
-                    <a name="//apple_ref/swift/Property/children" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLC4NodeC8childrenSayAEGSgvp">children</a>
+                    <a name="/s:15AWSSDKSwiftCore3XMLO7ElementC8addChildyyAC4NodeCF"></a>
+                    <a name="//apple_ref/swift/Method/addChild(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLO7ElementC8addChildyyAC4NodeCF">addChild(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -355,14 +429,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>add a child node to the xml element</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">fileprivate</span><span class="p">(</span><span class="k">set</span><span class="p">)</span> <span class="k">var</span> <span class="nv">children</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../../Classes/XML.html">XML</a></span><span class="o">.</span><span class="kt">Node</span><span class="p">]?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">addChild</span><span class="p">(</span><span class="n">_</span> <span class="nv">node</span><span class="p">:</span> <span class="kt"><a href="../../Enums/XML.html">XML</a></span><span class="o">.</span><span class="kt"><a href="../../Enums/XML/Node.html">Node</a></span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -372,9 +446,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore3XMLC4NodeC6parentAESgvp"></a>
-                    <a name="//apple_ref/swift/Property/parent" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLC4NodeC6parentAESgvp">parent</a>
+                    <a name="/s:15AWSSDKSwiftCore3XMLO7ElementC11insertChild4node2atyAC4NodeC_SitF"></a>
+                    <a name="//apple_ref/swift/Method/insertChild(node:at:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLO7ElementC11insertChild4node2atyAC4NodeC_SitF">insertChild(node:at:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -382,14 +456,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>insert a child node at position in the list of children nodes</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">weak</span> <span class="k">var</span> <span class="nv">parent</span><span class="p">:</span> <span class="kt"><a href="../../Classes/XML.html">XML</a></span><span class="o">.</span><span class="kt">Node</span><span class="p">?</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">insertChild</span><span class="p">(</span><span class="nv">node</span><span class="p">:</span> <span class="kt"><a href="../../Enums/XML.html">XML</a></span><span class="o">.</span><span class="kt"><a href="../../Enums/XML/Node.html">Node</a></span><span class="p">,</span> <span class="n">at</span> <span class="nv">index</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -399,9 +473,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore3XMLC4NodeC8documentAEyFZ"></a>
-                    <a name="//apple_ref/swift/Method/document()" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLC4NodeC8documentAEyFZ">document()</a>
+                    <a name="/s:15AWSSDKSwiftCore3XMLO7ElementC11setChildrenyySayAC4NodeCGSgF"></a>
+                    <a name="//apple_ref/swift/Method/setChildren(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLO7ElementC11setChildrenyySayAC4NodeCGSgF">setChildren(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -409,14 +483,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>create XML document node</p>
+                        <p>set this elements children nodes</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">document</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt"><a href="../../Classes/XML.html">XML</a></span><span class="o">.</span><span class="kt">Node</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">setChildren</span><span class="p">(</span><span class="n">_</span> <span class="nv">children</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../../Enums/XML.html">XML</a></span><span class="o">.</span><span class="kt"><a href="../../Enums/XML/Node.html">Node</a></span><span class="p">]?)</span></code></pre>
 
                         </div>
                       </div>
@@ -426,9 +500,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore3XMLC4NodeC7element8withName11stringValueAESS_SSSgtFZ"></a>
-                    <a name="//apple_ref/swift/Method/element(withName:stringValue:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLC4NodeC7element8withName11stringValueAESS_SSSgtFZ">element(withName:stringValue:)</a>
+                    <a name="/s:15AWSSDKSwiftCore3XMLO7ElementC9attribute7forNameAC4NodeCSgSS_tF"></a>
+                    <a name="//apple_ref/swift/Method/attribute(forName:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLO7ElementC9attribute7forNameAC4NodeCSgSS_tF">attribute(forName:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -436,14 +510,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>create XML element node</p>
+                        <p>return attribute attached to element</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">element</span><span class="p">(</span><span class="nv">withName</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">stringValue</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../../Classes/XML.html">XML</a></span><span class="o">.</span><span class="kt">Node</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">attribute</span><span class="p">(</span><span class="nv">forName</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../../Enums/XML.html">XML</a></span><span class="o">.</span><span class="kt"><a href="../../Enums/XML/Node.html">Node</a></span><span class="p">?</span></code></pre>
 
                         </div>
                       </div>
@@ -453,9 +527,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore3XMLC4NodeC4text11stringValueAESS_tFZ"></a>
-                    <a name="//apple_ref/swift/Method/text(stringValue:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLC4NodeC4text11stringValueAESS_tFZ">text(stringValue:)</a>
+                    <a name="/s:15AWSSDKSwiftCore3XMLO7ElementC12addAttributeyyAC4NodeCF"></a>
+                    <a name="//apple_ref/swift/Method/addAttribute(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLO7ElementC12addAttributeyyAC4NodeCF">addAttribute(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -463,14 +537,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>create raw text node</p>
+                        <p>add an attribute to an element. If one with this name already exists it is replaced</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">text</span><span class="p">(</span><span class="nv">stringValue</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../../Classes/XML.html">XML</a></span><span class="o">.</span><span class="kt">Node</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">addAttribute</span><span class="p">(</span><span class="n">_</span> <span class="nv">node</span><span class="p">:</span> <span class="kt"><a href="../../Enums/XML.html">XML</a></span><span class="o">.</span><span class="kt"><a href="../../Enums/XML/Node.html">Node</a></span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -480,9 +554,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore3XMLC4NodeC9attribute8withName11stringValueAESS_SStFZ"></a>
-                    <a name="//apple_ref/swift/Method/attribute(withName:stringValue:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLC4NodeC9attribute8withName11stringValueAESS_SStFZ">attribute(withName:stringValue:)</a>
+                    <a name="/s:15AWSSDKSwiftCore3XMLO7ElementC13setAttributesyySayAC4NodeCGSgF"></a>
+                    <a name="//apple_ref/swift/Method/setAttributes(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLO7ElementC13setAttributesyySayAC4NodeCGSgF">setAttributes(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -490,14 +564,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>create XML attribute node</p>
+                        <p>set this elements children nodes</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">attribute</span><span class="p">(</span><span class="nv">withName</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">stringValue</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../../Classes/XML.html">XML</a></span><span class="o">.</span><span class="kt">Node</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">setAttributes</span><span class="p">(</span><span class="n">_</span> <span class="nv">attributes</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../../Enums/XML.html">XML</a></span><span class="o">.</span><span class="kt"><a href="../../Enums/XML/Node.html">Node</a></span><span class="p">]?)</span></code></pre>
 
                         </div>
                       </div>
@@ -507,9 +581,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore3XMLC4NodeC9namespace8withName11stringValueAESSSg_SStFZ"></a>
-                    <a name="//apple_ref/swift/Method/namespace(withName:stringValue:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLC4NodeC9namespace8withName11stringValueAESSSg_SStFZ">namespace(withName:stringValue:)</a>
+                    <a name="/s:15AWSSDKSwiftCore3XMLO7ElementC9namespace7forNameAC4NodeCSgSSSg_tF"></a>
+                    <a name="//apple_ref/swift/Method/namespace(forName:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLO7ElementC9namespace7forNameAC4NodeCSgSSSg_tF">namespace(forName:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -517,14 +591,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>create XML namespace node</p>
+                        <p>return namespace attached to element</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">namespace</span><span class="p">(</span><span class="nv">withName</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">stringValue</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../../Classes/XML.html">XML</a></span><span class="o">.</span><span class="kt">Node</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">namespace</span><span class="p">(</span><span class="nv">forName</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../../Enums/XML.html">XML</a></span><span class="o">.</span><span class="kt"><a href="../../Enums/XML/Node.html">Node</a></span><span class="p">?</span></code></pre>
 
                         </div>
                       </div>
@@ -534,9 +608,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore3XMLC4NodeC7comment11stringValueAESS_tFZ"></a>
-                    <a name="//apple_ref/swift/Method/comment(stringValue:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLC4NodeC7comment11stringValueAESS_tFZ">comment(stringValue:)</a>
+                    <a name="/s:15AWSSDKSwiftCore3XMLO7ElementC12addNamespaceyyAC4NodeCF"></a>
+                    <a name="//apple_ref/swift/Method/addNamespace(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLO7ElementC12addNamespaceyyAC4NodeCF">addNamespace(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -544,14 +618,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>create XML comment node</p>
+                        <p>add a namespace to an element. If one with this name already exists it is replaced</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">comment</span><span class="p">(</span><span class="nv">stringValue</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../../Classes/XML.html">XML</a></span><span class="o">.</span><span class="kt">Node</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">addNamespace</span><span class="p">(</span><span class="n">_</span> <span class="nv">node</span><span class="p">:</span> <span class="kt"><a href="../../Enums/XML.html">XML</a></span><span class="o">.</span><span class="kt"><a href="../../Enums/XML/Node.html">Node</a></span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -561,9 +635,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore3XMLC4NodeC10childCountSivp"></a>
-                    <a name="//apple_ref/swift/Property/childCount" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLC4NodeC10childCountSivp">childCount</a>
+                    <a name="/s:15AWSSDKSwiftCore3XMLO7ElementC13setNamespacesyySayAC4NodeCGSgF"></a>
+                    <a name="//apple_ref/swift/Method/setNamespaces(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLO7ElementC13setNamespacesyySayAC4NodeCGSgF">setNamespaces(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -571,14 +645,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>return number of children</p>
+                        <p>set this elements children nodes</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">childCount</span><span class="p">:</span> <span class="kt">Int</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">setNamespaces</span><span class="p">(</span><span class="n">_</span> <span class="nv">namespaces</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../../Enums/XML.html">XML</a></span><span class="o">.</span><span class="kt"><a href="../../Enums/XML/Node.html">Node</a></span><span class="p">]?)</span></code></pre>
 
                         </div>
                       </div>
@@ -588,36 +662,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore3XMLC4NodeC6detachyyF"></a>
-                    <a name="//apple_ref/swift/Method/detach()" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLC4NodeC6detachyyF">detach()</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>detach XML node from its parent</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">detach</span><span class="p">()</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:15AWSSDKSwiftCore3XMLC4NodeC9xmlStringSSvp"></a>
+                    <a name="/s:15AWSSDKSwiftCore3XMLO7ElementC9xmlStringSSvp"></a>
                     <a name="//apple_ref/swift/Property/xmlString" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLC4NodeC9xmlStringSSvp">xmlString</a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLO7ElementC9xmlStringSSvp">xmlString</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -625,14 +672,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>output formatted XML</p>
+                        <p>return formatted XML</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">xmlString</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">override</span> <span class="kd">public</span> <span class="k">var</span> <span class="nv">xmlString</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
@@ -646,9 +693,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore3XMLC4NodeC5child3forAESgSS_tF"></a>
-                    <a name="//apple_ref/swift/Method/child(for:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLC4NodeC5child3forAESgSS_tF">child(for:)</a>
+                    <a name="/s:15AWSSDKSwiftCore3XMLO7ElementC9attribute3forAC4NodeCSgs9CodingKey_p_tF"></a>
+                    <a name="//apple_ref/swift/Method/attribute(for:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLO7ElementC9attribute3forAC4NodeCSgs9CodingKey_p_tF">attribute(for:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -663,92 +710,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">child</span><span class="p">(</span><span class="k">for</span> <span class="nv">string</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../../Classes/XML.html">XML</a></span><span class="o">.</span><span class="kt">Node</span><span class="p">?</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:15AWSSDKSwiftCore3XMLC4NodeC5child3forAESgs9CodingKey_p_tF"></a>
-                    <a name="//apple_ref/swift/Method/child(for:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLC4NodeC5child3forAESgs9CodingKey_p_tF">child(for:)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Undocumented</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">child</span><span class="p">(</span><span class="k">for</span> <span class="nv">key</span><span class="p">:</span> <span class="kt">CodingKey</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../../Classes/XML.html">XML</a></span><span class="o">.</span><span class="kt">Node</span><span class="p">?</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-              </ul>
-            </div>
-            <div class="task-group">
-              <ul>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:15AWSSDKSwiftCore3XMLC4NodeC11descriptionSSvp"></a>
-                    <a name="//apple_ref/swift/Property/description" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLC4NodeC11descriptionSSvp">description</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>CustomStringConvertible protocol</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">description</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:15AWSSDKSwiftCore3XMLC4NodeC16debugDescriptionSSvp"></a>
-                    <a name="//apple_ref/swift/Property/debugDescription" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLC4NodeC16debugDescriptionSSvp">debugDescription</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>CustomDebugStringConvertible protocol</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">debugDescription</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">attribute</span><span class="p">(</span><span class="k">for</span> <span class="nv">key</span><span class="p">:</span> <span class="kt">CodingKey</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../../Enums/XML.html">XML</a></span><span class="o">.</span><span class="kt"><a href="../../Enums/XML/Node.html">Node</a></span><span class="p">?</span></code></pre>
 
                         </div>
                       </div>

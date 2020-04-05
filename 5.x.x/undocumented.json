@@ -72,14 +72,7 @@
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSClient.swift",
-      "line": 742,
-      "symbol": "URL.hostWithPort",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSClient.swift",
-      "line": 758,
+      "line": 746,
       "symbol": "Array.queryEncoded",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
@@ -376,13 +369,6 @@
       "line": 184,
       "symbol": "AWSShape.getXMLContainerCoding(for:)",
       "symbol_kind": "source.lang.swift.decl.function.method.static",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Mirror.swift",
-      "line": 20,
-      "symbol": "Mirror.getAttribute(forKey:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
@@ -996,112 +982,105 @@
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 22,
-      "symbol": "XML",
-      "symbol_kind": "source.lang.swift.decl.class",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 28,
+      "line": 29,
       "symbol": "XML.Node.Kind.document",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 29,
+      "line": 30,
       "symbol": "XML.Node.Kind.element",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 30,
+      "line": 31,
       "symbol": "XML.Node.Kind.text",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 31,
+      "line": 32,
       "symbol": "XML.Node.Kind.attribute",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 32,
+      "line": 33,
       "symbol": "XML.Node.Kind.namespace",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 33,
+      "line": 34,
       "symbol": "XML.Node.Kind.comment",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 38,
+      "line": 39,
       "symbol": "XML.Node.name",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 39,
+      "line": 40,
       "symbol": "XML.Node.stringValue",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 40,
+      "line": 41,
       "symbol": "XML.Node.children",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 41,
+      "line": 42,
       "symbol": "XML.Node.parent",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 165,
+      "line": 166,
       "symbol": "XML.Document.version",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 166,
+      "line": 167,
       "symbol": "XML.Document.characterEncoding",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 168,
+      "line": 169,
       "symbol": "XML.Document.init()",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 172,
+      "line": 173,
       "symbol": "XML.Document.init(rootElement:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/adamfowler/Documents/dev/macOS/lib/swift-aws/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 222,
+      "line": 223,
       "symbol": "XML.Element.init(name:stringValue:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"

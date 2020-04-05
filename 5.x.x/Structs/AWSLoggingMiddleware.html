@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>XML Class Reference</title>
+    <title>AWSLoggingMiddleware Structure Reference</title>
     <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
     <meta charset='utf-8'>
@@ -10,8 +10,8 @@
     
   </head>
   <body>
-    <a name="//apple_ref/swift/Class/XML" class="dashAnchor"></a>
-    <a title="XML Class Reference"></a>
+    <a name="//apple_ref/swift/Struct/AWSLoggingMiddleware" class="dashAnchor"></a>
+    <a title="AWSLoggingMiddleware Structure Reference"></a>
     <header>
       <div class="content-wrapper">
         <p><a href="../index.html"> Docs</a> (59% documented)</p>
@@ -22,7 +22,7 @@
       <p id="breadcrumbs">
         <a href="../index.html"> Reference</a>
         <img id="carat" src="../img/carat.png" />
-        XML Class Reference
+        AWSLoggingMiddleware Structure Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -41,9 +41,6 @@
                 <a href="../Classes/AWSClient/EventLoopGroupProvider.html">– EventLoopGroupProvider</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/AWSLoggingMiddleware.html">AWSLoggingMiddleware</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Classes/NIOTSHTTPClient.html">NIOTSHTTPClient</a>
               </li>
               <li class="nav-group-task">
@@ -54,18 +51,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/NIOTSHTTPClient/HTTPError.html">– HTTPError</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/XML.html">XML</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/XML/Node.html">– Node</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/XML/Document.html">– Document</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/XML/Element.html">– Element</a>
               </li>
             </ul>
           </li>
@@ -86,6 +71,18 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Enums/ServiceProtocolType.html">ServiceProtocolType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/XML.html">XML</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/XML/Node.html">– Node</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/XML/Document.html">– Document</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/XML/Element.html">– Element</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Enums/XMLContainerCoding.html">XMLContainerCoding</a>
@@ -111,16 +108,10 @@
                 <a href="../Extensions/MetaDataServiceProvider.html">MetaDataServiceProvider</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Extensions/Mirror.html">Mirror</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Extensions/Sequence.html">Sequence</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Extensions/String.html">String</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Extensions/URL.html">URL</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Extensions/_QueryEncoder.html">_QueryEncoder</a>
@@ -164,6 +155,9 @@
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
                 <a href="../Structs/AWSError.html">AWSError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSLoggingMiddleware.html">AWSLoggingMiddleware</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/AWSMemberEncoding.html">AWSMemberEncoding</a>
@@ -220,14 +214,14 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>XML</h1>
+            <h1>AWSLoggingMiddleware</h1>
               <div class="declaration">
                 <div class="language">
-                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">XML</span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">AWSLoggingMiddleware</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/AWSServiceMiddleware.html">AWSServiceMiddleware</a></span></code></pre>
 
                 </div>
               </div>
-            <p>Undocumented</p>
+            <p>Middleware struct that outputs the contents of requests being sent to AWS and the bodies of the responses received</p>
 
           </section>
           <section class="section task-group-section">
@@ -236,9 +230,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore3XMLC4NodeC"></a>
-                    <a name="//apple_ref/swift/Class/Node" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLC4NodeC">Node</a>
+                    <a name="/s:15AWSSDKSwiftCore20AWSLoggingMiddlewareV3logACySSc_tcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(log:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore20AWSLoggingMiddlewareV3logACySSc_tcfc">init(log:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -246,15 +240,60 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>base class for all types of XML.Node</p>
+                        <p>initialize AWSLoggingMiddleware class</p>
 
-                        <a href="../Classes/XML/Node.html" class="slightly-smaller">See more</a>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">Node</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">log</span> <span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">String</span><span class="p">)</span><span class="o">-&gt;</span><span class="p">()</span> <span class="o">=</span> <span class="p">{</span> <span class="nf">print</span><span class="p">(</span><span class="nv">$0</span><span class="p">)</span> <span class="p">})</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>log</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Function to call with logging output</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore20AWSLoggingMiddlewareV5chain7requestAA10AWSRequestVAG_tKF"></a>
+                    <a name="//apple_ref/swift/Method/chain(request:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore20AWSLoggingMiddlewareV5chain7requestAA10AWSRequestVAG_tKF">chain(request:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>output request</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">chain</span><span class="p">(</span><span class="nv">request</span><span class="p">:</span> <span class="kt"><a href="../Structs/AWSRequest.html">AWSRequest</a></span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Structs/AWSRequest.html">AWSRequest</a></span></code></pre>
 
                         </div>
                       </div>
@@ -264,9 +303,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore3XMLC8DocumentC"></a>
-                    <a name="//apple_ref/swift/Class/Document" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLC8DocumentC">Document</a>
+                    <a name="/s:15AWSSDKSwiftCore20AWSLoggingMiddlewareV5chain8responseAA11AWSResponseVAG_tKF"></a>
+                    <a name="//apple_ref/swift/Method/chain(response:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore20AWSLoggingMiddlewareV5chain8responseAA11AWSResponseVAG_tKF">chain(response:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -274,43 +313,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>XML Document class</p>
+                        <p>output response</p>
 
-                        <a href="../Classes/XML/Document.html" class="slightly-smaller">See more</a>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">Document</span> <span class="p">:</span> <span class="kt"><a href="../Classes/XML.html">XML</a></span><span class="o">.</span><span class="kt"><a href="../Classes/XML/Node.html">Node</a></span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:15AWSSDKSwiftCore3XMLC7ElementC"></a>
-                    <a name="//apple_ref/swift/Class/Element" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLC7ElementC">Element</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>XML Element class</p>
-
-                        <a href="../Classes/XML/Element.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">Element</span> <span class="p">:</span> <span class="kt"><a href="../Classes/XML.html">XML</a></span><span class="o">.</span><span class="kt"><a href="../Classes/XML/Node.html">Node</a></span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">chain</span><span class="p">(</span><span class="nv">response</span><span class="p">:</span> <span class="kt"><a href="../Structs/AWSResponse.html">AWSResponse</a></span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Structs/AWSResponse.html">AWSResponse</a></span></code></pre>
 
                         </div>
                       </div>

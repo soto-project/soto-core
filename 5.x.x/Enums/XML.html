@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Mirror Extension Reference</title>
+    <title>XML Enumeration Reference</title>
     <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
     <meta charset='utf-8'>
@@ -10,8 +10,8 @@
     
   </head>
   <body>
-    <a name="//apple_ref/swift/Extension/Mirror" class="dashAnchor"></a>
-    <a title="Mirror Extension Reference"></a>
+    <a name="//apple_ref/swift/Enum/XML" class="dashAnchor"></a>
+    <a title="XML Enumeration Reference"></a>
     <header>
       <div class="content-wrapper">
         <p><a href="../index.html"> Docs</a> (59% documented)</p>
@@ -22,7 +22,7 @@
       <p id="breadcrumbs">
         <a href="../index.html"> Reference</a>
         <img id="carat" src="../img/carat.png" />
-        Mirror Extension Reference
+        XML Enumeration Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -41,9 +41,6 @@
                 <a href="../Classes/AWSClient/EventLoopGroupProvider.html">– EventLoopGroupProvider</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/AWSLoggingMiddleware.html">AWSLoggingMiddleware</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Classes/NIOTSHTTPClient.html">NIOTSHTTPClient</a>
               </li>
               <li class="nav-group-task">
@@ -54,18 +51,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/NIOTSHTTPClient/HTTPError.html">– HTTPError</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/XML.html">XML</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/XML/Node.html">– Node</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/XML/Document.html">– Document</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/XML/Element.html">– Element</a>
               </li>
             </ul>
           </li>
@@ -86,6 +71,18 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Enums/ServiceProtocolType.html">ServiceProtocolType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/XML.html">XML</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/XML/Node.html">– Node</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/XML/Document.html">– Document</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/XML/Element.html">– Element</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Enums/XMLContainerCoding.html">XMLContainerCoding</a>
@@ -111,16 +108,10 @@
                 <a href="../Extensions/MetaDataServiceProvider.html">MetaDataServiceProvider</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Extensions/Mirror.html">Mirror</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Extensions/Sequence.html">Sequence</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Extensions/String.html">String</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Extensions/URL.html">URL</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Extensions/_QueryEncoder.html">_QueryEncoder</a>
@@ -164,6 +155,9 @@
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
                 <a href="../Structs/AWSError.html">AWSError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSLoggingMiddleware.html">AWSLoggingMiddleware</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/AWSMemberEncoding.html">AWSMemberEncoding</a>
@@ -220,14 +214,17 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>Mirror</h1>
+            <h1>XML</h1>
               <div class="declaration">
                 <div class="language">
-                  <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Mirror</span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">XML</span></code></pre>
 
                 </div>
               </div>
-            
+            <p>Implemented to replace the XML Foundation classes. This was initially required as there is no implementation of the Foundation XMLNode classes in iOS. This is also here because the implementation of XMLNode in Linux Swift 4.2 was causing crashes. Whenever an XMLDocument was deleted all the underlying CoreFoundation objects were deleted. This meant if you still had a reference to a XMLElement from that document, while it was still valid the underlying CoreFoundation object had been deleted.</p>
+
+<p>I have placed everything inside a holding XML enumeration to avoid name clashes with the Foundation version. Otherwise this class reflects the behaviour of the Foundation classes as close as possible with the exceptions of, I haven&rsquo;t implemented queries, DTD, also XMLNodes do not contain an object reference. Also the node creation function in XMLNode return XMLNode instead of Any.</p>
+
           </section>
           <section class="section task-group-section">
             <div class="task-group">
@@ -235,9 +232,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:s6MirrorV15AWSSDKSwiftCoreE12getAttribute6forKeyypSgSS_tF"></a>
-                    <a name="//apple_ref/swift/Method/getAttribute(forKey:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:s6MirrorV15AWSSDKSwiftCoreE12getAttribute6forKeyypSgSS_tF">getAttribute(forKey:)</a>
+                    <a name="/s:15AWSSDKSwiftCore3XMLO4NodeC"></a>
+                    <a name="//apple_ref/swift/Class/Node" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLO4NodeC">Node</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -245,14 +242,71 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>base class for all types of XML.Node</p>
 
+                        <a href="../Enums/XML/Node.html" class="slightly-smaller">See more</a>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">getAttribute</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">key</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Any</span><span class="p">?</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">Node</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore3XMLO8DocumentC"></a>
+                    <a name="//apple_ref/swift/Class/Document" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLO8DocumentC">Document</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>XML Document class</p>
+
+                        <a href="../Enums/XML/Document.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">Document</span> <span class="p">:</span> <span class="kt"><a href="../Enums/XML.html">XML</a></span><span class="o">.</span><span class="kt"><a href="../Enums/XML/Node.html">Node</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore3XMLO7ElementC"></a>
+                    <a name="//apple_ref/swift/Class/Element" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore3XMLO7ElementC">Element</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>XML Element class</p>
+
+                        <a href="../Enums/XML/Element.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">Element</span> <span class="p">:</span> <span class="kt"><a href="../Enums/XML.html">XML</a></span><span class="o">.</span><span class="kt"><a href="../Enums/XML/Node.html">Node</a></span></code></pre>
 
                         </div>
                       </div>

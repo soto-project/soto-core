@@ -218,6 +218,29 @@ class CredentialTests: XCTestCase {
         XCTAssertEqual(ecredential2.nearExpiration(), false)
     }
     
+    func testSharedCredentialINIParser() {
+        let credentials = """
+                          [default]
+                          aws_access_key_id = AWSACCESSKEYID
+                          aws_secret_access_key = AWSSECRETACCESSKEY
+                          """
+        let filename = "credentials"
+        let filenameURL = URL(fileURLWithPath: filename)
+        XCTAssertNoThrow(try Data(credentials.utf8).write(to: filenameURL))
+        defer {
+            XCTAssertNoThrow(try FileManager.default.removeItem(at: filenameURL))
+        }
+        
+        do {
+            let credentials = try SharedCredential(filename: filename)
+            
+            XCTAssertEqual(credentials.accessKeyId, "AWSACCESSKEYID")
+            XCTAssertEqual(credentials.secretAccessKey, "AWSSECRETACCESSKEY")
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+    
     static var allTests : [(String, (CredentialTests) -> () throws -> Void)] {
         return [
             ("testSharedCredentials", testSharedCredentials),
@@ -227,6 +250,7 @@ class CredentialTests: XCTestCase {
             ("testSharedCredentialsMissingProfile", testSharedCredentialsMissingProfile),
             ("testSharedCredentialsParseFailure", testSharedCredentialsParseFailure),
             ("testExpiringCredential", testExpiringCredential),
+            ("testSharedCredentialINIParser", testSharedCredentialINIParser)
         ]
     }
 }

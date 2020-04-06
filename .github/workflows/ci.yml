@@ -8,6 +8,9 @@ on:
     branches:
     - "*"
 
+env:
+  ENABLE_TIMING_TESTS: "false"
+
 jobs:
   macos:
     runs-on: macOS-latest
@@ -21,7 +24,11 @@ jobs:
     - name: SPM tests
       run: swift test --enable-code-coverage
     - name: Convert coverage files
-      run: xcrun llvm-cov export -format "lcov" .build/debug/aws-sdk-swift-corePackageTests.xctest/Contents/MacOs/aws-sdk-swift-corePackageTests -instr-profile=.build/debug/codecov/default.profdata > info.lcov  
+      run: |
+        xcrun llvm-cov export -format "lcov" \
+          .build/debug/aws-sdk-swift-corePackageTests.xctest/Contents/MacOs/aws-sdk-swift-corePackageTests \
+          -ignore-filename-regex="\/Tests\/" \
+          -instr-profile=.build/debug/codecov/default.profdata > info.lcov  
     - name: Upload to codecov.io
       run: bash <(curl -s https://codecov.io/bash) -J 'aws-sdk-swift-core' -t ${{secrets.CODECOV_TOKEN}}
 
@@ -29,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        tag: ['swift:5.1.5', 'swift:5.2']
+        tag: ['swift:5.1.5', 'swift:5.2.1']
     container:
       image: ${{ matrix.tag }}
       volumes:
@@ -47,7 +54,11 @@ jobs:
     - name: Test
       run: swift test --parallel --enable-code-coverage --enable-test-discovery
     - name: Convert coverage files
-      run: llvm-cov export -format="lcov" .build/debug/aws-sdk-swift-corePackageTests.xctest -instr-profile .build/debug/codecov/default.profdata > info.lcov
+      run: |
+        llvm-cov export -format="lcov" \
+          .build/debug/aws-sdk-swift-corePackageTests.xctest \
+          -ignore-filename-regex="\/Tests\/" \
+          -instr-profile .build/debug/codecov/default.profdata > info.lcov
     - name: Upload to codecov.io
       uses: codecov/codecov-action@v1.0.3
       with:

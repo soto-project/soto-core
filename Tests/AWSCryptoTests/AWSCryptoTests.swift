@@ -36,9 +36,18 @@ final class AWSCryptoTests: XCTestCase {
     }
     
     func testMD5() {
-        let data = createRandomBuffer(34, 2345, size: 234896)
+        let buffer = createRandomBuffer(34, 2345, size: 234896)
+        // use Data instead of [UInt8] to test nonContinuousStorage
+        let data = Data(buffer)
         let digest = Insecure.MD5.hash(data: data)
         XCTAssertEqual(digest.hexDigest(), "3abdd8d79be09bc250d60ada1f000912")
+        
+        var md5 = Insecure.MD5()
+        md5.update(data: data[0..<123754])
+        md5.update(data: data[123754..<234896])
+        let digest2 = md5.finalize()
+        
+        XCTAssertEqual(digest, digest2)
     }
 
     func testSHA256() {
@@ -59,6 +68,26 @@ final class AWSCryptoTests: XCTestCase {
         XCTAssertEqual(digest.hexDigest(), "15fc2df3a1c3649b83baf0f28d1a611bee8339a050d9d2c2ac4afad18f3187f725530b09bb6b2044131648d11d608c394804bc02ce2110b76d231ea75201000d")
     }
     
+    func testHMAC() {
+        let data = createRandomBuffer(1, 91, size: 347237)
+        let key = createRandomBuffer(102, 3, size: 32)
+        let authenticationKey = HMAC<SHA256>.authenticationCode(for: data, using: SymmetricKey(data: key))
+        XCTAssertEqual(authenticationKey.hexDigest(), "ddec250211f1b546254bab3fb027af1acc4842898e8af6eeadcdbf8e2c6c1ff5")
+    }
+
+    func testMD5InitUpdateFinal() {
+        let data = createRandomBuffer(8372, 12489, size: 562741)
+        let digest = Insecure.MD5.hash(data: data)
+        
+        var md5 = Insecure.MD5()
+        md5.update(data: data[0..<238768])
+        md5.update(data: data[238768..<562741])
+        let digest2 = md5.finalize()
+        
+        XCTAssertEqual(digest, digest2)
+        XCTAssertEqual(digest.hexDigest(), digest2.hexDigest())
+    }
+    
     func testSHA256InitUpdateFinal() {
         let data = createRandomBuffer(8372, 12489, size: 562741)
         let digest = SHA256.hash(data: data)
@@ -72,15 +101,36 @@ final class AWSCryptoTests: XCTestCase {
         XCTAssertEqual(digest.hexDigest(), digest2.hexDigest())
     }
     
-    func testHMAC() {
-        let data = createRandomBuffer(1, 91, size: 347237)
-        let key = createRandomBuffer(102, 3, size: 32)
-        let authenticationKey = HMAC<SHA256>.authenticationCode(for: data, using: SymmetricKey(data: key))
-        XCTAssertEqual(authenticationKey.hexDigest(), "ddec250211f1b546254bab3fb027af1acc4842898e8af6eeadcdbf8e2c6c1ff5")
+    func testSHA384InitUpdateFinal() {
+        let data = createRandomBuffer(8372, 12489, size: 562741)
+        let digest = SHA384.hash(data: data)
+        
+        var sha384 = SHA384()
+        sha384.update(data: data[0..<238768])
+        sha384.update(data: data[238768..<562741])
+        let digest2 = sha384.finalize()
+        
+        XCTAssertEqual(digest, digest2)
+        XCTAssertEqual(digest.hexDigest(), digest2.hexDigest())
     }
-
+    
+    func testSHA512InitUpdateFinal() {
+        let data = createRandomBuffer(8372, 12489, size: 562741)
+        let digest = SHA512.hash(data: data)
+        
+        var sha512 = SHA512()
+        sha512.update(data: data[0..<238768])
+        sha512.update(data: data[238768..<562741])
+        let digest2 = sha512.finalize()
+        
+        XCTAssertEqual(digest, digest2)
+        XCTAssertEqual(digest.hexDigest(), digest2.hexDigest())
+    }
+    
     func testHMACInitUpdateFinal() {
-        let data = createRandomBuffer(21, 81, size: 762061)
+        let buffer = createRandomBuffer(21, 81, size: 762061)
+        // use Data instead of [UInt8] to test nonContinuousStorage
+        let data = Data(buffer)
         let key = createRandomBuffer(102, 3, size: 32)
         let authenticationKey = HMAC<SHA256>.authenticationCode(for: data, using: SymmetricKey(data: key))
 
@@ -96,7 +146,14 @@ final class AWSCryptoTests: XCTestCase {
     static var allTests = [
         ("testMD5", testMD5),
         ("testSHA256", testSHA256),
+        ("testSHA384", testSHA384),
+        ("testSHA512", testSHA512),
         ("testHMAC", testHMAC),
+        ("testMD5InitUpdateFinal", testMD5InitUpdateFinal),
+        ("testSHA256InitUpdateFinal", testSHA256InitUpdateFinal),
+        ("testSHA384InitUpdateFinal", testSHA384InitUpdateFinal),
+        ("testSHA512InitUpdateFinal", testSHA512InitUpdateFinal),
+        ("testHMACInitUpdateFinal", testHMACInitUpdateFinal)
     ]
 }
 

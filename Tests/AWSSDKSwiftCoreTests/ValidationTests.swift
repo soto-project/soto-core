@@ -39,7 +39,7 @@ class ValidationTests: XCTestCase {
     
     func testNumericMinMaxValidation() {
         struct A: AWSShape {
-            let size: Int
+            let size: Int?
             
             public func validate(name: String) throws {
                 try validate(size, name:"size", parent: name, max: 100)
@@ -54,9 +54,26 @@ class ValidationTests: XCTestCase {
         testValidationFail(a3)
     }
     
+    func testFloatingPointMinMaxValidation() {
+        struct A: AWSShape {
+            let size: Float?
+            
+            public func validate(name: String) throws {
+                try validate(size, name:"size", parent: name, max: 50.0)
+                try validate(size, name:"size", parent: name, min: 1.0)
+            }
+        }
+        let a1 = A(size:23)
+        testValidationSuccess(a1)
+        let a2 = A(size: 0)
+        testValidationFail(a2)
+        let a3 = A(size: 1000)
+        testValidationFail(a3)
+    }
+    
     func testStringLengthMinMaxValidation() {
         struct A: AWSShape {
-            let string: String
+            let string: String?
             
             public func validate(name: String) throws {
                 try validate(string, name:"string", parent: name, max: 24)
@@ -73,7 +90,7 @@ class ValidationTests: XCTestCase {
     
     func testArrayLengthMinMaxValidation() {
         struct A: AWSShape {
-            let numbers: [Int]
+            let numbers: [Int]?
             
             public func validate(name: String) throws {
                 try validate(numbers, name:"numbers", parent: name, max: 4)
@@ -90,7 +107,7 @@ class ValidationTests: XCTestCase {
     
     func testStringPatternValidation() {
         struct A: AWSShape {
-            let string: String
+            let string: String?
             
             public func validate(name: String) throws {
                 try validate(string, name:"string", parent: name, pattern: "^[A-Za-z]{3}$")
@@ -126,6 +143,7 @@ class ValidationTests: XCTestCase {
     static var allTests : [(String, (ValidationTests) -> () throws -> Void)] {
         return [
             ("testNumericMinMaxValidation", testNumericMinMaxValidation),
+            ("testFloatingPointMinMaxValidation", testFloatingPointMinMaxValidation),
             ("testStringLengthMinMaxValidation", testStringLengthMinMaxValidation),
             ("testArrayLengthMinMaxValidation", testArrayLengthMinMaxValidation),
             ("testStringPatternValidation", testStringPatternValidation),

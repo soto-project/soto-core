@@ -49,10 +49,15 @@ class AWSClientTests: XCTestCase {
             ("testCreateNIORequest", testCreateNIORequest),
             ("testValidateCode", testValidateCode),
             ("testUnsignedClient", testUnsignedClient),
+            ("testHeaderEncoding", testHeaderEncoding),
+            ("testQueryEncoding", testQueryEncoding),
+            ("testURIEncoding", testURIEncoding),
             ("testValidateXMLResponse", testValidateXMLResponse),
             ("testValidateXMLCodablePayloadResponse", testValidateXMLCodablePayloadResponse),
             ("testValidateXMLRawPayloadResponse", testValidateXMLRawPayloadResponse),
             ("testValidateXMLError", testValidateXMLError),
+            ("testValidateRawResponseError", testValidateRawResponseError),
+            ("testValidateQueryError", testValidateQueryError),
             ("testValidateJSONResponse", testValidateJSONResponse),
             ("testValidateJSONCodablePayloadResponse", testValidateJSONCodablePayloadResponse),
             ("testValidateJSONRawPayloadResponse", testValidateJSONRawPayloadResponse),
@@ -62,7 +67,9 @@ class AWSClientTests: XCTestCase {
             ("testPayloadDataInResponse", testPayloadDataInResponse),
             ("testClientNoInputNoOutput", testClientNoInputNoOutput),
             ("testClientWithInputNoOutput", testClientWithInputNoOutput),
-            ("testClientNoInputWithOutput", testClientNoInputWithOutput)
+            ("testClientNoInputWithOutput", testClientNoInputWithOutput),
+            ("testEC2ClientRequest", testEC2ClientRequest),
+            ("testEC2ValidateError", testEC2ValidateError)
         ]
     }
 
@@ -155,6 +162,7 @@ class AWSClientTests: XCTestCase {
         serviceProtocol: ServiceProtocol(type: .query),
         apiVersion: "2013-12-01",
         middlewares: [AWSLoggingMiddleware()],
+        possibleErrorTypes: [SESErrorType.self],
         eventLoopGroupProvider: .useAWSClientShared
     )
 
@@ -183,6 +191,17 @@ class AWSClientTests: XCTestCase {
         partitionEndpoint: "us-east-1",
         middlewares: [AWSLoggingMiddleware()],
         possibleErrorTypes: [S3ErrorType.self],
+        eventLoopGroupProvider: .useAWSClientShared
+    )
+
+    let ec2Client = AWSClient(
+        accessKeyId: "foo",
+        secretAccessKey: "bar",
+        region: nil,
+        service: "ec2",
+        serviceProtocol: ServiceProtocol(type: .other("ec2")),
+        apiVersion: "2013-12-02",
+        middlewares: [AWSLoggingMiddleware()],
         eventLoopGroupProvider: .useAWSClientShared
     )
 
@@ -419,6 +438,48 @@ class AWSClientTests: XCTestCase {
         }
     }
     
+    func testHeaderEncoding() {
+        struct Input: AWSShape {
+            static let _encoding = [AWSMemberEncoding(label: "h", location: .header(locationName: "header-member"))]
+            let h: String
+        }
+        do {
+            let input = Input(h: "TestHeader")
+            let request = try kinesisClient.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input)
+            XCTAssertEqual(request.httpHeaders["header-member"] as? String, "TestHeader")
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+    
+    func testQueryEncoding() {
+        struct Input: AWSShape {
+            static let _encoding = [AWSMemberEncoding(label: "q", location: .querystring(locationName: "query"))]
+            let q: String
+        }
+        do {
+            let input = Input(q: "=3+5897^sdfjh&")
+            let request = try kinesisClient.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input)
+            XCTAssertEqual(request.url.absoluteString, "https://kinesis.us-east-1.amazonaws.com/?query=%3D3%2B5897%5Esdfjh%26")
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+    
+    func testURIEncoding() {
+        struct Input: AWSShape {
+            static let _encoding = [AWSMemberEncoding(label: "u", location: .uri(locationName: "key"))]
+            let u: String
+        }
+        do {
+            let input = Input(u: "MyKey")
+            let request = try s3Client.createAWSRequest(operation: "Test", path: "/{key}", httpMethod: "GET", input: input)
+            XCTAssertEqual(request.url.absoluteString, "https://s3.amazonaws.com/MyKey")
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+    
     func testCreateWithXMLNamespace() {
         struct Input: AWSShape {
             public static let _xmlNamespace: String? = "https://test.amazonaws.com/doc/2020-03-11/"
@@ -507,17 +568,25 @@ class AWSClientTests: XCTestCase {
 
     func testValidateXMLCodablePayloadResponse() {
         class Output : AWSShape {
+            static let _encoding = [AWSMemberEncoding(label: "contentType", location: .header(locationName: "content-type"))]
             static let payloadPath: String? = "name"
             let name : String
+            let contentType: String
+            
+            private enum CodingKeys: String, CodingKey {
+                case name = "name"
+                case contentType = "content-type"
+            }
         }
         let response = AWSHTTPResponseImpl(
             status: .ok,
-            headers: HTTPHeaders(),
+            headers: ["Content-Type":"application/json"],
             bodyData: "<name>hello</name>".data(using: .utf8)!
         )
         do {
             let output : Output = try s3Client.validate(operation: "Output", response: response)
             XCTAssertEqual(output.name, "hello")
+            XCTAssertEqual(output.contentType, "application/json")
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -574,9 +643,26 @@ class AWSClientTests: XCTestCase {
             )
             let _: Output = try s3Client.validate(operation: "TestOperation", response: response)
             XCTFail("Shouldn't get here")
-        } catch S3ErrorType.noSuchKey(_) {
+        } catch S3ErrorType.noSuchKey(let message) {
+            XCTAssertEqual(message, "It doesn't exist")
         } catch {
             XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+    func testValidateQueryError() {
+        let response = AWSHTTPResponseImpl(
+            status: .notFound,
+            headers: HTTPHeaders(),
+            bodyData: "<ErrorResponse><Error><Code>MessageRejected</Code><Message>Don't like it</Message></Error></ErrorResponse>".data(using: .utf8)!
+        )
+        do {
+            try sesClient.validate(response: response)
+            XCTFail("Should not get here")
+        } catch SESErrorType.messageRejected(let message) {
+            XCTAssertEqual(message, "Don't like it")
+        } catch {
+            XCTFail("Throwing the wrong error")
         }
     }
 
@@ -623,18 +709,26 @@ class AWSClientTests: XCTestCase {
         struct Output : AWSShape {
             static let payloadPath: String? = "body"
             public static var _encoding = [
+                AWSMemberEncoding(label: "contentType", location: .header(locationName: "content-type")),
                 AWSMemberEncoding(label: "body", encoding: .blob)
             ]
             let body : Data
+            let contentType: String
+            
+            private enum CodingKeys: String, CodingKey {
+                case body = "body"
+                case contentType = "content-type"
+            }
         }
         let response = AWSHTTPResponseImpl(
             status: .ok,
-            headers: HTTPHeaders(),
+            headers: ["Content-Type":"application/json"],
             bodyData: "{\"name\":\"hello\"}".data(using: .utf8)!
         )
         do {
             let output : Output = try kinesisClient.validate(operation: "Output", response: response)
             XCTAssertEqual(output.body, "{\"name\":\"hello\"}".data(using: .utf8))
+            XCTAssertEqual(output.contentType, "application/json")
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -839,6 +933,37 @@ class AWSClientTests: XCTestCase {
             XCTFail("Unexpected error: \(error)")
         }
     }
+    
+    func testEC2ClientRequest() {
+        struct Input: AWSShape {
+            static let _encoding = [AWSMemberEncoding(label: "array", location: .body(locationName: "Array"), encoding: .list(member:"item"))]
+            let array: [String]
+        }
+        do {
+            let input = Input(array: ["entry1", "entry2"])
+            let request = try ec2Client.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input)
+            XCTAssertEqual(request.body.asString(), "Action=Test&Version=2013-12-02&array.1=entry1&array.2=entry2")
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+    
+    func testEC2ValidateError() {
+        let response = AWSHTTPResponseImpl(
+            status: .notFound,
+            headers: HTTPHeaders(),
+            bodyData: "<Errors><Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message></Error></Errors>".data(using: .utf8)!
+        )
+        do {
+            try ec2Client.validate(response: response)
+            XCTFail("Should not get here")
+        } catch let error as AWSResponseError {
+            XCTAssertEqual(error.errorCode, "NoSuchKey")
+            XCTAssertEqual(error.message, "It doesn't exist")
+        } catch {
+            XCTFail("Throwing the wrong error")
+        }
+    }
 }
 
 /// Error enum for Kinesis
@@ -848,10 +973,6 @@ public enum KinesisErrorType: AWSErrorType {
 
 extension KinesisErrorType {
     public init?(errorCode: String, message: String?){
-        var errorCode = errorCode
-        if let index = errorCode.firstIndex(of: "#") {
-            errorCode = String(errorCode[errorCode.index(index, offsetBy: 1)...])
-        }
         switch errorCode {
         case "ResourceNotFoundException":
             self = .resourceNotFoundException(message: message)
@@ -875,10 +996,6 @@ public enum S3ErrorType: AWSErrorType {
 
 extension S3ErrorType {
     public init?(errorCode: String, message: String?){
-        var errorCode = errorCode
-        if let index = errorCode.firstIndex(of: "#") {
-            errorCode = String(errorCode[errorCode.index(index, offsetBy: 1)...])
-        }
         switch errorCode {
         case "NoSuchKey":
             self = .noSuchKey(message: message)
@@ -894,3 +1011,27 @@ extension S3ErrorType {
         }
     }
 }
+
+/// Error enum for SES
+public enum SESErrorType: AWSErrorType {
+    case messageRejected(message: String?)
+}
+
+extension SESErrorType {
+    public init?(errorCode: String, message: String?){
+        switch errorCode {
+        case "MessageRejected":
+            self = .messageRejected(message: message)
+        default:
+            return nil
+        }
+    }
+
+    public var description : String {
+        switch self {
+        case .messageRejected(let message):
+            return "MessageRejected :\(message ?? "")"
+        }
+    }
+}
+

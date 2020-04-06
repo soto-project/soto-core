@@ -36,6 +36,7 @@ import NIO
 final class AWSSignerTests: XCTestCase {
     @EnvironmentVariable("ENABLE_TIMING_TESTS", default: true) static var enableTimingTests: Bool
     let credentials : Credential = StaticCredential(accessKeyId: "MYACCESSKEY", secretAccessKey: "MYSECRETACCESSKEY")
+    let credentialsWithSessionKey : Credential = StaticCredential(accessKeyId: "MYACCESSKEY", secretAccessKey: "MYSECRETACCESSKEY", sessionToken: "MYSESSIONTOKEN")
 
     func testSignGetHeaders() {
         let signer = AWSSigner(credentials: credentials, name: "glacier", region:"us-east-1")
@@ -55,10 +56,16 @@ final class AWSSignerTests: XCTestCase {
         XCTAssertEqual(url.absoluteString, "https://s3.us-east-1.amazonaws.com/?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=MYACCESSKEY%2F20010102%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20010102T034640Z&X-Amz-Expires=86400&X-Amz-SignedHeaders=host&X-Amz-Signature=27957103c8bfdff3560372b1d85976ed29c944f34295eca2d4fdac7fc02c375a")
     }
 
+    func testSignS3GetWithQueryURL() {
+        let signer = AWSSigner(credentials: credentials, name: "s3", region:"us-east-1")
+        let url = signer.signURL(url: URL(string: "https://s3.us-east-1.amazonaws.com/testFile?versionId=1")!, method: .GET, date:Date(timeIntervalSinceReferenceDate: 100000))
+        XCTAssertEqual(url.absoluteString, "https://s3.us-east-1.amazonaws.com/testFile?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=MYACCESSKEY%2F20010102%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20010102T034640Z&X-Amz-Expires=86400&X-Amz-SignedHeaders=host&versionId=1&X-Amz-Signature=22678dbcdbbc468c306757c8abd021e093e588e4eba7d0d0da9b92717bbcc1b0")
+    }
+
     func testSignS3PutURL() {
-        let signer = AWSSigner(credentials: credentials, name: "s3", region:"eu-west-1")
+        let signer = AWSSigner(credentials: credentialsWithSessionKey, name: "s3", region:"eu-west-1")
         let url = signer.signURL(url: URL(string: "https://test-bucket.s3.amazonaws.com/test-put.txt")!, method: .PUT, body: .string("Testing signed URLs"), date:Date(timeIntervalSinceReferenceDate: 100000))
-        XCTAssertEqual(url.absoluteString, "https://test-bucket.s3.amazonaws.com/test-put.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=MYACCESSKEY%2F20010102%2Feu-west-1%2Fs3%2Faws4_request&X-Amz-Date=20010102T034640Z&X-Amz-Expires=86400&X-Amz-SignedHeaders=host&X-Amz-Signature=13d665549a6ea5eb6a1615ede83440eaed3e0ee25c964e62d188c896d916d96f")
+        XCTAssertEqual(url.absoluteString, "https://test-bucket.s3.amazonaws.com/test-put.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=MYACCESSKEY%2F20010102%2Feu-west-1%2Fs3%2Faws4_request&X-Amz-Date=20010102T034640Z&X-Amz-Expires=86400&X-Amz-Security-Token=MYSESSIONTOKEN&X-Amz-SignedHeaders=host&X-Amz-Signature=969dfbc450089f34f5b430611b18def1701c72c9e7e1608142051a898094227e")
     }
 
     func testBodyData() {
@@ -106,6 +113,7 @@ final class AWSSignerTests: XCTestCase {
         ("testSignGetHeaders", testSignGetHeaders),
         ("testSignPutHeaders", testSignPutHeaders),
         ("testSignS3GetURL", testSignS3GetURL),
+        ("testSignS3GetWithQueryURL", testSignS3GetWithQueryURL),
         ("testSignS3PutURL", testSignS3PutURL),
         ("testBodyData", testBodyData),
         ("testPerformanceSignedURL", testPerformanceSignedURL),

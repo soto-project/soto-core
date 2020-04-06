@@ -210,10 +210,6 @@ public struct AWSSigner {
         }
     }
 
-    /// return a hexEncoded string buffer from an array of bytes
-    static func hexEncoded(_ buffer: [UInt8]) -> String {
-        return buffer.map{String(format: "%02x", $0)}.joined(separator: "")
-    }
     /// create timestamp dateformatter
     static private func createTimeStampDateFormatter() -> DateFormatter {
         let formatter = DateFormatter()

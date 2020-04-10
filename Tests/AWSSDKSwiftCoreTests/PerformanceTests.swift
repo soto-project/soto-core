@@ -18,7 +18,7 @@ import NIOHTTP1
 import AsyncHTTPClient
 @testable import AWSSDKSwiftCore
 
-struct HeaderRequest: AWSShape {
+struct HeaderRequest: AWSEncodableShape {
     static var _encoding: [AWSMemberEncoding] = [
         AWSMemberEncoding(label: "Header1", location: .header(locationName: "Header1")),
         AWSMemberEncoding(label: "Header2", location: .header(locationName: "Header2")),
@@ -32,7 +32,7 @@ struct HeaderRequest: AWSShape {
     let header4: TimeStamp
 }
 
-struct StandardRequest: AWSShape {
+struct StandardRequest: AWSEncodableShape {
     let item1: String
     let item2: Int
     let item3: Double
@@ -40,13 +40,13 @@ struct StandardRequest: AWSShape {
     let item5: [Int]
 }
 
-struct PayloadRequest: AWSShape {
+struct PayloadRequest: AWSEncodableShape & AWSShapeWithPayload {
     public static let payloadPath: String? = "payload"
 
     let payload: StandardRequest
 }
 
-struct MixedRequest: AWSShape {
+struct MixedRequest: AWSEncodableShape {
     static var _encoding: [AWSMemberEncoding] = [
         AWSMemberEncoding(label: "item1", location: .header(locationName: "item1")),
     ]
@@ -55,6 +55,14 @@ struct MixedRequest: AWSShape {
     let item2: Int
     let item3: Double
     let item4: TimeStamp
+}
+
+struct StandardResponse: AWSDecodableShape {
+    let item1: String
+    let item2: Int
+    let item3: Double
+    let item4: TimeStamp
+    let item5: [Int]
 }
 
 
@@ -275,7 +283,7 @@ class PerformanceTests: XCTestCase {
         measure {
             do {
                 for _ in 0..<1000 {
-                    let _: StandardRequest = try client.validate(operation: "Output", response: response)
+                    let _: StandardResponse = try client.validate(operation: "Output", response: response)
                 }
             } catch {
                 XCTFail(error.localizedDescription)
@@ -303,7 +311,7 @@ class PerformanceTests: XCTestCase {
         measure {
             do {
                 for _ in 0..<1000 {
-                    let _: StandardRequest = try client.validate(operation: "Output", response: response)
+                    let _: StandardResponse = try client.validate(operation: "Output", response: response)
                 }
             } catch {
                 XCTFail(error.localizedDescription)

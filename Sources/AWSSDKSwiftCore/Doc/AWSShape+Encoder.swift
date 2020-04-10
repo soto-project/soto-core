@@ -15,13 +15,13 @@
 import struct Foundation.Data
 import class  Foundation.JSONEncoder
 
-internal extension AWSShape {
-    
+internal extension AWSEncodableShape {
+
     /// Encode AWSShape as JSON
     func encodeAsJSON() throws -> Data {
         return try JSONEncoder().encode(self)
     }
-    
+
     /// Encode AWSShape as XML
     func encodeAsXML(rootName: String? = nil) throws -> XML.Element {
         let xml = try XMLEncoder().encode(self, name: rootName)
@@ -30,7 +30,7 @@ internal extension AWSShape {
         }
         return xml
     }
-    
+
     /// Encode AWSShape as a query array
     /// - Parameter flattenArrays: should all arrays be flattened
     func encodeAsQuery(flattenArrays: Bool = false) throws -> [String : Any] {
@@ -40,4 +40,3 @@ internal extension AWSShape {
     }
 
 }
-

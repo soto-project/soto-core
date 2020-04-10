@@ -115,11 +115,11 @@ class DictionaryEncoderTests: XCTestCase {
     }
     
     func testContainingStructureDecodeEncode() {
-        struct Test2 : Codable {
+        struct Test2 : AWSDecodableShape {
             let a : Int
             let b : String
         }
-        struct Test : Codable {
+        struct Test : AWSDecodableShape {
             let t : Test2
         }
         let dictionary: [String:Any] = ["t": ["a":4, "b":"Hello"]]
@@ -130,7 +130,7 @@ class DictionaryEncoderTests: XCTestCase {
     }
     
     func testEnumDecodeEncode() {
-        struct Test : Codable {
+        struct Test : AWSDecodableShape {
             enum TestEnum : String, Codable {
                 case first = "First"
                 case second = "Second"
@@ -144,7 +144,7 @@ class DictionaryEncoderTests: XCTestCase {
     }
     
     func testArrayDecodeEncode() {
-        struct Test : Codable {
+        struct Test : AWSDecodableShape {
             let a : [Int]
         }
         let dictionary: [String:Any] = ["a":[1,2,3,4,5]]
@@ -154,10 +154,10 @@ class DictionaryEncoderTests: XCTestCase {
     }
     
     func testArrayOfStructuresDecodeEncode() {
-        struct Test2 : Codable {
+        struct Test2 : AWSDecodableShape {
             let b : String
         }
-        struct Test : Codable {
+        struct Test : AWSDecodableShape {
             let a : [Test2]
         }
         let dictionary: [String:Any] = ["a":[["b":"hello"], ["b":"goodbye"]]]
@@ -168,7 +168,7 @@ class DictionaryEncoderTests: XCTestCase {
     }
     
     func testDictionaryDecodeEncode() {
-        struct Test : Codable {
+        struct Test : AWSDecodableShape {
             let a : [String:Int]
         }
         let dictionary: [String:Any] = ["a":["key":45]]
@@ -178,7 +178,7 @@ class DictionaryEncoderTests: XCTestCase {
     }
     
     func testEnumDictionaryDecodeEncode() {
-        struct Test : Codable {
+        struct Test : AWSDecodableShape {
             enum TestEnum : String, Codable {
                 case first = "First"
                 case second = "Second"
@@ -193,7 +193,7 @@ class DictionaryEncoderTests: XCTestCase {
     }
     
     func testDateDecodeEncode() {
-        struct Test : Codable {
+        struct Test : AWSDecodableShape {
             let date : Date
         }
         let dictionary: [String:Any] = ["date":0]
@@ -215,7 +215,7 @@ class DictionaryEncoderTests: XCTestCase {
     }
     
     func testDataDecodeEncode() {
-        struct Test : Codable {
+        struct Test : AWSDecodableShape {
             let data : Data
         }
         let dictionary: [String:Any] = ["data":"Hello, world".data(using:.utf8)!.base64EncodedString()]
@@ -233,7 +233,7 @@ class DictionaryEncoderTests: XCTestCase {
     }
     
     func testUrlDecodeEncode() {
-        struct Test : Codable {
+        struct Test : AWSDecodableShape {
             let url : URL
         }
         let dictionary: [String:Any] = ["url":"www.google.com"]
@@ -242,7 +242,7 @@ class DictionaryEncoderTests: XCTestCase {
         }
     }
     
-    func testDecodeErrors<T : Codable>(type: T.Type, dictionary: [String:Any], decoder: DictionaryDecoder = DictionaryDecoder()) {
+    func testDecodeErrors<T : Decodable>(type: T.Type, dictionary: [String:Any], decoder: DictionaryDecoder = DictionaryDecoder()) {
         do {
             _ = try DictionaryDecoder().decode(T.self, from: dictionary)
             XCTFail("Decoder did not throw an error when it should have")
@@ -252,7 +252,7 @@ class DictionaryEncoderTests: XCTestCase {
     }
     
     func testFloatOverflowDecodeErrors() {
-        struct Test : Codable {
+        struct Test : AWSDecodableShape {
             let float : Float
         }
         let dictionary: [String:Any] = ["float":Double.infinity]
@@ -260,7 +260,7 @@ class DictionaryEncoderTests: XCTestCase {
     }
     
     func testMissingKeyDecodeErrors() {
-        struct Test : Codable {
+        struct Test : AWSDecodableShape {
             let a : Int
             let b : Int
         }
@@ -269,7 +269,7 @@ class DictionaryEncoderTests: XCTestCase {
     }
     
     func testInvalidValueDecodeErrors() {
-        struct Test : Codable {
+        struct Test : AWSDecodableShape {
             let a : Int
         }
         let dictionary: [String:Any] = ["b":"test"]
@@ -277,7 +277,7 @@ class DictionaryEncoderTests: XCTestCase {
     }
     
     func testNestedContainer() {
-        struct Test : Decodable {
+        struct Test : AWSDecodableShape {
             let firstname : String
             let surname : String
             let age : Int
@@ -310,7 +310,7 @@ class DictionaryEncoderTests: XCTestCase {
     }
     
     func testSupercoder() {
-        class Base : Decodable {
+        class Base : AWSDecodableShape {
             let a : Int
         }
         class Test : Base {
@@ -336,7 +336,7 @@ class DictionaryEncoderTests: XCTestCase {
         }
     }
     
-    struct B: Codable {
+    struct B: AWSDecodableShape {
         let int: Int
         let int8: Int8
         let int16: Int16
@@ -355,7 +355,7 @@ class DictionaryEncoderTests: XCTestCase {
         let optional: String?
     }
     
-    struct A: Codable {
+    struct A: AWSDecodableShape {
         let b: B
         let dictionary: [String: String]
         let array: [String]

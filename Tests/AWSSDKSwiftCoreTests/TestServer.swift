@@ -79,12 +79,12 @@ class AWSTestServer {
     }
     
     /// run server reading request, convert from to an input shape processing them and converting the result back to a response.
-    func process<Input: AWSShape, Output: AWSShape>(_ process: (Input) throws -> Result<Output>) throws {
+    func process<Input: Decodable, Output: Encodable>(_ process: (Input) throws -> Result<Output>) throws {
         while(try processSingleRequest(process)) { }
     }
     
     /// run server reading request, convert from to an input shape processing them and converting the result back to a response. Return an error after so many requests
-    func ProcessWithErrors<Input: AWSShape, Output: AWSShape>(_ process: (Input) throws -> Result<Output>, error: ErrorType, errorAfter: Int) throws {
+    func ProcessWithErrors<Input: Decodable, Output:  Encodable>(_ process: (Input) throws -> Result<Output>, error: ErrorType, errorAfter: Int) throws {
         var count = errorAfter
         repeat {
             if count == 0 {
@@ -159,7 +159,7 @@ extension AWSTestServer {
     }
 
     /// read one request, convert it from to an input shape, processing it and convert the result back to a response.
-    func processSingleRequest<Input: AWSShape, Output: AWSShape>(_ process: (Input) throws -> Result<Output>) throws -> Bool {
+    func processSingleRequest<Input: Decodable, Output: Encodable>(_ process: (Input) throws -> Result<Output>) throws -> Bool {
         let request = try readRequest()
 
         // Convert to Input AWSShape

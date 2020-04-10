@@ -39,9 +39,6 @@ jobs:
         tag: ['swift:5.1.5', 'swift:5.2.1']
     container:
       image: ${{ matrix.tag }}
-      volumes:
-      - $GITHUB_WORKSPACE:/src
-      options: --workdir /src
     steps:
     - name: Checkout
       uses: actions/checkout@v1

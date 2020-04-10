@@ -205,7 +205,7 @@ class QueryEncoderTests: XCTestCase {
         let test = Test(a:[9,8,7,6,5,4,3])
         measure {
             do {
-                for _ in 1...10000 {
+                for _ in 1...1000 {
                     _ = try QueryEncoder().encode(test)
                 }
             } catch {

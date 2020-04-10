@@ -13,9 +13,11 @@ import XCTest
 class PayloadTests: XCTestCase {
 
     func testDataRequestPayload() {
-        struct DataPayload: AWSShape {
+        struct DataPayload: AWSEncodableShape & AWSShapeWithPayload {
             static var payloadPath: String? = "data"
             let data: AWSPayload
+            
+            private enum CodingKeys: CodingKey {}
         }
         
         do {
@@ -47,9 +49,11 @@ class PayloadTests: XCTestCase {
     }
     
     func testByteBufferRequestPayload() {
-        struct DataPayload: AWSShape {
+        struct DataPayload: AWSEncodableShape & AWSShapeWithPayload {
             static var payloadPath: String? = "data"
             let data: AWSPayload
+            
+            private enum CodingKeys: CodingKey {}
         }
         
         do {

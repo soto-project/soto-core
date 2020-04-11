@@ -32,19 +32,7 @@ extension AWSShape {
     public static func getEncoding(for: String) -> AWSMemberEncoding? {
         return _encoding.first {$0.label == `for`}
     }
-
-    /// return list of member variables serialized in the URL path
-    public static var pathParams: [String: String] {
-        var params: [String: String] = [:]
-        for member in _encoding {
-            guard let location = member.location else { continue }
-            if case .uri(let name) = location {
-                params[name] = member.label
-            }
-        }
-        return params
-    }
-
+    
     /// return list of member variables serialized in the headers
     public static var headerParams: [String: String] {
         var params: [String: String] = [:]
@@ -56,17 +44,16 @@ extension AWSShape {
         }
         return params
     }
-
-    /// return list of member variables serialized as query parameters
-    public static var queryParams: [String: String] {
-        var params: [String: String] = [:]
+    
+    /// return list of member variables serialized in the headers
+    public static var statusCodeParam: String? {
         for member in _encoding {
             guard let location = member.location else { continue }
-            if case .querystring(let name) = location {
-                params[name] = member.label
+            if case .statusCode = location {
+                return member.label
             }
         }
-        return params
+        return nil
     }
 }
 

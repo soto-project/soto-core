@@ -480,6 +480,64 @@ class AWSClientTests: XCTestCase {
         }
     }
 
+    func testHeaderResponseDecoding() {
+        struct Output: AWSDecodableShape {
+            static let _encoding = [AWSMemberEncoding(label: "h", location: .header(locationName: "header-member"))]
+            let h: String
+            private enum CodingKeys: String, CodingKey {
+                case h = "header-member"
+            }
+        }
+        let response = AWSHTTPResponseImpl(
+            status: .ok,
+            headers: ["header-member": "test-header"],
+            bodyData: nil
+        )
+        
+        // XML
+        do {
+            let result: Output = try sesClient.validate(operation: "Test", response: response)
+            XCTAssertEqual(result.h, "test-header")
+        } catch {
+            XCTFail("\(error)")
+        }
+        
+        // JSON
+        do {
+            let result: Output = try kinesisClient.validate(operation: "Test", response: response)
+            XCTAssertEqual(result.h, "test-header")
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+
+    func testStatusCodeResponseDecoding() {
+        struct Output: AWSDecodableShape {
+            static let _encoding = [AWSMemberEncoding(label: "status", location: .statusCode)]
+            let status: Int
+        }
+        let response = AWSHTTPResponseImpl(
+            status: .ok,
+            headers: HTTPHeaders(),
+            bodyData: nil
+        )
+        
+        // XML
+        do {
+            let result: Output = try s3Client.validate(operation: "Test", response: response)
+            XCTAssertEqual(result.status, 200)
+        } catch {
+            XCTFail("\(error)")
+        }
+        // JSON
+        do {
+            let result: Output = try kinesisClient.validate(operation: "Test", response: response)
+            XCTAssertEqual(result.status, 200)
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+
     func testCreateWithXMLNamespace() {
         struct Input: AWSEncodableShape {
             public static let _xmlNamespace: String? = "https://test.amazonaws.com/doc/2020-03-11/"

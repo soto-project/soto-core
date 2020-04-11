@@ -355,9 +355,12 @@ extension AWSClient {
                     headers[location] = value
                     
                 case .querystring(let location):
-                    if let array = value as? QueryEncodableArray {
+                    switch value {
+                    case let array as QueryEncodableArray:
                         array.queryEncoded.forEach { queryParams.append((key:location, value:$0)) }
-                    } else {
+                    case let dictionary as QueryEncodableDictionary:
+                        dictionary.queryEncoded.forEach { queryParams.append($0) }
+                    default:
                         queryParams.append((key:location, value:"\(value)"))
                     }
                     
@@ -759,3 +762,14 @@ protocol QueryEncodableArray {
 extension Array : QueryEncodableArray {
     var queryEncoded: [String] { return self.map{ "\($0)" }}
 }
+
+protocol QueryEncodableDictionary {
+    var queryEncoded: [(key:String, entry: String)] { get }
+}
+
+extension Dictionary : QueryEncodableDictionary {
+    var queryEncoded: [(key:String, entry: String)] {
+        return self.map{ (key:"\($0.key)", value:"\($0.value)") }
+    }
+}
+

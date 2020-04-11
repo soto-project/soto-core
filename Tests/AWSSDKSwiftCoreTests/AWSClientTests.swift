@@ -51,6 +51,8 @@ class AWSClientTests: XCTestCase {
             ("testUnsignedClient", testUnsignedClient),
             ("testHeaderEncoding", testHeaderEncoding),
             ("testQueryEncoding", testQueryEncoding),
+            ("testQueryEncodedArray", testQueryEncodedArray),
+            ("testQueryEncodedDictionary", testQueryEncodedDictionary),
             ("testURIEncoding", testURIEncoding),
             ("testValidateXMLResponse", testValidateXMLResponse),
             ("testValidateXMLCodablePayloadResponse", testValidateXMLCodablePayloadResponse),
@@ -69,7 +71,8 @@ class AWSClientTests: XCTestCase {
             ("testClientWithInputNoOutput", testClientWithInputNoOutput),
             ("testClientNoInputWithOutput", testClientNoInputWithOutput),
             ("testEC2ClientRequest", testEC2ClientRequest),
-            ("testEC2ValidateError", testEC2ValidateError)
+            ("testEC2ValidateError", testEC2ValidateError),
+            ("testRegionEnum", testRegionEnum)
         ]
     }
 
@@ -182,7 +185,7 @@ class AWSClientTests: XCTestCase {
     let s3Client = AWSClient(
         accessKeyId: "foo",
         secretAccessKey: "bar",
-        region: nil,
+        region: .cacentral1,
         service: "s3",
         serviceProtocol: ServiceProtocol(type: .restxml),
         apiVersion: "2006-03-01",
@@ -461,6 +464,34 @@ class AWSClientTests: XCTestCase {
             let input = Input(q: "=3+5897^sdfjh&")
             let request = try kinesisClient.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input)
             XCTAssertEqual(request.url.absoluteString, "https://kinesis.us-east-1.amazonaws.com/?query=%3D3%2B5897%5Esdfjh%26")
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+
+    func testQueryEncodedArray() {
+        struct Input: AWSEncodableShape {
+            static let _encoding = [AWSMemberEncoding(label: "q", location: .querystring(locationName: "query"))]
+            let q: [String]
+        }
+        do {
+            let input = Input(q: ["=3+5897^sdfjh&", "test"])
+            let request = try kinesisClient.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input)
+            XCTAssertEqual(request.url.absoluteString, "https://kinesis.us-east-1.amazonaws.com/?query=%3D3%2B5897%5Esdfjh%26&query=test")
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+
+    func testQueryEncodedDictionary() {
+        struct Input: AWSEncodableShape {
+            static let _encoding = [AWSMemberEncoding(label: "q", location: .querystring(locationName: "query"))]
+            let q: [String: Int]
+        }
+        do {
+            let input = Input(q: ["one": 1, "two": 2])
+            let request = try s3Client.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input)
+            XCTAssertEqual(request.url.absoluteString, "https://s3.amazonaws.com/?one=1&two=2")
         } catch {
             XCTFail("\(error)")
         }

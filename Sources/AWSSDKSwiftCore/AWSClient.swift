@@ -345,36 +345,31 @@ extension AWSClient {
 
         // TODO should replace with Encodable
         let mirror = Mirror(reflecting: input)
-        var memberVariablesCount = mirror.children.count
+        var memberVariablesCount = mirror.children.count - Input._encoding.count
 
-        let headerMemberParams = Input.headerParams
-        memberVariablesCount -= headerMemberParams.count
-        for (key, value) in headerMemberParams {
-            if let attr = mirror.getAttribute(forKey: value) {
-                headers[key] = attr
-            }
-        }
-
-        let queryMemberParams = Input.queryParams
-        memberVariablesCount -= queryMemberParams.count
-        for (key, value) in queryMemberParams {
-            if let attr = mirror.getAttribute(forKey: value) {
-                if let array = attr as? QueryEncodableArray {
-                    array.queryEncoded.forEach { queryParams.append((key:key, value:$0)) }
-                } else {
-                    queryParams.append((key:key, value:"\(attr)"))
+        // extract header, query and uri params
+        for encoding in Input._encoding {
+            if let value = mirror.getAttribute(forKey: encoding.label) {
+                switch encoding.location {
+                case .header(let location):
+                    headers[location] = value
+                    
+                case .querystring(let location):
+                    if let array = value as? QueryEncodableArray {
+                        array.queryEncoded.forEach { queryParams.append((key:location, value:$0)) }
+                    } else {
+                        queryParams.append((key:location, value:"\(value)"))
+                    }
+                    
+                case .uri(let location):
+                    path = path
+                        .replacingOccurrences(of: "{\(location)}", with: "\(value)")
+                        // percent-encode key which is part of the path
+                        .replacingOccurrences(of: "{\(location)+}", with: "\(value)".addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)!)
+                    
+                default:
+                    memberVariablesCount += 1
                 }
-            }
-        }
-
-        let pathMemberParams = Input.pathParams
-        memberVariablesCount -= pathMemberParams.count
-        for (key, value) in pathMemberParams {
-            if let attr = mirror.getAttribute(forKey: value) {
-                path = path
-                    .replacingOccurrences(of: "{\(key)}", with: "\(attr)")
-                    // percent-encode key which is part of the path
-                    .replacingOccurrences(of: "{\(key)+}", with: "\(attr)".addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)!)
             }
         }
 

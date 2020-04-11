@@ -36,7 +36,7 @@ public enum Region {
 
 extension Region {
     
-    init(rawValue: String) {
+    public init(rawValue: String) {
         switch rawValue {
         case "us-east-1":
             self = .useast1
@@ -80,7 +80,7 @@ extension Region {
 
     }
     
-    var rawValue: String {
+    public var rawValue: String {
         switch self {
         case .useast1:
             return "us-east-1"
@@ -121,5 +121,15 @@ extension Region {
         case .other(let string):
             return string
         }
+    }
+}
+
+extension Region: Equatable, Hashable {
+    public static func == (lhs: Region, rhs: Region) -> Bool {
+        lhs.rawValue == rhs.rawValue
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        self.rawValue.hash(into: &hasher)
     }
 }

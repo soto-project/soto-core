@@ -570,6 +570,11 @@ extension AWSClient {
                     outputNode.addChild(node)
                 }
             }
+            // add status code to output dictionary
+            if let statusCodeParam = Output.statusCodeParam {
+                let node = XML.Element(name: statusCodeParam, stringValue: "\(response.status.code)")
+                outputNode.addChild(node)
+            }
             return try XMLDecoder().decode(Output.self, from: outputNode)
 
         case .buffer(let byteBuffer):
@@ -606,6 +611,10 @@ extension AWSClient {
                     outputDict[headerParams[index].key] = stringValue
                 }
             }
+        }
+        // add status code to output dictionary
+        if let statusCodeParam = Output.statusCodeParam {
+            outputDict[statusCodeParam] = response.status.code
         }
 
         return try decoder.decode(Output.self, from: outputDict)

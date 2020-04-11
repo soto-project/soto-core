@@ -71,7 +71,7 @@ extension AWSShape {
 }
 
 extension AWSShape {
-    /// Return an idempotencyToken 
+    /// Return an idempotencyToken
     public static func idempotencyToken() -> String {
         return UUID().uuidString
     }
@@ -120,7 +120,7 @@ extension AWSShape {
 public protocol AWSEncodableShape: AWSShape & Encodable {
     /// The XML namespace for the object
     static var _xmlNamespace: String? { get }
-    
+
     /// returns if a shape is valid. The checks for validity are defined by the AWS model files we get from http://github.com/aws/aws-sdk-go
     func validate(name: String) throws
 }
@@ -157,6 +157,12 @@ public extension AWSEncodableShape {
     func validate<T : Collection>(_ value: T, name: String, parent: String, max: Int) throws {
         guard value.count <= max else { throw AWSClientError.validationError(message: "Length of \(parent).\(name) (\(value.count)) is greater than the maximum allowed value \(max).") }
     }
+    func validate(_ value: AWSPayload, name: String, parent: String, min: Int) throws {
+        guard value.byteBuffer.readableBytes >= min else { throw AWSClientError.validationError(message: "Length of \(parent).\(name) (\(value.byteBuffer.readableBytes)) is less than minimum allowed value \(min).") }
+    }
+    func validate(_ value: AWSPayload, name: String, parent: String, max: Int) throws {
+        guard value.byteBuffer.readableBytes <= max else { throw AWSClientError.validationError(message: "Length of \(parent).\(name) (\(value.byteBuffer.readableBytes)) is greater than the maximum allowed value \(max).") }
+    }
     func validate(_ value: String, name: String, parent: String, pattern: String) throws {
         let regularExpression = try NSRegularExpression(pattern: pattern, options: [])
         let firstMatch = regularExpression.rangeOfFirstMatch(in: value, options: .anchored, range: NSMakeRange(0, value.count))
@@ -184,6 +190,14 @@ public extension AWSEncodableShape {
         try validate(value, name: name, parent: parent, min: min)
     }
     func validate<T : Collection>(_ value: T?, name: String, parent: String, max: Int) throws {
+        guard let value = value else {return}
+        try validate(value, name: name, parent: parent, max: max)
+    }
+    func validate(_ value: AWSPayload?, name: String, parent: String, min: Int) throws {
+        guard let value = value else {return}
+        try validate(value, name: name, parent: parent, min: min)
+    }
+    func validate(_ value: AWSPayload?, name: String, parent: String, max: Int) throws {
         guard let value = value else {return}
         try validate(value, name: name, parent: parent, max: max)
     }

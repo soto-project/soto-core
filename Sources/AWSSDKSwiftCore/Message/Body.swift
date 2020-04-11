@@ -32,20 +32,8 @@ public enum Body {
 }
 
 extension Body {
-    /// initialize Body with Any. If it is Data, create .buffer() otherwise create a String describing the value
-    init(anyValue: Any) {
-        switch anyValue {
-        case let data as Data:
-            var byteBuffer = ByteBufferAllocator().buffer(capacity: data.count)
-            byteBuffer.writeBytes(data)
-            self = .buffer(byteBuffer)
-            
-        case let byteBuffer as ByteBuffer:
-            self = .buffer(byteBuffer)
-            
-        default:
-            self = .text("\(anyValue)")
-        }
+    init(_ payload: AWSPayload) {
+        self = .buffer(payload.byteBuffer)
     }
 
     /// return as a raw data buffer

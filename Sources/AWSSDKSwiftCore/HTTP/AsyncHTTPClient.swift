@@ -14,6 +14,7 @@
 
 import AsyncHTTPClient
 import NIO
+import NIOHTTP1
 
 /// comply with AWSHTTPClient protocol
 extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
@@ -50,6 +51,47 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
             return eventLoopGroup.next().makeFailedFuture(error)
         }
     }
+
+    func execute(request: AWSHTTPRequest, delegate: AWSHTTPClientResponseDelegate, timeout: TimeAmount) -> Task<AWSHTTPResponse>? {
+        let requestBody: AsyncHTTPClient.HTTPClient.Body?
+        if let body = request.body {
+            requestBody = .byteBuffer(body)
+        } else {
+            requestBody = nil
+        }
+        do {
+            let asyncRequest = try AsyncHTTPClient.HTTPClient.Request(url: request.url, method: request.method, headers: request.headers, body: requestBody)
+            return execute(request: asyncRequest, delegate: delegate, deadline: .now() + timeout)
+        } catch {
+            return nil
+        }
+    }
 }
 
 extension AsyncHTTPClient.HTTPClient.Response: AWSHTTPResponse {}
+
+class AWSHTTPClientResponseDelegate: HTTPClientResponseDelegate {
+
+    init(_ stream: @escaping (ByteBuffer)->()) {
+        self.stream = stream
+        self.head = nil
+    }
+
+    func didReceiveHead(task: HTTPClient.Task<AWSHTTPResponse>, _ head: HTTPResponseHead) -> EventLoopFuture<Void> {
+        self.head = head
+        return task.eventLoop.makeSucceededFuture(())
+    }
+    
+    func didReceiveBodyPart(task: HTTPClient.Task<AWSHTTPResponse>, _ buffer: ByteBuffer) -> EventLoopFuture<Void> {
+        stream(buffer)
+        return task.eventLoop.makeSucceededFuture(())
+    }
+
+    func didFinishRequest(task: HTTPClient.Task<AWSHTTPResponse>) throws -> AWSHTTPResponse {
+        return AsyncHTTPClient.HTTPClient.Response(host: "me", status: head.status, headers: head.headers, body: nil)
+    }
+
+    let stream: (ByteBuffer)->()
+    var head: HTTPResponseHead!
+}
+

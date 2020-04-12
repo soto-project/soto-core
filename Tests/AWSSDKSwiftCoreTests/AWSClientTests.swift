@@ -15,6 +15,7 @@
 import XCTest
 import AsyncHTTPClient
 import NIO
+import NIOFoundationCompat
 import NIOHTTP1
 import AWSTestUtils
 import AWSXML
@@ -1347,7 +1348,58 @@ let response = AWSHTTPResponseImpl(
         let request = try client.createAWSRequest(operation: "test", path: "/", httpMethod: "GET")
         XCTAssertEqual(request.url.absoluteString, "https://testService.us-east-1.amazonaws.com/test")
     }
+
+    func testStreamingResponse() {
+        struct Input : AWSEncodableShape {
+        }
+        struct Output : AWSDecodableShape & Encodable {
+            static let _encoding = [AWSMemberEncoding(label: "test", location: .header(locationName: "test"))]
+            let test: String
+        }
+        let data = createRandomBuffer(45, 109, size: 128*1024)
+
+        do {
+            let awsServer = AWSTestServer(serviceProtocol: .json)
+            let client = AWSClient(
+                accessKeyId: "",
+                secretAccessKey: "",
+                region: .useast1,
+                service:"TestClient",
+                serviceProtocol: ServiceProtocol(type: .json, version: ServiceProtocol.Version(major: 1, minor: 1)),
+                apiVersion: "2020-01-21",
+                endpoint: awsServer.address,
+                middlewares: [AWSLoggingMiddleware()],
+                eventLoopGroupProvider: .shared(MultiThreadedEventLoopGroup(numberOfThreads: 2))
+            )
+            var count = 0
+            let response: EventLoopFuture<Output> = client.send(operation: "test", path: "/", httpMethod: "GET", input: Input()) { (payload: ByteBuffer, eventLoop: EventLoop) in
+                let payloadSize = payload.readableBytes
+                let slice = Data(data[count..<(count+payloadSize)])
+                let payloadData = payload.getData(at: 0, length: payload.readableBytes)
+                XCTAssertEqual(slice, payloadData)
+                count += payloadSize
+                return eventLoop.makeSucceededFuture(())
+            }
+
+            try awsServer.process { request in
+                var byteBuffer = ByteBufferAllocator().buffer(capacity: 128*1024)
+                byteBuffer.writeBytes(data)
+                let response = AWSTestServer.Response(httpStatus: .ok, headers: ["test":"TestHeader"], body: byteBuffer)
+                return AWSTestServer.Result(output: response, continueProcessing: false)
+            }
+
+            let result = try response.wait()
+            XCTAssertEqual(result.test, "TestHeader")
+            XCTAssertEqual(count, 128*1024)
+            try awsServer.stop()
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+
+    }
 }
+
+
 
 /// Error enum for Kinesis
 public enum ServiceErrorType: AWSErrorType {

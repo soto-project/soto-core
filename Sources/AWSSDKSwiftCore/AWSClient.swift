@@ -37,6 +37,7 @@ public final class AWSClient {
         case alreadyShutdown
         case invalidURL(String)
         case tooMuchData
+        case streamingUnavailable
     }
 
     enum InternalError: Swift.Error {
@@ -234,6 +235,19 @@ extension AWSClient {
         return promise.futureResult
     }
 
+    /// invoke HTTP request
+    fileprivate func invoke(_ httpRequest: AWSHTTPRequest, stream: @escaping (ByteBuffer)->()) -> EventLoopFuture<AWSHTTPResponse> {
+        guard let httpClient = self.httpClient as? AsyncHTTPClient.HTTPClient else {
+            return eventLoopGroup.next().makeFailedFuture(RequestError.streamingUnavailable)
+        }
+        let delegate = AWSHTTPClientResponseDelegate(stream)
+        if let task = httpClient.execute(request: httpRequest, delegate: delegate, timeout: .seconds(5)) {
+            return task.futureResult
+        } else {
+            return eventLoopGroup.next().makeFailedFuture(RequestError.invalidURL(httpRequest.url.path))
+        }
+    }
+
     /// create HTTPClient
     fileprivate static func createHTTPClient() -> AWSHTTPClient {
         #if canImport(Network)
@@ -349,6 +363,23 @@ extension AWSClient {
         return recordMetrics(future, service: serviceConfig.service, operation: operationName)
     }
 
+    public func sendStreamResponse<Output: AWSDecodableShape, Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, input: Input, stream: @escaping (ByteBuffer)->()) -> EventLoopFuture<Output> {
+
+        return credentialProvider.getCredential().flatMapThrowing { credential in
+            let signer = AWSSigner(credentials: credential, name: self.signingName, region: self.region.rawValue)
+            let awsRequest = try self.createAWSRequest(
+                        operation: operationName,
+                        path: path,
+                        httpMethod: httpMethod,
+                        input: input)
+            return awsRequest.createHTTPRequest(signer: signer)
+        }.flatMap { request in
+            return self.invoke(request, stream: stream)
+        }.flatMapThrowing { response in
+            return try self.validate(operation: operationName, response: response)
+        }
+    }
+
     /// generate a signed URL
     /// - parameters:
     ///     - url : URL to sign
@@ -398,7 +429,7 @@ extension AWSClient {
         precondition(input.options.contains(.allowStreaming), "\(operation) does not allow streaming of data")
         precondition(reader.size != nil || input.options.contains(.allowChunkedStreaming), "\(operation) does not allow chunked streaming of data. Please supply a data size.")
     }
-    
+
     internal func createAWSRequest<Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
         var headers: [String: Any] = [:]
         var path = path
@@ -590,6 +621,10 @@ extension AWSClient {
         var raw: Bool = false
         var payloadKey: String? = (Output.self as? AWSShapeWithPayload.Type)?.payloadPath
 
+        // chunked payloads should be flagged as raw so service middleware can process them
+        if operationName == "SelectObjectContent" {
+            raw = true
+        }
         // if response has a payload with encoding info
         if let payloadPath = payloadKey, let encoding = Output.getEncoding(for: payloadPath) {
             // is payload raw
@@ -602,7 +637,7 @@ extension AWSClient {
             }
         }
 
-        var awsResponse = try AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol, raw: raw)
+        var awsResponse = try AWSResponse(operation: operationName, from: response, serviceProtocol: serviceConfig.serviceProtocol, raw: raw)
 
         // do we need to fix up the response before processing it
         for middleware in serviceConfig.middlewares + middlewares {
@@ -813,6 +848,8 @@ extension AWSClient.ClientError: CustomStringConvertible {
             """
         case .tooMuchData:
             return "You have supplied too much data for the Request."
+        case .streamingUnavailable:
+            return "Streaming is only available while using AsyncHTTPClient"
         }
     }
 }
@@ -823,7 +860,7 @@ extension AWSClient {
         let startTime = DispatchTime.now().uptimeNanoseconds
 
         Counter(label: "aws_requests_total", dimensions: dimensions).increment()
-        
+
         return future.map { response in
             Metrics.Timer(
                 label: "aws_request_duration",

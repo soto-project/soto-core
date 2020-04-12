@@ -3,6 +3,8 @@
 // Written by Adam Fowler 2020/03/18
 //
 
+//MARK: Collection Coders
+
 // ArrayCoder
 
 /// Protocol for array encoding properties. The only property required is the array element name `member`
@@ -10,11 +12,13 @@ public protocol ArrayCoderProperties {
     static var member: String { get }
 }
 
-public struct ArrayCoder<Properties: ArrayCoderProperties, Element> {
+/// Coder for encoding/decoding Arrays. This is extended to support encoding and decoding based on whether `Element` is `Encodable` or `Decodable`.
+public struct ArrayCoder<Properties: ArrayCoderProperties, Element>: CustomCoder {
     public typealias CodableValue = [Element]
 }
 
-extension ArrayCoder : CustomDecoder where Element: Decodable {
+/// extend to support decoding
+extension ArrayCoder: CustomDecoder where Element: Decodable {
     public static func decode(from decoder: Decoder) throws -> CodableValue {
         let topLevelContainer = try decoder.container(keyedBy: _EncodingWrapperKey.self)
         var values: [Element] = []
@@ -29,7 +33,8 @@ extension ArrayCoder : CustomDecoder where Element: Decodable {
     }
 }
 
-extension ArrayCoder : CustomEncoder where Element: Encodable {
+/// extend to support encoding
+extension ArrayCoder: CustomEncoder where Element: Encodable {
     public static func encode(value: CodableValue, to encoder: Encoder) throws {
         var topLevelContainer = encoder.container(keyedBy: _EncodingWrapperKey.self)
         var container = topLevelContainer.nestedUnkeyedContainer(forKey: _EncodingWrapperKey(stringValue: Properties.member, intValue: nil))
@@ -38,8 +43,6 @@ extension ArrayCoder : CustomEncoder where Element: Encodable {
         }
     }
 }
-
-extension ArrayCoder: CustomCoder where Element: Codable {}
 
 // DictionaryCoder
 
@@ -50,10 +53,12 @@ public protocol DictionaryCoderProperties {
     static var value: String { get }
 }
 
-public struct DictionaryCoder<Properties: DictionaryCoderProperties, Key: Hashable, Value> {
+/// Coder for encoding/decoding Dictionaries. This is extended to support encoding and decoding based on whether `Key` and `Value` are `Encodable` or `Decodable`.
+public struct DictionaryCoder<Properties: DictionaryCoderProperties, Key: Hashable, Value>: CustomCoder {
     public typealias CodableValue = [Key: Value]
 }
 
+/// extend to support decoding
 extension DictionaryCoder: CustomDecoder where Key: Decodable, Value: Decodable {
     public static func decode(from decoder: Decoder) throws -> CodableValue {
         var values: [Key: Value] = [:]
@@ -82,6 +87,7 @@ extension DictionaryCoder: CustomDecoder where Key: Decodable, Value: Decodable 
     }
 }
 
+/// extend to support encoding
 extension DictionaryCoder: CustomEncoder where Key: Encodable, Value: Encodable {
     public static func encode(value: CodableValue, to encoder: Encoder) throws {
         if let entry = Properties.entry {
@@ -102,10 +108,6 @@ extension DictionaryCoder: CustomEncoder where Key: Encodable, Value: Encodable 
         }
     }
 }
-
-extension DictionaryCoder: CustomCoder where Key: Codable, Value: Codable {}
-
-//MARK: Default Collection Coders
 
 /// The most common array encoding property is an element name "member"
 public struct DefaultArrayCoderProperties: ArrayCoderProperties {

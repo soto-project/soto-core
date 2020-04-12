@@ -472,7 +472,7 @@ extension AWSClient {
         var urlString = "\(baseURL.absoluteString)\(parsedPath.path)"
         if queryParams.count > 0 {
             urlString.append("?")
-            urlString.append(queryParams.map{"\($0.key)=\(urlEncodeQueryParam("\($0.value)"))"}.sorted().joined(separator:"&"))
+            urlString.append(queryParams.sorted{$0.key < $1.key}.map{"\($0.key)=\(urlEncodeQueryParam("\($0.value)"))"}.joined(separator:"&"))
         }
 
         guard let url = URL(string: urlString) else {

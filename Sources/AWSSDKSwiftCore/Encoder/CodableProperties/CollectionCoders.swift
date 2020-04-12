@@ -10,8 +10,11 @@ public protocol ArrayCoderProperties {
     static var member: String { get }
 }
 
-public struct ArrayCoder<Properties: ArrayCoderProperties, Element: Codable>: CustomCoder {
+public struct ArrayCoder<Properties: ArrayCoderProperties, Element> {
     public typealias CodableValue = [Element]
+}
+
+extension ArrayCoder : CustomDecoder where Element: Decodable {
     public static func decode(from decoder: Decoder) throws -> CodableValue {
         let topLevelContainer = try decoder.container(keyedBy: _EncodingWrapperKey.self)
         var values: [Element] = []
@@ -24,7 +27,9 @@ public struct ArrayCoder<Properties: ArrayCoderProperties, Element: Codable>: Cu
         }
         return values
     }
+}
 
+extension ArrayCoder : CustomEncoder where Element: Encodable {
     public static func encode(value: CodableValue, to encoder: Encoder) throws {
         var topLevelContainer = encoder.container(keyedBy: _EncodingWrapperKey.self)
         var container = topLevelContainer.nestedUnkeyedContainer(forKey: _EncodingWrapperKey(stringValue: Properties.member, intValue: nil))
@@ -33,6 +38,8 @@ public struct ArrayCoder<Properties: ArrayCoderProperties, Element: Codable>: Cu
         }
     }
 }
+
+extension ArrayCoder: CustomCoder where Element: Codable {}
 
 // DictionaryCoder
 
@@ -43,9 +50,11 @@ public protocol DictionaryCoderProperties {
     static var value: String { get }
 }
 
-public struct DictionaryCoder<Properties: DictionaryCoderProperties, Key: Codable & Hashable, Value: Codable>: CustomCoder {
+public struct DictionaryCoder<Properties: DictionaryCoderProperties, Key: Hashable, Value> {
     public typealias CodableValue = [Key: Value]
+}
 
+extension DictionaryCoder: CustomDecoder where Key: Decodable, Value: Decodable {
     public static func decode(from decoder: Decoder) throws -> CodableValue {
         var values: [Key: Value] = [:]
         if let entry = Properties.entry {
@@ -71,7 +80,9 @@ public struct DictionaryCoder<Properties: DictionaryCoderProperties, Key: Codabl
         }
         return values
     }
+}
 
+extension DictionaryCoder: CustomEncoder where Key: Encodable, Value: Encodable {
     public static func encode(value: CodableValue, to encoder: Encoder) throws {
         if let entry = Properties.entry {
             var topLevelContainter = encoder.container(keyedBy: _EncodingWrapperKey.self)
@@ -92,6 +103,8 @@ public struct DictionaryCoder<Properties: DictionaryCoderProperties, Key: Codabl
     }
 }
 
+extension DictionaryCoder: CustomCoder where Key: Codable, Value: Codable {}
+
 //MARK: Default Collection Coders
 
 /// The most common array encoding property is an element name "member"
@@ -106,5 +119,5 @@ public struct DefaultDictionaryCoderProperties: DictionaryCoderProperties {
     public static let value = "value"
 }
 
-public typealias DefaultArrayCoder<Element: Codable> = ArrayCoder<DefaultArrayCoderProperties, Element>
-public typealias DefaultDictionaryCoder<Key: Codable & Hashable, Value: Codable> = DictionaryCoder<DefaultDictionaryCoderProperties, Key, Value>
+public typealias DefaultArrayCoder<Element> = ArrayCoder<DefaultArrayCoderProperties, Element>
+public typealias DefaultDictionaryCoder<Key: Codable & Hashable, Value> = DictionaryCoder<DefaultDictionaryCoderProperties, Key, Value>

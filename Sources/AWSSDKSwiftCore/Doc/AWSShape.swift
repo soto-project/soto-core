@@ -64,24 +64,6 @@ extension AWSShape {
     }
 }
 
-/// extension to CollectionEncoding to produce the XML equivalent class
-extension AWSMemberEncoding.ShapeEncoding {
-    public var xmlEncoding : XMLContainerCoding? {
-        switch self {
-        case .default, .blob:
-            return nil
-        case .flatList:
-            return .default
-        case .list(let entry):
-            return .array(entry: entry)
-        case .flatMap(let key, let value):
-            return .dictionary(entry: nil, key: key, value: value)
-        case .map(let entry, let key, let value):
-            return .dictionary(entry: entry, key: key, value: value)
-        }
-    }
-}
-
 /// extension to AWSShape that returns XML container encoding for members of it
 extension AWSShape {
     /// return member for CodingKey
@@ -95,12 +77,6 @@ extension AWSShape {
         }
     }
 
-    public static func getXMLContainerCoding(for key: CodingKey) -> XMLContainerCoding? {
-        if let encoding = getEncoding(forKey: key) {
-            return encoding.shapeEncoding.xmlEncoding
-        }
-        return nil
-    }
 }
 
 /// AWSShape that can be encoded

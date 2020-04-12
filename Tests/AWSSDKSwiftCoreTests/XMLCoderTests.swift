@@ -399,7 +399,7 @@ class XMLCoderTests: XCTestCase {
 
     func testDictionaryOfStructuresEncodingDecodeEncode() {
         struct DictionaryItemKeyValue: DictionaryCoderProperties { static let entry: String? = "item"; static let key = "key"; static let value = "value";  }
-        struct Shape2 : AWSShape {
+        struct Shape2 : AWSDecodableShape & AWSEncodableShape {
             let float : Float
         }
         struct Shape : AWSDecodableShape & AWSEncodableShape {

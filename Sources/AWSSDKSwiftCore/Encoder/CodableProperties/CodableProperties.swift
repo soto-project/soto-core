@@ -4,11 +4,91 @@
 //
 
 /// Protocol for object that will encode and decode a value
-public protocol CustomCoder {
-    associatedtype CodableValue: Codable
+public protocol CustomEncoder {
+    associatedtype EncodableValue: Encodable
     
-    static func encode(value: CodableValue, to encoder: Encoder) throws
-    static func decode(from decoder: Decoder) throws -> CodableValue
+    static func encode(value: EncodableValue, to encoder: Encoder) throws
+}
+
+/// Protocol for object that will encode and decode a value
+public protocol CustomDecoder {
+    associatedtype DecodableValue: Decodable
+    
+    static func decode(from decoder: Decoder) throws -> DecodableValue
+}
+
+/// Combines `CustomEncoder` and `CustomDecoder`
+public protocol CustomCoder: CustomEncoder & CustomDecoder where EncodableValue == DecodableValue {
+    typealias CodableValue = DecodableValue
+}
+
+/// Property wrapper that applies a custom encoder and decoder to its wrapped value
+@propertyWrapper public struct Encoding<Coder: CustomEncoder>: Encodable {
+    var value: Coder.EncodableValue
+
+    public init(wrappedValue value: Coder.EncodableValue) {
+        self.value = value
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        try Coder.encode(value: value, to: encoder)
+    }
+    
+    public var wrappedValue: Coder.EncodableValue {
+        get { return self.value }
+        set { self.value = newValue }
+    }
+}
+
+/// Property wrapper that applies a custom encoder and decoder to its wrapped optional value
+@propertyWrapper public struct OptionalEncoding<Coder: CustomEncoder>: Encodable {
+    var value: Coder.EncodableValue?
+
+    public init(wrappedValue value: Coder.EncodableValue?) {
+        self.value = value
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        guard let value = self.value else { return }
+        try Coder.encode(value: value, to: encoder)
+    }
+    
+    public var wrappedValue: Coder.EncodableValue? {
+        get { return self.value }
+        set { self.value = newValue }
+    }
+}
+
+/// Property wrapper that applies a custom encoder and decoder to its wrapped value
+@propertyWrapper public struct Decoding<Coder: CustomDecoder>: Decodable {
+    var value: Coder.DecodableValue
+
+    public init(from decoder: Decoder) throws {
+        self.value = try Coder.decode(from: decoder)
+    }
+
+    public var wrappedValue: Coder.DecodableValue {
+        get { return self.value }
+        set { self.value = newValue }
+    }
+}
+
+/// Property wrapper that applies a custom encoder and decoder to its wrapped optional value
+@propertyWrapper public struct OptionalDecoding<Coder: CustomDecoder>: Decodable {
+    var value: Coder.DecodableValue?
+
+    public init(wrappedValue value: Coder.DecodableValue?) {
+        self.value = value
+    }
+
+    public init(from decoder: Decoder) throws {
+        self.value = try Coder.decode(from: decoder)
+    }
+
+    public var wrappedValue: Coder.DecodableValue? {
+        get { return self.value }
+        set { self.value = newValue }
+    }
 }
 
 /// Property wrapper that applies a custom encoder and decoder to its wrapped value
@@ -81,6 +161,8 @@ extension KeyedEncodingContainer {
 }
 
 /// extend OptionalCoding so it conforms to OptionalCodingWrapper
+extension OptionalEncoding: OptionalCodingWrapper {}
+extension OptionalDecoding: OptionalCodingWrapper {}
 extension OptionalCoding: OptionalCodingWrapper {}
 
 /// CodingKey used by Encoder property wrappers

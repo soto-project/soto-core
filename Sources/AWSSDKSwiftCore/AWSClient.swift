@@ -102,10 +102,10 @@ public final class AWSClient {
         if let _region = givenRegion {
             region = _region
         }
-        else if let partitionEndpoint = partitionEndpoint, let reg = Region(rawValue: partitionEndpoint) {
-            region = reg
-        } else if let defaultRegion = ProcessInfo.processInfo.environment["AWS_DEFAULT_REGION"], let reg = Region(rawValue: defaultRegion) {
-            region = reg
+        else if let partitionEndpoint = partitionEndpoint {
+            region = Region(rawValue: partitionEndpoint)
+        } else if let defaultRegion = ProcessInfo.processInfo.environment["AWS_DEFAULT_REGION"] {
+            region = Region(rawValue: defaultRegion)
         } else {
             region = .useast1
         }
@@ -199,7 +199,7 @@ extension AWSClient {
     ///     - input: Input object
     /// - returns:
     ///     Empty Future that completes when response is received
-    public func send<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> EventLoopFuture<Void> {
+    public func send<Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> EventLoopFuture<Void> {
 
         return credentialProvider.getCredential().flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: self.signingName, region: self.region.rawValue)
@@ -246,7 +246,7 @@ extension AWSClient {
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
     /// - returns:
     ///     Future containing output object that completes when response is received
-    public func send<Output: AWSShape>(operation operationName: String, path: String, httpMethod: String) -> EventLoopFuture<Output> {
+    public func send<Output: AWSDecodableShape>(operation operationName: String, path: String, httpMethod: String) -> EventLoopFuture<Output> {
 
         return credentialProvider.getCredential().flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: self.signingName, region: self.region.rawValue)
@@ -270,7 +270,7 @@ extension AWSClient {
     ///     - input: Input object
     /// - returns:
     ///     Future containing output object that completes when response is received
-    public func send<Output: AWSShape, Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> EventLoopFuture<Output> {
+    public func send<Output: AWSDecodableShape, Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, input: Input) -> EventLoopFuture<Output> {
 
         return credentialProvider.getCredential().flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: self.signingName, region: self.region.rawValue)
@@ -325,7 +325,7 @@ extension AWSClient {
         ).applyMiddlewares(middlewares)
     }
 
-    internal func createAWSRequest<Input: AWSShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
+    internal func createAWSRequest<Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
         var headers: [String: Any] = [:]
         var path = path
         var body: Body = .empty
@@ -345,48 +345,48 @@ extension AWSClient {
 
         // TODO should replace with Encodable
         let mirror = Mirror(reflecting: input)
-        var memberVariablesCount = mirror.children.count
+        var memberVariablesCount = mirror.children.count - Input._encoding.count
 
-        let headerMemberParams = Input.headerParams
-        memberVariablesCount -= headerMemberParams.count
-        for (key, value) in headerMemberParams {
-            if let attr = mirror.getAttribute(forKey: value) {
-                headers[key] = attr
-            }
-        }
-
-        let queryMemberParams = Input.queryParams
-        memberVariablesCount -= queryMemberParams.count
-        for (key, value) in queryMemberParams {
-            if let attr = mirror.getAttribute(forKey: value) {
-                if let array = attr as? QueryEncodableArray {
-                    array.queryEncoded.forEach { queryParams.append((key:key, value:$0)) }
-                } else {
-                    queryParams.append((key:key, value:"\(attr)"))
+        // extract header, query and uri params
+        for encoding in Input._encoding {
+            if let value = mirror.getAttribute(forKey: encoding.label) {
+                switch encoding.location {
+                case .header(let location):
+                    headers[location] = value
+                    
+                case .querystring(let location):
+                    switch value {
+                    case let array as QueryEncodableArray:
+                        array.queryEncoded.forEach { queryParams.append((key:location, value:$0)) }
+                    case let dictionary as QueryEncodableDictionary:
+                        dictionary.queryEncoded.forEach { queryParams.append($0) }
+                    default:
+                        queryParams.append((key:location, value:"\(value)"))
+                    }
+                    
+                case .uri(let location):
+                    path = path
+                        .replacingOccurrences(of: "{\(location)}", with: "\(value)")
+                        // percent-encode key which is part of the path
+                        .replacingOccurrences(of: "{\(location)+}", with: "\(value)".addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)!)
+                    
+                default:
+                    memberVariablesCount += 1
                 }
-            }
-        }
-
-        let pathMemberParams = Input.pathParams
-        memberVariablesCount -= pathMemberParams.count
-        for (key, value) in pathMemberParams {
-            if let attr = mirror.getAttribute(forKey: value) {
-                path = path
-                    .replacingOccurrences(of: "{\(key)}", with: "\(attr)")
-                    // percent-encode key which is part of the path
-                    .replacingOccurrences(of: "{\(key)+}", with: "\(attr)".addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)!)
             }
         }
 
         switch serviceProtocol.type {
         case .json, .restjson:
-            if let payload = Input.payloadPath {
+            if let payload = (Input.self as? AWSShapeWithPayload.Type)?.payloadPath {
                 if let payloadBody = mirror.getAttribute(forKey: payload) {
                     switch payloadBody {
-                    case let shape as AWSShape:
+                    case let awsPayload as AWSPayload:
+                        body = Body(awsPayload)
+                    case let shape as AWSEncodableShape:
                         body = .json(try shape.encodeAsJSON())
                     default:
-                        body = Body(anyValue: payloadBody)
+                        preconditionFailure("Cannot add this as a payload")
                     }
                 } else {
                     body = .empty
@@ -414,10 +414,12 @@ extension AWSClient {
             }
 
         case .restxml:
-            if let payload = Input.payloadPath {
+            if let payload = (Input.self as? AWSShapeWithPayload.Type)?.payloadPath {
                 if let payloadBody = mirror.getAttribute(forKey: payload) {
                     switch payloadBody {
-                    case let shape as AWSShape:
+                    case let awsPayload as AWSPayload:
+                        body = Body(awsPayload)
+                    case let shape as AWSEncodableShape:
                         var rootName: String? = nil
                         // extract custom payload name
                         if let encoding = Input.getEncoding(for: payload), case .body(let locationName) = encoding.location {
@@ -425,7 +427,7 @@ extension AWSClient {
                         }
                         body = .xml(try shape.encodeAsXML(rootName: rootName))
                     default:
-                        body = Body(anyValue: payloadBody)
+                        preconditionFailure("Cannot add this as a payload")
                     }
                 } else {
                     body = .empty
@@ -510,12 +512,12 @@ extension AWSClient {
 extension AWSClient {
 
     /// Validate the operation response and return a response shape
-    internal func validate<Output: AWSShape>(operation operationName: String, response: AWSHTTPResponse) throws -> Output {
+    internal func validate<Output: AWSDecodableShape>(operation operationName: String, response: AWSHTTPResponse) throws -> Output {
         var raw: Bool = false
-        var payloadKey: String? = Output.payloadPath
+        var payloadKey: String? = (Output.self as? AWSShapeWithPayload.Type)?.payloadPath
 
         // if response has a payload with encoding info
-        if let payloadPath = Output.payloadPath, let encoding = Output.getEncoding(for: payloadPath) {
+        if let payloadPath = payloadKey, let encoding = Output.getEncoding(for: payloadPath) {
             // is payload raw
             if case .blob = encoding.shapeEncoding, (200..<300).contains(response.status.code) {
                 raw = true
@@ -571,6 +573,11 @@ extension AWSClient {
                     outputNode.addChild(node)
                 }
             }
+            // add status code to output dictionary
+            if let statusCodeParam = Output.statusCodeParam {
+                let node = XML.Element(name: statusCodeParam, stringValue: "\(response.status.code)")
+                outputNode.addChild(node)
+            }
             return try XMLDecoder().decode(Output.self, from: outputNode)
 
         case .buffer(let byteBuffer):
@@ -607,6 +614,10 @@ extension AWSClient {
                     outputDict[headerParams[index].key] = stringValue
                 }
             }
+        }
+        // add status code to output dictionary
+        if let statusCodeParam = Output.statusCodeParam {
+            outputDict[statusCodeParam] = response.status.code
         }
 
         return try decoder.decode(Output.self, from: outputDict)
@@ -751,3 +762,14 @@ protocol QueryEncodableArray {
 extension Array : QueryEncodableArray {
     var queryEncoded: [String] { return self.map{ "\($0)" }}
 }
+
+protocol QueryEncodableDictionary {
+    var queryEncoded: [(key:String, entry: String)] { get }
+}
+
+extension Dictionary : QueryEncodableDictionary {
+    var queryEncoded: [(key:String, entry: String)] {
+        return self.map{ (key:"\($0.key)", value:"\($0.value)") }
+    }
+}
+

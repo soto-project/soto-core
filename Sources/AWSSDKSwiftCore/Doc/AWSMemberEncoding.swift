@@ -27,20 +27,8 @@ public struct AWSMemberEncoding {
         case uri(locationName: String)
         case querystring(locationName: String)
         case header(locationName: String)
+        case statusCode
         case body(locationName: String)
-        
-        public var name: String {
-            switch self {
-            case .uri(locationName: let name):
-                return name
-            case .querystring(locationName: let name):
-                return name
-            case .header(locationName: let name):
-                return name
-            case .body(locationName: let name):
-                return name
-            }
-        }
     }
     
     /// How the AWSMemberEncoding is serialized in XML and Query formats. Used for collection elements.

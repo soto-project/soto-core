@@ -103,7 +103,11 @@ public final class AWSClient {
             region = _region
         }
         else if let partitionEndpoint = partitionEndpoint {
-            region = Region(rawValue: partitionEndpoint)
+            if partitionEndpoint == "aws-global" {
+                region = .useast1
+            } else {
+                region = Region(rawValue: partitionEndpoint)
+            }
         } else if let defaultRegion = ProcessInfo.processInfo.environment["AWS_DEFAULT_REGION"] {
             region = Region(rawValue: defaultRegion)
         } else {

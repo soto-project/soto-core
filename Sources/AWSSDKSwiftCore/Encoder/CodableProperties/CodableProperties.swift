@@ -1,7 +1,16 @@
-// EncoderProperties.swift
-// Encoder Property Wrappers that apply custom encoding/decoding while using Codable
-// Written by Adam Fowler 2020/03/16
+//===----------------------------------------------------------------------===//
 //
+// This source file is part of the AWSSDKSwift open source project
+//
+// Copyright (c) 2020 the AWSSDKSwift project authors
+// Licensed under Apache License v2.0
+//
+// See LICENSE.txt for license information
+// See CONTRIBUTORS.txt for the list of AWSSDKSwift project authors
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+//===----------------------------------------------------------------------===//
 
 /// base protocol for encoder/decoder objects
 public protocol CustomCoder {

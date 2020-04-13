@@ -59,10 +59,12 @@ class AWSHTTPClientResponseDelegate<Payload: AWSHTTPClientStreamable>: HTTPClien
             } else {
                 accumulationBuffer = buffer
             }
-            if let payload = try Payload.consume(byteBuffer: &accumulationBuffer) {
-                // remove read data from accumulation buffer
-                self.accumulationBuffer = accumulationBuffer.slice()
-                return stream(payload, task.eventLoop)
+            if (200..<300).contains(head.status.code) {
+                if let payload = try Payload.consume(byteBuffer: &accumulationBuffer) {
+                    // remove read data from accumulation buffer
+                    self.accumulationBuffer = accumulationBuffer.slice()
+                    return stream(payload, task.eventLoop)
+                }
             }
             return task.eventLoop.makeSucceededFuture(())
         } catch {
@@ -78,7 +80,11 @@ class AWSHTTPClientResponseDelegate<Payload: AWSHTTPClientStreamable>: HTTPClien
         if let error = self.error {
             throw error
         }
-        return AsyncHTTPClient.HTTPClient.Response(host: host, status: head.status, headers: head.headers, body: nil)
+        if (200..<300).contains(head.status.code) {
+            return AsyncHTTPClient.HTTPClient.Response(host: host, status: head.status, headers: head.headers, body: nil)
+        } else {
+            return AsyncHTTPClient.HTTPClient.Response(host: host, status: head.status, headers: head.headers, body: accumulationBuffer)
+        }
     }
 
     let host: String

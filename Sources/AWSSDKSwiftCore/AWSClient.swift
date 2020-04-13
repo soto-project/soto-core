@@ -626,10 +626,6 @@ extension AWSClient {
         var raw: Bool = false
         var payloadKey: String? = (Output.self as? AWSShapeWithPayload.Type)?.payloadPath
 
-        // chunked payloads should be flagged as raw so service middleware can process them
-        if operationName == "SelectObjectContent" {
-            raw = true
-        }
         // if response has a payload with encoding info
         if let payloadPath = payloadKey, let encoding = Output.getEncoding(for: payloadPath) {
             // is payload raw

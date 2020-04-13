@@ -19,30 +19,49 @@ import NIOHTTP1
 
 /// Protocol defining an object that can be streamed by aws-sdk-swift. It is required to be initialize copies of itself from byte buffers
 public protocol AWSHTTPClientStreamable {
-    static func consume(byteBuffer: ByteBuffer) throws -> Self?
+    
+    /// Consume the data from a bytebuffer and if that is enough to generate an instance of this return the instance
+    /// - Parameter byteBuffer: byte buffer to consume
+    static func consume(byteBuffer: inout ByteBuffer) throws -> Self?
 }
 
 extension ByteBuffer: AWSHTTPClientStreamable {
-    public static func consume(byteBuffer: ByteBuffer) throws -> Self? { return byteBuffer }
+    public static func consume(byteBuffer: inout ByteBuffer) throws -> Self? {
+        let newByteBuffer = byteBuffer
+        byteBuffer.moveReaderIndex(forwardBy: byteBuffer.readableBytes)
+        return newByteBuffer
+    }
 }
 
 /// HTTP client delegate capturing the body parts received from AsyncHTTPClient.
 class AWSHTTPClientResponseDelegate<Payload: AWSHTTPClientStreamable>: HTTPClientResponseDelegate {
-
+    typealias Response = AWSHTTPResponse
+    
     init(host: String, stream: @escaping (Payload, EventLoop)->EventLoopFuture<Void>) {
         self.host = host
         self.stream = stream
         self.head = nil
+        self.error = nil
+        self.accumulationBuffer = ByteBufferAllocator().buffer(capacity: 0)
     }
 
-    func didReceiveHead(task: HTTPClient.Task<AWSHTTPResponse>, _ head: HTTPResponseHead) -> EventLoopFuture<Void> {
+    func didReceiveHead(task: HTTPClient.Task<Response>, _ head: HTTPResponseHead) -> EventLoopFuture<Void> {
         self.head = head
         return task.eventLoop.makeSucceededFuture(())
     }
     
-    func didReceiveBodyPart(task: HTTPClient.Task<AWSHTTPResponse>, _ buffer: ByteBuffer) -> EventLoopFuture<Void> {
+    func didReceiveBodyPart(task: HTTPClient.Task<Response>, _ buffer: ByteBuffer) -> EventLoopFuture<Void> {
         do {
-            if let payload = try Payload.consume(byteBuffer: buffer) {
+            // if the accumulation buffer has bytes in it then write this buffer into it
+            if accumulationBuffer.readableBytes > 0 {
+                var buffer = buffer
+                accumulationBuffer.writeBuffer(&buffer)
+            } else {
+                accumulationBuffer = buffer
+            }
+            if let payload = try Payload.consume(byteBuffer: &accumulationBuffer) {
+                // remove read data from accumulation buffer
+                self.accumulationBuffer = accumulationBuffer.slice()
                 return stream(payload, task.eventLoop)
             }
             return task.eventLoop.makeSucceededFuture(())
@@ -51,13 +70,22 @@ class AWSHTTPClientResponseDelegate<Payload: AWSHTTPClientStreamable>: HTTPClien
         }
     }
 
-    func didFinishRequest(task: HTTPClient.Task<AWSHTTPResponse>) throws -> AWSHTTPResponse {
+    func didReceiveError(task: HTTPClient.Task<Response>, _ error: Error) {
+        self.error = error
+    }
+
+    func didFinishRequest(task: HTTPClient.Task<Response>) throws -> AWSHTTPResponse {
+        if let error = self.error {
+            throw error
+        }
         return AsyncHTTPClient.HTTPClient.Response(host: host, status: head.status, headers: head.headers, body: nil)
     }
 
     let host: String
     let stream: (Payload, EventLoop)->EventLoopFuture<Void>
+    var error: Error?
     var head: HTTPResponseHead!
+    var accumulationBuffer: ByteBuffer
 }
 
 /// extend to include delegate support

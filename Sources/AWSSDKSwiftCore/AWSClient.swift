@@ -362,12 +362,12 @@ extension AWSClient {
         return recordMetrics(future, service: serviceConfig.service, operation: operationName)
     }
 
-    public func send<Output: AWSDecodableShape, Input: AWSEncodableShape>(
+    public func send<Output: AWSDecodableShape, Payload: AWSHTTPClientStreamable, Input: AWSEncodableShape>(
         operation operationName: String,
         path: String,
         httpMethod: String,
         input: Input,
-        stream: @escaping (ByteBuffer, EventLoop)->EventLoopFuture<Void>
+        stream: @escaping (Payload, EventLoop)->EventLoopFuture<Void>
     ) -> EventLoopFuture<Output> {
 
         return credentialProvider.getCredential().flatMapThrowing { credential in

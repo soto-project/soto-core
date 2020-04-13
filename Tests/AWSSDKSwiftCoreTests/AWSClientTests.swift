@@ -1372,7 +1372,7 @@ let response = AWSHTTPResponseImpl(
                 eventLoopGroupProvider: .shared(MultiThreadedEventLoopGroup(numberOfThreads: 2))
             )
             var count = 0
-            let response: EventLoopFuture<Output> = client.send(operation: "test", path: "/", httpMethod: "GET", input: Input()) { (payload: ByteBuffer, eventLoop: EventLoop) in
+            let response: EventLoopFuture<Output> = client.send(operation: "test", path: "/", httpMethod: "GET", input: Input()) { payload, eventLoop in
                 let payloadSize = payload.readableBytes
                 let slice = Data(data[count..<(count+payloadSize)])
                 let payloadData = payload.getData(at: 0, length: payload.readableBytes)

@@ -236,12 +236,11 @@ extension AWSClient {
     }
 
     /// invoke HTTP request
-    fileprivate func invoke(_ httpRequest: AWSHTTPRequest, stream: @escaping (ByteBuffer)->()) -> EventLoopFuture<AWSHTTPResponse> {
+    fileprivate func invoke<Payload: AWSHTTPClientStreamable>(_ httpRequest: AWSHTTPRequest, stream: @escaping (Payload, EventLoop)->EventLoopFuture<Void>) -> EventLoopFuture<AWSHTTPResponse> {
         guard let httpClient = self.httpClient as? AsyncHTTPClient.HTTPClient else {
             return eventLoopGroup.next().makeFailedFuture(RequestError.streamingUnavailable)
         }
-        let delegate = AWSHTTPClientResponseDelegate(stream)
-        if let task = httpClient.execute(request: httpRequest, delegate: delegate, timeout: .seconds(5)) {
+        if let task = httpClient.execute(request: httpRequest, stream: stream, timeout: .seconds(5)) {
             return task.futureResult
         } else {
             return eventLoopGroup.next().makeFailedFuture(RequestError.invalidURL(httpRequest.url.path))
@@ -363,7 +362,13 @@ extension AWSClient {
         return recordMetrics(future, service: serviceConfig.service, operation: operationName)
     }
 
-    public func sendStreamResponse<Output: AWSDecodableShape, Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, input: Input, stream: @escaping (ByteBuffer)->()) -> EventLoopFuture<Output> {
+    public func send<Output: AWSDecodableShape, Input: AWSEncodableShape>(
+        operation operationName: String,
+        path: String,
+        httpMethod: String,
+        input: Input,
+        stream: @escaping (ByteBuffer, EventLoop)->EventLoopFuture<Void>
+    ) -> EventLoopFuture<Output> {
 
         return credentialProvider.getCredential().flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: self.signingName, region: self.region.rawValue)

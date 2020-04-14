@@ -18,14 +18,14 @@ import NIO
 import NIOHTTP1
 
 /// Protocol defining an object that can be streamed by aws-sdk-swift. It is required to be initialize copies of itself from byte buffers
-public protocol AWSHTTPClientStreamable {
+public protocol AWSClientStreamable {
     
     /// Consume the data from a bytebuffer and if that is enough to generate an instance of this return the instance
     /// - Parameter byteBuffer: byte buffer to consume
     static func consume(byteBuffer: inout ByteBuffer) throws -> Self?
 }
 
-extension ByteBuffer: AWSHTTPClientStreamable {
+extension ByteBuffer: AWSClientStreamable {
     public static func consume(byteBuffer: inout ByteBuffer) throws -> Self? {
         let newByteBuffer = byteBuffer
         byteBuffer.moveReaderIndex(forwardBy: byteBuffer.readableBytes)
@@ -34,37 +34,77 @@ extension ByteBuffer: AWSHTTPClientStreamable {
 }
 
 /// HTTP client delegate capturing the body parts received from AsyncHTTPClient.
-class AWSHTTPClientResponseDelegate<Payload: AWSHTTPClientStreamable>: HTTPClientResponseDelegate {
+class AWSHTTPClientResponseDelegate<Payload: AWSClientStreamable>: HTTPClientResponseDelegate {
     typealias Response = AWSHTTPResponse
     
+    enum State {
+        case idle
+        case head(HTTPResponseHead)
+        case body(HTTPResponseHead, ByteBuffer)
+        case end
+        case error(Error)
+    }
+
+    let host: String
+    let stream: (Payload, EventLoop)->EventLoopFuture<Void>
+    var state: State
+
     init(host: String, stream: @escaping (Payload, EventLoop)->EventLoopFuture<Void>) {
         self.host = host
         self.stream = stream
-        self.head = nil
-        self.error = nil
-        self.accumulationBuffer = ByteBufferAllocator().buffer(capacity: 0)
+        self.state = .idle
     }
 
     func didReceiveHead(task: HTTPClient.Task<Response>, _ head: HTTPResponseHead) -> EventLoopFuture<Void> {
-        self.head = head
+        switch self.state {
+        case .idle:
+            self.state = .head(head)
+        case .head:
+            preconditionFailure("head already set")
+        case .body:
+            preconditionFailure("no head received before body")
+        case .end:
+            preconditionFailure("request already processed")
+        case .error:
+            break
+        }
         return task.eventLoop.makeSucceededFuture(())
     }
     
-    func didReceiveBodyPart(task: HTTPClient.Task<Response>, _ buffer: ByteBuffer) -> EventLoopFuture<Void> {
+    func didReceiveBodyPart(task: HTTPClient.Task<Response>, _ part: ByteBuffer) -> EventLoopFuture<Void> {
         do {
-            // if the accumulation buffer has bytes in it then write this buffer into it
-            if accumulationBuffer.readableBytes > 0 {
-                var buffer = buffer
-                accumulationBuffer.writeBuffer(&buffer)
-            } else {
-                accumulationBuffer = buffer
-            }
-            if (200..<300).contains(head.status.code) {
-                if let payload = try Payload.consume(byteBuffer: &accumulationBuffer) {
-                    // remove read data from accumulation buffer
-                    self.accumulationBuffer = accumulationBuffer.slice()
-                    return stream(payload, task.eventLoop)
+            switch self.state {
+            case .idle:
+                preconditionFailure("no head received before body")
+            case .head(let head):
+                var part = part
+                if (200..<300).contains(head.status.code) {
+                    if let payload = try Payload.consume(byteBuffer: &part) {
+                        // remove read data from accumulation buffer
+                        self.state = .body(head, part.slice())
+                        return stream(payload, task.eventLoop)
+                    }
                 }
+                self.state = .body(head, part)
+            case .body(let head, var body):
+                if body.readableBytes > 0 {
+                    var part = part
+                    body.writeBuffer(&part)
+                } else {
+                    body = part
+                }
+                if (200..<300).contains(head.status.code) {
+                    if let payload = try Payload.consume(byteBuffer: &body) {
+                        // remove read data from accumulation buffer
+                        self.state = .body(head, body.slice())
+                        return stream(payload, task.eventLoop)
+                    }
+                }
+                self.state = .body(head, body)
+            case .end:
+                preconditionFailure("request already processed")
+            case .error:
+                break
             }
             return task.eventLoop.makeSucceededFuture(())
         } catch {
@@ -73,30 +113,32 @@ class AWSHTTPClientResponseDelegate<Payload: AWSHTTPClientStreamable>: HTTPClien
     }
 
     func didReceiveError(task: HTTPClient.Task<Response>, _ error: Error) {
-        self.error = error
+        self.state = .error(error)
     }
 
     func didFinishRequest(task: HTTPClient.Task<Response>) throws -> AWSHTTPResponse {
-        if let error = self.error {
+        switch self.state {
+        case .idle:
+            preconditionFailure("no head received before end")
+        case .head(let head):
+            return AsyncHTTPClient.HTTPClient.Response(host: host, status: head.status, headers: head.headers, body: nil)
+        case .body(let head, let body):
+            if (200..<300).contains(head.status.code) {
+                return AsyncHTTPClient.HTTPClient.Response(host: host, status: head.status, headers: head.headers, body: nil)
+            } else {
+                return AsyncHTTPClient.HTTPClient.Response(host: host, status: head.status, headers: head.headers, body: body)
+            }
+        case .end:
+            preconditionFailure("request already processed")
+        case .error(let error):
             throw error
         }
-        if (200..<300).contains(head.status.code) {
-            return AsyncHTTPClient.HTTPClient.Response(host: host, status: head.status, headers: head.headers, body: nil)
-        } else {
-            return AsyncHTTPClient.HTTPClient.Response(host: host, status: head.status, headers: head.headers, body: accumulationBuffer)
-        }
     }
-
-    let host: String
-    let stream: (Payload, EventLoop)->EventLoopFuture<Void>
-    var error: Error?
-    var head: HTTPResponseHead!
-    var accumulationBuffer: ByteBuffer
 }
 
 /// extend to include delegate support
 extension AsyncHTTPClient.HTTPClient {
-    func execute<Payload: AWSHTTPClientStreamable>(request: AWSHTTPRequest, stream: @escaping (Payload, EventLoop)->EventLoopFuture<Void>, timeout: TimeAmount) -> Task<AWSHTTPResponse>? {
+    func execute<Payload: AWSClientStreamable>(request: AWSHTTPRequest, stream: @escaping (Payload, EventLoop)->EventLoopFuture<Void>, timeout: TimeAmount) -> Task<AWSHTTPResponse>? {
         let requestBody: AsyncHTTPClient.HTTPClient.Body?
         if let body = request.body {
             requestBody = .byteBuffer(body)

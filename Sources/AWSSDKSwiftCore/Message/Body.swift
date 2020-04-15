@@ -32,10 +32,6 @@ public enum Body {
 }
 
 extension Body {
-    init(_ payload: AWSPayload) {
-        self = .buffer(payload.byteBuffer)
-    }
-
     /// return as a raw data buffer
     public func asString() -> String? {
         switch self {

@@ -386,7 +386,7 @@ extension AWSClient {
                 if let payloadBody = mirror.getAttribute(forKey: payload) {
                     switch payloadBody {
                     case let awsPayload as AWSPayload:
-                        body = Body(awsPayload)
+                        body = .buffer(awsPayload.byteBuffer)
                     case let shape as AWSEncodableShape:
                         body = .json(try shape.encodeAsJSON())
                     default:
@@ -422,7 +422,7 @@ extension AWSClient {
                 if let payloadBody = mirror.getAttribute(forKey: payload) {
                     switch payloadBody {
                     case let awsPayload as AWSPayload:
-                        body = Body(awsPayload)
+                        body = .buffer(awsPayload.byteBuffer)
                     case let shape as AWSEncodableShape:
                         var rootName: String? = nil
                         // extract custom payload name

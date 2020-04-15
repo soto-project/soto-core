@@ -246,7 +246,7 @@ class AWSClientTests: XCTestCase {
             XCTAssertEqual(awsRequest.url.absoluteString, "https://s3.ca-central-1.amazonaws.com/Bucket?list-type=2")
             let nioRequest: AWSHTTPRequest = awsRequest.toHTTPRequest()
             XCTAssertEqual(nioRequest.method, HTTPMethod.GET)
-            XCTAssertEqual(nioRequest.body, nil)
+            XCTAssertNil(nioRequest.body)
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -303,7 +303,7 @@ class AWSClientTests: XCTestCase {
         let awsRequest = try client.createAWSRequest(operation: "test", path: "/", httpMethod: "GET")
         XCTAssertEqual(awsRequest.url.absoluteString, "https://service.aws.amazon.com/")
     }
-    
+
     func testCreateAwsRequestWithKeywordInHeader() {
         struct KeywordRequest: AWSEncodableShape {
             static var _encoding: [AWSMemberEncoding] = [
@@ -315,7 +315,7 @@ class AWSClientTests: XCTestCase {
             let request = KeywordRequest(repeat: "Repeat")
             let awsRequest = try s3Client.createAWSRequest(operation: "Keyword", path: "/", httpMethod: "POST", input: request)
             XCTAssertEqual(awsRequest.httpHeaders["repeat"] as? String, "Repeat")
-            XCTAssertEqual(awsRequest.body.asByteBuffer(), nil)
+            XCTAssertNil(awsRequest.body.asPayload())
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -1009,6 +1009,101 @@ class AWSClientTests: XCTestCase {
             XCTAssertEqual(error.message, "It doesn't exist")
         } else {
             XCTFail("Throwing the wrong error")
+        }
+    }
+
+    func testRequestStreaming() {
+        struct Input : AWSEncodableShape & AWSShapeWithPayload {
+            static var payloadPath: String = "payload"
+            let payload: AWSPayload
+            private enum CodingKeys: CodingKey {}
+        }
+
+        let awsServer = AWSTestServer(serviceProtocol: .json)
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        defer {
+            XCTAssertNoThrow(try awsServer.stop())
+            XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
+        }
+        do {
+            let client = AWSClient(
+                accessKeyId: "",
+                secretAccessKey: "",
+                region: .useast1,
+                service:"TestClient",
+                serviceProtocol: ServiceProtocol(type: .json, version: ServiceProtocol.Version(major: 1, minor: 1)),
+                apiVersion: "2020-01-21",
+                endpoint: awsServer.address,
+                middlewares: [AWSLoggingMiddleware()],
+                eventLoopGroupProvider: .shared(eventLoopGroup)
+            )
+
+            // supply buffer in 16k blocks
+            let bufferSize = 1024*1024
+            let blockSize = 16*1024
+            let data = createRandomBuffer(45,9182, size: bufferSize)
+
+            var i = 0
+            let payload = AWSPayload.stream(size: bufferSize) { eventLoop in
+                var buffer = ByteBufferAllocator().buffer(capacity: blockSize)
+                buffer.writeBytes(data[i..<(i+blockSize)])
+                i = i + blockSize
+                return eventLoop.makeSucceededFuture(buffer)
+            }
+            let input = Input(payload: payload)
+            let response = client.send(operation: "test", path: "/", httpMethod: "POST", input: input)
+
+            try awsServer.process { request in
+                let bytes = request.body.getBytes(at: 0, length: request.body.readableBytes)
+                XCTAssertEqual(bytes, data)
+                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
+                return AWSTestServer.Result(output: response, continueProcessing: false)
+            }
+
+            try response.wait()
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+    func testRequestStreamingTooMuchData() {
+        struct Input : AWSEncodableShape & AWSShapeWithPayload {
+            static var payloadPath: String = "payload"
+            let payload: AWSPayload
+            private enum CodingKeys: CodingKey {}
+        }
+
+        let awsServer = AWSTestServer(serviceProtocol: .json)
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        defer {
+            try? awsServer.stop()
+            XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
+        }
+        do {
+            let client = AWSClient(
+                accessKeyId: "",
+                secretAccessKey: "",
+                region: .useast1,
+                service:"TestClient",
+                serviceProtocol: ServiceProtocol(type: .json, version: ServiceProtocol.Version(major: 1, minor: 1)),
+                apiVersion: "2020-01-21",
+                endpoint: awsServer.address,
+                middlewares: [AWSLoggingMiddleware()],
+                eventLoopGroupProvider: .shared(eventLoopGroup)
+            )
+
+            // set up stream of 8 bytes but supply more than that
+            let payload = AWSPayload.stream(size: 8) { eventLoop in
+                var buffer = ByteBufferAllocator().buffer(capacity: 0)
+                buffer.writeString("String longer than 8 bytes")
+                return eventLoop.makeSucceededFuture(buffer)
+            }
+            let input = Input(payload: payload)
+            let response = client.send(operation: "test", path: "/", httpMethod: "POST", input: input)
+            try response.wait()
+        } catch AWSClient.RequestError.tooMuchData {
+        } catch {
+            XCTFail("Unexpected error: \(error)")
         }
     }
 

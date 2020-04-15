@@ -16,26 +16,31 @@ import struct Foundation.Data
 import NIO
 import NIOFoundationCompat
 
-/// Object storing request/response payload
-public struct AWSPayload {
+public enum AWSPayload {
 
-    /// Construct a payload from a ByteBuffer
-    public static func byteBuffer(_ byteBuffer: ByteBuffer) -> Self {
-        return Self(byteBuffer: byteBuffer)
-    }
+    case byteBuffer(ByteBuffer)
+    case stream(size: Int, closure: (EventLoop)->EventLoopFuture<ByteBuffer>)
 
-    /// Construct a payload from a Data
     public static func data(_ data: Data) -> Self {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: data.count)
         byteBuffer.writeBytes(data)
-        return Self(byteBuffer: byteBuffer)
+        return .byteBuffer(byteBuffer)
     }
 
     /// Construct a payload from a String
     public static func string(_ string: String) -> Self {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: string.utf8.count)
         byteBuffer.writeString(string)
-        return Self(byteBuffer: byteBuffer)
+        return .byteBuffer(byteBuffer)
+    }
+
+    var size: Int {
+        switch self {
+        case .byteBuffer(let byteBuffer):
+            return byteBuffer.readableBytes
+        case .stream(let size, _):
+            return size
+        }
     }
 
     /// return payload as Data

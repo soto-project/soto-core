@@ -33,6 +33,7 @@ public final class AWSClient {
 
     public enum ClientError: Swift.Error {
         case invalidURL(String)
+        case tooMuchData
     }
 
     enum InternalError: Swift.Error {
@@ -442,7 +443,7 @@ extension AWSClient {
                 if let payloadBody = mirror.getAttribute(forKey: payload) {
                     switch payloadBody {
                     case let awsPayload as AWSPayload:
-                        body = .buffer(awsPayload.byteBuffer)
+                        body = .raw(awsPayload)
                     case let shape as AWSEncodableShape:
                         body = .json(try shape.encodeAsJSON())
                     default:
@@ -478,7 +479,7 @@ extension AWSClient {
                 if let payloadBody = mirror.getAttribute(forKey: payload) {
                     switch payloadBody {
                     case let awsPayload as AWSPayload:
-                        body = .buffer(awsPayload.byteBuffer)
+                        body = .raw(awsPayload)
                     case let shape as AWSEncodableShape:
                         var rootName: String? = nil
                         // extract custom payload name
@@ -633,7 +634,7 @@ extension AWSClient {
             }
             return try XMLDecoder().decode(Output.self, from: outputNode)
 
-        case .buffer(let byteBuffer):
+        case .raw(let payload):
             if let payloadKey = payloadKey {
                 outputDict[payloadKey] = AWSPayload.byteBuffer(byteBuffer)
             }
@@ -788,6 +789,8 @@ extension AWSClient.ClientError: CustomStringConvertible {
             The request url \(urlString) is invalid format.
             This error is internal. So please make a issue on https://github.com/swift-aws/aws-sdk-swift/issues to solve it.
             """
+        case .tooMuchData:
+            return "You have supplied too much data for the Request."
         }
     }
 }

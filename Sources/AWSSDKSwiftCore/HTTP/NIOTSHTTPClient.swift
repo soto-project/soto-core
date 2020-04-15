@@ -254,7 +254,18 @@ extension NIOTSHTTPClient: AWSHTTPClient {
           uri: request.url.absoluteString
         )
         head.headers = request.headers
-        let request = Request(head: head, body: request.body)
+        let requestBody: ByteBuffer?
+        if let body = request.body {
+            switch body {
+            case .byteBuffer(let byteBuffer):
+                requestBody = byteBuffer
+            case .stream:
+                preconditionFailure("Request streaming isnt supported")
+            }
+        } else {
+            requestBody = nil
+        }
+        let request = Request(head: head, body: requestBody)
 
         return connect(request, timeout: timeout, on: eventLoop).map { return $0 }
     }

@@ -76,7 +76,7 @@ public struct AWSRequest {
         }
         return HTTPHeaders(headers.map { ($0, $1) })
     }
-  
+
     func createHTTPRequest(signer: AWSSigner) -> AWSHTTPRequest {
         // if credentials are empty don't sign request
         if signer.credentials.isEmpty() {
@@ -100,23 +100,35 @@ public struct AWSRequest {
 
     /// Create HTTP Client request from AWSRequest
     func toHTTPRequest() -> AWSHTTPRequest {
-        return AWSHTTPRequest.init(url: url, method: HTTPMethod(rawValue: httpMethod), headers: getHttpHeaders(), body: body.asByteBuffer())
+        return AWSHTTPRequest.init(url: url, method: HTTPMethod(rawValue: httpMethod), headers: getHttpHeaders(), body: body.asPayload())
     }
 
     /// Create HTTP Client request with signed URL from AWSRequest
     func toHTTPRequestWithSignedURL(signer: AWSSigner) -> AWSHTTPRequest {
         let method = HTTPMethod(rawValue: httpMethod)
-        let bodyData = body.asByteBuffer()
-        let signedURL = signer.signURL(url: url, method: method, body: bodyData != nil ? .byteBuffer(bodyData!) : nil, date: Date(), expires: 86400)
-        return AWSHTTPRequest.init(url: signedURL, method: method, headers: getHttpHeaders(), body: bodyData)
+        let body = self.body.asPayload()
+        let bodyDataForSigning: AWSSigner.BodyData?
+        if case .byteBuffer(let byteBuffer) = body {
+            bodyDataForSigning = .byteBuffer(byteBuffer)
+        } else {
+            bodyDataForSigning = nil
+        }
+        let signedURL = signer.signURL(url: url, method: method, body: bodyDataForSigning, date: Date(), expires: 86400)
+        return AWSHTTPRequest.init(url: signedURL, method: method, headers: getHttpHeaders(), body: body)
     }
 
     /// Create HTTP Client request with signed headers from AWSRequest
     func toHTTPRequestWithSignedHeader(signer: AWSSigner) -> AWSHTTPRequest {
         let method = HTTPMethod(rawValue: httpMethod)
-        let bodyData = body.asByteBuffer()
-        let signedHeaders = signer.signHeaders(url: url, method: method, headers: getHttpHeaders(), body: bodyData != nil ? .byteBuffer(bodyData!) : nil, date: Date())
-        return AWSHTTPRequest.init(url: url, method: method, headers: signedHeaders, body: bodyData)
+        let body = self.body.asPayload()
+        let bodyDataForSigning: AWSSigner.BodyData?
+        if case .byteBuffer(let byteBuffer) = body {
+            bodyDataForSigning = .byteBuffer(byteBuffer)
+        } else {
+            bodyDataForSigning = nil
+        }
+        let signedHeaders = signer.signHeaders(url: url, method: method, headers: getHttpHeaders(), body: bodyDataForSigning, date: Date())
+        return AWSHTTPRequest.init(url: url, method: method, headers: signedHeaders, body: body)
     }
 
     // return new request with middleware applied

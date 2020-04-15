@@ -42,14 +42,18 @@ public struct AWSResponse {
 
         // body
         guard let body = response.body,
-            body.readableBytes > 0,
-            let data = body.getData(at: body.readerIndex, length: body.readableBytes, byteTransferStrategy: .noCopy) else {
-                self.body = .empty
-                return
+            body.readableBytes > 0 else {
+            self.body = .empty
+            return
         }
 
         if raw {
-            self.body = .buffer(body)
+            self.body = .raw(.byteBuffer(body))
+            return
+        }
+
+        guard let data = body.getData(at: body.readerIndex, length: body.readableBytes, byteTransferStrategy: .noCopy) else {
+            self.body = .empty
             return
         }
 

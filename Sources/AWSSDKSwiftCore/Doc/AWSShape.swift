@@ -106,10 +106,10 @@ public extension AWSEncodableShape {
         guard value.count <= max else { throw AWSClientError(.validationError, message: "Length of \(parent).\(name) (\(value.count)) is greater than the maximum allowed value \(max).") }
     }
     func validate(_ value: AWSPayload, name: String, parent: String, min: Int) throws {
-        guard value.byteBuffer.readableBytes >= min else { throw AWSClientError(.validationError, message: "Length of \(parent).\(name) (\(value.byteBuffer.readableBytes)) is less than minimum allowed value \(min).") }
+        guard value.size >= min else { throw AWSClientError(.validationError, message: "Length of \(parent).\(name) (\(value.size)) is less than minimum allowed value \(min).") }
     }
     func validate(_ value: AWSPayload, name: String, parent: String, max: Int) throws {
-        guard value.byteBuffer.readableBytes <= max else { throw AWSClientError(.validationError, message: "Length of \(parent).\(name) (\(value.byteBuffer.readableBytes)) is greater than the maximum allowed value \(max).") }
+        guard value.size <= max else { throw AWSClientError(.validationError, message: "Length of \(parent).\(name) (\(value.size)) is greater than the maximum allowed value \(max).") }
     }
     func validate(_ value: String, name: String, parent: String, pattern: String) throws {
         let regularExpression = try NSRegularExpression(pattern: pattern, options: [])

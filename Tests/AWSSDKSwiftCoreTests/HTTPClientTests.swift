@@ -216,7 +216,7 @@ class HTTPClientTests {
             let text = "thisisatest"
             var body = ByteBufferAllocator().buffer(capacity: text.utf8.count)
             body.writeString(text)
-            let request = AWSHTTPRequest(url: awsServer.addressURL, method: .POST, headers: headers, body: body)
+            let request = AWSHTTPRequest(url: awsServer.addressURL, method: .POST, headers: headers, body: .byteBuffer(body))
             let responseFuture = execute(request)
 
             try awsServer.httpBin()

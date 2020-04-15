@@ -200,11 +200,5 @@ public protocol AWSDecodableShape: AWSShape & Decodable {}
 /// Root AWSShape which include a payload
 public protocol AWSShapeWithPayload {
     /// The path to the object that is included in the request body
-    static var payloadPath: String? { get }
-}
-
-public extension AWSShapeWithPayload {
-    static var payloadPath: String? {
-        return nil
-    }
+    static var payloadPath: String { get }
 }

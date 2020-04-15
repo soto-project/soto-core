@@ -41,7 +41,7 @@ struct StandardRequest: AWSEncodableShape {
 }
 
 struct PayloadRequest: AWSEncodableShape & AWSShapeWithPayload {
-    public static let payloadPath: String? = "payload"
+    public static let payloadPath: String = "payload"
 
     let payload: StandardRequest
 }

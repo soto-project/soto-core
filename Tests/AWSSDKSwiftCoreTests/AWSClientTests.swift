@@ -96,7 +96,7 @@ class AWSClientTests: XCTestCase {
     }
 
     struct F: AWSEncodableShape & AWSShapeWithPayload {
-        public static let payloadPath: String? = "fooParams"
+        public static let payloadPath: String = "fooParams"
 
         public let fooParams: E?
 
@@ -594,7 +594,7 @@ class AWSClientTests: XCTestCase {
             let number: Int
         }
         struct Input: AWSEncodableShape & AWSShapeWithPayload {
-            public static let payloadPath: String? = "payload"
+            public static let payloadPath: String = "payload"
             let payload: Payload
         }
 
@@ -658,7 +658,7 @@ class AWSClientTests: XCTestCase {
     func testValidateXMLCodablePayloadResponse() {
         class Output : AWSDecodableShape & AWSShapeWithPayload {
             static let _encoding = [AWSMemberEncoding(label: "contentType", location: .header(locationName: "content-type"))]
-            static let payloadPath: String? = "name"
+            static let payloadPath: String = "name"
             let name : String
             let contentType: String
 
@@ -683,7 +683,7 @@ class AWSClientTests: XCTestCase {
 
     func testValidateXMLRawPayloadResponse() {
         class Output : AWSDecodableShape, AWSShapeWithPayload {
-            static let payloadPath: String? = "body"
+            static let payloadPath: String = "body"
             public static var _encoding = [
                 AWSMemberEncoding(label: "body", encoding: .blob)
             ]
@@ -720,7 +720,7 @@ class AWSClientTests: XCTestCase {
 
     func testValidateRawResponseError() {
         class Output : AWSDecodableShape & AWSShapeWithPayload {
-            static let payloadPath: String? = "output"
+            static let payloadPath: String = "output"
             public static var _members = [AWSMemberEncoding(label: "output", encoding: .blob)]
             let output : Data
         }
@@ -778,7 +778,7 @@ class AWSClientTests: XCTestCase {
             let name : String
         }
         struct Output : AWSDecodableShape & AWSShapeWithPayload {
-            static let payloadPath: String? = "output2"
+            static let payloadPath: String = "output2"
             let output2 : Output2
         }
         let response = AWSHTTPResponseImpl(
@@ -796,7 +796,7 @@ class AWSClientTests: XCTestCase {
 
     func testValidateJSONRawPayloadResponse() {
         struct Output : AWSDecodableShape, AWSShapeWithPayload {
-            static let payloadPath: String? = "body"
+            static let payloadPath: String = "body"
             public static var _encoding = [
                 AWSMemberEncoding(label: "contentType", location: .header(locationName: "content-type")),
                 AWSMemberEncoding(label: "body", encoding: .blob)
@@ -877,7 +877,7 @@ class AWSClientTests: XCTestCase {
             let data: Data
         }
         struct J: AWSEncodableShape & AWSShapeWithPayload {
-            public static let payloadPath: String? = "dataContainer"
+            public static let payloadPath: String = "dataContainer"
             let dataContainer: DataContainer
         }
         let input = J(dataContainer: DataContainer(data: Data("test data".utf8)))
@@ -895,7 +895,7 @@ class AWSClientTests: XCTestCase {
 
     func testPayloadDataInResponse() {
         struct Response: AWSDecodableShape & AWSShapeWithPayload {
-            public static let payloadPath: String? = "data"
+            public static let payloadPath: String = "data"
             public static var _encoding = [
                 AWSMemberEncoding(label: "data", encoding: .blob),
             ]

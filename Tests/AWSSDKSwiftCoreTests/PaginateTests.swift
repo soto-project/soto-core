@@ -206,7 +206,8 @@ class PaginateTests: XCTestCase {
 
         do {
             // aws server process
-            try awsServer.ProcessWithErrors(stringListServerProcess, error: AWSTestServer.ErrorType(status: 400, errorCode:"InvalidAction", message: "You didn't mean that"), errorAfter: 0)
+            let error = AWSTestServer.ErrorType(status: 400, errorCode:"InvalidAction", message: "You didn't mean that")
+            try awsServer.processWithErrors(stringListServerProcess, errors: { _ in AWSTestServer.Result(output: error, continueProcessing: false)})
 
             // wait for response
             try future.wait()
@@ -227,7 +228,14 @@ class PaginateTests: XCTestCase {
 
         do {
             // aws server process
-            try awsServer.ProcessWithErrors(stringListServerProcess, error: AWSTestServer.ErrorType(status: 400, errorCode:"InvalidAction", message: "You didn't mean that"), errorAfter: 1)
+            let error = AWSTestServer.ErrorType(status: 400, errorCode:"InvalidAction", message: "You didn't mean that")
+            try awsServer.processWithErrors(stringListServerProcess, errors: {count in
+                if count > 0 {
+                    return AWSTestServer.Result(output: error, continueProcessing: false)
+                } else {
+                    return AWSTestServer.Result(output: nil, continueProcessing: true)
+                }
+            })
 
             // wait for response
             try future.wait()

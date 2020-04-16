@@ -21,7 +21,7 @@ import XCTest
 
 /// Test server for AWSClient. Input and Output shapes are defined by process function
 class AWSTestServer {
-    
+
     enum Error: Swift.Error {
         case notHead
         case notBody
@@ -47,13 +47,13 @@ class AWSTestServer {
         let httpStatus: HTTPResponseStatus
         let headers: [String: String]
         let body: ByteBuffer?
-        
+
         init(httpStatus: HTTPResponseStatus, headers: [String: String] = [:], body: ByteBuffer? = nil) {
             self.httpStatus = httpStatus
             self.headers = headers
             self.body = body
         }
-        
+
         static let ok = Response(httpStatus: .ok)
     }
 
@@ -78,7 +78,7 @@ class AWSTestServer {
     var addressURL: URL { return URL(string: "http://localhost:\(web.serverPort)")!}
     let byteBufferAllocator: ByteBufferAllocator
 
-    
+
     init(serviceProtocol: ServiceProtocol) {
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         self.web = NIOHTTP1TestServer(group: self.eventLoopGroup)
@@ -86,48 +86,60 @@ class AWSTestServer {
         self.byteBufferAllocator = ByteBufferAllocator()
         print("Starting serving on localhost:\(serverPort)")
     }
-    
+
     /// run server reading request, convert from to an input shape processing them and converting the result back to a response.
     func process<Input: Decodable, Output: Encodable>(_ process: (Input) throws -> Result<Output>) throws {
         while(try processSingleRequest(process)) { }
     }
-    
+
     /// run server reading request, convert from to an input shape processing them and converting the result back to a response. Return an error after so many requests
-    func ProcessWithErrors<Input: Decodable, Output:  Encodable>(_ process: (Input) throws -> Result<Output>, error: ErrorType, errorAfter: Int) throws {
-        var count = errorAfter
+    func processWithErrors<Input: Decodable, Output: Encodable>(_ process: (Input) throws -> Result<Output>, errors: (Int) -> Result<ErrorType?>) throws {
+        var count = 0
+        var continueProcessing = true
         repeat {
-            if count == 0 {
+            let errorResult = errors(count)
+            if let error = errorResult.output {
                 _ = try readRequest()
                 try writeError(error)
-                return
+                continueProcessing = errorResult.continueProcessing
+            } else if errorResult.continueProcessing == false {
+                continueProcessing = false
+            } else {
+                continueProcessing = try processSingleRequest(process)
             }
-            count -= 1
-        } while(try processSingleRequest(process))
+            count += 1
+        } while(continueProcessing)
     }
 
     /// run server reading requests, processing them and returning responses
     func process(_ process: (Request) throws -> Result<Response>) throws {
         while(try processSingleRequest(process)) { }
     }
-    
+
     /// run server reading requests, processing them and returning responses. Return an error after so many requests
-    func ProcessWithErrors(_ process: (Request) throws -> Result<Response>, error: ErrorType, errorAfter: Int) throws {
-        var count = errorAfter
+    func processWithErrors(process: (Request) throws -> Result<Response>, errors: (Int) -> Result<ErrorType?>) throws {
+        var count = 0
+        var continueProcessing = true
         repeat {
-            if count == 0 {
+            let errorResult = errors(count)
+            if let error = errorResult.output {
                 _ = try readRequest()
                 try writeError(error)
-                return
+                continueProcessing = errorResult.continueProcessing
+            } else if errorResult.continueProcessing == false {
+                continueProcessing = false
+            } else {
+                continueProcessing = try processSingleRequest(process)
             }
-            count -= 1
-        } while(try processSingleRequest(process))
+            count += 1
+        } while(continueProcessing)
     }
-    
+
 
     /// read one request and return details back in body
     func httpBin() throws {
         let request = try readRequest()
-        
+
         let data = request.body.getString(at: 0, length: request.body.readableBytes, encoding: .utf8)
         let httpBinResponse = HTTPBinResponse(
             method: request.method.rawValue,
@@ -137,7 +149,7 @@ class AWSTestServer {
         let responseBody = try JSONEncoder().encodeAsByteBuffer(httpBinResponse, allocator: ByteBufferAllocator())
         try writeResponse(Response(httpStatus: .ok, headers: [:], body: responseBody))
     }
-    
+
     func stop() throws {
         print("Stop serving on localhost:\(serverPort)")
         try web.stop()
@@ -151,9 +163,18 @@ extension AWSTestServer {
         let status: Int
         let errorCode: String
         let message: String
-        
+
         var json: String { return "{\"__type\":\"\(errorCode)\", \"message\": \"\(message)\"}"}
         var xml: String { return "<Error><Code>\(errorCode)</Code><Message>\(message)</Message></Error>"}
+
+        static let badRequest = ErrorType(status: 400, errorCode: "BadRequest", message: "AWSTestServer_ErrorType_BadRequest")
+        static let accessDenied = ErrorType(status: 401, errorCode: "AccessDenied", message: "AWSTestServer_ErrorType_AccessDenied")
+        static let notFound = ErrorType(status: 404, errorCode: "NotFound", message: "AWSTestServer_ErrorType_NotFound")
+        static let tooManyRequests = ErrorType(status: 429, errorCode: "TooManyRequests", message: "AWSTestServer_ErrorType_TooManyRequests")
+
+        static let `internal` = ErrorType(status: 500, errorCode: "InternalError", message: "AWSTestServer_ErrorType_InternalError")
+        static let notImplemented = ErrorType(status: 501, errorCode: "NotImplemented", message: "AWSTestServer_ErrorType_NotImplemented")
+        static let serviceUnavailable = ErrorType(status: 503, errorCode: "ServiceUnavailable", message: "AWSTestServer_ErrorType_ServiceUnavailable")
     }
 }
 
@@ -181,10 +202,10 @@ extension AWSTestServer {
             guard let xmlNode = try XML.Document(data: inputData).rootElement() else {throw Error.noXMLBody}
             input = try XMLDecoder().decode(Input.self, from: xmlNode)
         }
-        
+
         // process
         let result = try process(input)
-        
+
         // Convert to Output AWSShape
         let outputData: Data
         switch serviceProtocol {
@@ -195,16 +216,16 @@ extension AWSTestServer {
         }
         var byteBuffer = byteBufferAllocator.buffer(capacity: 0)
         byteBuffer.writeBytes(outputData)
-        
+
         try writeResponse(Response(httpStatus: .ok, headers: [:], body: byteBuffer))
 
         return result.continueProcessing
     }
-    
+
     /// read inbound request
     func readRequest() throws -> Request {
         var byteBuffer = byteBufferAllocator.buffer(capacity: 0)
-        
+
         // read inbound
         guard case .head(let head) = try web.readInbound() else {throw Error.notHead}
         // read body
@@ -224,7 +245,7 @@ extension AWSTestServer {
         }
         return Request(method: head.method, uri: head.uri, headers: requestHeaders, body: byteBuffer)
     }
-    
+
     /// write outbound response
     func writeResponse(_ response: Response) throws {
         XCTAssertNoThrow(try web.writeOutbound(.head(.init(version: .init(major: 1, minor: 1),
@@ -235,7 +256,7 @@ extension AWSTestServer {
         }
         XCTAssertNoThrow(try web.writeOutbound(.end(nil)))
     }
-    
+
     /// write error
     func writeError(_ error: ErrorType) throws {
         let errorString: String
@@ -249,10 +270,10 @@ extension AWSTestServer {
         case .xml:
             errorString = error.xml
         }
-        
+
         var byteBuffer = byteBufferAllocator.buffer(capacity: 0)
         byteBuffer.writeString(errorString)
-        
+
         try writeResponse(Response(httpStatus: HTTPResponseStatus(statusCode:error.status), headers: headers, body: byteBuffer))
     }
 }

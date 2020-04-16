@@ -360,13 +360,20 @@ extension AWSClient {
             throw RequestError.invalidURL("\(endpoint)\(path) must specify url host and scheme")
         }
 
+        var headers: [String: Any] = [:]
+
+        // set x-amz-target header
+        if let target = amzTarget {
+            headers["x-amz-target"] = "\(target).\(operationName)"
+        }
+
         return try AWSRequest(
             region: self.signer.region,
             url: url,
             serviceProtocol: serviceProtocol,
             operation: operationName,
             httpMethod: httpMethod,
-            httpHeaders: [:],
+            httpHeaders: headers,
             body: .empty
         ).applyMiddlewares(middlewares)
     }

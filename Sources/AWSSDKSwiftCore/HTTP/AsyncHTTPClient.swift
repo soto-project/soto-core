@@ -27,6 +27,7 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
         }
         do {
             let eventLoop = eventLoop ?? eventLoopGroup.next()
+            precondition(self.eventLoopGroup.makeIterator().contains { $0 === eventLoop }, "EventLoop provided to AWSClient must be part of HTTPClient's EventLoopGroup.")
             let asyncRequest = try AsyncHTTPClient.HTTPClient.Request(url: request.url, method: request.method, headers: request.headers, body: requestBody)
             return execute(request: asyncRequest, eventLoop: .delegate(on: eventLoop), deadline: .now() + timeout).map { $0 }
         } catch {

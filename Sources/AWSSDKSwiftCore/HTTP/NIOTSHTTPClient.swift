@@ -90,11 +90,12 @@ public final class NIOTSHTTPClient {
     }
 
     /// send request to HTTP client, return a future holding the Response
-    public func connect(_ request: Request, timeout: TimeAmount) -> EventLoopFuture<Response> {
+    public func connect(_ request: Request, timeout: TimeAmount, on eventLoop: EventLoop?) -> EventLoopFuture<Response> {
+        let eventLoop = eventLoop ?? eventLoopGroup.next()
         // extract details from request URL
-        guard let url = URL(string:request.head.uri) else { return eventLoopGroup.next().makeFailedFuture(HTTPError.malformedURL(url: request.head.uri)) }
-        guard let scheme = url.scheme else { return eventLoopGroup.next().makeFailedFuture(HTTPError.malformedURL(url: request.head.uri)) }
-        guard let hostname = url.host else { return eventLoopGroup.next().makeFailedFuture(HTTPError.malformedURL(url: request.head.uri)) }
+        guard let url = URL(string:request.head.uri) else { return eventLoop.makeFailedFuture(HTTPError.malformedURL(url: request.head.uri)) }
+        guard let scheme = url.scheme else { return eventLoop.makeFailedFuture(HTTPError.malformedURL(url: request.head.uri)) }
+        guard let hostname = url.host else { return eventLoop.makeFailedFuture(HTTPError.malformedURL(url: request.head.uri)) }
 
         let port : Int
         let headerHostname : String
@@ -108,9 +109,9 @@ public final class NIOTSHTTPClient {
         }
 
 
-        let response: EventLoopPromise<Response> = self.eventLoopGroup.next().makePromise()
+        let response: EventLoopPromise<Response> = eventLoop.makePromise()
 
-        var bootstrap = NIOTSConnectionBootstrap(group: self.eventLoopGroup)
+        var bootstrap = NIOTSConnectionBootstrap(group: eventLoop)
             .connectTimeout(timeout)
             .channelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: 1)
 
@@ -242,8 +243,8 @@ public final class NIOTSHTTPClient {
 /// comply with AWSHTTPClient protocol
 @available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)
 extension NIOTSHTTPClient: AWSHTTPClient {
-    
-    public func execute(request: AWSHTTPRequest, timeout: TimeAmount) -> EventLoopFuture<AWSHTTPResponse> {
+
+    public func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop?) -> EventLoopFuture<AWSHTTPResponse> {
         var head = HTTPRequestHead(
           version: HTTPVersion(major: 1, minor: 1),
           method: request.method,
@@ -252,7 +253,7 @@ extension NIOTSHTTPClient: AWSHTTPClient {
         head.headers = request.headers
         let request = Request(head: head, body: request.body)
 
-        return connect(request, timeout: timeout).map { return $0 }
+        return connect(request, timeout: timeout, on: eventLoop).map { return $0 }
     }
 }
 

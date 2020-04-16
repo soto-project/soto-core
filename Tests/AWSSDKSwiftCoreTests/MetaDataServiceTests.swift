@@ -74,7 +74,7 @@ class MetaDataServiceTests: XCTestCase {
         if ProcessInfo.processInfo.environment["TEST_EC2_METADATA"] != nil {
             do {
                 let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
-                _ = try MetaDataService.getCredential(httpClient: httpClient).wait()
+                _ = try MetaDataService.getCredential(httpClient: httpClient, on: httpClient.eventLoopGroup.next()).wait()
             } catch {
                 XCTFail("Unexpected error: \(error)")
             }

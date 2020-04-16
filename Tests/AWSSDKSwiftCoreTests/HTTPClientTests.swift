@@ -51,7 +51,7 @@ class NIOTSHTTPClientTests: XCTestCase {
     func testInitWithInvalidURL() {
       do {
         let request = AWSHTTPRequest(url: URL(string:"no_protocol.com")!, method: .GET, headers: HTTPHeaders(), body: nil)
-        _ = try client.execute(request: request, timeout: .seconds(5)).wait()
+        _ = try client.execute(request: request, timeout: .seconds(5), on: client.eventLoopGroup.next()).wait()
         XCTFail("Should throw malformedURL error")
       } catch {
         if case NIOTSHTTPClient.HTTPError.malformedURL = error {}
@@ -64,7 +64,7 @@ class NIOTSHTTPClientTests: XCTestCase {
     func testConnectGet() {
         do {
             let request = AWSHTTPRequest(url: awsServer.addressURL, method: .GET, headers: HTTPHeaders(), body: nil)
-            let future = client.execute(request: request, timeout: .seconds(5))
+            let future = client.execute(request: request, timeout: .seconds(5), on: client.eventLoopGroup.next())
             try awsServer.httpBin()
             _ = try future.wait()
         } catch {
@@ -75,7 +75,7 @@ class NIOTSHTTPClientTests: XCTestCase {
     func testConnectPost() {
         do {
             let request = AWSHTTPRequest(url: awsServer.addressURL, method: .POST, headers: HTTPHeaders(), body: nil)
-            let future = client.execute(request: request, timeout: .seconds(5))
+            let future = client.execute(request: request, timeout: .seconds(5), on: client.eventLoopGroup.next())
             try awsServer.httpBin()
             _ = try future.wait()
         } catch {
@@ -147,7 +147,7 @@ class HTTPClientTests {
     }
 
     func execute(_ request: AWSHTTPRequest) -> EventLoopFuture<AWSTestServer.HTTPBinResponse> {
-        return client.execute(request: request, timeout: .seconds(5))
+        return client.execute(request: request, timeout: .seconds(5), on: client.eventLoopGroup.next())
             .flatMapThrowing { response in
                 print(String(data: response.bodyData ?? Data(), encoding: .utf8)!)
                 return try JSONDecoder().decode(AWSTestServer.HTTPBinResponse.self, from: response.bodyData ?? Data())

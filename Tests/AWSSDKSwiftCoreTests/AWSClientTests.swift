@@ -72,7 +72,8 @@ class AWSClientTests: XCTestCase {
             ("testRegionEnum", testRegionEnum),
             ("testServerError", testServerError),
             ("testClientRetry", testClientRetry),
-            ("testClientRetryFail", testClientRetryFail)
+            ("testClientRetryFail", testClientRetryFail),
+            ("testClientEventLoop", testClientEventLoop),
         ]
     }
 
@@ -123,7 +124,7 @@ class AWSClientTests: XCTestCase {
         )
 
         do {
-            let credentialForSignature = try sesClient.credentialProvider.getCredential().wait()
+            let credentialForSignature = try sesClient.credentialProvider.getCredential(on: sesClient.eventLoopGroup.next()).wait()
             XCTAssertEqual(credentialForSignature.accessKeyId, "key")
             XCTAssertEqual(credentialForSignature.secretAccessKey, "secret")
         } catch {
@@ -141,7 +142,7 @@ class AWSClientTests: XCTestCase {
             httpClientProvider: .createNew)
 
         do {
-            let credentials = try client.credentialProvider.getCredential().wait()
+            let credentials = try client.credentialProvider.getCredential(on: client.eventLoopGroup.next()).wait()
             print(credentials)
         } catch NIO.ChannelError.connectTimeout(_) {
             // credentials request should fail. One possible error is a connectTimerout
@@ -1212,6 +1213,38 @@ class AWSClientTests: XCTestCase {
             XCTAssertEqual(output.s, "TestOutputString")
         } catch AWSClientError.accessDenied(let message) {
             XCTAssertEqual(message, AWSTestServer.ErrorType.accessDenied.message)
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+    func testClientEventLoop() {
+        do {
+            let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 5)
+            let awsServer = AWSTestServer(serviceProtocol: .json)
+            defer {
+                XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
+                XCTAssertNoThrow(try awsServer.stop())
+            }
+            let client = AWSClient(
+                accessKeyId: "",
+                secretAccessKey: "",
+                region: .useast1,
+                service:"TestClient",
+                serviceProtocol: ServiceProtocol(type: .json, version: ServiceProtocol.Version(major: 1, minor: 1)),
+                apiVersion: "2020-01-21",
+                endpoint: awsServer.address,
+                eventLoopGroupProvider: .shared(eventLoopGroup)
+            )
+            let eventLoop = client.eventLoopGroup.next()
+            let response: EventLoopFuture<Void> = client.send(operation: "test", path: "/", httpMethod: "POST", on: eventLoop)
+
+            try awsServer.process { request in
+                return AWSTestServer.Result(output: .ok, continueProcessing: false)
+            }
+            XCTAssertTrue(eventLoop === response.eventLoop)
+
+            try response.wait()
         } catch {
             XCTFail("Unexpected error: \(error)")
         }

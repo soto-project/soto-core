@@ -29,8 +29,12 @@ import struct Foundation.CharacterSet
 /// This is the workhorse of aws-sdk-swift-core. You provide it with a `AWSShape` Input object, it converts it to `AWSRequest` which is then converted to a raw `HTTPClient` Request. This is then sent to AWS. When the response from AWS is received if it is successful it is converted to a `AWSResponse` which is then decoded to generate a `AWSShape` Output object. If it is not successful then `AWSClient` will throw an `AWSErrorType`.
 public final class AWSClient {
 
-    public enum RequestError: Error {
+    public enum ClientError: Swift.Error {
         case invalidURL(String)
+    }
+
+    enum InternalError: Swift.Error {
+        case httpResponseError(AWSHTTPResponse)
     }
 
     /// Specifies how `EventLoopGroup` will be created and establishes lifecycle ownership.
@@ -69,6 +73,8 @@ public final class AWSClient {
 
     public let eventLoopGroup: EventLoopGroup
 
+    let retryController: RetryController
+
     private static let sharedEventLoopGroup: EventLoopGroup = createEventLoopGroup()
 
     /// create an eventLoopGroup
@@ -95,10 +101,11 @@ public final class AWSClient {
     ///     - endpoint: Custom endpoint URL to use instead of standard AWS servers
     ///     - serviceEndpoints: Dictionary of region to endpoints URLs
     ///     - partitionEndpoint: Default endpoint to use
+    ///     - retryCalculator: Object returning whether retries should be attempted. Possible options are NoRetry(), ExponentialRetry() or JitterRetry()
     ///     - middlewares: Array of middlewares to apply to requests and responses
     ///     - possibleErrorTypes: Array of possible error types that the client can throw
     ///     - eventLoopGroupProvider: EventLoopGroup to use. Use `useAWSClientShared` if the client shall manage its own EventLoopGroup.
-    public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, sessionToken: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, signingName: String? = nil, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, middlewares: [AWSServiceMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil, eventLoopGroupProvider: EventLoopGroupProvider) {
+    public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, sessionToken: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, signingName: String? = nil, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, retryController: RetryController = NoRetry(), middlewares: [AWSServiceMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil, eventLoopGroupProvider: EventLoopGroupProvider) {
         if let _region = givenRegion {
             region = _region
         }
@@ -146,6 +153,7 @@ public final class AWSClient {
         self.partitionEndpoint = partitionEndpoint
         self.middlewares = middlewares
         self.possibleErrorTypes = possibleErrorTypes ?? []
+        self.retryController = retryController
 
         // work out endpoint, if provided use that otherwise
         if let endpoint = endpoint {
@@ -176,8 +184,36 @@ extension AWSClient {
 
     /// invoke HTTP request
     fileprivate func invoke(_ httpRequest: AWSHTTPRequest) -> EventLoopFuture<AWSHTTPResponse> {
-        let futureResponse = httpClient.execute(request: httpRequest, timeout: .seconds(5))
-        return futureResponse
+        let eventloop = self.eventLoopGroup.next()
+        let promise = eventloop.makePromise(of: AWSHTTPResponse.self)
+
+        func execute(_ httpRequest: AWSHTTPRequest, attempt: Int) {
+            // execute HTTP request
+            _ = httpClient.execute(request: httpRequest, timeout: .seconds(5))
+                .flatMapThrowing { (response) throws -> Void in
+                    // if it returns an HTTP status code outside 2xx then throw an error
+                    guard (200..<300).contains(response.status.code) else { throw AWSClient.InternalError.httpResponseError(response) }
+                    promise.succeed(response)
+                }
+                .flatMapErrorThrowing { (error)->Void in
+                    // If I get a retry wait time for this error then attempt to retry request
+                    if let retryTime = self.retryController.getRetryWaitTime(error: error, attempt: attempt) {
+                        // schedule task for retrying AWS request
+                        eventloop.scheduleTask(in: retryTime) {
+                            execute(httpRequest, attempt: attempt + 1)
+                        }
+                    } else if case AWSClient.InternalError.httpResponseError(let response) = error {
+                        // if there was no retry and error was a response status code then attempt to convert to AWS error
+                        promise.fail(self.createError(for: response))
+                    } else {
+                        promise.fail(error)
+                    }
+            }
+        }
+
+        execute(httpRequest, attempt: 0)
+
+        return promise.futureResult
     }
 
     /// create HTTPClient
@@ -215,8 +251,8 @@ extension AWSClient {
             return awsRequest.createHTTPRequest(signer: signer)
         }.flatMap { request in
             return self.invoke(request)
-        }.flatMapThrowing { response in
-            return try self.validate(response: response)
+        }.map { _ in
+            return
         }
     }
 
@@ -238,8 +274,8 @@ extension AWSClient {
             return awsRequest.createHTTPRequest(signer: signer)
         }.flatMap { request in
             return self.invoke(request)
-        }.flatMapThrowing { response in
-            return try self.validate(response: response)
+        }.map { _ in
+            return
         }
     }
 
@@ -315,7 +351,14 @@ extension AWSClient {
     internal func createAWSRequest(operation operationName: String, path: String, httpMethod: String) throws -> AWSRequest {
 
         guard let url = URL(string: "\(endpoint)\(path)"), let _ = url.host else {
-            throw RequestError.invalidURL("\(endpoint)\(path) must specify url host and scheme")
+            throw AWSClient.ClientError.invalidURL("\(endpoint)\(path) must specify url host and scheme")
+        }
+
+        var headers: [String: Any] = [:]
+
+        // set x-amz-target header
+        if let target = amzTarget {
+            headers["x-amz-target"] = "\(target).\(operationName)"
         }
 
         return try AWSRequest(
@@ -324,7 +367,7 @@ extension AWSClient {
             serviceProtocol: serviceProtocol,
             operation: operationName,
             httpMethod: httpMethod,
-            httpHeaders: [:],
+            httpHeaders: headers,
             body: .empty
         ).applyMiddlewares(middlewares)
     }
@@ -339,7 +382,7 @@ extension AWSClient {
         try input.validate()
 
         guard let baseURL = URL(string: "\(endpoint)"), let _ = baseURL.host else {
-            throw RequestError.invalidURL("\(endpoint) must specify url host and scheme")
+            throw ClientError.invalidURL("\(endpoint) must specify url host and scheme")
         }
 
         // set x-amz-target header
@@ -386,7 +429,7 @@ extension AWSClient {
                 if let payloadBody = mirror.getAttribute(forKey: payload) {
                     switch payloadBody {
                     case let awsPayload as AWSPayload:
-                        body = Body(awsPayload)
+                        body = .buffer(awsPayload.byteBuffer)
                     case let shape as AWSEncodableShape:
                         body = .json(try shape.encodeAsJSON())
                     default:
@@ -422,7 +465,7 @@ extension AWSClient {
                 if let payloadBody = mirror.getAttribute(forKey: payload) {
                     switch payloadBody {
                     case let awsPayload as AWSPayload:
-                        body = Body(awsPayload)
+                        body = .buffer(awsPayload.byteBuffer)
                     case let shape as AWSEncodableShape:
                         var rootName: String? = nil
                         // extract custom payload name
@@ -458,7 +501,7 @@ extension AWSClient {
         }
 
         guard let parsedPath = URLComponents(string: path) else {
-            throw RequestError.invalidURL("\(endpoint)\(path)")
+            throw ClientError.invalidURL("\(endpoint)\(path)")
         }
 
         // add queries from the parsed path to the query params list
@@ -472,11 +515,11 @@ extension AWSClient {
         var urlString = "\(baseURL.absoluteString)\(parsedPath.path)"
         if queryParams.count > 0 {
             urlString.append("?")
-            urlString.append(queryParams.map{"\($0.key)=\(urlEncodeQueryParam("\($0.value)"))"}.sorted().joined(separator:"&"))
+            urlString.append(queryParams.sorted{$0.key < $1.key}.map{"\($0.key)=\(urlEncodeQueryParam("\($0.value)"))"}.joined(separator:"&"))
         }
 
         guard let url = URL(string: urlString) else {
-            throw RequestError.invalidURL("\(urlString)")
+            throw ClientError.invalidURL("\(urlString)")
         }
 
         return try AWSRequest(
@@ -538,8 +581,6 @@ extension AWSClient {
         for middleware in middlewares {
             awsResponse = try middleware.chain(response: awsResponse)
         }
-
-        try validateCode(response: awsResponse)
 
         awsResponse = try hypertextApplicationLanguageProcess(response: awsResponse)
 
@@ -627,118 +668,109 @@ extension AWSClient {
         return try decoder.decode(Output.self, from: outputDict)
     }
 
-    /// validate response without returning an output shape
-    internal func validate(response: AWSHTTPResponse) throws {
-        let awsResponse = try AWSResponse(from: response, serviceProtocolType: serviceProtocol.type)
-        try validateCode(response: awsResponse)
-    }
+    internal func createError(for response: AWSHTTPResponse) -> Error {
+        do {
+            let awsResponse = try AWSResponse(from: response, serviceProtocolType: serviceProtocol.type)
+            struct XMLError: Codable, ErrorMessage {
+                var code: String?
+                var message: String
 
-    /// validate http status code. If it is an error then throw an Error object
-    private func validateCode(response: AWSResponse) throws {
-        guard (200..<300).contains(response.status.code) else {
-            throw createError(for: response)
-        }
-    }
-
-    private func createError(for response: AWSResponse) -> Error {
-        struct XMLError: Codable, ErrorMessage {
-            var code: String?
-            var message: String
-
-            private enum CodingKeys: String, CodingKey {
-                case code = "Code"
-                case message = "Message"
+                private enum CodingKeys: String, CodingKey {
+                    case code = "Code"
+                    case message = "Message"
+                }
             }
-        }
-        struct QueryError: Codable, ErrorMessage {
-            var code: String?
-            var message: String
+            struct QueryError: Codable, ErrorMessage {
+                var code: String?
+                var message: String
 
-            private enum CodingKeys: String, CodingKey {
-                case code = "Code"
-                case message = "Message"
+                private enum CodingKeys: String, CodingKey {
+                    case code = "Code"
+                    case message = "Message"
+                }
             }
-        }
-        struct JSONError: Codable, ErrorMessage {
-            var code: String?
-            var message: String
+            struct JSONError: Codable, ErrorMessage {
+                var code: String?
+                var message: String
 
-            private enum CodingKeys: String, CodingKey {
-                case code = "__type"
-                case message = "message"
+                private enum CodingKeys: String, CodingKey {
+                    case code = "__type"
+                    case message = "message"
+                }
             }
-        }
-        struct RESTJSONError: Codable, ErrorMessage {
-            var code: String?
-            var message: String
+            struct RESTJSONError: Codable, ErrorMessage {
+                var code: String?
+                var message: String
 
-            private enum CodingKeys: String, CodingKey {
-                case code = "code"
-                case message = "message"
-            }
-        }
-
-        var errorMessage: ErrorMessage? = nil
-
-        switch serviceProtocol.type {
-        case .query:
-            guard case .xml(var element) = response.body else { break }
-            if let errors = element.elements(forName: "Errors").first {
-                element = errors
-            }
-            guard let errorElement = element.elements(forName: "Error").first else { break }
-            errorMessage = try? XMLDecoder().decode(QueryError.self, from: errorElement)
-
-        case .restxml:
-            guard case .xml(var element) = response.body else { break }
-            if let error = element.elements(forName: "Error").first {
-                element = error
-            }
-            errorMessage = try? XMLDecoder().decode(XMLError.self, from: element)
-
-        case .restjson:
-            guard case .json(let data) = response.body else { break }
-            errorMessage = try? JSONDecoder().decode(RESTJSONError.self, from: data)
-            if errorMessage?.code == nil {
-                errorMessage?.code = response.headers["x-amzn-ErrorType"] as? String
+                private enum CodingKeys: String, CodingKey {
+                    case code = "code"
+                    case message = "message"
+                }
             }
 
-        case .json:
-            guard case .json(let data) = response.body else { break }
-            errorMessage = try? JSONDecoder().decode(JSONError.self, from: data)
+            var errorMessage: ErrorMessage? = nil
 
-        case .other(let service):
-            if service == "ec2" {
-                guard case .xml(var element) = response.body else { break }
+            switch serviceProtocol.type {
+            case .query:
+                guard case .xml(var element) = awsResponse.body else { break }
                 if let errors = element.elements(forName: "Errors").first {
                     element = errors
                 }
                 guard let errorElement = element.elements(forName: "Error").first else { break }
                 errorMessage = try? XMLDecoder().decode(QueryError.self, from: errorElement)
-            }
-            break
-        }
 
-        if let errorMessage = errorMessage, let code = errorMessage.code {
-            for errorType in possibleErrorTypes {
-                if let error = errorType.init(errorCode: code, message: errorMessage.message) {
+            case .restxml:
+                guard case .xml(var element) = awsResponse.body else { break }
+                if let error = element.elements(forName: "Error").first {
+                    element = error
+                }
+                errorMessage = try? XMLDecoder().decode(XMLError.self, from: element)
+
+            case .restjson:
+                guard case .json(let data) = awsResponse.body else { break }
+                errorMessage = try? JSONDecoder().decode(RESTJSONError.self, from: data)
+                if errorMessage?.code == nil {
+                    errorMessage?.code = awsResponse.headers["x-amzn-ErrorType"] as? String
+                }
+
+            case .json:
+                guard case .json(let data) = awsResponse.body else { break }
+                errorMessage = try? JSONDecoder().decode(JSONError.self, from: data)
+
+            case .other(let service):
+                if service == "ec2" {
+                    guard case .xml(var element) = awsResponse.body else { break }
+                    if let errors = element.elements(forName: "Errors").first {
+                        element = errors
+                    }
+                    guard let errorElement = element.elements(forName: "Error").first else { break }
+                    errorMessage = try? XMLDecoder().decode(QueryError.self, from: errorElement)
+                }
+                break
+            }
+
+            if let errorMessage = errorMessage, let code = errorMessage.code {
+                for errorType in possibleErrorTypes {
+                    if let error = errorType.init(errorCode: code, message: errorMessage.message) {
+                        return error
+                    }
+                }
+                if let error = AWSClientError(errorCode: code, message: errorMessage.message) {
                     return error
                 }
+
+                if let error = AWSServerError(errorCode: code, message: errorMessage.message) {
+                    return error
+                }
+
+                return AWSResponseError(errorCode: code, message: errorMessage.message)
             }
 
-            if let error = AWSClientError(errorCode: code, message: errorMessage.message) {
-                return error
-            }
-
-            if let error = AWSServerError(errorCode: code, message: errorMessage.message) {
-                return error
-            }
-
-            return AWSResponseError(errorCode: code, message: errorMessage.message)
+            let rawBodyString = awsResponse.body.asString()
+            return AWSError(statusCode: response.status, message: errorMessage?.message ?? "Unhandled Error. Response Code: \(response.status.code)", rawBody: rawBodyString ?? "")
+        } catch {
+            return error
         }
-
-        let rawBodyString = response.body.asString()
-        return AWSError(statusCode: response.status, message: errorMessage?.message ?? "Unhandled Error. Response Code: \(response.status.code)", rawBody: rawBodyString ?? "")
     }
 }
 
@@ -747,7 +779,7 @@ protocol ErrorMessage {
     var message: String {get set}
 }
 
-extension AWSClient.RequestError: CustomStringConvertible {
+extension AWSClient.ClientError: CustomStringConvertible {
     public var description: String {
         switch self {
         case .invalidURL(let urlString):

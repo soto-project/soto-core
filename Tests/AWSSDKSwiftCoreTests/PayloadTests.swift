@@ -14,7 +14,7 @@ class PayloadTests: XCTestCase {
 
     func testRequestPayload(_ payload: AWSPayload, expectedResult: String) {
         struct DataPayload: AWSEncodableShape & AWSShapeWithPayload {
-            static var payloadPath: String? = "data"
+            static var payloadPath: String = "data"
             let data: AWSPayload
             
             private enum CodingKeys: CodingKey {}

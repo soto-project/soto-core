@@ -16,9 +16,9 @@ import XCTest
 @testable import AWSSDKSwiftCore
 
 class ValidationTests: XCTestCase {
-    
+
     /// test validation
-    func testValidationFail(_ shape: AWSShape) {
+    func testValidationFail(_ shape: AWSEncodableShape) {
         do {
             try shape.validate()
             XCTFail()
@@ -28,19 +28,19 @@ class ValidationTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
     }
-    
-    func testValidationSuccess(_ shape: AWSShape) {
+
+    func testValidationSuccess(_ shape: AWSEncodableShape) {
         do {
             try shape.validate()
         } catch {
             XCTFail(error.localizedDescription)
         }
     }
-    
+
     func testNumericMinMaxValidation() {
-        struct A: AWSShape {
+        struct A: AWSEncodableShape {
             let size: Int?
-            
+
             public func validate(name: String) throws {
                 try validate(size, name:"size", parent: name, max: 100)
                 try validate(size, name:"size", parent: name, min: 1)
@@ -53,11 +53,11 @@ class ValidationTests: XCTestCase {
         let a3 = A(size: 1000)
         testValidationFail(a3)
     }
-    
+
     func testFloatingPointMinMaxValidation() {
-        struct A: AWSShape {
+        struct A: AWSEncodableShape {
             let size: Float?
-            
+
             public func validate(name: String) throws {
                 try validate(size, name:"size", parent: name, max: 50.0)
                 try validate(size, name:"size", parent: name, min: 1.0)
@@ -70,11 +70,11 @@ class ValidationTests: XCTestCase {
         let a3 = A(size: 1000)
         testValidationFail(a3)
     }
-    
+
     func testStringLengthMinMaxValidation() {
-        struct A: AWSShape {
+        struct A: AWSEncodableShape {
             let string: String?
-            
+
             public func validate(name: String) throws {
                 try validate(string, name:"string", parent: name, max: 24)
                 try validate(string, name:"string", parent: name, min: 2)
@@ -87,11 +87,11 @@ class ValidationTests: XCTestCase {
         let a3 = A(string: "a")
         testValidationFail(a3)
     }
-    
+
     func testArrayLengthMinMaxValidation() {
-        struct A: AWSShape {
+        struct A: AWSEncodableShape {
             let numbers: [Int]?
-            
+
             public func validate(name: String) throws {
                 try validate(numbers, name:"numbers", parent: name, max: 4)
                 try validate(numbers, name:"numbers", parent: name, min: 2)
@@ -104,11 +104,11 @@ class ValidationTests: XCTestCase {
         let a3 = A(numbers: [1])
         testValidationFail(a3)
     }
-    
+
     func testStringPatternValidation() {
-        struct A: AWSShape {
+        struct A: AWSEncodableShape {
             let string: String?
-            
+
             public func validate(name: String) throws {
                 try validate(string, name:"string", parent: name, pattern: "^[A-Za-z]{3}$")
             }
@@ -120,11 +120,11 @@ class ValidationTests: XCTestCase {
         let a3 = A(string: "a-c")
         testValidationFail(a3)
     }
-    
+
     func testStringPattern2Validation() {
-        struct A: AWSShape {
+        struct A: AWSEncodableShape {
             let path: String
-            
+
             public func validate(name: String) throws {
                 try validate(path, name:"path", parent: name, pattern: "((/[A-Za-z0-9\\.,\\+@=_-]+)*)/")
             }
@@ -139,7 +139,7 @@ class ValidationTests: XCTestCase {
         let a4 = A(path:"/%hello/test/")
         testValidationSuccess(a4)
     }
-    
+
     static var allTests : [(String, (ValidationTests) -> () throws -> Void)] {
         return [
             ("testNumericMinMaxValidation", testNumericMinMaxValidation),
@@ -151,4 +151,3 @@ class ValidationTests: XCTestCase {
         ]
     }
 }
-

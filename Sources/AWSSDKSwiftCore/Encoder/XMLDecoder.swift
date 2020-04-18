@@ -38,7 +38,7 @@ public enum XMLContainerCoding {
 }
 
 /// protocol to return XMLContainerCoding values. To control how the child elements of a Codable class are encoded inherit from this and return coding values for each
-public protocol XMLCodable: Codable {
+public protocol XMLCodable {
     static func getXMLContainerCoding(for key: CodingKey) -> XMLContainerCoding?
 }
 

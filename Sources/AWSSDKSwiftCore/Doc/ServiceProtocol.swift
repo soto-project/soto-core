@@ -21,14 +21,14 @@ public enum ServiceProtocol {
 }
 
 extension ServiceProtocol {
-    public var contentType: String? {
+    public var contentType: String {
         switch self {
         case .json(let version):
             return "application/x-amz-json-\(version)"
         case .restjson:
             return "application/json"
         case .restxml:
-            return nil
+            return "application/octet-stream"
         case .query, .ec2:
             return "application/x-www-form-urlencoded; charset=utf-8"
         }

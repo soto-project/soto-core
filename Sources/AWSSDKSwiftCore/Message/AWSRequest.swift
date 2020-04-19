@@ -66,22 +66,11 @@ public struct AWSRequest {
         case "GET","HEAD":
             break
         default:
-            switch serviceProtocol {
-            case .json:
+            if case .restjson = serviceProtocol, case .buffer(_) = body {
+                headers["Content-Type"] = "binary/octet-stream"
+            } else {
                 headers["Content-Type"] = serviceProtocol.contentType
-            case .restjson:
-                if case .buffer(_) = body {
-                    headers["Content-Type"] = "binary/octet-stream"
-                } else {
-                    headers["Content-Type"] = "application/json"
-                }
-            case .query, .ec2:
-                headers["Content-Type"] = "application/x-www-form-urlencoded; charset=utf-8"
-            default:
-                break
             }
-
-            headers["Content-Type"] = headers["Content-Type"] ?? "application/octet-stream"
         }
 
         return HTTPHeaders(headers.map { ($0, $1) })

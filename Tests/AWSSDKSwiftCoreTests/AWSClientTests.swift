@@ -446,25 +446,25 @@ class AWSClientTests: XCTestCase {
         let object = Object(string: "Name")
         let object2 = Object2(payload: .string("Payload"))
         
-        let client = createAWSClient(serviceProtocol: ServiceProtocol(type: .json, version: .init(major:1, minor:1)))
+        let client = createAWSClient(serviceProtocol: .json(version: "1.1"))
         let request = try client.createAWSRequest(operation: "test", path: "/", httpMethod: "POST", input: object)
         XCTAssertEqual(request.getHttpHeaders()["content-type"].first, "application/x-amz-json-1.1")
         
-        let client2 = createAWSClient(serviceProtocol: ServiceProtocol(type: .restjson))
+        let client2 = createAWSClient(serviceProtocol: .restjson)
         let request2 = try client2.createAWSRequest(operation: "test", path: "/", httpMethod: "POST", input: object)
         XCTAssertEqual(request2.getHttpHeaders()["content-type"].first, "application/json")
         let rawRequest2 = try client2.createAWSRequest(operation: "test", path: "/", httpMethod: "POST", input: object2)
         XCTAssertEqual(rawRequest2.getHttpHeaders()["content-type"].first, "binary/octet-stream")
 
-        let client3 = createAWSClient(serviceProtocol: ServiceProtocol(type: .query))
+        let client3 = createAWSClient(serviceProtocol: .query)
         let request3 = try client3.createAWSRequest(operation: "test", path: "/", httpMethod: "POST", input: object)
         XCTAssertEqual(request3.getHttpHeaders()["content-type"].first, "application/x-www-form-urlencoded; charset=utf-8")
         
-        let client4 = createAWSClient(serviceProtocol: ServiceProtocol(type: .other("ec2")))
+        let client4 = createAWSClient(serviceProtocol: .ec2)
         let request4 = try client4.createAWSRequest(operation: "test", path: "/", httpMethod: "POST", input: object)
         XCTAssertEqual(request4.getHttpHeaders()["content-type"].first, "application/x-www-form-urlencoded; charset=utf-8")
         
-        let client5 = createAWSClient(serviceProtocol: ServiceProtocol(type: .restxml))
+        let client5 = createAWSClient(serviceProtocol: .restxml)
         let request5 = try client5.createAWSRequest(operation: "test", path: "/", httpMethod: "POST", input: object)
         XCTAssertEqual(request5.getHttpHeaders()["content-type"].first, "application/octet-stream")
     }

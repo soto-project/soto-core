@@ -40,7 +40,7 @@ func createAWSClient(
     amzTarget: String? = nil,
     service: String = "testService",
     signingName: String? = nil,
-    serviceProtocol: ServiceProtocol = ServiceProtocol(type: .restjson),
+    serviceProtocol: ServiceProtocol = .restjson,
     apiVersion: String = "01-01-2001",
     endpoint: String? = nil,
     serviceEndpoints: [String: String] = [:],

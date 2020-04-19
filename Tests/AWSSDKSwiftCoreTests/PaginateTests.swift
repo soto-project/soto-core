@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import AsyncHTTPClient
 import NIO
 import XCTest
 @testable import AWSSDKSwiftCore
@@ -21,11 +22,15 @@ class PaginateTests: XCTestCase {
         case didntFindToken
     }
     var awsServer: AWSTestServer!
+    var eventLoopGroup: EventLoopGroup!
+    var httpClient: AWSHTTPClient!
     var client: AWSClient!
 
     override func setUp() {
         // create server and client
         awsServer = AWSTestServer(serviceProtocol: .json)
+        eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 3)
+        httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
         client = AWSClient(
             accessKeyId: "",
             secretAccessKey: "",
@@ -35,12 +40,14 @@ class PaginateTests: XCTestCase {
             apiVersion: "2020-01-21",
             endpoint: "http://localhost:\(awsServer.serverPort)",
             middlewares: [AWSLoggingMiddleware()],
-            httpClientProvider: .createNew
+            httpClientProvider: .shared(httpClient)
         )
     }
 
     override func tearDown() {
         XCTAssertNoThrow(try self.awsServer.stop())
+        XCTAssertNoThrow(try self.httpClient.syncShutdown())
+        XCTAssertNoThrow(try self.eventLoopGroup.syncShutdownGracefully())
     }
 
     // test structures/functions
@@ -63,8 +70,8 @@ class PaginateTests: XCTestCase {
         let outputToken: Int?
     }
 
-    func counter(_ input: CounterInput) -> EventLoopFuture<CounterOutput> {
-        return client.send(operation: "TestOperation", path: "/", httpMethod: "POST", input: input)
+    func counter(_ input: CounterInput, on eventLoop: EventLoop?) -> EventLoopFuture<CounterOutput> {
+        return client.send(operation: "TestOperation", path: "/", httpMethod: "POST", input: input, on: eventLoop)
     }
 
     func counterPaginator(_ input: CounterInput, onPage: @escaping (CounterOutput, EventLoop)->EventLoopFuture<Bool>) -> EventLoopFuture<Void> {
@@ -131,12 +138,12 @@ class PaginateTests: XCTestCase {
         let outputToken: String?
     }
 
-    func stringList(_ input: StringListInput) -> EventLoopFuture<StringListOutput> {
-        return client.send(operation: "TestOperation", path: "/", httpMethod: "POST", input: input)
+    func stringList(_ input: StringListInput, on eventLoop: EventLoop? = nil) -> EventLoopFuture<StringListOutput> {
+        return client.send(operation: "TestOperation", path: "/", httpMethod: "POST", input: input, on: eventLoop)
     }
 
-    func stringListPaginator(_ input: StringListInput, onPage: @escaping (StringListOutput, EventLoop)->EventLoopFuture<Bool>) -> EventLoopFuture<Void> {
-        return client.paginate(input: input, command: stringList, tokenKey: \StringListOutput.outputToken, onPage: onPage)
+    func stringListPaginator(_ input: StringListInput, on eventLoop: EventLoop? = nil, onPage: @escaping (StringListOutput, EventLoop)->EventLoopFuture<Bool>) -> EventLoopFuture<Void> {
+        return client.paginate(input: input, command: stringList, tokenKey: \StringListOutput.outputToken, on: eventLoop, onPage: onPage)
     }
 
     // create list of unique strings
@@ -241,6 +248,27 @@ class PaginateTests: XCTestCase {
             try future.wait()
 
             XCTFail("testPaginateError: should have errored")
+        } catch {
+            print(error)
+        }
+    }
+
+    func testPaginateEventLoop() throws {
+        // paginate input
+        let clientEventLoop = client.eventLoopGroup.next()
+        let input = StringListInput(inputToken: nil, pageSize: 5)
+        let future = stringListPaginator(input, on: clientEventLoop) { _,eventloop in
+            XCTAssertTrue(clientEventLoop.inEventLoop)
+            XCTAssertTrue(clientEventLoop === eventloop)
+            return eventloop.makeSucceededFuture(true)
+        }
+
+        do {
+            // aws server process
+            try awsServer.process(stringListServerProcess)
+
+            // wait for response
+            try future.wait()
         } catch {
             print(error)
         }

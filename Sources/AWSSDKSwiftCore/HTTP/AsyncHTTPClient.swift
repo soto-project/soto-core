@@ -18,7 +18,10 @@ import NIO
 
 /// comply with AWSHTTPClient protocol
 extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
-    public func execute(request: AWSHTTPRequest, timeout: TimeAmount) -> EventLoopFuture<AWSHTTPResponse> {
+    public func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop?) -> EventLoopFuture<AWSHTTPResponse> {
+        if let eventLoop = eventLoop {
+            precondition(self.eventLoopGroup.makeIterator().contains { $0 === eventLoop }, "EventLoop provided to AWSClient must be part of the HTTPClient's EventLoopGroup.")
+        }
         let requestBody: AsyncHTTPClient.HTTPClient.Body?
         if let body = request.body {
             requestBody = .byteBuffer(body)
@@ -26,8 +29,9 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
             requestBody = nil
         }
         do {
+            let eventLoop = eventLoop ?? eventLoopGroup.next()
             let asyncRequest = try AsyncHTTPClient.HTTPClient.Request(url: request.url, method: request.method, headers: request.headers, body: requestBody)
-            return execute(request: asyncRequest, deadline: .now() + timeout).map { $0 }
+            return execute(request: asyncRequest, eventLoop: .delegate(on: eventLoop), deadline: .now() + timeout).map { $0 }
         } catch {
             return eventLoopGroup.next().makeFailedFuture(error)
         }

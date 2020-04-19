@@ -34,7 +34,7 @@ public protocol AWSHTTPResponse {
 /// Protocol defining requirements for a HTTPClient
 public protocol AWSHTTPClient {
     /// Execute HTTP request and return a future holding a HTTP Response
-    func execute(request: AWSHTTPRequest, timeout: TimeAmount) -> EventLoopFuture<AWSHTTPResponse>
+    func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop?) -> EventLoopFuture<AWSHTTPResponse>
     
     /// This should be called before an HTTP Client can be de-initialised
     func syncShutdown() throws

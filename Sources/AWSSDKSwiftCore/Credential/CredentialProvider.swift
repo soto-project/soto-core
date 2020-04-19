@@ -18,21 +18,19 @@ import NIOConcurrencyHelpers
 
 /// Protocol providing future holding a credential
 protocol CredentialProvider {
-    func getCredential() -> EventLoopFuture<Credential>
+    func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential>
 }
 
 /// Provides credentials that don't change
 struct StaticCredentialProvider: CredentialProvider {
     let credential: Credential
-    let eventLoopGroup: EventLoopGroup
 
-    init(credential: Credential,  eventLoopGroup: EventLoopGroup) {
+    init(credential: Credential) {
         self.credential = credential
-        self.eventLoopGroup = eventLoopGroup
     }
 
-    func getCredential() -> EventLoopFuture<Credential> {
-        return eventLoopGroup.next().makeSucceededFuture(credential)
+    func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
+        return eventLoop.makeSucceededFuture(credential)
     }
 }
 
@@ -49,7 +47,7 @@ class MetaDataCredentialProvider: CredentialProvider {
         self.httpClient = httpClient
     }
     
-    func getCredential() -> EventLoopFuture<Credential> {
+    func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
         lock.lock()
         let credential = self.credential
         lock.unlock()
@@ -59,10 +57,10 @@ class MetaDataCredentialProvider: CredentialProvider {
         }
         
         // we need to refresh the credentials
-        return self.refreshCredentials()
+        return self.refreshCredentials(on: eventLoop)
     }
     
-    func refreshCredentials() -> EventLoopFuture<Credential> {
+    func refreshCredentials(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
         return lock.withLock {
         
             if let future = refreshingCredentialFuture {
@@ -70,7 +68,7 @@ class MetaDataCredentialProvider: CredentialProvider {
                 return future
             }
             
-            let credentialFuture = MetaDataService.getCredential(httpClient: self.httpClient)
+            let credentialFuture = MetaDataService.getCredential(httpClient: self.httpClient, on: eventLoop)
                 .map { (credential)->Credential in
                     return self.lock.withLock {
                         self.credential = credential

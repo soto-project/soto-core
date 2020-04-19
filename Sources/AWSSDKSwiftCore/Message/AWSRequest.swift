@@ -66,21 +66,17 @@ public struct AWSRequest {
         case "GET","HEAD":
             break
         default:
-            switch serviceProtocol.type {
+            switch serviceProtocol {
             case .json:
-                headers["Content-Type"] = serviceProtocol.contentTypeString
+                headers["Content-Type"] = serviceProtocol.contentType
             case .restjson:
                 if case .buffer(_) = body {
                     headers["Content-Type"] = "binary/octet-stream"
                 } else {
                     headers["Content-Type"] = "application/json"
                 }
-            case .query:
+            case .query, .ec2:
                 headers["Content-Type"] = "application/x-www-form-urlencoded; charset=utf-8"
-            case .other(let service):
-                if service == "ec2" {
-                    headers["Content-Type"] = "application/x-www-form-urlencoded; charset=utf-8"
-                }
             default:
                 break
             }
@@ -97,7 +93,7 @@ public struct AWSRequest {
             return self.toHTTPRequest()
         }
 
-        switch (self.httpMethod, self.serviceProtocol.type) {
+        switch (self.httpMethod, self.serviceProtocol) {
         case ("GET",  .restjson), ("HEAD", .restjson):
             return self.toHTTPRequestWithSignedHeader(signer: signer)
 

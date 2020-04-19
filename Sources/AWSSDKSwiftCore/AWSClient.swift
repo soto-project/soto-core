@@ -437,7 +437,7 @@ extension AWSClient {
             }
         }
 
-        switch serviceProtocol.type {
+        switch serviceProtocol {
         case .json, .restjson:
             if let payload = (Input.self as? AWSShapeWithPayload.Type)?.payloadPath {
                 if let payloadBody = mirror.getAttribute(forKey: payload) {
@@ -500,17 +500,12 @@ extension AWSClient {
                 }
             }
 
-        case .other(let proto):
-            switch proto.lowercased() {
-            case "ec2":
-                var params = try input.encodeAsQuery(flattenArrays: true)
-                params["Action"] = operationName
-                params["Version"] = apiVersion
-                if let urlEncodedQueryParams = urlEncodeQueryParams(fromDictionary: params) {
-                    body = .text(urlEncodedQueryParams)
-                }
-            default:
-                break
+        case .ec2:
+            var params = try input.encodeAsQuery(flattenArrays: true)
+            params["Action"] = operationName
+            params["Version"] = apiVersion
+            if let urlEncodedQueryParams = urlEncodeQueryParams(fromDictionary: params) {
+                body = .text(urlEncodedQueryParams)
             }
         }
 
@@ -589,7 +584,7 @@ extension AWSClient {
             }
         }
 
-        var awsResponse = try AWSResponse(from: response, serviceProtocolType: serviceProtocol.type, raw: raw)
+        var awsResponse = try AWSResponse(from: response, serviceProtocol: serviceProtocol, raw: raw)
 
         // do we need to fix up the response before processing it
         for middleware in middlewares {
@@ -684,7 +679,7 @@ extension AWSClient {
 
     internal func createError(for response: AWSHTTPResponse) -> Error {
         do {
-            let awsResponse = try AWSResponse(from: response, serviceProtocolType: serviceProtocol.type)
+            let awsResponse = try AWSResponse(from: response, serviceProtocol: serviceProtocol)
             struct XMLError: Codable, ErrorMessage {
                 var code: String?
                 var message: String
@@ -724,7 +719,7 @@ extension AWSClient {
 
             var errorMessage: ErrorMessage? = nil
 
-            switch serviceProtocol.type {
+            switch serviceProtocol {
             case .query:
                 guard case .xml(var element) = awsResponse.body else { break }
                 if let errors = element.elements(forName: "Errors").first {
@@ -751,16 +746,13 @@ extension AWSClient {
                 guard case .json(let data) = awsResponse.body else { break }
                 errorMessage = try? JSONDecoder().decode(JSONError.self, from: data)
 
-            case .other(let service):
-                if service == "ec2" {
-                    guard case .xml(var element) = awsResponse.body else { break }
-                    if let errors = element.elements(forName: "Errors").first {
-                        element = errors
-                    }
-                    guard let errorElement = element.elements(forName: "Error").first else { break }
-                    errorMessage = try? XMLDecoder().decode(QueryError.self, from: errorElement)
+            case .ec2:
+                guard case .xml(var element) = awsResponse.body else { break }
+                if let errors = element.elements(forName: "Errors").first {
+                    element = errors
                 }
-                break
+                guard let errorElement = element.elements(forName: "Error").first else { break }
+                errorMessage = try? XMLDecoder().decode(QueryError.self, from: errorElement)
             }
 
             if let errorMessage = errorMessage, let code = errorMessage.code {

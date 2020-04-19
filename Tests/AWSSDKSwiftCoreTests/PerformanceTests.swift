@@ -74,7 +74,7 @@ class PerformanceTests: XCTestCase {
         let client = AWSClient(
             region: .useast1,
             service:"Test",
-            serviceProtocol: ServiceProtocol(type: .restxml),
+            serviceProtocol: .restxml,
             apiVersion: "1.0",
             httpClientProvider: .createNew
         )
@@ -96,7 +96,7 @@ class PerformanceTests: XCTestCase {
         let client = AWSClient(
             region: .useast1,
             service:"Test",
-            serviceProtocol: ServiceProtocol(type: .restxml),
+            serviceProtocol: .restxml,
             apiVersion: "1.0",
             httpClientProvider: .createNew
         )
@@ -118,7 +118,7 @@ class PerformanceTests: XCTestCase {
         let client = AWSClient(
             region: .useast1,
             service:"Test",
-            serviceProtocol: ServiceProtocol(type: .restxml),
+            serviceProtocol: .restxml,
             apiVersion: "1.0",
             httpClientProvider: .createNew
         )
@@ -140,7 +140,7 @@ class PerformanceTests: XCTestCase {
         let client = AWSClient(
             region: .useast1,
             service:"Test",
-            serviceProtocol: ServiceProtocol(type: .restjson),
+            serviceProtocol: .restjson,
             apiVersion: "1.0",
             httpClientProvider: .createNew
         )
@@ -162,7 +162,7 @@ class PerformanceTests: XCTestCase {
         let client = AWSClient(
             region: .useast1,
             service:"Test",
-            serviceProtocol: ServiceProtocol(type: .restjson),
+            serviceProtocol: .restjson,
             apiVersion: "1.0",
             httpClientProvider: .createNew
         )
@@ -184,7 +184,7 @@ class PerformanceTests: XCTestCase {
         let client = AWSClient(
             region: .useast1,
             service:"Test",
-            serviceProtocol: ServiceProtocol(type: .query),
+            serviceProtocol: .query,
             apiVersion: "1.0",
             httpClientProvider: .createNew
         )
@@ -208,7 +208,7 @@ class PerformanceTests: XCTestCase {
             secretAccessKey: "",
             region: .useast1,
             service:"Test",
-            serviceProtocol: ServiceProtocol(type: .json),
+            serviceProtocol: .json(version: "1.1"),
             apiVersion: "1.0",
             httpClientProvider: .createNew
         )
@@ -228,7 +228,7 @@ class PerformanceTests: XCTestCase {
             secretAccessKey: "MySecretAccessKey",
             region: .useast1,
             service:"Test",
-            serviceProtocol: ServiceProtocol(type: .json),
+            serviceProtocol: .json(version: "1.1"),
             apiVersion: "1.0",
             httpClientProvider: .createNew
         )
@@ -248,7 +248,7 @@ class PerformanceTests: XCTestCase {
             secretAccessKey: "MySecretAccessKey",
             region: .useast1,
             service:"Test",
-            serviceProtocol: ServiceProtocol(type: .json),
+            serviceProtocol: .json(version: "1.1"),
             apiVersion: "1.0",
             httpClientProvider: .createNew
         )
@@ -268,7 +268,7 @@ class PerformanceTests: XCTestCase {
         let client = AWSClient(
             region: .useast1,
             service:"Test",
-            serviceProtocol: ServiceProtocol(type: .restxml),
+            serviceProtocol: .restxml,
             apiVersion: "1.0",
             httpClientProvider: .createNew
         )
@@ -296,7 +296,7 @@ class PerformanceTests: XCTestCase {
         let client = AWSClient(
             region: .useast1,
             service:"Test",
-            serviceProtocol: ServiceProtocol(type: .restjson),
+            serviceProtocol: .restjson,
             apiVersion: "1.0",
             httpClientProvider: .createNew
         )

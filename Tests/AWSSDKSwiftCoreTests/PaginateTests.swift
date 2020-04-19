@@ -36,7 +36,7 @@ class PaginateTests: XCTestCase {
             secretAccessKey: "",
             region: .useast1,
             service:"TestClient",
-            serviceProtocol: ServiceProtocol(type: .json, version: ServiceProtocol.Version(major: 1, minor: 1)),
+            serviceProtocol: .json(version: "1.1"),
             apiVersion: "2020-01-21",
             endpoint: "http://localhost:\(awsServer.serverPort)",
             middlewares: [AWSLoggingMiddleware()],

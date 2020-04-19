@@ -31,7 +31,7 @@ class PayloadTests: XCTestCase {
                 apiVersion: "2020-01-21",
                 endpoint: awsServer.address,
                 middlewares: [AWSLoggingMiddleware()],
-                eventLoopGroupProvider: .useAWSClientShared
+                httpClientProvider: .createNew
             )
             let input = DataPayload(data: payload)
             let response = client.send(operation: "test", path: "/", httpMethod: "POST", input: input)

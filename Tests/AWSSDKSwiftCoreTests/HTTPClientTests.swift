@@ -40,7 +40,7 @@ class NIOTSHTTPClientTests: XCTestCase {
 
     override func setUp() {
         self.awsServer = AWSTestServer(serviceProtocol: .json)
-        self.client = NIOTSHTTPClient(eventLoopGroup: NIOTSEventLoopGroup())
+        self.client = NIOTSHTTPClient(eventLoopGroupProvider: .shared(NIOTSEventLoopGroup()))
     }
 
     override func tearDown() {

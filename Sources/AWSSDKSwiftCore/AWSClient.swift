@@ -37,12 +37,13 @@ public final class AWSClient {
         case httpResponseError(AWSHTTPResponse)
     }
 
-    /// Specifies how `EventLoopGroup` will be created and establishes lifecycle ownership.
-    public enum EventLoopGroupProvider {
-        /// `EventLoopGroup` will be provided by the user. Owner of this group is responsible for its lifecycle.
-        case shared(EventLoopGroup)
-        /// `EventLoopGroup` will be created by the client. When `syncShutdown` is called, created `EventLoopGroup` will be shut down as well.
-        case useAWSClientShared
+    /// Specifies how `HTTPClient` will be created and establishes lifecycle ownership.
+    public enum HTTPClientProvider {
+        /// `HTTPClient` will be provided by the user. Owner of this group is responsible for its lifecycle. Any HTTPClient that conforms to
+        /// `AWSHTTPClient` can be specified here including AsyncHTTPClient
+        case shared(AWSHTTPClient)
+        /// `HTTPClient` will be created by the client. When `deinit` is called, created `HTTPClient` will be shut down as well.
+        case createNew
     }
 
     let credentialProvider: CredentialProvider
@@ -69,23 +70,15 @@ public final class AWSClient {
 
     var possibleErrorTypes: [AWSErrorType.Type]
 
-    let httpClient: AWSHTTPClient
+    /// HTTP client used by AWSClient
+    public let httpClient: AWSHTTPClient
 
-    public let eventLoopGroup: EventLoopGroup
+    let httpClientProvider: HTTPClientProvider
+
+    /// EventLoopGroup used by AWSClient
+    public var eventLoopGroup: EventLoopGroup { return httpClient.eventLoopGroup }
 
     let retryController: RetryController
-
-    private static let sharedEventLoopGroup: EventLoopGroup = createEventLoopGroup()
-
-    /// create an eventLoopGroup
-    static func createEventLoopGroup() -> EventLoopGroup {
-        #if canImport(Network)
-            if #available(OSX 10.15, iOS 12.0, tvOS 12.0, watchOS 6.0, *) {
-                return NIOTSEventLoopGroup()
-            }
-        #endif
-        return MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
-    }
 
     /// Initialize an AWSClient struct
     /// - parameters:
@@ -104,8 +97,25 @@ public final class AWSClient {
     ///     - retryCalculator: Object returning whether retries should be attempted. Possible options are NoRetry(), ExponentialRetry() or JitterRetry()
     ///     - middlewares: Array of middlewares to apply to requests and responses
     ///     - possibleErrorTypes: Array of possible error types that the client can throw
-    ///     - eventLoopGroupProvider: EventLoopGroup to use. Use `useAWSClientShared` if the client shall manage its own EventLoopGroup.
-    public init(accessKeyId: String? = nil, secretAccessKey: String? = nil, sessionToken: String? = nil, region givenRegion: Region?, amzTarget: String? = nil, service: String, signingName: String? = nil, serviceProtocol: ServiceProtocol, apiVersion: String, endpoint: String? = nil, serviceEndpoints: [String: String] = [:], partitionEndpoint: String? = nil, retryController: RetryController = NoRetry(), middlewares: [AWSServiceMiddleware] = [], possibleErrorTypes: [AWSErrorType.Type]? = nil, eventLoopGroupProvider: EventLoopGroupProvider) {
+    ///     - httpClientProvider: HTTPClient to use. Use `useAWSClientShared` if the client shall manage its own HTTPClient.
+    public init(
+        accessKeyId: String? = nil,
+        secretAccessKey: String? = nil,
+        sessionToken: String? = nil,
+        region givenRegion: Region?,
+        amzTarget: String? = nil,
+        service: String,
+        signingName: String? = nil,
+        serviceProtocol: ServiceProtocol,
+        apiVersion: String,
+        endpoint: String? = nil,
+        serviceEndpoints: [String: String] = [:],
+        partitionEndpoint: String? = nil,
+        retryController: RetryController = NoRetry(), 
+        middlewares: [AWSServiceMiddleware] = [],
+        possibleErrorTypes: [AWSErrorType.Type]? = nil,
+        httpClientProvider: HTTPClientProvider
+    ) {
         if let _region = givenRegion {
             region = _region
         }
@@ -121,25 +131,26 @@ public final class AWSClient {
             region = .useast1
         }
 
-        // setup eventLoopGroup and httpClient
-        switch eventLoopGroupProvider {
-        case .shared(let providedEventLoopGroup):
-            self.eventLoopGroup = providedEventLoopGroup
-        case .useAWSClientShared:
-            self.eventLoopGroup = AWSClient.sharedEventLoopGroup
+        // setup httpClient
+        self.httpClientProvider = httpClientProvider
+        switch httpClientProvider {
+        case .shared(let providedHTTPClient):
+            self.httpClient = providedHTTPClient
+        case .createNew:
+            self.httpClient = AWSClient.createHTTPClient()
         }
-        self.httpClient = AWSClient.createHTTPClient(eventLoopGroup: eventLoopGroup)
 
+        let eventLoopGroup = self.httpClient.eventLoopGroup
         // create credentialProvider
         if let accessKey = accessKeyId, let secretKey = secretAccessKey {
             let credential = StaticCredential(accessKeyId: accessKey, secretAccessKey: secretKey, sessionToken: sessionToken)
-            self.credentialProvider = StaticCredentialProvider(credential: credential, eventLoopGroup: self.eventLoopGroup)
+            self.credentialProvider = StaticCredentialProvider(credential: credential, eventLoopGroup: eventLoopGroup)
         } else if let ecredential = EnvironmentCredential() {
             let credential = ecredential
-            self.credentialProvider = StaticCredentialProvider(credential: credential, eventLoopGroup: self.eventLoopGroup)
+            self.credentialProvider = StaticCredentialProvider(credential: credential, eventLoopGroup: eventLoopGroup)
         } else if let scredential = try? SharedCredential() {
             let credential = scredential
-            self.credentialProvider = StaticCredentialProvider(credential: credential, eventLoopGroup: self.eventLoopGroup)
+            self.credentialProvider = StaticCredentialProvider(credential: credential, eventLoopGroup: eventLoopGroup)
         } else {
             self.credentialProvider = MetaDataCredentialProvider(httpClient: self.httpClient)
         }
@@ -172,13 +183,17 @@ public final class AWSClient {
     }
 
     deinit {
-        do {
-            try httpClient.syncShutdown()
-        } catch {
-            preconditionFailure("Error shutting down AWSClient: \(error.localizedDescription)")
+        // if httpClient was created by AWSClient then it is required to shutdown the httpClient
+        if case .createNew = httpClientProvider {
+            do {
+                try httpClient.syncShutdown()
+            } catch {
+                print("Error shutting down HTTP client: \(error)")
+            }
         }
     }
 }
+
 // invoker
 extension AWSClient {
 
@@ -217,13 +232,13 @@ extension AWSClient {
     }
 
     /// create HTTPClient
-    fileprivate static func createHTTPClient(eventLoopGroup: EventLoopGroup) -> AWSHTTPClient {
+    fileprivate static func createHTTPClient() -> AWSHTTPClient {
         #if canImport(Network)
-        if #available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *), let nioTSEventLoopGroup = eventLoopGroup as? NIOTSEventLoopGroup {
-            return NIOTSHTTPClient(eventLoopGroup: nioTSEventLoopGroup)
+        if #available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *) {
+            return NIOTSHTTPClient(eventLoopGroupProvider: .createNew)
         }
         #endif
-        return AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
+        return AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew)
     }
 
 }
@@ -400,7 +415,7 @@ extension AWSClient {
                 switch encoding.location {
                 case .header(let location):
                     headers[location] = value
-                    
+
                 case .querystring(let location):
                     switch value {
                     case let array as QueryEncodableArray:
@@ -410,13 +425,13 @@ extension AWSClient {
                     default:
                         queryParams.append((key:location, value:"\(value)"))
                     }
-                    
+
                 case .uri(let location):
                     path = path
                         .replacingOccurrences(of: "{\(location)}", with: "\(value)")
                         // percent-encode key which is part of the path
                         .replacingOccurrences(of: "{\(location)+}", with: "\(value)".addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)!)
-                    
+
                 default:
                     memberVariablesCount += 1
                 }
@@ -808,4 +823,3 @@ extension Dictionary : QueryEncodableDictionary {
         return self.map{ (key:"\($0.key)", value:"\($0.value)") }
     }
 }
-

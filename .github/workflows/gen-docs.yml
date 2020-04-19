@@ -12,8 +12,10 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v1
-    - name: Install Jazzy
-      run: gem install jazzy
+    - name: Install Dependencies
+      run: |
+        brew install sourcekitten
+        gem install jazzy
     - name: Build
       run: |
         ./scripts/build-docs.sh

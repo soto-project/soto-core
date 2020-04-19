@@ -73,7 +73,7 @@ class AWSClientTests: XCTestCase {
             ("testServerError", testServerError),
             ("testClientRetry", testClientRetry),
             ("testClientRetryFail", testClientRetryFail),
-            ("testClientEventLoop", testClientEventLoop),
+            ("testClientResponseEventLoop", testClientResponseEventLoop),
         ]
     }
 
@@ -1218,11 +1218,13 @@ class AWSClientTests: XCTestCase {
         }
     }
 
-    func testClientEventLoop() {
+    func testClientResponseEventLoop() {
         do {
             let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 5)
+            let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
             let awsServer = AWSTestServer(serviceProtocol: .json)
             defer {
+                XCTAssertNoThrow(try httpClient.syncShutdown())
                 XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
                 XCTAssertNoThrow(try awsServer.stop())
             }
@@ -1234,7 +1236,7 @@ class AWSClientTests: XCTestCase {
                 serviceProtocol: ServiceProtocol(type: .json, version: ServiceProtocol.Version(major: 1, minor: 1)),
                 apiVersion: "2020-01-21",
                 endpoint: awsServer.address,
-                eventLoopGroupProvider: .shared(eventLoopGroup)
+                httpClientProvider: .shared(httpClient)
             )
             let eventLoop = client.eventLoopGroup.next()
             let response: EventLoopFuture<Void> = client.send(operation: "test", path: "/", httpMethod: "POST", on: eventLoop)

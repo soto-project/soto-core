@@ -140,17 +140,16 @@ public final class AWSClient {
             self.httpClient = AWSClient.createHTTPClient()
         }
 
-        let eventLoopGroup = self.httpClient.eventLoopGroup
         // create credentialProvider
         if let accessKey = accessKeyId, let secretKey = secretAccessKey {
             let credential = StaticCredential(accessKeyId: accessKey, secretAccessKey: secretKey, sessionToken: sessionToken)
-            self.credentialProvider = StaticCredentialProvider(credential: credential, eventLoopGroup: eventLoopGroup)
+            self.credentialProvider = StaticCredentialProvider(credential: credential)
         } else if let ecredential = EnvironmentCredential() {
             let credential = ecredential
-            self.credentialProvider = StaticCredentialProvider(credential: credential, eventLoopGroup: eventLoopGroup)
+            self.credentialProvider = StaticCredentialProvider(credential: credential)
         } else if let scredential = try? SharedCredential() {
             let credential = scredential
-            self.credentialProvider = StaticCredentialProvider(credential: credential, eventLoopGroup: eventLoopGroup)
+            self.credentialProvider = StaticCredentialProvider(credential: credential)
         } else {
             self.credentialProvider = MetaDataCredentialProvider(httpClient: self.httpClient)
         }

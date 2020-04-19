@@ -245,6 +245,9 @@ public final class NIOTSHTTPClient {
 extension NIOTSHTTPClient: AWSHTTPClient {
 
     public func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop?) -> EventLoopFuture<AWSHTTPResponse> {
+        if let eventLoop = eventLoop {
+            precondition(self.eventLoopGroup.makeIterator().contains { $0 === eventLoop }, "EventLoop provided to AWSClient must be part of the HTTPClient's EventLoopGroup.")
+        }
         var head = HTTPRequestHead(
           version: HTTPVersion(major: 1, minor: 1),
           method: request.method,

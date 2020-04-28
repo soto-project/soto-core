@@ -1108,7 +1108,7 @@ class AWSClientTests: XCTestCase {
         ]
         regions.forEach {
             let region = Region(rawValue: $0)
-            if case .other(_) = region {
+            if case .other(_,_) = region {
                 XCTFail("\($0) is not a region")
             }
             let rawValue = region.rawValue
@@ -1116,7 +1116,7 @@ class AWSClientTests: XCTestCase {
         }
 
         let region = Region(rawValue: "my-region")
-        if case .other(let regionName) = region {
+        if case .other(let regionName,_) = region {
             XCTAssertEqual(regionName, "my-region")
         } else {
             XCTFail("Did not construct Region.other()")

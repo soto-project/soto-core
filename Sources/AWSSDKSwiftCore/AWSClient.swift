@@ -175,7 +175,7 @@ public final class AWSClient {
             } else if let partitionEndpoint = partitionEndpoint, let globalEndpoint = serviceEndpoints[partitionEndpoint] {
                 serviceHost = globalEndpoint
             } else {
-                serviceHost = "\(service).\(region.rawValue).amazonaws.com"
+                serviceHost = "\(service).\(region.rawValue).\(region.dnsSuffix)"
             }
             self.endpoint = "https://\(serviceHost)"
         }

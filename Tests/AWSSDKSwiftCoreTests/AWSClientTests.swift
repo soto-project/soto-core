@@ -330,6 +330,17 @@ class AWSClientTests: XCTestCase {
         }
     }
 
+    func testPartitionEndpoints() throws {
+        let client = createAWSClient(
+            serviceEndpoints: ["aws-global":"service.aws.amazon.com"],
+            partitionEndpoints: [.aws: (endpoint: "aws-global", region: .euwest1)]
+        )
+        XCTAssertEqual(client.region, .euwest1)
+
+        let awsRequest = try client.createAWSRequest(operation: "test", path: "/", httpMethod: "GET")
+        XCTAssertEqual(awsRequest.url.absoluteString, "https://service.aws.amazon.com/")
+    }
+    
     func testCreateAwsRequestWithKeywordInHeader() {
         struct KeywordRequest: AWSEncodableShape {
             static var _encoding: [AWSMemberEncoding] = [

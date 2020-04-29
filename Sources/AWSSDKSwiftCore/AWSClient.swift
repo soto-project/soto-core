@@ -170,7 +170,7 @@ public final class AWSClient {
             sessionToken: sessionToken,
             serviceConfig: serviceConfig,
             retryController: retryController,
-            middlewares: middlewares,
+            middlewares: [],
             httpClientProvider: httpClientProvider)
     }
 

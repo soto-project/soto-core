@@ -1297,6 +1297,19 @@ class AWSClientTests: XCTestCase {
             XCTFail("Unexpected error: \(error)")
         }
     }
+    
+    func testMiddlewareIsOnlyAppliedOnce() throws {
+        struct URLAppendMiddleware: AWSServiceMiddleware {
+            func chain(request: AWSRequest) throws -> AWSRequest {
+                var request = request
+                request.url.appendPathComponent("test")
+                return request
+            }
+        }
+        let client = createAWSClient(middlewares: [URLAppendMiddleware()])
+        let request = try client.createAWSRequest(operation: "test", path: "/", httpMethod: "GET")
+        XCTAssertEqual(request.url.absoluteString, "https://testService.us-east-1.amazonaws.com/test")
+    }
 }
 
 /// Error enum for Kinesis

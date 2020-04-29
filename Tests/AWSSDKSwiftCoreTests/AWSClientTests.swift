@@ -218,7 +218,7 @@ class AWSClientTests: XCTestCase {
                 httpMethod: "POST",
                 input: input1
             )
-            XCTAssertEqual(awsRequest.url.absoluteString, "\(sesClient.endpoint)/")
+            XCTAssertEqual(awsRequest.url.absoluteString, "\(sesClient.serviceConfig.endpoint)/")
             let nioRequest: AWSHTTPRequest = awsRequest.toHTTPRequest()
             XCTAssertEqual(nioRequest.headers["value"][0], "<html><body><a href=\"https://redsox.com\">Test</a></body></html>")
             XCTAssertEqual(nioRequest.headers["Content-Type"][0], "application/x-www-form-urlencoded; charset=utf-8")
@@ -247,7 +247,7 @@ class AWSClientTests: XCTestCase {
                 httpMethod: "POST",
                 input: input2
             )
-            XCTAssertEqual(awsRequest.url.absoluteString, "\(kinesisClient.endpoint)/")
+            XCTAssertEqual(awsRequest.url.absoluteString, "\(kinesisClient.serviceConfig.endpoint)/")
 
             if case .json(let data) = awsRequest.body, let parsedBody = try JSONSerialization.jsonObject(with: data, options: []) as? [String:Any] {
                 if let member = parsedBody["Member"] as? [String:Any] {

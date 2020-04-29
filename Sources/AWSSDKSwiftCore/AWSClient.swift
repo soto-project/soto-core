@@ -46,39 +46,72 @@ public final class AWSClient {
         case createNew
     }
 
+    /// AWS service configuration
+    public let serviceConfig: ServiceConfig
+    /// AWS credentials provider
     let credentialProvider: CredentialProvider
-
-    let signingName: String
-
-    let apiVersion: String
-
-    let amzTarget: String?
-
-    let service: String
-
-    public let endpoint: String
-
-    public let region: Region
-
-    let serviceProtocol: ServiceProtocol
-
-    let serviceEndpoints: [String: String]
-
-    let partitionEndpoint: String?
-
-    let middlewares: [AWSServiceMiddleware]
-
-    var possibleErrorTypes: [AWSErrorType.Type]
-
+    /// middleware code to be applied to requests and responses
+    public let middlewares: [AWSServiceMiddleware]
     /// HTTP client used by AWSClient
-    public let httpClient: AWSHTTPClient
-
+    let httpClient: AWSHTTPClient
+    /// keeps a record of how we obtained the HTTP client
     let httpClientProvider: HTTPClientProvider
-
     /// EventLoopGroup used by AWSClient
     public var eventLoopGroup: EventLoopGroup { return httpClient.eventLoopGroup }
+    /// Retry Controller specifying what to do when a request fails
+    public let retryController: RetryController
 
-    let retryController: RetryController
+    // public accessors to ensure code outside of aws-sdk-swift-core still compiles
+    public var region: Region { return serviceConfig.region }
+    public var endpoint: String { return serviceConfig.endpoint }
+    public var serviceProtocol: ServiceProtocol { return serviceConfig.serviceProtocol }
+
+    /// Initialize an AWSClient struct
+    /// - parameters:
+    ///     - accessKeyId: Public access key provided by AWS
+    ///     - secretAccessKey: Private access key provided by AWS
+    ///     - sessionToken: Token provided by STS.AssumeRole() which allows access to another AWS account
+    ///     - serviceConfig: AWS service configuration
+    ///     - retryController: Object returning whether retries should be attempted. Possible options are NoRetry(), ExponentialRetry() or JitterRetry()
+    ///     - middlewares: Array of middlewares to apply to requests and responses
+    ///     - httpClientProvider: HTTPClient to use. Use `.createNew` if you want the client to manage its own HTTPClient.
+    public init(
+        accessKeyId: String? = nil,
+        secretAccessKey: String? = nil,
+        sessionToken: String? = nil,
+        serviceConfig: ServiceConfig,
+        retryController: RetryController = NoRetry(),
+        middlewares: [AWSServiceMiddleware] = [],
+        httpClientProvider: HTTPClientProvider
+    ) {
+        self.serviceConfig = serviceConfig
+
+        // setup httpClient
+         self.httpClientProvider = httpClientProvider
+         switch httpClientProvider {
+         case .shared(let providedHTTPClient):
+             self.httpClient = providedHTTPClient
+         case .createNew:
+             self.httpClient = AWSClient.createHTTPClient()
+        }
+
+        // create credentialProvider
+        if let accessKey = accessKeyId, let secretKey = secretAccessKey {
+            let credential = StaticCredential(accessKeyId: accessKey, secretAccessKey: secretKey, sessionToken: sessionToken)
+            self.credentialProvider = StaticCredentialProvider(credential: credential)
+        } else if let ecredential = EnvironmentCredential() {
+            let credential = ecredential
+            self.credentialProvider = StaticCredentialProvider(credential: credential)
+        } else if let scredential = try? SharedCredential() {
+            let credential = scredential
+            self.credentialProvider = StaticCredentialProvider(credential: credential)
+        } else {
+            self.credentialProvider = MetaDataCredentialProvider(httpClient: self.httpClient)
+        }
+
+        self.middlewares = middlewares
+        self.retryController = retryController
+    }
 
     /// Initialize an AWSClient struct
     /// - parameters:
@@ -97,8 +130,8 @@ public final class AWSClient {
     ///     - retryCalculator: Object returning whether retries should be attempted. Possible options are NoRetry(), ExponentialRetry() or JitterRetry()
     ///     - middlewares: Array of middlewares to apply to requests and responses
     ///     - possibleErrorTypes: Array of possible error types that the client can throw
-    ///     - httpClientProvider: HTTPClient to use. Use `useAWSClientShared` if the client shall manage its own HTTPClient.
-    public init(
+    ///     - httpClientProvider: HTTPClient to use. Use `.createNew` if you want the client to manage its own HTTPClient.
+    convenience public init(
         accessKeyId: String? = nil,
         secretAccessKey: String? = nil,
         sessionToken: String? = nil,
@@ -113,72 +146,30 @@ public final class AWSClient {
         partitionEndpoint: String? = nil,
         retryController: RetryController = NoRetry(),
         middlewares: [AWSServiceMiddleware] = [],
-        possibleErrorTypes: [AWSErrorType.Type]? = nil,
+        possibleErrorTypes: [AWSErrorType.Type] = [],
         httpClientProvider: HTTPClientProvider
     ) {
-        if let _region = givenRegion {
-            region = _region
-        }
-        else if let partitionEndpoint = partitionEndpoint {
-            if partitionEndpoint == "aws-global" {
-                region = .useast1
-            } else {
-                region = Region(rawValue: partitionEndpoint)
-            }
-        } else if let defaultRegion = ProcessInfo.processInfo.environment["AWS_DEFAULT_REGION"] {
-            region = Region(rawValue: defaultRegion)
-        } else {
-            region = .useast1
-        }
+         let serviceConfig = ServiceConfig(
+            region: givenRegion,
+            amzTarget: amzTarget,
+            service: service,
+            signingName: signingName,
+            serviceProtocol: serviceProtocol,
+            apiVersion: apiVersion,
+            endpoint: endpoint,
+            serviceEndpoints: serviceEndpoints,
+            partitionEndpoint: partitionEndpoint,
+            possibleErrorTypes: possibleErrorTypes,
+            middlewares: middlewares)
 
-        // setup httpClient
-        self.httpClientProvider = httpClientProvider
-        switch httpClientProvider {
-        case .shared(let providedHTTPClient):
-            self.httpClient = providedHTTPClient
-        case .createNew:
-            self.httpClient = AWSClient.createHTTPClient()
-        }
-
-        // create credentialProvider
-        if let accessKey = accessKeyId, let secretKey = secretAccessKey {
-            let credential = StaticCredential(accessKeyId: accessKey, secretAccessKey: secretKey, sessionToken: sessionToken)
-            self.credentialProvider = StaticCredentialProvider(credential: credential)
-        } else if let ecredential = EnvironmentCredential() {
-            let credential = ecredential
-            self.credentialProvider = StaticCredentialProvider(credential: credential)
-        } else if let scredential = try? SharedCredential() {
-            let credential = scredential
-            self.credentialProvider = StaticCredentialProvider(credential: credential)
-        } else {
-            self.credentialProvider = MetaDataCredentialProvider(httpClient: self.httpClient)
-        }
-
-        self.signingName = signingName ?? service
-        self.apiVersion = apiVersion
-        self.service = service
-        self.amzTarget = amzTarget
-        self.serviceProtocol = serviceProtocol
-        self.serviceEndpoints = serviceEndpoints
-        self.partitionEndpoint = partitionEndpoint
-        self.middlewares = middlewares
-        self.possibleErrorTypes = possibleErrorTypes ?? []
-        self.retryController = retryController
-
-        // work out endpoint, if provided use that otherwise
-        if let endpoint = endpoint {
-            self.endpoint = endpoint
-        } else {
-            let serviceHost: String
-            if let serviceEndpoint = serviceEndpoints[region.rawValue] {
-                serviceHost = serviceEndpoint
-            } else if let partitionEndpoint = partitionEndpoint, let globalEndpoint = serviceEndpoints[partitionEndpoint] {
-                serviceHost = globalEndpoint
-            } else {
-                serviceHost = "\(service).\(region.rawValue).amazonaws.com"
-            }
-            self.endpoint = "https://\(serviceHost)"
-        }
+        self.init(
+            accessKeyId: accessKeyId,
+            secretAccessKey: secretAccessKey,
+            sessionToken: sessionToken,
+            serviceConfig: serviceConfig,
+            retryController: retryController,
+            middlewares: middlewares,
+            httpClientProvider: httpClientProvider)
     }
 
     deinit {
@@ -256,7 +247,7 @@ extension AWSClient {
     public func send<Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, input: Input, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Void> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         return credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
-            let signer = AWSSigner(credentials: credential, name: self.signingName, region: self.region.rawValue)
+            let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
             let awsRequest = try self.createAWSRequest(
                         operation: operationName,
                         path: path,
@@ -280,7 +271,7 @@ extension AWSClient {
     public func send(operation operationName: String, path: String, httpMethod: String, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Void> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         return credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
-            let signer = AWSSigner(credentials: credential, name: self.signingName, region: self.region.rawValue)
+            let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
             let awsRequest = try self.createAWSRequest(
                         operation: operationName,
                         path: path,
@@ -303,7 +294,7 @@ extension AWSClient {
     public func send<Output: AWSDecodableShape>(operation operationName: String, path: String, httpMethod: String, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         return credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
-            let signer = AWSSigner(credentials: credential, name: self.signingName, region: self.region.rawValue)
+            let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
             let awsRequest = try self.createAWSRequest(
                         operation: operationName,
                         path: path,
@@ -327,7 +318,7 @@ extension AWSClient {
     public func send<Output: AWSDecodableShape, Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, input: Input, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         return credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
-            let signer = AWSSigner(credentials: credential, name: self.signingName, region: self.region.rawValue)
+            let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
             let awsRequest = try self.createAWSRequest(
                         operation: operationName,
                         path: path,
@@ -358,32 +349,31 @@ extension AWSClient {
 
     var signer: EventLoopFuture<AWSSigner> {
         return credentialProvider.getCredential(on: eventLoopGroup.next()).map { credential in
-            return AWSSigner(credentials: credential, name: self.signingName, region: self.region.rawValue)
+            return AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
         }
     }
 
     internal func createAWSRequest(operation operationName: String, path: String, httpMethod: String) throws -> AWSRequest {
-
-        guard let url = URL(string: "\(endpoint)\(path)"), let _ = url.host else {
-            throw AWSClient.ClientError.invalidURL("\(endpoint)\(path) must specify url host and scheme")
-        }
-
         var headers: [String: Any] = [:]
 
+        guard let url = URL(string: "\(serviceConfig.endpoint)\(path)"), let _ = url.host else {
+            throw AWSClient.ClientError.invalidURL("\(serviceConfig.endpoint)\(path) must specify url host and scheme")
+        }
+
         // set x-amz-target header
-        if let target = amzTarget {
+        if let target = serviceConfig.amzTarget {
             headers["x-amz-target"] = "\(target).\(operationName)"
         }
 
         return try AWSRequest(
-            region: region,
+            region: serviceConfig.region,
             url: url,
-            serviceProtocol: serviceProtocol,
+            serviceProtocol: serviceConfig.serviceProtocol,
             operation: operationName,
             httpMethod: httpMethod,
             httpHeaders: headers,
             body: .empty
-        ).applyMiddlewares(middlewares)
+        ).applyMiddlewares(serviceConfig.middlewares + middlewares)
     }
 
     internal func createAWSRequest<Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
@@ -395,12 +385,12 @@ extension AWSClient {
         // validate input parameters
         try input.validate()
 
-        guard let baseURL = URL(string: "\(endpoint)"), let _ = baseURL.host else {
-            throw ClientError.invalidURL("\(endpoint) must specify url host and scheme")
+        guard let baseURL = URL(string: "\(serviceConfig.endpoint)"), let _ = baseURL.host else {
+            throw ClientError.invalidURL("\(serviceConfig.endpoint) must specify url host and scheme")
         }
 
         // set x-amz-target header
-        if let target = amzTarget {
+        if let target = serviceConfig.amzTarget {
             headers["x-amz-target"] = "\(target).\(operationName)"
         }
 
@@ -437,7 +427,7 @@ extension AWSClient {
             }
         }
 
-        switch serviceProtocol {
+        switch serviceConfig.serviceProtocol {
         case .json, .restjson:
             if let payload = (Input.self as? AWSShapeWithPayload.Type)?.payloadPath {
                 if let payloadBody = mirror.getAttribute(forKey: payload) {
@@ -463,7 +453,7 @@ extension AWSClient {
             var dict = try input.encodeAsQuery()
 
             dict["Action"] = operationName
-            dict["Version"] = apiVersion
+            dict["Version"] = serviceConfig.apiVersion
 
             switch httpMethod {
             case "GET":
@@ -503,14 +493,14 @@ extension AWSClient {
         case .ec2:
             var params = try input.encodeAsQuery(flattenArrays: true)
             params["Action"] = operationName
-            params["Version"] = apiVersion
+            params["Version"] = serviceConfig.apiVersion
             if let urlEncodedQueryParams = urlEncodeQueryParams(fromDictionary: params) {
                 body = .text(urlEncodedQueryParams)
             }
         }
 
         guard let parsedPath = URLComponents(string: path) else {
-            throw ClientError.invalidURL("\(endpoint)\(path)")
+            throw ClientError.invalidURL("\(serviceConfig.endpoint)\(path)")
         }
 
         // add queries from the parsed path to the query params list
@@ -532,14 +522,14 @@ extension AWSClient {
         }
 
         return try AWSRequest(
-            region: region,
+            region: serviceConfig.region,
             url: url,
-            serviceProtocol: serviceProtocol,
+            serviceProtocol: serviceConfig.serviceProtocol,
             operation: operationName,
             httpMethod: httpMethod,
             httpHeaders: headers,
             body: body
-        ).applyMiddlewares(middlewares)
+        ).applyMiddlewares(serviceConfig.middlewares + middlewares)
     }
 
     static let queryAllowedCharacters = CharacterSet(charactersIn:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/")
@@ -584,10 +574,10 @@ extension AWSClient {
             }
         }
 
-        var awsResponse = try AWSResponse(from: response, serviceProtocol: serviceProtocol, raw: raw)
+        var awsResponse = try AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol, raw: raw)
 
         // do we need to fix up the response before processing it
-        for middleware in middlewares {
+        for middleware in serviceConfig.middlewares + middlewares {
             awsResponse = try middleware.chain(response: awsResponse)
         }
 
@@ -679,7 +669,7 @@ extension AWSClient {
 
     internal func createError(for response: AWSHTTPResponse) -> Error {
         do {
-            let awsResponse = try AWSResponse(from: response, serviceProtocol: serviceProtocol)
+            let awsResponse = try AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol)
             struct XMLError: Codable, ErrorMessage {
                 var code: String?
                 var message: String
@@ -719,7 +709,7 @@ extension AWSClient {
 
             var errorMessage: ErrorMessage? = nil
 
-            switch serviceProtocol {
+            switch serviceConfig.serviceProtocol {
             case .query:
                 guard case .xml(var element) = awsResponse.body else { break }
                 if let errors = element.elements(forName: "Errors").first {
@@ -756,7 +746,7 @@ extension AWSClient {
             }
 
             if let errorMessage = errorMessage, let code = errorMessage.code {
-                for errorType in possibleErrorTypes {
+                for errorType in serviceConfig.possibleErrorTypes {
                     if let error = errorType.init(errorCode: code, message: errorMessage.message) {
                         return error
                     }

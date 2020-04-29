@@ -47,7 +47,7 @@ func createAWSClient(
     partitionEndpoint: String? = nil,
     retryController: RetryController = NoRetry(),
     middlewares: [AWSServiceMiddleware] = [],
-    possibleErrorTypes: [AWSErrorType.Type]? = nil,
+    possibleErrorTypes: [AWSErrorType.Type] = [],
     httpClientProvider: AWSClient.HTTPClientProvider = .createNew
 ) -> AWSClient {
     return AWSClient(

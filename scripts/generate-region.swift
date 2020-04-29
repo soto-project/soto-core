@@ -39,6 +39,12 @@ struct RegionDesc {
     let `enum`: String
     let name: String
     let description: String?
+    let partition: String
+}
+
+struct Partition {
+    let name: String
+    let description: String
     let dnsSuffix: String
 }
 
@@ -59,13 +65,21 @@ print("Loading Endpoints")
 guard let endpoints = try loadEndpoints(url: "https://raw.githubusercontent.com/aws/aws-sdk-go/master/models/endpoints/endpoints.json") else { exit(-1) }
 
 var regionDescs: [RegionDesc] = []
+var partitions: [Partition] = endpoints.partitions.map {
+    return Partition(
+        name: $0.partition.filter { return $0.isLetter || $0.isNumber },
+        description: $0.partitionName,
+        dnsSuffix: $0.dnsSuffix
+    )
+}
+
 for partition in endpoints.partitions {
     let partitionRegionDescs = partition.regions.keys.map { region in
         return RegionDesc(
             enum: region.filter { return $0.isLetter || $0.isNumber },
             name: region,
             description: partition.regions[region]?.description,
-            dnsSuffix: partition.dnsSuffix
+            partition: partition.partition.filter { return $0.isLetter || $0.isNumber }
         )
     }
     regionDescs += partitionRegionDescs
@@ -78,7 +92,8 @@ let environment = Environment(loader: fsLoader)
 print("Creating Region.swift")
 
 let context: [String: Any] = [
-    "regions": regionDescs.sorted { $0.name < $1.name }
+    "regions": regionDescs.sorted { $0.name < $1.name },
+    "partitions": partitions
 ]
 
 let regionsFile = try environment.renderTemplate(name: "Region.stencil", context: context)

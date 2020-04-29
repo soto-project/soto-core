@@ -18,17 +18,16 @@ public enum Region {
 {%for region in regions %}
     case {{region.enum}} // {{region.description}}
 {%endfor %}
-    case other(name: String, dnsSuffix: String)
+    case other(String)
 }
 
 extension Region {
-
     public init(rawValue: String) {
         switch rawValue {
 {%for region in regions %}
         case "{{region.name}}": self = .{{region.enum}}
 {%endfor %}
-        default: self = .other(name: rawValue, dnsSuffix: "amazonaws.com")
+        default: self = .other(rawValue)
         }
     }
 
@@ -37,16 +36,16 @@ extension Region {
 {%for region in regions %}
         case .{{region.enum}}: return "{{region.name}}"
 {%endfor %}
-        case .other(let string, _): return string
+        case .other(let string): return string
         }
     }
 
-    public var dnsSuffix: String {
+    public var partition: Partition {
         switch self {
 {%for region in regions %}
-        case .{{region.enum}}: return "{{region.dnsSuffix}}"
+        case .{{region.enum}}: return .{{region.partition}}
 {%endfor %}
-        case .other(_, let dnsSuffix): return dnsSuffix
+        case .other(_): return .aws
         }
     }
 }
@@ -58,5 +57,21 @@ extension Region: Equatable, Hashable {
 
     public func hash(into hasher: inout Hasher) {
         self.rawValue.hash(into: &hasher)
+    }
+}
+
+public enum Partition: String {
+{%for partition in partitions %}
+    case {{partition.name}} // {{partition.description}}
+{%endfor %}
+}
+
+extension Partition {
+    public var dnsSuffix: String {
+        switch self {
+{%for partition in partitions %}
+        case .{{partition.name}}: return "{{partition.dnsSuffix}}"
+{%endfor %}
+        }
     }
 }

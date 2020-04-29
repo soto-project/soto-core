@@ -40,11 +40,10 @@ public enum Region {
     case usisobeast1 // US ISOB East (Ohio)
     case uswest1 // US West (N. California)
     case uswest2 // US West (Oregon)
-    case other(name: String, dnsSuffix: String)
+    case other(String)
 }
 
 extension Region {
-
     public init(rawValue: String) {
         switch rawValue {
         case "af-south-1": self = .afsouth1
@@ -72,7 +71,7 @@ extension Region {
         case "us-isob-east-1": self = .usisobeast1
         case "us-west-1": self = .uswest1
         case "us-west-2": self = .uswest2
-        default: self = .other(name: rawValue, dnsSuffix: "amazonaws.com")
+        default: self = .other(rawValue)
         }
     }
 
@@ -103,38 +102,38 @@ extension Region {
         case .usisobeast1: return "us-isob-east-1"
         case .uswest1: return "us-west-1"
         case .uswest2: return "us-west-2"
-        case .other(let string, _): return string
+        case .other(let string): return string
         }
     }
 
-    public var dnsSuffix: String {
+    public var partition: Partition {
         switch self {
-        case .afsouth1: return "amazonaws.com"
-        case .apeast1: return "amazonaws.com"
-        case .apnortheast1: return "amazonaws.com"
-        case .apnortheast2: return "amazonaws.com"
-        case .apsouth1: return "amazonaws.com"
-        case .apsoutheast1: return "amazonaws.com"
-        case .apsoutheast2: return "amazonaws.com"
-        case .cacentral1: return "amazonaws.com"
-        case .cnnorth1: return "amazonaws.com.cn"
-        case .cnnorthwest1: return "amazonaws.com.cn"
-        case .eucentral1: return "amazonaws.com"
-        case .eunorth1: return "amazonaws.com"
-        case .euwest1: return "amazonaws.com"
-        case .euwest2: return "amazonaws.com"
-        case .euwest3: return "amazonaws.com"
-        case .mesouth1: return "amazonaws.com"
-        case .saeast1: return "amazonaws.com"
-        case .useast1: return "amazonaws.com"
-        case .useast2: return "amazonaws.com"
-        case .usgoveast1: return "amazonaws.com"
-        case .usgovwest1: return "amazonaws.com"
-        case .usisoeast1: return "c2s.ic.gov"
-        case .usisobeast1: return "sc2s.sgov.gov"
-        case .uswest1: return "amazonaws.com"
-        case .uswest2: return "amazonaws.com"
-        case .other(_, let dnsSuffix): return dnsSuffix
+        case .afsouth1: return .aws
+        case .apeast1: return .aws
+        case .apnortheast1: return .aws
+        case .apnortheast2: return .aws
+        case .apsouth1: return .aws
+        case .apsoutheast1: return .aws
+        case .apsoutheast2: return .aws
+        case .cacentral1: return .aws
+        case .cnnorth1: return .awscn
+        case .cnnorthwest1: return .awscn
+        case .eucentral1: return .aws
+        case .eunorth1: return .aws
+        case .euwest1: return .aws
+        case .euwest2: return .aws
+        case .euwest3: return .aws
+        case .mesouth1: return .aws
+        case .saeast1: return .aws
+        case .useast1: return .aws
+        case .useast2: return .aws
+        case .usgoveast1: return .awsusgov
+        case .usgovwest1: return .awsusgov
+        case .usisoeast1: return .awsiso
+        case .usisobeast1: return .awsisob
+        case .uswest1: return .aws
+        case .uswest2: return .aws
+        case .other(_): return .aws
         }
     }
 }
@@ -146,5 +145,25 @@ extension Region: Equatable, Hashable {
 
     public func hash(into hasher: inout Hasher) {
         self.rawValue.hash(into: &hasher)
+    }
+}
+
+public enum Partition: String {
+    case aws // AWS Standard
+    case awscn // AWS China
+    case awsusgov // AWS GovCloud (US)
+    case awsiso // AWS ISO (US)
+    case awsisob // AWS ISOB (US)
+}
+
+extension Partition {
+    public var dnsSuffix: String {
+        switch self {
+        case .aws: return "amazonaws.com"
+        case .awscn: return "amazonaws.com.cn"
+        case .awsusgov: return "amazonaws.com"
+        case .awsiso: return "c2s.ic.gov"
+        case .awsisob: return "sc2s.sgov.gov"
+        }
     }
 }

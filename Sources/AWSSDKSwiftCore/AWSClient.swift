@@ -64,7 +64,7 @@ public final class AWSClient {
 
     let serviceEndpoints: [String: String]
 
-    let partitionEndpoint: String?
+    let partitionEndpoints: [Partition: (endpoint: String, region: Region)]
 
     let middlewares: [AWSServiceMiddleware]
 
@@ -102,7 +102,8 @@ public final class AWSClient {
         accessKeyId: String? = nil,
         secretAccessKey: String? = nil,
         sessionToken: String? = nil,
-        region givenRegion: Region?,
+        region: Region?,
+        partition: Partition = .aws,
         amzTarget: String? = nil,
         service: String,
         signingName: String? = nil,
@@ -110,25 +111,23 @@ public final class AWSClient {
         apiVersion: String,
         endpoint: String? = nil,
         serviceEndpoints: [String: String] = [:],
-        partitionEndpoint: String? = nil,
+        partitionEndpoints: [Partition: (endpoint: String, region: Region)] = [:],
         retryController: RetryController = NoRetry(),
         middlewares: [AWSServiceMiddleware] = [],
         possibleErrorTypes: [AWSErrorType.Type]? = nil,
         httpClientProvider: HTTPClientProvider
     ) {
-        if let _region = givenRegion {
-            region = _region
+        var partition = partition
+        if let region = region {
+            self.region = region
+            partition = region.partition
         }
-        else if let partitionEndpoint = partitionEndpoint {
-            if partitionEndpoint == "aws-global" {
-                region = .useast1
-            } else {
-                region = Region(rawValue: partitionEndpoint)
-            }
+        else if let partitionEndpoint = partitionEndpoints[partition] {
+            self.region = partitionEndpoint.region
         } else if let defaultRegion = ProcessInfo.processInfo.environment["AWS_DEFAULT_REGION"] {
-            region = Region(rawValue: defaultRegion)
+            self.region = Region(rawValue: defaultRegion)
         } else {
-            region = .useast1
+            self.region = .useast1
         }
 
         // setup httpClient
@@ -160,7 +159,7 @@ public final class AWSClient {
         self.amzTarget = amzTarget
         self.serviceProtocol = serviceProtocol
         self.serviceEndpoints = serviceEndpoints
-        self.partitionEndpoint = partitionEndpoint
+        self.partitionEndpoints = partitionEndpoints
         self.middlewares = middlewares
         self.possibleErrorTypes = possibleErrorTypes ?? []
         self.retryController = retryController
@@ -170,12 +169,13 @@ public final class AWSClient {
             self.endpoint = endpoint
         } else {
             let serviceHost: String
-            if let serviceEndpoint = serviceEndpoints[region.rawValue] {
+            if let serviceEndpoint = serviceEndpoints[self.region.rawValue] {
                 serviceHost = serviceEndpoint
-            } else if let partitionEndpoint = partitionEndpoint, let globalEndpoint = serviceEndpoints[partitionEndpoint] {
+            } else if let partitionEndpoint = partitionEndpoints[partition],
+                let globalEndpoint = serviceEndpoints[partitionEndpoint.endpoint] {
                 serviceHost = globalEndpoint
             } else {
-                serviceHost = "\(service).\(region.rawValue).\(region.dnsSuffix)"
+                serviceHost = "\(service).\(self.region.rawValue).\(partition.dnsSuffix)"
             }
             self.endpoint = "https://\(serviceHost)"
         }

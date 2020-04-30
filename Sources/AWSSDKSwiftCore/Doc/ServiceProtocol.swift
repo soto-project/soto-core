@@ -12,91 +12,25 @@
 //
 //===----------------------------------------------------------------------===//
 
-public enum ServiceProtocolType {
-    case json
+public enum ServiceProtocol {
+    case json(version: String)
     case restjson
     case restxml
     case query
-    case other(String)
-}
-
-extension ServiceProtocolType {
-    public init(rawValue: String) {
-        switch rawValue {
-        case "json":
-            self = .json
-        case "rest-json":
-            self = .restjson
-        case "rest-xml":
-            self = .restxml
-        case "query":
-            self = .query
-        default:
-            self = .other(rawValue)
-        }
-    }
-    
-    public var rawValue: String {
-        switch self {
-        case .json:
-            return "json"
-        case .restjson:
-            return "rest-json"
-        case .restxml:
-            return "rest-xml"
-        case .query:
-            return "query"
-        case .other(let value):
-            return value
-        }
-    }
-}
-
-public struct ServiceProtocol {
-    public struct Version {
-        public var major: Int
-        public var minor: Int
-        
-        public init(major: Int, minor: Int) {
-            self.major = major
-            self.minor = minor
-        }
-    }
-    
-    public let type: ServiceProtocolType
-    public let version: Version?
-    
-    public init(type: ServiceProtocolType, version: Version? = nil) {
-        self.type = type
-        self.version = version
-    }
-}
-
-extension ServiceProtocol.Version {
-    public var stringValue: String {
-        return "\(major).\(minor)"
-    }
-    
-    public var hashValue: Int {
-        return major ^ minor
-    }
+    case ec2
 }
 
 extension ServiceProtocol {
-    public init(name: String, version: Version? = nil) {
-        self.type = ServiceProtocolType(rawValue: name)
-        self.version = version
-    }
-    
-    var contentTypeString: String {
-        var contentSubTypeStr = "x-amz-\(type.rawValue)"
-        if let version = self.version {
-            contentSubTypeStr += "-\(version.stringValue)"
+    public var contentType: String {
+        switch self {
+        case .json(let version):
+            return "application/x-amz-json-\(version)"
+        case .restjson:
+            return "application/json"
+        case .restxml:
+            return "application/octet-stream"
+        case .query, .ec2:
+            return "application/x-www-form-urlencoded; charset=utf-8"
         }
-        return "application/\(contentSubTypeStr)"
     }
-}
-
-func == (lhs: ServiceProtocol, rhs: ServiceProtocol) -> Bool {
-    return lhs.contentTypeString == lhs.contentTypeString
 }

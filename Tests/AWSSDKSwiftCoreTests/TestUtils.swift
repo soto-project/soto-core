@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import AWSSDKSwiftCore
 import Foundation
 
 @propertyWrapper struct EnvironmentVariable<Value: LosslessStringConvertible> {
@@ -29,4 +30,42 @@ import Foundation
             return Value(value) ?? defaultValue
         }
     }
+}
+
+func createAWSClient(
+    accessKeyId: String? = nil,
+    secretAccessKey: String? = nil,
+    sessionToken: String? = nil,
+    region: Region = .useast1,
+    amzTarget: String? = nil,
+    service: String = "testService",
+    signingName: String? = nil,
+    serviceProtocol: ServiceProtocol = .restjson,
+    apiVersion: String = "01-01-2001",
+    endpoint: String? = nil,
+    serviceEndpoints: [String: String] = [:],
+    partitionEndpoint: String? = nil,
+    retryController: RetryController = NoRetry(),
+    middlewares: [AWSServiceMiddleware] = [],
+    possibleErrorTypes: [AWSErrorType.Type] = [],
+    httpClientProvider: AWSClient.HTTPClientProvider = .createNew
+) -> AWSClient {
+    return AWSClient(
+        accessKeyId: accessKeyId,
+        secretAccessKey: secretAccessKey,
+        sessionToken: sessionToken,
+        region: region,
+        amzTarget: amzTarget,
+        service: service,
+        signingName: signingName,
+        serviceProtocol: serviceProtocol,
+        apiVersion: apiVersion,
+        endpoint: endpoint,
+        serviceEndpoints: serviceEndpoints,
+        partitionEndpoint: partitionEndpoint,
+        retryController: retryController,
+        middlewares: middlewares,
+        possibleErrorTypes: possibleErrorTypes,
+        httpClientProvider: httpClientProvider
+    )
 }

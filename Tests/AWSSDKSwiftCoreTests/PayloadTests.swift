@@ -27,11 +27,11 @@ class PayloadTests: XCTestCase {
                 secretAccessKey: "",
                 region: .useast1,
                 service:"TestClient",
-                serviceProtocol: ServiceProtocol(type: .json, version: ServiceProtocol.Version(major: 1, minor: 1)),
+                serviceProtocol: .json(version: "1.1"),
                 apiVersion: "2020-01-21",
                 endpoint: awsServer.address,
                 middlewares: [AWSLoggingMiddleware()],
-                eventLoopGroupProvider: .useAWSClientShared
+                httpClientProvider: .createNew
             )
             let input = DataPayload(data: payload)
             let response = client.send(operation: "test", path: "/", httpMethod: "POST", input: input)

@@ -38,11 +38,11 @@ enum MetaDataServiceError: Error {
 struct MetaDataService {
 
     /// return future holding a credential provider
-    static func getCredential(httpClient: AWSHTTPClient) -> EventLoopFuture<Credential> {
+    static func getCredential(httpClient: AWSHTTPClient, on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
         if let ecsCredentialProvider = ECSMetaDataServiceProvider() {
-            return ecsCredentialProvider.getCredential(httpClient: httpClient)
+            return ecsCredentialProvider.getCredential(httpClient: httpClient, on: eventLoop)
         } else {
-            return InstanceMetaDataServiceProvider().getCredential(httpClient: httpClient)
+            return InstanceMetaDataServiceProvider().getCredential(httpClient: httpClient, on: eventLoop)
         }
     }
 }
@@ -57,15 +57,15 @@ protocol MetaDataContainer: Decodable {
 /// protocol for metadata service returning AWS credentials
 protocol MetaDataServiceProvider {
     associatedtype MetaData: MetaDataContainer
-    func getCredential(httpClient: AWSHTTPClient) -> EventLoopFuture<Credential>
+    func getCredential(httpClient: AWSHTTPClient, on eventLoop: EventLoop) -> EventLoopFuture<Credential>
 }
 
 extension MetaDataServiceProvider {
 
     /// make HTTP request
-    func request(url: String, method: HTTPMethod = .GET, headers: [String:String] = [:], timeout: TimeInterval, httpClient: AWSHTTPClient) -> EventLoopFuture<AWSHTTPResponse> {
+    func request(url: String, method: HTTPMethod = .GET, headers: [String:String] = [:], timeout: TimeInterval, httpClient: AWSHTTPClient, on eventLoop: EventLoop) -> EventLoopFuture<AWSHTTPResponse> {
         let request = AWSHTTPRequest(url: URL(string: url)!, method: method, headers: HTTPHeaders(headers.map {($0.key, $0.value) }), body: nil)
-        let futureResponse = httpClient.execute(request: request, timeout: TimeAmount.seconds(2))
+        let futureResponse = httpClient.execute(request: request, timeout: TimeAmount.seconds(2), on: eventLoop)
         return futureResponse
     }
 
@@ -129,8 +129,8 @@ struct ECSMetaDataServiceProvider: MetaDataServiceProvider {
         self.url = "http://\(ECSMetaDataServiceProvider.host)\(uri)"
     }
 
-    func getCredential(httpClient: AWSHTTPClient) -> EventLoopFuture<Credential> {
-        return request(url: url, timeout: 2, httpClient: httpClient)
+    func getCredential(httpClient: AWSHTTPClient, on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
+        return request(url: url, timeout: 2, httpClient: httpClient, on: eventLoop)
             .flatMapThrowing { response in
                 guard response.status == .ok else { throw MetaDataServiceError.couldNotGetInstanceMetadata }
                 if let body = response.body,
@@ -189,7 +189,7 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
         return "http://\(host)\(instanceMetadataUri)"
     }
 
-    func getCredential(httpClient: AWSHTTPClient) -> EventLoopFuture<Credential> {
+    func getCredential(httpClient: AWSHTTPClient, on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
         //  no point storing the session key as the credentials last as long
         var sessionTokenHeader: [String: String] = [:]
         // instance service expects absoluteString as uri...
@@ -198,7 +198,8 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
             method: .PUT,
             headers:["X-aws-ec2-metadata-token-ttl-seconds":"21600"],
             timeout: 2,
-            httpClient: httpClient
+            httpClient: httpClient,
+            on: eventLoop
         ).flatMapThrowing { response in
             // extract session key from response.
             if response.status == .ok,
@@ -209,14 +210,15 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
         }.flatMapError { error in
             // If we didn't find a session key then assume we are running IMDSv1 (we could be running from a Docker container
             // and the hop count for the PUT request is still set to 1)
-            return httpClient.eventLoopGroup.next().makeSucceededFuture(())
+            return eventLoop.makeSucceededFuture(())
         }.flatMap { _ in
             // request rolename
             return self.request(
                 url:InstanceMetaDataServiceProvider.baseURLString,
                 headers:sessionTokenHeader,
                 timeout: 2,
-                httpClient: httpClient
+                httpClient: httpClient,
+                on: eventLoop
             )
         }.flatMapThrowing { response in
             // extract rolename
@@ -228,7 +230,7 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
             return "\(InstanceMetaDataServiceProvider.baseURLString)/\(roleName)"
         }.flatMap { url in
             // request credentials
-            return self.request(url: url, headers:sessionTokenHeader, timeout: 2, httpClient: httpClient)
+            return self.request(url: url, headers:sessionTokenHeader, timeout: 2, httpClient: httpClient, on: eventLoop)
         }.flatMapThrowing { response in
             // decode credentials
             guard response.status == .ok else { throw MetaDataServiceError.couldNotGetInstanceMetadata }

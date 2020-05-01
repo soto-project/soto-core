@@ -31,6 +31,7 @@ public enum Region {
     case eunorth1
     case saeast1
     case mesouth1
+    case afsouth1
     case other(String)
 }
 
@@ -74,6 +75,8 @@ extension Region {
             self = .saeast1
         case "me-south-1":
             self = .mesouth1
+        case "af-south-1":
+            self = .afsouth1
         default:
             self = .other(rawValue)
         }
@@ -118,6 +121,8 @@ extension Region {
             return "sa-east-1"
         case .mesouth1:
             return "me-south-1"
+        case .afsouth1:
+            return "af-south-1"
         case .other(let string):
             return string
         }

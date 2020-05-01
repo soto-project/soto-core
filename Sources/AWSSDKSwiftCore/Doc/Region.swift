@@ -29,6 +29,7 @@ public enum Region {
     case euwest2
     case eucentral1
     case eunorth1
+    case eusouth1
     case saeast1
     case mesouth1
     case afsouth1
@@ -71,6 +72,8 @@ extension Region {
             self = .eucentral1
         case "eu-north-1":
             self = .eunorth1
+        case "eu-south-1":
+            self = .eusouth1
         case "sa-east-1":
             self = .saeast1
         case "me-south-1":
@@ -117,6 +120,8 @@ extension Region {
             return "eu-central-1"
         case .eunorth1:
             return "eu-north-1"
+        case .eusouth1:
+            return "eu-south-1"
         case .saeast1:
             return "sa-east-1"
         case .mesouth1:

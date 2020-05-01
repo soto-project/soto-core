@@ -23,6 +23,8 @@ public enum Region: String {
     case euwest2 = "eu-west-2"
     case eucentral1 = "eu-central-1"
     case eunorth1 = "eu-north-1"
+    case eusouth1 = "eu-south-1"
     case saeast1 = "sa-east-1"
     case mesouth1 = "me-south-1"
+    case afsouth1 = "af-south-1"
 }

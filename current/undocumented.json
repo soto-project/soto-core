@@ -535,34 +535,41 @@
     {
       "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
       "line": 34,
+      "symbol": "Region.afsouth1",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 35,
       "symbol": "Region.other(_:)",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
-      "line": 37,
+      "line": 38,
       "symbol": "Region",
       "symbol_kind": "source.lang.swift.decl.extension",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
-      "line": 39,
+      "line": 40,
       "symbol": "Region.init(rawValue:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
-      "line": 83,
+      "line": 86,
       "symbol": "Region.rawValue",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
-      "line": 127,
+      "line": 132,
       "symbol": "Region",
       "symbol_kind": "source.lang.swift.decl.extension",
       "warning": "undocumented"

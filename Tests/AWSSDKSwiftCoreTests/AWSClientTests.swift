@@ -883,8 +883,8 @@ class AWSClientTests: XCTestCase {
     }
 
     func testPayloadDataInResponse() {
-        struct Response: AWSDecodableShape {
-            public static let payloadPath: String? = "payload"
+        struct Response: AWSDecodableShape, AWSShapeWithPayload {
+            public static let payloadPath: String = "payload"
             public static var _encoding = [
                 AWSMemberEncoding(label: "payload", encoding: .blob),
             ]

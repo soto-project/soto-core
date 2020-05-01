@@ -63,8 +63,8 @@ class PayloadTests: XCTestCase {
     }
 
     func testResponsePayload() {
-        struct Output : AWSDecodableShape {
-            static let payloadPath: String? = "payload"
+        struct Output : AWSDecodableShape, AWSShapeWithPayload {
+            static let payloadPath: String = "payload"
             public static var _encoding = [
                 AWSMemberEncoding(label: "payload", encoding: .blob)
             ]
@@ -77,11 +77,11 @@ class PayloadTests: XCTestCase {
                 secretAccessKey: "",
                 region: .useast1,
                 service:"TestClient",
-                serviceProtocol: ServiceProtocol(type: .json, version: ServiceProtocol.Version(major: 1, minor: 1)),
+                serviceProtocol: .json(version: "1.1"),
                 apiVersion: "2020-01-21",
                 endpoint: awsServer.address,
                 middlewares: [AWSLoggingMiddleware()],
-                eventLoopGroupProvider: .useAWSClientShared
+                httpClientProvider: .createNew
             )
             let response: EventLoopFuture<Output> = client.send(operation: "test", path: "/", httpMethod: "POST")
 

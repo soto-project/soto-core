@@ -33,6 +33,21 @@ public struct ServiceConfig {
     /// Middleware code specific to the service used to edit requests before they sent and responses before they are decoded
     public let middlewares: [AWSServiceMiddleware]
     
+    /// Create a ServiceConfig object
+    ///
+    /// - Parameters:
+    ///   - region: Region of server you want to communicate with
+    ///   - partition: Amazon endpoint partition. This is ignored if region is set. If no region is set then this is used along side partitionEndpoints to calculate endpoint
+    ///   - amzTarget: "x-amz-target" header value
+    ///   - service: Name of service endpoint
+    ///   - signingName: Name that all AWS requests are signed with
+    ///   - serviceProtocol: protocol of service (.json, .xml, .query etc)
+    ///   - apiVersion: "Version" header value
+    ///   - endpoint: Custom endpoint URL to use instead of standard AWS servers
+    ///   - serviceEndpoints: Dictionary of endpoints to URLs
+    ///   - partitionEndpoints: Default endpoint to use, if no region endpoint is supplied
+    ///   - possibleErrorTypes: Array of possible error types that the client can throw
+    ///   - middlewares: Array of middlewares to apply to requests and responses
     public init(
         region: Region?,
         partition: Partition,

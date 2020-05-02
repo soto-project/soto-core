@@ -119,6 +119,7 @@ public final class AWSClient {
     ///     - secretAccessKey: Private access key provided by AWS
     ///     - sessionToken: Token provided by STS.AssumeRole() which allows access to another AWS account
     ///     - region: Region of server you want to communicate with
+    ///     - partition: Amazon endpoint partition. This is ignored if region is set. If no region is set then this is used along side serviceProtocol to calculate endpoint
     ///     - amzTarget: "x-amz-target" header value
     ///     - service: Name of service endpoint
     ///     - signingName: Name that all AWS requests are signed with
@@ -126,7 +127,7 @@ public final class AWSClient {
     ///     - apiVersion: "Version" header value
     ///     - endpoint: Custom endpoint URL to use instead of standard AWS servers
     ///     - serviceEndpoints: Dictionary of region to endpoints URLs
-    ///     - partitionEndpoint: Default endpoint to use
+    ///     - partitionEndpoint: Default endpoint to use, if no region endpoint is supplied
     ///     - retryCalculator: Object returning whether retries should be attempted. Possible options are NoRetry(), ExponentialRetry() or JitterRetry()
     ///     - middlewares: Array of middlewares to apply to requests and responses
     ///     - possibleErrorTypes: Array of possible error types that the client can throw

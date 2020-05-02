@@ -48,17 +48,11 @@ public struct AWSPayload {
     let byteBuffer: ByteBuffer
 }
 
-// The decode/encode functions are here temporarily until we merge in https://github.com/swift-aws/aws-sdk-swift-core/pull/214. After that we
-// should be able to remove them
-extension AWSPayload: Codable {
+extension AWSPayload: Decodable {
 
-    // AWSPayload has to comform to Codable so I can add it to AWSShape objects (which conform to Codable). But we don't want the
+    // AWSPayload has to comform to Decodable so I can add it to AWSShape objects (which conform to Decodable). But we don't want the
     // Encoder/Decoder ever to process a AWSPayload
     public init(from decoder: Decoder) throws {
         preconditionFailure("Cannot decode an AWSPayload")
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        preconditionFailure("Cannot encode an AWSPayload")
     }
 }

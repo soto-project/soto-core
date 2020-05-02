@@ -190,7 +190,6 @@ class AWSClientTests: XCTestCase {
         apiVersion: "2006-03-01",
         endpoint: nil,
         serviceEndpoints: ["us-west-2": "s3.us-west-2.amazonaws.com", "eu-west-1": "s3.eu-west-1.amazonaws.com", "us-east-1": "s3.amazonaws.com", "ap-northeast-1": "s3.ap-northeast-1.amazonaws.com", "s3-external-1": "s3-external-1.amazonaws.com", "ap-southeast-2": "s3.ap-southeast-2.amazonaws.com", "sa-east-1": "s3.sa-east-1.amazonaws.com", "ap-southeast-1": "s3.ap-southeast-1.amazonaws.com", "us-west-1": "s3.us-west-1.amazonaws.com"],
-        partitionEndpoint: "us-east-1",
         middlewares: [AWSLoggingMiddleware()],
         possibleErrorTypes: [S3ErrorType.self],
         httpClientProvider: .createNew
@@ -281,7 +280,7 @@ class AWSClientTests: XCTestCase {
                 input: input1
             )
 
-            XCTAssertEqual(awsRequest.url.absoluteString, "https://s3.amazonaws.com/Bucket?list-type=2")
+            XCTAssertEqual(awsRequest.url.absoluteString, "https://s3.ca-central-1.amazonaws.com/Bucket?list-type=2")
             let nioRequest: AWSHTTPRequest = awsRequest.toHTTPRequest()
             XCTAssertEqual(nioRequest.method, HTTPMethod.GET)
             XCTAssertEqual(nioRequest.body, nil)
@@ -331,6 +330,17 @@ class AWSClientTests: XCTestCase {
         }
     }
 
+    func testPartitionEndpoints() throws {
+        let client = createAWSClient(
+            serviceEndpoints: ["aws-global":"service.aws.amazon.com"],
+            partitionEndpoints: [.aws: (endpoint: "aws-global", region: .euwest1)]
+        )
+        XCTAssertEqual(client.region, .euwest1)
+
+        let awsRequest = try client.createAWSRequest(operation: "test", path: "/", httpMethod: "GET")
+        XCTAssertEqual(awsRequest.url.absoluteString, "https://service.aws.amazon.com/")
+    }
+    
     func testCreateAwsRequestWithKeywordInHeader() {
         struct KeywordRequest: AWSEncodableShape {
             static var _encoding: [AWSMemberEncoding] = [
@@ -358,7 +368,7 @@ class AWSClientTests: XCTestCase {
         do {
             let request = KeywordRequest(self: "KeywordRequest")
             let awsRequest = try s3Client.createAWSRequest(operation: "Keyword", path: "/", httpMethod: "POST", input: request)
-            XCTAssertEqual(awsRequest.url, URL(string:"https://s3.amazonaws.com/?self=KeywordRequest")!)
+            XCTAssertEqual(awsRequest.url, URL(string:"https://s3.ca-central-1.amazonaws.com/?self=KeywordRequest")!)
             XCTAssertEqual(awsRequest.body.asByteBuffer(), nil)
         } catch {
             XCTFail(error.localizedDescription)
@@ -519,7 +529,7 @@ class AWSClientTests: XCTestCase {
         do {
             let input = Input(q: ["one": 1, "two": 2])
             let request = try s3Client.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input)
-            XCTAssertEqual(request.url.absoluteString, "https://s3.amazonaws.com/?one=1&two=2")
+            XCTAssertEqual(request.url.absoluteString, "https://s3.ca-central-1.amazonaws.com/?one=1&two=2")
         } catch {
             XCTFail("\(error)")
         }
@@ -533,7 +543,7 @@ class AWSClientTests: XCTestCase {
         do {
             let input = Input(u: "MyKey")
             let request = try s3Client.createAWSRequest(operation: "Test", path: "/{key}", httpMethod: "GET", input: input)
-            XCTAssertEqual(request.url.absoluteString, "https://s3.amazonaws.com/MyKey")
+            XCTAssertEqual(request.url.absoluteString, "https://s3.ca-central-1.amazonaws.com/MyKey")
         } catch {
             XCTFail("\(error)")
         }

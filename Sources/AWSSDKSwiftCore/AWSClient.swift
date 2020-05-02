@@ -119,6 +119,7 @@ public final class AWSClient {
     ///     - secretAccessKey: Private access key provided by AWS
     ///     - sessionToken: Token provided by STS.AssumeRole() which allows access to another AWS account
     ///     - region: Region of server you want to communicate with
+    ///     - partition: Amazon endpoint partition. This is ignored if region is set. If no region is set then this is used along side serviceProtocol to calculate endpoint
     ///     - amzTarget: "x-amz-target" header value
     ///     - service: Name of service endpoint
     ///     - signingName: Name that all AWS requests are signed with
@@ -126,7 +127,7 @@ public final class AWSClient {
     ///     - apiVersion: "Version" header value
     ///     - endpoint: Custom endpoint URL to use instead of standard AWS servers
     ///     - serviceEndpoints: Dictionary of region to endpoints URLs
-    ///     - partitionEndpoint: Default endpoint to use
+    ///     - partitionEndpoint: Default endpoint to use, if no region endpoint is supplied
     ///     - retryCalculator: Object returning whether retries should be attempted. Possible options are NoRetry(), ExponentialRetry() or JitterRetry()
     ///     - middlewares: Array of middlewares to apply to requests and responses
     ///     - possibleErrorTypes: Array of possible error types that the client can throw
@@ -135,7 +136,8 @@ public final class AWSClient {
         accessKeyId: String? = nil,
         secretAccessKey: String? = nil,
         sessionToken: String? = nil,
-        region givenRegion: Region?,
+        region: Region?,
+        partition: Partition = .aws,
         amzTarget: String? = nil,
         service: String,
         signingName: String? = nil,
@@ -143,14 +145,15 @@ public final class AWSClient {
         apiVersion: String,
         endpoint: String? = nil,
         serviceEndpoints: [String: String] = [:],
-        partitionEndpoint: String? = nil,
+        partitionEndpoints: [Partition: (endpoint: String, region: Region)] = [:],
         retryController: RetryController = NoRetry(),
         middlewares: [AWSServiceMiddleware] = [],
         possibleErrorTypes: [AWSErrorType.Type] = [],
         httpClientProvider: HTTPClientProvider
     ) {
          let serviceConfig = ServiceConfig(
-            region: givenRegion,
+            region: region,
+            partition: partition,
             amzTarget: amzTarget,
             service: service,
             signingName: signingName,
@@ -158,7 +161,7 @@ public final class AWSClient {
             apiVersion: apiVersion,
             endpoint: endpoint,
             serviceEndpoints: serviceEndpoints,
-            partitionEndpoint: partitionEndpoint,
+            partitionEndpoints: partitionEndpoints,
             possibleErrorTypes: possibleErrorTypes,
             middlewares: middlewares)
 

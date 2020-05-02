@@ -94,7 +94,7 @@ class PayloadTests: XCTestCase {
 
             let output = try response.wait()
 
-            XCTAssertEqual(output.payload.byteBuffer.getString(at:0, length: output.payload.byteBuffer.readableBytes), "testResponsePayload")
+            XCTAssertEqual(output.payload.asString(), "testResponsePayload")
             //XCTAssertEqual(output.i, 547)
             try awsServer.stop()
         } catch {

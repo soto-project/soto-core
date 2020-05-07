@@ -197,7 +197,7 @@ extension AWSClient {
 
         func execute(_ httpRequest: AWSHTTPRequest, attempt: Int) {
             // execute HTTP request
-            _ = httpClient.execute(request: httpRequest, timeout: .seconds(5), on: eventLoop)
+            _ = httpClient.execute(request: httpRequest, timeout: .seconds(20), on: eventLoop)
                 .flatMapThrowing { (response) throws -> Void in
                     // if it returns an HTTP status code outside 2xx then throw an error
                     guard (200..<300).contains(response.status.code) else { throw AWSClient.InternalError.httpResponseError(response) }

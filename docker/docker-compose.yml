@@ -12,6 +12,15 @@ services:
     <<: *common
     command: /bin/bash -xcl "swift test"
 
+  test-amazon:
+    build:
+        context: .
+        dockerfile: Dockerfile.amazon
+    volumes:
+      - ..:/working
+    working_dir: /working
+    command: /bin/bash -xcl "swift test"
+
   test-thread:
     <<: *common
     command: /bin/bash -xcl "swift test --sanitize=thread"

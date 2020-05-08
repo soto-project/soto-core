@@ -16,10 +16,13 @@ import class Foundation.ProcessInfo
 
 /// Configuration class defining an AWS service
 public struct ServiceConfig {
+
     /// Region where service is running
     public let region: Region
     /// The destination service of the request. Added as a header value, along with the operation name
     public let amzTarget: String?
+    /// Name of service
+    public let service: String
     /// Name used to sign requests
     public let signingName: String
     /// Protocol used by service json/xml/query
@@ -32,7 +35,7 @@ public struct ServiceConfig {
     public let possibleErrorTypes: [AWSErrorType.Type]
     /// Middleware code specific to the service used to edit requests before they sent and responses before they are decoded
     public let middlewares: [AWSServiceMiddleware]
-    
+
     /// Create a ServiceConfig object
     ///
     /// - Parameters:
@@ -75,6 +78,7 @@ public struct ServiceConfig {
             self.region = .useast1
         }
 
+        self.service = service
         self.apiVersion = apiVersion
         self.signingName = signingName ?? service
         self.amzTarget = amzTarget

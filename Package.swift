@@ -21,6 +21,7 @@ let package = Package(
         .library(name: "AWSSDKSwiftCore", targets: ["AWSSDKSwiftCore"])
     ],
     dependencies: [
+        .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0" ..< "3.0.0"),
         .package(url: "https://github.com/apple/swift-nio.git", .upToNextMajor(from:"2.13.1")),
         .package(url: "https://github.com/apple/swift-nio-ssl.git", .upToNextMajor(from:"2.4.1")),
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", .upToNextMajor(from:"1.0.0")),
@@ -32,6 +33,7 @@ let package = Package(
             dependencies: [
                 "AsyncHTTPClient",
                 "AWSSignerV4",
+                "Metrics",
                 "NIO",
                 "NIOHTTP1",
                 "NIOSSL",

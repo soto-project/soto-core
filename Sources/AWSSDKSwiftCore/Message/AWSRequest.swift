@@ -57,32 +57,35 @@ public struct AWSRequest {
             headers[key] = "\(value)"
         }
 
-        switch httpMethod {
-        case "GET","HEAD":
-            break
-        default:
-            switch serviceProtocol.type {
-            case .json:
-                headers["Content-Type"] = serviceProtocol.contentTypeString
-            case .restjson:
-                if case .buffer(_) = body {
-                    headers["Content-Type"] = "binary/octet-stream"
-                } else {
-                    headers["Content-Type"] = "application/json"
-                }
-            case .query:
-                headers["Content-Type"] = "application/x-www-form-urlencoded; charset=utf-8"
-            case .other(let service):
-                if service == "ec2" {
-                    headers["Content-Type"] = "application/x-www-form-urlencoded; charset=utf-8"
-                }
-            default:
+        // don't set content type if it is already set
+        if headers["Content-Type"] == nil {
+            switch httpMethod {
+            case "GET","HEAD":
                 break
+            default:
+                switch serviceProtocol.type {
+                case .json:
+                    headers["Content-Type"] = serviceProtocol.contentTypeString
+                case .restjson:
+                    if case .buffer(_) = body {
+                        headers["Content-Type"] = "binary/octet-stream"
+                    } else {
+                        headers["Content-Type"] = "application/json"
+                    }
+                case .query:
+                    headers["Content-Type"] = "application/x-www-form-urlencoded; charset=utf-8"
+                case .other(let service):
+                    if service == "ec2" {
+                        headers["Content-Type"] = "application/x-www-form-urlencoded; charset=utf-8"
+                    }
+                default:
+                    break
+                }
+
+                headers["Content-Type"] = headers["Content-Type"] ?? "application/octet-stream"
             }
-
-            headers["Content-Type"] = headers["Content-Type"] ?? "application/octet-stream"
         }
-
+        
         var head = HTTPRequestHead(
           version: HTTPVersion(major: 1, minor: 1),
           method: nioHTTPMethod(from: httpMethod),

@@ -53,7 +53,7 @@ public final class AWSClient {
     /// middleware code to be applied to requests and responses
     public let middlewares: [AWSServiceMiddleware]
     /// HTTP client used by AWSClient
-    let httpClient: AWSHTTPClient
+    public let httpClient: AWSHTTPClient
     /// keeps a record of how we obtained the HTTP client
     let httpClientProvider: HTTPClientProvider
     /// EventLoopGroup used by AWSClient

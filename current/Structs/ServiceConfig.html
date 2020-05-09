@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>ServiceConfig Structure Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+  </head>
+  <body>
+    <a name="//apple_ref/swift/Struct/ServiceConfig" class="dashAnchor"></a>
+    <a title="ServiceConfig Structure Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="../index.html"> Docs</a> (57% documented)</p>
+        <p class="header-right"><a href="https://github.com/swift-aws/aws-sdk-swift-core"><img src="../img/gh.png"/>View on GitHub</a></p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="../index.html"> Reference</a>
+        <img id="carat" src="../img/carat.png" />
+        ServiceConfig Structure Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="../Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/AWSClient.html">AWSClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AWSClient/ClientError.html">– ClientError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AWSClient/HTTPClientProvider.html">– HTTPClientProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/NIOTSHTTPClient.html">NIOTSHTTPClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/NIOTSHTTPClient/EventLoopGroupProvider.html">– EventLoopGroupProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/NIOTSHTTPClient/Request.html">– Request</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/NIOTSHTTPClient/Response.html">– Response</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/NIOTSHTTPClient/HTTPError.html">– HTTPError</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Enums.html">Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/AWSClientError.html">AWSClientError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/AWSServerError.html">AWSServerError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/Body.html">Body</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/Region.html">Region</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ServiceProtocol.html">ServiceProtocol</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/XML.html">XML</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/XML/Node.html">– Node</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/XML/Document.html">– Document</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/XML/Element.html">– Element</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/XMLContainerCoding.html">XMLContainerCoding</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Extensions/AsyncHTTPClient.html">AsyncHTTPClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/AsyncHTTPClient/HTTPClient.html">– HTTPClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/AsyncHTTPClient/HTTPClient.html">– HTTPClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Sequence.html">Sequence</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Protocols.html#/s:15AWSSDKSwiftCore17AWSDecodableShapeP">AWSDecodableShape</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSEncodableShape.html">AWSEncodableShape</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSErrorType.html">AWSErrorType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSHTTPClient.html">AWSHTTPClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSHTTPResponse.html">AWSHTTPResponse</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSPaginateToken.html">AWSPaginateToken</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSServiceMiddleware.html">AWSServiceMiddleware</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSShape.html">AWSShape</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSShapeWithPayload.html">AWSShapeWithPayload</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/Credential.html">Credential</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/RetryController.html">RetryController</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/StandardRetryController.html">StandardRetryController</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/XMLCodable.html">XMLCodable</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Structs.html">Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Structs/AWSError.html">AWSError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSHTTPRequest.html">AWSHTTPRequest</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSLoggingMiddleware.html">AWSLoggingMiddleware</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSMemberEncoding.html">AWSMemberEncoding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSMemberEncoding/Location.html">– Location</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSMemberEncoding/ShapeEncoding.html">– ShapeEncoding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSPayload.html">AWSPayload</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSRequest.html">AWSRequest</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSResponse.html">AWSResponse</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSResponseError.html">AWSResponseError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSSigner.html">AWSSigner</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSSigner/BodyData.html">– BodyData</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/EnvironmentCredential.html">EnvironmentCredential</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/ExpiringCredential.html">ExpiringCredential</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/ExponentialRetry.html">ExponentialRetry</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/JitterRetry.html">JitterRetry</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/NoRetry.html">NoRetry</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/ServiceConfig.html">ServiceConfig</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/SharedCredential.html">SharedCredential</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/SharedCredential/SharedCredentialError.html">– SharedCredentialError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/StaticCredential.html">StaticCredential</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/TimeStamp.html">TimeStamp</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>ServiceConfig</h1>
+              <div class="declaration">
+                <div class="language">
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">ServiceConfig</span></code></pre>
+
+                </div>
+              </div>
+            <p>Configuration class defining an AWS service</p>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore13ServiceConfigV6regionAA6RegionOvp"></a>
+                    <a name="//apple_ref/swift/Property/region" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore13ServiceConfigV6regionAA6RegionOvp">region</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Region where service is running</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">region</span><span class="p">:</span> <span class="kt"><a href="../Enums/Region.html">Region</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore13ServiceConfigV9amzTargetSSSgvp"></a>
+                    <a name="//apple_ref/swift/Property/amzTarget" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore13ServiceConfigV9amzTargetSSSgvp">amzTarget</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The destination service of the request. Added as a header value, along with the operation name</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">amzTarget</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore13ServiceConfigV11signingNameSSvp"></a>
+                    <a name="//apple_ref/swift/Property/signingName" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore13ServiceConfigV11signingNameSSvp">signingName</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Name used to sign requests</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">signingName</span><span class="p">:</span> <span class="kt">String</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore13ServiceConfigV15serviceProtocolAA0cF0Ovp"></a>
+                    <a name="//apple_ref/swift/Property/serviceProtocol" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore13ServiceConfigV15serviceProtocolAA0cF0Ovp">serviceProtocol</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Protocol used by service json/xml/query</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">serviceProtocol</span><span class="p">:</span> <span class="kt"><a href="../Enums/ServiceProtocol.html">ServiceProtocol</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore13ServiceConfigV10apiVersionSSvp"></a>
+                    <a name="//apple_ref/swift/Property/apiVersion" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore13ServiceConfigV10apiVersionSSvp">apiVersion</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Version of the Service API, added as a header in query protocol based services</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">apiVersion</span><span class="p">:</span> <span class="kt">String</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore13ServiceConfigV8endpointSSvp"></a>
+                    <a name="//apple_ref/swift/Property/endpoint" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore13ServiceConfigV8endpointSSvp">endpoint</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The url to use in requests</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">endpoint</span><span class="p">:</span> <span class="kt">String</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore13ServiceConfigV18possibleErrorTypesSayAA12AWSErrorType_pXpGvp"></a>
+                    <a name="//apple_ref/swift/Property/possibleErrorTypes" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore13ServiceConfigV18possibleErrorTypesSayAA12AWSErrorType_pXpGvp">possibleErrorTypes</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>An array of the possible error types returned by the service</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">possibleErrorTypes</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Protocols/AWSErrorType.html">AWSErrorType</a></span><span class="o">.</span><span class="k">Type</span><span class="p">]</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore13ServiceConfigV11middlewaresSayAA20AWSServiceMiddleware_pGvp"></a>
+                    <a name="//apple_ref/swift/Property/middlewares" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore13ServiceConfigV11middlewaresSayAA20AWSServiceMiddleware_pGvp">middlewares</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Middleware code specific to the service used to edit requests before they sent and responses before they are decoded</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">middlewares</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Protocols/AWSServiceMiddleware.html">AWSServiceMiddleware</a></span><span class="p">]</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore13ServiceConfigV6region9amzTarget7service11signingName0H8Protocol10apiVersion8endpoint0H9Endpoints17partitionEndpoint18possibleErrorTypes11middlewaresAcA6RegionOSg_SSSgSSArA0cK0OSSARSDyS2SGARSayAA12AWSErrorType_pXpGSayAA20AWSServiceMiddleware_pGtcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(region:amzTarget:service:signingName:serviceProtocol:apiVersion:endpoint:serviceEndpoints:partitionEndpoint:possibleErrorTypes:middlewares:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore13ServiceConfigV6region9amzTarget7service11signingName0H8Protocol10apiVersion8endpoint0H9Endpoints17partitionEndpoint18possibleErrorTypes11middlewaresAcA6RegionOSg_SSSgSSArA0cK0OSSARSDyS2SGARSayAA12AWSErrorType_pXpGSayAA20AWSServiceMiddleware_pGtcfc">init(region:<wbr>amzTarget:<wbr>service:<wbr>signingName:<wbr>serviceProtocol:<wbr>apiVersion:<wbr>endpoint:<wbr>serviceEndpoints:<wbr>partitionEndpoint:<wbr>possibleErrorTypes:<wbr>middlewares:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span>
+    <span class="n"><a href="../Structs/ServiceConfig.html#/s:15AWSSDKSwiftCore13ServiceConfigV6regionAA6RegionOvp">region</a></span> <span class="nv">givenRegion</span><span class="p">:</span> <span class="kt"><a href="../Enums/Region.html">Region</a></span><span class="p">?,</span>
+    <span class="nv">amzTarget</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+    <span class="nv">service</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
+    <span class="nv">signingName</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+    <span class="nv">serviceProtocol</span><span class="p">:</span> <span class="kt"><a href="../Enums/ServiceProtocol.html">ServiceProtocol</a></span><span class="p">,</span>
+    <span class="nv">apiVersion</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
+    <span class="nv">endpoint</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+    <span class="nv">serviceEndpoints</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">:</span> <span class="kt">String</span><span class="p">]</span> <span class="o">=</span> <span class="p">[:],</span>
+    <span class="nv">partitionEndpoint</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+    <span class="nv">possibleErrorTypes</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Protocols/AWSErrorType.html">AWSErrorType</a></span><span class="o">.</span><span class="k">Type</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
+    <span class="nv">middlewares</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Protocols/AWSServiceMiddleware.html">AWSServiceMiddleware</a></span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>© Copyright (c) 2019 Yuki Takei(noppoMan), Joe Smith(Yasumoto), Jonathan McAllister(jonnymacs), Adam Fowler (adam-fowler), Fabian Fett (fabianfett)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.3</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>

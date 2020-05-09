@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>NIOTSHTTPClient Class Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+  </head>
+  <body>
+    <a name="//apple_ref/swift/Class/NIOTSHTTPClient" class="dashAnchor"></a>
+    <a title="NIOTSHTTPClient Class Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="../index.html"> Docs</a> (57% documented)</p>
+        <p class="header-right"><a href="https://github.com/swift-aws/aws-sdk-swift-core"><img src="../img/gh.png"/>View on GitHub</a></p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="../index.html"> Reference</a>
+        <img id="carat" src="../img/carat.png" />
+        NIOTSHTTPClient Class Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="../Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/AWSClient.html">AWSClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AWSClient/ClientError.html">– ClientError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AWSClient/HTTPClientProvider.html">– HTTPClientProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/NIOTSHTTPClient.html">NIOTSHTTPClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/NIOTSHTTPClient/EventLoopGroupProvider.html">– EventLoopGroupProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/NIOTSHTTPClient/Request.html">– Request</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/NIOTSHTTPClient/Response.html">– Response</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/NIOTSHTTPClient/HTTPError.html">– HTTPError</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Enums.html">Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/AWSClientError.html">AWSClientError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/AWSServerError.html">AWSServerError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/Body.html">Body</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/Region.html">Region</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ServiceProtocol.html">ServiceProtocol</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/XML.html">XML</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/XML/Node.html">– Node</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/XML/Document.html">– Document</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/XML/Element.html">– Element</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/XMLContainerCoding.html">XMLContainerCoding</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Extensions/AsyncHTTPClient.html">AsyncHTTPClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/AsyncHTTPClient/HTTPClient.html">– HTTPClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/AsyncHTTPClient/HTTPClient.html">– HTTPClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Sequence.html">Sequence</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Protocols.html#/s:15AWSSDKSwiftCore17AWSDecodableShapeP">AWSDecodableShape</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSEncodableShape.html">AWSEncodableShape</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSErrorType.html">AWSErrorType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSHTTPClient.html">AWSHTTPClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSHTTPResponse.html">AWSHTTPResponse</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSPaginateToken.html">AWSPaginateToken</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSServiceMiddleware.html">AWSServiceMiddleware</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSShape.html">AWSShape</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSShapeWithPayload.html">AWSShapeWithPayload</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/Credential.html">Credential</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/RetryController.html">RetryController</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/StandardRetryController.html">StandardRetryController</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/XMLCodable.html">XMLCodable</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Structs.html">Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Structs/AWSError.html">AWSError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSHTTPRequest.html">AWSHTTPRequest</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSLoggingMiddleware.html">AWSLoggingMiddleware</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSMemberEncoding.html">AWSMemberEncoding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSMemberEncoding/Location.html">– Location</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSMemberEncoding/ShapeEncoding.html">– ShapeEncoding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSPayload.html">AWSPayload</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSRequest.html">AWSRequest</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSResponse.html">AWSResponse</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSResponseError.html">AWSResponseError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSSigner.html">AWSSigner</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSSigner/BodyData.html">– BodyData</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/EnvironmentCredential.html">EnvironmentCredential</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/ExpiringCredential.html">ExpiringCredential</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/ExponentialRetry.html">ExponentialRetry</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/JitterRetry.html">JitterRetry</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/NoRetry.html">NoRetry</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/ServiceConfig.html">ServiceConfig</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/SharedCredential.html">SharedCredential</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/SharedCredential/SharedCredentialError.html">– SharedCredentialError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/StaticCredential.html">StaticCredential</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/TimeStamp.html">TimeStamp</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>NIOTSHTTPClient</h1>
+              <div class="declaration">
+                <div class="language">
+                  <pre class="highlight swift"><code><span class="kd">@available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)</span>
+<span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">NIOTSHTTPClient</span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">NIOTSHTTPClient</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSHTTPClient.html">AWSHTTPClient</a></span></code></pre>
+
+                </div>
+              </div>
+            <p>HTTP Client class providing API for sending HTTP requests</p>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore15NIOTSHTTPClientC22EventLoopGroupProviderO"></a>
+                    <a name="//apple_ref/swift/Enum/EventLoopGroupProvider" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC22EventLoopGroupProviderO">EventLoopGroupProvider</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Specifies how <code>EventLoopGroup</code> will be created and establishes lifecycle ownership.</p>
+
+                        <a href="../Classes/NIOTSHTTPClient/EventLoopGroupProvider.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">EventLoopGroupProvider</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore15NIOTSHTTPClientC7RequestV"></a>
+                    <a name="//apple_ref/swift/Struct/Request" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC7RequestV">Request</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Request structure to send</p>
+
+                        <a href="../Classes/NIOTSHTTPClient/Request.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">Request</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore15NIOTSHTTPClientC8ResponseV"></a>
+                    <a name="//apple_ref/swift/Struct/Response" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC8ResponseV">Response</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Response structure received back</p>
+
+                        <a href="../Classes/NIOTSHTTPClient/Response.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">Response</span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt"><a href="../Classes/NIOTSHTTPClient.html">NIOTSHTTPClient</a></span><span class="o">.</span><span class="kt">Response</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSHTTPResponse.html">AWSHTTPResponse</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore15NIOTSHTTPClientC9HTTPErrorO"></a>
+                    <a name="//apple_ref/swift/Enum/HTTPError" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC9HTTPErrorO">HTTPError</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Errors returned from HTTPClient when parsing responses</p>
+
+                        <a href="../Classes/NIOTSHTTPClient/HTTPError.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">HTTPError</span> <span class="p">:</span> <span class="kt">Error</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore15NIOTSHTTPClientC22eventLoopGroupProviderA2C05EventefG0O_tcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(eventLoopGroupProvider:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC22eventLoopGroupProviderA2C05EventefG0O_tcfc">init(eventLoopGroupProvider:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Initialise HTTPClient</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">eventLoopGroupProvider</span><span class="p">:</span> <span class="kt"><a href="../Classes/NIOTSHTTPClient/EventLoopGroupProvider.html">EventLoopGroupProvider</a></span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore15NIOTSHTTPClientC12syncShutdownyyKF"></a>
+                    <a name="//apple_ref/swift/Method/syncShutdown()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC12syncShutdownyyKF">syncShutdown()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Shuts down the client and <code>EventLoopGroup</code> if it was created by the client.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">syncShutdown</span><span class="p">()</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore15NIOTSHTTPClientC7connect_7timeout2on3NIO15EventLoopFutureCyAC8ResponseVGAC7RequestV_AG10TimeAmountVAG0hI0_pSgtF"></a>
+                    <a name="//apple_ref/swift/Method/connect(_:timeout:on:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC7connect_7timeout2on3NIO15EventLoopFutureCyAC8ResponseVGAC7RequestV_AG10TimeAmountVAG0hI0_pSgtF">connect(_:<wbr>timeout:<wbr>on:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>send request to HTTP client, return a future holding the Response</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">connect</span><span class="p">(</span><span class="n">_</span> <span class="nv">request</span><span class="p">:</span> <span class="kt"><a href="../Classes/NIOTSHTTPClient/Request.html">Request</a></span><span class="p">,</span> <span class="nv">timeout</span><span class="p">:</span> <span class="kt">TimeAmount</span><span class="p">,</span> <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt"><a href="../Classes/NIOTSHTTPClient/Response.html">Response</a></span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore13AWSHTTPClientP14eventLoopGroup3NIO05EventeF0_pvp"></a>
+                    <a name="//apple_ref/swift/Property/eventLoopGroup" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore13AWSHTTPClientP14eventLoopGroup3NIO05EventeF0_pvp">eventLoopGroup</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">eventLoopGroup</span><span class="p">:</span> <span class="kt">EventLoopGroup</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore13AWSHTTPClientP7execute7request7timeout2on3NIO15EventLoopFutureCyAA15AWSHTTPResponse_pGAA14AWSHTTPRequestV_AH10TimeAmountVAH0iJ0_pSgtF"></a>
+                    <a name="//apple_ref/swift/Method/execute(request:timeout:on:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore13AWSHTTPClientP7execute7request7timeout2on3NIO15EventLoopFutureCyAA15AWSHTTPResponse_pGAA14AWSHTTPRequestV_AH10TimeAmountVAH0iJ0_pSgtF">execute(request:<wbr>timeout:<wbr>on:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">execute</span><span class="p">(</span><span class="nv">request</span><span class="p">:</span> <span class="kt"><a href="../Structs/AWSHTTPRequest.html">AWSHTTPRequest</a></span><span class="p">,</span> <span class="nv">timeout</span><span class="p">:</span> <span class="kt">TimeAmount</span><span class="p">,</span> <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt"><a href="../Protocols/AWSHTTPResponse.html">AWSHTTPResponse</a></span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>© Copyright (c) 2019 Yuki Takei(noppoMan), Joe Smith(Yasumoto), Jonathan McAllister(jonnymacs), Adam Fowler (adam-fowler), Fabian Fett (fabianfett)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.3</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>

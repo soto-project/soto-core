@@ -636,7 +636,7 @@ extension AWSClient {
 
         case .raw(let payload):
             if let payloadKey = payloadKey {
-                outputDict[payloadKey] = AWSPayload.byteBuffer(byteBuffer)
+                outputDict[payloadKey] = payload
             }
 
         default:

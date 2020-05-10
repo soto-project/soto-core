@@ -21,9 +21,9 @@ public struct AWSHTTPRequest {
     public let url: URL
     public let method: HTTPMethod
     public let headers: HTTPHeaders
-    public let body: ByteBuffer?
+    public let body: AWSPayload?
 
-    public init(url: URL, method: HTTPMethod, headers: HTTPHeaders = [:], body: ByteBuffer? = nil) {
+    public init(url: URL, method: HTTPMethod, headers: HTTPHeaders = [:], body: AWSPayload? = nil) {
         self.url = url
         self.method = method
         self.headers = headers

@@ -45,20 +45,33 @@ public enum AWSPayload {
 
     /// return payload as Data
     public func asData() -> Data? {
-        return byteBuffer.getData(at: byteBuffer.readerIndex, length: byteBuffer.readableBytes, byteTransferStrategy: .noCopy)
+        switch self {
+        case .byteBuffer(let byteBuffer):
+            return byteBuffer.getData(at: byteBuffer.readerIndex, length: byteBuffer.readableBytes, byteTransferStrategy: .noCopy)
+        default:
+            return nil
+        }
     }
 
     /// return payload as String
     public func asString() -> String? {
-        return byteBuffer.getString(at: byteBuffer.readerIndex, length: byteBuffer.readableBytes, encoding: .utf8)
+        switch self {
+        case .byteBuffer(let byteBuffer):
+            return byteBuffer.getString(at: byteBuffer.readerIndex, length: byteBuffer.readableBytes, encoding: .utf8)
+        default:
+            return nil
+        }
     }
 
     /// return payload as ByteBuffer
-    public func asBytebuffer() -> ByteBuffer {
-        return byteBuffer
+    public func asByteBuffer() -> ByteBuffer? {
+        switch self {
+        case .byteBuffer(let byteBuffer):
+            return byteBuffer
+        default:
+            return nil
+        }
     }
-
-    let byteBuffer: ByteBuffer
 }
 
 extension AWSPayload: Decodable {

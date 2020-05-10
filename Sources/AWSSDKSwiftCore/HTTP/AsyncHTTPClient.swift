@@ -37,7 +37,7 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
                         if newAmountLeft == 0 {
                             promise.succeed(())
                         } else if newAmountLeft < 0 {
-                            promise.fail(AWSClient.RequestError.tooMuchData)
+                            promise.fail(AWSClient.ClientError.tooMuchData)
                         } else {
                             _writeToStreamWriter(newAmountLeft)
                         }
@@ -49,7 +49,7 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
         return promise.futureResult
     }
 
-    func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop?) -> EventLoopFuture<AWSHTTPResponse> {
+    public func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop?) -> EventLoopFuture<AWSHTTPResponse> {
         if let eventLoop = eventLoop {
             precondition(self.eventLoopGroup.makeIterator().contains { $0 === eventLoop }, "EventLoop provided to AWSClient must be part of the HTTPClient's EventLoopGroup.")
         }        

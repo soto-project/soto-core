@@ -332,7 +332,7 @@ class AWSClientTests: XCTestCase {
             let request = KeywordRequest(self: "KeywordRequest")
             let awsRequest = try s3Client.createAWSRequest(operation: "Keyword", path: "/", httpMethod: "POST", input: request)
             XCTAssertEqual(awsRequest.url, URL(string:"https://s3.ca-central-1.amazonaws.com/?self=KeywordRequest")!)
-            XCTAssertEqual(awsRequest.body.asByteBuffer(), nil)
+            XCTAssertEqual(awsRequest.body.asPayload()?.asByteBuffer(), nil)
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -1020,10 +1020,10 @@ class AWSClientTests: XCTestCase {
         }
 
         let awsServer = AWSTestServer(serviceProtocol: .json)
-        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
         defer {
             XCTAssertNoThrow(try awsServer.stop())
-            XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
+            XCTAssertNoThrow(try httpClient.syncShutdown())
         }
         do {
             let client = AWSClient(
@@ -1031,11 +1031,11 @@ class AWSClientTests: XCTestCase {
                 secretAccessKey: "",
                 region: .useast1,
                 service:"TestClient",
-                serviceProtocol: ServiceProtocol(type: .json, version: ServiceProtocol.Version(major: 1, minor: 1)),
+                serviceProtocol: .json(version: "1.1"),
                 apiVersion: "2020-01-21",
                 endpoint: awsServer.address,
                 middlewares: [AWSLoggingMiddleware()],
-                eventLoopGroupProvider: .shared(eventLoopGroup)
+                httpClientProvider: .shared(httpClient)
             )
 
             // supply buffer in 16k blocks
@@ -1074,10 +1074,10 @@ class AWSClientTests: XCTestCase {
         }
 
         let awsServer = AWSTestServer(serviceProtocol: .json)
-        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
         defer {
             try? awsServer.stop()
-            XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
+            XCTAssertNoThrow(try httpClient.syncShutdown())
         }
         do {
             let client = AWSClient(
@@ -1085,11 +1085,11 @@ class AWSClientTests: XCTestCase {
                 secretAccessKey: "",
                 region: .useast1,
                 service:"TestClient",
-                serviceProtocol: ServiceProtocol(type: .json, version: ServiceProtocol.Version(major: 1, minor: 1)),
+                serviceProtocol: .json(version: "1.1"),
                 apiVersion: "2020-01-21",
                 endpoint: awsServer.address,
                 middlewares: [AWSLoggingMiddleware()],
-                eventLoopGroupProvider: .shared(eventLoopGroup)
+                httpClientProvider: .shared(httpClient)
             )
 
             // set up stream of 8 bytes but supply more than that
@@ -1101,7 +1101,7 @@ class AWSClientTests: XCTestCase {
             let input = Input(payload: payload)
             let response = client.send(operation: "test", path: "/", httpMethod: "POST", input: input)
             try response.wait()
-        } catch AWSClient.RequestError.tooMuchData {
+        } catch AWSClient.ClientError.tooMuchData {
         } catch {
             XCTFail("Unexpected error: \(error)")
         }

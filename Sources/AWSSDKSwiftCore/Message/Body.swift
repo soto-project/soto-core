@@ -57,7 +57,7 @@ extension Body {
         }
     }
 
-    /// return as bytebuffer
+    /// return as payload
     public func asPayload() -> AWSPayload? {
         switch self {
         case .text(let text):

@@ -200,7 +200,7 @@ public final class AWSClient {
 
 // invoker
 extension AWSClient {
-
+    
     /// invoke HTTP request
     fileprivate func invoke(_ httpRequest: AWSHTTPRequest, on eventLoop: EventLoop) -> EventLoopFuture<AWSHTTPResponse> {
         let eventloop = self.eventLoopGroup.next()
@@ -235,16 +235,39 @@ extension AWSClient {
         return promise.futureResult
     }
 
+    
     /// invoke HTTP request
-    fileprivate func invoke<Payload: AWSClientStreamable>(_ httpRequest: AWSHTTPRequest, stream: @escaping (Payload, EventLoop)->EventLoopFuture<Void>) -> EventLoopFuture<AWSHTTPResponse> {
-        guard let httpClient = self.httpClient as? AsyncHTTPClient.HTTPClient else {
-            return eventLoopGroup.next().makeFailedFuture(RequestError.streamingUnavailable)
+    fileprivate func invoke<Payload: AWSClientStreamable>(_ httpRequest: AWSHTTPRequest, on eventLoop: EventLoop, stream: @escaping (Payload, EventLoop)->EventLoopFuture<Void>) -> EventLoopFuture<AWSHTTPResponse> {
+        let eventloop = self.eventLoopGroup.next()
+        let promise = eventloop.makePromise(of: AWSHTTPResponse.self)
+
+        func execute(_ httpRequest: AWSHTTPRequest, attempt: Int) {
+            // execute HTTP request
+            _ = httpClient.execute(request: httpRequest, timeout: .seconds(20), on: eventLoop, stream: stream)
+                .flatMapThrowing { (response) throws -> Void in
+                    // if it returns an HTTP status code outside 2xx then throw an error
+                    guard (200..<300).contains(response.status.code) else { throw AWSClient.InternalError.httpResponseError(response) }
+                    promise.succeed(response)
+                }
+                .flatMapErrorThrowing { (error)->Void in
+                    // If I get a retry wait time for this error then attempt to retry request
+                    if let retryTime = self.retryController.getRetryWaitTime(error: error, attempt: attempt) {
+                        // schedule task for retrying AWS request
+                        eventloop.scheduleTask(in: retryTime) {
+                            execute(httpRequest, attempt: attempt + 1)
+                        }
+                    } else if case AWSClient.InternalError.httpResponseError(let response) = error {
+                        // if there was no retry and error was a response status code then attempt to convert to AWS error
+                        promise.fail(self.createError(for: response))
+                    } else {
+                        promise.fail(error)
+                    }
+            }
         }
-        if let task = httpClient.execute(request: httpRequest, stream: stream, timeout: .seconds(5)) {
-            return task.futureResult
-        } else {
-            return eventLoopGroup.next().makeFailedFuture(RequestError.invalidURL(httpRequest.url.path))
-        }
+
+        execute(httpRequest, attempt: 0)
+
+        return promise.futureResult
     }
 
     /// create HTTPClient
@@ -367,11 +390,12 @@ extension AWSClient {
         path: String,
         httpMethod: String,
         input: Input,
+        on eventLoop: EventLoop? = nil,
         stream: @escaping (Payload, EventLoop)->EventLoopFuture<Void>
     ) -> EventLoopFuture<Output> {
-
-        return credentialProvider.getCredential().flatMapThrowing { credential in
-            let signer = AWSSigner(credentials: credential, name: self.signingName, region: self.region.rawValue)
+        let eventLoop = eventLoop ?? eventLoopGroup.next()
+        return credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
+            let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
             let awsRequest = try self.createAWSRequest(
                         operation: operationName,
                         path: path,
@@ -379,7 +403,7 @@ extension AWSClient {
                         input: input)
             return awsRequest.createHTTPRequest(signer: signer)
         }.flatMap { request in
-            return self.invoke(request, stream: stream)
+            return self.invoke(request, on: eventLoop, stream: stream)
         }.flatMapThrowing { response in
             return try self.validate(operation: operationName, response: response)
         }
@@ -638,7 +662,7 @@ extension AWSClient {
             }
         }
 
-        var awsResponse = try AWSResponse(operation: operationName, from: response, serviceProtocol: serviceConfig.serviceProtocol, raw: raw)
+        var awsResponse = try AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol, raw: raw)
 
         // do we need to fix up the response before processing it
         for middleware in serviceConfig.middlewares + middlewares {

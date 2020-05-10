@@ -19,8 +19,6 @@ import AWSXML
 /// Structure encapsulating a processed HTTP Response
 public struct AWSResponse {
 
-    /// operation name
-    public let operationName: String
     /// response status
     public let status: HTTPResponseStatus
     /// response headers
@@ -33,8 +31,7 @@ public struct AWSResponse {
     ///     - from: Raw HTTP Response
     ///     - serviceProtocol: protocol of service (.json, .xml, .query etc)
     ///     - raw: Whether Body should be treated as raw data
-    init(operation: String, from response: AWSHTTPResponse, serviceProtocol: ServiceProtocol, raw: Bool = false) throws {
-        self.operationName = operation
+    init(from response: AWSHTTPResponse, serviceProtocol: ServiceProtocol, raw: Bool = false) throws {
         self.status = response.status
 
         // headers

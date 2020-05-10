@@ -1359,17 +1359,24 @@ let response = AWSHTTPResponseImpl(
         let data = createRandomBuffer(45, 109, size: 128*1024)
 
         do {
+            let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 5)
+            let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
             let awsServer = AWSTestServer(serviceProtocol: .json)
+            defer {
+                XCTAssertNoThrow(try httpClient.syncShutdown())
+                XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
+                XCTAssertNoThrow(try awsServer.stop())
+            }
             let client = AWSClient(
                 accessKeyId: "",
                 secretAccessKey: "",
                 region: .useast1,
                 service:"TestClient",
-                serviceProtocol: ServiceProtocol(type: .json, version: ServiceProtocol.Version(major: 1, minor: 1)),
+                serviceProtocol: .json(version: "1.1"),
                 apiVersion: "2020-01-21",
                 endpoint: awsServer.address,
                 middlewares: [AWSLoggingMiddleware()],
-                eventLoopGroupProvider: .shared(MultiThreadedEventLoopGroup(numberOfThreads: 2))
+                httpClientProvider: .shared(httpClient)
             )
             var count = 0
             let response: EventLoopFuture<Output> = client.send(operation: "test", path: "/", httpMethod: "GET", input: Input()) { (payload: ByteBuffer, eventLoop: EventLoop) in
@@ -1391,7 +1398,6 @@ let response = AWSHTTPResponseImpl(
             let result = try response.wait()
             XCTAssertEqual(result.test, "TestHeader")
             XCTAssertEqual(count, 128*1024)
-            try awsServer.stop()
         } catch {
             XCTFail("Unexpected error: \(error)")
         }

@@ -138,7 +138,7 @@ class AWSHTTPClientResponseDelegate<Payload: AWSClientStreamable>: HTTPClientRes
 
 /// extend to include delegate support
 extension AsyncHTTPClient.HTTPClient {
-    func execute<Payload: AWSClientStreamable>(request: AWSHTTPRequest, stream: @escaping (Payload, EventLoop)->EventLoopFuture<Void>, timeout: TimeAmount) -> Task<AWSHTTPResponse>? {
+    public func execute<Payload: AWSClientStreamable>(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop?, stream: @escaping (Payload, EventLoop)->EventLoopFuture<Void>) -> EventLoopFuture<AWSHTTPResponse> {
         let requestBody: AsyncHTTPClient.HTTPClient.Body?
         if let body = request.body {
             requestBody = .byteBuffer(body)
@@ -148,9 +148,9 @@ extension AsyncHTTPClient.HTTPClient {
         do {
             let asyncRequest = try AsyncHTTPClient.HTTPClient.Request(url: request.url, method: request.method, headers: request.headers, body: requestBody)
             let delegate = AWSHTTPClientResponseDelegate(host: asyncRequest.host, stream: stream)
-            return execute(request: asyncRequest, delegate: delegate, deadline: .now() + timeout)
+            return execute(request: asyncRequest, delegate: delegate, deadline: .now() + timeout).futureResult
         } catch {
-            return nil
+            return eventLoopGroup.next().makeFailedFuture(error)
         }
     }
 }

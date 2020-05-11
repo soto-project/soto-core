@@ -201,14 +201,13 @@ public final class AWSClient {
 // invoker
 extension AWSClient {
     
-    /// invoke HTTP request
-    fileprivate func invoke(_ httpRequest: AWSHTTPRequest, on eventLoop: EventLoop) -> EventLoopFuture<AWSHTTPResponse> {
+    fileprivate func invoke(_ request: @escaping () -> EventLoopFuture<AWSHTTPResponse>) -> EventLoopFuture<AWSHTTPResponse> {
         let eventloop = self.eventLoopGroup.next()
         let promise = eventloop.makePromise(of: AWSHTTPResponse.self)
 
-        func execute(_ httpRequest: AWSHTTPRequest, attempt: Int) {
+        func execute(attempt: Int) {
             // execute HTTP request
-            _ = httpClient.execute(request: httpRequest, timeout: .seconds(20), on: eventLoop)
+            _ = request()
                 .flatMapThrowing { (response) throws -> Void in
                     // if it returns an HTTP status code outside 2xx then throw an error
                     guard (200..<300).contains(response.status.code) else { throw AWSClient.InternalError.httpResponseError(response) }
@@ -219,7 +218,7 @@ extension AWSClient {
                     if case .retry(let retryTime) = self.retryPolicy.getRetryWaitTime(error: error, attempt: attempt) {
                         // schedule task for retrying AWS request
                         eventloop.scheduleTask(in: retryTime) {
-                            execute(httpRequest, attempt: attempt + 1)
+                            execute(attempt: attempt + 1)
                         }
                     } else if case AWSClient.InternalError.httpResponseError(let response) = error {
                         // if there was no retry and error was a response status code then attempt to convert to AWS error
@@ -230,44 +229,23 @@ extension AWSClient {
             }
         }
 
-        execute(httpRequest, attempt: 0)
+        execute(attempt: 0)
 
         return promise.futureResult
     }
-
     
     /// invoke HTTP request
-    fileprivate func invoke<Payload: AWSClientStreamable>(_ httpRequest: AWSHTTPRequest, on eventLoop: EventLoop, stream: @escaping (Payload, EventLoop)->EventLoopFuture<Void>) -> EventLoopFuture<AWSHTTPResponse> {
-        let eventloop = self.eventLoopGroup.next()
-        let promise = eventloop.makePromise(of: AWSHTTPResponse.self)
-
-        func execute(_ httpRequest: AWSHTTPRequest, attempt: Int) {
-            // execute HTTP request
-            _ = httpClient.execute(request: httpRequest, timeout: .seconds(20), on: eventLoop, stream: stream)
-                .flatMapThrowing { (response) throws -> Void in
-                    // if it returns an HTTP status code outside 2xx then throw an error
-                    guard (200..<300).contains(response.status.code) else { throw AWSClient.InternalError.httpResponseError(response) }
-                    promise.succeed(response)
-                }
-                .flatMapErrorThrowing { (error)->Void in
-                    // If I get a retry wait time for this error then attempt to retry request
-                    if let retryTime = self.retryController.getRetryWaitTime(error: error, attempt: attempt) {
-                        // schedule task for retrying AWS request
-                        eventloop.scheduleTask(in: retryTime) {
-                            execute(httpRequest, attempt: attempt + 1)
-                        }
-                    } else if case AWSClient.InternalError.httpResponseError(let response) = error {
-                        // if there was no retry and error was a response status code then attempt to convert to AWS error
-                        promise.fail(self.createError(for: response))
-                    } else {
-                        promise.fail(error)
-                    }
-            }
+    fileprivate func invoke(_ httpRequest: AWSHTTPRequest, on eventLoop: EventLoop) -> EventLoopFuture<AWSHTTPResponse> {
+        return invoke {
+            return self.httpClient.execute(request: httpRequest, timeout: .seconds(20), on: eventLoop)
         }
-
-        execute(httpRequest, attempt: 0)
-
-        return promise.futureResult
+    }
+    
+    /// invoke HTTP request with response streaming
+    fileprivate func invoke(_ httpRequest: AWSHTTPRequest, on eventLoop: EventLoop, stream: @escaping AWSHTTPClient.ResponseStream) -> EventLoopFuture<AWSHTTPResponse> {
+        return invoke {
+            return self.httpClient.execute(request: httpRequest, timeout: .seconds(20), on: eventLoop, stream: stream)
+        }
     }
 
     /// create HTTPClient
@@ -385,13 +363,13 @@ extension AWSClient {
         return recordMetrics(future, service: serviceConfig.service, operation: operationName)
     }
 
-    public func send<Output: AWSDecodableShape, Payload: AWSClientStreamable, Input: AWSEncodableShape>(
+    public func send<Output: AWSDecodableShape, Input: AWSEncodableShape>(
         operation operationName: String,
         path: String,
         httpMethod: String,
         input: Input,
         on eventLoop: EventLoop? = nil,
-        stream: @escaping (Payload, EventLoop)->EventLoopFuture<Void>
+        stream: @escaping AWSHTTPClient.ResponseStream
     ) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         return credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in

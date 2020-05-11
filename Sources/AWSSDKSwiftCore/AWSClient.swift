@@ -740,7 +740,11 @@ extension AWSClient {
                 errorMessage = try? XMLDecoder().decode(QueryError.self, from: errorElement)
             }
 
-            if let errorMessage = errorMessage, let code = errorMessage.code {
+            if let errorMessage = errorMessage, var code = errorMessage.code {
+                // remove code prefix before #
+                if let index = code.firstIndex(of: "#") {
+                    code = String(code[code.index(index, offsetBy: 1)...])
+                }
                 for errorType in serviceConfig.possibleErrorTypes {
                     if let error = errorType.init(errorCode: code, message: errorMessage.message) {
                         return error

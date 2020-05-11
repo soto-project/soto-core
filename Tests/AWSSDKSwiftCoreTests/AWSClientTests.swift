@@ -1160,8 +1160,13 @@ class AWSClientTests: XCTestCase {
             })
 
             try response.wait()
-        } catch AWSServerError.internalError(let message) {
-            XCTAssertEqual(message, AWSTestServer.ErrorType.internal.message)
+        } catch let error as AWSServerError {
+            switch error {
+            case .internalError:
+                XCTAssertEqual(error.message, AWSTestServer.ErrorType.internal.message)
+            default:
+                XCTFail("Unexpected error: \(error)")
+            }
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
@@ -1250,8 +1255,8 @@ class AWSClientTests: XCTestCase {
             let output = try response.wait()
 
             XCTAssertEqual(output.s, "TestOutputString")
-        } catch AWSClientError.accessDenied(let message) {
-            XCTAssertEqual(message, AWSTestServer.ErrorType.accessDenied.message)
+        } catch  let error as AWSClientError where error == AWSClientError.accessDenied {
+            XCTAssertEqual(error.message, AWSTestServer.ErrorType.accessDenied.message)
         } catch {
             XCTFail("Unexpected error: \(error)")
         }

@@ -80,39 +80,39 @@ public struct Region: RawRepresentable, Equatable {
 extension Region {
 
     public var partition: Partition {
-        switch self.rawValue {
-        case "afsouth1": return .aws
-        case "apeast1": return .aws
-        case "apnortheast1": return .aws
-        case "apnortheast2": return .aws
-        case "apsouth1": return .aws
-        case "apsoutheast1": return .aws
-        case "apsoutheast2": return .aws
-        case "cacentral1": return .aws
-        case "cnnorth1": return .awscn
-        case "cnnorthwest1": return .awscn
-        case "eucentral1": return .aws
-        case "eunorth1": return .aws
-        case "eusouth1": return .aws
-        case "euwest1": return .aws
-        case "euwest2": return .aws
-        case "euwest3": return .aws
-        case "mesouth1": return .aws
-        case "saeast1": return .aws
-        case "useast1": return .aws
-        case "useast2": return .aws
-        case "usgoveast1": return .awsusgov
-        case "usgovwest1": return .awsusgov
-        case "usisoeast1": return .awsiso
-        case "usisobeast1": return .awsisob
-        case "uswest1": return .aws
-        case "uswest2": return .aws
+        switch self {
+        case .afsouth1: return .aws
+        case .apeast1: return .aws
+        case .apnortheast1: return .aws
+        case .apnortheast2: return .aws
+        case .apsouth1: return .aws
+        case .apsoutheast1: return .aws
+        case .apsoutheast2: return .aws
+        case .cacentral1: return .aws
+        case .cnnorth1: return .awscn
+        case .cnnorthwest1: return .awscn
+        case .eucentral1: return .aws
+        case .eunorth1: return .aws
+        case .eusouth1: return .aws
+        case .euwest1: return .aws
+        case .euwest2: return .aws
+        case .euwest3: return .aws
+        case .mesouth1: return .aws
+        case .saeast1: return .aws
+        case .useast1: return .aws
+        case .useast2: return .aws
+        case .usgoveast1: return .awsusgov
+        case .usgovwest1: return .awsusgov
+        case .usisoeast1: return .awsiso
+        case .usisobeast1: return .awsisob
+        case .uswest1: return .aws
+        case .uswest2: return .aws
         default: return .aws
         }
     }
 }
 
-public struct Partition {
+public struct Partition: RawRepresentable, Equatable, Hashable {
     enum InternalPartition: String {
         case aws
         case awscn
@@ -121,7 +121,17 @@ public struct Partition {
         case awsisob
     }
     private var partition: InternalPartition
+    
     public var rawValue: String { return partition.rawValue }
+
+    public init?(rawValue: String) {
+        guard let partition = InternalPartition(rawValue: rawValue) else { return nil }
+        self.partition = partition
+    }
+
+    private init(partition: InternalPartition) {
+        self.partition = partition
+    }
 
     // AWS Standard
     public static var aws: Partition { .init(partition: .aws) }
@@ -134,8 +144,6 @@ public struct Partition {
     // AWS ISOB (US)
     public static var awsisob: Partition { .init(partition: .awsisob) }
 }
-
-extension Partition: Equatable, Hashable { }
 
 extension Partition {
     public var dnsSuffix: String {

@@ -95,23 +95,3 @@ class AWSHTTPClientResponseDelegate: HTTPClientResponseDelegate {
         }
     }
 }
-
-/// extend to include delegate support
-extension AsyncHTTPClient.HTTPClient {
-    public func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop?, stream: @escaping ResponseStream) -> EventLoopFuture<AWSHTTPResponse> {
-        let requestBody: AsyncHTTPClient.HTTPClient.Body?
-        if let body = request.body {
-            requestBody = .byteBuffer(body)
-        } else {
-            requestBody = nil
-        }
-        do {
-            let asyncRequest = try AsyncHTTPClient.HTTPClient.Request(url: request.url, method: request.method, headers: request.headers, body: requestBody)
-            let delegate = AWSHTTPClientResponseDelegate(host: asyncRequest.host, stream: stream)
-            return execute(request: asyncRequest, delegate: delegate, deadline: .now() + timeout).futureResult
-        } catch {
-            return eventLoopGroup.next().makeFailedFuture(error)
-        }
-    }
-}
-

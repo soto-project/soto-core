@@ -52,7 +52,7 @@ public struct Partition {
 
 {%for partition in partitions %}
     // {{partition.description}}
-    public static let {{partition.name}} = Partition(partition: .{{partition.name}})
+    public static var {{partition.name}}: Partition { .init(partition: .{{partition.name}}) }
 {%endfor %}
 }
 

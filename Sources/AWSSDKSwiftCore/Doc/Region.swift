@@ -112,16 +112,6 @@ extension Region {
     }
 }
 
-/*extension Region: Equatable, Hashable {
-    public static func == (lhs: Region, rhs: Region) -> Bool {
-        lhs.rawValue == rhs.rawValue
-    }
-
-    public func hash(into hasher: inout Hasher) {
-        self.rawValue.hash(into: &hasher)
-    }
-}*/
-
 public struct Partition {
     enum InternalPartition: String {
         case aws
@@ -134,15 +124,15 @@ public struct Partition {
     public var rawValue: String { return partition.rawValue }
 
     // AWS Standard
-    public static let aws = Partition(partition: .aws)
+    public static var aws: Partition { .init(partition: .aws) }
     // AWS China
-    public static let awscn = Partition(partition: .awscn)
+    public static var awscn: Partition { .init(partition: .awscn) }
     // AWS GovCloud (US)
-    public static let awsusgov = Partition(partition: .awsusgov)
+    public static var awsusgov: Partition { .init(partition: .awsusgov) }
     // AWS ISO (US)
-    public static let awsiso = Partition(partition: .awsiso)
+    public static var awsiso: Partition { .init(partition: .awsiso) }
     // AWS ISOB (US)
-    public static let awsisob = Partition(partition: .awsisob)
+    public static var awsisob: Partition { .init(partition: .awsisob) }
 }
 
 extension Partition: Equatable, Hashable { }

@@ -24,7 +24,6 @@ class AWSHTTPClientResponseDelegate: HTTPClientResponseDelegate {
     enum State {
         case idle
         case head(HTTPResponseHead)
-        //case body(HTTPResponseHead, ByteBuffer)
         case end
         case error(Error)
     }
@@ -45,8 +44,6 @@ class AWSHTTPClientResponseDelegate: HTTPClientResponseDelegate {
             self.state = .head(head)
         case .head:
             preconditionFailure("head already set")
-        //case .body:
-        //    preconditionFailure("no head received before body")
         case .end:
             preconditionFailure("request already processed")
         case .error:
@@ -82,12 +79,6 @@ class AWSHTTPClientResponseDelegate: HTTPClientResponseDelegate {
             preconditionFailure("no head received before end")
         case .head(let head):
             return AsyncHTTPClient.HTTPClient.Response(host: host, status: head.status, headers: head.headers, body: nil)
-        /*case .body(let head, let body):
-            if (200..<300).contains(head.status.code) {
-                return AsyncHTTPClient.HTTPClient.Response(host: host, status: head.status, headers: head.headers, body: nil)
-            } else {
-                return AsyncHTTPClient.HTTPClient.Response(host: host, status: head.status, headers: head.headers, body: body)
-            }*/
         case .end:
             preconditionFailure("request already processed")
         case .error(let error):

@@ -88,4 +88,9 @@ extension Body {
             return nil
         }
     }
+    
+    // return as ByteBuffer
+    public func asByteBuffer() -> ByteBuffer? {
+        return asPayload()?.asByteBuffer()
+    }
 }

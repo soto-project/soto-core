@@ -332,7 +332,7 @@ class AWSClientTests: XCTestCase {
             let request = KeywordRequest(self: "KeywordRequest")
             let awsRequest = try s3Client.createAWSRequest(operation: "Keyword", path: "/", httpMethod: "POST", input: request)
             XCTAssertEqual(awsRequest.url, URL(string:"https://s3.ca-central-1.amazonaws.com/?self=KeywordRequest")!)
-            XCTAssertEqual(awsRequest.body.asPayload()?.asByteBuffer(), nil)
+            XCTAssertEqual(awsRequest.body.asByteBuffer(), nil)
         } catch {
             XCTFail(error.localizedDescription)
         }

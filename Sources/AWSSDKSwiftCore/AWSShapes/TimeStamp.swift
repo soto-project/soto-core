@@ -20,19 +20,19 @@ import struct Foundation.TimeZone
 /// Time stamp object that can encoded to ISO8601 format and decoded from ISO8601, HTTP date format and UNIX epoch seconds
 public struct TimeStamp {
     
-    public var stringValue: String? {
-        guard let date = dateValue else { return nil }
-        return TimeStamp.string(from:date)
+    public var stringValue: String {
+        return TimeStamp.string(from:dateValue)
     }
     
-    public let dateValue: Date?
+    public let dateValue: Date
 
     public init(_ date: Date) {
         dateValue = date
     }
     
-    public init(_ string: String) {
-        self.dateValue = TimeStamp.date(from: string)
+    public init?(_ string: String) {
+        guard let date = TimeStamp.date(from: string) else { return nil }
+        self.dateValue = date
     }
     
     public init(_ double: Double) {
@@ -63,10 +63,16 @@ public struct TimeStamp {
         return dateFormatter
     }
 
-    /// date formatters for parsing date strings. Currently know of two different formats returned by AWS: iso and http
+    /// date formatters for parsing date strings. Currently know of three different formats returned by AWS: iso, shorter iso and http
     static func createDateFormatters() -> [DateFormatter] {
         var dateFormatters : [DateFormatter] = [defaultDateFormatter]
         
+        let shorterDateFormatter = DateFormatter()
+        shorterDateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        shorterDateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
+        shorterDateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        dateFormatters.append(shorterDateFormatter)
+
         let httpDateFormatter = DateFormatter()
         httpDateFormatter.locale = Locale(identifier: "en_US_POSIX")
         httpDateFormatter.dateFormat = "EEE, d MMM yyy HH:mm:ss z"
@@ -86,10 +92,10 @@ extension TimeStamp: Codable {
         let container = try decoder.singleValueContainer()
         if let value = try? container.decode(Double.self) {
             self.init(value)
-        } else if let value = try? container.decode(String.self) {
-                self.init(value)
-        } else if let value = try? container.decode(Date.self) {
-            self.init(value)
+        } else if let value = try? container.decode(String.self), let date = TimeStamp.date(from: value) {
+            self.init(date)
+        } else if let date = try? container.decode(Date.self) {
+            self.init(date)
         } else {
             throw DecodingError.dataCorruptedError(in: container, debugDescription: "Expected string when decoding a Date")
         }

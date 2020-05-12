@@ -1162,7 +1162,7 @@ class AWSClientTests: XCTestCase {
             try response.wait()
         } catch let error as AWSServerError {
             switch error {
-            case .internalError:
+            case .internalFailure:
                 XCTAssertEqual(error.message, AWSTestServer.ErrorType.internal.message)
             default:
                 XCTFail("Unexpected error: \(error)")

@@ -16,16 +16,8 @@
 
 public struct AWSServerError: AWSErrorType {
     enum Code: String {
-        case insufficientAddressCapacity = "InsufficientAddressCapacity"
-        case insufficientCapacity = "InsufficientCapacity"
-        case insufficientHostCapacity = "InsufficientHostCapacity"
-        case insufficientInstanceCapacity = "InsufficientInstanceCapacity"
-        case insufficientReservedInstanceCapacity = "InsufficientReservedInstanceCapacity"
-        case internalError = "InternalError"
         case internalFailure = "InternalFailure"
-        case requestLimitExceeded = "RequestLimitExceeded"
         case serviceUnavailable = "ServiceUnavailable"
-        case unavailable = "Unavailable"
     }
     private var error: Code
     public var message: String?
@@ -46,26 +38,10 @@ public struct AWSServerError: AWSErrorType {
         self.message = message
     }
 
-    // Not enough available addresses to satisfy your minimum request. Reduce the number of addresses you are requesting or wait for additional capacity to become available.
-    public static var insufficientAddressCapacity:AWSServerError { .init(.insufficientAddressCapacity) }
-    // There is not enough capacity to fulfill your import instance request. You can wait for additional capacity to become available.
-    public static var insufficientCapacity:AWSServerError { .init(.insufficientCapacity) }
-    // There is not enough capacity to fulfill your Dedicated Host request. Reduce the number of Dedicated Hosts in your request, or wait for additional capacity to become available.
-    public static var insufficientHostCapacity:AWSServerError { .init(.insufficientHostCapacity) }
-    // There is not enough capacity to fulfill your instance request. Reduce the number of instances in your request, or wait for additional capacity to become available. You can also try launching an instance by selecting different instance types (which you can resize at a later stage). The returned message might also give specific guidance about how to solve the problem.
-    public static var insufficientInstanceCapacity:AWSServerError { .init(.insufficientInstanceCapacity) }
-    // Not enough available Reserved instances to satisfy your minimum request. Reduce the number of Reserved instances in your request or wait for additional capacity to become available.
-    public static var insufficientReservedInstanceCapacity:AWSServerError { .init(.insufficientReservedInstanceCapacity) }
-    // An internal error has occurred. Retry your request, but if the problem persists, contact us with details by posting a message on the AWS forums.
-    public static var internalError:AWSServerError { .init(.internalError) }
     // The request processing has failed because of an unknown error, exception or failure.
     public static var internalFailure:AWSServerError { .init(.internalFailure) }
-    // The maximum request rate permitted by the Amazon EC2 APIs has been exceeded for your account. For best results, use an increasing or variable sleep interval between requests. For more information, see Query API Request Rate.
-    public static var requestLimitExceeded:AWSServerError { .init(.requestLimitExceeded) }
     // The request has failed due to a temporary failure of the server.
     public static var serviceUnavailable:AWSServerError { .init(.serviceUnavailable) }
-    // The server is overloaded and can't handle the request.
-    public static var unavailable:AWSServerError { .init(.unavailable) }
 }
 
 extension AWSServerError: Equatable {

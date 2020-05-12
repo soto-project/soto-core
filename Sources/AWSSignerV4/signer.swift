@@ -48,6 +48,7 @@ public struct AWSSigner {
         case string(String)
         case data(Data)
         case byteBuffer(ByteBuffer)
+        case unsignedPayload
     }
 
     /// Generate signed headers, for a HTTP request
@@ -202,6 +203,8 @@ public struct AWSSigner {
             hash = byteBufferView.withContiguousStorageIfAvailable { bytes in
                 return SHA256.hash(data: bytes).hexDigest()
             }
+        case .unsignedPayload:
+            return "UNSIGNED-PAYLOAD"
         }
         if let hash = hash {
             return hash

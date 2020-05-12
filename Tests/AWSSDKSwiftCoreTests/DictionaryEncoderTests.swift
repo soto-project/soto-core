@@ -192,29 +192,7 @@ class DictionaryEncoderTests: XCTestCase {
         }
     }
     
-    func testDateDecodeEncode() {
-        struct Test : AWSDecodableShape {
-            let date : Date
-        }
-        let dictionary: [String:Any] = ["date":0]
-        testDecode(type: Test.self, dictionary: dictionary) {
-            XCTAssertEqual($0.date, Date(timeIntervalSinceReferenceDate: 0))
-        }
-
-        let dateFormatter = DateFormatter()
-        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
-        
-        let decoder = DictionaryDecoder()
-        decoder.dateDecodingStrategy = .formatted(dateFormatter)
-        
-        let dictionary2: [String:Any] = ["date":"2001-07-21T14:31:45.100Z"]
-        testDecode(type: Test.self, dictionary: dictionary2, decoder: decoder) {
-            XCTAssertEqual($0.date, dateFormatter.date(from: "2001-07-21T14:31:45.100Z"))
-        }
-    }
-    
-    func testDataDecodeEncode() {
+   func testDataDecodeEncode() {
         struct Test : AWSDecodableShape {
             let data : Data
         }
@@ -229,16 +207,6 @@ class DictionaryEncoderTests: XCTestCase {
         let dictionary2: [String:Any] = ["data":"Hello, world".data(using:.utf8)!]
         testDecode(type: Test.self, dictionary: dictionary2, decoder: decoder) {
             XCTAssertEqual($0.data, "Hello, world".data(using:.utf8)!)
-        }
-    }
-    
-    func testUrlDecodeEncode() {
-        struct Test : AWSDecodableShape {
-            let url : URL
-        }
-        let dictionary: [String:Any] = ["url":"www.google.com"]
-        testDecode(type: Test.self, dictionary: dictionary) {
-            XCTAssertEqual($0.url, URL(string: "www.google.com")!)
         }
     }
     
@@ -450,9 +418,7 @@ class DictionaryEncoderTests: XCTestCase {
             ("testArrayOfStructuresDecodeEncode", testArrayOfStructuresDecodeEncode),
             ("testDictionaryDecodeEncode", testDictionaryDecodeEncode),
             ("testEnumDictionaryDecodeEncode", testEnumDictionaryDecodeEncode),
-            ("testDateDecodeEncode", testDateDecodeEncode),
             ("testDataDecodeEncode", testDataDecodeEncode),
-            ("testUrlDecodeEncode", testUrlDecodeEncode),
             ("testFloatOverflowDecodeErrors", testFloatOverflowDecodeErrors),
             ("testInvalidValueDecodeErrors", testInvalidValueDecodeErrors),
             ("testMissingKeyDecodeErrors", testMissingKeyDecodeErrors),

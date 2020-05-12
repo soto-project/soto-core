@@ -293,14 +293,6 @@ class XMLCoderTests: XCTestCase {
         XCTAssertEqual(value?.type, .yes)
     }
 
-    func testUrlDecodeEncode() {
-        struct Test : Codable {
-            let url : URL
-        }
-        let xml = "<Test><url>https://docs.aws.amazon.com/</url></Test>"
-        testDecodeEncode(type: Test.self, xml: xml)
-    }
-
     func testSerializeToXML() {
         let shape = testShape
         let node = try! XMLEncoder().encode(shape)
@@ -497,7 +489,6 @@ class XMLCoderTests: XCTestCase {
             ("testDictionaryDecodeEncode", testDictionaryDecodeEncode),
             ("testDateDecodeEncode", testDateDecodeEncode),
             ("testDataDecodeEncode", testDataDecodeEncode),
-            ("testUrlDecodeEncode", testUrlDecodeEncode),
             ("testSerializeToXML", testSerializeToXML),
             ("testDecodeExpandedContainers", testDecodeExpandedContainers),
             ("testArrayEncodingDecodeEncode", testArrayEncodingDecodeEncode),

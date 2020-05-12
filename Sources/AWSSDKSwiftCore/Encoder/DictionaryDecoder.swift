@@ -21,30 +21,9 @@ import class  Foundation.DateFormatter
 import struct Foundation.Data
 import struct Foundation.CharacterSet
 import struct Foundation.URL
-import struct Foundation.Decimal
-import class  Foundation.ISO8601DateFormatter
 
-import class  Foundation.NSObject
-import class  Foundation.NSMutableDictionary
-import class  Foundation.NSMutableArray
 import class  Foundation.NSNull
 import class  Foundation.NSNumber
-import class  Foundation.NSString
-import class  Foundation.NSData
-import class  Foundation.NSDictionary
-import class  Foundation.NSDecimalNumber
-import class  Foundation.NSURL
-import class  Foundation.NSDate
-
-/// A marker protocol used to determine whether a value is a `String`-keyed `Dictionary`
-/// containing `Decodable` values (in which case it should be exempt from key conversion strategies).
-fileprivate protocol _DictionaryStringDictionaryDecodableMarker {
-    static var elementType: Decodable.Type { get }
-}
-
-extension Dictionary : _DictionaryStringDictionaryDecodableMarker where Key == String, Value: Decodable {
-    static var elementType: Decodable.Type { return Value.self }
-}
 
 //===----------------------------------------------------------------------===//
 // Dictionary Decoders
@@ -54,41 +33,13 @@ extension Dictionary : _DictionaryStringDictionaryDecodableMarker where Key == S
 class DictionaryDecoder {
     // MARK: Options
     
-    /// The strategy to use for decoding `Date` values.
-    public enum DateDecodingStrategy {
-        /// Defer to `Date` for decoding. This is the default strategy.
-        case deferredToDate
-        
-        /// Decode the `Date` as a UNIX timestamp from a NSNumber.
-        case secondsSince1970
-        
-        /// Decode the `Date` as UNIX millisecond timestamp from a NSNumber.
-        case millisecondsSince1970
-        
-        /// Decode the `Date` as an ISO-8601-formatted string (in RFC 3339 format).
-        @available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *)
-        case iso8601
-        
-        /// Decode the `Date` as a string parsed by the given formatter.
-        case formatted(DateFormatter)
-        
-        /// Decode the `Date` as a custom value decoded by the given closure.
-        case custom((_ decoder: Decoder) throws -> Date)
-    }
-    
     /// The strategy to use for decoding `Data` values.
     public enum DataDecodingStrategy {
-        /// Defer to `Data` for decoding.
-        case deferredToData
-        
         /// Decode the `Data` from a Base64-encoded string.
         case base64
         
         /// Don't decode. This is the default strategy.
         case raw
-        
-        /// Decode the `Data` as a custom value decoded by the given closure.
-        case custom((_ decoder: Decoder) throws -> Data)
     }
     
     /// The strategy to use for non-JSON-conforming floating-point values (IEEE 754 infinity and NaN).
@@ -99,9 +50,6 @@ class DictionaryDecoder {
         /// Decode the values from the given representation strings.
         case convertFromString(positiveInfinity: String, negativeInfinity: String, nan: String)
     }
-    
-    /// The strategy to use in decoding dates. Defaults to `.deferredToDate`.
-    open var dateDecodingStrategy: DateDecodingStrategy = .deferredToDate
     
     /// The strategy to use in decoding binary data. Defaults to `.base64`.
     open var dataDecodingStrategy: DataDecodingStrategy = .base64
@@ -114,7 +62,6 @@ class DictionaryDecoder {
     
     /// Options set on the top-level encoder to pass down the decoding hierarchy.
     fileprivate struct _Options {
-        let dateDecodingStrategy: DateDecodingStrategy
         let dataDecodingStrategy: DataDecodingStrategy
         let nonConformingFloatDecodingStrategy: NonConformingFloatDecodingStrategy
         let userInfo: [CodingUserInfoKey : Any]
@@ -122,8 +69,7 @@ class DictionaryDecoder {
     
     /// The options set on the top-level decoder.
     fileprivate var options: _Options {
-        return _Options(dateDecodingStrategy: dateDecodingStrategy,
-                        dataDecodingStrategy: dataDecodingStrategy,
+        return _Options(dataDecodingStrategy: dataDecodingStrategy,
                         nonConformingFloatDecodingStrategy: nonConformingFloatDecodingStrategy,
                         userInfo: userInfo)
     }
@@ -1279,59 +1225,10 @@ extension __DictionaryDecoder {
         return string
     }
     
-    fileprivate func unbox(_ value: Any, as type: Date.Type) throws -> Date? {
-        guard !(value is NSNull) else { return nil }
-        
-        switch self.options.dateDecodingStrategy {
-        case .deferredToDate:
-            self.storage.push(container: value)
-            defer { self.storage.popContainer() }
-            return try Date(from: self)
-            
-        case .secondsSince1970:
-            let double = try self.unbox(value, as: Double.self)!
-            return Date(timeIntervalSince1970: double)
-            
-        case .millisecondsSince1970:
-            let double = try self.unbox(value, as: Double.self)!
-            return Date(timeIntervalSince1970: double / 1000.0)
-            
-        case .iso8601:
-            if #available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *) {
-                let string = try self.unbox(value, as: String.self)!
-                guard let date = _iso8601Formatter.date(from: string) else {
-                    throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Expected date string to be ISO8601-formatted."))
-                }
-                
-                return date
-            } else {
-                fatalError("ISO8601DateFormatter is unavailable on this platform.")
-            }
-            
-        case .formatted(let formatter):
-            let string = try self.unbox(value, as: String.self)!
-            guard let date = formatter.date(from: string) else {
-                throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Date string does not match format expected by formatter."))
-            }
-            
-            return date
-            
-        case .custom(let closure):
-            self.storage.push(container: value)
-            defer { self.storage.popContainer() }
-            return try closure(self)
-        }
-    }
-    
     fileprivate func unbox(_ value: Any, as type: Data.Type) throws -> Data? {
         guard !(value is NSNull) else { return nil }
         
         switch self.options.dataDecodingStrategy {
-        case .deferredToData:
-            self.storage.push(container: value)
-            defer { self.storage.popContainer() }
-            return try Data(from: self)
-            
         case .base64:
             guard let string = value as? String else {
                 throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
@@ -1349,43 +1246,7 @@ extension __DictionaryDecoder {
             }
             
             return data
-            
-        case .custom(let closure):
-            self.storage.push(container: value)
-            defer { self.storage.popContainer() }
-            return try closure(self)
         }
-    }
-    
-    fileprivate func unbox(_ value: Any, as type: Decimal.Type) throws -> Decimal? {
-        guard !(value is NSNull) else { return nil }
-        
-        // Attempt to bridge from NSDecimalNumber.
-        if let decimal = value as? Decimal {
-            return decimal
-        } else {
-            let doubleValue = try self.unbox(value, as: Double.self)!
-            return Decimal(doubleValue)
-        }
-    }
-    
-    fileprivate func unbox<T>(_ value: Any, as type: _DictionaryStringDictionaryDecodableMarker.Type) throws -> T? {
-        guard !(value is NSNull) else { return nil }
-        
-        var result = [String : Any]()
-        guard let dict = value as? NSDictionary else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
-        }
-        let elementType = type.elementType
-        for (key, value) in dict {
-            let key = key as! String
-            self.codingPath.append(_DictionaryKey(stringValue: key, intValue: nil))
-            defer { self.codingPath.removeLast() }
-            
-            result[key] = try unbox_(value, as: elementType)
-        }
-        
-        return result as? T
     }
     
     fileprivate func unbox<T : Decodable>(_ value: Any, as type: T.Type) throws -> T? {
@@ -1393,26 +1254,10 @@ extension __DictionaryDecoder {
     }
     
     fileprivate func unbox_(_ value: Any, as type: Decodable.Type) throws -> Any? {
-        if type == Date.self || type == NSDate.self {
-            return try self.unbox(value, as: Date.self)
-        } else if type == Data.self || type == NSData.self {
+        if type == Data.self {
             return try self.unbox(value, as: Data.self)
         } else if type == AWSPayload.self {
             return value
-        } else if type == URL.self || type == NSURL.self {
-            guard let urlString = try self.unbox(value, as: String.self) else {
-                return nil
-            }
-            
-            guard let url = URL(string: urlString) else {
-                throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath,
-                                                                        debugDescription: "Invalid URL string."))
-            }
-            return url
-        } else if type == Decimal.self || type == NSDecimalNumber.self {
-            return try self.unbox(value, as: Decimal.self)
-        } else if let stringKeyedDictType = type as? _DictionaryStringDictionaryDecodableMarker.Type {
-            return try self.unbox(value, as: stringKeyedDictType)
         } else {
             self.storage.push(container: value)
             defer { self.storage.popContainer() }
@@ -1451,18 +1296,6 @@ fileprivate struct _DictionaryKey : CodingKey {
     
     fileprivate static let `super` = _DictionaryKey(stringValue: "super")!
 }
-
-//===----------------------------------------------------------------------===//
-// Shared ISO8601 Date Formatter
-//===----------------------------------------------------------------------===//
-
-// NOTE: This value is implicitly lazy and _must_ be lazy. We're compiled against the latest SDK (w/ ISO8601DateFormatter), but linked against whichever Foundation the user has. ISO8601DateFormatter might not exist, so we better not hit this code path on an older OS.
-@available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *)
-fileprivate var _iso8601Formatter: ISO8601DateFormatter = {
-    let formatter = ISO8601DateFormatter()
-    formatter.formatOptions = .withInternetDateTime
-    return formatter
-}()
 
 //===----------------------------------------------------------------------===//
 // Error Utilities

@@ -12,14 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-func unwrap(any: Any) -> Any? {
-    let mi = Mirror(reflecting: any)
-    if mi.displayStyle != .optional {
-        return any
-    }
-    if mi.children.count == 0 { return nil }
-    let (_, some) = mi.children.first!
-    return some
+func unwrap(_ any: Any) -> Any?
+{
+    let mirror = Mirror(reflecting: any)
+    guard mirror.displayStyle == .optional else { return any }
+    guard let first = mirror.children.first else { return nil }
+    return first.value
 }
 
 extension Mirror {
@@ -27,10 +25,6 @@ extension Mirror {
         guard let matched = children.filter({ $0.label == key }).first else {
             return nil
         }
-        guard let value = unwrap(any: matched.value) else {
-            return nil
-        }
-        
-        return value
+        return unwrap(matched.value)
     }
 }

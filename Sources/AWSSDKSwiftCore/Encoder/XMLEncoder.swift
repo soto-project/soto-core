@@ -16,13 +16,6 @@ import struct Foundation.Data
 import struct Foundation.Date
 import struct Foundation.URL
 import class  Foundation.DateFormatter
-import class  Foundation.ISO8601DateFormatter
-
-import class  Foundation.NSNumber
-import class  Foundation.NSURL
-import class  Foundation.NSDate
-import class  Foundation.NSData
-
 
 /// The wrapper class for encoding Codable classes to XMLElements
 class XMLEncoder {
@@ -478,16 +471,16 @@ extension _XMLEncoder : SingleValueEncodingContainer {
 extension _XMLEncoder {
     /// Returns the given value boxed in a container appropriate for pushing onto the container stack.
     fileprivate func box(_ value: Bool)   -> String { return value.description }
-    fileprivate func box(_ value: Int)    -> String { return NSNumber(value: value).description }
-    fileprivate func box(_ value: Int8)   -> String { return NSNumber(value: value).description }
-    fileprivate func box(_ value: Int16)  -> String { return NSNumber(value: value).description }
-    fileprivate func box(_ value: Int32)  -> String { return NSNumber(value: value).description }
-    fileprivate func box(_ value: Int64)  -> String { return NSNumber(value: value).description }
-    fileprivate func box(_ value: UInt)   -> String { return NSNumber(value: value).description }
-    fileprivate func box(_ value: UInt8)  -> String { return NSNumber(value: value).description }
-    fileprivate func box(_ value: UInt16) -> String { return NSNumber(value: value).description }
-    fileprivate func box(_ value: UInt32) -> String { return NSNumber(value: value).description }
-    fileprivate func box(_ value: UInt64) -> String { return NSNumber(value: value).description }
+    fileprivate func box(_ value: Int)    -> String { return value.description }
+    fileprivate func box(_ value: Int8)   -> String { return value.description }
+    fileprivate func box(_ value: Int16)  -> String { return value.description }
+    fileprivate func box(_ value: Int32)  -> String { return value.description }
+    fileprivate func box(_ value: Int64)  -> String { return value.description }
+    fileprivate func box(_ value: UInt)   -> String { return value.description }
+    fileprivate func box(_ value: UInt8)  -> String { return value.description }
+    fileprivate func box(_ value: UInt16) -> String { return value.description }
+    fileprivate func box(_ value: UInt32) -> String { return value.description }
+    fileprivate func box(_ value: UInt64) -> String { return value.description }
     fileprivate func box(_ value: String) -> String { return value }
 
     fileprivate func box(_ float: Float) throws -> String {
@@ -507,7 +500,7 @@ extension _XMLEncoder {
             }
         }
 
-        return NSNumber(value: float).description
+        return float.description
     }
 
     fileprivate func box(_ double: Double) throws -> String {
@@ -527,7 +520,7 @@ extension _XMLEncoder {
             }
         }
 
-        return NSNumber(value: double).description
+        return double.description
     }
 
 
@@ -621,18 +614,6 @@ fileprivate struct _XMLKey : CodingKey {
 
     fileprivate static let `super` = _XMLKey(stringValue: "super")!
 }
-
-//===----------------------------------------------------------------------===//
-// Shared ISO8601 Date Formatter
-//===----------------------------------------------------------------------===//
-
-// NOTE: This value is implicitly lazy and _must_ be lazy. We're compiled against the latest SDK (w/ ISO8601DateFormatter), but linked against whichever Foundation the user has. ISO8601DateFormatter might not exist, so we better not hit this code path on an older OS.
-@available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *)
-fileprivate var _iso8601Formatter: ISO8601DateFormatter = {
-    let formatter = ISO8601DateFormatter()
-    formatter.formatOptions = .withInternetDateTime
-    return formatter
-}()
 
 //===----------------------------------------------------------------------===//
 // Error Utilities

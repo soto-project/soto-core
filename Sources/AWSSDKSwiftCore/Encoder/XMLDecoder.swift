@@ -16,12 +16,6 @@ import struct Foundation.Data
 import struct Foundation.Date
 import struct Foundation.URL
 import class  Foundation.DateFormatter
-import class  Foundation.ISO8601DateFormatter
-
-import class  Foundation.NSURL
-import class  Foundation.NSDate
-import class  Foundation.NSData
-
 
 /// The wrapper class for decoding Codable classes from XMLNodes
 class XMLDecoder {
@@ -667,18 +661,6 @@ fileprivate struct _XMLKey : CodingKey {
 
     fileprivate static let `super` = _XMLKey(stringValue: "super")!
 }
-
-//===----------------------------------------------------------------------===//
-// Shared ISO8601 Date Formatter
-//===----------------------------------------------------------------------===//
-
-// NOTE: This value is implicitly lazy and _must_ be lazy. We're compiled against the latest SDK (w/ ISO8601DateFormatter), but linked against whichever Foundation the user has. ISO8601DateFormatter might not exist, so we better not hit this code path on an older OS.
-@available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *)
-fileprivate var _iso8601Formatter: ISO8601DateFormatter = {
-    let formatter = ISO8601DateFormatter()
-    formatter.formatOptions = .withInternetDateTime
-    return formatter
-}()
 
 //===----------------------------------------------------------------------===//
 // Error Utilities

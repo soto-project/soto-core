@@ -26,7 +26,9 @@ import struct Foundation.URLComponents
 import struct Foundation.URLQueryItem
 import struct Foundation.CharacterSet
 
-/// This is the workhorse of aws-sdk-swift-core. You provide it with a `AWSShape` Input object, it converts it to `AWSRequest` which is then converted to a raw `HTTPClient` Request. This is then sent to AWS. When the response from AWS is received if it is successful it is converted to a `AWSResponse` which is then decoded to generate a `AWSShape` Output object. If it is not successful then `AWSClient` will throw an `AWSErrorType`.
+/// This is the workhorse of aws-sdk-swift-core. You provide it with a `AWSShape` Input object, it converts it to `AWSRequest` which is then converted
+/// to a raw `HTTPClient` Request. This is then sent to AWS. When the response from AWS is received if it is successful it is converted to a `AWSResponse`
+/// which is then decoded to generate a `AWSShape` Output object. If it is not successful then `AWSClient` will throw an `AWSErrorType`.
 public final class AWSClient {
 
     public enum ClientError: Swift.Error {
@@ -494,7 +496,7 @@ extension AWSClient {
             }
 
         case .ec2:
-            var params = try input.encodeAsQuery(flattenArrays: true)
+            var params = try input.encodeAsQuery()
             params["Action"] = operationName
             params["Version"] = serviceConfig.apiVersion
             if let urlEncodedQueryParams = urlEncodeQueryParams(fromDictionary: params) {

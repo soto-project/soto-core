@@ -16,43 +16,12 @@ import struct Foundation.Data
 import struct Foundation.Date
 import struct Foundation.URL
 import class  Foundation.DateFormatter
-import class  Foundation.ISO8601DateFormatter
-
-import class  Foundation.NSURL
-import class  Foundation.NSDate
-import class  Foundation.NSData
-
 
 /// The wrapper class for decoding Codable classes from XMLNodes
 class XMLDecoder {
 
-    /// The strategy to use for decoding `Date` values.
-    public enum DateDecodingStrategy {
-        /// Defer to `Date` for decoding. This is the default strategy.
-        case deferredToDate
-
-        /// Decode the `Date` as a UNIX timestamp from a JSON number.
-        case secondsSince1970
-
-        /// Decode the `Date` as UNIX millisecond timestamp from a JSON number.
-        case millisecondsSince1970
-
-        /// Decode the `Date` as an ISO-8601-formatted string (in RFC 3339 format).
-        @available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *)
-        case iso8601
-
-        /// Decode the `Date` as a string parsed by the given formatter.
-        case formatted(DateFormatter)
-
-        /// Decode the `Date` as a custom value decoded by the given closure.
-        case custom((_ decoder: Decoder) throws -> Date)
-    }
-
     /// The strategy to use for decoding `Data` values.
     public enum DataDecodingStrategy {
-        /// Defer to `Data` for decoding.
-        case deferredToData
-
         /// Decode the `Data` from a Base64-encoded string.
         case base64
 
@@ -69,9 +38,6 @@ class XMLDecoder {
         case convertFromString(positiveInfinity: String, negativeInfinity: String, nan: String)
     }
 
-    /// The strategy to use in decoding dates. Defaults to `.deferredToDate`.
-    open var dateDecodingStrategy: DateDecodingStrategy = .deferredToDate
-
     /// The strategy to use in decoding binary data. Defaults to `.raw`.
     open var dataDecodingStrategy: DataDecodingStrategy = .base64
 
@@ -83,7 +49,6 @@ class XMLDecoder {
 
     /// Options set on the top-level encoder to pass down the decoding hierarchy.
     fileprivate struct _Options {
-        let dateDecodingStrategy: DateDecodingStrategy
         let dataDecodingStrategy: DataDecodingStrategy
         let nonConformingFloatDecodingStrategy: NonConformingFloatDecodingStrategy
         let userInfo: [CodingUserInfoKey : Any]
@@ -91,8 +56,7 @@ class XMLDecoder {
 
     /// The options set on the top-level decoder.
     fileprivate var options: _Options {
-        return _Options(dateDecodingStrategy: dateDecodingStrategy,
-                        dataDecodingStrategy: dataDecodingStrategy,
+        return _Options(dataDecodingStrategy: dataDecodingStrategy,
                         nonConformingFloatDecodingStrategy: nonConformingFloatDecodingStrategy,
                         userInfo: userInfo)
     }
@@ -630,57 +594,9 @@ fileprivate class _XMLDecoder : Decoder {
         return unboxValue
     }
 
-    /// get Date from XML.Node
-    func unbox(_ element : XML.Node, as type: Date.Type) throws -> Date {
-        switch self.options.dateDecodingStrategy {
-        case .deferredToDate:
-            self.storage.push(container: element)
-            defer { self.storage.popContainer() }
-            return try Date(from: self)
-
-        case .secondsSince1970:
-            let double = try self.unbox(element, as: Double.self)
-            return Date(timeIntervalSince1970: double)
-
-        case .millisecondsSince1970:
-            let double = try self.unbox(element, as: Double.self)
-            return Date(timeIntervalSince1970: double / 1000.0)
-
-        case .iso8601:
-            if #available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *) {
-                let string = try self.unbox(element, as: String.self)
-                guard let date = _iso8601Formatter.date(from: string) else {
-                    throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Expected date string to be ISO8601-formatted."))
-                }
-
-                return date
-            } else {
-                fatalError("ISO8601DateFormatter is unavailable on this platform.")
-            }
-
-        case .formatted(let formatter):
-            let string = try self.unbox(element, as: String.self)
-            guard let date = formatter.date(from: string) else {
-                throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Date string does not match format expected by formatter."))
-            }
-
-            return date
-
-        case .custom(let closure):
-            self.storage.push(container: element)
-            defer { self.storage.popContainer() }
-            return try closure(self)
-        }
-    }
-
     /// get Data from XML.Node
     fileprivate func unbox(_ element : XML.Node, as type: Data.Type) throws -> Data {
         switch self.options.dataDecodingStrategy {
-        case .deferredToData:
-            self.storage.push(container: element)
-            defer { self.storage.popContainer() }
-            return try Data(from: self)
-
         case .base64:
             guard let string = element.stringValue else {
                 throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: element.stringValue ?? "nil")
@@ -699,26 +615,13 @@ fileprivate class _XMLDecoder : Decoder {
         }
     }
 
-    /// get URL from XML.Node
-    fileprivate func unbox(_ element : XML.Node, as type: URL.Type) throws -> URL {
-        let urlString = try self.unbox(element, as: String.self)
-        guard let url = URL(string: urlString) else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: element.stringValue ?? "nil")
-        }
-        return url
-    }
-
     func unbox<T>(_ element : XML.Node, as type: T.Type) throws -> T where T : Decodable {
         return try unbox_(element, as: T.self) as! T
     }
 
     func unbox_(_ element : XML.Node, as type: Decodable.Type) throws -> Any {
-        if type == Date.self || type == NSDate.self {
-            return try self.unbox(element, as: Date.self)
-        } else if type == Data.self || type == NSData.self {
+        if type == Data.self {
             return try self.unbox(element, as: Data.self)
-        } else if type == URL.self || type == NSURL.self {
-            return try self.unbox(element, as: URL.self)
         } else {
             self.storage.push(container:element)
             defer { self.storage.popContainer() }
@@ -758,18 +661,6 @@ fileprivate struct _XMLKey : CodingKey {
 
     fileprivate static let `super` = _XMLKey(stringValue: "super")!
 }
-
-//===----------------------------------------------------------------------===//
-// Shared ISO8601 Date Formatter
-//===----------------------------------------------------------------------===//
-
-// NOTE: This value is implicitly lazy and _must_ be lazy. We're compiled against the latest SDK (w/ ISO8601DateFormatter), but linked against whichever Foundation the user has. ISO8601DateFormatter might not exist, so we better not hit this code path on an older OS.
-@available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *)
-fileprivate var _iso8601Formatter: ISO8601DateFormatter = {
-    let formatter = ISO8601DateFormatter()
-    formatter.formatOptions = .withInternetDateTime
-    return formatter
-}()
 
 //===----------------------------------------------------------------------===//
 // Error Utilities

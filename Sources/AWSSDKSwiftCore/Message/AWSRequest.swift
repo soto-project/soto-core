@@ -110,6 +110,8 @@ public struct AWSRequest {
         let bodyDataForSigning: AWSSigner.BodyData?
         if let body = payload?.asByteBuffer() {
             bodyDataForSigning = .byteBuffer(body)
+        } else if case .stream = payload {
+            bodyDataForSigning = .unsignedPayload
         } else {
             bodyDataForSigning = nil
         }
@@ -124,6 +126,8 @@ public struct AWSRequest {
         let bodyDataForSigning: AWSSigner.BodyData?
         if let body = payload?.asByteBuffer() {
             bodyDataForSigning = .byteBuffer(body)
+        } else if case .stream = payload {
+            bodyDataForSigning = .unsignedPayload
         } else {
             bodyDataForSigning = nil
         }

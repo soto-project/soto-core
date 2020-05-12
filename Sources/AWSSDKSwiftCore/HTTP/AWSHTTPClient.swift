@@ -22,6 +22,13 @@ public struct AWSHTTPRequest {
     public let method: HTTPMethod
     public let headers: HTTPHeaders
     public let body: ByteBuffer?
+    
+    public init(url: URL, method: HTTPMethod, headers: HTTPHeaders = [:], body: ByteBuffer? = nil) {
+        self.url = url
+        self.method = method
+        self.headers = headers
+        self.body = body
+    }
 }
 
 /// HTTP Response

@@ -62,17 +62,18 @@ public struct AWSRequest {
             headers[key] = "\(value)"
         }
 
-        switch httpMethod {
-        case "GET","HEAD":
-            break
-        default:
-            if case .restjson = serviceProtocol, case .buffer(_) = body {
-                headers["Content-Type"] = "binary/octet-stream"
-            } else {
-                headers["Content-Type"] = serviceProtocol.contentType
+        if headers["Content-Type"] == nil {
+            switch httpMethod {
+            case "GET","HEAD":
+                break
+            default:
+                if case .restjson = serviceProtocol, case .buffer(_) = body {
+                    headers["Content-Type"] = "binary/octet-stream"
+                } else {
+                    headers["Content-Type"] = serviceProtocol.contentType
+                }
             }
         }
-
         return HTTPHeaders(headers.map { ($0, $1) })
     }
   

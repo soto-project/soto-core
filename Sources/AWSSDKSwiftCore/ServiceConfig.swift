@@ -33,8 +33,24 @@ public struct ServiceConfig {
     /// Middleware code specific to the service used to edit requests before they sent and responses before they are decoded
     public let middlewares: [AWSServiceMiddleware]
     
+    /// Create a ServiceConfig object
+    ///
+    /// - Parameters:
+    ///   - region: Region of server you want to communicate with
+    ///   - partition: Amazon endpoint partition. This is ignored if region is set. If no region is set then this is used along side partitionEndpoints to calculate endpoint
+    ///   - amzTarget: "x-amz-target" header value
+    ///   - service: Name of service endpoint
+    ///   - signingName: Name that all AWS requests are signed with
+    ///   - serviceProtocol: protocol of service (.json, .xml, .query etc)
+    ///   - apiVersion: "Version" header value
+    ///   - endpoint: Custom endpoint URL to use instead of standard AWS servers
+    ///   - serviceEndpoints: Dictionary of endpoints to URLs
+    ///   - partitionEndpoints: Default endpoint to use, if no region endpoint is supplied
+    ///   - possibleErrorTypes: Array of possible error types that the client can throw
+    ///   - middlewares: Array of middlewares to apply to requests and responses
     public init(
-        region givenRegion: Region?,
+        region: Region?,
+        partition: Partition,
         amzTarget: String? = nil,
         service: String,
         signingName: String? = nil,
@@ -42,24 +58,21 @@ public struct ServiceConfig {
         apiVersion: String,
         endpoint: String? = nil,
         serviceEndpoints: [String: String] = [:],
-        partitionEndpoint: String? = nil,
+        partitionEndpoints: [Partition: (endpoint: String, region: Region)],
         possibleErrorTypes: [AWSErrorType.Type] = [],
         middlewares: [AWSServiceMiddleware] = []
     )
     {
-        if let _region = givenRegion {
-            region = _region
-        }
-        else if let partitionEndpoint = partitionEndpoint {
-            if partitionEndpoint == "aws-global" {
-                region = .useast1
-            } else {
-                region = Region(rawValue: partitionEndpoint)
-            }
+        var partition = partition
+        if let region = region {
+            self.region = region
+            partition = region.partition
+        } else if let partitionEndpoint = partitionEndpoints[partition] {
+            self.region = partitionEndpoint.region
         } else if let defaultRegion = ProcessInfo.processInfo.environment["AWS_DEFAULT_REGION"] {
-            region = Region(rawValue: defaultRegion)
+            self.region = Region(rawValue: defaultRegion)
         } else {
-            region = .useast1
+            self.region = .useast1
         }
 
         self.apiVersion = apiVersion
@@ -74,12 +87,13 @@ public struct ServiceConfig {
             self.endpoint = endpoint
         } else {
             let serviceHost: String
-            if let serviceEndpoint = serviceEndpoints[region.rawValue] {
+            if let serviceEndpoint = serviceEndpoints[self.region.rawValue] {
                 serviceHost = serviceEndpoint
-            } else if let partitionEndpoint = partitionEndpoint, let globalEndpoint = serviceEndpoints[partitionEndpoint] {
+            } else if let partitionEndpoint = partitionEndpoints[partition],
+                let globalEndpoint = serviceEndpoints[partitionEndpoint.endpoint] {
                 serviceHost = globalEndpoint
             } else {
-                serviceHost = "\(service).\(region.rawValue).amazonaws.com"
+                serviceHost = "\(service).\(self.region.rawValue).\(partition.dnsSuffix)"
             }
             self.endpoint = "https://\(serviceHost)"
         }

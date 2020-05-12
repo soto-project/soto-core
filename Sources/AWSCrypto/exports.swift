@@ -14,6 +14,6 @@
 
 // Replicating the CryptoKit framework interface for < macOS 10.15
 
-#if canImport(Crypto)
+#if os(Linux)
 @_exported import Crypto
 #endif

@@ -22,8 +22,8 @@ class ValidationTests: XCTestCase {
         do {
             try shape.validate()
             XCTFail()
-        } catch AWSClientError.validationError(let message) {
-            print(message ?? "")
+        } catch let error as AWSClientError where error == AWSClientError.validationError {
+            print(error.message ?? "")
         } catch {
             XCTFail(error.localizedDescription)
         }

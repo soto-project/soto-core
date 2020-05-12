@@ -103,33 +103,33 @@ public extension AWSEncodableShape {
     }
 
     func validate<T : BinaryInteger>(_ value: T, name: String, parent: String, min: T) throws {
-        guard value >= min else { throw AWSClientError.validationError(message: "\(parent).\(name) (\(value)) is less than minimum allowed value \(min).") }
+        guard value >= min else { throw AWSClientError(.validationError, message: "\(parent).\(name) (\(value)) is less than minimum allowed value \(min).") }
     }
     func validate<T : BinaryInteger>(_ value: T, name: String, parent: String, max: T) throws {
-        guard value <= max else { throw AWSClientError.validationError(message: "\(parent).\(name) (\(value)) is greater than the maximum allowed value \(max).") }
+        guard value <= max else { throw AWSClientError(.validationError, message: "\(parent).\(name) (\(value)) is greater than the maximum allowed value \(max).") }
     }
     func validate<T : FloatingPoint>(_ value: T, name: String, parent: String, min: T) throws {
-        guard value >= min else { throw AWSClientError.validationError(message: "\(parent).\(name) (\(value)) is less than minimum allowed value \(min).") }
+        guard value >= min else { throw AWSClientError(.validationError, message: "\(parent).\(name) (\(value)) is less than minimum allowed value \(min).") }
     }
     func validate<T : FloatingPoint>(_ value: T, name: String, parent: String, max: T) throws {
-        guard value <= max else { throw AWSClientError.validationError(message: "\(parent).\(name) (\(value)) is greater than the maximum allowed value \(max).") }
+        guard value <= max else { throw AWSClientError(.validationError, message: "\(parent).\(name) (\(value)) is greater than the maximum allowed value \(max).") }
     }
     func validate<T : Collection>(_ value: T, name: String, parent: String, min: Int) throws {
-        guard value.count >= min else { throw AWSClientError.validationError(message: "Length of \(parent).\(name) (\(value.count)) is less than minimum allowed value \(min).") }
+        guard value.count >= min else { throw AWSClientError(.validationError, message: "Length of \(parent).\(name) (\(value.count)) is less than minimum allowed value \(min).") }
     }
     func validate<T : Collection>(_ value: T, name: String, parent: String, max: Int) throws {
-        guard value.count <= max else { throw AWSClientError.validationError(message: "Length of \(parent).\(name) (\(value.count)) is greater than the maximum allowed value \(max).") }
+        guard value.count <= max else { throw AWSClientError(.validationError, message: "Length of \(parent).\(name) (\(value.count)) is greater than the maximum allowed value \(max).") }
     }
     func validate(_ value: AWSPayload, name: String, parent: String, min: Int) throws {
-        guard value.byteBuffer.readableBytes >= min else { throw AWSClientError.validationError(message: "Length of \(parent).\(name) (\(value.byteBuffer.readableBytes)) is less than minimum allowed value \(min).") }
+        guard value.byteBuffer.readableBytes >= min else { throw AWSClientError(.validationError, message: "Length of \(parent).\(name) (\(value.byteBuffer.readableBytes)) is less than minimum allowed value \(min).") }
     }
     func validate(_ value: AWSPayload, name: String, parent: String, max: Int) throws {
-        guard value.byteBuffer.readableBytes <= max else { throw AWSClientError.validationError(message: "Length of \(parent).\(name) (\(value.byteBuffer.readableBytes)) is greater than the maximum allowed value \(max).") }
+        guard value.byteBuffer.readableBytes <= max else { throw AWSClientError(.validationError, message: "Length of \(parent).\(name) (\(value.byteBuffer.readableBytes)) is greater than the maximum allowed value \(max).") }
     }
     func validate(_ value: String, name: String, parent: String, pattern: String) throws {
         let regularExpression = try NSRegularExpression(pattern: pattern, options: [])
         let firstMatch = regularExpression.rangeOfFirstMatch(in: value, options: .anchored, range: NSMakeRange(0, value.count))
-        guard firstMatch.location != NSNotFound && firstMatch.length > 0 else { throw AWSClientError.validationError(message: "\(parent).\(name) (\(value)) does not match pattern \(pattern).") }
+        guard firstMatch.location != NSNotFound && firstMatch.length > 0 else { throw AWSClientError(.validationError, message: "\(parent).\(name) (\(value)) does not match pattern \(pattern).") }
     }
     // validate optional values
     func validate<T : BinaryInteger>(_ value: T?, name: String, parent: String, min: T) throws {

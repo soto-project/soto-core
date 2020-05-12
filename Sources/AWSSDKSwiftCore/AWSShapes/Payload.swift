@@ -21,6 +21,7 @@ public enum AWSPayload {
     case byteBuffer(ByteBuffer)
     case stream(size: Int, closure: (EventLoop)->EventLoopFuture<ByteBuffer>)
 
+    /// Construct a payload from a Data
     public static func data(_ data: Data) -> Self {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: data.count)
         byteBuffer.writeBytes(data)
@@ -32,6 +33,24 @@ public enum AWSPayload {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: string.utf8.count)
         byteBuffer.writeString(string)
         return .byteBuffer(byteBuffer)
+    }
+
+    /// Construct a payload from a NIOFileHandle
+    public static func fileHandle(_ fileHandle: NIOFileHandle, size: Int, fileIO: NonBlockingFileIO, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) -> Self {
+        let blockSize = 64*1024
+        var leftToRead = size
+        func stream(_ eventLoop: EventLoop) -> EventLoopFuture<ByteBuffer> {
+            let blockSize = min(leftToRead, blockSize)
+            leftToRead -= blockSize
+            let futureByteBuffer: EventLoopFuture<ByteBuffer> = fileIO.read(fileHandle: fileHandle, byteCount: blockSize, allocator: byteBufferAllocator, eventLoop: eventLoop)
+                .map { byteBuffer in
+                    precondition(byteBuffer.readableBytes == blockSize, "File did not have enough data")
+                    return byteBuffer
+            }
+            return futureByteBuffer
+        }
+        
+        return .stream(size: size, closure: stream)
     }
 
     var size: Int {

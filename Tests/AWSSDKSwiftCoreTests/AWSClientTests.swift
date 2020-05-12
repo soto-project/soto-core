@@ -1026,17 +1026,7 @@ class AWSClientTests: XCTestCase {
             XCTAssertNoThrow(try httpClient.syncShutdown())
         }
         do {
-            let client = AWSClient(
-                accessKeyId: "",
-                secretAccessKey: "",
-                region: .useast1,
-                service:"TestClient",
-                serviceProtocol: .json(version: "1.1"),
-                apiVersion: "2020-01-21",
-                endpoint: awsServer.address,
-                middlewares: [AWSLoggingMiddleware()],
-                httpClientProvider: .shared(httpClient)
-            )
+            let client = createAWSClient(accessKeyId: "", secretAccessKey: "", endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
 
             // supply buffer in 16k blocks
             let bufferSize = 1024*1024
@@ -1080,17 +1070,7 @@ class AWSClientTests: XCTestCase {
             XCTAssertNoThrow(try httpClient.syncShutdown())
         }
         do {
-            let client = AWSClient(
-                accessKeyId: "",
-                secretAccessKey: "",
-                region: .useast1,
-                service:"TestClient",
-                serviceProtocol: .json(version: "1.1"),
-                apiVersion: "2020-01-21",
-                endpoint: awsServer.address,
-                middlewares: [AWSLoggingMiddleware()],
-                httpClientProvider: .shared(httpClient)
-            )
+            let client = createAWSClient(accessKeyId: "", secretAccessKey: "", endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
 
             // set up stream of 8 bytes but supply more than that
             let payload = AWSPayload.stream(size: 8) { eventLoop in
@@ -1100,6 +1080,56 @@ class AWSClientTests: XCTestCase {
             }
             let input = Input(payload: payload)
             let response = client.send(operation: "test", path: "/", httpMethod: "POST", input: input)
+            try response.wait()
+        } catch AWSClient.ClientError.tooMuchData {
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+    func testRequestStreamingFile() {
+        struct Input : AWSEncodableShape & AWSShapeWithPayload {
+            static var payloadPath: String = "payload"
+            let payload: AWSPayload
+            private enum CodingKeys: CodingKey {}
+        }
+
+        let awsServer = AWSTestServer(serviceProtocol: .json)
+        let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+        defer {
+            try? awsServer.stop()
+            XCTAssertNoThrow(try httpClient.syncShutdown())
+        }
+        do {
+            let client = createAWSClient(accessKeyId: "", secretAccessKey: "", endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
+
+            let bufferSize = 208*1024
+            let data = Data(createRandomBuffer(45,9182, size: bufferSize))
+            let filename = "testRequestStreamingFile"
+            let fileURL = URL(fileURLWithPath: filename)
+            try data.write(to: fileURL)
+            defer {
+                XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL))
+            }
+
+            let threadPool = NIOThreadPool(numberOfThreads: 3)
+            threadPool.start()
+            let fileIO = NonBlockingFileIO(threadPool: threadPool)
+            let fileHandle = try fileIO.openFile(path: filename, mode: .read, eventLoop: httpClient.eventLoopGroup.next()).wait()
+            defer {
+                XCTAssertNoThrow(try fileHandle.close())
+                XCTAssertNoThrow(try threadPool.syncShutdownGracefully())
+            }
+            let input = Input(payload: .fileHandle(fileHandle, size: bufferSize, fileIO: fileIO))
+            let response = client.send(operation: "test", path: "/", httpMethod: "POST", input: input)
+
+            try awsServer.process { request in
+                let requestData = request.body.getData(at: 0, length: request.body.readableBytes)
+                XCTAssertEqual(requestData, data)
+                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
+                return AWSTestServer.Result(output: response, continueProcessing: false)
+            }
+
             try response.wait()
         } catch AWSClient.ClientError.tooMuchData {
         } catch {

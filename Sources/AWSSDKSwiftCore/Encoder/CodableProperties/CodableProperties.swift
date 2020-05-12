@@ -113,7 +113,7 @@ extension KeyedEncodingContainer {
 extension OptionalCoding: OptionalCodingWrapper {}
 
 /// CodingKey used by Encoder property wrappers
-internal struct _EncodingWrapperKey : CodingKey {
+internal struct EncodingWrapperKey : CodingKey {
     public var stringValue: String
     public var intValue: Int?
     

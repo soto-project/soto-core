@@ -29,9 +29,9 @@ public struct ArrayCoder<Properties: ArrayCoderProperties, Element>: CustomCoder
 /// extend to support decoding
 extension ArrayCoder: CustomDecoder where Element: Decodable {
     public static func decode(from decoder: Decoder) throws -> CodableValue {
-        let topLevelContainer = try decoder.container(keyedBy: _EncodingWrapperKey.self)
+        let topLevelContainer = try decoder.container(keyedBy: EncodingWrapperKey.self)
         var values: [Element] = []
-        let memberKey = _EncodingWrapperKey(stringValue: Properties.member, intValue: nil)
+        let memberKey = EncodingWrapperKey(stringValue: Properties.member, intValue: nil)
         guard topLevelContainer.contains(memberKey) else { return values }
         
         var container = try topLevelContainer.nestedUnkeyedContainer(forKey: memberKey)
@@ -45,8 +45,8 @@ extension ArrayCoder: CustomDecoder where Element: Decodable {
 /// extend to support encoding
 extension ArrayCoder: CustomEncoder where Element: Encodable {
     public static func encode(value: CodableValue, to encoder: Encoder) throws {
-        var topLevelContainer = encoder.container(keyedBy: _EncodingWrapperKey.self)
-        var container = topLevelContainer.nestedUnkeyedContainer(forKey: _EncodingWrapperKey(stringValue: Properties.member, intValue: nil))
+        var topLevelContainer = encoder.container(keyedBy: EncodingWrapperKey.self)
+        var container = topLevelContainer.nestedUnkeyedContainer(forKey: EncodingWrapperKey(stringValue: Properties.member, intValue: nil))
         for entry in value {
             try container.encode(entry)
         }
@@ -72,23 +72,23 @@ extension DictionaryCoder: CustomDecoder where Key: Decodable, Value: Decodable 
     public static func decode(from decoder: Decoder) throws -> CodableValue {
         var values: [Key: Value] = [:]
         if let entry = Properties.entry {
-            let topLevelContainer = try decoder.container(keyedBy: _EncodingWrapperKey.self)
-            let entryKey = _EncodingWrapperKey(stringValue: entry, intValue: nil)
+            let topLevelContainer = try decoder.container(keyedBy: EncodingWrapperKey.self)
+            let entryKey = EncodingWrapperKey(stringValue: entry, intValue: nil)
             guard topLevelContainer.contains(entryKey) else { return values }
             
             var container = try topLevelContainer.nestedUnkeyedContainer(forKey: entryKey)
             while !container.isAtEnd {
-                let container2 = try container.nestedContainer(keyedBy: _EncodingWrapperKey.self)
-                let key = try container2.decode(Key.self, forKey: _EncodingWrapperKey(stringValue: Properties.key, intValue: nil))
-                let value = try container2.decode(Value.self, forKey: _EncodingWrapperKey(stringValue: Properties.value, intValue: nil))
+                let container2 = try container.nestedContainer(keyedBy: EncodingWrapperKey.self)
+                let key = try container2.decode(Key.self, forKey: EncodingWrapperKey(stringValue: Properties.key, intValue: nil))
+                let value = try container2.decode(Value.self, forKey: EncodingWrapperKey(stringValue: Properties.value, intValue: nil))
                 values[key] = value
             }
         } else {
             var container = try decoder.unkeyedContainer()
             while !container.isAtEnd {
-                let container2 = try container.nestedContainer(keyedBy: _EncodingWrapperKey.self)
-                let key = try container2.decode(Key.self, forKey: _EncodingWrapperKey(stringValue: Properties.key, intValue: nil))
-                let value = try container2.decode(Value.self, forKey: _EncodingWrapperKey(stringValue: Properties.value, intValue: nil))
+                let container2 = try container.nestedContainer(keyedBy: EncodingWrapperKey.self)
+                let key = try container2.decode(Key.self, forKey: EncodingWrapperKey(stringValue: Properties.key, intValue: nil))
+                let value = try container2.decode(Value.self, forKey: EncodingWrapperKey(stringValue: Properties.value, intValue: nil))
                 values[key] = value
             }
         }
@@ -100,19 +100,19 @@ extension DictionaryCoder: CustomDecoder where Key: Decodable, Value: Decodable 
 extension DictionaryCoder: CustomEncoder where Key: Encodable, Value: Encodable {
     public static func encode(value: CodableValue, to encoder: Encoder) throws {
         if let entry = Properties.entry {
-            var topLevelContainter = encoder.container(keyedBy: _EncodingWrapperKey.self)
-            var container = topLevelContainter.nestedUnkeyedContainer(forKey: _EncodingWrapperKey(stringValue: entry, intValue: nil))
+            var topLevelContainter = encoder.container(keyedBy: EncodingWrapperKey.self)
+            var container = topLevelContainter.nestedUnkeyedContainer(forKey: EncodingWrapperKey(stringValue: entry, intValue: nil))
             for (key, value) in value {
-                var container2 = container.nestedContainer(keyedBy: _EncodingWrapperKey.self)
-                try container2.encode(key, forKey: _EncodingWrapperKey(stringValue: Properties.key, intValue: nil))
-                try container2.encode(value, forKey: _EncodingWrapperKey(stringValue: Properties.value, intValue: nil))
+                var container2 = container.nestedContainer(keyedBy: EncodingWrapperKey.self)
+                try container2.encode(key, forKey: EncodingWrapperKey(stringValue: Properties.key, intValue: nil))
+                try container2.encode(value, forKey: EncodingWrapperKey(stringValue: Properties.value, intValue: nil))
             }
         } else {
             var container = encoder.unkeyedContainer()
             for (key, value) in value {
-                var container2 = container.nestedContainer(keyedBy: _EncodingWrapperKey.self)
-                try container2.encode(key, forKey: _EncodingWrapperKey(stringValue: Properties.key, intValue: nil))
-                try container2.encode(value, forKey: _EncodingWrapperKey(stringValue: Properties.value, intValue: nil))
+                var container2 = container.nestedContainer(keyedBy: EncodingWrapperKey.self)
+                try container2.encode(key, forKey: EncodingWrapperKey(stringValue: Properties.key, intValue: nil))
+                try container2.encode(value, forKey: EncodingWrapperKey(stringValue: Properties.value, intValue: nil))
             }
         }
     }

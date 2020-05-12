@@ -18,22 +18,17 @@ import class Foundation.NSData
 /// The wrapper class for encoding Codable classes to Query dictionary
 class QueryEncoder {
 
-    /// override container encoding and flatten all the containers (needed for EC2, which reports unflattened containers when they are flattened)
-    open var flattenContainers : Bool = false
-
     /// Contextual user-provided information for use during encoding.
     open var userInfo: [CodingUserInfoKey : Any] = [:]
 
     /// Options set on the top-level encoder to pass down the encoding hierarchy.
     fileprivate struct _Options {
-        let flattenContainers: Bool
         let userInfo: [CodingUserInfoKey : Any]
     }
 
     /// The options set on the top-level encoder.
     fileprivate var options: _Options {
-        return _Options(flattenContainers: flattenContainers,
-                        userInfo: userInfo)
+        return _Options(userInfo: userInfo)
     }
 
     public init() {}

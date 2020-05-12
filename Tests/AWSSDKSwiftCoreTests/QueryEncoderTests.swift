@@ -101,6 +101,7 @@ class QueryEncoderTests: XCTestCase {
     }
 
     func testArrayOfStructuresEncode() {
+        struct ArrayM: ArrayCoderProperties { static let member = "m" }
         struct Test2 : AWSEncodableShape {
             let b : String
 
@@ -109,8 +110,7 @@ class QueryEncoderTests: XCTestCase {
             }
         }
         struct Test : AWSEncodableShape {
-            static let _encoding = [AWSMemberEncoding(label: "A", encoding:.list(member: "m") )]
-            let a : [Test2]
+            @Coding<ArrayCoder<ArrayM, Test2>> var a : [Test2]
 
             private enum CodingKeys: String, CodingKey {
                 case a = "A"
@@ -122,8 +122,7 @@ class QueryEncoderTests: XCTestCase {
 
     func testDictionaryEncode() {
         struct Test : AWSEncodableShape {
-            static let _encoding = [AWSMemberEncoding(label: "A", encoding:.map(entry: "entry", key: "key", value: "value"))]
-            let a : [String:Int]
+            @Coding<DefaultDictionaryCoder> var a : [String:Int]
 
             private enum CodingKeys: String, CodingKey {
                 case a = "A"
@@ -142,12 +141,11 @@ class QueryEncoderTests: XCTestCase {
             }
         }
         struct Test : AWSEncodableShape {
-            static let _encoding = [AWSMemberEncoding(label: "A", encoding:.map(entry: "entry", key: "key", value: "value"))]
             enum TestEnum : String, Codable {
                 case first = "first"
                 case second = "second"
             }
-            let a : [TestEnum:Test2]
+            @Coding<DefaultDictionaryCoder> var a : [TestEnum:Test2]
 
             private enum CodingKeys: String, CodingKey {
                 case a = "A"
@@ -158,18 +156,18 @@ class QueryEncoderTests: XCTestCase {
     }
 
     func testArrayEncodingEncode() {
+        struct ArrayItem: ArrayCoderProperties { static let member = "item" }
         struct Test : AWSEncodableShape {
-            static let _encoding = [AWSMemberEncoding(label: "a", encoding:.list(member:"item"))]
-            let a : [Int]
+            @Coding<ArrayCoder<ArrayItem, Int>> var a : [Int]
         }
         let test = Test(a:[9,8,7,6])
         testQuery(test, query:"a.item.1=9&a.item.2=8&a.item.3=7&a.item.4=6")
     }
 
     func testDictionaryEncodingEncode() {
+        struct DictionaryItemKV: DictionaryCoderProperties { static let entry: String? = "item"; static let key = "k"; static let value = "v" }
         struct Test : AWSEncodableShape {
-            static let _encoding = [AWSMemberEncoding(label: "A", encoding:.map(entry: "item", key: "k", value: "v"))]
-            let a : [String:Int]
+            @Coding<DictionaryCoder<DictionaryItemKV, String, Int>> var a : [String:Int]
 
             private enum CodingKeys: String, CodingKey {
                 case a = "A"
@@ -180,9 +178,11 @@ class QueryEncoderTests: XCTestCase {
     }
 
     func testDictionaryEncodingEncode2() {
+        struct DictionaryNameEntry: DictionaryCoderProperties {
+            static let entry: String? = nil; static let key = "name"; static let value = "entry"
+        }
         struct Test : AWSEncodableShape {
-            static let _encoding = [AWSMemberEncoding(label: "A", encoding:.flatMap(key: "name", value: "entry"))]
-            let a : [String:Int]
+            @Coding<DictionaryCoder<DictionaryNameEntry, String, Int>> var a : [String:Int]
 
             private enum CodingKeys: String, CodingKey {
                 case a = "A"

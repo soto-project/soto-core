@@ -22,124 +22,87 @@ import class  Foundation.NSURL
 import class  Foundation.NSDate
 import class  Foundation.NSData
 
-/// rules for encoding/decoding containers like arrays and dictionaries.
-public enum XMLContainerCoding {
-    /// default case, flat arrays and coding dictionaries like all other codable structures
-    case `default`
-    
-    /// case for coding arrays. where there is an enclosing xml element and each array element has name is defined by element. eg <array><member>1</member><member>2</member></array>
-    case array(entry: String?)
-    
-    /// case for coding dictionaries where key element contains the value. Encoding like a struct or class where the keys are the variable names. This is only valid for dictionaries that have keys of type 'String' eg <dict><key>value</key><key2>value2</key2></dict>
-    case structure
-    
-    /// case for coding dictionaries where key and value are stored in separate elements and these can be either stored as children of the dictionary element or as children of a enclosing entry element which is then stored under the dictionary element eg <dict><entry><key>name</key><value>John Smith</value></entry><entry>...</entry>...</dict>
-    case dictionary(entry: String?, key: String, value: String)
-}
-
-/// protocol to return XMLContainerCoding values. To control how the child elements of a Codable class are encoded inherit from this and return coding values for each
-public protocol XMLCodable {
-    static func getXMLContainerCoding(for key: CodingKey) -> XMLContainerCoding?
-}
-
-/// A marker protocols used to determine whether a value is a `Dictionary` or an `Array`
-fileprivate protocol _XMLDictionaryDecodableMarker { }
-fileprivate protocol _XMLArrayDecodableMarker { }
-
-extension Dictionary : _XMLDictionaryDecodableMarker where Value: Decodable { }
-extension Array : _XMLArrayDecodableMarker where Element: Decodable { }
 
 /// The wrapper class for decoding Codable classes from XMLNodes
 class XMLDecoder {
-    
+
     /// The strategy to use for decoding `Date` values.
     public enum DateDecodingStrategy {
         /// Defer to `Date` for decoding. This is the default strategy.
         case deferredToDate
-        
+
         /// Decode the `Date` as a UNIX timestamp from a JSON number.
         case secondsSince1970
-        
+
         /// Decode the `Date` as UNIX millisecond timestamp from a JSON number.
         case millisecondsSince1970
-        
+
         /// Decode the `Date` as an ISO-8601-formatted string (in RFC 3339 format).
         @available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *)
         case iso8601
-        
+
         /// Decode the `Date` as a string parsed by the given formatter.
         case formatted(DateFormatter)
-        
+
         /// Decode the `Date` as a custom value decoded by the given closure.
         case custom((_ decoder: Decoder) throws -> Date)
     }
-    
+
     /// The strategy to use for decoding `Data` values.
     public enum DataDecodingStrategy {
         /// Defer to `Data` for decoding.
         case deferredToData
-        
+
         /// Decode the `Data` from a Base64-encoded string.
         case base64
-        
+
         /// Decode the `Data` as a custom value decoded by the given closure.
         case custom((_ decoder: Decoder) throws -> Data)
     }
-    
+
     /// The strategy to use for non-JSON-conforming floating-point values (IEEE 754 infinity and NaN).
     public enum NonConformingFloatDecodingStrategy {
         /// Throw upon encountering non-conforming values. This is the default strategy.
         case `throw`
-        
+
         /// Decode the values from the given representation strings.
         case convertFromString(positiveInfinity: String, negativeInfinity: String, nan: String)
     }
 
     /// The strategy to use in decoding dates. Defaults to `.deferredToDate`.
     open var dateDecodingStrategy: DateDecodingStrategy = .deferredToDate
-    
+
     /// The strategy to use in decoding binary data. Defaults to `.raw`.
     open var dataDecodingStrategy: DataDecodingStrategy = .base64
-    
+
     /// The strategy to use in decoding non-conforming numbers. Defaults to `.throw`.
     open var nonConformingFloatDecodingStrategy: NonConformingFloatDecodingStrategy = .throw
-    
-    /// The strategy to use for encoding Arrays
-    open var arrayDecodingStrategy: XMLContainerCoding = .array(entry:nil)
-    
-    /// The strategy to use for encoding Dictionaries
-    open var dictionaryDecodingStrategy: XMLContainerCoding = .structure
-    
+
     /// Contextual user-provided information for use during decoding.
     open var userInfo: [CodingUserInfoKey : Any] = [:]
-    
+
     /// Options set on the top-level encoder to pass down the decoding hierarchy.
     fileprivate struct _Options {
         let dateDecodingStrategy: DateDecodingStrategy
         let dataDecodingStrategy: DataDecodingStrategy
         let nonConformingFloatDecodingStrategy: NonConformingFloatDecodingStrategy
-        let arrayDecodingStrategy: XMLContainerCoding
-        let dictionaryDecodingStrategy: XMLContainerCoding
         let userInfo: [CodingUserInfoKey : Any]
     }
-    
+
     /// The options set on the top-level decoder.
     fileprivate var options: _Options {
         return _Options(dateDecodingStrategy: dateDecodingStrategy,
                         dataDecodingStrategy: dataDecodingStrategy,
                         nonConformingFloatDecodingStrategy: nonConformingFloatDecodingStrategy,
-                        arrayDecodingStrategy: arrayDecodingStrategy,
-                        dictionaryDecodingStrategy: dictionaryDecodingStrategy,
                         userInfo: userInfo)
     }
-    
+
 
     public init() {}
 
     /// decode a Codable class from XML
     public func decode<T : Decodable>(_ type: T.Type, from xml: XML.Node) throws -> T {
-        let containerCodingMapType = type as? XMLCodable.Type
-        let decoder = _XMLDecoder(xml, options: self.options, containerCodingMapType: containerCodingMapType)
+        let decoder = _XMLDecoder(xml, options: self.options)
         let value = try T(from: decoder)
         return value
     }
@@ -165,50 +128,43 @@ extension XML.Element {
 struct _XMLDecoderStorage {
     /// the container stack
     private var containers : [XML.Node] = []
-    
+
     /// initializes self with no containers
     init() {}
-    
+
     /// return the container at the top of the storage
     var topContainer : XML.Node? { return containers.last }
-    
+
     /// push a new container onto the storage
     mutating func push(container: XML.Node) { containers.append(container) }
-    
+
     /// pop a container from the storage
     @discardableResult mutating func popContainer() -> XML.Node { return containers.removeLast() }
 }
 
 /// Internal XMLDecoder class. Does all the heavy lifting
 fileprivate class _XMLDecoder : Decoder {
-    
+
     /// The decoder's storage.
     var storage : _XMLDecoderStorage
-    
+
     /// Options set on the top-level decoder.
     let options: XMLDecoder._Options
-    
+
     /// The path to the current point in encoding.
     var codingPath: [CodingKey]
-    
+
     /// Contextual user-provided information for use during encoding.
     public var userInfo: [CodingUserInfoKey : Any] { return self.options.userInfo }
-    
+
     /// Current element we are working with
     var element : XML.Node { return storage.topContainer! }
 
-    /// the container coding map for the current element
-    var containerCodingMapType : XMLCodable.Type?
-    
-    /// the container encoding for the current element
-    var containerCoding : XMLContainerCoding = .default
-
-    public init(_ element : XML.Node, at codingPath: [CodingKey] = [], options: XMLDecoder._Options, containerCodingMapType: XMLCodable.Type?) {
+    public init(_ element : XML.Node, at codingPath: [CodingKey] = [], options: XMLDecoder._Options) {
         self.storage = _XMLDecoderStorage()
         self.storage.push(container: element)
         self.codingPath = codingPath
         self.options = options
-        self.containerCodingMapType = containerCodingMapType
     }
 
     public func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
@@ -218,74 +174,30 @@ fileprivate class _XMLDecoder : Decoder {
     struct KDC<Key: CodingKey> : KeyedDecodingContainerProtocol {
         var codingPath: [CodingKey] { return decoder.codingPath }
         var allKeys: [Key] = []
-        var allValueNodes: [String : XML.Node] = [:]
         let element : XML.Node
         let decoder : _XMLDecoder
-        let expandedDictionary : Bool // are we decoding a dictionary of the form <entry><key></key><value></value></entry><entry>...
 
         public init(_ element : XML.Node, decoder: _XMLDecoder) {
             self.element = element
             self.decoder = decoder
-            
-            // based on the containerCoding, select the key and value XML elements
-            switch decoder.containerCoding {
-            case .dictionary(var entryName, let keyName, let valueName):
-                var element = element
-                
-                // if entry name is NULL, set enclosing xml element to be the parent element and set the name to look for to be the name of the current element. Otherwise the code will look for xml elements named entryName under the current element
-                if entryName == nil {
-                    entryName = decoder.codingPath.last?.stringValue
-                    if let parent = element.parent {
-                        decoder.storage.popContainer()
-                        decoder.storage.push(container: parent)
-                        element = parent
-                    }
-                }
-                if let entryName = entryName, let entries = (element as? XML.Element)?.elements(forName: entryName) {
-                    for entry in entries {
-                        guard let keyNode = entry.child(for: keyName),
-                            let valueNode = entry.child(for: valueName),
-                            let keyString = keyNode.stringValue,
-                            let key = Key(stringValue: keyString) else {
-                            continue
-                        }
-                        allKeys.append(key)
-                        // store value elements for later
-                        allValueNodes[keyString] = valueNode
-                    }
-                }
 
-                expandedDictionary = true
-                
-            default:
-                // all elements directly under the container xml element are considered. THe key is the name of the element and the value is the text attached to the element
-                allKeys = element.children?.compactMap { (element: XML.Node)->Key? in
-                    if let name = element.name {
-                        return Key(stringValue: name)
-                    }
-                    return nil
-                    } ?? []
-                expandedDictionary = false
-            }
+            // all elements directly under the container xml element are considered. THe key is the name of the element and the value is the text attached to the element
+            allKeys = element.children?.compactMap { (element: XML.Node)->Key? in
+                if let name = element.name {
+                    return Key(stringValue: name)
+                }
+                return nil
+            } ?? []
         }
 
         /// return if decoder has a value for a key
         func contains(_ key: Key) -> Bool {
-            if expandedDictionary {
-                return allValueNodes[key.stringValue] != nil
-            } else {
-                return element.child(for: key) != nil
-            }
+            return element.child(for: key) != nil
         }
 
         /// get the XMLElment for a particular key
         func child(for key: CodingKey) throws -> XML.Node {
-            if expandedDictionary {
-                guard let child = allValueNodes[key.stringValue] else {
-                    throw DecodingError.keyNotFound(key, DecodingError.Context(codingPath: codingPath, debugDescription:"Failed to find key value in expanded dictionary. Should not get here"))
-                }
-                return child
-            } else if let child = element.child(for: key) {
+            if let child = element.child(for: key) {
                 return child
             } else if let attribute = (element as? XML.Element)?.attribute(for: key) {
                 return attribute
@@ -372,17 +284,6 @@ fileprivate class _XMLDecoder : Decoder {
             self.decoder.codingPath.append(key)
             defer { self.decoder.codingPath.removeLast() }
 
-            // set containerCoding
-            if let containerCoding = decoder.containerCodingMapType?.getXMLContainerCoding(for:key) {
-                decoder.containerCoding = containerCoding
-            } else if type is _XMLDictionaryDecodableMarker.Type {
-                decoder.containerCoding = decoder.options.dictionaryDecodingStrategy
-            } else if type is _XMLArrayDecodableMarker.Type {
-                decoder.containerCoding = decoder.options.arrayDecodingStrategy
-            } else {
-                decoder.containerCoding = .default
-            }
-
             let element = try self.child(for:key)
             return try decoder.unbox(element, as:T.self)
         }
@@ -390,9 +291,9 @@ fileprivate class _XMLDecoder : Decoder {
         func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
             self.decoder.codingPath.append(key)
             defer { self.decoder.codingPath.removeLast() }
-            
+
             let child = try self.child(for: key)
-            
+
             let container = KDC<NestedKey>(child, decoder:self.decoder)
             return KeyedDecodingContainer(container)
         }
@@ -400,18 +301,20 @@ fileprivate class _XMLDecoder : Decoder {
         func nestedUnkeyedContainer(forKey key: Key) throws -> UnkeyedDecodingContainer {
             self.decoder.codingPath.append(key)
             defer { self.decoder.codingPath.removeLast() }
-            
-            return UKDC(element, decoder: self.decoder)
+
+            let child = try self.child(for: key)
+
+            return UKDC(child, decoder: self.decoder)
         }
 
         private func _superDecoder(forKey key: __owned CodingKey) throws -> Decoder {
             self.decoder.codingPath.append(key)
             defer { self.decoder.codingPath.removeLast() }
-            
+
             let child = try self.child(for: key)
-            return _XMLDecoder(child, at: self.decoder.codingPath, options: self.decoder.options, containerCodingMapType: decoder.containerCodingMapType)
+            return _XMLDecoder(child, at: self.decoder.codingPath, options: self.decoder.options)
         }
-        
+
        func superDecoder() throws -> Decoder {
         return try _superDecoder(forKey: _XMLKey.super)
         }
@@ -433,43 +336,7 @@ fileprivate class _XMLDecoder : Decoder {
         let decoder : _XMLDecoder
 
         init(_ element: XML.Node, decoder: _XMLDecoder) {
-            var elements : [XML.Node]?
-            
-            // build array of elements based on the container coding
-            switch decoder.containerCoding {
-            case .array(let member):
-                // array is built from child xmlelements with name member
-                if let member = member {
-                    elements = (element as? XML.Element)?.elements(forName: member) ?? []
-                }
-                
-            case .dictionary(let entry, let key, let value):
-                // dictionaries with non string keys (eg enums) are processed with an UnkeyedDecodingContainer. With elements alternating between key and value
-                var elements2 : [XML.Node] = []
-                if let entry = entry {
-                    for entryChild in (element as? XML.Element)?.elements(forName: entry) ?? [] {
-                        let keyNode = entryChild.child(for: key)
-                        let entryNode = entryChild.child(for: value)
-                        if keyNode != nil && entryNode != nil {
-                            elements2.append(keyNode!)
-                            elements2.append(entryNode!)
-                        }
-                    }
-                } else {
-                    for child in element.children ?? [] {
-                        if child.name == key || child.name == value {
-                            elements2.append(child)
-                        }
-                    }
-                }
-                elements = elements2
-
-            default:
-                break
-            }
-            if let elements = elements {
-                self.elements = elements
-            } else if let parent = element.parent {
+            if let parent = element.parent {
                 decoder.storage.popContainer()
                 decoder.storage.push(container: parent)
                 self.elements = (parent as? XML.Element)?.elements(forName: decoder.codingPath.last!.stringValue) ?? []
@@ -577,15 +444,6 @@ fileprivate class _XMLDecoder : Decoder {
         }
 
         mutating func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
-            // set containerCoding
-            if type is _XMLDictionaryDecodableMarker.Type {
-                decoder.containerCoding = decoder.options.dictionaryDecodingStrategy
-            } else if type is _XMLArrayDecodableMarker.Type {
-                decoder.containerCoding = decoder.options.arrayDecodingStrategy
-            } else {
-                decoder.containerCoding = .default
-            }
-
             let value = try decoder.unbox(elements[currentIndex], as:T.self)
             currentIndex += 1
             return value
@@ -594,10 +452,10 @@ fileprivate class _XMLDecoder : Decoder {
         mutating func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
             self.decoder.codingPath.append(_XMLKey(index: currentIndex))
             defer { self.decoder.codingPath.removeLast() }
-            
+
             let child = elements[currentIndex]
             currentIndex += 1
-            
+
             let container = KDC<NestedKey>(child, decoder:self.decoder)
             return KeyedDecodingContainer(container)
         }
@@ -605,7 +463,7 @@ fileprivate class _XMLDecoder : Decoder {
         mutating func nestedUnkeyedContainer() throws -> UnkeyedDecodingContainer {
             self.decoder.codingPath.append(_XMLKey(index: currentIndex))
             defer { self.decoder.codingPath.removeLast() }
-            
+
             currentIndex += 1
 
             return UKDC(elements[currentIndex], decoder: self.decoder)
@@ -614,11 +472,11 @@ fileprivate class _XMLDecoder : Decoder {
         mutating func superDecoder() throws -> Decoder {
             self.decoder.codingPath.append(_XMLKey(index: currentIndex))
             defer { self.decoder.codingPath.removeLast() }
-            
+
             let child = elements[currentIndex]
             currentIndex += 1
-            
-            return _XMLDecoder(child, at: self.decoder.codingPath, options: self.decoder.options, containerCodingMapType: decoder.containerCodingMapType)
+
+            return _XMLDecoder(child, at: self.decoder.codingPath, options: self.decoder.options)
         }
     }
 
@@ -697,18 +555,6 @@ fileprivate class _XMLDecoder : Decoder {
         }
 
         func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
-            // store containerCoding to reset at the exit of thie function
-            let prevContainerCoding = decoder.containerCoding
-            defer { decoder.containerCoding = prevContainerCoding }
-            // set containerCoding
-            if type is _XMLDictionaryDecodableMarker.Type {
-                decoder.containerCoding = decoder.options.dictionaryDecodingStrategy
-            } else if type is _XMLArrayDecodableMarker.Type {
-                decoder.containerCoding = decoder.options.arrayDecodingStrategy
-            } else {
-                decoder.containerCoding = .default
-            }
-
             return try decoder.unbox(element, as: T.self)
         }
 
@@ -778,12 +624,12 @@ fileprivate class _XMLDecoder : Decoder {
         guard let value = element.stringValue, let unboxValue = Double(value) else { throw DecodingError._typeMismatch(at: codingPath, expectation: Double.self, reality: element.stringValue ?? "nil") }
         return unboxValue
     }
-    
+
     func unbox(_ element : XML.Node, as type: Float.Type) throws -> Float {
         guard let value = element.stringValue, let unboxValue = Float(value) else { throw DecodingError._typeMismatch(at: codingPath, expectation: Float.self, reality: element.stringValue ?? "nil") }
         return unboxValue
     }
-    
+
     /// get Date from XML.Node
     func unbox(_ element : XML.Node, as type: Date.Type) throws -> Date {
         switch self.options.dateDecodingStrategy {
@@ -791,42 +637,42 @@ fileprivate class _XMLDecoder : Decoder {
             self.storage.push(container: element)
             defer { self.storage.popContainer() }
             return try Date(from: self)
-            
+
         case .secondsSince1970:
             let double = try self.unbox(element, as: Double.self)
             return Date(timeIntervalSince1970: double)
-            
+
         case .millisecondsSince1970:
             let double = try self.unbox(element, as: Double.self)
             return Date(timeIntervalSince1970: double / 1000.0)
-            
+
         case .iso8601:
             if #available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *) {
                 let string = try self.unbox(element, as: String.self)
                 guard let date = _iso8601Formatter.date(from: string) else {
                     throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Expected date string to be ISO8601-formatted."))
                 }
-                
+
                 return date
             } else {
                 fatalError("ISO8601DateFormatter is unavailable on this platform.")
             }
-            
+
         case .formatted(let formatter):
             let string = try self.unbox(element, as: String.self)
             guard let date = formatter.date(from: string) else {
                 throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Date string does not match format expected by formatter."))
             }
-            
+
             return date
-            
+
         case .custom(let closure):
             self.storage.push(container: element)
             defer { self.storage.popContainer() }
             return try closure(self)
         }
     }
-    
+
     /// get Data from XML.Node
     fileprivate func unbox(_ element : XML.Node, as type: Data.Type) throws -> Data {
         switch self.options.dataDecodingStrategy {
@@ -834,25 +680,25 @@ fileprivate class _XMLDecoder : Decoder {
             self.storage.push(container: element)
             defer { self.storage.popContainer() }
             return try Data(from: self)
-            
+
         case .base64:
             guard let string = element.stringValue else {
                 throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: element.stringValue ?? "nil")
             }
-            
+
             guard let data = Data(base64Encoded: string) else {
                 throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Encountered Data is not valid Base64."))
             }
-            
+
             return data
-            
+
         case .custom(let closure):
             self.storage.push(container: element)
             defer { self.storage.popContainer() }
             return try closure(self)
         }
     }
-    
+
     /// get URL from XML.Node
     fileprivate func unbox(_ element : XML.Node, as type: URL.Type) throws -> URL {
         let urlString = try self.unbox(element, as: String.self)
@@ -861,18 +707,12 @@ fileprivate class _XMLDecoder : Decoder {
         }
         return url
     }
-    
+
     func unbox<T>(_ element : XML.Node, as type: T.Type) throws -> T where T : Decodable {
         return try unbox_(element, as: T.self) as! T
     }
-    
+
     func unbox_(_ element : XML.Node, as type: Decodable.Type) throws -> Any {
-        // store previous container coding map to revert on function exit
-        let prevContainerCodingOwner = self.containerCodingMapType
-        defer { self.containerCodingMapType = prevContainerCodingOwner }
-        // set the current container coding map
-        containerCodingMapType = type as? XMLCodable.Type
-        
         if type == Date.self || type == NSDate.self {
             return try self.unbox(element, as: Date.self)
         } else if type == Data.self || type == NSData.self {
@@ -895,27 +735,27 @@ fileprivate class _XMLDecoder : Decoder {
 fileprivate struct _XMLKey : CodingKey {
     public var stringValue: String
     public var intValue: Int?
-    
+
     public init?(stringValue: String) {
         self.stringValue = stringValue
         self.intValue = nil
     }
-    
+
     public init?(intValue: Int) {
         self.stringValue = "\(intValue)"
         self.intValue = intValue
     }
-    
+
     public init(stringValue: String, intValue: Int?) {
         self.stringValue = stringValue
         self.intValue = intValue
     }
-    
+
     fileprivate init(index: Int) {
         self.stringValue = "Index \(index)"
         self.intValue = index
     }
-    
+
     fileprivate static let `super` = _XMLKey(stringValue: "super")!
 }
 
@@ -951,9 +791,8 @@ extension EncodingError {
         } else {
             valueDescription = "\(T.self).nan"
         }
-        
+
         let debugDescription = "Unable to encode \(valueDescription) directly. Use DictionaryEncoder.NonConformingFloatEncodingStrategy.convertToString to specify how the value should be encoded."
         return .invalidValue(value, EncodingError.Context(codingPath: codingPath, debugDescription: debugDescription))
     }
 }
-

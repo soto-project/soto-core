@@ -64,21 +64,6 @@ extension AWSShape {
     }
 }
 
-/// extension to AWSShape that returns XML container encoding for members of it
-extension AWSShape {
-    /// return member for CodingKey
-    public static func getEncoding(forKey: CodingKey) -> AWSMemberEncoding? {
-        return _encoding.first {
-            if let location = $0.location, case .body(let name) = location {
-                return name == forKey.stringValue
-            } else {
-                return $0.label == forKey.stringValue
-            }
-        }
-    }
-
-}
-
 /// AWSShape that can be encoded
 public protocol AWSEncodableShape: AWSShape & Encodable {
     /// The XML namespace for the object

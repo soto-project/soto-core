@@ -41,7 +41,7 @@ class TimeStampTests: XCTestCase {
     func testDecodeISOFromXML() {
         do {
             struct A: Codable {
-                let date: TimeStamp
+                @Coding<ISO8601TimeStampCoder> var date: TimeStamp
             }
             let xml = "<A><date>2017-01-01T00:01:00.000Z</date></A>"
             let xmlElement = try XML.Element(xmlString: xml)
@@ -81,15 +81,28 @@ class TimeStampTests: XCTestCase {
         }
     }
     
-    func testEncodeToJSON() {
+    func testEncodeISO8601ToXML() {
         do {
             struct A: Codable {
-                let date: TimeStamp
+                @Coding<ISO8601TimeStampCoder> var date: TimeStamp
             }
             let a = A(date: TimeStamp("2019-05-01T00:00:00.001Z")!)
-            let data = try JSONEncoder().encode(a)
-            let jsonString = String(data: data, encoding: .utf8)
-            XCTAssertEqual(jsonString, "{\"date\":\"2019-05-01T00:00:00.001Z\"}")
+            let xml = try XMLEncoder().encode(a)
+            XCTAssertEqual(xml.xmlString, "<A><date>2019-05-01T00:00:00.001Z</date></A>")
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+
+    func testEncodeHTTPHeaderToJSON() {
+        do {
+            struct A: AWSEncodableShape {
+                @Coding<HTTPHeaderTimeStampCoder> var date: TimeStamp
+            }
+            let a = A(date: TimeStamp("2019-05-01T00:00:00.001Z")!)
+            let client = createAWSClient()
+            let request = try client.createAWSRequest(operation: "test", path: "/", httpMethod: "GET", input: a)
+            XCTAssertEqual(request.body.asString(), "{\"date\":\"Wed, 1 May 2019 00:00:00 GMT\"}")
         } catch {
             XCTFail("\(error)")
         }
@@ -115,7 +128,8 @@ class TimeStampTests: XCTestCase {
             ("testDecodeISOFromXML", testDecodeISOFromXML),
             ("testDecodeHttpFormattedTimestamp", testDecodeHttpFormattedTimestamp),
             ("testDecodeUnixEpochTimestamp", testDecodeUnixEpochTimestamp),
-            ("testEncodeToJSON", testEncodeToJSON),
+            ("testEncodeISO8601ToXML", testEncodeISO8601ToXML),
+            ("testEncodeHTTPHeaderToJSON", testEncodeHTTPHeaderToJSON),
             ("testEncodeUnixEpochToJSON", testEncodeUnixEpochToJSON)
         ]
     }

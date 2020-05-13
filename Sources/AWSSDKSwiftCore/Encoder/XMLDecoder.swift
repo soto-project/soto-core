@@ -91,19 +91,19 @@ extension XML.Element {
 /// Storage for the XMLDecoder. Stores a stack of XMLNodes
 struct _XMLDecoderStorage {
     /// the container stack
-    private var containers : [XML.Node] = []
+    private var containers : [XML.Node?] = []
 
     /// initializes self with no containers
     init() {}
 
     /// return the container at the top of the storage
-    var topContainer : XML.Node? { return containers.last }
+    var topContainer : XML.Node? { return containers.last! }
 
     /// push a new container onto the storage
-    mutating func push(container: XML.Node) { containers.append(container) }
+    mutating func push(container: XML.Node?) { containers.append(container) }
 
     /// pop a container from the storage
-    @discardableResult mutating func popContainer() -> XML.Node { return containers.removeLast() }
+    @discardableResult mutating func popContainer() -> XML.Node? { return containers.removeLast() }
 }
 
 /// Internal XMLDecoder class. Does all the heavy lifting
@@ -121,9 +121,6 @@ fileprivate class _XMLDecoder : Decoder {
     /// Contextual user-provided information for use during encoding.
     public var userInfo: [CodingUserInfoKey : Any] { return self.options.userInfo }
 
-    /// Current element we are working with
-    var element : XML.Node { return storage.topContainer! }
-
     public init(_ element : XML.Node, at codingPath: [CodingKey] = [], options: XMLDecoder._Options) {
         self.storage = _XMLDecoderStorage()
         self.storage.push(container: element)
@@ -132,6 +129,9 @@ fileprivate class _XMLDecoder : Decoder {
     }
 
     public func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
+        guard let element = storage.topContainer else {
+            throw DecodingError.keyNotFound(codingPath.last!, DecodingError.Context(codingPath: codingPath, debugDescription: "Key not found"))
+        }
         return KeyedDecodingContainer(KDC(element, decoder: self))
     }
 
@@ -167,6 +167,16 @@ fileprivate class _XMLDecoder : Decoder {
                 return attribute
             }
             throw DecodingError.keyNotFound(key, DecodingError.Context(codingPath: codingPath, debugDescription: "Key not found"))
+        }
+
+        /// get the XMLElment for a particular key
+        func optionalChild(for key: CodingKey) -> XML.Node? {
+            if let child = element.child(for: key) {
+                return child
+            } else if let attribute = (element as? XML.Element)?.attribute(for: key) {
+                return attribute
+            }
+            return nil
         }
 
         func decodeNil(forKey key: Key) throws -> Bool {
@@ -248,7 +258,7 @@ fileprivate class _XMLDecoder : Decoder {
             self.decoder.codingPath.append(key)
             defer { self.decoder.codingPath.removeLast() }
 
-            let element = try self.child(for:key)
+            let element = self.optionalChild(for:key)
             return try decoder.unbox(element, as:T.self)
         }
 
@@ -266,9 +276,7 @@ fileprivate class _XMLDecoder : Decoder {
             self.decoder.codingPath.append(key)
             defer { self.decoder.codingPath.removeLast() }
 
-            let child = try self.child(for: key)
-
-            return UKDC(child, decoder: self.decoder)
+            return UKDC(element, decoder: self.decoder)
         }
 
         private func _superDecoder(forKey key: __owned CodingKey) throws -> Decoder {
@@ -290,6 +298,13 @@ fileprivate class _XMLDecoder : Decoder {
     }
 
     public func unkeyedContainer() throws -> UnkeyedDecodingContainer {
+        let top = storage.popContainer()
+        defer {
+            storage.push(container: top)
+        }
+        guard let element = storage.topContainer else {
+            throw DecodingError.keyNotFound(codingPath.last!, DecodingError.Context(codingPath: codingPath, debugDescription: "Key not found"))
+        }
         return UKDC(element, decoder: self)
     }
 
@@ -300,14 +315,7 @@ fileprivate class _XMLDecoder : Decoder {
         let decoder : _XMLDecoder
 
         init(_ element: XML.Node, decoder: _XMLDecoder) {
-            if let parent = element.parent {
-                decoder.storage.popContainer()
-                decoder.storage.push(container: parent)
-                self.elements = (parent as? XML.Element)?.elements(forName: decoder.codingPath.last!.stringValue) ?? []
-            } else {
-                self.elements = []
-            }
-
+            self.elements = (element as? XML.Element)?.elements(forName: decoder.codingPath.last!.stringValue) ?? []
             self.decoder = decoder
         }
 
@@ -445,6 +453,9 @@ fileprivate class _XMLDecoder : Decoder {
     }
 
     public func singleValueContainer() throws -> SingleValueDecodingContainer {
+        guard let element = storage.topContainer else {
+            throw DecodingError.keyNotFound(codingPath.last!, DecodingError.Context(codingPath: codingPath, debugDescription: "Key not found"))
+        }
         return SVDC(element, decoder:self)
     }
 
@@ -595,7 +606,10 @@ fileprivate class _XMLDecoder : Decoder {
     }
 
     /// get Data from XML.Node
-    fileprivate func unbox(_ element : XML.Node, as type: Data.Type) throws -> Data {
+    fileprivate func unbox(_ element : XML.Node?, as type: Data.Type) throws -> Data {
+        guard let element = element else {
+            throw DecodingError.keyNotFound(codingPath.last!, DecodingError.Context(codingPath: codingPath, debugDescription: "Key not found"))
+        }
         switch self.options.dataDecodingStrategy {
         case .base64:
             guard let string = element.stringValue else {
@@ -615,11 +629,11 @@ fileprivate class _XMLDecoder : Decoder {
         }
     }
 
-    func unbox<T>(_ element : XML.Node, as type: T.Type) throws -> T where T : Decodable {
+    func unbox<T>(_ element : XML.Node?, as type: T.Type) throws -> T where T : Decodable {
         return try unbox_(element, as: T.self) as! T
     }
 
-    func unbox_(_ element : XML.Node, as type: Decodable.Type) throws -> Any {
+    func unbox_(_ element : XML.Node?, as type: Decodable.Type) throws -> Any {
         if type == Data.self {
             return try self.unbox(element, as: Data.self)
         } else {

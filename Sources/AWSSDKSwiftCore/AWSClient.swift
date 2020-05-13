@@ -13,6 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+import Dispatch
+import Metrics
 import NIO
 import NIOHTTP1
 import NIOTransportServices
@@ -20,7 +22,6 @@ import class  Foundation.ProcessInfo
 import class  Foundation.JSONSerialization
 import class  Foundation.JSONDecoder
 import struct Foundation.Data
-import struct Foundation.Date
 import struct Foundation.URL
 import struct Foundation.URLComponents
 import struct Foundation.URLQueryItem
@@ -251,7 +252,7 @@ extension AWSClient {
     ///     Empty Future that completes when response is received
     public func send<Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, input: Input, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Void> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
-        return credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
+        let future: EventLoopFuture<Void> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
             let awsRequest = try self.createAWSRequest(
                         operation: operationName,
@@ -264,6 +265,7 @@ extension AWSClient {
         }.map { _ in
             return
         }
+        return recordMetrics(future, service: serviceConfig.service, operation: operationName)
     }
 
     /// send an empty request and return a future with an empty response
@@ -275,7 +277,7 @@ extension AWSClient {
     ///     Empty Future that completes when response is received
     public func send(operation operationName: String, path: String, httpMethod: String, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Void> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
-        return credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
+        let future: EventLoopFuture<Void> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
             let awsRequest = try self.createAWSRequest(
                         operation: operationName,
@@ -287,6 +289,7 @@ extension AWSClient {
         }.map { _ in
             return
         }
+        return recordMetrics(future, service: serviceConfig.service, operation: operationName)
     }
 
     /// send an empty request and return a future with the output object generated from the response
@@ -298,7 +301,7 @@ extension AWSClient {
     ///     Future containing output object that completes when response is received
     public func send<Output: AWSDecodableShape>(operation operationName: String, path: String, httpMethod: String, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
-        return credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
+        let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
             let awsRequest = try self.createAWSRequest(
                         operation: operationName,
@@ -310,6 +313,7 @@ extension AWSClient {
         }.flatMapThrowing { response in
             return try self.validate(operation: operationName, response: response)
         }
+        return recordMetrics(future, service: serviceConfig.service, operation: operationName)
     }
 
     /// send a request with an input object and return a future with the output object generated from the response
@@ -322,7 +326,7 @@ extension AWSClient {
     ///     Future containing output object that completes when response is received
     public func send<Output: AWSDecodableShape, Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, input: Input, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
-        return credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
+        let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
             let awsRequest = try self.createAWSRequest(
                         operation: operationName,
@@ -335,6 +339,7 @@ extension AWSClient {
         }.flatMapThrowing { response in
             return try self.validate(operation: operationName, response: response)
         }
+        return recordMetrics(future, service: serviceConfig.service, operation: operationName)
     }
 
     /// generate a signed URL
@@ -784,6 +789,27 @@ extension AWSClient.ClientError: CustomStringConvertible {
             The request url \(urlString) is invalid format.
             This error is internal. So please make a issue on https://github.com/swift-aws/aws-sdk-swift/issues to solve it.
             """
+        }
+    }
+}
+
+extension AWSClient {
+    func recordMetrics<Output>(_ future: EventLoopFuture<Output>, service: String, operation: String) -> EventLoopFuture<Output> {
+        let dimensions: [(String, String)] = [("service", service), ("operation", operation)]
+        let startTime = DispatchTime.now().uptimeNanoseconds
+
+        Counter(label: "aws_requests_total", dimensions: dimensions).increment()
+        
+        return future.map { response in
+            Metrics.Timer(
+                label: "aws_request_duration",
+                dimensions: dimensions,
+                preferredDisplayUnit: .seconds
+            ).recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
+            return response
+        }.flatMapErrorThrowing { error in
+            Counter(label: "aws_request_errors", dimensions: dimensions).increment()
+            throw error
         }
     }
 }

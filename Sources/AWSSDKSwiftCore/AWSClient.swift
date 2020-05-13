@@ -792,7 +792,7 @@ extension AWSClient {
         let dimensions: [(String, String)] = [("service", service), ("operation", operation)]
         let startTime = DispatchTime.now().uptimeNanoseconds
 
-        Counter(label: "aws_number_of_requests", dimensions: dimensions).increment()
+        Counter(label: "aws_requests_total", dimensions: dimensions).increment()
         
         return future.map { response in
             Metrics.Timer(
@@ -802,7 +802,7 @@ extension AWSClient {
             ).recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
             return response
         }.flatMapErrorThrowing { error in
-            Counter(label: "aws_number_of_errors", dimensions: dimensions).increment()
+            Counter(label: "aws_request_errors", dimensions: dimensions).increment()
             throw error
         }
     }

@@ -35,14 +35,6 @@ public struct AWSMemberEncoding {
     public enum ShapeEncoding {
         /// default case, flat arrays and serializing dictionaries like all other codable structures
         case `default`
-        /// encode array as multiple entries all with same name
-        case flatList
-        /// encode array as multiple entries all with same name, enclosed by element `member`
-        case list(member: String)
-        /// encode dictionary with multiple pairs of `key` and `value` entries
-        case flatMap(key: String, value: String)
-        /// encode dictionary with multiple pairs of `key` and `value` entries, enclosed by element `entry`
-        case map(entry: String, key: String, value: String)
         /// shape is stored as data blob in body
         case blob
     }

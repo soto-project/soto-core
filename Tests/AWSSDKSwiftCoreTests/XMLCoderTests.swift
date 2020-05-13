@@ -74,19 +74,11 @@ class XMLCoderTests: XCTestCase {
     }
 
     struct Arrays : AWSDecodableShape & AWSEncodableShape {
-       public static var _encoding: [AWSMemberEncoding] = [
-           AWSMemberEncoding(label: "ArrayOfNatives", encoding: .list(member: "member"))
-       ]
-
        let arrayOfNatives : [Int]
        let arrayOfShapes : [Numbers]
     }
 
     struct Dictionaries : AWSDecodableShape & AWSEncodableShape {
-       public static var _encoding: [AWSMemberEncoding] = [
-           AWSMemberEncoding(label: "natives", encoding: .map(entry: "entry", key: "key", value: "value")),
-           AWSMemberEncoding(label: "shapes", encoding: .flatMap(key: "key", value: "value"))
-       ]
        let dictionaryOfNatives : [String:Int]
        let dictionaryOfShapes : [String:StringShape]
 

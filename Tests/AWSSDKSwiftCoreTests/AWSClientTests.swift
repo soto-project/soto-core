@@ -1024,7 +1024,6 @@ class AWSClientTests: XCTestCase {
 
     func testEC2ClientRequest() {
         struct Input: AWSEncodableShape {
-            static let _encoding = [AWSMemberEncoding(label: "array", location: .body(locationName: "Array"), encoding: .list(member:"item"))]
             let array: [String]
         }
         do {

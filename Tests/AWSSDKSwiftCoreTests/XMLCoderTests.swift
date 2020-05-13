@@ -234,6 +234,14 @@ class XMLCoderTests: XCTestCase {
         testDecodeEncode(type: Test.self, xml: xml)
     }
 
+    func testEmptyArrayDecodeEncode() {
+        struct Test : Codable {
+            let a : [Int]
+        }
+        let xml = "<Test></Test>"
+        testDecodeEncode(type: Test.self, xml: xml)
+    }
+
     func testArrayOfStructuresDecodeEncode() {
         struct Test2 : Codable {
             let b : String
@@ -250,14 +258,6 @@ class XMLCoderTests: XCTestCase {
             let a : [String:Int]
         }
         let xml = "<Test><a><first>1</first></a></Test>"
-        testDecodeEncode(type: Test.self, xml: xml)
-    }
-
-    func testDateDecodeEncode() {
-        struct Test : Codable {
-            let date : Date
-        }
-        let xml = "<Test><date>24876876234.5</date></Test>"
         testDecodeEncode(type: Test.self, xml: xml)
     }
 
@@ -487,7 +487,6 @@ class XMLCoderTests: XCTestCase {
             ("testArrayDecodeEncode", testArrayDecodeEncode),
             ("testArrayOfStructuresDecodeEncode", testArrayOfStructuresDecodeEncode),
             ("testDictionaryDecodeEncode", testDictionaryDecodeEncode),
-            ("testDateDecodeEncode", testDateDecodeEncode),
             ("testDataDecodeEncode", testDataDecodeEncode),
             ("testSerializeToXML", testSerializeToXML),
             ("testDecodeExpandedContainers", testDecodeExpandedContainers),

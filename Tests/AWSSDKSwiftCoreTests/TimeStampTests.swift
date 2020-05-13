@@ -23,6 +23,9 @@ class TimeStampTests: XCTestCase {
 
     func testDecodeISOFromJSON() {
         do {
+            struct A: Codable {
+                let date: TimeStamp
+            }
             let json = "{\"date\": \"2017-01-01T00:00:00.000Z\"}"
             if let json_data = json.data(using: .utf8) {
                 let a = try JSONDecoder().decode(A.self, from: json_data)
@@ -37,6 +40,9 @@ class TimeStampTests: XCTestCase {
     
     func testDecodeISOFromXML() {
         do {
+            struct A: Codable {
+                @Coding<ISO8601TimeStampCoder> var date: TimeStamp
+            }
             let xml = "<A><date>2017-01-01T00:01:00.000Z</date></A>"
             let xmlElement = try XML.Element(xmlString: xml)
             let a = try XMLDecoder().decode(A.self, from: xmlElement)
@@ -48,6 +54,9 @@ class TimeStampTests: XCTestCase {
     
     func testDecodeHttpFormattedTimestamp() {
         do {
+            struct A: Codable {
+                let date: TimeStamp
+            }
             let xml = "<A><date>Tue, 15 Nov 1994 12:45:26 GMT</date></A>"
             let xmlElement = try XML.Element(xmlString: xml)
             let a = try XMLDecoder().decode(A.self, from: xmlElement)
@@ -60,6 +69,9 @@ class TimeStampTests: XCTestCase {
     
     func testDecodeUnixEpochTimestamp() {
         do {
+            struct A: Codable {
+                let date: TimeStamp
+            }
             let xml = "<A><date>1221382800</date></A>"
             let xmlElement = try XML.Element(xmlString: xml)
             let a = try XMLDecoder().decode(A.self, from: xmlElement)
@@ -69,12 +81,42 @@ class TimeStampTests: XCTestCase {
         }
     }
     
-    func testEncodeToJSON() {
+    func testEncodeISO8601ToXML() {
         do {
-            let a = A(date: TimeStamp("2019-05-01T00:00:00.001Z"))
+            struct A: Codable {
+                @Coding<ISO8601TimeStampCoder> var date: TimeStamp
+            }
+            let a = A(date: TimeStamp("2019-05-01T00:00:00.001Z")!)
+            let xml = try XMLEncoder().encode(a)
+            XCTAssertEqual(xml.xmlString, "<A><date>2019-05-01T00:00:00.001Z</date></A>")
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+
+    func testEncodeHTTPHeaderToJSON() {
+        do {
+            struct A: AWSEncodableShape {
+                @Coding<HTTPHeaderTimeStampCoder> var date: TimeStamp
+            }
+            let a = A(date: TimeStamp("2019-05-01T00:00:00.001Z")!)
+            let client = createAWSClient()
+            let request = try client.createAWSRequest(operation: "test", path: "/", httpMethod: "GET", input: a)
+            XCTAssertEqual(request.body.asString(), "{\"date\":\"Wed, 1 May 2019 00:00:00 GMT\"}")
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+
+    func testEncodeUnixEpochToJSON() {
+        do {
+            struct A: Codable {
+                @Coding<UnixEpochTimeStampCoder> var date: TimeStamp
+            }
+            let a = A(date: TimeStamp(23983978378))
             let data = try JSONEncoder().encode(a)
             let jsonString = String(data: data, encoding: .utf8)
-            XCTAssertEqual(jsonString, "{\"date\":\"2019-05-01T00:00:00.001Z\"}")
+            XCTAssertEqual(jsonString, "{\"date\":23983978378}")
         } catch {
             XCTFail("\(error)")
         }
@@ -86,7 +128,9 @@ class TimeStampTests: XCTestCase {
             ("testDecodeISOFromXML", testDecodeISOFromXML),
             ("testDecodeHttpFormattedTimestamp", testDecodeHttpFormattedTimestamp),
             ("testDecodeUnixEpochTimestamp", testDecodeUnixEpochTimestamp),
-            ("testEncodeToJSON", testEncodeToJSON),
+            ("testEncodeISO8601ToXML", testEncodeISO8601ToXML),
+            ("testEncodeHTTPHeaderToJSON", testEncodeHTTPHeaderToJSON),
+            ("testEncodeUnixEpochToJSON", testEncodeUnixEpochToJSON)
         ]
     }
 }

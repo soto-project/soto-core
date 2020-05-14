@@ -19,19 +19,19 @@ services:
     volumes:
       - ..:/working
     working_dir: /working
-    command: /bin/bash -xcl "swift test"
+    command: /bin/bash -xcl "swift test --enable-test-discovery --parallel"
 
   test-thread:
     <<: *common
-    command: /bin/bash -xcl "swift test --sanitize=thread"
+    command: /bin/bash -xcl "swift test --enable-test-discovery --sanitize=thread"
 
   test-address:
     <<: *common
-    command: /bin/bash -xcl "swift test --sanitize=address -Xswiftc -g"
+    command: /bin/bash -xcl "swift test --enable-test-discovery --sanitize=address -Xswiftc -g"
 
   test-release:
     <<: *common
-    command: /bin/bash -xcl "swift test --sanitize=address -c release -Xswiftc -enable-testing"
+    command: /bin/bash -xcl "swift test --enable-test-discovery --sanitize=address -c release -Xswiftc -enable-testing"
 
   clean:
     <<: *common

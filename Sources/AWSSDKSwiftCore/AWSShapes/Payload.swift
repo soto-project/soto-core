@@ -19,7 +19,7 @@ import NIOFoundationCompat
 public enum AWSPayload {
 
     case byteBuffer(ByteBuffer)
-    case stream(size: Int, closure: (EventLoop)->EventLoopFuture<ByteBuffer>)
+    case stream(size: Int? = nil, stream: (EventLoop)->EventLoopFuture<ByteBuffer>)
 
     /// Construct a payload from a Data
     public static func data(_ data: Data) -> Self {
@@ -36,24 +36,31 @@ public enum AWSPayload {
     }
 
     /// Construct a stream payload from a NIOFileHandle
-    public static func fileHandle(_ fileHandle: NIOFileHandle, size: Int, fileIO: NonBlockingFileIO, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) -> Self {
+    public static func fileHandle(_ fileHandle: NIOFileHandle, size: Int? = nil, fileIO: NonBlockingFileIO, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) -> Self {
         let blockSize = 64*1024
         var leftToRead = size
         func stream(_ eventLoop: EventLoop) -> EventLoopFuture<ByteBuffer> {
-            let blockSize = min(leftToRead, blockSize)
-            leftToRead -= blockSize
-            let futureByteBuffer: EventLoopFuture<ByteBuffer> = fileIO.read(fileHandle: fileHandle, byteCount: blockSize, allocator: byteBufferAllocator, eventLoop: eventLoop)
-                .map { byteBuffer in
-                    precondition(byteBuffer.readableBytes == blockSize, "File did not have enough data")
-                    return byteBuffer
+            // calculate how much data is left to read, if a file size was indicated
+            var blockSize = blockSize
+            if let leftToRead2 = leftToRead {
+                blockSize = min(blockSize, leftToRead2)
+                leftToRead = leftToRead2 - blockSize
+            }
+            let futureByteBuffer = fileIO.read(fileHandle: fileHandle, byteCount: blockSize, allocator: byteBufferAllocator, eventLoop: eventLoop)
+            
+            if leftToRead != nil {
+                return futureByteBuffer.map { byteBuffer in
+                        precondition(byteBuffer.readableBytes == blockSize, "File did not have enough data")
+                        return byteBuffer
+                }
             }
             return futureByteBuffer
         }
         
-        return .stream(size: size, closure: stream)
+        return .stream(size: size, stream: stream)
     }
 
-    var size: Int {
+    var size: Int? {
         switch self {
         case .byteBuffer(let byteBuffer):
             return byteBuffer.readableBytes

@@ -22,24 +22,34 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
     /// write stream to StreamWriter
     private func writeToStreamWriter(
         writer: HTTPClient.Body.StreamWriter,
-        size: Int,
+        size: Int?,
         on eventLoop: EventLoop,
-        closure: @escaping (EventLoop)->EventLoopFuture<ByteBuffer>) -> EventLoopFuture<Void> {
+        stream: @escaping (EventLoop)->EventLoopFuture<ByteBuffer>) -> EventLoopFuture<Void> {
         let promise = eventLoop.makePromise(of: Void.self)
 
-        func _writeToStreamWriter(_ amountLeft: Int) {
+        func _writeToStreamWriter(_ amountLeft: Int?) {
             // get byte buffer from closure, write to StreamWriter, if there are still bytes to write then call
             // _writeToStreamWriter again.
-            _ = closure(eventLoop)
-                .map { byteBuffer in
-                    let newAmountLeft = amountLeft - byteBuffer.readableBytes
+            _ = stream(eventLoop)
+                .map { (byteBuffer)->() in
+                    // if no amount was set and the byte buffer has no readable bytes then this is assumed to mean
+                    // there will be no more data
+                    if amountLeft == nil && byteBuffer.readableBytes == 0 {
+                        promise.succeed(())
+                        return
+                    }
+                    let newAmountLeft = amountLeft.map { $0 - byteBuffer.readableBytes }
                     _ = writer.write(.byteBuffer(byteBuffer)).flatMap { ()->EventLoopFuture<Void> in
-                        if newAmountLeft == 0 {
-                            promise.succeed(())
-                        } else if newAmountLeft < 0 {
-                            promise.fail(AWSClient.ClientError.tooMuchData)
+                        if let newAmountLeft = newAmountLeft {
+                            if newAmountLeft == 0 {
+                                promise.succeed(())
+                            } else if newAmountLeft < 0 {
+                                promise.fail(AWSClient.ClientError.tooMuchData)
+                            } else {
+                                _writeToStreamWriter(newAmountLeft)
+                            }
                         } else {
-                            _writeToStreamWriter(newAmountLeft)
+                            _writeToStreamWriter(nil)
                         }
                         return promise.futureResult
                     }.cascadeFailure(to: promise)
@@ -54,23 +64,25 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
             precondition(self.eventLoopGroup.makeIterator().contains { $0 === eventLoop }, "EventLoop provided to AWSClient must be part of the HTTPClient's EventLoopGroup.")
         }        
         let requestBody: AsyncHTTPClient.HTTPClient.Body?
-        if let body = request.body {
-            switch body {
-            case .byteBuffer(let byteBuffer):
-                requestBody = .byteBuffer(byteBuffer)
-
-            case .stream(let size, let closure):
-                let eventLoop = eventLoopGroup.next()
-                requestBody = .stream(length: size) { writer in
-                    return self.writeToStreamWriter(writer: writer, size: size, on: eventLoop, closure: closure)
-                }
+        var requestHeaders = request.headers
+        
+        switch request.body {
+        case .some(.byteBuffer(let byteBuffer)):
+            requestBody = .byteBuffer(byteBuffer)
+        case .some(.stream(let size, let closure)):
+            let eventLoop = eventLoop ?? eventLoopGroup.next()
+            if size == nil {
+                requestHeaders.add(name: "Transfer-Encoding", value: "chunked")
             }
-        } else {
+            requestBody = .stream(length: size) { writer in
+                return self.writeToStreamWriter(writer: writer, size: size, on: eventLoop, stream: closure)
+            }
+        case .none:
             requestBody = nil
         }
         do {
             let eventLoop = eventLoop ?? eventLoopGroup.next()
-            let asyncRequest = try AsyncHTTPClient.HTTPClient.Request(url: request.url, method: request.method, headers: request.headers, body: requestBody)
+            let asyncRequest = try AsyncHTTPClient.HTTPClient.Request(url: request.url, method: request.method, headers: requestHeaders, body: requestBody)
             return execute(request: asyncRequest, eventLoop: .delegate(on: eventLoop), deadline: .now() + timeout).map { $0 }
         } catch {
             return eventLoopGroup.next().makeFailedFuture(error)

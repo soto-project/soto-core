@@ -33,7 +33,8 @@ public struct AWSPayload {
         return AWSPayload(payload: .byteBuffer(buffer))
     }
     
-    /// construct a payload from a stream function
+    /// construct a payload from a stream function. If you supply a size the stream function will be called repeated until you supply the number of bytes specified. If you
+    /// don't supply a size the stream function will be called repeatedly until you supply an empty `ByteBuffer`
     public static func stream(size: Int? = nil, stream: @escaping (EventLoop)->EventLoopFuture<ByteBuffer>) -> Self {
         return AWSPayload(payload: .stream(size: size, stream: stream))
     }

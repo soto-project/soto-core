@@ -63,6 +63,7 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
         if let eventLoop = eventLoop {
             precondition(self.eventLoopGroup.makeIterator().contains { $0 === eventLoop }, "EventLoop provided to AWSClient must be part of the HTTPClient's EventLoopGroup.")
         }        
+        let eventLoop = eventLoop ?? eventLoopGroup.next()
         let requestBody: AsyncHTTPClient.HTTPClient.Body?
         var requestHeaders = request.headers
         
@@ -70,7 +71,7 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
         case .some(.byteBuffer(let byteBuffer)):
             requestBody = .byteBuffer(byteBuffer)
         case .some(.stream(let size, let closure)):
-            let eventLoop = eventLoop ?? eventLoopGroup.next()
+            // add "Transfer-Encoding" header if streaming with unknown size
             if size == nil {
                 requestHeaders.add(name: "Transfer-Encoding", value: "chunked")
             }
@@ -81,7 +82,6 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
             requestBody = nil
         }
         do {
-            let eventLoop = eventLoop ?? eventLoopGroup.next()
             let asyncRequest = try AsyncHTTPClient.HTTPClient.Request(url: request.url, method: request.method, headers: requestHeaders, body: requestBody)
             return execute(request: asyncRequest, eventLoop: .delegate(on: eventLoop), deadline: .now() + timeout).map { $0 }
         } catch {

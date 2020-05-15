@@ -35,7 +35,7 @@ public enum AWSPayload {
         return .byteBuffer(byteBuffer)
     }
 
-    /// Construct a payload from a NIOFileHandle
+    /// Construct a stream payload from a NIOFileHandle
     public static func fileHandle(_ fileHandle: NIOFileHandle, size: Int, fileIO: NonBlockingFileIO, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) -> Self {
         let blockSize = 64*1024
         var leftToRead = size
@@ -76,7 +76,7 @@ public enum AWSPayload {
     public func asString() -> String? {
         switch self {
         case .byteBuffer(let byteBuffer):
-            return byteBuffer.getString(at: byteBuffer.readerIndex, length: byteBuffer.readableBytes, encoding: .utf8)
+            return byteBuffer.getString(at: byteBuffer.readerIndex, length: byteBuffer.readableBytes)
         default:
             return nil
         }

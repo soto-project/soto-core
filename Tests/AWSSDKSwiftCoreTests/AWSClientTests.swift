@@ -1029,7 +1029,7 @@ class AWSClientTests: XCTestCase {
         do {
             let input = Input(array: ["entry1", "entry2"])
             let request = try ec2Client.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input)
-            XCTAssertEqual(request.body.asString(), "Action=Test&Version=2013-12-02&array.1=entry1&array.2=entry2")
+            XCTAssertEqual(request.body.asString(), "Action=Test&Array.1=entry1&Array.2=entry2&Version=2013-12-02")
         } catch {
             XCTFail("\(error)")
         }

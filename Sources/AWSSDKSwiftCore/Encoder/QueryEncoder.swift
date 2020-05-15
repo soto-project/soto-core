@@ -21,14 +21,18 @@ class QueryEncoder {
     /// Contextual user-provided information for use during encoding.
     open var userInfo: [CodingUserInfoKey : Any] = [:]
 
+    /// Are we encoding for EC2
+    open var ec2: Bool = false
+
     /// Options set on the top-level encoder to pass down the encoding hierarchy.
     fileprivate struct _Options {
         let userInfo: [CodingUserInfoKey : Any]
+        let ec2: Bool
     }
 
     /// The options set on the top-level encoder.
     fileprivate var options: _Options {
-        return _Options(userInfo: userInfo)
+        return _Options(userInfo: self.userInfo, ec2: self.ec2)
     }
 
     public init() {}
@@ -80,7 +84,7 @@ class QueryEncoder {
 /// class for holding a keyed container (dictionary). Need to encapsulate dictionary in class so we can be sure we are
 /// editing the dictionary we push onto the stack
 fileprivate class _QueryEncoderKeyedContainer {
-    var values: [String: Any] = [:]
+    private(set) var values: [String: Any] = [:]
 
     func addChild(path: String, child: Any) {
         values[path] = child
@@ -90,7 +94,7 @@ fileprivate class _QueryEncoderKeyedContainer {
 /// class for holding unkeyed container (array). Need to encapsulate array in class so we can be sure we are
 /// editing the array we push onto the stack
 fileprivate class _QueryEncoderUnkeyedContainer {
-    var values: [Any] = []
+    private(set) var values: [Any] = []
 
     func addChild(_ child: Any) {
         values.append(child)
@@ -179,7 +183,7 @@ fileprivate class _QueryEncoder : Encoder {
         }
 
         mutating func encode(_ value: Any, key: String) {
-            container.values["\(key)"] = value
+            container.addChild(path: ec2Encode(key), child: value)
         }
 
         mutating func encodeNil(forKey key: Key) throws { encode("", key: key.stringValue) }
@@ -203,7 +207,7 @@ fileprivate class _QueryEncoder : Encoder {
             defer { self.encoder.codingPath.removeLast() }
 
             let childContainer = try encoder.box(value)
-            container.addChild(path: key.stringValue, child: childContainer)
+            container.addChild(path: ec2Encode(key.stringValue), child: childContainer)
         }
 
         mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
@@ -211,7 +215,7 @@ fileprivate class _QueryEncoder : Encoder {
             defer { self.encoder.codingPath.removeLast() }
 
             let keyedContainer = _QueryEncoderKeyedContainer()
-            container.addChild(path: key.stringValue, child: keyedContainer)
+            container.addChild(path: ec2Encode(key.stringValue), child: keyedContainer)
 
             let kec = KEC<NestedKey>(referencing: self.encoder, container: keyedContainer)
             return KeyedEncodingContainer(kec)
@@ -222,7 +226,7 @@ fileprivate class _QueryEncoder : Encoder {
             defer { self.encoder.codingPath.removeLast() }
 
             let unkeyedContainer = _QueryEncoderUnkeyedContainer()
-            container.addChild(path: key.stringValue, child: unkeyedContainer)
+            container.addChild(path: ec2Encode(key.stringValue), child: unkeyedContainer)
 
             return UKEC(referencing: self.encoder, container: unkeyedContainer)
         }
@@ -233,6 +237,13 @@ fileprivate class _QueryEncoder : Encoder {
 
         mutating func superEncoder(forKey key: Key) -> Encoder {
             return encoder
+        }
+        
+        func ec2Encode(_ string: String) -> String {
+            if encoder.options.ec2 {
+                return string.uppercaseFirst()
+            }
+            return string
         }
     }
 
@@ -391,4 +402,11 @@ fileprivate struct _QueryKey : CodingKey {
     }
 
     fileprivate static let `super` = _QueryKey(stringValue: "super")!
+}
+
+extension String {
+    func uppercaseFirst() -> String {
+        guard self.count > 0 else { return self }
+        return String(self[self.startIndex]).uppercased() + self[index(after: startIndex)...]
+    }
 }

@@ -501,7 +501,7 @@ extension AWSClient {
             }
 
         case .ec2:
-            var params = try input.encodeAsQuery()
+            var params = try input.encodeAsQueryForEC2()
             params["Action"] = operationName
             params["Version"] = serviceConfig.apiVersion
             if let urlEncodedQueryParams = urlEncodeQueryParams(fromDictionary: params) {

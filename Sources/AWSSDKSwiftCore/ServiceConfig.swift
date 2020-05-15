@@ -15,7 +15,7 @@
 import class Foundation.ProcessInfo
 
 /// Configuration class defining an AWS service
-public struct ServiceConfig {
+public class ServiceConfig {
 
     /// Region where service is running
     public let region: Region

@@ -30,12 +30,19 @@ internal extension AWSEncodableShape {
         }
         return xml
     }
-
+    
     /// Encode AWSShape as a query array
     /// - Parameter flattenArrays: should all arrays be flattened
     func encodeAsQuery() throws -> [String : Any] {
         let encoder = QueryEncoder()
         return try encoder.encode(self)
     }
-
+    
+    /// Encode AWSShape as a query array
+    /// - Parameter flattenArrays: should all arrays be flattened
+    func encodeAsQueryForEC2() throws -> [String : Any] {
+        let encoder = QueryEncoder()
+        encoder.ec2 = true
+        return try encoder.encode(self)
+    }
 }

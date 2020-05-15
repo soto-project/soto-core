@@ -223,6 +223,28 @@ class QueryEncoderTests: XCTestCase {
         let result = queryString(dictionary: ["a": data.base64EncodedString()])!
         testQuery(test, query: result)
     }
+    
+    func testEC2Encode() {
+        struct Test2 : AWSEncodableShape {
+            let data : String
+        }
+        struct Test : AWSEncodableShape {
+            let object : Test2
+        }
+        do {
+            let value = Test(object: Test2(data: "Hello"))
+            let queryEncoder = QueryEncoder()
+            queryEncoder.ec2 = true
+            let queryDict = try queryEncoder.encode(value)
+            let queryAsString = queryString(dictionary: queryDict)
+            
+            XCTAssertEqual(queryAsString, "Object.Data=Hello")
+        } catch {
+            XCTFail("\(error)")
+        }
+
+        
+    }
 
     static var allTests : [(String, (QueryEncoderTests) -> () throws -> Void)] {
         return [
@@ -236,7 +258,8 @@ class QueryEncoderTests: XCTestCase {
             ("testArrayEncodingEncode", testArrayEncodingEncode),
             ("testDictionaryEncodingEncode", testDictionaryEncodingEncode),
             ("testDictionaryEncodingEncode2", testDictionaryEncodingEncode2),
-            ("testDataBlobEncode", testDataBlobEncode)
+            ("testDataBlobEncode", testDataBlobEncode),
+            ("testEC2Encode", testEC2Encode)
         ]
     }
 }

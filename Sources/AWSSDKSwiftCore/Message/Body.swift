@@ -39,7 +39,7 @@ extension Body {
             return text
 
         case .raw(let payload):
-            if case .byteBuffer(let byteBuffer) = payload {
+            if let byteBuffer = payload.asByteBuffer() {
                 return byteBuffer.getString(at: byteBuffer.readerIndex, length: byteBuffer.readableBytes, encoding: .utf8)
             } else {
                 return nil

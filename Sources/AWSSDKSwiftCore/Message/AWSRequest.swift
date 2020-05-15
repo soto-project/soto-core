@@ -108,11 +108,12 @@ public struct AWSRequest {
         let method = HTTPMethod(rawValue: httpMethod)
         let payload = self.body.asPayload()
         let bodyDataForSigning: AWSSigner.BodyData?
-        if let body = payload?.asByteBuffer() {
-            bodyDataForSigning = .byteBuffer(body)
-        } else if case .stream = payload {
+        switch payload?.payload {
+        case .some(.byteBuffer(let buffer)):
+            bodyDataForSigning = .byteBuffer(buffer)
+        case .some(.stream(size: _, stream: _)):
             bodyDataForSigning = .unsignedPayload
-        } else {
+        case .none:
             bodyDataForSigning = nil
         }
         let signedURL = signer.signURL(url: url, method: method, body: bodyDataForSigning, date: Date(), expires: 86400)
@@ -124,11 +125,12 @@ public struct AWSRequest {
         let method = HTTPMethod(rawValue: httpMethod)
         let payload = self.body.asPayload()
         let bodyDataForSigning: AWSSigner.BodyData?
-        if let body = payload?.asByteBuffer() {
-            bodyDataForSigning = .byteBuffer(body)
-        } else if case .stream = payload {
+        switch payload?.payload {
+        case .some(.byteBuffer(let buffer)):
+            bodyDataForSigning = .byteBuffer(buffer)
+        case .some(.stream(size: _, stream: _)):
             bodyDataForSigning = .unsignedPayload
-        } else {
+        case .none:
             bodyDataForSigning = nil
         }
         let signedHeaders = signer.signHeaders(url: url, method: method, headers: getHttpHeaders(), body: bodyDataForSigning, date: Date())

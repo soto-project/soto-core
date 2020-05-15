@@ -66,7 +66,7 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
         let requestBody: AsyncHTTPClient.HTTPClient.Body?
         var requestHeaders = request.headers
         
-        switch request.body {
+        switch request.body?.payload {
         case .some(.byteBuffer(let byteBuffer)):
             requestBody = .byteBuffer(byteBuffer)
         case .some(.stream(let size, let closure)):

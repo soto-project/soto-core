@@ -16,26 +16,43 @@ import struct Foundation.Data
 import NIO
 import NIOFoundationCompat
 
-public enum AWSPayload {
-
-    case byteBuffer(ByteBuffer)
-    case stream(size: Int? = nil, stream: (EventLoop)->EventLoopFuture<ByteBuffer>)
-
-    /// Construct a payload from a Data
+/// Holds a request or response payload. A request payload can be in the form of either a ByteBuffer or a stream function that will supply ByteBuffers to the HTTP client.
+/// A response payload only comes in the form of a ByteBuffer
+public struct AWSPayload {
+    
+    /// Internal enum
+    enum Payload {
+        case byteBuffer(ByteBuffer)
+        case stream(size: Int?, stream: (EventLoop)->EventLoopFuture<ByteBuffer>)
+    }
+    
+    internal let payload: Payload
+    
+    /// construct a payload from a ByteBuffer
+    public static func byteBuffer(_ buffer: ByteBuffer) -> Self {
+        return AWSPayload(payload: .byteBuffer(buffer))
+    }
+    
+    /// construct a payload from a stream function
+    public static func stream(size: Int? = nil, stream: @escaping (EventLoop)->EventLoopFuture<ByteBuffer>) -> Self {
+        return AWSPayload(payload: .stream(size: size, stream: stream))
+    }
+    
+    /// Construct a payload from `Data`
     public static func data(_ data: Data) -> Self {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: data.count)
         byteBuffer.writeBytes(data)
-        return .byteBuffer(byteBuffer)
+        return AWSPayload(payload: .byteBuffer(byteBuffer))
     }
 
-    /// Construct a payload from a String
+    /// Construct a payload from a `String`
     public static func string(_ string: String) -> Self {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: string.utf8.count)
         byteBuffer.writeString(string)
-        return .byteBuffer(byteBuffer)
+        return AWSPayload(payload: .byteBuffer(byteBuffer))
     }
 
-    /// Construct a stream payload from a NIOFileHandle
+    /// Construct a stream payload from a `NIOFileHandle`
     public static func fileHandle(_ fileHandle: NIOFileHandle, size: Int? = nil, fileIO: NonBlockingFileIO, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) -> Self {
         let blockSize = 64*1024
         var leftToRead = size
@@ -57,11 +74,12 @@ public enum AWSPayload {
             return futureByteBuffer
         }
         
-        return .stream(size: size, stream: stream)
+        return AWSPayload(payload: .stream(size: size, stream: stream))
     }
-
+    
+    /// Return the size of the payload. If the payload is a stream it is always possible to return a size
     var size: Int? {
-        switch self {
+        switch payload {
         case .byteBuffer(let byteBuffer):
             return byteBuffer.readableBytes
         case .stream(let size, _):
@@ -71,7 +89,7 @@ public enum AWSPayload {
 
     /// return payload as Data
     public func asData() -> Data? {
-        switch self {
+        switch payload {
         case .byteBuffer(let byteBuffer):
             return byteBuffer.getData(at: byteBuffer.readerIndex, length: byteBuffer.readableBytes, byteTransferStrategy: .noCopy)
         default:
@@ -81,7 +99,7 @@ public enum AWSPayload {
 
     /// return payload as String
     public func asString() -> String? {
-        switch self {
+        switch payload {
         case .byteBuffer(let byteBuffer):
             return byteBuffer.getString(at: byteBuffer.readerIndex, length: byteBuffer.readableBytes)
         default:
@@ -91,7 +109,7 @@ public enum AWSPayload {
 
     /// return payload as ByteBuffer
     public func asByteBuffer() -> ByteBuffer? {
-        switch self {
+        switch payload {
         case .byteBuffer(let byteBuffer):
             return byteBuffer
         default:

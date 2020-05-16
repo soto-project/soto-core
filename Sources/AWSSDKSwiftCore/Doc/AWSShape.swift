@@ -107,12 +107,16 @@ public extension AWSEncodableShape {
     }
     func validate(_ value: AWSPayload, name: String, parent: String, min: Int) throws {
         if let size = value.size {
-            guard size >= min else { throw AWSClientError(.validationError, message: "Length of \(parent).\(name) (\(size)) is less than minimum allowed value \(min).") }
+            guard size >= min else {
+                throw AWSClientError(.validationError, message: "Length of \(parent).\(name) (\(size)) is less than minimum allowed value \(min).")
+            }
         }
     }
     func validate(_ value: AWSPayload, name: String, parent: String, max: Int) throws {
         if let size = value.size {
-            guard size <= max else { throw AWSClientError(.validationError, message: "Length of \(parent).\(name) (\(size)) is greater than the maximum allowed value \(max).") }
+            guard size <= max else {
+                throw AWSClientError(.validationError, message: "Length of \(parent).\(name) (\(size)) is greater than the maximum allowed value \(max).")
+            }
         }
     }
     func validate(_ value: String, name: String, parent: String, pattern: String) throws {

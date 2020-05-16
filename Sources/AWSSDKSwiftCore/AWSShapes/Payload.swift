@@ -40,15 +40,15 @@ public struct AWSPayload {
     }
     
     /// Construct a payload from `Data`
-    public static func data(_ data: Data) -> Self {
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: data.count)
+    public static func data(_ data: Data, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) -> Self {
+        var byteBuffer = byteBufferAllocator.buffer(capacity: data.count)
         byteBuffer.writeBytes(data)
         return AWSPayload(payload: .byteBuffer(byteBuffer))
     }
 
     /// Construct a payload from a `String`
-    public static func string(_ string: String) -> Self {
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: string.utf8.count)
+    public static func string(_ string: String, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) -> Self {
+        var byteBuffer = byteBufferAllocator.buffer(capacity: string.utf8.count)
         byteBuffer.writeString(string)
         return AWSPayload(payload: .byteBuffer(byteBuffer))
     }

@@ -24,13 +24,13 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
         writer: HTTPClient.Body.StreamWriter,
         size: Int?,
         on eventLoop: EventLoop,
-        stream: @escaping (EventLoop)->EventLoopFuture<ByteBuffer>) -> EventLoopFuture<Void> {
+        getData: @escaping (EventLoop)->EventLoopFuture<ByteBuffer>) -> EventLoopFuture<Void> {
         let promise = eventLoop.makePromise(of: Void.self)
 
         func _writeToStreamWriter(_ amountLeft: Int?) {
             // get byte buffer from closure, write to StreamWriter, if there are still bytes to write then call
             // _writeToStreamWriter again.
-            _ = stream(eventLoop)
+            _ = getData(eventLoop)
                 .map { (byteBuffer)->() in
                     // if no amount was set and the byte buffer has no readable bytes then this is assumed to mean
                     // there will be no more data
@@ -70,13 +70,13 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
         switch request.body?.payload {
         case .some(.byteBuffer(let byteBuffer)):
             requestBody = .byteBuffer(byteBuffer)
-        case .some(.stream(let size, let closure)):
+        case .some(.stream(let size, let getData)):
             // add "Transfer-Encoding" header if streaming with unknown size
             if size == nil {
                 requestHeaders.add(name: "Transfer-Encoding", value: "chunked")
             }
             requestBody = .stream(length: size) { writer in
-                return self.writeToStreamWriter(writer: writer, size: size, on: eventLoop, stream: closure)
+                return self.writeToStreamWriter(writer: writer, size: size, on: eventLoop, getData: getData)
             }
         case .none:
             requestBody = nil

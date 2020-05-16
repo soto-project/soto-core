@@ -493,7 +493,7 @@ extension AWSClient {
         case .other(let proto):
             switch proto.lowercased() {
             case "ec2":
-                var params = AWSShapeEncoder().query(input, flattenLists: true)
+                var params = AWSShapeEncoder().query(input, ec2: true)
                 params["Action"] = operationName
                 params["Version"] = apiVersion
                 if let urlEncodedQueryParams = urlEncodeQueryParams(fromDictionary: params) {

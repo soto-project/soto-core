@@ -34,7 +34,7 @@ class AWSShapeEncoder {
     }
 
     /// Encode shape into query keys and values
-    public func query(_ input: AWSShape, flattenLists: Bool = false) -> [String : Any] {
+    public func query(_ input: AWSShape, ec2: Bool = false) -> [String : Any] {
         var dictionary : [String : Any] = [:]
 
         func encodeToFlatDictionary(_ input: AWSShape, name: String? = nil) {
@@ -46,6 +46,9 @@ class AWSShapeEncoder {
                 let member = type(of:input).getMember(named: label)
                 if let location = member?.location, case .body(let locationName) = location {
                     label = locationName
+                    if ec2 == true {
+                        label = label.upperFirst()
+                    }
                 }
                 let fullLabel = name != nil ? "\(name!).\(label)" : label
 
@@ -56,7 +59,7 @@ class AWSShapeEncoder {
                 case let v as [AWSShape]:
                     var memberString = ""
                     if let encoding = member?.shapeEncoding {
-                        if case .list(let element) = encoding, flattenLists == false {
+                        if case .list(let element) = encoding, ec2 == false {
                             memberString = "\(element)."
                         }
                     }
@@ -89,7 +92,7 @@ class AWSShapeEncoder {
 
                 case let v as [Any]:
                     var memberString = ""
-                    if let encoding = member?.shapeEncoding, flattenLists == false {
+                    if let encoding = member?.shapeEncoding, ec2 == false {
                         if case .list(let element) = encoding {
                             memberString = "\(element)."
                         }

@@ -256,12 +256,12 @@ extension NIOTSHTTPClient: AWSHTTPClient {
         head.headers = request.headers
 
         let requestBody: ByteBuffer?
-        switch request.body?.payload {
-        case .some(.byteBuffer(let byteBuffer)):
+        switch request.body.payload {
+        case .byteBuffer(let byteBuffer):
             requestBody = byteBuffer
-        case .some(.stream):
+        case .stream:
             preconditionFailure("Request streaming isnt supported")
-        case .none:
+        case .empty:
             requestBody = nil
         }
         let request = Request(head: head, body: requestBody)

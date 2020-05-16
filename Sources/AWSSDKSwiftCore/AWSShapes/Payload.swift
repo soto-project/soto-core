@@ -24,6 +24,7 @@ public struct AWSPayload {
     enum Payload {
         case byteBuffer(ByteBuffer)
         case stream(size: Int?, stream: (EventLoop)->EventLoopFuture<ByteBuffer>)
+        case empty
     }
     
     internal let payload: Payload
@@ -37,6 +38,11 @@ public struct AWSPayload {
     /// don't supply a size the stream function will be called repeatedly until you supply an empty `ByteBuffer`
     public static func stream(size: Int? = nil, stream: @escaping (EventLoop)->EventLoopFuture<ByteBuffer>) -> Self {
         return AWSPayload(payload: .stream(size: size, stream: stream))
+    }
+    
+    /// construct an empty payload
+    public static var empty: Self {
+        return AWSPayload(payload: .empty)
     }
     
     /// Construct a payload from `Data`
@@ -85,6 +91,8 @@ public struct AWSPayload {
             return byteBuffer.readableBytes
         case .stream(let size, _):
             return size
+        case .empty:
+            return 0
         }
     }
 
@@ -115,6 +123,18 @@ public struct AWSPayload {
             return byteBuffer
         default:
             return nil
+        }
+    }
+    
+    /// does payload consist of zero bytes
+    public var isEmpty: Bool {
+        switch payload {
+        case .byteBuffer(let buffer):
+            return buffer.readableBytes == 0
+        case .stream:
+            return false
+        case .empty:
+            return true
         }
     }
 }

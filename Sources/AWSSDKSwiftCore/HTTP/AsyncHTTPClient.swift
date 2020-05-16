@@ -67,10 +67,10 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
         let requestBody: AsyncHTTPClient.HTTPClient.Body?
         var requestHeaders = request.headers
         
-        switch request.body?.payload {
-        case .some(.byteBuffer(let byteBuffer)):
+        switch request.body.payload {
+        case .byteBuffer(let byteBuffer):
             requestBody = .byteBuffer(byteBuffer)
-        case .some(.stream(let size, let getData)):
+        case .stream(let size, let getData):
             // add "Transfer-Encoding" header if streaming with unknown size
             if size == nil {
                 requestHeaders.add(name: "Transfer-Encoding", value: "chunked")
@@ -78,7 +78,7 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
             requestBody = .stream(length: size) { writer in
                 return self.writeToStreamWriter(writer: writer, size: size, on: eventLoop, getData: getData)
             }
-        case .none:
+        case .empty:
             requestBody = nil
         }
         do {

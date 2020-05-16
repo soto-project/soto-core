@@ -246,7 +246,7 @@ class AWSClientTests: XCTestCase {
             XCTAssertEqual(awsRequest.url.absoluteString, "https://s3.ca-central-1.amazonaws.com/Bucket?list-type=2")
             let nioRequest: AWSHTTPRequest = awsRequest.toHTTPRequest()
             XCTAssertEqual(nioRequest.method, HTTPMethod.GET)
-            XCTAssertNil(nioRequest.body)
+            XCTAssertTrue(nioRequest.body.isEmpty)
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -315,7 +315,7 @@ class AWSClientTests: XCTestCase {
             let request = KeywordRequest(repeat: "Repeat")
             let awsRequest = try s3Client.createAWSRequest(operation: "Keyword", path: "/", httpMethod: "POST", input: request)
             XCTAssertEqual(awsRequest.httpHeaders["repeat"] as? String, "Repeat")
-            XCTAssertNil(awsRequest.body.asPayload())
+            XCTAssertTrue(awsRequest.body.asPayload().isEmpty)
         } catch {
             XCTFail(error.localizedDescription)
         }

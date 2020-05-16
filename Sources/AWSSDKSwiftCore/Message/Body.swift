@@ -58,7 +58,7 @@ extension Body {
     }
 
     /// return as payload
-    public func asPayload() -> AWSPayload? {
+    public func asPayload() -> AWSPayload {
         switch self {
         case .text(let text):
             var buffer = ByteBufferAllocator().buffer(capacity: text.utf8.count)
@@ -70,7 +70,7 @@ extension Body {
 
         case .json(let data):
             if data.isEmpty {
-                return nil
+                return .empty
             } else {
                 var buffer = ByteBufferAllocator().buffer(capacity: data.count)
                 buffer.writeBytes(data)
@@ -85,12 +85,12 @@ extension Body {
             return .byteBuffer(buffer)
 
         case .empty:
-            return nil
+            return .empty
         }
     }
     
     // return as ByteBuffer
     public func asByteBuffer() -> ByteBuffer? {
-        return asPayload()?.asByteBuffer()
+        return asPayload().asByteBuffer()
     }
 }

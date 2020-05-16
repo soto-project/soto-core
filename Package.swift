@@ -22,8 +22,8 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0" ..< "3.0.0"),
-        .package(url: "https://github.com/apple/swift-nio.git", .upToNextMajor(from:"2.13.1")),
-        .package(url: "https://github.com/apple/swift-nio-ssl.git", .upToNextMajor(from:"2.4.1")),
+        .package(url: "https://github.com/apple/swift-nio.git", .upToNextMajor(from:"2.16.1")),
+        .package(url: "https://github.com/apple/swift-nio-ssl.git", .upToNextMajor(from:"2.7.2")),
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", .upToNextMajor(from:"1.0.0")),
         .package(url: "https://github.com/swift-server/async-http-client.git", .upToNextMajor(from:"1.0.0"))
     ],

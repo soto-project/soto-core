@@ -16,6 +16,40 @@ import AsyncHTTPClient
 import Foundation
 import NIO
 
+extension AsyncHTTPClient.HTTPClient.Body.StreamWriter {
+    /// Write data out in chunked format "{chunk byte size in hexadecimal}\r\n{chunk}\r\n"
+    ///
+    /// - Parameters:
+    ///   - data: chunk data
+    ///   - byteBufferAllocator: byte buffer allocator used to allocate space for header
+    func writeChunk(_ chunk: ByteBuffer, byteBufferAllocator: ByteBufferAllocator) -> EventLoopFuture<Void> {
+        // chunk header is chunk size in hexadecimal plus carriage return,newline
+        let chunkHeader = "\(String(chunk.readableBytes, radix:16, uppercase: true))\r\n"
+        let chunkHeaderLength = chunkHeader.utf8.count
+        var headerByteBuffer = byteBufferAllocator.buffer(capacity: chunkHeaderLength)
+        headerByteBuffer.writeString(chunkHeader)
+        // use end of header for tail
+        let tailByteBuffer = headerByteBuffer.getSlice(at: headerByteBuffer.readerIndex + chunkHeaderLength - 2, length: 2)!
+
+        return write(.byteBuffer(headerByteBuffer)).flatMap { _ in
+            self.write(.byteBuffer(chunk))
+        }.flatMap { _ in
+            self.write(.byteBuffer(tailByteBuffer))
+        }
+    }
+    
+    /// Write empty chunk for end of chunked stream
+    ///
+    /// - Parameter byteBufferAllocator: byte buffer allocator used to allocate space for header
+    func writeEmptyChunk(byteBufferAllocator: ByteBufferAllocator) -> EventLoopFuture<Void> {
+        let emptyChunk = "0\r\n\r\n"
+        var emptyChunkBuffer = byteBufferAllocator.buffer(capacity: emptyChunk.utf8.count)
+        emptyChunkBuffer.writeString(emptyChunk)
+
+        return write(.byteBuffer(emptyChunkBuffer))
+    }
+}
+
 /// comply with AWSHTTPClient protocol
 extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
 
@@ -24,6 +58,7 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
         writer: HTTPClient.Body.StreamWriter,
         size: Int?,
         on eventLoop: EventLoop,
+        byteBufferAllocator: ByteBufferAllocator,
         getData: @escaping (EventLoop)->EventLoopFuture<ByteBuffer>) -> EventLoopFuture<Void> {
         let promise = eventLoop.makePromise(of: Void.self)
 
@@ -35,11 +70,21 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
                     // if no amount was set and the byte buffer has no readable bytes then this is assumed to mean
                     // there will be no more data
                     if amountLeft == nil && byteBuffer.readableBytes == 0 {
-                        promise.succeed(())
+                        _ = writer.writeEmptyChunk(byteBufferAllocator: byteBufferAllocator).map { _ in
+                            promise.succeed(())
+                        }.cascadeFailure(to: promise)
                         return
                     }
+                    // calculate amount left to write
                     let newAmountLeft = amountLeft.map { $0 - byteBuffer.readableBytes }
-                    _ = writer.write(.byteBuffer(byteBuffer)).flatMap { ()->EventLoopFuture<Void> in
+                    // write chunk. If amountLeft is nil assume we are writing chunked output
+                    let writeFuture: EventLoopFuture<Void>
+                    if amountLeft == nil {
+                        writeFuture = writer.writeChunk(byteBuffer, byteBufferAllocator: byteBufferAllocator)
+                    } else {
+                        writeFuture = writer.write(.byteBuffer(byteBuffer))
+                    }
+                    _ = writeFuture.flatMap { ()->EventLoopFuture<Void> in
                         if let newAmountLeft = newAmountLeft {
                             if newAmountLeft == 0 {
                                 promise.succeed(())
@@ -58,7 +103,13 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
         _writeToStreamWriter(size)
         return promise.futureResult
     }
-
+    
+    /// Execute HTTP request
+    /// - Parameters:
+    ///   - request: HTTP request
+    ///   - timeout: If execution is idle for longer than timeout then throw error
+    ///   - eventLoop: eventLoop to run request on
+    /// - Returns: EventLoopFuture that will be fulfilled with request response
     public func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop?) -> EventLoopFuture<AWSHTTPResponse> {
         if let eventLoop = eventLoop {
             precondition(self.eventLoopGroup.makeIterator().contains { $0 === eventLoop }, "EventLoop provided to AWSClient must be part of the HTTPClient's EventLoopGroup.")
@@ -70,13 +121,13 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
         switch request.body.payload {
         case .byteBuffer(let byteBuffer):
             requestBody = .byteBuffer(byteBuffer)
-        case .stream(let size, let getData):
+        case .stream(let size, let byteBufferAllocator, let getData):
             // add "Transfer-Encoding" header if streaming with unknown size
             if size == nil {
                 requestHeaders.add(name: "Transfer-Encoding", value: "chunked")
             }
             requestBody = .stream(length: size) { writer in
-                return self.writeToStreamWriter(writer: writer, size: size, on: eventLoop, getData: getData)
+                return self.writeToStreamWriter(writer: writer, size: size, on: eventLoop, byteBufferAllocator: byteBufferAllocator, getData: getData)
             }
         case .empty:
             requestBody = nil

@@ -111,7 +111,7 @@ public struct AWSRequest {
         switch payload.payload {
         case .byteBuffer(let buffer):
             bodyDataForSigning = .byteBuffer(buffer)
-        case .stream(size: _, stream: _):
+        case .stream:
             bodyDataForSigning = .unsignedPayload
         case .empty:
             bodyDataForSigning = nil
@@ -128,7 +128,7 @@ public struct AWSRequest {
         switch payload.payload {
         case .byteBuffer(let buffer):
             bodyDataForSigning = .byteBuffer(buffer)
-        case .stream(size: _, stream: _):
+        case .stream:
             bodyDataForSigning = .unsignedPayload
         case .empty:
             bodyDataForSigning = nil

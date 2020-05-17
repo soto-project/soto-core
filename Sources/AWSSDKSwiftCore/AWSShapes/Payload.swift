@@ -23,7 +23,7 @@ public struct AWSPayload {
     /// Internal enum
     enum Payload {
         case byteBuffer(ByteBuffer)
-        case stream(size: Int?, stream: (EventLoop)->EventLoopFuture<ByteBuffer>)
+        case stream(size: Int?, byteBufferAllocator: ByteBufferAllocator, stream: (EventLoop)->EventLoopFuture<ByteBuffer>)
         case empty
     }
     
@@ -36,8 +36,8 @@ public struct AWSPayload {
     
     /// construct a payload from a stream function. If you supply a size the stream function will be called repeated until you supply the number of bytes specified. If you
     /// don't supply a size the stream function will be called repeatedly until you supply an empty `ByteBuffer`
-    public static func stream(size: Int? = nil, stream: @escaping (EventLoop)->EventLoopFuture<ByteBuffer>) -> Self {
-        return AWSPayload(payload: .stream(size: size, stream: stream))
+    public static func stream(size: Int? = nil, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(), stream: @escaping (EventLoop)->EventLoopFuture<ByteBuffer>) -> Self {
+        return AWSPayload(payload: .stream(size: size, byteBufferAllocator: byteBufferAllocator, stream: stream))
     }
     
     /// construct an empty payload
@@ -81,7 +81,7 @@ public struct AWSPayload {
             return futureByteBuffer
         }
         
-        return AWSPayload(payload: .stream(size: size, stream: stream))
+        return AWSPayload(payload: .stream(size: size, byteBufferAllocator: byteBufferAllocator, stream: stream))
     }
     
     /// Return the size of the payload. If the payload is a stream it is always possible to return a size
@@ -89,7 +89,7 @@ public struct AWSPayload {
         switch payload {
         case .byteBuffer(let byteBuffer):
             return byteBuffer.readableBytes
-        case .stream(let size, _):
+        case .stream(let size,_,_):
             return size
         case .empty:
             return 0

@@ -31,11 +31,9 @@ extension AsyncHTTPClient.HTTPClient.Body.StreamWriter {
         // use end of header for tail
         let tailByteBuffer = headerByteBuffer.getSlice(at: headerByteBuffer.readerIndex + chunkHeaderLength - 2, length: 2)!
 
-        return write(.byteBuffer(headerByteBuffer)).flatMap { _ in
-            self.write(.byteBuffer(chunk))
-        }.flatMap { _ in
-            self.write(.byteBuffer(tailByteBuffer))
-        }
+        _ = write(.byteBuffer(headerByteBuffer))
+        _ = write(.byteBuffer(chunk))
+        return write(.byteBuffer(tailByteBuffer))
     }
     
     /// Write empty chunk for end of chunked stream

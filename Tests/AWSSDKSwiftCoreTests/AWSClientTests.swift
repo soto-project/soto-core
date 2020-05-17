@@ -1140,6 +1140,53 @@ class AWSClientTests: XCTestCase {
         }
     }
 
+    func testRequestChunkedStreaming() {
+        struct Input : AWSEncodableShape & AWSShapeWithPayload {
+            static var payloadPath: String = "payload"
+            let payload: AWSPayload
+            private enum CodingKeys: CodingKey {}
+        }
+
+        let awsServer = AWSTestServer(serviceProtocol: .json)
+        let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+        defer {
+            XCTAssertNoThrow(try awsServer.stop())
+            XCTAssertNoThrow(try httpClient.syncShutdown())
+        }
+        do {
+            let client = createAWSClient(accessKeyId: "", secretAccessKey: "", endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
+
+            // supply buffer in 16k blocks
+            let bufferSize = 145*1024
+            let blockSize = 16*1024
+            let data = createRandomBuffer(45,9182, size: bufferSize)
+            var byteBuffer = ByteBufferAllocator().buffer(capacity: bufferSize)
+            byteBuffer.writeBytes(data)
+
+            let payload = AWSPayload.stream { eventLoop in
+                let size = min(blockSize, byteBuffer.readableBytes)
+                if size == 0 {
+                    return eventLoop.makeSucceededFuture((byteBuffer))
+                } else {
+                    return eventLoop.makeSucceededFuture(byteBuffer.readSlice(length: size)!)
+                }
+            }
+            let input = Input(payload: payload)
+            let response = client.send(operation: "test", path: "/", httpMethod: "POST", input: input)
+
+            try awsServer.process { request in
+                let bytes = request.body.getBytes(at: 0, length: request.body.readableBytes)
+                XCTAssertTrue(bytes == data)
+                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
+                return AWSTestServer.Result(output: response, continueProcessing: false)
+            }
+
+            try response.wait()
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
     func testProvideHTTPClient() {
         do {
             // By default AsyncHTTPClient will follow redirects. This test creates an HTTP client that doesn't follow redirects and

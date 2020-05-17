@@ -157,9 +157,7 @@ public final class NIOTSHTTPClient {
 
             head.headers.replaceOrAdd(name: "Host", value: hostname)
             head.headers.replaceOrAdd(name: "User-Agent", value: "AWS SDK Swift Core")
-            if let body = request.body {
-                head.headers.replaceOrAdd(name: "Content-Length", value: body.readableBytes.description)
-            }
+            head.headers.replaceOrAdd(name: "Content-Length", value: request.body?.readableBytes.description ?? "0")
             head.headers.replaceOrAdd(name: "Connection", value: "Close")
 
 

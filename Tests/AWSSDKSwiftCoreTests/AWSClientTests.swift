@@ -1120,28 +1120,9 @@ class AWSClientTests: XCTestCase {
                 XCTAssertNoThrow(try fileHandle.close())
                 XCTAssertNoThrow(try threadPool.syncShutdownGracefully())
             }
-            // upload without file size
-            let input = Input(payload: .fileHandle(fileHandle, fileIO: fileIO))
+
+            let input = Input(payload: .fileHandle(fileHandle, size: bufferSize, fileIO: fileIO))
             let response = client.send(operation: "test", path: "/", httpMethod: "POST", input: input)
-
-            try awsServer.process { request in
-                XCTAssertEqual(request.headers["transfer-encoding"], "chunked")
-                XCTAssertNil(request.headers["Content-Size"])
-                let requestData = request.body.getData(at: 0, length: request.body.readableBytes)
-                XCTAssertEqual(requestData, data)
-                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
-                return AWSTestServer.Result(output: response, continueProcessing: false)
-            }
-
-            try response.wait()
-
-            // upload with file size
-            let fileHandle2 = try fileIO.openFile(path: filename, mode: .read, eventLoop: httpClient.eventLoopGroup.next()).wait()
-            defer {
-                XCTAssertNoThrow(try fileHandle2.close())
-            }
-            let input2 = Input(payload: .fileHandle(fileHandle2, size: bufferSize, fileIO: fileIO))
-            let response2 = client.send(operation: "test", path: "/", httpMethod: "POST", input: input2)
 
             try awsServer.process { request in
                 XCTAssertNil(request.headers["transfer-encoding"])
@@ -1152,7 +1133,7 @@ class AWSClientTests: XCTestCase {
                 return AWSTestServer.Result(output: response, continueProcessing: false)
             }
 
-            try response2.wait()
+            try response.wait()
         } catch AWSClient.ClientError.tooMuchData {
         } catch {
             XCTFail("Unexpected error: \(error)")

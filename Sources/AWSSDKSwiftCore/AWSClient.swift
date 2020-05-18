@@ -83,7 +83,7 @@ public final class AWSClient {
         secretAccessKey: String? = nil,
         sessionToken: String? = nil,
         serviceConfig: ServiceConfig,
-        retryController: RetryController = NoRetry(),
+        retryController: RetryController = JitterRetry(),
         middlewares: [AWSServiceMiddleware] = [],
         httpClientProvider: HTTPClientProvider
     ) {
@@ -149,7 +149,7 @@ public final class AWSClient {
         endpoint: String? = nil,
         serviceEndpoints: [String: String] = [:],
         partitionEndpoints: [Partition: (endpoint: String, region: Region)] = [:],
-        retryController: RetryController = NoRetry(),
+        retryController: RetryController = JitterRetry(),
         middlewares: [AWSServiceMiddleware] = [],
         possibleErrorTypes: [AWSErrorType.Type] = [],
         httpClientProvider: HTTPClientProvider

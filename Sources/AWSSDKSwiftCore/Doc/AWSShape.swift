@@ -166,8 +166,25 @@ public extension AWSEncodableShape {
 /// AWSShape that can be decoded
 public protocol AWSDecodableShape: AWSShape & Decodable {}
 
+/// AWSShapeWithPayload options.
+public struct PayloadOptions: OptionSet {
+    public var rawValue: Int
+    
+    public init(rawValue: Int) {
+        self.rawValue = rawValue
+    }
+    
+    public static let allowStreaming = PayloadOptions(rawValue: 1<<0)
+    public static let allowChunkedStreaming = PayloadOptions(rawValue: 1<<1)
+}
+
 /// Root AWSShape which include a payload
 public protocol AWSShapeWithPayload {
     /// The path to the object that is included in the request body
     static var payloadPath: String { get }
+    static var options: PayloadOptions { get }
+}
+
+extension AWSShapeWithPayload {
+    static var options: PayloadOptions { return [] }
 }

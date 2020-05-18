@@ -1015,6 +1015,7 @@ class AWSClientTests: XCTestCase {
     func testRequestStreaming() {
         struct Input : AWSEncodableShape & AWSShapeWithPayload {
             static var payloadPath: String = "payload"
+            static var options: PayloadOptions = [.allowStreaming]
             let payload: AWSPayload
             private enum CodingKeys: CodingKey {}
         }
@@ -1059,6 +1060,7 @@ class AWSClientTests: XCTestCase {
     func testRequestStreamingTooMuchData() {
         struct Input : AWSEncodableShape & AWSShapeWithPayload {
             static var payloadPath: String = "payload"
+            static var options: PayloadOptions = [.allowStreaming]
             let payload: AWSPayload
             private enum CodingKeys: CodingKey {}
         }
@@ -1090,6 +1092,7 @@ class AWSClientTests: XCTestCase {
     func testRequestStreamingFile() {
         struct Input : AWSEncodableShape & AWSShapeWithPayload {
             static var payloadPath: String = "payload"
+            static var options: PayloadOptions = [.allowStreaming]
             let payload: AWSPayload
             private enum CodingKeys: CodingKey {}
         }
@@ -1143,6 +1146,7 @@ class AWSClientTests: XCTestCase {
     func testRequestChunkedStreaming() {
         struct Input : AWSEncodableShape & AWSShapeWithPayload {
             static var payloadPath: String = "payload"
+            static var options: PayloadOptions = [.allowStreaming, .allowChunkedStreaming]
             let payload: AWSPayload
             private enum CodingKeys: CodingKey {}
         }

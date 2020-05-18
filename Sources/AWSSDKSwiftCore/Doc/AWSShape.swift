@@ -186,5 +186,5 @@ public protocol AWSShapeWithPayload {
 }
 
 extension AWSShapeWithPayload {
-    static var options: PayloadOptions { return [] }
+    public static var options: PayloadOptions { return [] }
 }

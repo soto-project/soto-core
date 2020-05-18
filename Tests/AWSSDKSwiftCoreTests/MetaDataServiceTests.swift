@@ -64,7 +64,7 @@ class MetaDataServiceTests: XCTestCase {
 
     // Disabling cannot guarantee that 169.254.169.254 is not a valid IP on another network
     func testMetaDataGetCredential() {
-        if ProcessInfo.processInfo.environment["TEST_EC2_METADATA"] != nil {
+        if Environment["TEST_EC2_METADATA"] != nil {
             do {
                 let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
                 _ = try MetaDataService.getCredential(httpClient: httpClient, on: httpClient.eventLoopGroup.next()).wait()

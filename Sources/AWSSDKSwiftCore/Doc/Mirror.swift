@@ -12,8 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-func unwrap(_ any: Any) -> Any?
-{
+func unwrap(_ any: Any) -> Any? {
     let mirror = Mirror(reflecting: any)
     guard mirror.displayStyle == .optional else { return any }
     guard let first = mirror.children.first else { return nil }

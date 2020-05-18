@@ -18,7 +18,6 @@ import Metrics
 import NIO
 import NIOHTTP1
 import NIOTransportServices
-import class  Foundation.ProcessInfo
 import class  Foundation.JSONSerialization
 import class  Foundation.JSONDecoder
 import struct Foundation.Data

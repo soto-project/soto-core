@@ -14,7 +14,6 @@
 
 import INIParser
 import struct Foundation.Date
-import class  Foundation.ProcessInfo
 import class  Foundation.NSString
 
 extension Credential {
@@ -33,7 +32,7 @@ public struct ExpiringCredential: Credential {
     public init(accessKeyId: String, secretAccessKey: String, sessionToken: String? = nil, expiration: Date? = nil) {
         self.accessKeyId = accessKeyId
         self.secretAccessKey = secretAccessKey
-        self.sessionToken = sessionToken ?? ProcessInfo.processInfo.environment["AWS_SESSION_TOKEN"]
+        self.sessionToken = sessionToken ?? Environment["AWS_SESSION_TOKEN"]
         self.expiration = expiration
     }
 
@@ -109,5 +108,24 @@ public struct SharedCredential: Credential {
         }
         self.secretAccessKey = secretAccessKey
         self.sessionToken = config["aws_session_token"]
+    }
+}
+
+/// environment variable version of credential that uses system environment variables to get credential details
+public struct EnvironmentCredential: Credential {
+    public let accessKeyId: String
+    public let secretAccessKey: String
+    public let sessionToken: String?
+    
+    public init?() {
+        guard let accessKeyId = Environment["AWS_ACCESS_KEY_ID"] else {
+            return nil
+        }
+        guard let secretAccessKey = Environment["AWS_SECRET_ACCESS_KEY"] else {
+            return nil
+        }
+        self.accessKeyId = accessKeyId
+        self.secretAccessKey = secretAccessKey
+        self.sessionToken = Environment["AWS_SESSION_TOKEN"]
     }
 }

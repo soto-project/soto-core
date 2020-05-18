@@ -25,7 +25,6 @@ import struct Foundation.TimeInterval
 import struct Foundation.TimeZone
 import struct Foundation.Locale
 import class  Foundation.JSONDecoder
-import class  Foundation.ProcessInfo
 
 /// errors returned by metadata service
 enum MetaDataServiceError: Error {
@@ -120,7 +119,7 @@ struct ECSMetaDataServiceProvider: MetaDataServiceProvider {
 
     typealias MetaData = ECSMetaData
 
-    static var containerCredentialsUri = ProcessInfo.processInfo.environment["AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"]
+    static var containerCredentialsUri = Environment["AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"]
     static var host = "169.254.170.2"
     var url: String
 

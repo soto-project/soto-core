@@ -208,7 +208,7 @@ extension AWSClient {
                 }
                 .flatMapErrorThrowing { (error)->Void in
                     // If I get a retry wait time for this error then attempt to retry request
-                    if let retryTime = self.retryController.getRetryWaitTime(error: error, attempt: attempt) {
+                    if case .retry(let retryTime) = self.retryController.getRetryWaitTime(error: error, attempt: attempt) {
                         // schedule task for retrying AWS request
                         eventloop.scheduleTask(in: retryTime) {
                             execute(httpRequest, attempt: attempt + 1)

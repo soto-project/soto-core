@@ -15,20 +15,25 @@
 import NIO
 import NIOHTTP1
 
+public enum RetryStatus {
+    case retry(wait: TimeAmount)
+    case dontRetry
+}
+
 /// Protocol for Retry controller. Returns amount of time before the next retry after an HTTP error
 public protocol RetryController {
     /// Returns whether we should retry (nil means don't) and how long we should wait before retrying
     /// - Parameters:
     ///   - error: Error returned by HTTP client
     ///   - attempt: retry attempt number
-    func getRetryWaitTime(error: Error, attempt: Int) -> TimeAmount?
+    func getRetryWaitTime(error: Error, attempt: Int) -> RetryStatus?
 }
 
 /// Retry controller that never returns a retry wait time
 public struct NoRetry: RetryController {
     public init() {}
-    public func getRetryWaitTime(error: Error, attempt: Int) -> TimeAmount? {
-        return nil
+    public func getRetryWaitTime(error: Error, attempt: Int) -> RetryStatus? {
+        return .dontRetry
     }
 }
 
@@ -40,18 +45,18 @@ public protocol StandardRetryController: RetryController {
 
 public extension StandardRetryController {
     /// default version of getRetryWaitTime for StandardRetryController
-    func getRetryWaitTime(error: Error, attempt: Int) -> TimeAmount? {
-        guard attempt < maxRetries else { return nil }
+    func getRetryWaitTime(error: Error, attempt: Int) -> RetryStatus? {
+        guard attempt < maxRetries else { return .dontRetry }
         
         switch error {
         // server error or too many requests
         case AWSClient.InternalError.httpResponseError(let response):
             if (500...).contains(response.status.code) || response.status.code == 429 {
-                return calculateRetryWaitTime(attempt: attempt)
+                return .retry(wait: calculateRetryWaitTime(attempt: attempt))
             }
-            return nil
+            return .dontRetry
         default:
-            return nil
+            return .dontRetry
         }
     }
 }

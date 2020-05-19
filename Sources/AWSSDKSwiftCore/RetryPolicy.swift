@@ -21,7 +21,7 @@ public enum RetryStatus {
 }
 
 /// Protocol for Retry strategy. Has function returning amount of time before the next retry after an HTTP error
-public protocol RetryStrategy {
+public protocol RetryPolicy {
     /// Returns whether we should retry (nil means don't) and how long we should wait before retrying
     /// - Parameters:
     ///   - error: Error returned by HTTP client
@@ -30,7 +30,7 @@ public protocol RetryStrategy {
 }
 
 /// Retry controller that never returns a retry wait time
-public struct NoRetry: RetryStrategy {
+public struct NoRetry: RetryPolicy {
     public init() {}
     public func getRetryWaitTime(error: Error, attempt: Int) -> RetryStatus? {
         return .dontRetry
@@ -38,7 +38,7 @@ public struct NoRetry: RetryStrategy {
 }
 
 /// Protocol for standard retry response. Will attempt to retry on 5xx errors, 429 (tooManyRequests).
-public protocol StandardRetryStrategy: RetryStrategy {
+public protocol StandardRetryStrategy: RetryPolicy {
     var maxRetries: Int { get }
     func calculateRetryWaitTime(attempt: Int) -> TimeAmount
 }

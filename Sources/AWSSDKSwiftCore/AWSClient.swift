@@ -62,7 +62,7 @@ public final class AWSClient {
     /// EventLoopGroup used by AWSClient
     public var eventLoopGroup: EventLoopGroup { return httpClient.eventLoopGroup }
     /// Retry Controller specifying what to do when a request fails
-    public let retryStrategy: RetryStrategy
+    public let retryPolicy: RetryPolicy
 
     // public accessors to ensure code outside of aws-sdk-swift-core still compiles
     public var region: Region { return serviceConfig.region }
@@ -75,7 +75,7 @@ public final class AWSClient {
     ///     - secretAccessKey: Private access key provided by AWS
     ///     - sessionToken: Token provided by STS.AssumeRole() which allows access to another AWS account
     ///     - serviceConfig: AWS service configuration
-    ///     - retryStrategy: Object returning whether retries should be attempted. Possible options are NoRetry(), ExponentialRetry() or JitterRetry()
+    ///     - retryPolicy: Object returning whether retries should be attempted. Possible options are NoRetry(), ExponentialRetry() or JitterRetry()
     ///     - middlewares: Array of middlewares to apply to requests and responses
     ///     - httpClientProvider: HTTPClient to use. Use `.createNew` if you want the client to manage its own HTTPClient.
     public init(
@@ -83,7 +83,7 @@ public final class AWSClient {
         secretAccessKey: String? = nil,
         sessionToken: String? = nil,
         serviceConfig: ServiceConfig,
-        retryStrategy: RetryStrategy = JitterRetry(),
+        retryPolicy: RetryPolicy = JitterRetry(),
         middlewares: [AWSServiceMiddleware] = [],
         httpClientProvider: HTTPClientProvider
     ) {
@@ -113,7 +113,7 @@ public final class AWSClient {
         }
 
         self.middlewares = middlewares
-        self.retryStrategy = retryStrategy
+        self.retryPolicy = retryPolicy
     }
 
     /// Initialize an AWSClient struct
@@ -131,7 +131,7 @@ public final class AWSClient {
     ///     - endpoint: Custom endpoint URL to use instead of standard AWS servers
     ///     - serviceEndpoints: Dictionary of region to endpoints URLs
     ///     - partitionEndpoint: Default endpoint to use, if no region endpoint is supplied
-    ///     - retryStrategy: Object returning whether retries should be attempted. Possible options are NoRetry(), ExponentialRetry() or JitterRetry()
+    ///     - retryPolicy: Object returning whether retries should be attempted. Possible options are NoRetry(), ExponentialRetry() or JitterRetry()
     ///     - middlewares: Array of middlewares to apply to requests and responses
     ///     - possibleErrorTypes: Array of possible error types that the client can throw
     ///     - httpClientProvider: HTTPClient to use. Use `.createNew` if you want the client to manage its own HTTPClient.
@@ -149,7 +149,7 @@ public final class AWSClient {
         endpoint: String? = nil,
         serviceEndpoints: [String: String] = [:],
         partitionEndpoints: [Partition: (endpoint: String, region: Region)] = [:],
-        retryStrategy: RetryStrategy = JitterRetry(),
+        retryPolicy: RetryPolicy = JitterRetry(),
         middlewares: [AWSServiceMiddleware] = [],
         possibleErrorTypes: [AWSErrorType.Type] = [],
         httpClientProvider: HTTPClientProvider
@@ -173,7 +173,7 @@ public final class AWSClient {
             secretAccessKey: secretAccessKey,
             sessionToken: sessionToken,
             serviceConfig: serviceConfig,
-            retryStrategy: retryStrategy,
+            retryPolicy: retryPolicy,
             middlewares: [],
             httpClientProvider: httpClientProvider)
     }
@@ -208,7 +208,7 @@ extension AWSClient {
                 }
                 .flatMapErrorThrowing { (error)->Void in
                     // If I get a retry wait time for this error then attempt to retry request
-                    if case .retry(let retryTime) = self.retryStrategy.getRetryWaitTime(error: error, attempt: attempt) {
+                    if case .retry(let retryTime) = self.retryPolicy.getRetryWaitTime(error: error, attempt: attempt) {
                         // schedule task for retrying AWS request
                         eventloop.scheduleTask(in: retryTime) {
                             execute(httpRequest, attempt: attempt + 1)

@@ -19,8 +19,6 @@ jobs:
       uses: actions/checkout@v1
       with:
         fetch-depth: 1
-    - name: SPM build
-      run: swift build
     - name: SPM tests
       run: swift test --enable-code-coverage
     - name: Convert coverage files
@@ -40,7 +38,7 @@ jobs:
       with:
         fetch-depth: 1
     - name: Xcodebuild
-      run: xcodebuild -sdk iphonesimulator13.4 -scheme aws-sdk-swift-core -quiet
+      run: xcodebuild test -scheme aws-sdk-swift-core -quiet -destination 'platform=iOS Simulator,name=iPhone 11'
 
   linux:
     runs-on: ubuntu-latest

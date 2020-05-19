@@ -18,6 +18,7 @@ import NIO
 import NIOFoundationCompat
 @testable import AWSSDKSwiftCore
 
+#if false
 class MetaDataServiceTests: XCTestCase {
 
     func testInstanceMetaDataService() {
@@ -75,3 +76,4 @@ class MetaDataServiceTests: XCTestCase {
     }
 
 }
+#endif

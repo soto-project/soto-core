@@ -69,6 +69,9 @@ let package = Package(
             .byName(name: "AWSXML"),
             .byName(name: "AWSSDKSwiftCore"),
         ]),
+        .testTarget(name: "INIParserTests", dependencies: [
+            .byName(name: "INIParser")
+        ]),
     ]
 )
 

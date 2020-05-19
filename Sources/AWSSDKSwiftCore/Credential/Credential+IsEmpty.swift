@@ -12,10 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIO
-import AWSSignerV4
+import INIParser
+import struct Foundation.Date
+import class  Foundation.NSString
 
-/// Protocol providing future holding a credential
-public protocol CredentialProvider {
-    func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential>
+extension Credential {
+    func isEmpty() -> Bool {
+        return self.accessKeyId.isEmpty || self.secretAccessKey.isEmpty
+    }
 }

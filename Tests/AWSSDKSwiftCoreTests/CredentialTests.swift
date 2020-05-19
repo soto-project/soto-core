@@ -15,6 +15,7 @@
 import XCTest
 @testable import AWSSDKSwiftCore
 
+#if false
 class CredentialTests: XCTestCase {
     /// Fake parser that returns mocked values and keeps track of calls to parse
     class FakeParser: SharedCredentialsConfigParser {
@@ -241,3 +242,4 @@ class CredentialTests: XCTestCase {
         }
     }
 }
+#endif

@@ -14,9 +14,9 @@
 
 /// Protocol for providing credential details for accessing AWS services
 public protocol Credential {
-    var accessKeyId: String {get}
-    var secretAccessKey: String {get}
-    var sessionToken: String? {get}
+    var accessKeyId: String { get }
+    var secretAccessKey: String { get }
+    var sessionToken: String? { get }
 }
 
 /// basic version of Credential where you supply the credentials
@@ -31,3 +31,4 @@ public struct StaticCredential: Credential {
         self.sessionToken = sessionToken
     }
 }
+

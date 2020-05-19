@@ -38,12 +38,12 @@ public struct NoRetry: RetryPolicy {
 }
 
 /// Protocol for standard retry response. Will attempt to retry on 5xx errors, 429 (tooManyRequests).
-public protocol StandardRetryStrategy: RetryPolicy {
+public protocol StandardRetryPolicy: RetryPolicy {
     var maxRetries: Int { get }
     func calculateRetryWaitTime(attempt: Int) -> TimeAmount
 }
 
-public extension StandardRetryStrategy {
+public extension StandardRetryPolicy {
     /// default version of getRetryWaitTime for StandardRetryController
     func getRetryWaitTime(error: Error, attempt: Int) -> RetryStatus? {
         guard attempt < maxRetries else { return .dontRetry }
@@ -62,7 +62,7 @@ public extension StandardRetryStrategy {
 }
 
 /// Retry with an exponentially increasing wait time between wait times
-public struct ExponentialRetry: StandardRetryStrategy {
+public struct ExponentialRetry: StandardRetryPolicy {
     public let base: TimeAmount
     public let maxRetries: Int
     
@@ -81,7 +81,7 @@ public struct ExponentialRetry: StandardRetryStrategy {
 /// Exponential jitter retry. Instead of returning an exponentially increasing retry time it returns a jittered version. In a heavy load situation
 /// where a large number of clients all hit the servers at the same time, jitter helps to smooth out the server response. See
 /// https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/ for details.
-public struct JitterRetry: StandardRetryStrategy {
+public struct JitterRetry: StandardRetryPolicy {
     public let base: TimeAmount
     public let maxRetries: Int
     

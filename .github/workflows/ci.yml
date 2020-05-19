@@ -32,6 +32,16 @@ jobs:
     - name: Upload to codecov.io
       run: bash <(curl -s https://codecov.io/bash) -J 'aws-sdk-swift-core' -t ${{secrets.CODECOV_TOKEN}}
 
+  ios:
+    runs-on: macOS-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+    - name: Xcodebuild
+      run: xcodebuild -sdk iphonesimulator13.4 -scheme aws-sdk-swift-core -quiet
+
   linux:
     runs-on: ubuntu-latest
     strategy:

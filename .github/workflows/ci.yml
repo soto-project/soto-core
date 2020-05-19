@@ -19,8 +19,6 @@ jobs:
       uses: actions/checkout@v1
       with:
         fetch-depth: 1
-    - name: SPM build
-      run: swift build
     - name: SPM tests
       run: swift test --enable-code-coverage
     - name: Convert coverage files
@@ -31,6 +29,18 @@ jobs:
           -instr-profile=.build/debug/codecov/default.profdata > info.lcov  
     - name: Upload to codecov.io
       run: bash <(curl -s https://codecov.io/bash) -J 'aws-sdk-swift-core' -t ${{secrets.CODECOV_TOKEN}}
+
+  ios:
+    runs-on: macOS-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+    - name: Xcodebuild
+      run: |
+        xcodebuild -scheme aws-sdk-swift-core -quiet -destination 'platform=iOS Simulator,name=iPhone 11'
+        xcodebuild test -scheme aws-sdk-swift-core -destination 'platform=iOS Simulator,name=iPhone 11'
 
   linux:
     runs-on: ubuntu-latest

@@ -1112,7 +1112,7 @@ class AWSClientTests: XCTestCase {
                 serviceProtocol: .json(version: "1.1"),
                 apiVersion: "2020-01-21",
                 endpoint: awsServer.address,
-                retryController: ExponentialRetry(base: .milliseconds(200)),
+                retryStrategy: ExponentialRetry(base: .milliseconds(200)),
                 middlewares: [AWSLoggingMiddleware()],
                 httpClientProvider: .shared(httpClient)
             )
@@ -1161,7 +1161,7 @@ class AWSClientTests: XCTestCase {
                 serviceProtocol: .json(version: "1.1"),
                 apiVersion: "2020-01-21",
                 endpoint: awsServer.address,
-                retryController: JitterRetry(),
+                retryStrategy: JitterRetry(),
                 middlewares: [AWSLoggingMiddleware()],
                 httpClientProvider: .shared(httpClient)
             )
@@ -1207,7 +1207,7 @@ class AWSClientTests: XCTestCase {
                 serviceProtocol: .json(version: "1.1"),
                 apiVersion: "2020-01-21",
                 endpoint: awsServer.address,
-                retryController: JitterRetry(),
+                retryStrategy: JitterRetry(),
                 middlewares: [AWSLoggingMiddleware()],
                 httpClientProvider: .shared(httpClient)
             )

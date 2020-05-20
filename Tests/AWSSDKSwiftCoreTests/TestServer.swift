@@ -28,6 +28,7 @@ class AWSTestServer {
         case notEnd
         case emptyBody
         case noXMLBody
+        case corruptChunkedData
     }
     // what are we returning
     enum ServiceProtocol {

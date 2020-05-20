@@ -157,9 +157,7 @@ public final class NIOTSHTTPClient {
 
             head.headers.replaceOrAdd(name: "Host", value: hostname)
             head.headers.replaceOrAdd(name: "User-Agent", value: "AWS SDK Swift Core")
-            if let body = request.body {
-                head.headers.replaceOrAdd(name: "Content-Length", value: body.readableBytes.description)
-            }
+            head.headers.replaceOrAdd(name: "Content-Length", value: request.body?.readableBytes.description ?? "0")
             head.headers.replaceOrAdd(name: "Connection", value: "Close")
 
 
@@ -254,7 +252,17 @@ extension NIOTSHTTPClient: AWSHTTPClient {
           uri: request.url.absoluteString
         )
         head.headers = request.headers
-        let request = Request(head: head, body: request.body)
+
+        let requestBody: ByteBuffer?
+        switch request.body.payload {
+        case .byteBuffer(let byteBuffer):
+            requestBody = byteBuffer
+        case .stream:
+            preconditionFailure("Request streaming isnt supported")
+        case .empty:
+            requestBody = nil
+        }
+        let request = Request(head: head, body: requestBody)
 
         return connect(request, timeout: timeout, on: eventLoop).map { return $0 }
     }

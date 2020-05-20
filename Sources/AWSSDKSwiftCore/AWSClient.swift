@@ -33,6 +33,7 @@ public final class AWSClient {
 
     public enum ClientError: Swift.Error {
         case invalidURL(String)
+        case tooMuchData
     }
 
     enum InternalError: Swift.Error {
@@ -385,6 +386,12 @@ extension AWSClient {
         ).applyMiddlewares(serviceConfig.middlewares + middlewares)
     }
 
+    internal func verifyStream(operation: String, payload: AWSPayload, input: AWSShapeWithPayload.Type) {
+        guard case .stream(let size,_) = payload.payload else { return }
+        precondition(input.options.contains(.allowStreaming), "\(operation) does not allow streaming of data")
+        precondition(size != nil || input.options.contains(.allowChunkedStreaming), "\(operation) does not allow chunked streaming of data. Please supply a data size.")
+    }
+    
     internal func createAWSRequest<Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
         var headers: [String: Any] = [:]
         var path = path
@@ -438,11 +445,13 @@ extension AWSClient {
 
         switch serviceConfig.serviceProtocol {
         case .json, .restjson:
-            if let payload = (Input.self as? AWSShapeWithPayload.Type)?.payloadPath {
+            if let shapeWithPayload = Input.self as? AWSShapeWithPayload.Type {
+                let payload = shapeWithPayload.payloadPath
                 if let payloadBody = mirror.getAttribute(forKey: payload) {
                     switch payloadBody {
                     case let awsPayload as AWSPayload:
-                        body = .buffer(awsPayload.byteBuffer)
+                        verifyStream(operation: operationName, payload: awsPayload, input: shapeWithPayload)
+                        body = .raw(awsPayload)
                     case let shape as AWSEncodableShape:
                         body = .json(try shape.encodeAsJSON())
                     default:
@@ -474,11 +483,13 @@ extension AWSClient {
             }
 
         case .restxml:
-            if let payload = (Input.self as? AWSShapeWithPayload.Type)?.payloadPath {
+            if let shapeWithPayload = Input.self as? AWSShapeWithPayload.Type {
+                let payload = shapeWithPayload.payloadPath
                 if let payloadBody = mirror.getAttribute(forKey: payload) {
                     switch payloadBody {
                     case let awsPayload as AWSPayload:
-                        body = .buffer(awsPayload.byteBuffer)
+                        verifyStream(operation: operationName, payload: awsPayload, input: shapeWithPayload)
+                        body = .raw(awsPayload)
                     case let shape as AWSEncodableShape:
                         var rootName: String? = nil
                         // extract custom payload name
@@ -633,9 +644,9 @@ extension AWSClient {
             }
             return try XMLDecoder().decode(Output.self, from: outputNode)
 
-        case .buffer(let byteBuffer):
+        case .raw(let payload):
             if let payloadKey = payloadKey {
-                outputDict[payloadKey] = AWSPayload.byteBuffer(byteBuffer)
+                outputDict[payloadKey] = payload
             }
 
         default:
@@ -788,6 +799,8 @@ extension AWSClient.ClientError: CustomStringConvertible {
             The request url \(urlString) is invalid format.
             This error is internal. So please make a issue on https://github.com/swift-aws/aws-sdk-swift/issues to solve it.
             """
+        case .tooMuchData:
+            return "You have supplied too much data for the Request."
         }
     }
 }

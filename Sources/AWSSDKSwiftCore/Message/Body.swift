@@ -22,7 +22,7 @@ public enum Body {
     /// text
     case text(String)
     /// raw data
-    case buffer(ByteBuffer)
+    case raw(AWSPayload)
     /// json data
     case json(Data)
     /// xml
@@ -38,8 +38,12 @@ extension Body {
         case .text(let text):
             return text
 
-        case .buffer(let byteBuffer):
-            return byteBuffer.getString(at: byteBuffer.readerIndex, length: byteBuffer.readableBytes, encoding: .utf8)
+        case .raw(let payload):
+            if let byteBuffer = payload.asByteBuffer() {
+                return byteBuffer.getString(at: byteBuffer.readerIndex, length: byteBuffer.readableBytes, encoding: .utf8)
+            } else {
+                return nil
+            }
 
         case .json(let data):
             return String(data: data, encoding: .utf8)
@@ -53,24 +57,24 @@ extension Body {
         }
     }
 
-    /// return as bytebuffer
-    public func asByteBuffer() -> ByteBuffer? {
+    /// return as payload
+    public func asPayload() -> AWSPayload {
         switch self {
         case .text(let text):
             var buffer = ByteBufferAllocator().buffer(capacity: text.utf8.count)
             buffer.writeString(text)
-            return buffer
+            return .byteBuffer(buffer)
 
-        case .buffer(let byteBuffer):
-            return byteBuffer
+        case .raw(let payload):
+            return payload
 
         case .json(let data):
             if data.isEmpty {
-                return nil
+                return .empty
             } else {
                 var buffer = ByteBufferAllocator().buffer(capacity: data.count)
                 buffer.writeBytes(data)
-                return buffer
+                return .byteBuffer(buffer)
             }
 
         case .xml(let node):
@@ -78,10 +82,15 @@ extension Body {
             let text = xmlDocument.xmlString
             var buffer = ByteBufferAllocator().buffer(capacity: text.utf8.count)
             buffer.writeString(text)
-            return buffer
+            return .byteBuffer(buffer)
 
         case .empty:
-            return nil
+            return .empty
         }
+    }
+    
+    // return as ByteBuffer
+    public func asByteBuffer() -> ByteBuffer? {
+        return asPayload().asByteBuffer()
     }
 }

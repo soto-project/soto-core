@@ -106,10 +106,18 @@ public extension AWSEncodableShape {
         guard value.count <= max else { throw AWSClientError(.validationError, message: "Length of \(parent).\(name) (\(value.count)) is greater than the maximum allowed value \(max).") }
     }
     func validate(_ value: AWSPayload, name: String, parent: String, min: Int) throws {
-        guard value.byteBuffer.readableBytes >= min else { throw AWSClientError(.validationError, message: "Length of \(parent).\(name) (\(value.byteBuffer.readableBytes)) is less than minimum allowed value \(min).") }
+        if let size = value.size {
+            guard size >= min else {
+                throw AWSClientError(.validationError, message: "Length of \(parent).\(name) (\(size)) is less than minimum allowed value \(min).")
+            }
+        }
     }
     func validate(_ value: AWSPayload, name: String, parent: String, max: Int) throws {
-        guard value.byteBuffer.readableBytes <= max else { throw AWSClientError(.validationError, message: "Length of \(parent).\(name) (\(value.byteBuffer.readableBytes)) is greater than the maximum allowed value \(max).") }
+        if let size = value.size {
+            guard size <= max else {
+                throw AWSClientError(.validationError, message: "Length of \(parent).\(name) (\(size)) is greater than the maximum allowed value \(max).")
+            }
+        }
     }
     func validate(_ value: String, name: String, parent: String, pattern: String) throws {
         let regularExpression = try NSRegularExpression(pattern: pattern, options: [])
@@ -158,8 +166,25 @@ public extension AWSEncodableShape {
 /// AWSShape that can be decoded
 public protocol AWSDecodableShape: AWSShape & Decodable {}
 
+/// AWSShapeWithPayload options.
+public struct PayloadOptions: OptionSet {
+    public var rawValue: Int
+    
+    public init(rawValue: Int) {
+        self.rawValue = rawValue
+    }
+    
+    public static let allowStreaming = PayloadOptions(rawValue: 1<<0)
+    public static let allowChunkedStreaming = PayloadOptions(rawValue: 1<<1)
+}
+
 /// Root AWSShape which include a payload
 public protocol AWSShapeWithPayload {
     /// The path to the object that is included in the request body
     static var payloadPath: String { get }
+    static var options: PayloadOptions { get }
+}
+
+extension AWSShapeWithPayload {
+    public static var options: PayloadOptions { return [] }
 }

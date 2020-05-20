@@ -50,7 +50,7 @@ class NIOTSHTTPClientTests: XCTestCase {
 
     func testInitWithInvalidURL() {
       do {
-        let request = AWSHTTPRequest(url: URL(string:"no_protocol.com")!, method: .GET, headers: HTTPHeaders(), body: nil)
+        let request = AWSHTTPRequest(url: URL(string:"no_protocol.com")!, method: .GET, headers: HTTPHeaders())
         _ = try client.execute(request: request, timeout: .seconds(5), on: client.eventLoopGroup.next()).wait()
         XCTFail("Should throw malformedURL error")
       } catch {
@@ -63,7 +63,7 @@ class NIOTSHTTPClientTests: XCTestCase {
 
     func testConnectGet() {
         do {
-            let request = AWSHTTPRequest(url: awsServer.addressURL, method: .GET, headers: HTTPHeaders(), body: nil)
+            let request = AWSHTTPRequest(url: awsServer.addressURL, method: .GET, headers: HTTPHeaders())
             let future = client.execute(request: request, timeout: .seconds(5), on: client.eventLoopGroup.next())
             try awsServer.httpBin()
             _ = try future.wait()
@@ -74,7 +74,7 @@ class NIOTSHTTPClientTests: XCTestCase {
 
     func testConnectPost() {
         do {
-            let request = AWSHTTPRequest(url: awsServer.addressURL, method: .POST, headers: HTTPHeaders(), body: nil)
+            let request = AWSHTTPRequest(url: awsServer.addressURL, method: .POST, headers: HTTPHeaders())
             let future = client.execute(request: request, timeout: .seconds(5), on: client.eventLoopGroup.next())
             try awsServer.httpBin()
             _ = try future.wait()
@@ -153,7 +153,7 @@ class HTTPClientTests {
                 XCTAssertNoThrow(try awsServer.stop())
             }
             let headers: HTTPHeaders = [:]
-            let request = AWSHTTPRequest(url: URL(string: "\(awsServer.address)/get?test=2")!, method: .GET, headers: headers, body: nil)
+            let request = AWSHTTPRequest(url: URL(string: "\(awsServer.address)/get?test=2")!, method: .GET, headers: headers, body: .empty)
             let responseFuture = execute(request)
 
             try awsServer.httpBin()
@@ -170,7 +170,7 @@ class HTTPClientTests {
     func testHTTPS() {
         do {
             let headers: HTTPHeaders = [:]
-            let request = AWSHTTPRequest(url: URL(string:"https://httpbin.org/get")!, method: .GET, headers: headers, body: nil)
+            let request = AWSHTTPRequest(url: URL(string:"https://httpbin.org/get")!, method: .GET, headers: headers)
             let response = try execute(request).wait()
 
             XCTAssertEqual(response.url, "https://httpbin.org/get")
@@ -188,7 +188,7 @@ class HTTPClientTests {
             let headers: HTTPHeaders = [
                 "Test-Header": "testValue"
             ]
-            let request = AWSHTTPRequest(url: awsServer.addressURL, method: .POST, headers: headers, body: nil)
+            let request = AWSHTTPRequest(url: awsServer.addressURL, method: .POST, headers: headers, body: .empty)
             let responseFuture = execute(request)
 
             try awsServer.httpBin()
@@ -216,7 +216,7 @@ class HTTPClientTests {
             let text = "thisisatest"
             var body = ByteBufferAllocator().buffer(capacity: text.utf8.count)
             body.writeString(text)
-            let request = AWSHTTPRequest(url: awsServer.addressURL, method: .POST, headers: headers, body: body)
+            let request = AWSHTTPRequest(url: awsServer.addressURL, method: .POST, headers: headers, body: .byteBuffer(body))
             let responseFuture = execute(request)
 
             try awsServer.httpBin()

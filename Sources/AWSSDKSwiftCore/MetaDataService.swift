@@ -63,7 +63,7 @@ extension MetaDataServiceProvider {
 
     /// make HTTP request
     func request(url: String, method: HTTPMethod = .GET, headers: [String:String] = [:], timeout: TimeInterval, httpClient: AWSHTTPClient, on eventLoop: EventLoop) -> EventLoopFuture<AWSHTTPResponse> {
-        let request = AWSHTTPRequest(url: URL(string: url)!, method: method, headers: HTTPHeaders(headers.map {($0.key, $0.value) }), body: nil)
+        let request = AWSHTTPRequest(url: URL(string: url)!, method: method, headers: HTTPHeaders(headers.map {($0.key, $0.value) }))
         let futureResponse = httpClient.execute(request: request, timeout: TimeAmount.seconds(2), on: eventLoop)
         return futureResponse
     }

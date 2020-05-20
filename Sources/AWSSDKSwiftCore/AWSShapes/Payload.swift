@@ -16,44 +16,127 @@ import struct Foundation.Data
 import NIO
 import NIOFoundationCompat
 
-/// Object storing request/response payload
+/// Holds a request or response payload. A request payload can be in the form of either a ByteBuffer or a stream function that will supply ByteBuffers to the HTTP client.
+/// A response payload only comes in the form of a ByteBuffer
 public struct AWSPayload {
-
-    /// Construct a payload from a ByteBuffer
-    public static func byteBuffer(_ byteBuffer: ByteBuffer) -> Self {
-        return Self(byteBuffer: byteBuffer)
+    
+    /// Internal enum
+    enum Payload {
+        case byteBuffer(ByteBuffer)
+        case stream(size: Int?, stream: (EventLoop)->EventLoopFuture<ByteBuffer>)
+        case empty
     }
-
-    /// Construct a payload from a Data
-    public static func data(_ data: Data) -> Self {
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: data.count)
+    
+    internal let payload: Payload
+    
+    /// construct a payload from a ByteBuffer
+    public static func byteBuffer(_ buffer: ByteBuffer) -> Self {
+        return AWSPayload(payload: .byteBuffer(buffer))
+    }
+    
+    /// construct a payload from a stream function. If you supply a size the stream function will be called repeated until you supply the number of bytes specified. If you
+    /// don't supply a size the stream function will be called repeatedly until you supply an empty `ByteBuffer`
+    public static func stream(size: Int? = nil, stream: @escaping (EventLoop)->EventLoopFuture<ByteBuffer>) -> Self {
+        return AWSPayload(payload: .stream(size: size, stream: stream))
+    }
+    
+    /// construct an empty payload
+    public static var empty: Self {
+        return AWSPayload(payload: .empty)
+    }
+    
+    /// Construct a payload from `Data`
+    public static func data(_ data: Data, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) -> Self {
+        var byteBuffer = byteBufferAllocator.buffer(capacity: data.count)
         byteBuffer.writeBytes(data)
-        return Self(byteBuffer: byteBuffer)
+        return AWSPayload(payload: .byteBuffer(byteBuffer))
     }
 
-    /// Construct a payload from a String
-    public static func string(_ string: String) -> Self {
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: string.utf8.count)
+    /// Construct a payload from a `String`
+    public static func string(_ string: String, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) -> Self {
+        var byteBuffer = byteBufferAllocator.buffer(capacity: string.utf8.count)
         byteBuffer.writeString(string)
-        return Self(byteBuffer: byteBuffer)
+        return AWSPayload(payload: .byteBuffer(byteBuffer))
+    }
+
+    /// Construct a stream payload from a `NIOFileHandle`
+    public static func fileHandle(_ fileHandle: NIOFileHandle, size: Int? = nil, fileIO: NonBlockingFileIO, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) -> Self {
+        let blockSize = 64*1024
+        var leftToRead = size
+        func stream(_ eventLoop: EventLoop) -> EventLoopFuture<ByteBuffer> {
+            // calculate how much data is left to read, if a file size was indicated
+            var blockSize = blockSize
+            if let leftToRead2 = leftToRead {
+                blockSize = min(blockSize, leftToRead2)
+                leftToRead = leftToRead2 - blockSize
+            }
+            let futureByteBuffer = fileIO.read(fileHandle: fileHandle, byteCount: blockSize, allocator: byteBufferAllocator, eventLoop: eventLoop)
+            
+            if leftToRead != nil {
+                return futureByteBuffer.map { byteBuffer in
+                        precondition(byteBuffer.readableBytes == blockSize, "File did not have enough data")
+                        return byteBuffer
+                }
+            }
+            return futureByteBuffer
+        }
+        
+        return AWSPayload(payload: .stream(size: size, stream: stream))
+    }
+    
+    /// Return the size of the payload. If the payload is a stream it is always possible to return a size
+    var size: Int? {
+        switch payload {
+        case .byteBuffer(let byteBuffer):
+            return byteBuffer.readableBytes
+        case .stream(let size,_):
+            return size
+        case .empty:
+            return 0
+        }
     }
 
     /// return payload as Data
     public func asData() -> Data? {
-        return byteBuffer.getData(at: byteBuffer.readerIndex, length: byteBuffer.readableBytes, byteTransferStrategy: .noCopy)
+        switch payload {
+        case .byteBuffer(let byteBuffer):
+            return byteBuffer.getData(at: byteBuffer.readerIndex, length: byteBuffer.readableBytes, byteTransferStrategy: .noCopy)
+        default:
+            return nil
+        }
     }
 
     /// return payload as String
     public func asString() -> String? {
-        return byteBuffer.getString(at: byteBuffer.readerIndex, length: byteBuffer.readableBytes, encoding: .utf8)
+        switch payload {
+        case .byteBuffer(let byteBuffer):
+            return byteBuffer.getString(at: byteBuffer.readerIndex, length: byteBuffer.readableBytes)
+        default:
+            return nil
+        }
     }
 
     /// return payload as ByteBuffer
-    public func asBytebuffer() -> ByteBuffer {
-        return byteBuffer
+    public func asByteBuffer() -> ByteBuffer? {
+        switch payload {
+        case .byteBuffer(let byteBuffer):
+            return byteBuffer
+        default:
+            return nil
+        }
     }
-
-    let byteBuffer: ByteBuffer
+    
+    /// does payload consist of zero bytes
+    public var isEmpty: Bool {
+        switch payload {
+        case .byteBuffer(let buffer):
+            return buffer.readableBytes == 0
+        case .stream:
+            return false
+        case .empty:
+            return true
+        }
+    }
 }
 
 extension AWSPayload: Decodable {

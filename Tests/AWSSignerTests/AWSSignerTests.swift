@@ -108,15 +108,4 @@ final class AWSSignerTests: XCTestCase {
             }
         }
     }
-
-    static var allTests = [
-        ("testSignGetHeaders", testSignGetHeaders),
-        ("testSignPutHeaders", testSignPutHeaders),
-        ("testSignS3GetURL", testSignS3GetURL),
-        ("testSignS3GetWithQueryURL", testSignS3GetWithQueryURL),
-        ("testSignS3PutURL", testSignS3PutURL),
-        ("testBodyData", testBodyData),
-        ("testPerformanceSignedURL", testPerformanceSignedURL),
-        ("testPerformanceSignedHeaders", testPerformanceSignedHeaders),
-    ]
 }

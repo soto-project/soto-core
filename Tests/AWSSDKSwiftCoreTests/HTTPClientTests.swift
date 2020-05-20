@@ -127,14 +127,6 @@ class AsyncHTTPClientTests: XCTestCase {
     func testBody() {
         HTTPClientTests(client).testBody()
     }
-
-    static var allTests : [(String, (AsyncHTTPClientTests) -> () throws -> Void)] {
-        return [
-            ("testGet", testGet),
-            ("testHeaders", testHeaders),
-            ("testBody", testBody)
-        ]
-    }
 }
 
 /// HTTP Client tests, to be used with any HTTP client that conforms to AWSHTTPClient

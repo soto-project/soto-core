@@ -241,25 +241,6 @@ class QueryEncoderTests: XCTestCase {
             XCTAssertEqual(queryAsString, "Object.Data=Hello")
         } catch {
             XCTFail("\(error)")
-        }
-
-        
-    }
-
-    static var allTests : [(String, (QueryEncoderTests) -> () throws -> Void)] {
-        return [
-            ("testSimpleStructureEncode", testSimpleStructureEncode),
-            ("testContainingStructureEncode", testContainingStructureEncode),
-            ("testEnumEncode", testEnumEncode),
-            ("testArrayEncode", testArrayEncode),
-            ("testArrayOfStructuresEncode", testArrayOfStructuresEncode),
-            ("testDictionaryEncode", testDictionaryEncode),
-            ("testDictionaryEnumKeyEncode", testDictionaryEnumKeyEncode),
-            ("testArrayEncodingEncode", testArrayEncodingEncode),
-            ("testDictionaryEncodingEncode", testDictionaryEncodingEncode),
-            ("testDictionaryEncodingEncode2", testDictionaryEncodingEncode2),
-            ("testDataBlobEncode", testDataBlobEncode),
-            ("testEC2Encode", testEC2Encode)
-        ]
+        }   
     }
 }

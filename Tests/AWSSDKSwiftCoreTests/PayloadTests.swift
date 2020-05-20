@@ -107,12 +107,4 @@ class PayloadTests: XCTestCase {
             XCTFail("Unexpected error: \(error)")
         }
     }
-
-    static var allTests : [(String, (PayloadTests) -> () throws -> Void)] {
-        return [
-            ("testStringRequestPayload", testStringRequestPayload),
-            ("testDataRequestPayload", testDataRequestPayload),
-            ("testByteBufferRequestPayload", testByteBufferRequestPayload),
-        ]
-    }
 }

@@ -41,43 +41,6 @@ class AWSClientTests: XCTestCase {
         }
     }
 
-    static var allTests : [(String, (AWSClientTests) -> () throws -> Void)] {
-        return [
-            ("testGetCredential", testGetCredential),
-            ("testExpiredCredential", testExpiredCredential),
-            ("testCreateAWSRequest", testCreateAWSRequest),
-            ("testCreateNIORequest", testCreateNIORequest),
-            ("testUnsignedClient", testUnsignedClient),
-            ("testProtocolContentType", testProtocolContentType),
-            ("testHeaderEncoding", testHeaderEncoding),
-            ("testQueryEncoding", testQueryEncoding),
-            ("testQueryEncodedArray", testQueryEncodedArray),
-            ("testQueryEncodedDictionary", testQueryEncodedDictionary),
-            ("testURIEncoding", testURIEncoding),
-            ("testValidateXMLResponse", testValidateXMLResponse),
-            ("testValidateXMLCodablePayloadResponse", testValidateXMLCodablePayloadResponse),
-            ("testXMLError", testXMLError),
-            ("testValidateQueryError", testQueryError),
-            ("testValidateJSONResponse", testValidateJSONResponse),
-            ("testValidateJSONCodablePayloadResponse", testValidateJSONCodablePayloadResponse),
-            ("testValidateJSONRawPayloadResponse", testValidateJSONRawPayloadResponse),
-            ("testValidateJSONError", testJSONError),
-            ("testProcessHAL", testProcessHAL),
-            ("testDataInJsonPayload", testDataInJsonPayload),
-            ("testPayloadDataInResponse", testPayloadDataInResponse),
-            ("testClientNoInputNoOutput", testClientNoInputNoOutput),
-            ("testClientWithInputNoOutput", testClientWithInputNoOutput),
-            ("testClientNoInputWithOutput", testClientNoInputWithOutput),
-            ("testEC2ClientRequest", testEC2ClientRequest),
-            ("testEC2ValidateError", testEC2ValidateError),
-            ("testRegionEnum", testRegionEnum),
-            ("testServerError", testServerError),
-            ("testClientRetry", testClientRetry),
-            ("testClientRetryFail", testClientRetryFail),
-            ("testClientResponseEventLoop", testClientResponseEventLoop),
-        ]
-    }
-
     struct C: AWSEncodableShape {
         public static var _encoding: [AWSMemberEncoding] = [
              AWSMemberEncoding(label: "value", location: .header(locationName: "value"))

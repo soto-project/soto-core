@@ -318,20 +318,4 @@ class PerformanceTests: XCTestCase {
             }
         }
     }
-
-    static var allTests : [(String, (PerformanceTests) -> () throws -> Void)] {
-        return [
-            ("testHeaderRequest", testHeaderRequest),
-            ("testXMLRequest", testXMLRequest),
-            ("testXMLPayloadRequest", testXMLPayloadRequest),
-            ("testJSONRequest", testJSONRequest),
-            ("testJSONPayloadRequest", testJSONPayloadRequest),
-            ("testQueryRequest", testQueryRequest),
-            ("testUnsignedRequest", testUnsignedRequest),
-            ("testSignedURLRequest", testSignedURLRequest),
-            ("testSignedHeadersRequest", testSignedHeadersRequest),
-            ("testValidateXMLResponse", testValidateXMLResponse),
-            ("testValidateJSONResponse", testValidateJSONResponse),
-        ]
-    }
 }

@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import class Foundation.ProcessInfo
-
 /// Configuration class defining an AWS service
 public class ServiceConfig {
 
@@ -72,7 +70,7 @@ public class ServiceConfig {
             partition = region.partition
         } else if let partitionEndpoint = partitionEndpoints[partition] {
             self.region = partitionEndpoint.region
-        } else if let defaultRegion = ProcessInfo.processInfo.environment["AWS_DEFAULT_REGION"] {
+        } else if let defaultRegion = Environment["AWS_DEFAULT_REGION"] {
             self.region = Region(rawValue: defaultRegion)
         } else {
             self.region = .useast1

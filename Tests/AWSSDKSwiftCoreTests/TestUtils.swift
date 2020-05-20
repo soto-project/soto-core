@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import AWSSDKSwiftCore
 import Foundation
+@testable import AWSSDKSwiftCore
 
 @propertyWrapper struct EnvironmentVariable<Value: LosslessStringConvertible> {
     var defaultValue: Value
@@ -26,7 +26,7 @@ import Foundation
     
     public var wrappedValue: Value {
         get {
-            guard let value = ProcessInfo.processInfo.environment[variableName] else { return defaultValue }
+            guard let value = Environment[variableName] else { return defaultValue }
             return Value(value) ?? defaultValue
         }
     }

@@ -12,18 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-func unwrap(_ any: Any) -> Any? {
-    let mirror = Mirror(reflecting: any)
-    guard mirror.displayStyle == .optional else { return any }
-    guard let first = mirror.children.first else { return nil }
-    return first.value
-}
+import XCTest
+@testable import AWSSDKSwiftCore
 
-extension Mirror {
-    func getAttribute(forKey key: String) -> Any? {
-        guard let matched = children.filter({ $0.label == key }).first else {
-            return nil
-        }
-        return unwrap(matched.value)
+class EnvironmentTests: XCTestCase {
+    func testGetPathFromEnvironment() {
+        let path = Environment["PATH"]
+        XCTAssertNotNil(path)
+        XCTAssertNotEqual(path, "")
     }
 }

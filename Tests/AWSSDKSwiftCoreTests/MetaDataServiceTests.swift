@@ -19,13 +19,6 @@ import NIOFoundationCompat
 @testable import AWSSDKSwiftCore
 
 class MetaDataServiceTests: XCTestCase {
-    static var allTests : [(String, (MetaDataServiceTests) -> () throws -> Void)] {
-        return [
-            ("testInstanceMetaDataService", testInstanceMetaDataService),
-            ("testInstanceMetaDataServiceFail", testInstanceMetaDataServiceFail),
-            ("testMetaDataGetCredential", testMetaDataGetCredential)
-        ]
-    }
 
     func testInstanceMetaDataService() {
         let body: [String: String] = ["Code" : "Success",

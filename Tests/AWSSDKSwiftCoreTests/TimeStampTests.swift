@@ -121,16 +121,4 @@ class TimeStampTests: XCTestCase {
             XCTFail("\(error)")
         }
     }
-
-    static var allTests : [(String, (TimeStampTests) -> () throws -> Void)] {
-        return [
-            ("testDecodeISOFromJSON", testDecodeISOFromJSON),
-            ("testDecodeISOFromXML", testDecodeISOFromXML),
-            ("testDecodeHttpFormattedTimestamp", testDecodeHttpFormattedTimestamp),
-            ("testDecodeUnixEpochTimestamp", testDecodeUnixEpochTimestamp),
-            ("testEncodeISO8601ToXML", testEncodeISO8601ToXML),
-            ("testEncodeHTTPHeaderToJSON", testEncodeHTTPHeaderToJSON),
-            ("testEncodeUnixEpochToJSON", testEncodeUnixEpochToJSON)
-        ]
-    }
 }

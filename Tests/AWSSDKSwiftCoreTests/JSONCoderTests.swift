@@ -151,12 +151,6 @@ class JSONCoderTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
     }
-
-    static var allTests : [(String, (JSONCoderTests) -> () throws -> Void)] {
-        return [
-            ("testSerializeToDictionaryAndJSON", testSerializeToDictionaryAndJSON),
-        ]
-    }
 }
 
 

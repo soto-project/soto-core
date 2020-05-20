@@ -273,13 +273,4 @@ class PaginateTests: XCTestCase {
             print(error)
         }
     }
-
-    static var allTests : [(String, (PaginateTests) -> () throws -> Void)] {
-        return [
-            ("testIntegerTokenPaginate", testIntegerTokenPaginate),
-            ("testStringTokenPaginate", testStringTokenPaginate),
-            ("testPaginateError", testPaginateError),
-            ("testPaginateErrorAfterFirstRequest", testPaginateErrorAfterFirstRequest),
-        ]
-    }
 }

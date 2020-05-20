@@ -139,15 +139,4 @@ class ValidationTests: XCTestCase {
         let a4 = A(path:"/%hello/test/")
         testValidationSuccess(a4)
     }
-
-    static var allTests : [(String, (ValidationTests) -> () throws -> Void)] {
-        return [
-            ("testNumericMinMaxValidation", testNumericMinMaxValidation),
-            ("testFloatingPointMinMaxValidation", testFloatingPointMinMaxValidation),
-            ("testStringLengthMinMaxValidation", testStringLengthMinMaxValidation),
-            ("testArrayLengthMinMaxValidation", testArrayLengthMinMaxValidation),
-            ("testStringPatternValidation", testStringPatternValidation),
-            ("testStringPattern2Validation", testStringPattern2Validation),
-        ]
-    }
 }

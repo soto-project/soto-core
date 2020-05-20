@@ -240,17 +240,4 @@ class CredentialTests: XCTestCase {
             XCTFail("\(error)")
         }
     }
-    
-    static var allTests : [(String, (CredentialTests) -> () throws -> Void)] {
-        return [
-            ("testSharedCredentials", testSharedCredentials),
-            ("testSharedCredentialsMissingSessionToken", testSharedCredentialsMissingSessionToken),
-            ("testSharedCredentialsMissingAccessKey", testSharedCredentialsMissingAccessKey),
-            ("testSharedCredentialsMissingSecretKey", testSharedCredentialsMissingSecretKey),
-            ("testSharedCredentialsMissingProfile", testSharedCredentialsMissingProfile),
-            ("testSharedCredentialsParseFailure", testSharedCredentialsParseFailure),
-            ("testExpiringCredential", testExpiringCredential),
-            ("testSharedCredentialINIParser", testSharedCredentialINIParser)
-        ]
-    }
 }

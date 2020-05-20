@@ -405,26 +405,5 @@ class DictionaryEncoderTests: XCTestCase {
             XCTFail("\(error)")
         }
     }
-    
-    static var allTests : [(String, (DictionaryEncoderTests) -> () throws -> Void)] {
-        return [
-            ("testDecode", testDecode),
-            ("testDecodeFail", testDecodeFail),
-            ("testSimpleStructureDecodeEncode", testSimpleStructureDecodeEncode),
-            ("testBaseTypesDecodeEncode", testBaseTypesDecodeEncode),
-            ("testContainingStructureDecodeEncode", testContainingStructureDecodeEncode),
-            ("testEnumDecodeEncode", testEnumDecodeEncode),
-            ("testArrayDecodeEncode", testArrayDecodeEncode),
-            ("testArrayOfStructuresDecodeEncode", testArrayOfStructuresDecodeEncode),
-            ("testDictionaryDecodeEncode", testDictionaryDecodeEncode),
-            ("testEnumDictionaryDecodeEncode", testEnumDictionaryDecodeEncode),
-            ("testDataDecodeEncode", testDataDecodeEncode),
-            ("testFloatOverflowDecodeErrors", testFloatOverflowDecodeErrors),
-            ("testInvalidValueDecodeErrors", testInvalidValueDecodeErrors),
-            ("testMissingKeyDecodeErrors", testMissingKeyDecodeErrors),
-            ("testNestedContainer", testNestedContainer),
-            ("testSupercoder", testSupercoder)
-        ]
-    }
 }
 

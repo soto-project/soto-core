@@ -112,24 +112,5 @@ class XMLTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
     }
-    
-    static var allTests : [(String, (XMLTests) -> () throws -> Void)] {
-        return [
-            ("testAddChild", testAddChild),
-            ("testAddRemoveChild", testAddRemoveChild),
-            ("testAttributeAdd", testAttributeAdd),
-            ("testAttributeReplace", testAttributeReplace),
-            ("testNamespaceAdd", testNamespaceAdd),
-            ("testNamespaceReplace", testNamespaceReplace),
-            ("testDocumentDefaultOutput", testDocumentDefaultOutput),
-            ("testNullNamespaceReplace", testNamespaceReplace),
-            ("testAttributesDecodeEncode", testAttributesDecodeEncode),
-            ("testNamespacesDecodeEncode", testNamespacesDecodeEncode),
-            ("testArrayDecodeEncode", testArrayDecodeEncode),
-            ("testCommentDecodeEncode", testArrayDecodeEncode),
-            ("testCDATADecodeEncode", testArrayDecodeEncode),
-            ("testWhitespaceDecodeEncode", testWhitespaceDecodeEncode),
-        ]
-    }
 }
 

@@ -470,29 +470,4 @@ class XMLCoderTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
     }
-
-    static var allTests : [(String, (XMLCoderTests) -> () throws -> Void)] {
-        return [
-            ("testSimpleStructureDecodeEncode", testSimpleStructureDecodeEncode),
-            ("testContainingStructureDecodeEncode", testContainingStructureDecodeEncode),
-            ("testEnumDecodeEncode", testEnumDecodeEncode),
-            ("testArrayDecodeEncode", testArrayDecodeEncode),
-            ("testArrayOfStructuresDecodeEncode", testArrayOfStructuresDecodeEncode),
-            ("testDictionaryDecodeEncode", testDictionaryDecodeEncode),
-            ("testDataDecodeEncode", testDataDecodeEncode),
-            ("testSerializeToXML", testSerializeToXML),
-            ("testDecodeExpandedContainers", testDecodeExpandedContainers),
-            ("testArrayEncodingDecodeEncode", testArrayEncodingDecodeEncode),
-            ("testArrayOfStructuresEncodingDecodeEncode", testArrayOfStructuresEncodingDecodeEncode),
-            ("testDictionaryEncodingDecodeEncode", testDictionaryEncodingDecodeEncode),
-            ("testDictionaryOfStructuresEncodingDecodeEncode", testDictionaryOfStructuresEncodingDecodeEncode),
-            ("testFlatDictionaryEncodingDecodeEncode", testFlatDictionaryEncodingDecodeEncode),
-            ("testEnumDictionaryEncodingDecodeEncode", testEnumDictionaryEncodingDecodeEncode),
-            ("testEnumFlatDictionaryEncodingDecodeEncode", testEnumFlatDictionaryEncodingDecodeEncode),
-
-            ("testEncodeDecodeXML", testEncodeDecodeXML),
-            ("testDecodeFail", testDecodeFail),
-            ("testEncodeDecodeDictionariesXML", testEncodeDecodeDictionariesXML)
-        ]
-    }
 }

@@ -142,19 +142,6 @@ final class AWSCryptoTests: XCTestCase {
         XCTAssertEqual(authenticationKey, authenticationKey2)
         XCTAssertEqual(authenticationKey.hexDigest(), authenticationKey2.hexDigest())
     }
-    
-    static var allTests = [
-        ("testMD5", testMD5),
-        ("testSHA256", testSHA256),
-        ("testSHA384", testSHA384),
-        ("testSHA512", testSHA512),
-        ("testHMAC", testHMAC),
-        ("testMD5InitUpdateFinal", testMD5InitUpdateFinal),
-        ("testSHA256InitUpdateFinal", testSHA256InitUpdateFinal),
-        ("testSHA384InitUpdateFinal", testSHA384InitUpdateFinal),
-        ("testSHA512InitUpdateFinal", testSHA512InitUpdateFinal),
-        ("testHMACInitUpdateFinal", testHMACInitUpdateFinal)
-    ]
 }
 
 public extension Sequence where Element == UInt8 {

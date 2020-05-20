@@ -20,7 +20,7 @@ jobs:
       with:
         fetch-depth: 1
     - name: SPM tests
-      run: swift test --enable-code-coverage
+      run: swift test --enable-code-coverage --sanitize=thread
     - name: Convert coverage files
       run: |
         xcrun llvm-cov export -format "lcov" \
@@ -46,7 +46,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        tag: ['swift:5.1', 'swift:5.2']
+        tag: 
+          - swift:5.1
+          - swift:5.2
     container:
       image: ${{ matrix.tag }}
     steps:
@@ -57,9 +59,9 @@ jobs:
     - name: Install dependencies
       run: |
         apt-get update -qq
-        apt-get install -q -y tzdata libssl-dev zlib1g-dev
+        apt-get install -q -y tzdata libssl-dev zlib1g-dev curl
     - name: Test
-      run: swift test --parallel --enable-code-coverage --enable-test-discovery
+      run: swift test --enable-test-discovery --enable-code-coverage --sanitize=thread
     - name: Convert coverage files
       run: |
         llvm-cov export -format="lcov" \
@@ -67,6 +69,6 @@ jobs:
           -ignore-filename-regex="\/Tests\/" \
           -instr-profile .build/debug/codecov/default.profdata > info.lcov
     - name: Upload to codecov.io
-      uses: codecov/codecov-action@v1.0.3
+      uses: codecov/codecov-action@v1
       with:
-        token: ${{secrets.CODECOV_TOKEN}}
+        file: info.lcov

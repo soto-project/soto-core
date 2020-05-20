@@ -341,17 +341,6 @@ extension AWSClient {
         }
         return recordMetrics(future, service: serviceConfig.service, operation: operationName)
     }
-
-    /// generate a signed URL
-    /// - parameters:
-    ///     - url : URL to sign
-    ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
-    ///     - expires: How long before the signed URL expires
-    /// - returns:
-    ///     A signed URL
-    public func signURL(url: URL, httpMethod: String, expires: Int = 86400) -> EventLoopFuture<URL> {
-        return signer.map { signer in signer.signURL(url: url, method: HTTPMethod(rawValue: httpMethod), expires: expires) }
-    }
 }
 
 // request creator

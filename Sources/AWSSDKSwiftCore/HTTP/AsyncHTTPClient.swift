@@ -60,7 +60,7 @@ extension AsyncHTTPClient.HTTPClient {
             precondition(self.eventLoopGroup.makeIterator().contains { $0 === eventLoop }, "EventLoop provided to AWSClient must be part of the HTTPClient's EventLoopGroup.")
         }
         let requestBody: AsyncHTTPClient.HTTPClient.Body?
-        if let body = request.body {
+        if case .byteBuffer(let body) = request.body.payload {
             requestBody = .byteBuffer(body)
         } else {
             requestBody = nil

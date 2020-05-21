@@ -148,10 +148,6 @@ public class AWSTestServer {
     }
 }
 
-// errors
-extension AWSTestServer {
-}
-
 extension AWSTestServer {
     /// read one request, process it then return the respons
     func processSingleRawRequest(_ process: (Request) throws -> Result<Response>) throws -> Bool {

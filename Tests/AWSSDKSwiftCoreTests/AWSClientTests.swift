@@ -406,6 +406,35 @@ class AWSClientTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
     }
+    
+    func testSignedClient() {
+        let input = E()
+        let client = AWSClient(
+            accessKeyId: "foo",
+            secretAccessKey: "bar",
+            region: .useast1,
+            service: "s3",
+            serviceProtocol: .restxml,
+            apiVersion: "2013-12-02",
+            middlewares: [],
+            httpClientProvider: .createNew
+        )
+
+        do {
+            let awsRequest = try client.createAWSRequest(
+                operation: "CopyObject",
+                path: "/",
+                httpMethod: "PUT",
+                input: input
+            )
+
+            let request: AWSHTTPRequest = awsRequest.createHTTPRequest(signer: try client.signer.wait())
+
+            XCTAssertNotNil(request.headers["Authorization"].first)
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
 
     func testProtocolContentType() throws {
         struct Object: AWSEncodableShape {

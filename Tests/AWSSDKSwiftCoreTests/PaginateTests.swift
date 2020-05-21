@@ -103,7 +103,7 @@ class PaginateTests: XCTestCase {
                 }
                 let continueProcessing = (endIndex != arraySize)
                 let output = CounterOutput(array: array, outputToken: endIndex != arraySize ? endIndex : nil)
-                return AWSTestServer.Result(output: output, continueProcessing: continueProcessing)
+                return .result(output, continueProcessing: continueProcessing)
             }
 
             // wait for response
@@ -169,7 +169,7 @@ class PaginateTests: XCTestCase {
             continueProcessing = true
         }
         let output = StringListOutput(array: array, outputToken: outputToken)
-        return AWSTestServer.Result(output: output, continueProcessing: continueProcessing)
+        return .result(output, continueProcessing: continueProcessing)
     }
 
     func testStringTokenPaginate() throws {
@@ -214,8 +214,9 @@ class PaginateTests: XCTestCase {
 
         do {
             // aws server process
-            let error = AWSTestServer.ErrorType.badRequest
-            try awsServer.processWithErrors(stringListServerProcess, errors: { _ in AWSTestServer.Result(output: error, continueProcessing: false)})
+            try awsServer.process { (request: StringListInput) -> AWSTestServer.Result<StringListOutput> in
+                return .error(.badRequest)
+            }
 
             // wait for response
             try future.wait()
@@ -236,14 +237,15 @@ class PaginateTests: XCTestCase {
 
         do {
             // aws server process
-            let error = AWSTestServer.ErrorType.badRequest
-            try awsServer.processWithErrors(stringListServerProcess, errors: {count in
-                if count > 0 {
-                    return AWSTestServer.Result(output: error, continueProcessing: false)
+            var count = 0
+            try awsServer.process {(request: StringListInput) -> AWSTestServer.Result<StringListOutput> in
+                if count == 0 {
+                    count += 1
+                    return .error(.badRequest, continueProcessing: true)
                 } else {
-                    return AWSTestServer.Result(output: nil, continueProcessing: true)
+                    return try stringListServerProcess(request)
                 }
-            })
+            }
 
             // wait for response
             try future.wait()

@@ -66,16 +66,31 @@ public class AWSTestServer {
         public static let ok = Response(httpStatus: .ok)
     }
 
-    // result from process
-    public struct Result<Output>{
-        public let output: Output
-        public let continueProcessing: Bool
+    /// Error type
+    public struct ErrorType {
+        public let status: Int
+        public let errorCode: String
+        public let message: String
 
-        public init(output: Output, continueProcessing: Bool) {
-            self.output = output
-            self.continueProcessing = continueProcessing
-        }
+        public var json: String { return "{\"__type\":\"\(errorCode)\", \"message\": \"\(message)\"}"}
+        public var xml: String { return "<Error><Code>\(errorCode)</Code><Message>\(message)</Message></Error>"}
+
+        public static let badRequest = ErrorType(status: 400, errorCode: "BadRequest", message: "AWSTestServer_ErrorType_BadRequest")
+        public static let accessDenied = ErrorType(status: 401, errorCode: "AccessDenied", message: "AWSTestServer_ErrorType_AccessDenied")
+        public static let notFound = ErrorType(status: 404, errorCode: "NotFound", message: "AWSTestServer_ErrorType_NotFound")
+        public static let tooManyRequests = ErrorType(status: 429, errorCode: "TooManyRequests", message: "AWSTestServer_ErrorType_TooManyRequests")
+
+        public static let `internal` = ErrorType(status: 500, errorCode: "InternalFailure", message: "AWSTestServer_ErrorType_InternalFailure")
+        public static let notImplemented = ErrorType(status: 501, errorCode: "NotImplemented", message: "AWSTestServer_ErrorType_NotImplemented")
+        public static let serviceUnavailable = ErrorType(status: 503, errorCode: "ServiceUnavailable", message: "AWSTestServer_ErrorType_ServiceUnavailable")
     }
+
+    /// result from process
+    public enum Result<Output> {
+        case result(Output, continueProcessing: Bool = false)
+        case error(ErrorType, continueProcessing: Bool = false)
+    }
+    
     // httpBin function response
     public struct HTTPBinResponse: Codable {
         public let method: String?
@@ -107,49 +122,10 @@ public class AWSTestServer {
         while(try processSingleRequest(process)) { }
     }
 
-    /// run server reading request, convert from to an input shape processing them and converting the result back to a response. Return an error after so many requests
-    public func processWithErrors<Input: Decodable, Output: Encodable>(_ process: (Input) throws -> Result<Output>, errors: (Int) -> Result<ErrorType?>) throws {
-        var count = 0
-        var continueProcessing = true
-        repeat {
-            let errorResult = errors(count)
-            if let error = errorResult.output {
-                _ = try readRequest()
-                try writeError(error)
-                continueProcessing = errorResult.continueProcessing
-            } else if errorResult.continueProcessing == false {
-                continueProcessing = false
-            } else {
-                continueProcessing = try processSingleRequest(process)
-            }
-            count += 1
-        } while(continueProcessing)
-    }
-
     /// run server reading requests, processing them and returning responses
-    public func process(_ process: (Request) throws -> Result<Response>) throws {
-        while(try processSingleRequest(process)) { }
+    public func processRaw(_ process: (Request) throws -> Result<Response>) throws {
+        while(try processSingleRawRequest(process)) { }
     }
-
-    /// run server reading requests, processing them and returning responses. Return an error after so many requests
-    public func processWithErrors(process: (Request) throws -> Result<Response>, errors: (Int) -> Result<ErrorType?>) throws {
-        var count = 0
-        var continueProcessing = true
-        repeat {
-            let errorResult = errors(count)
-            if let error = errorResult.output {
-                _ = try readRequest()
-                try writeError(error)
-                continueProcessing = errorResult.continueProcessing
-            } else if errorResult.continueProcessing == false {
-                continueProcessing = false
-            } else {
-                continueProcessing = try processSingleRequest(process)
-            }
-            count += 1
-        } while(continueProcessing)
-    }
-
 
     /// read one request and return details back in body
     public func httpBin() throws {
@@ -174,33 +150,21 @@ public class AWSTestServer {
 
 // errors
 extension AWSTestServer {
-    public struct ErrorType {
-        public let status: Int
-        public let errorCode: String
-        public let message: String
-
-        public var json: String { return "{\"__type\":\"\(errorCode)\", \"message\": \"\(message)\"}"}
-        public var xml: String { return "<Error><Code>\(errorCode)</Code><Message>\(message)</Message></Error>"}
-
-        public static let badRequest = ErrorType(status: 400, errorCode: "BadRequest", message: "AWSTestServer_ErrorType_BadRequest")
-        public static let accessDenied = ErrorType(status: 401, errorCode: "AccessDenied", message: "AWSTestServer_ErrorType_AccessDenied")
-        public static let notFound = ErrorType(status: 404, errorCode: "NotFound", message: "AWSTestServer_ErrorType_NotFound")
-        public static let tooManyRequests = ErrorType(status: 429, errorCode: "TooManyRequests", message: "AWSTestServer_ErrorType_TooManyRequests")
-
-        public static let `internal` = ErrorType(status: 500, errorCode: "InternalFailure", message: "AWSTestServer_ErrorType_InternalFailure")
-        public static let notImplemented = ErrorType(status: 501, errorCode: "NotImplemented", message: "AWSTestServer_ErrorType_NotImplemented")
-        public static let serviceUnavailable = ErrorType(status: 503, errorCode: "ServiceUnavailable", message: "AWSTestServer_ErrorType_ServiceUnavailable")
-    }
 }
 
 extension AWSTestServer {
     /// read one request, process it then return the respons
-    func processSingleRequest(_ process: (Request) throws -> Result<Response>) throws -> Bool {
+    func processSingleRawRequest(_ process: (Request) throws -> Result<Response>) throws -> Bool {
         let request = try readRequest()
         let result = try process(request)
-        try writeResponse(result.output)
-
-        return result.continueProcessing
+        switch result {
+        case .result(let response, let continueProcessing):
+            try writeResponse(response)
+            return continueProcessing
+        case .error(let error, let continueProcessing):
+            try writeError(error)
+            return continueProcessing
+        }
     }
 
     /// read one request, convert it from to an input shape, processing it and convert the result back to a response.
@@ -221,20 +185,25 @@ extension AWSTestServer {
         // process
         let result = try process(input)
 
-        // Convert to Output AWSShape
-        let outputData: Data
-        switch serviceProtocol {
-        case .json, .restjson:
-            outputData = try JSONEncoder().encode(result.output)
-        case .xml:
-            outputData = try XMLEncoder().encode(result.output).xmlString.data(using: .utf8) ?? Data()
+        switch result {
+        case .result(let response, let continueProcessing):
+            // Convert to Output AWSShape
+            let outputData: Data
+            switch serviceProtocol {
+            case .json, .restjson:
+                outputData = try JSONEncoder().encode(response)
+            case .xml:
+                outputData = try XMLEncoder().encode(response).xmlString.data(using: .utf8) ?? Data()
+            }
+            var byteBuffer = byteBufferAllocator.buffer(capacity: 0)
+            byteBuffer.writeBytes(outputData)
+
+            try writeResponse(Response(httpStatus: .ok, headers: [:], body: byteBuffer))
+            return continueProcessing
+        case .error(let error, let continueProcessing):
+            try writeError(error)
+            return continueProcessing
         }
-        var byteBuffer = byteBufferAllocator.buffer(capacity: 0)
-        byteBuffer.writeBytes(outputData)
-
-        try writeResponse(Response(httpStatus: .ok, headers: [:], body: byteBuffer))
-
-        return result.continueProcessing
     }
 
     /// read inbound request

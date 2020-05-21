@@ -43,9 +43,9 @@ class PayloadTests: XCTestCase {
             let input = DataPayload(data: payload)
             let response = client.send(operation: "test", path: "/", httpMethod: "POST", input: input)
 
-            try awsServer.process { request in
+            try awsServer.processRaw { request in
                 XCTAssertEqual(request.body.getString(at: 0, length: request.body.readableBytes), expectedResult)
-                return AWSTestServer.Result(output: .ok, continueProcessing: false)
+                return .result(.ok)
             }
 
             try response.wait()
@@ -92,11 +92,11 @@ class PayloadTests: XCTestCase {
             )
             let response: EventLoopFuture<Output> = client.send(operation: "test", path: "/", httpMethod: "POST")
 
-            try awsServer.process { request in
+            try awsServer.processRaw { request in
                 var byteBuffer = ByteBufferAllocator().buffer(capacity: 0)
                 byteBuffer.writeString("testResponsePayload")
                 let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
-                return AWSTestServer.Result(output: response, continueProcessing: false)
+                return .result(response)
             }
 
             let output = try response.wait()

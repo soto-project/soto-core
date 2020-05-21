@@ -1,1209 +1,1671 @@
 {
   "warnings": [
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSClient+Paginate.swift",
-      "line": 13,
-      "symbol": "AWSPaginateStringToken.usingPaginationToken(_:)",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSClient+Paginate.swift",
+      "line": 20,
+      "symbol": "AWSPaginateToken.Token",
+      "symbol_kind": "source.lang.swift.decl.associatedtype",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSClient+Paginate.swift",
+      "line": 21,
+      "symbol": "AWSPaginateToken.usingPaginationToken(_:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSClient+Paginate.swift",
-      "line": 19,
-      "symbol": "AWSPaginateIntToken.usingPaginationToken(_:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSClient.swift",
-      "line": 28,
-      "symbol": "AWSClient.RequestError",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSClient.swift",
+      "line": 34,
+      "symbol": "AWSClient.ClientError",
       "symbol_kind": "source.lang.swift.decl.enum",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSClient.swift",
-      "line": 29,
-      "symbol": "AWSClient.RequestError.invalidURL(_:)",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSClient.swift",
+      "line": 35,
+      "symbol": "AWSClient.ClientError.invalidURL(_:)",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSClient.swift",
-      "line": 762,
-      "symbol": "AWSClient.RequestError",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSClient.swift",
+      "line": 36,
+      "symbol": "AWSClient.ClientError.tooMuchData",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSClient.swift",
+      "line": 68,
+      "symbol": "AWSClient.region",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSClient.swift",
+      "line": 69,
+      "symbol": "AWSClient.endpoint",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSClient.swift",
+      "line": 70,
+      "symbol": "AWSClient.serviceProtocol",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSClient.swift",
+      "line": 794,
+      "symbol": "AWSClient.ClientError",
       "symbol_kind": "source.lang.swift.decl.extension",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSShapes/TimeStamp.swift",
-      "line": 16,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSShapes/TimeStamp.swift",
+      "line": 23,
       "symbol": "TimeStamp.stringValue",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSShapes/TimeStamp.swift",
-      "line": 21,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSShapes/TimeStamp.swift",
+      "line": 27,
       "symbol": "TimeStamp.dateValue",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSShapes/TimeStamp.swift",
-      "line": 23,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSShapes/TimeStamp.swift",
+      "line": 29,
       "symbol": "TimeStamp.init(_:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSShapes/TimeStamp.swift",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSShapes/TimeStamp.swift",
+      "line": 33,
+      "symbol": "TimeStamp.init(_:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSShapes/TimeStamp.swift",
+      "line": 38,
+      "symbol": "TimeStamp.init(_:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
       "line": 27,
-      "symbol": "TimeStamp.init(_:)",
+      "symbol": "ExpiringCredential.accessKeyId",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
+      "line": 28,
+      "symbol": "ExpiringCredential.secretAccessKey",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
+      "line": 29,
+      "symbol": "ExpiringCredential.sessionToken",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
+      "line": 30,
+      "symbol": "ExpiringCredential.expiration",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
+      "line": 32,
+      "symbol": "ExpiringCredential.init(accessKeyId:secretAccessKey:sessionToken:expiration:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/AWSShapes/TimeStamp.swift",
-      "line": 31,
-      "symbol": "TimeStamp.init(_:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Bytes.swift",
-      "line": 10,
-      "symbol": "UInt8.hexdigest()",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 16,
-      "symbol": "CredentialProvider.accessKeyId",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 17,
-      "symbol": "CredentialProvider.secretAccessKey",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 18,
-      "symbol": "CredentialProvider.sessionToken",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 19,
-      "symbol": "CredentialProvider.expiration",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 39,
-      "symbol": "Credential.accessKeyId",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 40,
-      "symbol": "Credential.secretAccessKey",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 41,
-      "symbol": "Credential.sessionToken",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 42,
-      "symbol": "Credential.expiration",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 44,
-      "symbol": "Credential.init(accessKeyId:secretAccessKey:sessionToken:expiration:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 79,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
+      "line": 76,
       "symbol": "SharedCredential.SharedCredentialError.missingProfile(_:)",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 80,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
+      "line": 77,
       "symbol": "SharedCredential.SharedCredentialError.missingAccessKeyId",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 81,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
+      "line": 78,
       "symbol": "SharedCredential.SharedCredentialError.missingSecretAccessKey",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 84,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
+      "line": 81,
       "symbol": "SharedCredential.accessKeyId",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 85,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
+      "line": 82,
       "symbol": "SharedCredential.secretAccessKey",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 86,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
+      "line": 83,
       "symbol": "SharedCredential.sessionToken",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 87,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
+      "line": 84,
       "symbol": "SharedCredential.expiration",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 89,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
+      "line": 86,
       "symbol": "SharedCredential.init(filename:profile:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 119,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
+      "line": 116,
       "symbol": "EnvironmentCredential.accessKeyId",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 120,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
+      "line": 117,
       "symbol": "EnvironmentCredential.secretAccessKey",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 121,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
+      "line": 118,
       "symbol": "EnvironmentCredential.sessionToken",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 122,
-      "symbol": "EnvironmentCredential.expiration",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
-      "line": 124,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/Credential.swift",
+      "line": 120,
       "symbol": "EnvironmentCredential.init()",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
-      "line": 120,
-      "symbol": "AWSShape.validate()",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
-      "line": 128,
-      "symbol": "AWSShape.validate(_:name:parent:min:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
-      "line": 131,
-      "symbol": "AWSShape.validate(_:name:parent:max:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
-      "line": 134,
-      "symbol": "AWSShape.validate(_:name:parent:min:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
-      "line": 137,
-      "symbol": "AWSShape.validate(_:name:parent:max:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
-      "line": 140,
-      "symbol": "AWSShape.validate(_:name:parent:min:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
-      "line": 143,
-      "symbol": "AWSShape.validate(_:name:parent:max:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
-      "line": 146,
-      "symbol": "AWSShape.validate(_:name:parent:pattern:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
-      "line": 152,
-      "symbol": "AWSShape.validate(_:name:parent:min:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
-      "line": 156,
-      "symbol": "AWSShape.validate(_:name:parent:max:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
-      "line": 160,
-      "symbol": "AWSShape.validate(_:name:parent:min:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
-      "line": 164,
-      "symbol": "AWSShape.validate(_:name:parent:max:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
-      "line": 168,
-      "symbol": "AWSShape.validate(_:name:parent:min:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
-      "line": 172,
-      "symbol": "AWSShape.validate(_:name:parent:max:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
-      "line": 176,
-      "symbol": "AWSShape.validate(_:name:parent:pattern:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
-      "line": 191,
-      "symbol": "AWSShapeMember.ShapeEncoding.xmlEncoding",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
-      "line": 209,
-      "symbol": "AWSShape.getXMLContainerCoding(for:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.static",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShapeMember.swift",
-      "line": 13,
-      "symbol": "AWSShapeMember.Shape.structure",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShapeMember.swift",
-      "line": 14,
-      "symbol": "AWSShapeMember.Shape.enum",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShapeMember.swift",
-      "line": 15,
-      "symbol": "AWSShapeMember.Shape.map",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShapeMember.swift",
-      "line": 16,
-      "symbol": "AWSShapeMember.Shape.list",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShapeMember.swift",
-      "line": 17,
-      "symbol": "AWSShapeMember.Shape.string",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShapeMember.swift",
-      "line": 18,
-      "symbol": "AWSShapeMember.Shape.integer",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShapeMember.swift",
-      "line": 19,
-      "symbol": "AWSShapeMember.Shape.blob",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShapeMember.swift",
-      "line": 20,
-      "symbol": "AWSShapeMember.Shape.long",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShapeMember.swift",
-      "line": 21,
-      "symbol": "AWSShapeMember.Shape.double",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShapeMember.swift",
-      "line": 22,
-      "symbol": "AWSShapeMember.Shape.float",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShapeMember.swift",
-      "line": 23,
-      "symbol": "AWSShapeMember.Shape.boolean",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShapeMember.swift",
-      "line": 24,
-      "symbol": "AWSShapeMember.Shape.timestamp",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShapeMember.swift",
-      "line": 25,
-      "symbol": "AWSShapeMember.Shape.any",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShapeMember.swift",
-      "line": 30,
-      "symbol": "AWSShapeMember.Location.uri(locationName:)",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShapeMember.swift",
-      "line": 31,
-      "symbol": "AWSShapeMember.Location.querystring(locationName:)",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShapeMember.swift",
-      "line": 32,
-      "symbol": "AWSShapeMember.Location.header(locationName:)",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShapeMember.swift",
-      "line": 33,
-      "symbol": "AWSShapeMember.Location.body(locationName:)",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShapeMember.swift",
-      "line": 35,
-      "symbol": "AWSShapeMember.Location.name",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShapeMember.swift",
-      "line": 74,
-      "symbol": "AWSShapeMember.init(label:location:required:type:encoding:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
-      "line": 9,
-      "symbol": "Region",
-      "symbol_kind": "source.lang.swift.decl.enum",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
-      "line": 10,
-      "symbol": "Region.useast1",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
-      "line": 11,
-      "symbol": "Region.useast2",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
-      "line": 12,
-      "symbol": "Region.uswest1",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
-      "line": 13,
-      "symbol": "Region.uswest2",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
-      "line": 14,
-      "symbol": "Region.apsouth1",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
-      "line": 15,
-      "symbol": "Region.apnortheast2",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
-      "line": 16,
-      "symbol": "Region.apsoutheast1",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
-      "line": 17,
-      "symbol": "Region.apsoutheast2",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
-      "line": 18,
-      "symbol": "Region.apnortheast1",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
-      "line": 19,
-      "symbol": "Region.apeast1",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
-      "line": 20,
-      "symbol": "Region.cacentral1",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
-      "line": 21,
-      "symbol": "Region.euwest1",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
-      "line": 22,
-      "symbol": "Region.euwest3",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
-      "line": 23,
-      "symbol": "Region.euwest2",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
-      "line": 24,
-      "symbol": "Region.eucentral1",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
-      "line": 25,
-      "symbol": "Region.eunorth1",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
-      "line": 26,
-      "symbol": "Region.eusouth1",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSMemberEncoding.swift",
       "line": 27,
-      "symbol": "Region.saeast1",
+      "symbol": "AWSMemberEncoding.Location.uri(locationName:)",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSMemberEncoding.swift",
       "line": 28,
-      "symbol": "Region.mesouth1",
+      "symbol": "AWSMemberEncoding.Location.querystring(locationName:)",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSMemberEncoding.swift",
       "line": 29,
-      "symbol": "Region.afsouth1",
+      "symbol": "AWSMemberEncoding.Location.header(locationName:)",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
-      "line": 9,
-      "symbol": "ServiceProtocolType",
-      "symbol_kind": "source.lang.swift.decl.enum",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
-      "line": 10,
-      "symbol": "ServiceProtocolType.json",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSMemberEncoding.swift",
+      "line": 30,
+      "symbol": "AWSMemberEncoding.Location.statusCode",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
-      "line": 11,
-      "symbol": "ServiceProtocolType.restjson",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSMemberEncoding.swift",
+      "line": 31,
+      "symbol": "AWSMemberEncoding.Location.body(locationName:)",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
-      "line": 12,
-      "symbol": "ServiceProtocolType.restxml",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
-      "line": 13,
-      "symbol": "ServiceProtocolType.query",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
-      "line": 14,
-      "symbol": "ServiceProtocolType.other(_:)",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
-      "line": 17,
-      "symbol": "ServiceProtocolType",
-      "symbol_kind": "source.lang.swift.decl.extension",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
-      "line": 18,
-      "symbol": "ServiceProtocolType.init(rawValue:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
-      "line": 33,
-      "symbol": "ServiceProtocolType.rawValue",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSMemberEncoding.swift",
       "line": 49,
-      "symbol": "ServiceProtocol",
+      "symbol": "AWSMemberEncoding.init(label:location:encoding:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
+      "line": 82,
+      "symbol": "AWSEncodableShape.validate()",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
+      "line": 90,
+      "symbol": "AWSEncodableShape.validate(_:name:parent:min:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
+      "line": 93,
+      "symbol": "AWSEncodableShape.validate(_:name:parent:max:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
+      "line": 96,
+      "symbol": "AWSEncodableShape.validate(_:name:parent:min:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
+      "line": 99,
+      "symbol": "AWSEncodableShape.validate(_:name:parent:max:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
+      "line": 102,
+      "symbol": "AWSEncodableShape.validate(_:name:parent:min:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
+      "line": 105,
+      "symbol": "AWSEncodableShape.validate(_:name:parent:max:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
+      "line": 108,
+      "symbol": "AWSEncodableShape.validate(_:name:parent:min:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
+      "line": 115,
+      "symbol": "AWSEncodableShape.validate(_:name:parent:max:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
+      "line": 122,
+      "symbol": "AWSEncodableShape.validate(_:name:parent:pattern:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
+      "line": 128,
+      "symbol": "AWSEncodableShape.validate(_:name:parent:min:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
+      "line": 132,
+      "symbol": "AWSEncodableShape.validate(_:name:parent:max:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
+      "line": 136,
+      "symbol": "AWSEncodableShape.validate(_:name:parent:min:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
+      "line": 140,
+      "symbol": "AWSEncodableShape.validate(_:name:parent:max:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
+      "line": 144,
+      "symbol": "AWSEncodableShape.validate(_:name:parent:min:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
+      "line": 148,
+      "symbol": "AWSEncodableShape.validate(_:name:parent:max:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
+      "line": 152,
+      "symbol": "AWSEncodableShape.validate(_:name:parent:min:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
+      "line": 156,
+      "symbol": "AWSEncodableShape.validate(_:name:parent:max:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
+      "line": 160,
+      "symbol": "AWSEncodableShape.validate(_:name:parent:pattern:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
+      "line": 177,
+      "symbol": "PayloadOptions.allowStreaming",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
+      "line": 178,
+      "symbol": "PayloadOptions.allowChunkedStreaming",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
+      "line": 185,
+      "symbol": "AWSShapeWithPayload.options",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/AWSShape.swift",
+      "line": 189,
+      "symbol": "AWSShapeWithPayload.options",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 17,
+      "symbol": "Region",
       "symbol_kind": "source.lang.swift.decl.struct",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
-      "line": 50,
-      "symbol": "ServiceProtocol.Version",
-      "symbol_kind": "source.lang.swift.decl.struct",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 25,
+      "symbol": "Region.afsouth1",
+      "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 27,
+      "symbol": "Region.apeast1",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 29,
+      "symbol": "Region.apnortheast1",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 31,
+      "symbol": "Region.apnortheast2",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 33,
+      "symbol": "Region.apsouth1",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 35,
+      "symbol": "Region.apsoutheast1",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 37,
+      "symbol": "Region.apsoutheast2",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 39,
+      "symbol": "Region.cacentral1",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 41,
+      "symbol": "Region.cnnorth1",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 43,
+      "symbol": "Region.cnnorthwest1",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 45,
+      "symbol": "Region.eucentral1",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 47,
+      "symbol": "Region.eunorth1",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 49,
+      "symbol": "Region.eusouth1",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
       "line": 51,
-      "symbol": "ServiceProtocol.Version.major",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "symbol": "Region.euwest1",
+      "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
-      "line": 52,
-      "symbol": "ServiceProtocol.Version.minor",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 53,
+      "symbol": "Region.euwest2",
+      "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
-      "line": 54,
-      "symbol": "ServiceProtocol.Version.init(major:minor:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 55,
+      "symbol": "Region.euwest3",
+      "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
-      "line": 60,
-      "symbol": "ServiceProtocol.type",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 57,
+      "symbol": "Region.mesouth1",
+      "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 59,
+      "symbol": "Region.saeast1",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
       "line": 61,
-      "symbol": "ServiceProtocol.version",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "symbol": "Region.useast1",
+      "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
       "line": 63,
-      "symbol": "ServiceProtocol.init(type:version:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "symbol": "Region.useast2",
+      "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 65,
+      "symbol": "Region.usgoveast1",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 67,
+      "symbol": "Region.usgovwest1",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
       "line": 69,
-      "symbol": "ServiceProtocol.Version",
-      "symbol_kind": "source.lang.swift.decl.extension",
+      "symbol": "Region.usisoeast1",
+      "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
-      "line": 70,
-      "symbol": "ServiceProtocol.Version.stringValue",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 71,
+      "symbol": "Region.usisobeast1",
+      "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
-      "line": 74,
-      "symbol": "ServiceProtocol.Version.hashValue",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 73,
+      "symbol": "Region.uswest1",
+      "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
-      "line": 79,
-      "symbol": "ServiceProtocol",
-      "symbol_kind": "source.lang.swift.decl.extension",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 75,
+      "symbol": "Region.uswest2",
+      "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
-      "line": 80,
-      "symbol": "ServiceProtocol.init(name:version:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/XMLDecoder.swift",
-      "line": 36,
-      "symbol": "XMLCodable.getXMLContainerCoding(for:)",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 77,
+      "symbol": "Region.other(_:)",
       "symbol_kind": "source.lang.swift.decl.function.method.static",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/XMLDecoder.swift",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 80,
+      "symbol": "Region",
+      "symbol_kind": "source.lang.swift.decl.extension",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 82,
+      "symbol": "Region.partition",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 115,
+      "symbol": "Partition",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 137,
+      "symbol": "Partition.aws",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 139,
+      "symbol": "Partition.awscn",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
       "line": 141,
-      "symbol": "XMLDecoder.init()",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "symbol": "Partition.awsusgov",
+      "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/XMLEncoder.swift",
-      "line": 125,
-      "symbol": "XMLEncoder.init()",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 143,
+      "symbol": "Partition.awsiso",
+      "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/XMLEncoder.swift",
-      "line": 127,
-      "symbol": "XMLEncoder.encode(_:name:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 145,
+      "symbol": "Partition.awsisob",
+      "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Error.swift",
-      "line": 12,
-      "symbol": "AWSErrorType.init(errorCode:message:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 148,
+      "symbol": "Partition",
+      "symbol_kind": "source.lang.swift.decl.extension",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Error.swift",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/Region.swift",
+      "line": 149,
+      "symbol": "Partition.dnsSuffix",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
+      "line": 15,
+      "symbol": "ServiceProtocol",
+      "symbol_kind": "source.lang.swift.decl.enum",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
       "line": 16,
-      "symbol": "AWSErrorType.localizedDescription",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "symbol": "ServiceProtocol.json(version:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Error.swift",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
+      "line": 17,
+      "symbol": "ServiceProtocol.restjson",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
+      "line": 18,
+      "symbol": "ServiceProtocol.restxml",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
+      "line": 19,
+      "symbol": "ServiceProtocol.query",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
+      "line": 20,
+      "symbol": "ServiceProtocol.ec2",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
       "line": 23,
-      "symbol": "AWSResponseError.errorCode",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "symbol": "ServiceProtocol",
+      "symbol_kind": "source.lang.swift.decl.extension",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Error.swift",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Doc/ServiceProtocol.swift",
       "line": 24,
-      "symbol": "AWSResponseError.message",
+      "symbol": "ServiceProtocol.contentType",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Error.swift",
-      "line": 26,
-      "symbol": "AWSResponseError.init(errorCode:message:)",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/CodableProperties.swift",
+      "line": 17,
+      "symbol": "CustomCoder.CodableValue",
+      "symbol_kind": "source.lang.swift.decl.associatedtype",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/CodableProperties.swift",
+      "line": 22,
+      "symbol": "CustomEncoder.encode(value:to:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/CodableProperties.swift",
+      "line": 27,
+      "symbol": "CustomDecoder.decode(from:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/CodableProperties.swift",
+      "line": 34,
+      "symbol": "Coding.init(wrappedValue:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Error.swift",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/CodableProperties.swift",
       "line": 38,
-      "symbol": "AWSError.message",
+      "symbol": "Coding.wrappedValue",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Error.swift",
-      "line": 39,
-      "symbol": "AWSError.rawBody",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Error.swift",
-      "line": 40,
-      "symbol": "AWSError.statusCode",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Error.swift",
-      "line": 42,
-      "symbol": "AWSError.init(statusCode:message:rawBody:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Error.swift",
-      "line": 56,
-      "symbol": "AWSServerError.insufficientAddressCapacity(message:)",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Error.swift",
-      "line": 58,
-      "symbol": "AWSServerError.insufficientCapacity(message:)",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Error.swift",
-      "line": 60,
-      "symbol": "AWSServerError.insufficientInstanceCapacity(message:)",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Error.swift",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/CodableProperties.swift",
       "line": 62,
-      "symbol": "AWSServerError.insufficientHostCapacity(message:)",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Error.swift",
-      "line": 64,
-      "symbol": "AWSServerError.insufficientReservedInstanceCapacity(message:)",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Error.swift",
-      "line": 66,
-      "symbol": "AWSServerError.internalError(message:)",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Error.swift",
-      "line": 68,
-      "symbol": "AWSServerError.internalFailure(message:)",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Error.swift",
-      "line": 70,
-      "symbol": "AWSServerError.requestLimitExceeded(message:)",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Error.swift",
-      "line": 72,
-      "symbol": "AWSServerError.serviceUnavailable(message:)",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Error.swift",
-      "line": 74,
-      "symbol": "AWSServerError.unavailable(message:)",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Error.swift",
-      "line": 78,
-      "symbol": "AWSServerError.init(errorCode:message:)",
+      "symbol": "OptionalCoding.init(wrappedValue:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Error.swift",
-      "line": 195,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/CodableProperties.swift",
+      "line": 66,
+      "symbol": "OptionalCoding.wrappedValue",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/CodableProperties.swift",
+      "line": 90,
+      "symbol": "OptionalCodingWrapper.WrappedType",
+      "symbol_kind": "source.lang.swift.decl.associatedtype",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/CodableProperties.swift",
+      "line": 91,
+      "symbol": "OptionalCodingWrapper.wrappedValue",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/CodableProperties.swift",
+      "line": 92,
+      "symbol": "OptionalCodingWrapper.init(wrappedValue:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/CodableProperties.swift",
+      "line": 98,
+      "symbol": "KeyedDecodingContainer.decode(_:forKey:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/CodableProperties.swift",
+      "line": 106,
+      "symbol": "KeyedEncodingContainer.encode(_:forKey:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/CollectionCoders.swift",
+      "line": 21,
+      "symbol": "ArrayCoderProperties.member",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/CollectionCoders.swift",
+      "line": 26,
+      "symbol": "ArrayCoder.CodableValue",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/CollectionCoders.swift",
+      "line": 31,
+      "symbol": "ArrayCoder.decode(from:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/CollectionCoders.swift",
+      "line": 47,
+      "symbol": "ArrayCoder.encode(value:to:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/CollectionCoders.swift",
+      "line": 60,
+      "symbol": "DictionaryCoderProperties.entry",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/CollectionCoders.swift",
+      "line": 61,
+      "symbol": "DictionaryCoderProperties.key",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/CollectionCoders.swift",
+      "line": 62,
+      "symbol": "DictionaryCoderProperties.value",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/CollectionCoders.swift",
+      "line": 67,
+      "symbol": "DictionaryCoder.CodableValue",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/CollectionCoders.swift",
+      "line": 72,
+      "symbol": "DictionaryCoder.decode(from:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/CollectionCoders.swift",
+      "line": 101,
+      "symbol": "DictionaryCoder.encode(value:to:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/CollectionCoders.swift",
+      "line": 123,
+      "symbol": "DefaultArrayCoderProperties.member",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/CollectionCoders.swift",
+      "line": 128,
+      "symbol": "DefaultDictionaryCoderProperties.entry",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/CollectionCoders.swift",
+      "line": 129,
+      "symbol": "DefaultDictionaryCoderProperties.key",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/CollectionCoders.swift",
+      "line": 130,
+      "symbol": "DefaultDictionaryCoderProperties.value",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/CollectionCoders.swift",
+      "line": 133,
+      "symbol": "DefaultArrayCoder",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/CollectionCoders.swift",
+      "line": 134,
+      "symbol": "DefaultDictionaryCoder",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/TimeStampCoder.swift",
+      "line": 71,
+      "symbol": "UnixEpochTimeStampCoder.CodableValue",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/TimeStampCoder.swift",
+      "line": 73,
+      "symbol": "UnixEpochTimeStampCoder.decode(from:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Encoder/CodableProperties/TimeStampCoder.swift",
+      "line": 79,
+      "symbol": "UnixEpochTimeStampCoder.encode(value:to:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/ClientErrors.swift",
+      "line": 17,
+      "symbol": "AWSClientError",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/ClientErrors.swift",
+      "line": 36,
+      "symbol": "AWSClientError.message",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/ClientErrors.swift",
+      "line": 38,
       "symbol": "AWSClientError.init(errorCode:message:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTPClient.swift",
-      "line": 42,
-      "symbol": "HTTPClient.HTTPError.malformedHead",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/ClientErrors.swift",
+      "line": 55,
+      "symbol": "AWSClientError.accessDenied",
+      "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTPClient.swift",
-      "line": 43,
-      "symbol": "HTTPClient.HTTPError.malformedBody",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/ClientErrors.swift",
+      "line": 57,
+      "symbol": "AWSClientError.incompleteSignature",
+      "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTPClient.swift",
-      "line": 44,
-      "symbol": "HTTPClient.HTTPError.malformedURL(url:)",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/ClientErrors.swift",
+      "line": 59,
+      "symbol": "AWSClientError.invalidAction",
+      "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTPClient.swift",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/ClientErrors.swift",
+      "line": 61,
+      "symbol": "AWSClientError.invalidClientTokenId",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/ClientErrors.swift",
+      "line": 63,
+      "symbol": "AWSClientError.invalidParameterCombination",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/ClientErrors.swift",
+      "line": 65,
+      "symbol": "AWSClientError.invalidParameterValue",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/ClientErrors.swift",
+      "line": 67,
+      "symbol": "AWSClientError.invalidQueryParameter",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/ClientErrors.swift",
+      "line": 69,
+      "symbol": "AWSClientError.malformedQueryString",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/ClientErrors.swift",
+      "line": 71,
+      "symbol": "AWSClientError.missingAction",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/ClientErrors.swift",
+      "line": 73,
+      "symbol": "AWSClientError.missingAuthenticationToken",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/ClientErrors.swift",
+      "line": 75,
+      "symbol": "AWSClientError.missingParameter",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/ClientErrors.swift",
+      "line": 77,
+      "symbol": "AWSClientError.optInRequired",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/ClientErrors.swift",
+      "line": 79,
+      "symbol": "AWSClientError.requestExpired",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/ClientErrors.swift",
+      "line": 81,
+      "symbol": "AWSClientError.throttling",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/ClientErrors.swift",
+      "line": 83,
+      "symbol": "AWSClientError.validationError",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/ClientErrors.swift",
+      "line": 86,
+      "symbol": "AWSClientError",
+      "symbol_kind": "source.lang.swift.decl.extension",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/ClientErrors.swift",
+      "line": 92,
+      "symbol": "AWSClientError",
+      "symbol_kind": "source.lang.swift.decl.extension",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/Error.swift",
+      "line": 19,
+      "symbol": "AWSErrorType.init(errorCode:message:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/Error.swift",
+      "line": 23,
+      "symbol": "AWSErrorType.localizedDescription",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/Error.swift",
+      "line": 30,
+      "symbol": "AWSResponseError.errorCode",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/Error.swift",
+      "line": 31,
+      "symbol": "AWSResponseError.message",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/Error.swift",
+      "line": 33,
+      "symbol": "AWSResponseError.init(errorCode:message:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/Error.swift",
       "line": 45,
-      "symbol": "HTTPClient.HTTPError.alreadyShutdown",
+      "symbol": "AWSError.message",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/Error.swift",
+      "line": 46,
+      "symbol": "AWSError.rawBody",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/Error.swift",
+      "line": 47,
+      "symbol": "AWSError.statusCode",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/ServerErrors.swift",
+      "line": 17,
+      "symbol": "AWSServerError",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/ServerErrors.swift",
+      "line": 23,
+      "symbol": "AWSServerError.message",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/ServerErrors.swift",
+      "line": 25,
+      "symbol": "AWSServerError.init(errorCode:message:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/ServerErrors.swift",
+      "line": 42,
+      "symbol": "AWSServerError.internalFailure",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/ServerErrors.swift",
+      "line": 44,
+      "symbol": "AWSServerError.serviceUnavailable",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/ServerErrors.swift",
+      "line": 47,
+      "symbol": "AWSServerError",
+      "symbol_kind": "source.lang.swift.decl.extension",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Errors/ServerErrors.swift",
+      "line": 53,
+      "symbol": "AWSServerError",
+      "symbol_kind": "source.lang.swift.decl.extension",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTP/AWSHTTPClient.swift",
+      "line": 21,
+      "symbol": "AWSHTTPRequest.url",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTP/AWSHTTPClient.swift",
+      "line": 22,
+      "symbol": "AWSHTTPRequest.method",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTP/AWSHTTPClient.swift",
+      "line": 23,
+      "symbol": "AWSHTTPRequest.headers",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTP/AWSHTTPClient.swift",
+      "line": 24,
+      "symbol": "AWSHTTPRequest.body",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTP/AWSHTTPClient.swift",
+      "line": 26,
+      "symbol": "AWSHTTPRequest.init(url:method:headers:body:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTP/AWSHTTPClient.swift",
+      "line": 36,
+      "symbol": "AWSHTTPResponse.status",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTP/AWSHTTPClient.swift",
+      "line": 37,
+      "symbol": "AWSHTTPResponse.headers",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTP/AWSHTTPClient.swift",
+      "line": 38,
+      "symbol": "AWSHTTPResponse.body",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTP/NIOTSHTTPClient.swift",
+      "line": 44,
+      "symbol": "NIOTSHTTPClient.Request.head",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTP/NIOTSHTTPClient.swift",
+      "line": 45,
+      "symbol": "NIOTSHTTPClient.Request.body",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTP/NIOTSHTTPClient.swift",
+      "line": 50,
+      "symbol": "NIOTSHTTPClient.Response.head",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTP/NIOTSHTTPClient.swift",
+      "line": 51,
+      "symbol": "NIOTSHTTPClient.Response.body",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTP/NIOTSHTTPClient.swift",
+      "line": 56,
+      "symbol": "NIOTSHTTPClient.HTTPError.malformedHead",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Message/AWSRequest.swift",
-      "line": 17,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTP/NIOTSHTTPClient.swift",
+      "line": 57,
+      "symbol": "NIOTSHTTPClient.HTTPError.malformedBody",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTP/NIOTSHTTPClient.swift",
+      "line": 58,
+      "symbol": "NIOTSHTTPClient.HTTPError.malformedURL(url:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTP/NIOTSHTTPClient.swift",
+      "line": 59,
+      "symbol": "NIOTSHTTPClient.HTTPError.alreadyShutdown",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTP/NIOTSHTTPClient.swift",
+      "line": 273,
+      "symbol": "NIOTSHTTPClient.Response.status",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/HTTP/NIOTSHTTPClient.swift",
+      "line": 274,
+      "symbol": "NIOTSHTTPClient.Response.headers",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Message/AWSRequest.swift",
+      "line": 23,
       "symbol": "AWSRequest.region",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Message/AWSRequest.swift",
-      "line": 18,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Message/AWSRequest.swift",
+      "line": 24,
       "symbol": "AWSRequest.url",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Message/AWSRequest.swift",
-      "line": 19,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Message/AWSRequest.swift",
+      "line": 25,
       "symbol": "AWSRequest.serviceProtocol",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Message/AWSRequest.swift",
-      "line": 20,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Message/AWSRequest.swift",
+      "line": 26,
       "symbol": "AWSRequest.operation",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Message/AWSRequest.swift",
-      "line": 21,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Message/AWSRequest.swift",
+      "line": 27,
       "symbol": "AWSRequest.httpMethod",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Message/AWSRequest.swift",
-      "line": 22,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Message/AWSRequest.swift",
+      "line": 28,
       "symbol": "AWSRequest.httpHeaders",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Message/AWSRequest.swift",
-      "line": 23,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Message/AWSRequest.swift",
+      "line": 29,
       "symbol": "AWSRequest.body",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Signers/Signers.swift",
-      "line": 9,
-      "symbol": "Signers",
-      "symbol_kind": "source.lang.swift.decl.class",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Signers/Signers.swift",
-      "line": 20,
-      "symbol": "Signers",
-      "symbol_kind": "source.lang.swift.decl.extension",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/String.swift",
-      "line": 10,
-      "symbol": "String.lowerFirst()",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Message/Body.swift",
+      "line": 93,
+      "symbol": "Body.asByteBuffer()",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/String.swift",
-      "line": 14,
-      "symbol": "String.upperFirst()",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/String.swift",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/RetryPolicy.swift",
       "line": 18,
-      "symbol": "String.toSwiftLabelCase()",
+      "symbol": "RetryStatus",
+      "symbol_kind": "source.lang.swift.decl.enum",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/RetryPolicy.swift",
+      "line": 19,
+      "symbol": "RetryStatus.retry(wait:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/RetryPolicy.swift",
+      "line": 20,
+      "symbol": "RetryStatus.dontRetry",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/RetryPolicy.swift",
+      "line": 34,
+      "symbol": "NoRetry.init()",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/String.swift",
-      "line": 25,
-      "symbol": "String.toSwiftVariableCase()",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/RetryPolicy.swift",
+      "line": 42,
+      "symbol": "StandardRetryPolicy.maxRetries",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/RetryPolicy.swift",
+      "line": 43,
+      "symbol": "StandardRetryPolicy.calculateRetryWaitTime(attempt:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/String.swift",
-      "line": 29,
-      "symbol": "String.camelCased(separator:)",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/RetryPolicy.swift",
+      "line": 66,
+      "symbol": "ExponentialRetry.base",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/RetryPolicy.swift",
+      "line": 67,
+      "symbol": "ExponentialRetry.maxRetries",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/RetryPolicy.swift",
+      "line": 69,
+      "symbol": "ExponentialRetry.init(base:maxRetries:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/String.swift",
-      "line": 50,
-      "symbol": "String.tagStriped()",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/RetryPolicy.swift",
+      "line": 74,
+      "symbol": "ExponentialRetry.calculateRetryWaitTime(attempt:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 22,
-      "symbol": "XML",
-      "symbol_kind": "source.lang.swift.decl.class",
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/RetryPolicy.swift",
+      "line": 85,
+      "symbol": "JitterRetry.base",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 28,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/RetryPolicy.swift",
+      "line": 86,
+      "symbol": "JitterRetry.maxRetries",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/RetryPolicy.swift",
+      "line": 88,
+      "symbol": "JitterRetry.init(base:maxRetries:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/RetryPolicy.swift",
+      "line": 93,
+      "symbol": "JitterRetry.calculateRetryWaitTime(attempt:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
+      "line": 36,
       "symbol": "XML.Node.Kind.document",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 29,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
+      "line": 37,
       "symbol": "XML.Node.Kind.element",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 30,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
+      "line": 38,
       "symbol": "XML.Node.Kind.text",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 31,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
+      "line": 39,
       "symbol": "XML.Node.Kind.attribute",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 32,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
+      "line": 40,
       "symbol": "XML.Node.Kind.namespace",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 33,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
+      "line": 41,
       "symbol": "XML.Node.Kind.comment",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 38,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
+      "line": 46,
       "symbol": "XML.Node.name",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 39,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
+      "line": 47,
       "symbol": "XML.Node.stringValue",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 40,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
+      "line": 48,
       "symbol": "XML.Node.children",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 41,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
+      "line": 49,
       "symbol": "XML.Node.parent",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 165,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
+      "line": 173,
       "symbol": "XML.Document.version",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 166,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
+      "line": 174,
       "symbol": "XML.Document.characterEncoding",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 168,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
+      "line": 176,
       "symbol": "XML.Document.init()",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 172,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
+      "line": 180,
       "symbol": "XML.Document.init(rootElement:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
-      "line": 222,
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/XML.swift",
+      "line": 230,
       "symbol": "XML.Element.init(name:stringValue:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSignerV4/credentials.swift",
+      "line": 17,
+      "symbol": "Credential.accessKeyId",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSignerV4/credentials.swift",
+      "line": 18,
+      "symbol": "Credential.secretAccessKey",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSignerV4/credentials.swift",
+      "line": 19,
+      "symbol": "Credential.sessionToken",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSignerV4/credentials.swift",
+      "line": 24,
+      "symbol": "StaticCredential.accessKeyId",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSignerV4/credentials.swift",
+      "line": 25,
+      "symbol": "StaticCredential.secretAccessKey",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSignerV4/credentials.swift",
+      "line": 26,
+      "symbol": "StaticCredential.sessionToken",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSignerV4/credentials.swift",
+      "line": 28,
+      "symbol": "StaticCredential.init(accessKeyId:secretAccessKey:sessionToken:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSignerV4/signer.swift",
+      "line": 48,
+      "symbol": "AWSSigner.BodyData.string(_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSignerV4/signer.swift",
+      "line": 49,
+      "symbol": "AWSSigner.BodyData.data(_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSignerV4/signer.swift",
+      "line": 50,
+      "symbol": "AWSSigner.BodyData.byteBuffer(_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSignerV4/signer.swift",
+      "line": 51,
+      "symbol": "AWSSigner.BodyData.unsignedPayload",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
     }
   ],
-  "source_directory": "/Users/runner/runners/2.169.1/work/aws-sdk-swift-core/aws-sdk-swift-core"
+  "source_directory": "/Users/runner/runners/2.262.1/work/aws-sdk-swift-core/aws-sdk-swift-core"
 }

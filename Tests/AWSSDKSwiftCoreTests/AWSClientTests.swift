@@ -409,20 +409,21 @@ class AWSClientTests: XCTestCase {
     
     func testSignedClient() {
         let input = E()
-        
         let client = createAWSClient(accessKeyId: "foo", secretAccessKey: "bar")
         
         do {
-            let awsRequest = try client.createAWSRequest(
-                operation: "CopyObject",
-                path: "/",
-                httpMethod: "PUT",
-                input: input
-            )
-
-            let request: AWSHTTPRequest = awsRequest.createHTTPRequest(signer: try client.signer.wait())
-
-            XCTAssertNotNil(request.headers["Authorization"].first)
+            for httpMethod in ["GET","HEAD","PUT","DELETE","POST","PATCH"] {
+                let awsRequest = try client.createAWSRequest(
+                    operation: "Test",
+                    path: "/",
+                    httpMethod: httpMethod,
+                    input: input
+                )
+                
+                let request = awsRequest.createHTTPRequest(signer: try client.signer.wait())
+                
+                XCTAssertNotNil(request.headers["Authorization"].first)
+            }
         } catch {
             XCTFail(error.localizedDescription)
         }

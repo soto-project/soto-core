@@ -18,7 +18,7 @@ import struct Foundation.URL
 import class  Foundation.DateFormatter
 
 /// The wrapper class for decoding Codable classes from XMLNodes
-class XMLDecoder {
+public class XMLDecoder {
 
     /// The strategy to use for decoding `Data` values.
     public enum DataDecodingStrategy {

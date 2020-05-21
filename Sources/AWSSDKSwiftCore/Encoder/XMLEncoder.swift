@@ -18,7 +18,7 @@ import struct Foundation.URL
 import class  Foundation.DateFormatter
 
 /// The wrapper class for encoding Codable classes to XMLElements
-class XMLEncoder {
+public class XMLEncoder {
 
     /// The strategy to use for encoding `Data` values.
     public enum DataEncodingStrategy {

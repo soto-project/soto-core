@@ -409,17 +409,9 @@ class AWSClientTests: XCTestCase {
     
     func testSignedClient() {
         let input = E()
-        let client = AWSClient(
-            accessKeyId: "foo",
-            secretAccessKey: "bar",
-            region: .useast1,
-            service: "s3",
-            serviceProtocol: .restxml,
-            apiVersion: "2013-12-02",
-            middlewares: [],
-            httpClientProvider: .createNew
-        )
-
+        
+        let client = createAWSClient(accessKeyId: "foo", secretAccessKey: "bar")
+        
         do {
             let awsRequest = try client.createAWSRequest(
                 operation: "CopyObject",

@@ -14,6 +14,7 @@
 
 import NIO
 import XCTest
+import AWSTestUtils
 @testable import AWSSDKSwiftCore
 
 class PayloadTests: XCTestCase {

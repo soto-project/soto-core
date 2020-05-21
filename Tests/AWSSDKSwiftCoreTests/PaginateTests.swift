@@ -15,6 +15,7 @@
 import AsyncHTTPClient
 import NIO
 import XCTest
+import AWSTestUtils
 @testable import AWSSDKSwiftCore
 
 class PaginateTests: XCTestCase {
@@ -213,7 +214,7 @@ class PaginateTests: XCTestCase {
 
         do {
             // aws server process
-            let error = AWSTestServer.ErrorType(status: 400, errorCode:"InvalidAction", message: "You didn't mean that")
+            let error = AWSTestServer.ErrorType.badRequest
             try awsServer.processWithErrors(stringListServerProcess, errors: { _ in AWSTestServer.Result(output: error, continueProcessing: false)})
 
             // wait for response
@@ -235,7 +236,7 @@ class PaginateTests: XCTestCase {
 
         do {
             // aws server process
-            let error = AWSTestServer.ErrorType(status: 400, errorCode:"InvalidAction", message: "You didn't mean that")
+            let error = AWSTestServer.ErrorType.badRequest
             try awsServer.processWithErrors(stringListServerProcess, errors: {count in
                 if count > 0 {
                     return AWSTestServer.Result(output: error, continueProcessing: false)

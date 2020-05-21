@@ -41,12 +41,13 @@ let package = Package(
                 "NIOFoundationCompat",
                 "INIParser"
             ]),
-        .target(name: "AWSSignerV4", dependencies: ["AWSCrypto", "NIOHTTP1"]),
-        .target(name: "INIParser", dependencies: []),
         .target(name: "AWSCrypto", dependencies: []),
+        .target(name: "AWSSignerV4", dependencies: ["AWSCrypto", "NIOHTTP1"]),
+        .target(name: "AWSTestUtils", dependencies: ["AWSSDKSwiftCore", "NIOTestUtils", "NIO", "NIOHTTP1", "NIOFoundationCompat"]),
+        .target(name: "INIParser", dependencies: []),
 
         .testTarget(name: "AWSCryptoTests", dependencies: ["AWSCrypto"]),
-        .testTarget(name: "AWSSDKSwiftCoreTests", dependencies: ["AWSSDKSwiftCore", "NIOTestUtils"]),
+        .testTarget(name: "AWSSDKSwiftCoreTests", dependencies: ["AWSSDKSwiftCore", "AWSTestUtils"]),
         .testTarget(name: "AWSSignerTests", dependencies: ["AWSSignerV4"])
     ]
 )

@@ -15,7 +15,7 @@
 import Foundation
 @testable import AWSSDKSwiftCore
 
-@propertyWrapper struct EnvironmentVariable<Value: LosslessStringConvertible> {
+@propertyWrapper public struct EnvironmentVariable<Value: LosslessStringConvertible> {
     var defaultValue: Value
     var variableName: String
 
@@ -32,7 +32,7 @@ import Foundation
     }
 }
 
-func createAWSClient(
+public func createAWSClient(
     accessKeyId: String? = nil,
     secretAccessKey: String? = nil,
     sessionToken: String? = nil,
@@ -74,7 +74,7 @@ func createAWSClient(
 
 // create a buffer of random values. Will always create the same given you supply the same z and w values
 // Random number generator from https://www.codeproject.com/Articles/25172/Simple-Random-Number-Generation
-func createRandomBuffer(_ w: UInt, _ z: UInt, size: Int) -> [UInt8] {
+public func createRandomBuffer(_ w: UInt, _ z: UInt, size: Int) -> [UInt8] {
     var z = z
     var w = w
     func getUInt8() -> UInt8

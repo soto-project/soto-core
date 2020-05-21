@@ -17,7 +17,7 @@ import AsyncHTTPClient
 import NIO
 import NIOHTTP1
 import NIOTransportServices
-import NIOTestUtils
+import AWSTestUtils
 
 @testable import AWSSDKSwiftCore
 

@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import XCTest
+import AWSTestUtils
 @testable import AWSSDKSwiftCore
 
 class TimeStampTests: XCTestCase {

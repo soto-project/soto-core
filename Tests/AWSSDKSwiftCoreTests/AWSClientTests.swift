@@ -380,52 +380,38 @@ class AWSClientTests: XCTestCase {
 
     func testUnsignedClient() {
         let input = E()
-        let client = AWSClient(
-            accessKeyId: "",
-            secretAccessKey: "",
-            region: .useast1,
-            service: "s3",
-            serviceProtocol: .restxml,
-            apiVersion: "2013-12-02",
-            middlewares: [],
-            httpClientProvider: .createNew
-        )
+        let client = createAWSClient(accessKeyId: "", secretAccessKey: "")
+        
+        var awsRequest: AWSRequest?
+        XCTAssertNoThrow(awsRequest = try client.createAWSRequest(
+            operation: "CopyObject",
+            path: "/",
+            httpMethod: "PUT",
+            input: input
+        ))
 
-        do {
-            let awsRequest = try client.createAWSRequest(
-                operation: "CopyObject",
-                path: "/",
-                httpMethod: "PUT",
-                input: input
-            )
-
-            let request: AWSHTTPRequest = awsRequest.createHTTPRequest(signer: try client.signer.wait())
-
-            XCTAssertNil(request.headers["Authorization"].first)
-        } catch {
-            XCTFail(error.localizedDescription)
-        }
+        var request: AWSHTTPRequest?
+        XCTAssertNoThrow(request = awsRequest?.createHTTPRequest(signer: try client.signer.wait()))
+        XCTAssertNil(request?.headers["Authorization"].first)
     }
     
     func testSignedClient() {
         let input = E()
         let client = createAWSClient(accessKeyId: "foo", secretAccessKey: "bar")
         
-        do {
-            for httpMethod in ["GET","HEAD","PUT","DELETE","POST","PATCH"] {
-                let awsRequest = try client.createAWSRequest(
-                    operation: "Test",
-                    path: "/",
-                    httpMethod: httpMethod,
-                    input: input
-                )
-                
-                let request = awsRequest.createHTTPRequest(signer: try client.signer.wait())
-                
-                XCTAssertNotNil(request.headers["Authorization"].first)
-            }
-        } catch {
-            XCTFail(error.localizedDescription)
+        for httpMethod in ["GET","HEAD","PUT","DELETE","POST","PATCH"] {
+            var awsRequest: AWSRequest?
+            
+            XCTAssertNoThrow( awsRequest = try client.createAWSRequest(
+                operation: "Test",
+                path: "/",
+                httpMethod: httpMethod,
+                input: input
+            ))
+            
+            var request: AWSHTTPRequest?
+            XCTAssertNoThrow(request = awsRequest?.createHTTPRequest(signer: try client.signer.wait()))
+            XCTAssertNotNil(request?.headers["Authorization"].first)
         }
     }
 

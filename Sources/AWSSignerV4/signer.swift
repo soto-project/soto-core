@@ -135,6 +135,7 @@ public struct AWSSigner {
         // add date, host, sha256 and if available security token headers
         headers.add(name: "X-Amz-Date", value: dateString)
         headers.add(name: "host", value: url.host ?? "")
+        headers.add(name: "x-amz-content-sha256", value: bodyHash)
         if let sessionToken = credentials.sessionToken {
             headers.add(name: "x-amz-security-token", value: sessionToken)
         }
@@ -144,6 +145,16 @@ public struct AWSSigner {
         let signingKey = self.signingKey(date: signingData.date)
         let signature = self.signature(signingData: signingData)
         let chunkedSigningData = ChunkedSigningData(signature: signature, datetime: signingData.datetime, signingKey: signingKey)
+
+        // construct authorization string
+        let authorization = "AWS4-HMAC-SHA256 " +
+            "Credential=\(credentials.accessKeyId)/\(signingData.date)/\(region)/\(name)/aws4_request, " +
+            "SignedHeaders=\(signingData.signedHeaders), " +
+        "Signature=\(signature)"
+
+        // add Authorization header
+        headers.add(name: "Authorization", value: authorization)
+
         return (headers: headers, signingData: chunkedSigningData)
     }
     
@@ -228,6 +239,7 @@ public struct AWSSigner {
             "\(canonicalHeaders)\n\n" +
             "\(signingData.signedHeaders)\n" +
             signingData.hashedPayload
+        print(canonicalRequest)
         return canonicalRequest
     }
 
@@ -243,7 +255,7 @@ public struct AWSSigner {
     /// chunked upload string to sign
     func chunkStringToSign(body: BodyData, previousSignature: String, datetime: String) -> String {
         let date = String(datetime.prefix(8))
-        let stringToSign = "AWS4-HMAC-SHA256\n" +
+        let stringToSign = "AWS4-HMAC-SHA256-PAYLOAD\n" +
             "\(datetime)\n" +
             "\(date)/\(region)/\(name)/aws4_request\n" +
             "\(previousSignature)\n" +

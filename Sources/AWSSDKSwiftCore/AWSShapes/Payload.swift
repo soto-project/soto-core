@@ -23,7 +23,7 @@ public struct AWSPayload {
     /// Internal enum
     enum Payload {
         case byteBuffer(ByteBuffer)
-        case stream(size: Int?, stream: (EventLoop)->EventLoopFuture<ByteBuffer>)
+        case stream(StreamReader)
         case empty
     }
     
@@ -37,7 +37,7 @@ public struct AWSPayload {
     /// construct a payload from a stream function. If you supply a size the stream function will be called repeated until you supply the number of bytes specified. If you
     /// don't supply a size the stream function will be called repeatedly until you supply an empty `ByteBuffer`
     public static func stream(size: Int? = nil, stream: @escaping (EventLoop)->EventLoopFuture<ByteBuffer>) -> Self {
-        return AWSPayload(payload: .stream(size: size, stream: stream))
+        return AWSPayload(payload: .stream(ChunkedStreamReader(size: size, read: stream)))
     }
     
     /// construct an empty payload
@@ -61,7 +61,7 @@ public struct AWSPayload {
 
     /// Construct a stream payload from a `NIOFileHandle`
     public static func fileHandle(_ fileHandle: NIOFileHandle, size: Int? = nil, fileIO: NonBlockingFileIO, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) -> Self {
-        let blockSize = 64*1024
+        let blockSize = AWSChunkedStreamReader.bufferSize
         var leftToRead = size
         func stream(_ eventLoop: EventLoop) -> EventLoopFuture<ByteBuffer> {
             // calculate how much data is left to read, if a file size was indicated
@@ -81,7 +81,12 @@ public struct AWSPayload {
             return futureByteBuffer
         }
         
-        return AWSPayload(payload: .stream(size: size, stream: stream))
+        return AWSPayload(payload: .stream(ChunkedStreamReader(size: size, read: stream)))
+    }
+    
+    /// construct a payload from a stream reader object.
+    internal static func streamReader(_ reader: StreamReader) -> Self {
+        return AWSPayload(payload: .stream(reader))
     }
     
     /// Return the size of the payload. If the payload is a stream it is always possible to return a size
@@ -89,8 +94,8 @@ public struct AWSPayload {
         switch payload {
         case .byteBuffer(let byteBuffer):
             return byteBuffer.readableBytes
-        case .stream(let size,_):
-            return size
+        case .stream(let reader):
+            return reader.size
         case .empty:
             return 0
         }

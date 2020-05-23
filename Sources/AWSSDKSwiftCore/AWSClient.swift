@@ -394,9 +394,9 @@ extension AWSClient {
     }
 
     internal func verifyStream(operation: String, payload: AWSPayload, input: AWSShapeWithPayload.Type) {
-        guard case .stream(let size,_) = payload.payload else { return }
+        guard case .stream(let reader) = payload.payload else { return }
         precondition(input.options.contains(.allowStreaming), "\(operation) does not allow streaming of data")
-        precondition(size != nil || input.options.contains(.allowChunkedStreaming), "\(operation) does not allow chunked streaming of data. Please supply a data size.")
+        precondition(reader.size != nil || input.options.contains(.allowChunkedStreaming), "\(operation) does not allow chunked streaming of data. Please supply a data size.")
     }
     
     internal func createAWSRequest<Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {

@@ -13,55 +13,11 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
-import Foundation
 import NIO
 
 /// comply with AWSHTTPClient protocol
 extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
 
-    /// write stream to StreamWriter
-    private func writeToStreamWriter(
-        writer: HTTPClient.Body.StreamWriter,
-        size: Int?,
-        on eventLoop: EventLoop,
-        getData: @escaping (EventLoop)->EventLoopFuture<ByteBuffer>) -> EventLoopFuture<Void> {
-        let promise = eventLoop.makePromise(of: Void.self)
-
-        func _writeToStreamWriter(_ amountLeft: Int?) {
-            // get byte buffer from closure, write to StreamWriter, if there are still bytes to write then call
-            // _writeToStreamWriter again.
-            _ = getData(eventLoop)
-                .map { (byteBuffer)->() in
-                    // if no amount was set and the byte buffer has no readable bytes then this is assumed to mean
-                    // there will be no more data
-                    if amountLeft == nil && byteBuffer.readableBytes == 0 {
-                        promise.succeed(())
-                        return
-                    }
-                    // calculate amount left to write
-                    let newAmountLeft = amountLeft.map { $0 - byteBuffer.readableBytes }
-                    // write chunk. If amountLeft is nil assume we are writing chunked output
-                    let writeFuture: EventLoopFuture<Void> = writer.write(.byteBuffer(byteBuffer))
-                    _ = writeFuture.flatMap { ()->EventLoopFuture<Void> in
-                        if let newAmountLeft = newAmountLeft {
-                            if newAmountLeft == 0 {
-                                promise.succeed(())
-                            } else if newAmountLeft < 0 {
-                                promise.fail(AWSClient.ClientError.tooMuchData)
-                            } else {
-                                _writeToStreamWriter(newAmountLeft)
-                            }
-                        } else {
-                            _writeToStreamWriter(nil)
-                        }
-                        return promise.futureResult
-                    }.cascadeFailure(to: promise)
-            }.cascadeFailure(to: promise)
-        }
-        _writeToStreamWriter(size)
-        return promise.futureResult
-    }
-    
     /// Execute HTTP request
     /// - Parameters:
     ///   - request: HTTP request
@@ -79,13 +35,10 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
         switch request.body.payload {
         case .byteBuffer(let byteBuffer):
             requestBody = .byteBuffer(byteBuffer)
-        case .stream(let size, let getData):
-            // add "Transfer-Encoding" header if streaming with unknown size
-            if size == nil {
-                requestHeaders.add(name: "Transfer-Encoding", value: "chunked")
-            }
-            requestBody = .stream(length: size) { writer in
-                return self.writeToStreamWriter(writer: writer, size: size, on: eventLoop, getData: getData)
+        case .stream(let reader):
+            requestHeaders = reader.updateHeaders(headers: requestHeaders)
+            requestBody = .stream(length: reader.contentSize) { writer in
+                return writer.write(reader: reader, on: eventLoop)
             }
         case .empty:
             requestBody = nil

@@ -49,6 +49,7 @@ public struct AWSSigner {
         case data(Data)
         case byteBuffer(ByteBuffer)
         case unsignedPayload
+        case s3chunked
     }
 
     /// Generate signed headers, for a HTTP request
@@ -113,6 +114,50 @@ public struct AWSSigner {
         return signedURL
     }
 
+    public struct ChunkedSigningData {
+        public let signature: String
+        let datetime: String
+        let signingKey: SymmetricKey
+    }
+    
+    /// Start the process of signing a s3 chunked upload. Update headers and generate first signature. See https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-streaming.html
+    ///  for more details
+    /// - Parameters:
+    ///   - url: url
+    ///   - method: http method
+    ///   - headers: original headers
+    ///   - date: date to use for signing
+    /// - Returns: Tuple of updated headers and signing data to use in first call to `signChunk`
+    public func startSigningChunks(url: URL, method: HTTPMethod = .GET, headers: HTTPHeaders = HTTPHeaders(), date: Date = Date()) -> (headers: HTTPHeaders, signingData: ChunkedSigningData) {
+        let bodyHash = AWSSigner.hashedPayload(.s3chunked)
+        let dateString = AWSSigner.timestamp(date)
+        var headers = headers
+        // add date, host, sha256 and if available security token headers
+        headers.add(name: "X-Amz-Date", value: dateString)
+        headers.add(name: "host", value: url.host ?? "")
+        if let sessionToken = credentials.sessionToken {
+            headers.add(name: "x-amz-security-token", value: sessionToken)
+        }
+
+        // construct signing data. Do this after adding the headers as it uses data from the headers
+        let signingData = AWSSigner.SigningData(url: url, method: method, headers: headers, bodyHash: bodyHash, date: dateString, signer: self)
+        let signingKey = self.signingKey(date: signingData.date)
+        let signature = self.signature(signingData: signingData)
+        let chunkedSigningData = ChunkedSigningData(signature: signature, datetime: signingData.datetime, signingKey: signingKey)
+        return (headers: headers, signingData: chunkedSigningData)
+    }
+    
+    /// Generate the signature for a chunk in a s3 chunked upload
+    /// - Parameters:
+    ///   - body: Body of chunk
+    ///   - signingData: Signing data returned from previous `signChunk` or `startSigningChunk` if this is the first call
+    /// - Returns: signing data that includes the signature and other data that is required for signing the next chunk
+    public func signChunk(body: BodyData, signingData: ChunkedSigningData) -> ChunkedSigningData {
+        let stringToSign = self.chunkStringToSign(body: body, previousSignature: signingData.signature, datetime: signingData.datetime)
+        let signature = HMAC<SHA256>.authenticationCode(for: [UInt8](stringToSign.utf8), using: signingData.signingKey).hexDigest()
+        return ChunkedSigningData(signature: signature, datetime: signingData.datetime, signingKey: signingData.signingKey)
+    }
+    
     /// structure used to store data used throughout the signing process
     struct SigningData {
         let url : URL
@@ -158,11 +203,8 @@ public struct AWSSigner {
 
     // Stage 3 Calculating signature as in https://docs.aws.amazon.com/general/latest/gr/sigv4-calculate-signature.html
     func signature(signingData: SigningData) -> String {
-        let kDate = HMAC<SHA256>.authenticationCode(for: [UInt8](signingData.date.utf8), using: SymmetricKey(data: Array("AWS4\(credentials.secretAccessKey)".utf8)))
-        let kRegion = HMAC<SHA256>.authenticationCode(for: [UInt8](region.utf8), using: SymmetricKey(data: kDate))
-        let kService = HMAC<SHA256>.authenticationCode(for: [UInt8](name.utf8), using: SymmetricKey(data: kRegion))
-        let kSigning = HMAC<SHA256>.authenticationCode(for: [UInt8]("aws4_request".utf8), using: SymmetricKey(data: kService))
-        let kSignature = HMAC<SHA256>.authenticationCode(for: [UInt8](stringToSign(signingData: signingData).utf8), using: SymmetricKey(data: kSigning))
+        let signingKey = self.signingKey(date: signingData.date)
+        let kSignature = HMAC<SHA256>.authenticationCode(for: [UInt8](stringToSign(signingData: signingData).utf8), using: signingKey)
         return kSignature.hexDigest()
     }
 
@@ -189,6 +231,27 @@ public struct AWSSigner {
         return canonicalRequest
     }
 
+    /// get signing key
+    func signingKey(date: String) -> SymmetricKey {
+        let kDate = HMAC<SHA256>.authenticationCode(for: [UInt8](date.utf8), using: SymmetricKey(data: Array("AWS4\(credentials.secretAccessKey)".utf8)))
+        let kRegion = HMAC<SHA256>.authenticationCode(for: [UInt8](region.utf8), using: SymmetricKey(data: kDate))
+        let kService = HMAC<SHA256>.authenticationCode(for: [UInt8](name.utf8), using: SymmetricKey(data: kRegion))
+        let kSigning = HMAC<SHA256>.authenticationCode(for: [UInt8]("aws4_request".utf8), using: SymmetricKey(data: kService))
+        return SymmetricKey(data: kSigning)
+    }
+    
+    /// chunked upload string to sign
+    func chunkStringToSign(body: BodyData, previousSignature: String, datetime: String) -> String {
+        let date = String(datetime.prefix(8))
+        let stringToSign = "AWS4-HMAC-SHA256\n" +
+            "\(datetime)\n" +
+            "\(date)/\(region)/\(name)/aws4_request\n" +
+            "\(previousSignature)\n" +
+            "\(Self.hashedEmptyBody)\n" +
+            Self.hashedPayload(body)
+        return stringToSign
+    }
+    
     /// Create a SHA256 hash of the Requests body
     static func hashedPayload(_ payload: BodyData?) -> String {
         guard let payload = payload else { return hashedEmptyBody }
@@ -205,6 +268,8 @@ public struct AWSSigner {
             }
         case .unsignedPayload:
             return "UNSIGNED-PAYLOAD"
+        case .s3chunked:
+            return "STREAMING-AWS4-HMAC-SHA256-PAYLOAD"
         }
         if let hash = hash {
             return hash

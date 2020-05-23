@@ -93,23 +93,6 @@ public struct AWSRequest {
         return AWSHTTPRequest.init(url: url, method: HTTPMethod(rawValue: httpMethod), headers: getHttpHeaders(), body: body.asPayload())
     }
 
-    /// Create HTTP Client request with signed URL from AWSRequest
-    func toHTTPRequestWithSignedURL(signer: AWSSigner) -> AWSHTTPRequest {
-        let method = HTTPMethod(rawValue: httpMethod)
-        let payload = self.body.asPayload()
-        let bodyDataForSigning: AWSSigner.BodyData?
-        switch payload.payload {
-        case .byteBuffer(let buffer):
-            bodyDataForSigning = .byteBuffer(buffer)
-        case .stream:
-            bodyDataForSigning = .unsignedPayload
-        case .empty:
-            bodyDataForSigning = nil
-        }
-        let signedURL = signer.signURL(url: url, method: method, body: bodyDataForSigning, date: Date(), expires: 86400)
-        return AWSHTTPRequest.init(url: signedURL, method: method, headers: getHttpHeaders(), body: payload)
-    }
-
     /// Create HTTP Client request with signed headers from AWSRequest
     func toHTTPRequestWithSignedHeader(signer: AWSSigner) -> AWSHTTPRequest {
         let method = HTTPMethod(rawValue: httpMethod)

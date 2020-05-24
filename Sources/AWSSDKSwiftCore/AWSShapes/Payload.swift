@@ -36,8 +36,12 @@ public struct AWSPayload {
     
     /// construct a payload from a stream function. If you supply a size the stream function will be called repeated until you supply the number of bytes specified. If you
     /// don't supply a size the stream function will be called repeatedly until you supply an empty `ByteBuffer`
-    public static func stream(size: Int? = nil, stream: @escaping (EventLoop)->EventLoopFuture<ByteBuffer>) -> Self {
-        return AWSPayload(payload: .stream(ChunkedStreamReader(size: size, read: stream)))
+    public static func stream(
+        size: Int? = nil,
+        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
+        stream: @escaping (EventLoop)->EventLoopFuture<ByteBuffer>
+    ) -> Self {
+        return AWSPayload(payload: .stream(ChunkedStreamReader(size: size, read: stream, byteBufferAllocator: byteBufferAllocator)))
     }
     
     /// construct an empty payload
@@ -60,7 +64,13 @@ public struct AWSPayload {
     }
 
     /// Construct a stream payload from a `NIOFileHandle`
-    public static func fileHandle(_ fileHandle: NIOFileHandle, size: Int? = nil, fileIO: NonBlockingFileIO, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) -> Self {
+    public static func fileHandle(
+        _ fileHandle: NIOFileHandle,
+        size: Int? = nil,
+        fileIO: NonBlockingFileIO,
+        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
+    ) -> Self {
+        // use chunked reader buffer size to avoid allocating additional buffers when streaming data
         let blockSize = AWSChunkedStreamReader.bufferSize
         var leftToRead = size
         func stream(_ eventLoop: EventLoop) -> EventLoopFuture<ByteBuffer> {
@@ -81,7 +91,7 @@ public struct AWSPayload {
             return futureByteBuffer
         }
         
-        return AWSPayload(payload: .stream(ChunkedStreamReader(size: size, read: stream)))
+        return AWSPayload(payload: .stream(ChunkedStreamReader(size: size, read: stream, byteBufferAllocator: byteBufferAllocator)))
     }
     
     /// construct a payload from a stream reader object.

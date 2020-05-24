@@ -17,6 +17,7 @@ import AWSSignerV4
 import NIO
 import NIOHTTP1
 
+/// Protocol for objects that supply streamed data to HTTPClient.Body.StreamWriter
 protocol StreamReader {
     
     /// size of data to be streamed
@@ -25,14 +26,27 @@ protocol StreamReader {
     var contentSize: Int? { get }
     /// function providing data to be streamed
     var read: (EventLoop)->EventLoopFuture<ByteBuffer> { get }
+    /// bytebuffer allocator
+    var byteBufferAllocator: ByteBufferAllocator { get }
     
+    /// Update headers for this kind of streamed data
+    /// - Parameter headers: headers to update
     func updateHeaders(headers: HTTPHeaders) -> HTTPHeaders
+    
+    /// Provide a list of ByteBuffers to write. Back pressure is applied on the last buffer
+    /// - Parameter eventLoop: eventLoop to use when generating the event loop future
     func streamChunks(on eventLoop: EventLoop) -> EventLoopFuture<[ByteBuffer]>
+    
+    /// Return an end of stream marker
     func endChunk() -> ByteBuffer?
 }
 
 /// Standard chunked streamer. Adds transfer-encoding : chunked header if a size is not supplied. NIO adds all the chunk headers
+/// so it just passes the streamed data straight through to the StreamWriter
 struct ChunkedStreamReader: StreamReader {
+
+    /// Update headers. Add "Transfer-encoding" header if we don't have a steam size
+    /// - Parameter headers: headers to update
     func updateHeaders(headers: HTTPHeaders) -> HTTPHeaders {
         var headers = headers
         // add "Transfer-Encoding" header if streaming with unknown size
@@ -42,6 +56,8 @@ struct ChunkedStreamReader: StreamReader {
         return headers
     }
     
+    /// Provide a list of ByteBuffers to write. The `ChunkedStreamReader` just passes the `ByteBuffer` supplied to straight through
+    /// - Parameter eventLoop: eventLoop to use when generating the event loop future
     func streamChunks(on eventLoop: EventLoop) -> EventLoopFuture<[ByteBuffer]> {
         return read(eventLoop).map { (byteBuffer) -> [ByteBuffer] in
             if byteBuffer.readableBytes > 0 {
@@ -52,31 +68,61 @@ struct ChunkedStreamReader: StreamReader {
         }
     }
     
+    /// Return an end of stream marker. No end of stream marker is required here
+    /// - Returns: nil
     func endChunk() -> ByteBuffer? {
         return nil
     }
-
+    
+    /// Content size is the same as the size as we aren't adding any chunk headers here
     var contentSize: Int? { return size }
     
+    /// size of data to be streamed
     let size: Int?
+    /// function providing data to be streamed
     let read: (EventLoop)->EventLoopFuture<ByteBuffer>
+    /// bytebuffer allocator
+    var byteBufferAllocator: ByteBufferAllocator
 }
 
 /// AWS Chunked streamer
 class AWSChunkedStreamReader: StreamReader {
+    /// Working buffer size
     static let bufferSize: Int = 64*1024
     static let bufferSizeInHex: String = String(bufferSize, radix: 16)
     static let bufferSizeLength = bufferSizeInHex.count
     static let chunkSignatureLength = 1 + 16 + 64 // ";" + "chunk-signature=" + hex(sha256)
     static let endOfLineLength = 2
+    /// Maximum size of chunk header
     static let maxHeaderSize: Int = bufferSizeInHex.count + chunkSignatureLength + endOfLineLength
-
+    
+    /// Initialise a AWSChunkedStreamReader
+    init(size: Int, seedSigningData: AWSSigner.ChunkedSigningData, signer: AWSSigner, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(), read: @escaping (EventLoop)->EventLoopFuture<ByteBuffer>) {
+        self.size = size
+        self.read = read
+        self.signer = signer
+        self.signingData = seedSigningData
+        // have separate buffers so we aren't allocating 128k
+        self.byteBufferAllocator = byteBufferAllocator
+        self.headerBuffer = byteBufferAllocator.buffer(capacity: Self.maxHeaderSize)
+        self.workingBuffer = byteBufferAllocator.buffer(capacity: Self.bufferSize)
+        self.tailBuffer = byteBufferAllocator.buffer(capacity: Self.endOfLineLength)
+        tailBuffer.writeString("\r\n")
+        self.previouslyReadBuffer = nil
+    }
+    
+    /// Update HTTP headers. Add "Content-encoding" header
+    /// - Parameter headers: headers to update
     func updateHeaders(headers: HTTPHeaders) -> HTTPHeaders {
         var headers = headers
         headers.add(name: "Content-Encoding", value: "aws-chunked")
         return headers
     }
     
+    /// Fill working buffer with data supplied. First verify there isnt data left over from previous call, then keep calling `read`
+    /// until the working buffer is full
+    /// - Parameter eventLoop: EventLoop to work off
+    /// - Returns: Full working buffer
     func fillWorkingBuffer(on eventLoop: EventLoop) -> EventLoopFuture<ByteBuffer> {
         workingBuffer.clear()
         // if there is still data available from the previously read buffer then use that
@@ -102,6 +148,7 @@ class AWSChunkedStreamReader: StreamReader {
                     return
                 }
                 // if working buffer is empty and this buffer is the chunk buffer size then just return this buffer
+                // This allows us to avoid the buffer copy
                 if self.workingBuffer.readableBytes == 0 && buffer.readableBytes == Self.bufferSize {
                     promise.succeed(buffer)
                     return
@@ -111,10 +158,13 @@ class AWSChunkedStreamReader: StreamReader {
                 let bytesToRead = min(buffer.readableBytes, bytesRequired)
                 var slice = buffer.readSlice(length: bytesToRead)!
                 self.workingBuffer.writeBuffer(&slice)
-                if buffer.readableBytes > 0 {
-                    self.previouslyReadBuffer = buffer
-                }
+                // if working buffer is full then call succeed on the promise
                 if self.workingBuffer.readableBytes == Self.bufferSize {
+                    // if the supplied buffer still has readable bytes then store this buffer so those bytes can
+                    // be used in the next call to `fillWorkingBuffer`.
+                    if buffer.readableBytes > 0 {
+                        self.previouslyReadBuffer = buffer
+                    }
                     promise.succeed(self.workingBuffer)
                     return
                 }
@@ -127,6 +177,9 @@ class AWSChunkedStreamReader: StreamReader {
         return promise.futureResult
     }
     
+    /// Provide a list of `ByteBuffers` to `StreamWriter`. This function fills the working buffer and then signs it
+    /// and returns it along with `ByteBuffers` that contain the header and tail data.
+    /// - Parameter eventLoop: EventLoop to run everythin off
     func streamChunks(on eventLoop: EventLoop) -> EventLoopFuture<[ByteBuffer]> {
         return fillWorkingBuffer(on: eventLoop).map { buffer in
             // sign header etc
@@ -139,6 +192,7 @@ class AWSChunkedStreamReader: StreamReader {
         }
     }
     
+    /// Return the end chunk
     func endChunk() -> ByteBuffer? {
         self.signingData = self.signer.signChunk(body: .byteBuffer(ByteBufferAllocator().buffer(capacity: 0)), signingData: self.signingData)
         let header = "0;chunk-signature=\(self.signingData.signature)\r\n"
@@ -146,20 +200,8 @@ class AWSChunkedStreamReader: StreamReader {
         self.headerBuffer.writeString(header)
         return self.headerBuffer
     }
-
-    init(size: Int, seedSigningData: AWSSigner.ChunkedSigningData, signer: AWSSigner, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(), read: @escaping (EventLoop)->EventLoopFuture<ByteBuffer>) {
-        self.size = size
-        self.read = read
-        self.signer = signer
-        self.signingData = seedSigningData
-        // have separate buffers so we aren't allocating 128k
-        self.headerBuffer = byteBufferAllocator.buffer(capacity: Self.maxHeaderSize)
-        self.workingBuffer = byteBufferAllocator.buffer(capacity: Self.bufferSize)
-        self.tailBuffer = byteBufferAllocator.buffer(capacity: Self.endOfLineLength)
-        tailBuffer.writeString("\r\n")
-        self.previouslyReadBuffer = nil
-    }
     
+    /// Calculate content size for aws chunked data. 
     var contentSize: Int? {
         let size = self.size!
         let numberOfChunks = size / Self.bufferSize
@@ -173,8 +215,12 @@ class AWSChunkedStreamReader: StreamReader {
         let fullSize = numberOfChunks * (Self.bufferSize + Self.maxHeaderSize + Self.endOfLineLength) + lastChunkSize + Self.maxHeaderSize - 2  // number of chunks * chunk size + end chunk size + tail chunk size
         return fullSize
     }
+    /// size of data to be streamed
     let size: Int?
+    /// function providing data to be streamed
     let read: (EventLoop)->EventLoopFuture<ByteBuffer>
+    /// bytebuffer allocator
+    var byteBufferAllocator: ByteBufferAllocator
 
     var signer: AWSSigner
     var signingData: AWSSigner.ChunkedSigningData

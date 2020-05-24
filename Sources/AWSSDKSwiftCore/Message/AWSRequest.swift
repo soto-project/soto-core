@@ -98,7 +98,7 @@ public struct AWSRequest {
     /// Create HTTP Client request with signed headers from AWSRequest
     func toHTTPRequestWithSignedHeader(signer: AWSSigner) -> AWSHTTPRequest {
         let method = HTTPMethod(rawValue: httpMethod)
-        var payload = self.body.asPayload()
+        let payload = self.body.asPayload()
         let bodyDataForSigning: AWSSigner.BodyData?
         switch payload.payload {
         case .byteBuffer(let buffer):
@@ -107,9 +107,16 @@ public struct AWSRequest {
             if signer.name == "s3" {
                 assert(reader.size != nil, "S3 stream requires size")
                 var headers = getHttpHeaders()
+                // need to add this header here as it needs to be included in the signed headers
                 headers.add(name: "x-amz-decoded-content-length", value: reader.size!.description)
                 let (signedHeaders, seedSigningData) = signer.startSigningChunks(url: url, method: method, headers: headers, date: Date())
-                payload = AWSPayload.streamReader(AWSChunkedStreamReader(size: reader.size!, seedSigningData: seedSigningData, signer: signer, read: reader.read))
+                let s3Reader = AWSChunkedStreamReader(
+                    size: reader.size!,
+                    seedSigningData: seedSigningData,
+                    signer: signer,
+                    byteBufferAllocator: reader.byteBufferAllocator,
+                    read: reader.read)
+                let payload = AWSPayload.streamReader(s3Reader)
                 return AWSHTTPRequest.init(url: url, method: method, headers: signedHeaders, body: payload)
             } else {
                 bodyDataForSigning = .unsignedPayload

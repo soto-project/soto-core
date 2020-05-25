@@ -14,8 +14,7 @@
 
 import XCTest
 @testable import AWSSDKSwiftCore
-
-
+@testable import AWSXML
 
 class XMLCoderTests: XCTestCase {
 

@@ -17,6 +17,7 @@ import NIOFoundationCompat
 import NIOHTTP1
 import NIOTestUtils
 import XCTest
+@_implementationOnly import AWSXML
 @testable import AWSSDKSwiftCore
 
 /// Test server for AWSClient. Input and Output shapes are defined by process function

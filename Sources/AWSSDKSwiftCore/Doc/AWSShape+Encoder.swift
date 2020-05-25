@@ -14,6 +14,7 @@
 
 import struct Foundation.Data
 import class  Foundation.JSONEncoder
+@_implementationOnly import AWSXML
 
 internal extension AWSEncodableShape {
 

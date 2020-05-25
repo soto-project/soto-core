@@ -112,7 +112,7 @@ public enum XML {
         }
 
         /// return children of a specific kind
-        func children(of kind: Kind) -> [XML.Node]? {
+        public func children(of kind: Kind) -> [XML.Node]? {
             return children?.compactMap { $0.kind == kind ? $0 : nil }
         }
 

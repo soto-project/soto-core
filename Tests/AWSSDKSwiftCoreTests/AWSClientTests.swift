@@ -16,6 +16,8 @@ import XCTest
 import AsyncHTTPClient
 import NIO
 import NIOHTTP1
+import AWSTestUtils
+import AWSXML
 @testable import AWSSDKSwiftCore
 
 class AWSClientTests: XCTestCase {
@@ -709,9 +711,9 @@ class AWSClientTests: XCTestCase {
             let client = createAWSClient(accessKeyId: "", secretAccessKey: "", serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
             let response = client.send(operation: "test", path: "/", httpMethod: "POST")
 
-            try awsServer.process { request in
+            try awsServer.processRaw { request in
                 let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
-                return AWSTestServer.Result(output: response, continueProcessing: false)
+                return .result(response)
             }
 
             try response.wait()
@@ -737,12 +739,12 @@ class AWSClientTests: XCTestCase {
             let input = Input(e:.second, i: [1,2,4,8])
             let response = client.send(operation: "test", path: "/", httpMethod: "POST", input: input)
 
-            try awsServer.process { request in
+            try awsServer.processRaw { request in
                 let receivedInput = try JSONDecoder().decode(Input.self, from: request.body)
                 XCTAssertEqual(receivedInput.e, .second)
                 XCTAssertEqual(receivedInput.i, [1,2,4,8])
                 let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
-                return AWSTestServer.Result(output: response, continueProcessing: false)
+                return .result(response)
             }
 
             try response.wait()
@@ -762,11 +764,11 @@ class AWSClientTests: XCTestCase {
             let client = createAWSClient(accessKeyId: "", secretAccessKey: "", serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
             let response: EventLoopFuture<Output> = client.send(operation: "test", path: "/", httpMethod: "POST")
 
-            try awsServer.process { request in
+            try awsServer.processRaw { request in
                 let output = Output(s: "TestOutputString", i: 547)
                 let byteBuffer = try JSONEncoder().encodeAsByteBuffer(output, allocator: ByteBufferAllocator())
                 let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
-                return AWSTestServer.Result(output: response, continueProcessing: false)
+                return .result(response)
             }
 
             let output = try response.wait()
@@ -840,11 +842,11 @@ class AWSClientTests: XCTestCase {
             let input = Input(payload: payload)
             let response = client.send(operation: "test", path: "/", httpMethod: "POST", input: input)
 
-            try awsServer.process { request in
+            try awsServer.processRaw { request in
                 let bytes = request.body.getBytes(at: 0, length: request.body.readableBytes)
                 XCTAssertEqual(bytes, data)
                 let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
-                return AWSTestServer.Result(output: response, continueProcessing: false)
+                return .result(response)
             }
 
             try response.wait()
@@ -923,13 +925,13 @@ class AWSClientTests: XCTestCase {
             let input = Input(payload: .fileHandle(fileHandle, size: bufferSize, fileIO: fileIO))
             let response = client.send(operation: "test", path: "/", httpMethod: "POST", input: input)
 
-            try awsServer.process { request in
+            try awsServer.processRaw { request in
                 XCTAssertNil(request.headers["transfer-encoding"])
                 XCTAssertEqual(request.headers["Content-Length"], bufferSize.description)
                 let requestData = request.body.getData(at: 0, length: request.body.readableBytes)
                 XCTAssertEqual(requestData, data)
                 let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
-                return AWSTestServer.Result(output: response, continueProcessing: false)
+                return .result(response)
             }
 
             try response.wait()
@@ -974,11 +976,11 @@ class AWSClientTests: XCTestCase {
             let input = Input(payload: payload)
             let response = client.send(operation: "test", path: "/", httpMethod: "POST", input: input)
 
-            try awsServer.process { request in
+            try awsServer.processRaw { request in
                 let bytes = request.body.getBytes(at: 0, length: request.body.readableBytes)
                 XCTAssertTrue(bytes == data)
                 let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
-                return AWSTestServer.Result(output: response, continueProcessing: false)
+                return .result(response)
             }
 
             try response.wait()
@@ -1001,9 +1003,9 @@ class AWSClientTests: XCTestCase {
             let client = createAWSClient(accessKeyId: "", secretAccessKey: "", serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
             let response = client.send(operation: "test", path: "/", httpMethod: "POST")
 
-            try awsServer.process { request in
+            try awsServer.processRaw { request in
                 let response = AWSTestServer.Response(httpStatus: .temporaryRedirect, headers: ["Location":awsServer.address], body: nil)
-                return AWSTestServer.Result(output: response, continueProcessing: false)
+                return .result(response)
             }
 
             try response.wait()
@@ -1035,16 +1037,15 @@ class AWSClientTests: XCTestCase {
             let client = createAWSClient(accessKeyId: "", secretAccessKey: "", serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address, retryPolicy: ExponentialRetry(base: .milliseconds(200)), httpClientProvider: .shared(httpClient))
             let response = client.send(operation: "test", path: "/", httpMethod: "POST")
 
-            try awsServer.processWithErrors(process: { request in
-                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
-                return AWSTestServer.Result(output: response, continueProcessing: false)
-            }, errors: { count in
+            var count = 0
+            try awsServer.processRaw { request in
+                count += 1
                 if count < 5 {
-                    return AWSTestServer.Result(output: AWSTestServer.ErrorType.internal, continueProcessing: true)
+                    return .error(.internal, continueProcessing: true)
                 } else {
-                    return AWSTestServer.Result(output: nil, continueProcessing: false)
+                    return .result(.ok)
                 }
-            })
+            }
 
             try response.wait()
         } catch let error as AWSServerError {
@@ -1080,18 +1081,18 @@ class AWSClientTests: XCTestCase {
             )
             let response: EventLoopFuture<Output> = client.send(operation: "test", path: "/", httpMethod: "POST")
 
-            try awsServer.processWithErrors(process: { request in
-                let output = Output(s: "TestOutputString")
-                let byteBuffer = try JSONEncoder().encodeAsByteBuffer(output, allocator: ByteBufferAllocator())
-                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
-                return AWSTestServer.Result(output: response, continueProcessing: false)
-            }, errors: { count in
+            var count = 0
+            try awsServer.processRaw { request in
+                count += 1
                 if count < 3 {
-                    return AWSTestServer.Result(output: AWSTestServer.ErrorType.notImplemented, continueProcessing: true)
+                    return .error(.notImplemented, continueProcessing: true)
                 } else {
-                    return AWSTestServer.Result(output: nil, continueProcessing: true)
+                    let output = Output(s: "TestOutputString")
+                    let byteBuffer = try JSONEncoder().encodeAsByteBuffer(output, allocator: ByteBufferAllocator())
+                    let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
+                    return .result(response)
                 }
-            })
+            }
 
             let output = try response.wait()
 
@@ -1122,14 +1123,9 @@ class AWSClientTests: XCTestCase {
             )
             let response: EventLoopFuture<Output> = client.send(operation: "test", path: "/", httpMethod: "POST")
 
-            try awsServer.processWithErrors(process: { request in
-                let output = Output(s: "TestOutputString")
-                let byteBuffer = try JSONEncoder().encodeAsByteBuffer(output, allocator: ByteBufferAllocator())
-                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
-                return AWSTestServer.Result(output: response, continueProcessing: false)
-            }, errors: { count in
-                return AWSTestServer.Result(output: AWSTestServer.ErrorType.accessDenied, continueProcessing: false)
-            })
+            try awsServer.processRaw { request in
+                return .error(.accessDenied, continueProcessing: false)
+            }
 
             let output = try response.wait()
 
@@ -1160,8 +1156,8 @@ class AWSClientTests: XCTestCase {
             let eventLoop = client.eventLoopGroup.next()
             let response: EventLoopFuture<Void> = client.send(operation: "test", path: "/", httpMethod: "POST", on: eventLoop)
 
-            try awsServer.process { request in
-                return AWSTestServer.Result(output: .ok, continueProcessing: false)
+            try awsServer.processRaw { request in
+                return .result(.ok)
             }
             XCTAssertTrue(eventLoop === response.eventLoop)
 

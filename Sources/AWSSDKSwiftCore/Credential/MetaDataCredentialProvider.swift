@@ -48,8 +48,7 @@ enum MetaDataClientError: Error {
 
 extension MetaDataClient {
     
-    /// decode response return by metadata service
-    func decodeResponse(_ bytes: ByteBuffer) throws -> MetaData {
+    static func createJSONDecoder() -> JSONDecoder {
         let decoder = JSONDecoder()
         // set JSON decoding strategy for dates
         let dateFormatter = DateFormatter()
@@ -57,10 +56,10 @@ extension MetaDataClient {
         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
         dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
         decoder.dateDecodingStrategy = .formatted(dateFormatter)
-        // decode to associated type
-        let metaData = try decoder.decode(MetaData.self, from: bytes)
-        return metaData
+        
+        return decoder
     }
+    
 }
 
 public final class MetaDataCredentialProvider<Client: MetaDataClient>: CredentialProvider {
@@ -155,6 +154,7 @@ struct ECSMetaDataClient: MetaDataClient {
     
     let httpClient    : AWSHTTPClient
     let endpointURL   : String
+    let decoder       = Self.createJSONDecoder()
     
     init?(httpClient: AWSHTTPClient, host: String = ECSMetaDataClient.Host) {
         guard let relativeURL = Environment[Self.RelativeURIEnvironmentName] else {
@@ -171,7 +171,7 @@ struct ECSMetaDataClient: MetaDataClient {
                 guard let body = response.body else {
                     throw MetaDataClientError.missingMetaData
                 }
-                return try self.decodeResponse(body)
+                return try self.decoder.decode(MetaData.self, from: body)
             }
     }
     
@@ -230,6 +230,7 @@ struct InstanceMetaDataClient: MetaDataClient {
     
     let httpClient: AWSHTTPClient
     let host      : String
+    let decoder   = Self.createJSONDecoder()
   
     init(httpClient: AWSHTTPClient, host: String = InstanceMetaDataClient.Host) {
         self.httpClient = httpClient
@@ -270,7 +271,7 @@ struct InstanceMetaDataClient: MetaDataClient {
                     throw MetaDataClientError.missingMetaData
                 }
                 
-                return try self.decodeResponse(body)
+                return try self.decoder.decode(MetaData.self, from: body)
             }
     }
         

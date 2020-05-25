@@ -125,6 +125,9 @@ public final class MetaDataCredentialProvider<Client: MetaDataClient>: Credentia
 struct ECSMetaDataClient: MetaDataClient {
     public typealias MetaData = ECSMetaData
     
+    static let Host = "169.254.170.2"
+    static let RelativeURIEnvironmentName = "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"
+    
     struct ECSMetaData: CredentialContainer {
         let accessKeyId: String
         let secretAccessKey: String
@@ -150,13 +153,11 @@ struct ECSMetaDataClient: MetaDataClient {
         }
     }
     
-    static let Host = "169.254.170.2"
-    
     let httpClient    : AWSHTTPClient
     let endpointURL   : String
     
     init?(httpClient: AWSHTTPClient, host: String = ECSMetaDataClient.Host) {
-        guard let relativeURL = Environment["AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"] else {
+        guard let relativeURL = Environment[Self.RelativeURIEnvironmentName] else {
             return nil
         }
         

@@ -15,6 +15,7 @@
 @testable import AWSSDKSwiftCore
 import XCTest
 import NIO
+import AsyncHTTPClient
 
 class MetaDataCredentialProviderTests: XCTestCase {
 
@@ -156,5 +157,82 @@ class MetaDataCredentialProviderTests: XCTestCase {
         
         // ensure callback was only hit once
         XCTAssertEqual(hitCount, iterations)
+    }
+    
+    func testECSMetaDataClient() {
+        let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
+        
+        let loop = group.next()
+        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(loop))
+        defer { XCTAssertNoThrow( try httpClient.syncShutdown()) }
+        let testServer = AWSTestServer(serviceProtocol: .json)
+        
+        let path = "/" + UUID().uuidString
+        Environment.set(path, for: ECSMetaDataClient.RelativeURIEnvironmentName)
+        defer { Environment.unset(name: ECSMetaDataClient.RelativeURIEnvironmentName) }
+        
+        let client = ECSMetaDataClient(httpClient: httpClient, host: "localhost:\(testServer.web.serverPort)")
+        let future = client!.getMetaData(on: loop)
+        
+        let accessKeyId = "abc123"
+        let secretAccessKey = "123abc"
+        let sessionToken = "xyz987"
+        let expiration = Date(timeIntervalSince1970: Date().timeIntervalSince1970.rounded() + 60 * 2)
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        let roleArn = "asd:aws:asd"
+        
+        XCTAssertNoThrow(try testServer.process { (request) -> AWSTestServer.Result<AWSTestServer.Response> in
+            XCTAssertEqual(request.uri, path)
+            XCTAssertEqual(request.method, .GET)
+            
+            let json = """
+                {
+                    "AccessKeyId": "\(accessKeyId)",
+                    "SecretAccessKey": "\(secretAccessKey)",
+                    "Token": "\(sessionToken)",
+                    "Expiration": "\(dateFormatter.string(from: expiration))",
+                    "RoleArn": "\(roleArn)"
+                }
+                """
+            var byteButter = ByteBufferAllocator().buffer(capacity: json.utf8.count)
+            byteButter.writeString(json)
+            return .init(output: .init(httpStatus: .ok, body: byteButter), continueProcessing: false)
+        })
+        
+        var metaData: ECSMetaDataClient.MetaData?
+        XCTAssertNoThrow(metaData = try future.wait())
+        
+        XCTAssertEqual(metaData?.accessKeyId, accessKeyId)
+        XCTAssertEqual(metaData?.secretAccessKey, secretAccessKey)
+        XCTAssertEqual(metaData?.token, sessionToken)
+        XCTAssertEqual(metaData?.expiration, expiration)
+        XCTAssertEqual(metaData?.roleArn, roleArn)
+        
+        XCTAssertEqual(metaData?.credential.accessKeyId, accessKeyId)
+        XCTAssertEqual(metaData?.credential.secretAccessKey, secretAccessKey)
+        XCTAssertEqual(metaData?.credential.sessionToken, sessionToken)
+    }
+    
+    func testECSMetaDataClientDefaultHost() {
+        XCTAssertEqual(ECSMetaDataClient.Host, "169.254.170.2")
+        XCTAssertEqual(ECSMetaDataClient.RelativeURIEnvironmentName, "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI")
+    }
+    
+    func testECSMetaDataClientIsNotCreatedWithoutEnvVariable() {
+        let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
+        
+        let loop = group.next()
+        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(loop))
+        defer { XCTAssertNoThrow( try httpClient.syncShutdown()) }
+
+        Environment.unset(name: ECSMetaDataClient.RelativeURIEnvironmentName)
+        
+        XCTAssertNil(ECSMetaDataClient(httpClient: httpClient, host: "localhost"))
     }
 }

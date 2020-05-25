@@ -185,7 +185,13 @@ struct ECSMetaDataClient: MetaDataClient {
 /// Provide AWS credentials for instances
 struct InstanceMetaDataClient: MetaDataClient {
     typealias MetaData = InstanceMetaData
-
+    
+    static let Host = "169.254.169.254"
+    static let CredentialUri = "/latest/meta-data/iam/security-credentials/"
+    static let TokenUri = "/latest/api/token"
+    static let TokenTimeToLiveHeader = (name: "X-aws-ec2-metadata-token-ttl-seconds", value: "21600")
+    static let TokenHeaderName = "X-aws-ec2-metadata-token"
+    
     struct InstanceMetaData: CredentialContainer {
         let accessKeyId: String
         let secretAccessKey: String
@@ -215,9 +221,6 @@ struct InstanceMetaDataClient: MetaDataClient {
         }
     }
   
-    private static let Host = "169.254.169.254"
-    private static let CredentialUri = "/latest/meta-data/iam/security-credentials/"
-    private static let TokenUri = "/latest/api/token"
     private var tokenURL: URL {
         return URL(string: "http://\(self.host)\(Self.TokenUri)")!
     }
@@ -236,7 +239,7 @@ struct InstanceMetaDataClient: MetaDataClient {
     func getMetaData(on eventLoop: EventLoop) -> EventLoopFuture<InstanceMetaData> {
         return getToken(on: eventLoop)
             .map() { token in
-                HTTPHeaders([("X-aws-ec2-metadata-token", token)])
+                HTTPHeaders([(Self.TokenHeaderName, token)])
             }
             .flatMapErrorThrowing() { error in
                 // we fallback to version 1
@@ -272,7 +275,7 @@ struct InstanceMetaDataClient: MetaDataClient {
     }
         
     func getToken(on eventLoop: EventLoop) -> EventLoopFuture<String> {
-        return request(url: self.tokenURL, method: .PUT, headers: HTTPHeaders([("X-aws-ec2-metadata-token-ttl-seconds", "21600")]), timeout: .seconds(2), on: eventLoop)
+        return request(url: self.tokenURL, method: .PUT, headers: HTTPHeaders([Self.TokenTimeToLiveHeader]), timeout: .seconds(2), on: eventLoop)
             .flatMapThrowing { response in
                 guard response.status == .ok else {
                     throw MetaDataClientError.unexpectedTokenResponseStatus(status: response.status)
@@ -292,7 +295,7 @@ struct InstanceMetaDataClient: MetaDataClient {
         timeout: TimeAmount = .seconds(2),
         on eventLoop: EventLoop) -> EventLoopFuture<AWSHTTPResponse>
     {
-        let request = AWSHTTPRequest(url: url, method: .GET, headers: headers, body: .empty)
+        let request = AWSHTTPRequest(url: url, method: method, headers: headers, body: .empty)
         return httpClient.execute(request: request, timeout: timeout, on: eventLoop)
     }
 }

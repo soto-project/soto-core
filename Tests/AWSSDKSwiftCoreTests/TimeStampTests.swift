@@ -14,6 +14,7 @@
 
 import XCTest
 import AWSTestUtils
+import AWSXML
 @testable import AWSSDKSwiftCore
 
 class TimeStampTests: XCTestCase {

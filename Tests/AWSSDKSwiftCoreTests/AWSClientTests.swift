@@ -17,6 +17,7 @@ import AsyncHTTPClient
 import NIO
 import NIOHTTP1
 import AWSTestUtils
+import AWSXML
 @testable import AWSSDKSwiftCore
 
 class AWSClientTests: XCTestCase {

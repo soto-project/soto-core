@@ -14,6 +14,7 @@
 
 import NIO
 import NIOHTTP1
+@_implementationOnly import AWSXML
 
 /// Structure encapsulating a processed HTTP Response
 public struct AWSResponse {

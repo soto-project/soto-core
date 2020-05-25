@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import XCTest
-@testable import AWSSDKSwiftCore
+@testable import AWSXML
 
 class XMLTests: XCTestCase {
 

@@ -47,14 +47,14 @@ extension StaticCredential {
         let threadPool = NIOThreadPool(numberOfThreads: 1)
         let fileIO = NonBlockingFileIO(threadPool: threadPool)
         
-        return Self.getStaticCredentialsFromDisk(credentialsFilePath: credentialsFilePath, profile: profile, on: eventLoop, using: fileIO)
+        return Self.getSharedCredentialsFromDisk(credentialsFilePath: credentialsFilePath, profile: profile, on: eventLoop, using: fileIO)
             .always { (_) in
                 // shutdown the threadpool async
                 threadPool.shutdownGracefully { (_) in }
             }
     }
     
-    private static func getStaticCredentialsFromDisk(
+    static func getSharedCredentialsFromDisk(
         credentialsFilePath: String,
         profile: String,
         on eventLoop: EventLoop,
@@ -66,30 +66,36 @@ extension StaticCredential {
             .flatMap { (handle, region) in
                 fileIO.read(fileRegion: region, allocator: ByteBufferAllocator(), eventLoop: eventLoop)
             }
-            .flatMapThrowing { (buffer) in
-                let string = buffer.getString(at: 0, length: buffer.readableBytes)!
-                var parser: INIParser
-                do {
-                    parser = try INIParser(string)
-                }
-                catch INIParser.Error.invalidSyntax {
-                    throw SharedCredentialError.invalidCredentialFileSyntax
-                }
-                
-                guard let config = parser.sections[profile] else {
-                    throw SharedCredentialError.missingProfile(profile)
-                }
-                
-                guard let accessKeyId = config["aws_access_key_id"] else {
-                    throw SharedCredentialError.missingAccessKeyId
-                }
-                
-                guard let secretAccessKey = config["aws_secret_access_key"] else {
-                    throw SharedCredentialError.missingSecretAccessKey
-                }
-                
-                return StaticCredential(accessKeyId: accessKeyId, secretAccessKey: secretAccessKey)
+            .flatMapThrowing {
+                try Self.sharedCredentials(from: $0, for: profile)
             }
+    }
+    
+    static func sharedCredentials(from byteBuffer: ByteBuffer, for profile: String) throws -> StaticCredential {
+        let string = byteBuffer.getString(at: 0, length: byteBuffer.readableBytes)!
+        var parser: INIParser
+        do {
+            parser = try INIParser(string)
+        }
+        catch INIParser.Error.invalidSyntax {
+            throw SharedCredentialError.invalidCredentialFileSyntax
+        }
+        
+        guard let config = parser.sections[profile] else {
+            throw SharedCredentialError.missingProfile(profile)
+        }
+        
+        guard let accessKeyId = config["aws_access_key_id"] else {
+            throw SharedCredentialError.missingAccessKeyId
+        }
+        
+        guard let secretAccessKey = config["aws_secret_access_key"] else {
+            throw SharedCredentialError.missingSecretAccessKey
+        }
+        
+        let sessionToken = config["aws_session_token"]
+        
+        return StaticCredential(accessKeyId: accessKeyId, secretAccessKey: secretAccessKey, sessionToken: sessionToken)
     }
     
     static func expandTildeInFilePath(_ filePath: String) -> String {

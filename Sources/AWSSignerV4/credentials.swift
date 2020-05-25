@@ -20,7 +20,7 @@ public protocol Credential {
 }
 
 /// basic version of Credential where you supply the credentials
-public struct StaticCredential: Credential {
+public struct StaticCredential: Credential, Equatable {
     public let accessKeyId: String
     public let secretAccessKey: String
     public let sessionToken: String?

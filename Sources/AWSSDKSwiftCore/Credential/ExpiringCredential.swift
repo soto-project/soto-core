@@ -17,7 +17,12 @@ import struct Foundation.TimeInterval
 
 public protocol ExpiringCredential: Credential {
     func isExpiring(within: TimeInterval) -> Bool
-    var isExpired: Bool { get }
+}
+
+public extension ExpiringCredential {
+    var isExpired: Bool {
+        isExpiring(within: 0)
+    }
 }
 
 /// Provide AWS credentials directly
@@ -37,13 +42,6 @@ struct RotatingCredential: ExpiringCredential {
     func isExpiring(within interval: TimeInterval) -> Bool {
         if let expiration = self.expiration {
             return expiration.timeIntervalSinceNow < interval
-        }
-        return false
-    }
-    
-    var isExpired: Bool {
-        if let expiration = self.expiration {
-            return expiration.timeIntervalSinceNow < 0
         }
         return false
     }

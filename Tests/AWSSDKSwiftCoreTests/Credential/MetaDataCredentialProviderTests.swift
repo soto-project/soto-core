@@ -283,8 +283,8 @@ class MetaDataCredentialProviderTests: XCTestCase {
         let accessKeyId = "abc123"
         let secretAccessKey = "123abc"
         let sessionToken = "xyz987"
-        let code = "987xyz"
-        let type = "somesuperdupertype"
+        let code = "Success"
+        let type = "AWS-HMAC"
         let expiration = Date(timeIntervalSince1970: Date().timeIntervalSince1970.rounded() + 60 * 2)
         let lastUpdated = Date(timeIntervalSince1970: Date().timeIntervalSince1970.rounded() - 60 * 2)
         let dateFormatter = DateFormatter()
@@ -370,8 +370,8 @@ class MetaDataCredentialProviderTests: XCTestCase {
         let accessKeyId = "abc123"
         let secretAccessKey = "123abc"
         let sessionToken = "xyz987"
-        let code = "987xyz"
-        let type = "somesuperdupertype"
+        let code = "Success"
+        let type = "AWS-HMAC"
         let expiration = Date(timeIntervalSince1970: Date().timeIntervalSince1970.rounded() + 60 * 2)
         let lastUpdated = Date(timeIntervalSince1970: Date().timeIntervalSince1970.rounded() - 60 * 2)
         let dateFormatter = DateFormatter()

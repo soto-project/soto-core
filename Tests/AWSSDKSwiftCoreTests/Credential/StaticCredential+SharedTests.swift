@@ -125,7 +125,7 @@ class StaticCredential_SharedTests: XCTestCase {
         let expandedNewPath = StaticCredential.expandTildeInFilePath(expandableFilePath)
         
         #if os(Linux)
-        XCTAssertFail(expandedNewPath.hasPrefix("~"))
+        XCTAssert(!expandedNewPath.hasPrefix("~"))
         #else
         // this doesn't work on linux because of SR-12843
         let expandedNSString = NSString(string: expandableFilePath).expandingTildeInPath

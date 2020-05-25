@@ -18,7 +18,7 @@ import AWSSignerV4
 #if os(Linux)
 import Glibc
 #else
-import Darwin
+import Foundation.NSString
 #endif
 
 
@@ -99,7 +99,12 @@ extension StaticCredential {
     }
     
     static func expandTildeInFilePath(_ filePath: String) -> String {
-        filePath.withCString { (ptr) -> String in
+        #if os(Linux)
+        // We don't want to add more dependencies on Foundation than needed.
+        // For this reason we get the expanded filePath on Linux from libc.
+        // Since `wordexp` and `wordfree` are not available on iOS we stay
+        // with NSString on Darwin.
+        return filePath.withCString { (ptr) -> String in
             var wexp = wordexp_t()
             guard 0 == wordexp(ptr, &wexp, 0), let we_wordv = wexp.we_wordv else {
                 return filePath
@@ -109,10 +114,13 @@ extension StaticCredential {
             }
             
             guard let resolved = we_wordv[0], let pth = String(cString: resolved, encoding: .utf8) else {
-                 return filePath
+                return filePath
             }
             
             return pth
         }
+        #else
+        return NSString(string: filePath).expandingTildeInPath
+        #endif
     }
 }

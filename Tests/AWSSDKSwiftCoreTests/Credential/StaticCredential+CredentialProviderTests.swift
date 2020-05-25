@@ -21,6 +21,7 @@ class StaticCredential_CredentialProviderTests: XCTestCase {
         let cred = StaticCredential(accessKeyId: "abc", secretAccessKey: "123", sessionToken: "xyz")
         
         let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
         let loop = group.next()
         var returned: Credential?
         XCTAssertNoThrow(returned = try cred.getCredential(on: loop).wait())

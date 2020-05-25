@@ -63,17 +63,19 @@ extension MetaDataClient {
     }
 }
 
-public class MetaDataCredentialProvider<Client: MetaDataClient>: CredentialProvider {
+public final class MetaDataCredentialProvider<Client: MetaDataClient>: CredentialProvider {
     typealias MetaData  = Client.MetaData
     
     let metaDataClient  : Client
+    let remainingTokenLifetimeForUse: TimeInterval
     
     let lock            = NIOConcurrencyHelpers.Lock()
     var credential      : ExpiringCredential? = nil
     var credentialFuture: EventLoopFuture<Credential>? = nil
 
-    init(eventLoop: EventLoop, client: Client) {
+    init(eventLoop: EventLoop, client: Client, remainingTokenLifetimeForUse: TimeInterval? = nil) {
         self.metaDataClient = client
+        self.remainingTokenLifetimeForUse = remainingTokenLifetimeForUse ?? 3 * 60
     }
     
     public func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
@@ -81,7 +83,7 @@ public class MetaDataCredentialProvider<Client: MetaDataClient>: CredentialProvi
         let cred = credential
         self.lock.unlock()
         
-        if let cred = cred, cred.isExpiring(within: 3 * 60) == false {
+        if let cred = cred, !cred.isExpiring(within: remainingTokenLifetimeForUse) {
             // we have credentials and those are still valid
             return eventLoop.makeSucceededFuture(cred)
         }
@@ -96,7 +98,7 @@ public class MetaDataCredentialProvider<Client: MetaDataClient>: CredentialProvi
         
         if let future = credentialFuture {
             // a refresh is already running
-            if future.eventLoop === eventLoop {
+            if future.eventLoop !== eventLoop {
                 // We want to hop back to the event loop we came in case
                 // the refresh is resolved on another EventLoop.
                 return future.hop(to: eventLoop)
@@ -118,7 +120,6 @@ public class MetaDataCredentialProvider<Client: MetaDataClient>: CredentialProvi
 
         return credentialFuture!
     }
-  
 }
 
 struct ECSMetaDataClient: MetaDataClient {

@@ -31,10 +31,18 @@ public protocol CredentialContainer: Decodable {
 }
 
 /// protocol to get Credentials from the Client. With this the AWSClient requests the credentials for request signing from ecs and ec2.
-public protocol MetaDataClient {
+public protocol MetaDataClient: CredentialProvider {
     associatedtype MetaData: CredentialContainer & Decodable
     
     func getMetaData(on eventLoop: EventLoop) -> EventLoopFuture<MetaData>
+}
+
+extension MetaDataClient {
+    public func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
+        self.getMetaData(on: eventLoop).map { (metaData) in
+            metaData.credential
+        }
+    }
 }
 
 enum MetaDataClientError: Error {
@@ -62,64 +70,6 @@ extension MetaDataClient {
     
 }
 
-public final class MetaDataCredentialProvider<Client: MetaDataClient>: CredentialProvider {
-    typealias MetaData  = Client.MetaData
-    
-    let metaDataClient  : Client
-    let remainingTokenLifetimeForUse: TimeInterval
-    
-    let lock            = NIOConcurrencyHelpers.Lock()
-    var credential      : ExpiringCredential? = nil
-    var credentialFuture: EventLoopFuture<Credential>? = nil
-
-    init(eventLoop: EventLoop, client: Client, remainingTokenLifetimeForUse: TimeInterval? = nil) {
-        self.metaDataClient = client
-        self.remainingTokenLifetimeForUse = remainingTokenLifetimeForUse ?? 3 * 60
-    }
-    
-    public func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
-        self.lock.lock()
-        let cred = credential
-        self.lock.unlock()
-        
-        if let cred = cred, !cred.isExpiring(within: remainingTokenLifetimeForUse) {
-            // we have credentials and those are still valid
-            return eventLoop.makeSucceededFuture(cred)
-        }
-        
-        // we need to refresh the credentials
-        return self.refreshCredentials(on: eventLoop)
-    }
-    
-    private func refreshCredentials(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
-        self.lock.lock()
-        defer { self.lock.unlock() }
-        
-        if let future = credentialFuture {
-            // a refresh is already running
-            if future.eventLoop !== eventLoop {
-                // We want to hop back to the event loop we came in case
-                // the refresh is resolved on another EventLoop.
-                return future.hop(to: eventLoop)
-            }
-            return future
-        }
-        
-        credentialFuture = self.metaDataClient.getMetaData(on: eventLoop)
-            .map { (metadata) -> (Credential) in
-                let credential = metadata.credential
-                
-                // update the internal credential locked
-                self.lock.withLock {
-                    self.credentialFuture = nil
-                    self.credential = credential
-                }
-                return credential
-            }
-
-        return credentialFuture!
-    }
-}
 
 struct ECSMetaDataClient: MetaDataClient {
     public typealias MetaData = ECSMetaData

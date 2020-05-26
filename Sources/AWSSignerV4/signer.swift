@@ -239,7 +239,6 @@ public struct AWSSigner {
             "\(canonicalHeaders)\n\n" +
             "\(signingData.signedHeaders)\n" +
             signingData.hashedPayload
-        print(canonicalRequest)
         return canonicalRequest
     }
 

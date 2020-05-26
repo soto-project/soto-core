@@ -14,6 +14,7 @@
 
 @testable import AWSSDKSwiftCore
 import NIO
+import NIOConcurrencyHelpers
 import XCTest
 
 class RotatingCredentialProviderTests: XCTestCase {
@@ -93,6 +94,7 @@ class RotatingCredentialProviderTests: XCTestCase {
         
         var resultFutures = [EventLoopFuture<Void>]()
         var setupFutures = [EventLoopFuture<Void>]()
+        let fulFillCount = NIOAtomic<Int>.makeAtomic(value: 0)
         let iterations = 10000
         for _ in 0..<iterations {
             let loop = group.next()
@@ -111,6 +113,7 @@ class RotatingCredentialProviderTests: XCTestCase {
                     XCTAssertEqual(returned.sessionToken, cred.sessionToken)
                     XCTAssertEqual((returned as? RotatingCredential)?.expiration, cred.expiration)
                     XCTAssert(loop.inEventLoop)
+                    fulFillCount.add(1)
                 }
             }
             resultFutures.append(future)
@@ -125,6 +128,8 @@ class RotatingCredentialProviderTests: XCTestCase {
         
         // ensure callback was only hit once
         XCTAssertEqual(hitCount, 1)
+        // ensure all waiting futures where fulfilled
+        XCTAssertEqual(fulFillCount.load(), iterations)
     }
     
     func testAlwaysGetNewTokenIfTokenLifetimeForUseIsShorterThanLifetime() {

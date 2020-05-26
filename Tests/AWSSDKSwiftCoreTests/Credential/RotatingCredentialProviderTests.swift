@@ -91,12 +91,20 @@ class RotatingCredentialProviderTests: XCTestCase {
         }
         let provider = RotatingCredentialProvider(eventLoop: loop, client: client)
         
-        var futures = [EventLoopFuture<Void>]()
-        for _ in 1...10000 {
+        var resultFutures = [EventLoopFuture<Void>]()
+        var setupFutures = [EventLoopFuture<Void>]()
+        let iterations = 10000
+        for _ in 0..<iterations {
             let loop = group.next()
+            let setupPromise = loop.makePromise(of: Void.self)
+            setupFutures.append(setupPromise.futureResult)
             let future: EventLoopFuture<Void> = loop.flatSubmit {
                 // this should be executed right away
-                provider.getCredential(on: loop).map { returned in
+                defer {
+                    setupPromise.succeed(())
+                }
+                
+                return provider.getCredential(on: loop).map { returned in
                     // this should be executed after the promise is fulfilled.
                     XCTAssertEqual(returned.accessKeyId, cred.accessKeyId)
                     XCTAssertEqual(returned.secretAccessKey, cred.secretAccessKey)
@@ -105,12 +113,15 @@ class RotatingCredentialProviderTests: XCTestCase {
                     XCTAssert(loop.inEventLoop)
                 }
             }
-            futures.append(future)
+            resultFutures.append(future)
         }
         
+        // ensure all 10k have been setup
+        XCTAssertNoThrow(try EventLoopFuture.whenAllSucceed(setupFutures, on: group.next()).wait())
+        // succeed the promise call
         promise.succeed(cred)
-        
-        XCTAssertNoThrow(try futures.forEach { try $0.wait() })
+        // ensure all 10k result futures have been forfilled
+        XCTAssertNoThrow(try EventLoopFuture.whenAllSucceed(resultFutures, on: group.next()).wait())
         
         // ensure callback was only hit once
         XCTAssertEqual(hitCount, 1)
@@ -141,7 +152,4 @@ class RotatingCredentialProviderTests: XCTestCase {
         // ensure callback was only hit once
         XCTAssertEqual(hitCount, iterations)
     }
-
-    
-    
 }

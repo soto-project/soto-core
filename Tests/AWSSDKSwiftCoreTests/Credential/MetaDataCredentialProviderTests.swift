@@ -16,6 +16,7 @@
 import XCTest
 import NIO
 import AsyncHTTPClient
+import AWSTestUtils
 
 class MetaDataCredentialProviderTests: XCTestCase {
     
@@ -35,7 +36,7 @@ class MetaDataCredentialProviderTests: XCTestCase {
         Environment.set(path, for: ECSMetaDataClient.RelativeURIEnvironmentName)
         defer { Environment.unset(name: ECSMetaDataClient.RelativeURIEnvironmentName) }
         
-        let client = ECSMetaDataClient(httpClient: httpClient, host: "localhost:\(testServer.web.serverPort)")
+        let client = ECSMetaDataClient(httpClient: httpClient, host: "\(testServer.host):\(testServer.serverPort)")
         let future = client!.getMetaData(on: loop)
         
         let accessKeyId = "abc123"
@@ -49,7 +50,9 @@ class MetaDataCredentialProviderTests: XCTestCase {
         dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
         let roleArn = "asd:aws:asd"
         
-        XCTAssertNoThrow(try testServer.process { (request) -> AWSTestServer.Result<AWSTestServer.Response> in
+        XCTAssertNoThrow(try testServer.processRaw {
+            (request: AWSTestServer.Request) -> AWSTestServer.Result<AWSTestServer.Response> in
+            
             XCTAssertEqual(request.uri, path)
             XCTAssertEqual(request.method, .GET)
             
@@ -64,7 +67,7 @@ class MetaDataCredentialProviderTests: XCTestCase {
                 """
             var byteButter = ByteBufferAllocator().buffer(capacity: json.utf8.count)
             byteButter.writeString(json)
-            return .init(output: .init(httpStatus: .ok, body: byteButter), continueProcessing: false)
+            return .result(.init(httpStatus: .ok, body: byteButter), continueProcessing: false)
         })
         
         var metaData: ECSMetaDataClient.MetaData?
@@ -115,29 +118,29 @@ class MetaDataCredentialProviderTests: XCTestCase {
         Environment.set(path, for: ECSMetaDataClient.RelativeURIEnvironmentName)
         defer { Environment.unset(name: ECSMetaDataClient.RelativeURIEnvironmentName) }
         
-        let client = InstanceMetaDataClient(httpClient: httpClient, host: "localhost:\(testServer.web.serverPort)")
+        let client = InstanceMetaDataClient(httpClient: httpClient, host: "\(testServer.host):\(testServer.serverPort)")
         let future = client.getMetaData(on: loop)
         
         let token = UUID().uuidString
-        XCTAssertNoThrow(try testServer.process { (request) -> AWSTestServer.Result<AWSTestServer.Response> in
+        XCTAssertNoThrow(try testServer.processRaw { (request) -> AWSTestServer.Result<AWSTestServer.Response> in
             XCTAssertEqual(request.uri, InstanceMetaDataClient.TokenUri)
             XCTAssertEqual(request.method, .PUT)
             XCTAssertEqual(request.headers[InstanceMetaDataClient.TokenTimeToLiveHeader.name], InstanceMetaDataClient.TokenTimeToLiveHeader.value)
             
             var byteBuffer = ByteBufferAllocator().buffer(capacity: token.utf8.count)
             byteBuffer.writeString(token)
-            return .init(output: .init(httpStatus: .ok, body: byteBuffer), continueProcessing: false)
+            return .result(.init(httpStatus: .ok, body: byteBuffer), continueProcessing: false)
         })
         
         let roleName = "MySuperDuperAwesomeRoleName"
-        XCTAssertNoThrow(try testServer.process { (request) -> AWSTestServer.Result<AWSTestServer.Response> in
+        XCTAssertNoThrow(try testServer.processRaw { (request) -> AWSTestServer.Result<AWSTestServer.Response> in
             XCTAssertEqual(request.uri, InstanceMetaDataClient.CredentialUri)
             XCTAssertEqual(request.method, .GET)
             XCTAssertEqual(request.headers[InstanceMetaDataClient.TokenHeaderName], token)
             
             var byteBuffer = ByteBufferAllocator().buffer(capacity: roleName.utf8.count)
             byteBuffer.writeString(roleName)
-            return .init(output: .init(httpStatus: .ok, body: byteBuffer), continueProcessing: false)
+            return .result(.init(httpStatus: .ok, body: byteBuffer), continueProcessing: false)
         })
         
         let accessKeyId = "abc123"
@@ -152,7 +155,7 @@ class MetaDataCredentialProviderTests: XCTestCase {
         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
         dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
         
-        XCTAssertNoThrow(try testServer.process { (request) -> AWSTestServer.Result<AWSTestServer.Response> in
+        XCTAssertNoThrow(try testServer.processRaw { (request) -> AWSTestServer.Result<AWSTestServer.Response> in
             XCTAssertEqual(request.uri, InstanceMetaDataClient.CredentialUri.appending(roleName))
             XCTAssertEqual(request.method, .GET)
             XCTAssertEqual(request.headers[InstanceMetaDataClient.TokenHeaderName], token)
@@ -171,7 +174,7 @@ class MetaDataCredentialProviderTests: XCTestCase {
 
             var byteBuffer = ByteBufferAllocator().buffer(capacity: json.utf8.count)
             byteBuffer.writeString(json)
-            return .init(output: .init(httpStatus: .ok, body: byteBuffer), continueProcessing: false)
+            return .result(.init(httpStatus: .ok, body: byteBuffer), continueProcessing: false)
         })
         
         var metaData: InstanceMetaDataClient.MetaData?
@@ -204,27 +207,27 @@ class MetaDataCredentialProviderTests: XCTestCase {
         Environment.set(path, for: ECSMetaDataClient.RelativeURIEnvironmentName)
         defer { Environment.unset(name: ECSMetaDataClient.RelativeURIEnvironmentName) }
         
-        let client = InstanceMetaDataClient(httpClient: httpClient, host: "localhost:\(testServer.web.serverPort)")
+        let client = InstanceMetaDataClient(httpClient: httpClient, host: "\(testServer.host):\(testServer.serverPort)")
         let future = client.getMetaData(on: loop)
         
-        XCTAssertNoThrow(try testServer.process { (request) -> AWSTestServer.Result<AWSTestServer.Response> in
+        XCTAssertNoThrow(try testServer.processRaw { (request) -> AWSTestServer.Result<AWSTestServer.Response> in
             // we try to use version 2, but this endpoint is not available, so we respond with 404
             XCTAssertEqual(request.uri, InstanceMetaDataClient.TokenUri)
             XCTAssertEqual(request.method, .PUT)
             XCTAssertEqual(request.headers[InstanceMetaDataClient.TokenTimeToLiveHeader.name], InstanceMetaDataClient.TokenTimeToLiveHeader.value)
             
-            return .init(output: .init(httpStatus: .notFound), continueProcessing: false)
+            return .result(.init(httpStatus: .notFound), continueProcessing: false)
         })
         
         let roleName = "MySuperDuperAwesomeRoleName"
-        XCTAssertNoThrow(try testServer.process { (request) -> AWSTestServer.Result<AWSTestServer.Response> in
+        XCTAssertNoThrow(try testServer.processRaw { (request) -> AWSTestServer.Result<AWSTestServer.Response> in
             XCTAssertEqual(request.uri, InstanceMetaDataClient.CredentialUri)
             XCTAssertEqual(request.method, .GET)
             XCTAssertNil(request.headers[InstanceMetaDataClient.TokenHeaderName])
             
             var byteBuffer = ByteBufferAllocator().buffer(capacity: roleName.utf8.count)
             byteBuffer.writeString(roleName)
-            return .init(output: .init(httpStatus: .ok, body: byteBuffer), continueProcessing: false)
+            return .result(.init(httpStatus: .ok, body: byteBuffer), continueProcessing: false)
         })
         
         let accessKeyId = "abc123"
@@ -239,7 +242,7 @@ class MetaDataCredentialProviderTests: XCTestCase {
         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
         dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
         
-        XCTAssertNoThrow(try testServer.process { (request) -> AWSTestServer.Result<AWSTestServer.Response> in
+        XCTAssertNoThrow(try testServer.processRaw { (request) -> AWSTestServer.Result<AWSTestServer.Response> in
             XCTAssertEqual(request.uri, InstanceMetaDataClient.CredentialUri.appending(roleName))
             XCTAssertEqual(request.method, .GET)
             XCTAssertNil(request.headers[InstanceMetaDataClient.TokenHeaderName])
@@ -258,7 +261,7 @@ class MetaDataCredentialProviderTests: XCTestCase {
 
             var byteBuffer = ByteBufferAllocator().buffer(capacity: json.utf8.count)
             byteBuffer.writeString(json)
-            return .init(output: .init(httpStatus: .ok, body: byteBuffer), continueProcessing: false)
+            return .result(.init(httpStatus: .ok, body: byteBuffer), continueProcessing: false)
         })
         
         var metaData: InstanceMetaDataClient.MetaData?

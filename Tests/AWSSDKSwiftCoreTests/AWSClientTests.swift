@@ -1388,11 +1388,11 @@ let response = AWSHTTPResponseImpl(
                 return eventLoop.makeSucceededFuture(())
             }
 
-            try awsServer.process { request in
+            try awsServer.processRaw { request in
                 var byteBuffer = ByteBufferAllocator().buffer(capacity: 128*1024)
                 byteBuffer.writeBytes(data)
                 let response = AWSTestServer.Response(httpStatus: .ok, headers: ["test":"TestHeader"], body: byteBuffer)
-                return AWSTestServer.Result(output: response, continueProcessing: false)
+                return .result(response)
             }
 
             let result = try response.wait()

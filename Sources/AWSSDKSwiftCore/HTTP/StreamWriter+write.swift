@@ -31,13 +31,7 @@ extension AsyncHTTPClient.HTTPClient.Body.StreamWriter {
                     // if no amount was set and no byte buffers are supppied then this is assumed to mean
                     // there will be no more data
                     if amountLeft == nil && byteBuffers.count == 0 {
-                        if let endChunk = reader.endChunk() {
-                            _ = self.write(.byteBuffer(endChunk)).map { _ in
-                                promise.succeed(())
-                            }.cascadeFailure(to: promise)
-                        } else {
-                            promise.succeed(())
-                        }
+                        promise.succeed(())
                         return
                     }
                     // calculate amount left to write
@@ -58,14 +52,8 @@ extension AsyncHTTPClient.HTTPClient.Body.StreamWriter {
                         let writeFuture: EventLoopFuture<Void> = self.write(.byteBuffer(lastBuffer))
                         _ = writeFuture.flatMap { ()->EventLoopFuture<Void> in
                             if let newAmountLeft = newAmountLeft {
-                                if newAmountLeft == reader.endChunkSize {
-                                    if let endChunk = reader.endChunk() {
-                                        _ = self.write(.byteBuffer(endChunk)).map { _ in
-                                            promise.succeed(())
-                                        }.cascadeFailure(to: promise)
-                                    } else {
-                                        promise.succeed(())
-                                    }
+                                if newAmountLeft == 0 {
+                                    promise.succeed(())
                                 } else if newAmountLeft < 0 {
                                     promise.fail(AWSClient.ClientError.tooMuchData)
                                 } else {

@@ -948,14 +948,38 @@ let response = AWSHTTPResponseImpl(
         }
     }
 
-    func testRequestStreaming() {
+    func testRequestStreaming(client: AWSClient, server: AWSTestServer, bufferSize: Int, blockSize: Int) throws {
         struct Input : AWSEncodableShape & AWSShapeWithPayload {
             static var payloadPath: String = "payload"
             static var options: PayloadOptions = [.allowStreaming]
             let payload: AWSPayload
             private enum CodingKeys: CodingKey {}
         }
+        let data = createRandomBuffer(45,9182, size: bufferSize)
+        var byteBuffer = ByteBufferAllocator().buffer(capacity: data.count)
+        byteBuffer.writeBytes(data)
 
+        let payload = AWSPayload.stream(size: bufferSize) { eventLoop in
+            let size = min(blockSize, byteBuffer.readableBytes)
+            // don't ask for 0 bytes
+            XCTAssertNotEqual(size, 0)
+            let buffer = byteBuffer.readSlice(length: size)!
+            return eventLoop.makeSucceededFuture(buffer)
+        }
+        let input = Input(payload: payload)
+        let response = client.send(operation: "test", path: "/", httpMethod: "POST", input: input)
+
+        try server.processRaw { request in
+            let bytes = request.body.getBytes(at: 0, length: request.body.readableBytes)
+            XCTAssertEqual(bytes, data)
+            let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
+            return .result(response)
+        }
+
+        try response.wait()
+    }
+    
+    func testRequestStreaming() {
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
         let client = createAWSClient(accessKeyId: "", secretAccessKey: "", endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
@@ -966,42 +990,16 @@ let response = AWSHTTPResponseImpl(
         }
         do {
 
-            // supply buffer in 16k blocks
-            let bufferSize = 1024*1024
-            let blockSize = 16*1024
-            let data = createRandomBuffer(45,9182, size: bufferSize)
+            try testRequestStreaming(client: client, server: awsServer, bufferSize: 128*1024, blockSize: 16*1024)
+            try testRequestStreaming(client: client, server: awsServer, bufferSize: 128*1024, blockSize: 17*1024)
+            try testRequestStreaming(client: client, server: awsServer, bufferSize: 18*1024, blockSize: 47*1024)
 
-            var i = 0
-            let payload = AWSPayload.stream(size: bufferSize) { eventLoop in
-                var buffer = ByteBufferAllocator().buffer(capacity: blockSize)
-                buffer.writeBytes(data[i..<(i+blockSize)])
-                i = i + blockSize
-                return eventLoop.makeSucceededFuture(buffer)
-            }
-            let input = Input(payload: payload)
-            let response = client.send(operation: "test", path: "/", httpMethod: "POST", input: input)
-
-            try awsServer.processRaw { request in
-                let bytes = request.body.getBytes(at: 0, length: request.body.readableBytes)
-                XCTAssertEqual(bytes, data)
-                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
-                return .result(response)
-            }
-
-            try response.wait()
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
     }
 
     func testRequestS3Streaming() {
-        struct Input : AWSEncodableShape & AWSShapeWithPayload {
-            static var payloadPath: String = "payload"
-            static var options: PayloadOptions = [.allowStreaming]
-            let payload: AWSPayload
-            private enum CodingKeys: CodingKey {}
-        }
-
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
         defer {
@@ -1009,31 +1007,15 @@ let response = AWSHTTPResponseImpl(
             XCTAssertNoThrow(try httpClient.syncShutdown())
         }
         do {
-            let client = createAWSClient(accessKeyId: "foo", secretAccessKey: "bar", service: "s3", endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
+            let client = createAWSClient(accessKeyId: "", secretAccessKey: "", endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
 
-            // supply buffer in 64k blocks
-            let bufferSize = 228*1024
-            let blockSize = 48*1024
-            let data = createRandomBuffer(45,9182, size: bufferSize)
-            var byteBuffer = ByteBufferAllocator().buffer(capacity: data.count)
-            byteBuffer.writeBytes(data)
+            try testRequestStreaming(client: client, server: awsServer, bufferSize: 128*1024, blockSize: 16*1024)
+            try testRequestStreaming(client: client, server: awsServer, bufferSize: 81*1024, blockSize: 16*1024)
+            try testRequestStreaming(client: client, server: awsServer, bufferSize: 128*1024, blockSize: S3ChunkedStreamReader.bufferSize)
+            try testRequestStreaming(client: client, server: awsServer, bufferSize: 130*1024, blockSize: S3ChunkedStreamReader.bufferSize)
+            try testRequestStreaming(client: client, server: awsServer, bufferSize: 128*1024, blockSize: 17*1024)
+            try testRequestStreaming(client: client, server: awsServer, bufferSize: 18*1024, blockSize: 47*1024)
 
-            let payload = AWSPayload.stream(size: bufferSize) { eventLoop in
-                let size = min(blockSize, byteBuffer.readableBytes)
-                let buffer = byteBuffer.readSlice(length: size)!
-                return eventLoop.makeSucceededFuture(buffer)
-            }
-            let input = Input(payload: payload)
-            let response = client.send(operation: "test", path: "/", httpMethod: "POST", input: input)
-
-            try awsServer.processRaw { request in
-                let bytes = request.body.getBytes(at: 0, length: request.body.readableBytes)
-                XCTAssertEqual(bytes, data)
-                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
-                return .result(response)
-            }
-
-            try response.wait()
         } catch {
             XCTFail("Unexpected error: \(error)")
         }

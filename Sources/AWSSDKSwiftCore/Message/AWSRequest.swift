@@ -110,7 +110,7 @@ public struct AWSRequest {
                 // need to add this header here as it needs to be included in the signed headers
                 headers.add(name: "x-amz-decoded-content-length", value: reader.size!.description)
                 let (signedHeaders, seedSigningData) = signer.startSigningChunks(url: url, method: method, headers: headers, date: Date())
-                let s3Reader = AWSChunkedStreamReader(
+                let s3Reader = S3ChunkedStreamReader(
                     size: reader.size!,
                     seedSigningData: seedSigningData,
                     signer: signer,

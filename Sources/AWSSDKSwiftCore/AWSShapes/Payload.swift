@@ -71,7 +71,7 @@ public struct AWSPayload {
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
     ) -> Self {
         // use chunked reader buffer size to avoid allocating additional buffers when streaming data
-        let blockSize = AWSChunkedStreamReader.bufferSize
+        let blockSize = S3ChunkedStreamReader.bufferSize
         var leftToRead = size
         func stream(_ eventLoop: EventLoop) -> EventLoopFuture<ByteBuffer> {
             // calculate how much data is left to read, if a file size was indicated

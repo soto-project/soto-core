@@ -41,9 +41,8 @@ public final class RotatingCredentialProvider<Client: CredentialProvider>: Crede
         switch cred {
         case .none:
             return self.refreshCredentials(on: eventLoop)
-        case .some(let cred) where cred is ExpiringCredential:
-            let expcred = cred as! ExpiringCredential
-            if expcred.isExpiring(within: remainingTokenLifetimeForUse) {
+        case .some(let cred as ExpiringCredential):
+            if cred.isExpiring(within: remainingTokenLifetimeForUse) {
                 // the credentials are expiring... let's refresh
                 return self.refreshCredentials(on: eventLoop)
             }

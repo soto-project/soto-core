@@ -39,6 +39,10 @@ protocol StreamReader {
     
     /// Return an end of stream marker
     func endChunk() -> ByteBuffer?
+    
+    /// size of end chunk
+    var endChunkSize: Int { get }
+    
 }
 
 /// Standard chunked streamer. Adds transfer-encoding : chunked header if a size is not supplied. NIO adds all the chunk headers
@@ -74,6 +78,9 @@ struct ChunkedStreamReader: StreamReader {
         return nil
     }
     
+    /// Size of end chunk
+    let endChunkSize: Int = 0
+
     /// Content size is the same as the size as we aren't adding any chunk headers here
     var contentSize: Int? { return size }
     
@@ -195,11 +202,13 @@ class AWSChunkedStreamReader: StreamReader {
     /// Return the end chunk
     func endChunk() -> ByteBuffer? {
         self.signingData = self.signer.signChunk(body: .byteBuffer(ByteBufferAllocator().buffer(capacity: 0)), signingData: self.signingData)
-        let header = "0;chunk-signature=\(self.signingData.signature)\r\n"
+        let header = "0;chunk-signature=\(self.signingData.signature)\r\n\r\n"
         self.headerBuffer.clear()
         self.headerBuffer.writeString(header)
         return self.headerBuffer
     }
+    
+    var endChunkSize: Int { return 1 + Self.chunkSignatureLength + Self.endOfLineLength * 2 }
     
     /// Calculate content size for aws chunked data. 
     var contentSize: Int? {
@@ -212,7 +221,7 @@ class AWSChunkedStreamReader: StreamReader {
         } else {
             lastChunkSize = 0
         }
-        let fullSize = numberOfChunks * (Self.bufferSize + Self.maxHeaderSize + Self.endOfLineLength) + lastChunkSize + Self.maxHeaderSize - 2  // number of chunks * chunk size + end chunk size + tail chunk size
+        let fullSize = numberOfChunks * (Self.bufferSize + Self.maxHeaderSize + Self.endOfLineLength) + lastChunkSize + 1 + Self.chunkSignatureLength + Self.endOfLineLength * 2  // number of chunks * chunk size + end chunk size + tail chunk size
         return fullSize
     }
     /// size of data to be streamed

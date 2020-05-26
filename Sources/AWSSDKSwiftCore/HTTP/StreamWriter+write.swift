@@ -58,8 +58,14 @@ extension AsyncHTTPClient.HTTPClient.Body.StreamWriter {
                         let writeFuture: EventLoopFuture<Void> = self.write(.byteBuffer(lastBuffer))
                         _ = writeFuture.flatMap { ()->EventLoopFuture<Void> in
                             if let newAmountLeft = newAmountLeft {
-                                if newAmountLeft == 0 {
-                                    promise.succeed(())
+                                if newAmountLeft == reader.endChunkSize {
+                                    if let endChunk = reader.endChunk() {
+                                        _ = self.write(.byteBuffer(endChunk)).map { _ in
+                                            promise.succeed(())
+                                        }.cascadeFailure(to: promise)
+                                    } else {
+                                        promise.succeed(())
+                                    }
                                 } else if newAmountLeft < 0 {
                                     promise.fail(AWSClient.ClientError.tooMuchData)
                                 } else {

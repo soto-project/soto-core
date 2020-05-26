@@ -1011,26 +1011,26 @@ let response = AWSHTTPResponseImpl(
         do {
             let client = createAWSClient(accessKeyId: "foo", secretAccessKey: "bar", service: "s3", endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
 
-            // supply buffer in 16k blocks
-            let bufferSize = 1024*1024
-            let blockSize = 64*1024
+            // supply buffer in 64k blocks
+            let bufferSize = 228*1024
+            let blockSize = 48*1024
             let data = createRandomBuffer(45,9182, size: bufferSize)
+            var byteBuffer = ByteBufferAllocator().buffer(capacity: data.count)
+            byteBuffer.writeBytes(data)
 
-            var i = 0
             let payload = AWSPayload.stream(size: bufferSize) { eventLoop in
-                var buffer = ByteBufferAllocator().buffer(capacity: blockSize)
-                buffer.writeBytes(data[i..<(i+blockSize)])
-                i = i + blockSize
+                let size = min(blockSize, byteBuffer.readableBytes)
+                let buffer = byteBuffer.readSlice(length: size)!
                 return eventLoop.makeSucceededFuture(buffer)
             }
             let input = Input(payload: payload)
             let response = client.send(operation: "test", path: "/", httpMethod: "POST", input: input)
 
-            try awsServer.process { request in
+            try awsServer.processRaw { request in
                 let bytes = request.body.getBytes(at: 0, length: request.body.readableBytes)
                 XCTAssertEqual(bytes, data)
                 let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
-                return AWSTestServer.Result(output: response, continueProcessing: false)
+                return .result(response)
             }
 
             try response.wait()

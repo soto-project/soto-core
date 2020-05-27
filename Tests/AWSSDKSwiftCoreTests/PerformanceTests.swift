@@ -72,194 +72,193 @@ class PerformanceTests: XCTestCase {
     
     func testHeaderRequest() {
         guard Self.enableTimingTests == true else { return }
-        let client = AWSClient(
+        let config = createServiceConfig(
             region: .useast1,
             service:"Test",
             serviceProtocol: .restxml,
-            apiVersion: "1.0",
-            httpClientProvider: .createNew
-        )
+            apiVersion: "1.0")
+
         let date = Date()
         let request = HeaderRequest(header1: "Header1", header2: "Header2", header3: "Header3", header4: TimeStamp(date))
         measure {
-            do {
-                for _ in 0..<1000 {
-                    _ = try client.createAWSRequest(operation: "Test", path: "/", httpMethod: "POST", input: request)
+            for _ in 0..<1000 {
+                do {
+                    // XCTAssertNoThrow does not compile with measure.
+                    _ = try AWSRequest(operation: "Test", path: "/", httpMethod: "POST", input: request, configuration: config)
+                } catch {
+                    XCTFail("Unexpected error: \(error.localizedDescription)")
                 }
-            } catch {
-                XCTFail(error.localizedDescription)
             }
         }
     }
 
     func testXMLRequest() {
         guard Self.enableTimingTests == true else { return }
-        let client = AWSClient(
+        let config = createServiceConfig(
             region: .useast1,
             service:"Test",
             serviceProtocol: .restxml,
-            apiVersion: "1.0",
-            httpClientProvider: .createNew
-        )
+            apiVersion: "1.0")
+        
         let date = Date()
         let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1,2,3,4,5])
         measure {
             do {
                 for _ in 0..<1000 {
-                    _ = try client.createAWSRequest(operation: "Test", path: "/", httpMethod: "POST", input: request)
+                    // XCTAssertNoThrow does not compile with measure.
+                    _ = try AWSRequest(operation: "Test", path: "/", httpMethod: "POST", input: request, configuration: config)
                 }
             } catch {
-                XCTFail(error.localizedDescription)
+                XCTFail("Unexpected error: \(error.localizedDescription)")
             }
         }
     }
 
     func testXMLPayloadRequest() {
         guard Self.enableTimingTests == true else { return }
-        let client = AWSClient(
+        let config = createServiceConfig(
             region: .useast1,
             service:"Test",
             serviceProtocol: .restxml,
-            apiVersion: "1.0",
-            httpClientProvider: .createNew
-        )
+            apiVersion: "1.0")
+        
         let date = Date()
         let request = PayloadRequest(payload: StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1,2,3,4,5]))
         measure {
             do {
                 for _ in 0..<1000 {
-                    _ = try client.createAWSRequest(operation: "Test", path: "/", httpMethod: "POST", input: request)
+                    // XCTAssertNoThrow does not compile with measure.
+                    _ = try AWSRequest(operation: "Test", path: "/", httpMethod: "POST", input: request, configuration: config)
                 }
             } catch {
-                XCTFail(error.localizedDescription)
+                XCTFail("Unexpected error: \(error.localizedDescription)")
             }
         }
     }
 
     func testJSONRequest() {
         guard Self.enableTimingTests == true else { return }
-        let client = AWSClient(
+        let config = createServiceConfig(
             region: .useast1,
             service:"Test",
-            serviceProtocol: .restjson,
-            apiVersion: "1.0",
-            httpClientProvider: .createNew
-        )
+            serviceProtocol: .restxml,
+            apiVersion: "1.0")
+        
         let date = Date()
         let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1,2,3,4,5])
         measure {
             do {
                 for _ in 0..<1000 {
-                    _ = try client.createAWSRequest(operation: "Test", path: "/", httpMethod: "POST", input: request)
+                    // XCTAssertNoThrow does not compile with measure.
+                    _ = try AWSRequest(operation: "Test", path: "/", httpMethod: "POST", input: request, configuration: config)
                 }
             } catch {
-                XCTFail(error.localizedDescription)
+                XCTFail("Unexpected error: \(error.localizedDescription)")
             }
         }
     }
 
     func testJSONPayloadRequest() {
         guard Self.enableTimingTests == true else { return }
-        let client = AWSClient(
+        let config = createServiceConfig(
             region: .useast1,
             service:"Test",
             serviceProtocol: .restjson,
-            apiVersion: "1.0",
-            httpClientProvider: .createNew
-        )
+            apiVersion: "1.0")
+        
         let date = Date()
         let request = PayloadRequest(payload: StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1,2,3,4,5]))
         measure {
             do {
                 for _ in 0..<1000 {
-                    _ = try client.createAWSRequest(operation: "Test", path: "/", httpMethod: "POST", input: request)
+                    // XCTAssertNoThrow does not compile with measure.
+                    _ = try AWSRequest(operation: "Test", path: "/", httpMethod: "POST", input: request, configuration: config)
                 }
             } catch {
-                XCTFail(error.localizedDescription)
+                XCTFail("Unexpected error: \(error.localizedDescription)")
             }
         }
     }
 
     func testQueryRequest() {
         guard Self.enableTimingTests == true else { return }
-        let client = AWSClient(
+        let config = createServiceConfig(
             region: .useast1,
             service:"Test",
             serviceProtocol: .query,
-            apiVersion: "1.0",
-            httpClientProvider: .createNew
-        )
+            apiVersion: "1.0")
+        
         let date = Date()
         let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1,2,3,4,5])
         measure {
             do {
                 for _ in 0..<1000 {
-                    _ = try client.createAWSRequest(operation: "Test", path: "/", httpMethod: "POST", input: request)
+                    // XCTAssertNoThrow does not compile with measure.
+                    _ = try AWSRequest(operation: "Test", path: "/", httpMethod: "POST", input: request, configuration: config)
                 }
             } catch {
-                XCTFail(error.localizedDescription)
+                XCTFail("Unexpected error: \(error.localizedDescription)")
             }
         }
     }
 
     func testUnsignedRequest() {
         guard Self.enableTimingTests == true else { return }
-        let client = AWSClient(
-            accessKeyId: "",
-            secretAccessKey: "",
+        let config = createServiceConfig(
             region: .useast1,
             service:"Test",
             serviceProtocol: .json(version: "1.1"),
-            apiVersion: "1.0",
-            httpClientProvider: .createNew
-        )
-        let awsRequest = try! client.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET")
-        let signer = try! client.signer.wait()
+            apiVersion: "1.0")
+        
+        let request = try! AWSRequest(operation: "Test", path: "/", httpMethod: "GET", configuration: config)
+        let signer = AWSSigner(credentials: StaticCredential(accessKeyId: "", secretAccessKey: ""), name: config.service, region: config.region.rawValue)
+        
         measure {
             for _ in 0..<1000 {
-                _ = awsRequest.createHTTPRequest(signer: signer)
+                _ = request.createHTTPRequest(signer: signer)
             }
         }
     }
 
     func testSignedURLRequest() {
         guard Self.enableTimingTests == true else { return }
-        let client = AWSClient(
-            accessKeyId: "MyAccessKeyId",
-            secretAccessKey: "MySecretAccessKey",
+        let config = createServiceConfig(
             region: .useast1,
             service:"Test",
             serviceProtocol: .json(version: "1.1"),
-            apiVersion: "1.0",
-            httpClientProvider: .createNew
-        )
-        let awsRequest = try! client.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET")
-        let signer = try! client.signer.wait()
+            apiVersion: "1.0")
+        
+        let request = try! AWSRequest(operation: "Test", path: "/", httpMethod: "GET", configuration: config)
+        let signer = AWSSigner(
+            credentials: StaticCredential(accessKeyId: "MyAccessKeyId", secretAccessKey: "MySecretAccessKey"),
+            name: config.service,
+            region: config.region.rawValue)
         measure {
             for _ in 0..<1000 {
-                _ = awsRequest.createHTTPRequest(signer: signer)
+                _ = request.createHTTPRequest(signer: signer)
             }
         }
     }
 
     func testSignedHeadersRequest() {
         guard Self.enableTimingTests == true else { return }
-        let client = AWSClient(
-            accessKeyId: "MyAccessKeyId",
-            secretAccessKey: "MySecretAccessKey",
+        let config = createServiceConfig(
             region: .useast1,
             service:"Test",
             serviceProtocol: .json(version: "1.1"),
-            apiVersion: "1.0",
-            httpClientProvider: .createNew
-        )
+            apiVersion: "1.0")
+        
         let date = Date()
-        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1,2,3,4,5])
-        let awsRequest = try! client.createAWSRequest(operation: "Test", path: "/", httpMethod: "POST", input: request)
-        let signer = try! client.signer.wait()
+        let input = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1,2,3,4,5])
+        let request = try! AWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input, configuration: config)
+        let signer = AWSSigner(
+            credentials: StaticCredential(accessKeyId: "MyAccessKeyId", secretAccessKey: "MySecretAccessKey"),
+            name: config.service,
+            region: config.region.rawValue)
+        
         measure {
             for _ in 0..<1000 {
-                _ = awsRequest.createHTTPRequest(signer: signer)
+                _ = request.createHTTPRequest(signer: signer)
             }
         }
     }

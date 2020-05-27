@@ -32,7 +32,36 @@ import Foundation
     }
 }
 
-public func createAWSClient(
+func createServiceConfig(
+    region: Region = .useast1,
+    partition: Partition = .aws,
+    amzTarget: String? = nil,
+    service: String = "test",
+    signingName: String? = nil,
+    serviceProtocol: ServiceProtocol = .restjson,
+    apiVersion: String = "01-01-2001",
+    endpoint: String? = nil,
+    serviceEndpoints: [String: String] = [:],
+    partitionEndpoints: [Partition: (endpoint: String, region: Region)] = [:],
+    possibleErrorTypes: [AWSErrorType.Type] = [],
+    middlewares: [AWSServiceMiddleware] = []) -> ServiceConfig
+{
+    ServiceConfig(
+        region: region,
+        partition: partition,
+        amzTarget: amzTarget,
+        service: service,
+        signingName: signingName,
+        serviceProtocol: serviceProtocol,
+        apiVersion: apiVersion,
+        endpoint: endpoint,
+        serviceEndpoints: serviceEndpoints,
+        partitionEndpoints: partitionEndpoints,
+        possibleErrorTypes: possibleErrorTypes,
+        middlewares: middlewares)
+}
+
+func createAWSClient(
     accessKeyId: String? = nil,
     secretAccessKey: String? = nil,
     sessionToken: String? = nil,

@@ -51,6 +51,7 @@ public final class AWSClient {
     }
 
     /// AWS service configuration
+    @available(*, deprecated, message: "The service config shall be passed into the AWSClient")
     public let serviceConfig: ServiceConfig
     /// AWS credentials provider
     let credentialProvider: CredentialProvider
@@ -234,107 +235,151 @@ extension AWSClient {
 
 }
 
-// public facing apis
+// apis used by aws service structs
 extension AWSClient {
 
-    /// send a request with an input object and return a future with an empty response
+    // We have four execute methods:
+    //   1. No input, no output
+    //   2. input but no output
+    //   3. no input but an output
+    //   4. an input and an output
+    //
+    // in this order:
+    
+    /// execute an operation without input payload and return a future with an empty result
     /// - parameters:
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
-    ///     - input: Input object
+    ///     - configuration: A `ServiceConfig` object configuring the client
+    ///     - eventLoop: An optional `EventLoop` on which the operation shall be send and received
     /// - returns:
     ///     Empty Future that completes when response is received
-    public func send<Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, input: Input, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Void> {
+    public func execute(
+        operation operationName: String,
+        path: String,
+        httpMethod: String,
+        with configuration: ServiceConfig,
+        on eventLoop: EventLoop? = nil) -> EventLoopFuture<Void>
+    {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
-        let future: EventLoopFuture<Void> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
-            let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
-            let awsRequest = try self.createAWSRequest(
+        return credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
+            let signer = AWSSigner(credentials: credential, name: configuration.signingName, region: configuration.region.rawValue)
+            let awsRequest = try AWSRequest(
                         operation: operationName,
                         path: path,
                         httpMethod: httpMethod,
-                        input: input)
+                        configuration: configuration).applyMiddlewares(configuration.middlewares + self.middlewares)
             return awsRequest.createHTTPRequest(signer: signer)
         }.flatMap { request in
             return self.invoke(request, on: eventLoop)
         }.map { _ in
             return
-        }
-        return recordMetrics(future, service: serviceConfig.service, operation: operationName)
+        }.recordMetrics(for: configuration.service, operation: operationName)
     }
-
-    /// send an empty request and return a future with an empty response
-    /// - parameters:
-    ///     - operationName: Name of the AWS operation
-    ///     - path: path to append to endpoint URL
-    ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
-    /// - returns:
-    ///     Empty Future that completes when response is received
-    public func send(operation operationName: String, path: String, httpMethod: String, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Void> {
-        let eventLoop = eventLoop ?? eventLoopGroup.next()
-        let future: EventLoopFuture<Void> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
-            let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
-            let awsRequest = try self.createAWSRequest(
-                        operation: operationName,
-                        path: path,
-                        httpMethod: httpMethod)
-            return awsRequest.createHTTPRequest(signer: signer)
-        }.flatMap { request in
-            return self.invoke(request, on: eventLoop)
-        }.map { _ in
-            return
-        }
-        return recordMetrics(future, service: serviceConfig.service, operation: operationName)
-    }
-
-    /// send an empty request and return a future with the output object generated from the response
-    /// - parameters:
-    ///     - operationName: Name of the AWS operation
-    ///     - path: path to append to endpoint URL
-    ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
-    /// - returns:
-    ///     Future containing output object that completes when response is received
-    public func send<Output: AWSDecodableShape>(operation operationName: String, path: String, httpMethod: String, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Output> {
-        let eventLoop = eventLoop ?? eventLoopGroup.next()
-        let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
-            let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
-            let awsRequest = try self.createAWSRequest(
-                        operation: operationName,
-                        path: path,
-                        httpMethod: httpMethod)
-            return awsRequest.createHTTPRequest(signer: signer)
-        }.flatMap { request in
-            return self.invoke(request, on: eventLoop)
-        }.flatMapThrowing { response in
-            return try self.validate(operation: operationName, response: response)
-        }
-        return recordMetrics(future, service: serviceConfig.service, operation: operationName)
-    }
-
-    /// send a request with an input object and return a future with the output object generated from the response
+    
+    
+    /// execute an operation with an input payload and return a future with an empty response
     /// - parameters:
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
     ///     - input: Input object
+    ///     - configuration: A `ServiceConfig` object configuring the client
+    ///     - eventLoop: An optional `EventLoop` on which the operation shall be send and received
     /// - returns:
-    ///     Future containing output object that completes when response is received
-    public func send<Output: AWSDecodableShape, Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, input: Input, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Output> {
+    ///     Empty Future that completes when response is received
+    public func execute<Input: AWSEncodableShape>(
+        operation operationName: String,
+        path: String,
+        httpMethod: String,
+        input: Input,
+        with configuration: ServiceConfig,
+        on eventLoop: EventLoop? = nil) -> EventLoopFuture<Void>
+    {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
-        let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
-            let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
-            let awsRequest = try self.createAWSRequest(
+        return credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
+            let signer = AWSSigner(credentials: credential, name: configuration.signingName, region: configuration.region.rawValue)
+            let awsRequest = try AWSRequest(
                         operation: operationName,
                         path: path,
                         httpMethod: httpMethod,
-                        input: input)
+                        input: input,
+                        configuration: configuration
+            ).applyMiddlewares(configuration.middlewares + self.middlewares)
+            return awsRequest.createHTTPRequest(signer: signer)
+        }.flatMap { request in
+            return self.invoke(request, on: eventLoop)
+        }.map { _ in
+            return
+        }.recordMetrics(for: configuration.service, operation: operationName)
+    }
+
+    /// execute an operation without input payload and return a future with the output object generated from the response
+    /// - parameters:
+    ///     - operationName: Name of the AWS operation
+    ///     - path: path to append to endpoint URL
+    ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - configuration: A `ServiceConfig` object configuring the client
+    ///     - eventLoop: An optional `EventLoop` on which the operation shall be send and received
+    /// - returns:
+    ///     Future containing output object that completes when response is received
+    public func execute<Output: AWSDecodableShape>(
+        operation operationName: String,
+        path: String,
+        httpMethod: String,
+        with configuration: ServiceConfig,
+        on eventLoop: EventLoop? = nil) -> EventLoopFuture<Output>
+    {
+        let eventLoop = eventLoop ?? eventLoopGroup.next()
+        return credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
+            let signer = AWSSigner(credentials: credential, name: configuration.signingName, region: configuration.region.rawValue)
+            let awsRequest = try AWSRequest(
+                        operation: operationName,
+                        path: path,
+                        httpMethod: httpMethod,
+                        configuration: configuration).applyMiddlewares(configuration.middlewares + self.middlewares)
             return awsRequest.createHTTPRequest(signer: signer)
         }.flatMap { request in
             return self.invoke(request, on: eventLoop)
         }.flatMapThrowing { response in
             return try self.validate(operation: operationName, response: response)
-        }
-        return recordMetrics(future, service: serviceConfig.service, operation: operationName)
+        }.recordMetrics(for: configuration.service, operation: operationName)
+    }
+
+    /// execute an operation with an input object and return a future with the output object generated from the response
+    /// - parameters:
+    ///     - operationName: Name of the AWS operation
+    ///     - path: path to append to endpoint URL
+    ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - input: Input object
+    ///     - configuration: A `ServiceConfig` object configuring the client
+    ///     - eventLoop: An optional `EventLoop` on which the operation shall be send and received
+    /// - returns:
+    ///     Future containing output object that completes when response is received
+    public func send<Output: AWSDecodableShape, Input: AWSEncodableShape>(
+        operation operationName: String,
+        path: String,
+        httpMethod: String,
+        input: Input,
+        with configuration: ServiceConfig,
+        on eventLoop: EventLoop? = nil) -> EventLoopFuture<Output>
+    {
+        let eventLoop = eventLoop ?? eventLoopGroup.next()
+        return credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
+            let signer = AWSSigner(credentials: credential, name: configuration.signingName, region: configuration.region.rawValue)
+            let awsRequest = try AWSRequest(
+                        operation: operationName,
+                        path: path,
+                        httpMethod: httpMethod,
+                        input: input,
+                        configuration: configuration).applyMiddlewares(configuration.middlewares + self.middlewares)
+            return awsRequest.createHTTPRequest(signer: signer)
+        }.flatMap { request in
+            return self.invoke(request, on: eventLoop)
+        }.flatMapThrowing { response in
+            return try self.validate(operation: operationName, response: response)
+        }.recordMetrics(for: configuration.service, operation: operationName)
     }
 
     /// generate a signed URL
@@ -357,37 +402,42 @@ extension AWSClient {
             return AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
         }
     }
+}
 
-    internal func createAWSRequest(operation operationName: String, path: String, httpMethod: String) throws -> AWSRequest {
+extension AWSRequest {
+    
+    init(operation operationName: String,
+         path: String,
+         httpMethod: String,
+         configuration: ServiceConfig) throws
+    {
         var headers: [String: Any] = [:]
 
-        guard let url = URL(string: "\(serviceConfig.endpoint)\(path)"), let _ = url.host else {
-            throw AWSClient.ClientError.invalidURL("\(serviceConfig.endpoint)\(path) must specify url host and scheme")
+        guard let url = URL(string: "\(configuration.endpoint)\(path)"), let _ = url.host else {
+            throw AWSClient.ClientError.invalidURL("\(configuration.endpoint)\(path) must specify url host and scheme")
         }
 
         // set x-amz-target header
-        if let target = serviceConfig.amzTarget {
+        if let target = configuration.amzTarget {
             headers["x-amz-target"] = "\(target).\(operationName)"
         }
 
-        return try AWSRequest(
-            region: serviceConfig.region,
-            url: url,
-            serviceProtocol: serviceConfig.serviceProtocol,
-            operation: operationName,
-            httpMethod: httpMethod,
-            httpHeaders: headers,
-            body: .empty
-        ).applyMiddlewares(serviceConfig.middlewares + middlewares)
-    }
-
-    internal func verifyStream(operation: String, payload: AWSPayload, input: AWSShapeWithPayload.Type) {
-        guard case .stream(let size,_) = payload.payload else { return }
-        precondition(input.options.contains(.allowStreaming), "\(operation) does not allow streaming of data")
-        precondition(size != nil || input.options.contains(.allowChunkedStreaming), "\(operation) does not allow chunked streaming of data. Please supply a data size.")
+        self.region = configuration.region
+        self.url = url
+        self.serviceProtocol = configuration.serviceProtocol
+        self.operation = operationName
+        self.httpMethod = httpMethod
+        self.httpHeaders = headers
+        self.body = .empty
     }
     
-    internal func createAWSRequest<Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
+    init<Input: AWSEncodableShape>(
+        operation operationName: String,
+        path: String,
+        httpMethod: String,
+        input: Input,
+        configuration: ServiceConfig) throws
+    {
         var headers: [String: Any] = [:]
         var path = path
         var body: Body = .empty
@@ -396,12 +446,12 @@ extension AWSClient {
         // validate input parameters
         try input.validate()
 
-        guard let baseURL = URL(string: "\(serviceConfig.endpoint)"), let _ = baseURL.host else {
-            throw ClientError.invalidURL("\(serviceConfig.endpoint) must specify url host and scheme")
+        guard let baseURL = URL(string: "\(configuration.endpoint)"), let _ = baseURL.host else {
+            throw AWSClient.ClientError.invalidURL("\(configuration.endpoint) must specify url host and scheme")
         }
 
         // set x-amz-target header
-        if let target = serviceConfig.amzTarget {
+        if let target = configuration.amzTarget {
             headers["x-amz-target"] = "\(target).\(operationName)"
         }
 
@@ -438,14 +488,14 @@ extension AWSClient {
             }
         }
 
-        switch serviceConfig.serviceProtocol {
+        switch configuration.serviceProtocol {
         case .json, .restjson:
             if let shapeWithPayload = Input.self as? AWSShapeWithPayload.Type {
                 let payload = shapeWithPayload.payloadPath
                 if let payloadBody = mirror.getAttribute(forKey: payload) {
                     switch payloadBody {
                     case let awsPayload as AWSPayload:
-                        verifyStream(operation: operationName, payload: awsPayload, input: shapeWithPayload)
+                        Self.verifyStream(operation: operationName, payload: awsPayload, input: shapeWithPayload)
                         body = .raw(awsPayload)
                     case let shape as AWSEncodableShape:
                         body = .json(try shape.encodeAsJSON())
@@ -466,13 +516,13 @@ extension AWSClient {
             var dict = try input.encodeAsQuery()
 
             dict["Action"] = operationName
-            dict["Version"] = serviceConfig.apiVersion
+            dict["Version"] = configuration.apiVersion
 
             switch httpMethod {
             case "GET":
                 queryParams.append(contentsOf: dict.map {(key:$0.key, value:$0)})
             default:
-                if let urlEncodedQueryParams = urlEncodeQueryParams(fromDictionary: dict) {
+                if let urlEncodedQueryParams = Self.urlEncodeQueryParams(fromDictionary: dict) {
                     body = .text(urlEncodedQueryParams)
                 }
             }
@@ -483,7 +533,7 @@ extension AWSClient {
                 if let payloadBody = mirror.getAttribute(forKey: payload) {
                     switch payloadBody {
                     case let awsPayload as AWSPayload:
-                        verifyStream(operation: operationName, payload: awsPayload, input: shapeWithPayload)
+                        Self.verifyStream(operation: operationName, payload: awsPayload, input: shapeWithPayload)
                         body = .raw(awsPayload)
                     case let shape as AWSEncodableShape:
                         var rootName: String? = nil
@@ -508,14 +558,14 @@ extension AWSClient {
         case .ec2:
             var params = try input.encodeAsQueryForEC2()
             params["Action"] = operationName
-            params["Version"] = serviceConfig.apiVersion
-            if let urlEncodedQueryParams = urlEncodeQueryParams(fromDictionary: params) {
+            params["Version"] = configuration.apiVersion
+            if let urlEncodedQueryParams = Self.urlEncodeQueryParams(fromDictionary: params) {
                 body = .text(urlEncodedQueryParams)
             }
         }
 
         guard let parsedPath = URLComponents(string: path) else {
-            throw ClientError.invalidURL("\(serviceConfig.endpoint)\(path)")
+            throw AWSClient.ClientError.invalidURL("\(configuration.endpoint)\(path)")
         }
 
         // add queries from the parsed path to the query params list
@@ -529,31 +579,38 @@ extension AWSClient {
         var urlString = "\(baseURL.absoluteString)\(parsedPath.path)"
         if queryParams.count > 0 {
             urlString.append("?")
-            urlString.append(queryParams.sorted{$0.key < $1.key}.map{"\($0.key)=\(urlEncodeQueryParam("\($0.value)"))"}.joined(separator:"&"))
+            urlString.append(queryParams.sorted{$0.key < $1.key}.map{"\($0.key)=\(Self.urlEncodeQueryParam("\($0.value)"))"}.joined(separator:"&"))
         }
 
         guard let url = URL(string: urlString) else {
-            throw ClientError.invalidURL("\(urlString)")
+            throw AWSClient.ClientError.invalidURL("\(urlString)")
         }
 
-        return try AWSRequest(
-            region: serviceConfig.region,
-            url: url,
-            serviceProtocol: serviceConfig.serviceProtocol,
-            operation: operationName,
-            httpMethod: httpMethod,
-            httpHeaders: headers,
-            body: body
-        ).applyMiddlewares(serviceConfig.middlewares + middlewares)
+        
+        self.region = configuration.region
+        self.url = url
+        self.serviceProtocol = configuration.serviceProtocol
+        self.operation = operationName
+        self.httpMethod = httpMethod
+        self.httpHeaders = headers
+        self.body = body
+    }
+    
+    // MARK: - Private static helpers -
+
+    private static func verifyStream(operation: String, payload: AWSPayload, input: AWSShapeWithPayload.Type) {
+        guard case .stream(let size,_) = payload.payload else { return }
+        precondition(input.options.contains(.allowStreaming), "\(operation) does not allow streaming of data")
+        precondition(size != nil || input.options.contains(.allowChunkedStreaming), "\(operation) does not allow chunked streaming of data. Please supply a data size.")
     }
 
     static let queryAllowedCharacters = CharacterSet(charactersIn:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/")
 
-    fileprivate func urlEncodeQueryParam(_ value: String) -> String {
-        return value.addingPercentEncoding(withAllowedCharacters: AWSClient.queryAllowedCharacters) ?? value
+    private static func urlEncodeQueryParam(_ value: String) -> String {
+        return value.addingPercentEncoding(withAllowedCharacters: Self.queryAllowedCharacters) ?? value
     }
 
-    fileprivate func urlEncodeQueryParams(fromDictionary dict: [String:Any]) -> String? {
+    private static func urlEncodeQueryParams(fromDictionary dict: [String:Any]) -> String? {
         guard dict.count > 0 else {return nil}
         var query = ""
         let keys = Array(dict.keys).sorted()
@@ -800,14 +857,14 @@ extension AWSClient.ClientError: CustomStringConvertible {
     }
 }
 
-extension AWSClient {
-    func recordMetrics<Output>(_ future: EventLoopFuture<Output>, service: String, operation: String) -> EventLoopFuture<Output> {
+extension EventLoopFuture {
+    func recordMetrics(for service: String, operation: String) -> EventLoopFuture<Value> {
         let dimensions: [(String, String)] = [("service", service), ("operation", operation)]
         let startTime = DispatchTime.now().uptimeNanoseconds
 
         Counter(label: "aws_requests_total", dimensions: dimensions).increment()
         
-        return future.map { response in
+        return self.map { response in
             Metrics.Timer(
                 label: "aws_request_duration",
                 dimensions: dimensions,

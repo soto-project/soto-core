@@ -27,32 +27,26 @@ class PayloadTests: XCTestCase {
             private enum CodingKeys: CodingKey {}
         }
 
-        do {
-            let awsServer = AWSTestServer(serviceProtocol: .json)
-            let client = AWSClient(
-                accessKeyId: "",
-                secretAccessKey: "",
-                region: .useast1,
-                service:"TestClient",
-                serviceProtocol: .json(version: "1.1"),
-                apiVersion: "2020-01-21",
-                endpoint: awsServer.address,
-                middlewares: [AWSLoggingMiddleware()],
-                httpClientProvider: .createNew
-            )
-            let input = DataPayload(data: payload)
-            let response = client.send(operation: "test", path: "/", httpMethod: "POST", input: input)
+        let awsServer = AWSTestServer(serviceProtocol: .json)
+        defer { XCTAssertNoThrow(try awsServer.stop()) }
+        let config = createServiceConfig(
+            region: .useast1,
+            service:"TestClient",
+            serviceProtocol: .json(version: "1.1"),
+            apiVersion: "2020-01-21",
+            endpoint: awsServer.address,
+            middlewares: [AWSLoggingMiddleware()])
+        let client = AWSClient(serviceConfig: config, httpClientProvider: .createNew)
+        
+        let input = DataPayload(data: payload)
+        let response = client.execute(operation: "test", path: "/", httpMethod: "POST", input: input, with: config)
 
-            try awsServer.processRaw { request in
-                XCTAssertEqual(request.body.getString(at: 0, length: request.body.readableBytes), expectedResult)
-                return .result(.ok)
-            }
+        XCTAssertNoThrow(try awsServer.process { request in
+            XCTAssertEqual(request.body.getString(at: 0, length: request.body.readableBytes), expectedResult)
+            return AWSTestServer.Result(output: .ok, continueProcessing: false)
+        })
 
-            try response.wait()
-            try awsServer.stop()
-        } catch {
-            XCTFail("Unexpected error: \(error)")
-        }
+        XCTAssertNoThrow(try response.wait())
     }
 
     func testDataRequestPayload() {
@@ -77,35 +71,29 @@ class PayloadTests: XCTestCase {
             ]
             let payload: AWSPayload
         }
-        do {
-            let awsServer = AWSTestServer(serviceProtocol: .json)
-            let client = AWSClient(
-                accessKeyId: "",
-                secretAccessKey: "",
-                region: .useast1,
-                service:"TestClient",
-                serviceProtocol: .json(version: "1.1"),
-                apiVersion: "2020-01-21",
-                endpoint: awsServer.address,
-                middlewares: [AWSLoggingMiddleware()],
-                httpClientProvider: .createNew
-            )
-            let response: EventLoopFuture<Output> = client.send(operation: "test", path: "/", httpMethod: "POST")
+        
+        let awsServer = AWSTestServer(serviceProtocol: .json)
+        defer { XCTAssertNoThrow(try awsServer.stop()) }
+        let config = createServiceConfig(
+            region: .useast1,
+            service:"TestClient",
+            serviceProtocol: .json(version: "1.1"),
+            apiVersion: "2020-01-21",
+            endpoint: awsServer.address,
+            middlewares: [AWSLoggingMiddleware()])
+        let client = AWSClient(serviceConfig: config, httpClientProvider: .createNew)
+        
+        let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: "POST", with: config)
 
-            try awsServer.processRaw { request in
-                var byteBuffer = ByteBufferAllocator().buffer(capacity: 0)
-                byteBuffer.writeString("testResponsePayload")
-                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
-                return .result(response)
-            }
+        XCTAssertNoThrow(try awsServer.process { request in
+            var byteBuffer = ByteBufferAllocator().buffer(capacity: 0)
+            byteBuffer.writeString("testResponsePayload")
+            let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
+            return AWSTestServer.Result(output: response, continueProcessing: false)
+        })
 
-            let output = try response.wait()
-
-            XCTAssertEqual(output.payload.asString(), "testResponsePayload")
-            //XCTAssertEqual(output.i, 547)
-            try awsServer.stop()
-        } catch {
-            XCTFail("Unexpected error: \(error)")
-        }
+        var output: Output?
+        XCTAssertNoThrow(output = try response.wait())
+        XCTAssertEqual(output?.payload.asString(), "testResponsePayload")
     }
 }

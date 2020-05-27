@@ -193,16 +193,20 @@ struct InstanceMetaDataClient: MetaDataClient {
                 HTTPHeaders([(Self.TokenHeaderName, token)])
             }
             .flatMapErrorThrowing() { error in
-                // we fallback to version 1
+                // If we didn't find a session key then assume we are running IMDSv1.
+                // (we could be running from a Docker container and the hop count for the PUT
+                // request is still set to 1)
                 HTTPHeaders()
             }
             .flatMap { (headers) -> EventLoopFuture<(AWSHTTPResponse, HTTPHeaders)> in
+                // next we need to request the rolename
                 self.request(url: self.credentialURL,
                              method: .GET,
                              headers: headers,
                              on: eventLoop).map() { ($0, headers) }
             }
-            .flatMapThrowing() { (response, headers) -> (URL, HTTPHeaders) in
+            .flatMapThrowing { (response, headers) -> (String, HTTPHeaders) in
+                // the rolename is in the body
                 guard response.status == .ok else {
                     throw MetaDataClientError.unexpectedTokenResponseStatus(status: response.status)
                 }
@@ -211,17 +215,20 @@ struct InstanceMetaDataClient: MetaDataClient {
                     throw MetaDataClientError.couldNotGetInstanceRoleName
                 }
 
-                return (self.credentialURL.appendingPathComponent(roleName), headers)
+                return (roleName, headers)
             }
-            .flatMap { (url, headers) in
+            .flatMap { (roleName, headers) -> EventLoopFuture<AWSHTTPResponse> in
+                // request credentials with the rolename
+                let url = self.credentialURL.appendingPathComponent(roleName)
                 return self.request(url: url, headers: headers, on: eventLoop)
             }
-            .flatMapThrowing { response in
+            .flatMapThrowing { (response) in
+                // decode the repsonse payload into the metadata object
                 guard let body = response.body else {
                     throw MetaDataClientError.missingMetaData
                 }
                 
-                return try self.decoder.decode(MetaData.self, from: body)
+                return try self.decoder.decode(InstanceMetaData.self, from: body)
             }
     }
         

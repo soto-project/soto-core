@@ -216,7 +216,7 @@ class AWSClientTests: XCTestCase {
             ))
             
             var signedRequest: AWSHTTPRequest?
-            XCTAssertNoThrow(signedRequest = request?.createHTTPRequest(signer: try signer))
+            XCTAssertNoThrow(signedRequest = request?.createHTTPRequest(signer: signer))
             XCTAssertNotNil(signedRequest?.headers["Authorization"].first)
         }
     }
@@ -262,20 +262,18 @@ class AWSClientTests: XCTestCase {
         XCTAssertEqual(request5?.getHttpHeaders()["content-type"].first, "application/octet-stream")
     }
 
-    #if false
     func testHeaderEncoding() {
         struct Input: AWSEncodableShape {
             static let _encoding = [AWSMemberEncoding(label: "h", location: .header(locationName: "header-member"))]
             let h: String
         }
-        let client = createAWSClient()
-        do {
-            let input = Input(h: "TestHeader")
-            let request = try client.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input)
-            XCTAssertEqual(request.httpHeaders["header-member"] as? String, "TestHeader")
-        } catch {
-            XCTFail("\(error)")
-        }
+        
+        let config = createServiceConfig()
+        let input = Input(h: "TestHeader")
+        
+        var request: AWSRequest?
+        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input, configuration: config))
+        XCTAssertEqual(request?.httpHeaders["header-member"] as? String, "TestHeader")
     }
 
     func testQueryEncoding() {
@@ -283,14 +281,12 @@ class AWSClientTests: XCTestCase {
             static let _encoding = [AWSMemberEncoding(label: "q", location: .querystring(locationName: "query"))]
             let q: String
         }
-        let client = createAWSClient()
-        do {
-            let input = Input(q: "=3+5897^sdfjh&")
-            let request = try client.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input)
-            XCTAssertEqual(request.url.absoluteString, "https://testService.us-east-1.amazonaws.com/?query=%3D3%2B5897%5Esdfjh%26")
-        } catch {
-            XCTFail("\(error)")
-        }
+        
+        let config = createServiceConfig(service: "testService")
+        let input = Input(q: "=3+5897^sdfjh&")
+        var request: AWSRequest?
+        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input, configuration: config))
+        XCTAssertEqual(request?.url.absoluteString, "https://testService.us-east-1.amazonaws.com/?query=%3D3%2B5897%5Esdfjh%26")
     }
 
     func testQueryEncodedArray() {
@@ -298,14 +294,11 @@ class AWSClientTests: XCTestCase {
             static let _encoding = [AWSMemberEncoding(label: "q", location: .querystring(locationName: "query"))]
             let q: [String]
         }
-        let client = createAWSClient()
-        do {
-            let input = Input(q: ["=3+5897^sdfjh&", "test"])
-            let request = try client.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input)
-            XCTAssertEqual(request.url.absoluteString, "https://testService.us-east-1.amazonaws.com/?query=%3D3%2B5897%5Esdfjh%26&query=test")
-        } catch {
-            XCTFail("\(error)")
-        }
+        let config = createServiceConfig(service: "testService")
+        let input = Input(q: ["=3+5897^sdfjh&", "test"])
+        var request: AWSRequest?
+        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input, configuration: config))
+        XCTAssertEqual(request?.url.absoluteString, "https://testService.us-east-1.amazonaws.com/?query=%3D3%2B5897%5Esdfjh%26&query=test")
     }
 
     func testQueryEncodedDictionary() {
@@ -313,14 +306,11 @@ class AWSClientTests: XCTestCase {
             static let _encoding = [AWSMemberEncoding(label: "q", location: .querystring(locationName: "query"))]
             let q: [String: Int]
         }
-        let client = createAWSClient(region: .useast2, service: "myservice")
-        do {
-            let input = Input(q: ["one": 1, "two": 2])
-            let request = try client.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input)
-            XCTAssertEqual(request.url.absoluteString, "https://myservice.us-east-2.amazonaws.com/?one=1&two=2")
-        } catch {
-            XCTFail("\(error)")
-        }
+        let config = createServiceConfig(region: .useast2, service: "myservice")
+        let input = Input(q: ["one": 1, "two": 2])
+        var request: AWSRequest?
+        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input, configuration: config))
+        XCTAssertEqual(request?.url.absoluteString, "https://myservice.us-east-2.amazonaws.com/?one=1&two=2")
     }
 
     func testURIEncoding() {
@@ -328,16 +318,14 @@ class AWSClientTests: XCTestCase {
             static let _encoding = [AWSMemberEncoding(label: "u", location: .uri(locationName: "key"))]
             let u: String
         }
-        let client = createAWSClient(region: .cacentral1, service: "s3")
-        do {
-            let input = Input(u: "MyKey")
-            let request = try client.createAWSRequest(operation: "Test", path: "/{key}", httpMethod: "GET", input: input)
-            XCTAssertEqual(request.url.absoluteString, "https://s3.ca-central-1.amazonaws.com/MyKey")
-        } catch {
-            XCTFail("\(error)")
-        }
+        let config = createServiceConfig(region: .cacentral1, service: "s3")
+        let input = Input(u: "MyKey")
+        var request: AWSRequest?
+        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/{key}", httpMethod: "GET", input: input, configuration: config))
+        XCTAssertEqual(request?.url.absoluteString, "https://s3.ca-central-1.amazonaws.com/MyKey")
     }
 
+    #if false
     func testHeaderResponseDecoding() {
         struct Output: AWSDecodableShape {
             static let _encoding = [AWSMemberEncoding(label: "h", location: .header(locationName: "header-member"))]

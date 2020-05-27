@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import NIO
+import NIOHTTP1
 import XCTest
 import AWSTestUtils
 @testable import AWSSDKSwiftCore
@@ -36,14 +37,14 @@ class PayloadTests: XCTestCase {
             apiVersion: "2020-01-21",
             endpoint: awsServer.address,
             middlewares: [AWSLoggingMiddleware()])
-        let client = AWSClient(serviceConfig: config, httpClientProvider: .createNew)
+        let client = AWSClient(credentialProvider: nil, serviceConfig: config, httpClientProvider: .createNew)
         
         let input = DataPayload(data: payload)
         let response = client.execute(operation: "test", path: "/", httpMethod: "POST", input: input, with: config)
 
-        XCTAssertNoThrow(try awsServer.process { request in
+        XCTAssertNoThrow(try awsServer.processRaw { request in
             XCTAssertEqual(request.body.getString(at: 0, length: request.body.readableBytes), expectedResult)
-            return AWSTestServer.Result(output: .ok, continueProcessing: false)
+            return .result(.ok, continueProcessing: false)
         })
 
         XCTAssertNoThrow(try response.wait())
@@ -81,15 +82,14 @@ class PayloadTests: XCTestCase {
             apiVersion: "2020-01-21",
             endpoint: awsServer.address,
             middlewares: [AWSLoggingMiddleware()])
-        let client = AWSClient(serviceConfig: config, httpClientProvider: .createNew)
+        let client = AWSClient(credentialProvider: nil, serviceConfig: config, httpClientProvider: .createNew)
         
         let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: "POST", with: config)
 
-        XCTAssertNoThrow(try awsServer.process { request in
+        XCTAssertNoThrow(try awsServer.processRaw { request in
             var byteBuffer = ByteBufferAllocator().buffer(capacity: 0)
             byteBuffer.writeString("testResponsePayload")
-            let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
-            return AWSTestServer.Result(output: response, continueProcessing: false)
+            return .result(.init(httpStatus: .ok, body: byteBuffer), continueProcessing: false)
         })
 
         var output: Output?

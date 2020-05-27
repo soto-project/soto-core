@@ -265,25 +265,24 @@ class PerformanceTests: XCTestCase {
 
     func testValidateXMLResponse() {
         guard Self.enableTimingTests == true else { return }
-        let client = AWSClient(
+        let config = createServiceConfig(
             region: .useast1,
             service:"Test",
             serviceProtocol: .restxml,
-            apiVersion: "1.0",
-            httpClientProvider: .createNew
-        )
+            apiVersion: "1.0")
+        
         var buffer = ByteBufferAllocator().buffer(capacity: 0)
         buffer.writeString("<Output><item1>Hello</item1><item2>5</item2><item3>3.141</item3><item4>2001-12-23T15:34:12.590Z</item4><item5>3</item5><item5>6</item5><item5>325</item5></Output>")
         let response = HTTPClient.Response(
             host: "localhost",
             status: .ok,
             headers: HTTPHeaders(),
-            body: buffer
-        )
+            body: buffer)
+        
         measure {
             do {
                 for _ in 0..<1000 {
-                    let _: StandardResponse = try client.validate(operation: "Output", response: response)
+                    let _: StandardResponse = try response.validate(operation: "Output", configuration: config)
                 }
             } catch {
                 XCTFail(error.localizedDescription)
@@ -293,25 +292,24 @@ class PerformanceTests: XCTestCase {
 
     func testValidateJSONResponse() {
         guard Self.enableTimingTests == true else { return }
-        let client = AWSClient(
+        let config = createServiceConfig(
             region: .useast1,
             service:"Test",
             serviceProtocol: .restjson,
-            apiVersion: "1.0",
-            httpClientProvider: .createNew
-        )
+            apiVersion: "1.0")
+        
         var buffer = ByteBufferAllocator().buffer(capacity: 0)
         buffer.writeString("{\"item1\":\"Hello\", \"item2\":5, \"item3\":3.14, \"item4\":\"2001-12-23T15:34:12.590Z\", \"item5\": [1,56,3,7]}")
         let response = HTTPClient.Response(
             host: "localhost",
             status: .ok,
             headers: HTTPHeaders(),
-            body: buffer
-        )
+            body: buffer)
+        
         measure {
             do {
                 for _ in 0..<1000 {
-                    let _: StandardResponse = try client.validate(operation: "Output", response: response)
+                    let _: StandardResponse = try response.validate(operation: "Output", configuration: config)
                 }
             } catch {
                 XCTFail(error.localizedDescription)

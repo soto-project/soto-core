@@ -15,7 +15,7 @@
 import Foundation
 
 // AWS HAL services I know of are APIGateway, Pinpoint, Greengrass
-extension AWSClient {
+extension AWSHTTPResponse {
     /// process hal+json date. Extract properties from HAL
     func hypertextApplicationLanguageProcess(response: AWSResponse) throws -> AWSResponse {
         guard case .json(let data) = response.body,

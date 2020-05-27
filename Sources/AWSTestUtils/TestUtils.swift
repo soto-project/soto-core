@@ -32,7 +32,7 @@ import Foundation
     }
 }
 
-func createServiceConfig(
+public func createServiceConfig(
     region: Region = .useast1,
     partition: Partition = .aws,
     amzTarget: String? = nil,
@@ -61,7 +61,7 @@ func createServiceConfig(
         middlewares: middlewares)
 }
 
-func createAWSClient(
+public func createAWSClient(
     accessKeyId: String? = nil,
     secretAccessKey: String? = nil,
     sessionToken: String? = nil,

@@ -196,26 +196,26 @@ extension AWSClient {
 
         func execute(_ httpRequest: AWSHTTPRequest, attempt: Int) {
             // execute HTTP request
-            _ = httpClient.execute(request: httpRequest, timeout: .seconds(20), on: eventLoop)
+            httpClient.execute(request: httpRequest, timeout: .seconds(20), on: eventLoop)
                 .flatMapThrowing { (response) throws -> Void in
                     // if it returns an HTTP status code outside 2xx then throw an error
                     guard (200..<300).contains(response.status.code) else { throw AWSClient.InternalError.httpResponseError(response) }
                     promise.succeed(response)
                 }
-                .flatMapErrorThrowing { (error)->Void in
-                    // If I get a retry wait time for this error then attempt to retry request
+                .whenFailure { (error) in
+                    // If I we failed, let's try to recover.
+                    // If we get a retry time we will recover after that time has passed
                     if case .retry(let retryTime) = self.retryPolicy.getRetryWaitTime(error: error, attempt: attempt) {
                         // schedule task for retrying AWS request
                         eventloop.scheduleTask(in: retryTime) {
                             execute(httpRequest, attempt: attempt + 1)
                         }
-                    } else if case AWSClient.InternalError.httpResponseError(let response) = error {
-                        // if there was no retry and error was a response status code then attempt to convert to AWS error
-                        promise.fail(self.createError(for: response))
                     } else {
+                        // we could not recover - therefore let's fail
                         promise.fail(error)
                     }
-            }
+                }
+                
         }
 
         execute(httpRequest, attempt: 0)
@@ -273,6 +273,11 @@ extension AWSClient {
             return awsRequest.createHTTPRequest(signer: signer)
         }.flatMap { request in
             return self.invoke(request, on: eventLoop)
+        }.flatMapErrorThrowing { (error) -> AWSHTTPResponse in
+            guard case AWSClient.InternalError.httpResponseError(let response) = error else {
+                throw error
+            }
+            throw self.createError(for: response, configuration: configuration)
         }.map { _ in
             return
         }.recordMetrics(for: configuration.service, operation: operationName)
@@ -310,6 +315,11 @@ extension AWSClient {
             return awsRequest.createHTTPRequest(signer: signer)
         }.flatMap { request in
             return self.invoke(request, on: eventLoop)
+        }.flatMapErrorThrowing { (error) -> AWSHTTPResponse in
+            guard case AWSClient.InternalError.httpResponseError(let response) = error else {
+                throw error
+            }
+            throw self.createError(for: response, configuration: configuration)
         }.map { _ in
             return
         }.recordMetrics(for: configuration.service, operation: operationName)
@@ -342,8 +352,13 @@ extension AWSClient {
             return awsRequest.createHTTPRequest(signer: signer)
         }.flatMap { request in
             return self.invoke(request, on: eventLoop)
+        }.flatMapErrorThrowing { (error) -> AWSHTTPResponse in
+            guard case AWSClient.InternalError.httpResponseError(let response) = error else {
+                throw error
+            }
+            throw self.createError(for: response, configuration: configuration)
         }.flatMapThrowing { response in
-            return try self.validate(operation: operationName, response: response)
+            return try response.validate(operation: operationName, configuration: configuration, middlewares: self.middlewares)
         }.recordMetrics(for: configuration.service, operation: operationName)
     }
 
@@ -377,8 +392,13 @@ extension AWSClient {
             return awsRequest.createHTTPRequest(signer: signer)
         }.flatMap { request in
             return self.invoke(request, on: eventLoop)
+        }.flatMapErrorThrowing { (error) -> AWSHTTPResponse in
+            guard case AWSClient.InternalError.httpResponseError(let response) = error else {
+                throw error
+            }
+            throw self.createError(for: response, configuration: configuration)
         }.flatMapThrowing { response in
-            return try self.validate(operation: operationName, response: response)
+            return try response.validate(operation: operationName, configuration: configuration, middlewares: self.middlewares)
         }.recordMetrics(for: configuration.service, operation: operationName)
     }
 
@@ -627,17 +647,21 @@ extension AWSRequest {
 }
 
 // response validator
-extension AWSClient {
+extension AWSHTTPResponse {
 
     /// Validate the operation response and return a response shape
-    internal func validate<Output: AWSDecodableShape>(operation operationName: String, response: AWSHTTPResponse) throws -> Output {
+    internal func validate<Output: AWSDecodableShape>(
+        operation operationName: String,
+        configuration: ServiceConfig,
+        middlewares: [AWSServiceMiddleware] = []) throws -> Output
+    {
         var raw: Bool = false
         var payloadKey: String? = (Output.self as? AWSShapeWithPayload.Type)?.payloadPath
 
         // if response has a payload with encoding info
         if let payloadPath = payloadKey, let encoding = Output.getEncoding(for: payloadPath) {
             // is payload raw
-            if case .blob = encoding.shapeEncoding, (200..<300).contains(response.status.code) {
+            if case .blob = encoding.shapeEncoding, (200..<300).contains(self.status.code) {
                 raw = true
             }
             // get CodingKey string for payload to insert in output
@@ -646,10 +670,10 @@ extension AWSClient {
             }
         }
 
-        var awsResponse = try AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol, raw: raw)
+        var awsResponse = try AWSResponse(from: self, serviceProtocol: configuration.serviceProtocol, raw: raw)
 
         // do we need to fix up the response before processing it
-        for middleware in serviceConfig.middlewares + middlewares {
+        for middleware in configuration.middlewares + middlewares {
             awsResponse = try middleware.chain(response: awsResponse)
         }
 
@@ -691,7 +715,7 @@ extension AWSClient {
             }
             // add status code to output dictionary
             if let statusCodeParam = Output.statusCodeParam {
-                let node = XML.Element(name: statusCodeParam, stringValue: "\(response.status.code)")
+                let node = XML.Element(name: statusCodeParam, stringValue: "\(self.status.code)")
                 outputNode.addChild(node)
             }
             return try XMLDecoder().decode(Output.self, from: outputNode)
@@ -725,15 +749,18 @@ extension AWSClient {
         }
         // add status code to output dictionary
         if let statusCodeParam = Output.statusCodeParam {
-            outputDict[statusCodeParam] = response.status.code
+            outputDict[statusCodeParam] = self.status.code
         }
 
         return try decoder.decode(Output.self, from: outputDict)
     }
+}
 
-    internal func createError(for response: AWSHTTPResponse) -> Error {
+extension AWSClient {
+
+    internal func createError(for response: AWSHTTPResponse, configuration: ServiceConfig) -> Error {
         do {
-            let awsResponse = try AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol)
+            let awsResponse = try AWSResponse(from: response, serviceProtocol: configuration.serviceProtocol)
             struct XMLError: Codable, ErrorMessage {
                 var code: String?
                 var message: String
@@ -773,7 +800,7 @@ extension AWSClient {
 
             var errorMessage: ErrorMessage? = nil
 
-            switch serviceConfig.serviceProtocol {
+            switch configuration.serviceProtocol {
             case .query:
                 guard case .xml(var element) = awsResponse.body else { break }
                 if let errors = element.elements(forName: "Errors").first {
@@ -814,7 +841,7 @@ extension AWSClient {
                 if let index = code.firstIndex(of: "#") {
                     code = String(code[code.index(index, offsetBy: 1)...])
                 }
-                for errorType in serviceConfig.possibleErrorTypes {
+                for errorType in configuration.possibleErrorTypes {
                     if let error = errorType.init(errorCode: code, message: errorMessage.message) {
                         return error
                     }

@@ -32,7 +32,7 @@ import struct Foundation.CharacterSet
 /// which is then decoded to generate a `AWSShape` Output object. If it is not successful then `AWSClient` will throw an `AWSErrorType`.
 public final class AWSClient {
 
-    public enum ClientError: Swift.Error {
+    public enum ClientError: Swift.Error, Equatable {
         case invalidURL(String)
         case tooMuchData
     }
@@ -277,7 +277,7 @@ extension AWSClient {
             guard case AWSClient.InternalError.httpResponseError(let response) = error else {
                 throw error
             }
-            throw self.createError(for: response, configuration: configuration)
+            throw Self.createError(for: response, configuration: configuration)
         }.map { _ in
             return
         }.recordMetrics(for: configuration.service, operation: operationName)
@@ -319,7 +319,7 @@ extension AWSClient {
             guard case AWSClient.InternalError.httpResponseError(let response) = error else {
                 throw error
             }
-            throw self.createError(for: response, configuration: configuration)
+            throw Self.createError(for: response, configuration: configuration)
         }.map { _ in
             return
         }.recordMetrics(for: configuration.service, operation: operationName)
@@ -356,7 +356,7 @@ extension AWSClient {
             guard case AWSClient.InternalError.httpResponseError(let response) = error else {
                 throw error
             }
-            throw self.createError(for: response, configuration: configuration)
+            throw Self.createError(for: response, configuration: configuration)
         }.flatMapThrowing { response in
             return try response.validate(operation: operationName, configuration: configuration, middlewares: self.middlewares)
         }.recordMetrics(for: configuration.service, operation: operationName)
@@ -396,7 +396,7 @@ extension AWSClient {
             guard case AWSClient.InternalError.httpResponseError(let response) = error else {
                 throw error
             }
-            throw self.createError(for: response, configuration: configuration)
+            throw Self.createError(for: response, configuration: configuration)
         }.flatMapThrowing { response in
             return try response.validate(operation: operationName, configuration: configuration, middlewares: self.middlewares)
         }.recordMetrics(for: configuration.service, operation: operationName)
@@ -758,7 +758,7 @@ extension AWSHTTPResponse {
 
 extension AWSClient {
 
-    internal func createError(for response: AWSHTTPResponse, configuration: ServiceConfig) -> Error {
+    internal static func createError(for response: AWSHTTPResponse, configuration: ServiceConfig) -> Error {
         do {
             let awsResponse = try AWSResponse(from: response, serviceProtocol: configuration.serviceProtocol)
             struct XMLError: Codable, ErrorMessage {

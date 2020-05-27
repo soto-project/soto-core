@@ -221,27 +221,14 @@ extension AWSClient {
         with configuration: ServiceConfig,
         on eventLoop: EventLoop? = nil) -> EventLoopFuture<Void>
     {
-        let eventLoop = eventLoop ?? eventLoopGroup.next()
-        return credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
-            let signer = AWSSigner(credentials: credential, name: configuration.signingName, region: configuration.region.rawValue)
-            let awsRequest = try AWSRequest(
-                        operation: operationName,
-                        path: path,
-                        httpMethod: httpMethod,
-                        configuration: configuration).applyMiddlewares(configuration.middlewares + self.middlewares)
-            return awsRequest.createHTTPRequest(signer: signer)
-        }.flatMap { request in
-            return self.invoke(request, on: eventLoop)
-        }.flatMapErrorThrowing { (error) -> AWSHTTPResponse in
-            guard case AWSClient.InternalError.httpResponseError(let response) = error else {
-                throw error
-            }
-            throw Self.createError(for: response, configuration: configuration)
-        }.map { _ in
-            return
+        self.execute(on: eventLoop, configuration: configuration) {
+            try AWSRequest(
+                operation: operationName,
+                path: path,
+                httpMethod: httpMethod,
+                configuration: configuration)
         }.recordMetrics(for: configuration.service, operation: operationName)
     }
-    
     
     /// execute an operation with an input payload and return a future with an empty response
     /// - parameters:
@@ -261,26 +248,13 @@ extension AWSClient {
         with configuration: ServiceConfig,
         on eventLoop: EventLoop? = nil) -> EventLoopFuture<Void>
     {
-        let eventLoop = eventLoop ?? eventLoopGroup.next()
-        return credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
-            let signer = AWSSigner(credentials: credential, name: configuration.signingName, region: configuration.region.rawValue)
-            let awsRequest = try AWSRequest(
-                        operation: operationName,
-                        path: path,
-                        httpMethod: httpMethod,
-                        input: input,
-                        configuration: configuration
-            ).applyMiddlewares(configuration.middlewares + self.middlewares)
-            return awsRequest.createHTTPRequest(signer: signer)
-        }.flatMap { request in
-            return self.invoke(request, on: eventLoop)
-        }.flatMapErrorThrowing { (error) -> AWSHTTPResponse in
-            guard case AWSClient.InternalError.httpResponseError(let response) = error else {
-                throw error
-            }
-            throw Self.createError(for: response, configuration: configuration)
-        }.map { _ in
-            return
+        self.execute(on: eventLoop, configuration: configuration) {
+            try AWSRequest(
+                operation: operationName,
+                path: path,
+                httpMethod: httpMethod,
+                input: input,
+                configuration: configuration)
         }.recordMetrics(for: configuration.service, operation: operationName)
     }
 
@@ -300,24 +274,12 @@ extension AWSClient {
         with configuration: ServiceConfig,
         on eventLoop: EventLoop? = nil) -> EventLoopFuture<Output>
     {
-        let eventLoop = eventLoop ?? eventLoopGroup.next()
-        return credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
-            let signer = AWSSigner(credentials: credential, name: configuration.signingName, region: configuration.region.rawValue)
-            let awsRequest = try AWSRequest(
-                        operation: operationName,
-                        path: path,
-                        httpMethod: httpMethod,
-                        configuration: configuration).applyMiddlewares(configuration.middlewares + self.middlewares)
-            return awsRequest.createHTTPRequest(signer: signer)
-        }.flatMap { request in
-            return self.invoke(request, on: eventLoop)
-        }.flatMapErrorThrowing { (error) -> AWSHTTPResponse in
-            guard case AWSClient.InternalError.httpResponseError(let response) = error else {
-                throw error
-            }
-            throw Self.createError(for: response, configuration: configuration)
-        }.flatMapThrowing { response in
-            return try response.validate(operation: operationName, configuration: configuration, middlewares: self.middlewares)
+        self.execute(on: eventLoop, configuration: configuration, operationName: operationName) {
+            try AWSRequest(
+                operation: operationName,
+                path: path,
+                httpMethod: httpMethod,
+                configuration: configuration)
         }.recordMetrics(for: configuration.service, operation: operationName)
     }
 
@@ -339,26 +301,63 @@ extension AWSClient {
         with configuration: ServiceConfig,
         on eventLoop: EventLoop? = nil) -> EventLoopFuture<Output>
     {
-        let eventLoop = eventLoop ?? eventLoopGroup.next()
-        return credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
-            let signer = AWSSigner(credentials: credential, name: configuration.signingName, region: configuration.region.rawValue)
-            let awsRequest = try AWSRequest(
-                        operation: operationName,
-                        path: path,
-                        httpMethod: httpMethod,
-                        input: input,
-                        configuration: configuration).applyMiddlewares(configuration.middlewares + self.middlewares)
-            return awsRequest.createHTTPRequest(signer: signer)
-        }.flatMap { request in
-            return self.invoke(request, on: eventLoop)
-        }.flatMapErrorThrowing { (error) -> AWSHTTPResponse in
-            guard case AWSClient.InternalError.httpResponseError(let response) = error else {
-                throw error
-            }
-            throw Self.createError(for: response, configuration: configuration)
-        }.flatMapThrowing { response in
-            return try response.validate(operation: operationName, configuration: configuration, middlewares: self.middlewares)
+        self.execute(on: eventLoop, configuration: configuration, operationName: operationName) {
+            try AWSRequest(
+                operation: operationName,
+                path: path,
+                httpMethod: httpMethod,
+                input: input,
+                configuration: configuration)
         }.recordMetrics(for: configuration.service, operation: operationName)
+    }
+    
+    private func execute(on eventLoop: EventLoop?, configuration: ServiceConfig, _ createRequest: @escaping () throws -> AWSRequest)
+        -> EventLoopFuture<AWSHTTPResponse>
+    {
+        let eventLoop = eventLoop ?? eventLoopGroup.next()
+        return credentialProvider.getCredential(on: eventLoop)
+            .flatMapThrowing { credential in
+                // create the request and apply middleware
+                let request = try createRequest().applyMiddlewares(configuration.middlewares + self.middlewares)
+                // create signer and sign request
+                let signer = AWSSigner(
+                    credentials: credential,
+                    name: configuration.signingName,
+                    region: configuration.region.rawValue)
+                return request.createHTTPRequest(signer: signer)
+            }
+            .flatMap { request in
+                // execute request
+                return self.invoke(request, on: eventLoop)
+            }
+            .flatMapErrorThrowing { (error) -> AWSHTTPResponse in
+                // transform the error into an AWSError if possible
+                guard case AWSClient.InternalError.httpResponseError(let response) = error else {
+                    throw error
+                }
+                throw Self.createError(for: response, configuration: configuration)
+            }
+    }
+    
+    private func execute(on eventLoop: EventLoop?, configuration: ServiceConfig, _ createRequest: @escaping () throws -> AWSRequest)
+        -> EventLoopFuture<Void>
+    {
+        self.execute(on: eventLoop, configuration: configuration, createRequest).map {
+            (_: AWSHTTPResponse) in
+        }
+    }
+    
+    private func execute<Output: AWSDecodableShape>(
+        on eventLoop: EventLoop?,
+        configuration: ServiceConfig,
+        operationName: String,
+        _ createRequest: @escaping () throws -> AWSRequest)
+        -> EventLoopFuture<Output>
+    {
+        self.execute(on: eventLoop, configuration: configuration, createRequest).flatMapThrowing {
+            (response: AWSHTTPResponse) in
+            try response.validate(operation: operationName, configuration: configuration, middlewares: self.middlewares)
+        }
     }
 
     /// generate a signed URL

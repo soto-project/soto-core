@@ -50,9 +50,6 @@ public final class AWSClient {
         case createNew
     }
 
-    /// AWS service configuration
-    @available(*, deprecated, message: "The service config shall be passed into the AWSClient")
-    public let serviceConfig: ServiceConfig
     /// AWS credentials provider
     let credentialProvider: CredentialProvider
     /// middleware code to be applied to requests and responses
@@ -66,11 +63,6 @@ public final class AWSClient {
     /// Retry Controller specifying what to do when a request fails
     public let retryPolicy: RetryPolicy
 
-    // public accessors to ensure code outside of aws-sdk-swift-core still compiles
-    public var region: Region { return serviceConfig.region }
-    public var endpoint: String { return serviceConfig.endpoint }
-    public var serviceProtocol: ServiceProtocol { return serviceConfig.serviceProtocol }
-
     /// Initialize an AWSClient struct
     /// - parameters:
     ///     - credentialProvider: An object that returns valid signing credentials for request signing.
@@ -80,13 +72,10 @@ public final class AWSClient {
     ///     - httpClientProvider: HTTPClient to use. Use `.createNew` if you want the client to manage its own HTTPClient.
     public init(
         credentialProvider: CredentialProvider?,
-        serviceConfig: ServiceConfig,
         retryPolicy: RetryPolicy = JitterRetry(),
         middlewares: [AWSServiceMiddleware] = [],
         httpClientProvider: HTTPClientProvider
     ) {
-        self.serviceConfig = serviceConfig
-
         // setup httpClient
         self.httpClientProvider = httpClientProvider
         switch httpClientProvider {
@@ -132,35 +121,8 @@ public final class AWSClient {
         accessKeyId: String? = nil,
         secretAccessKey: String? = nil,
         sessionToken: String? = nil,
-        region: Region?,
-        partition: Partition = .aws,
-        amzTarget: String? = nil,
-        service: String,
-        signingName: String? = nil,
-        serviceProtocol: ServiceProtocol,
-        apiVersion: String,
-        endpoint: String? = nil,
-        serviceEndpoints: [String: String] = [:],
-        partitionEndpoints: [Partition: (endpoint: String, region: Region)] = [:],
-        retryPolicy: RetryPolicy = JitterRetry(),
-        middlewares: [AWSServiceMiddleware] = [],
-        possibleErrorTypes: [AWSErrorType.Type] = [],
         httpClientProvider: HTTPClientProvider
     ) {
-         let serviceConfig = ServiceConfig(
-            region: region,
-            partition: partition,
-            amzTarget: amzTarget,
-            service: service,
-            signingName: signingName,
-            serviceProtocol: serviceProtocol,
-            apiVersion: apiVersion,
-            endpoint: endpoint,
-            serviceEndpoints: serviceEndpoints,
-            partitionEndpoints: partitionEndpoints,
-            possibleErrorTypes: possibleErrorTypes,
-            middlewares: middlewares)
-        
         var credentials: StaticCredential? = nil
         if let accessKeyId = accessKeyId, let secretAccessKey = secretAccessKey {
             credentials = StaticCredential(accessKeyId: accessKeyId, secretAccessKey: secretAccessKey, sessionToken: sessionToken)
@@ -168,9 +130,6 @@ public final class AWSClient {
 
         self.init(
             credentialProvider: credentials,
-            serviceConfig: serviceConfig,
-            retryPolicy: retryPolicy,
-            middlewares: [],
             httpClientProvider: httpClientProvider)
     }
 
@@ -410,18 +369,19 @@ extension AWSClient {
     /// - returns:
     ///     A signed URL
     public func signURL(url: URL, httpMethod: String, expires: Int = 86400) -> EventLoopFuture<URL> {
-        return signer.map { signer in signer.signURL(url: url, method: HTTPMethod(rawValue: httpMethod), expires: expires) }
+        preconditionFailure()
+        //signer.map { signer in signer.signURL(url: url, method: HTTPMethod(rawValue: httpMethod), expires: expires) }
     }
 }
 
 // request creator
 extension AWSClient {
 
-    var signer: EventLoopFuture<AWSSigner> {
-        return credentialProvider.getCredential(on: eventLoopGroup.next()).map { credential in
-            return AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
-        }
-    }
+//    var signer: EventLoopFuture<AWSSigner> {
+//        return credentialProvider.getCredential(on: eventLoopGroup.next()).map { credential in
+//            return AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
+//        }
+//    }
 }
 
 extension AWSRequest {

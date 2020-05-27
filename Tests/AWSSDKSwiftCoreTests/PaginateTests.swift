@@ -42,7 +42,6 @@ class PaginateTests: XCTestCase {
             middlewares: [AWSLoggingMiddleware()])
         client = AWSClient(
             credentialProvider: StaticCredential(accessKeyId: "", secretAccessKey: ""),
-            serviceConfig: config,
             httpClientProvider: .shared(httpClient))
     }
 

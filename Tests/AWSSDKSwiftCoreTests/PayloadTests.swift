@@ -37,7 +37,7 @@ class PayloadTests: XCTestCase {
             apiVersion: "2020-01-21",
             endpoint: awsServer.address,
             middlewares: [AWSLoggingMiddleware()])
-        let client = AWSClient(credentialProvider: nil, serviceConfig: config, httpClientProvider: .createNew)
+        let client = AWSClient(credentialProvider: nil, httpClientProvider: .createNew)
         
         let input = DataPayload(data: payload)
         let response = client.execute(operation: "test", path: "/", httpMethod: "POST", input: input, with: config)
@@ -82,7 +82,7 @@ class PayloadTests: XCTestCase {
             apiVersion: "2020-01-21",
             endpoint: awsServer.address,
             middlewares: [AWSLoggingMiddleware()])
-        let client = AWSClient(credentialProvider: nil, serviceConfig: config, httpClientProvider: .createNew)
+        let client = AWSClient(credentialProvider: nil, httpClientProvider: .createNew)
         
         let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: "POST", with: config)
 

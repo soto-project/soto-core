@@ -78,30 +78,12 @@ class AWSClientTests: XCTestCase {
 
 
     func testGetCredential() {
-        let client = createAWSClient(accessKeyId: "key", secretAccessKey: "secret")
+        let client = AWSClient(accessKeyId: "key", secretAccessKey: "secret", httpClientProvider: .createNew)
 
-        var credentialForSignature: Credential?
-        XCTAssertNoThrow(credentialForSignature = try client.credentialProvider.getCredential(on: client.eventLoopGroup.next()).wait())
-        XCTAssertEqual(credentialForSignature?.accessKeyId, "key")
-        XCTAssertEqual(credentialForSignature?.secretAccessKey, "secret")
-    }
-
-    // this test only really works on Linux as it requires the MetaDataService. On mac it will just pass automatically
-    func testExpiredCredential() {
-        let client = createAWSClient()
-
-        do {
-            let credentials = try client.credentialProvider.getCredential(on: client.eventLoopGroup.next()).wait()
-            print(credentials)
-        } catch NIO.ChannelError.connectTimeout(_) {
-            // credentials request should fail. One possible error is a connectTimerout
-        } catch is NIOConnectionError {
-                // credentials request should fail. One possible error is a connection error
-//        } catch MetaDataServiceError.couldNotGetInstanceRoleName {
-            // credentials request fails in a slightly different way if it finds the IP
-        } catch {
-            XCTFail("Unexpected error \(error)")
-        }
+        var credential: Credential?
+        XCTAssertNoThrow(credential = try client.credentialProvider.getCredential(on: client.eventLoopGroup.next()).wait())
+        XCTAssertEqual(credential?.accessKeyId, "key")
+        XCTAssertEqual(credential?.secretAccessKey, "secret")
     }
 
     func testPartitionEndpoints() throws {
@@ -109,7 +91,6 @@ class AWSClientTests: XCTestCase {
             serviceEndpoints: ["aws-global":"service.aws.amazon.com"],
             partitionEndpoints: [.aws: (endpoint: "aws-global", region: .euwest1)]
         )
-        // XCTAssertEqual(client.region, .euwest1) // FIXME: How has this ever worked?
         XCTAssertEqual(config.region, .euwest1)
         
         let awsRequest = try AWSRequest(operation: "test", path: "/", httpMethod: "GET", configuration: config)
@@ -624,7 +605,7 @@ class AWSClientTests: XCTestCase {
     func testClientNoInputNoOutput() {
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
-        let client = AWSClient(credentialProvider: nil, serviceConfig: config, httpClientProvider: .createNew)
+        let client = AWSClient(credentialProvider: nil, httpClientProvider: .createNew)
         let response = client.execute(operation: "test", path: "/", httpMethod: "POST", with: config)
 
         XCTAssertNoThrow(try awsServer.processRaw { request in
@@ -649,7 +630,7 @@ class AWSClientTests: XCTestCase {
 
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
-        let client = AWSClient(credentialProvider: nil, serviceConfig: config, httpClientProvider: .createNew)
+        let client = AWSClient(credentialProvider: nil, httpClientProvider: .createNew)
         
         let input = Input(e:.second, i: [1,2,4,8])
         let response = client.execute(operation: "test", path: "/", httpMethod: "POST", input: input, with: config)
@@ -674,7 +655,7 @@ class AWSClientTests: XCTestCase {
 
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
-        let client = AWSClient(credentialProvider: nil, serviceConfig: config, httpClientProvider: .createNew)
+        let client = AWSClient(credentialProvider: nil, httpClientProvider: .createNew)
         let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: "POST", with: config)
 
         XCTAssertNoThrow(try awsServer.processRaw { request in
@@ -730,7 +711,7 @@ class AWSClientTests: XCTestCase {
         }
         
         let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
-        let client = AWSClient(credentialProvider: nil, serviceConfig: config, httpClientProvider: .shared(httpClient))
+        let client = AWSClient(credentialProvider: nil, httpClientProvider: .shared(httpClient))
     
         // supply buffer in 16k blocks
         let bufferSize = 1024*1024
@@ -775,7 +756,7 @@ class AWSClientTests: XCTestCase {
         }
         
         let config = createServiceConfig(endpoint: awsServer.address)
-        let client = AWSClient(credentialProvider: nil, serviceConfig: config, httpClientProvider: .shared(httpClient))
+        let client = AWSClient(credentialProvider: nil, httpClientProvider: .shared(httpClient))
         
         let payload = AWSPayload.stream(size: 8) { eventLoop in
             var buffer = ByteBufferAllocator().buffer(capacity: 0)
@@ -805,7 +786,7 @@ class AWSClientTests: XCTestCase {
         }
 
         let config = createServiceConfig(endpoint: awsServer.address)
-        let client = AWSClient(credentialProvider: nil, serviceConfig: config, httpClientProvider: .shared(httpClient))
+        let client = AWSClient(credentialProvider: nil, httpClientProvider: .shared(httpClient))
 
         let bufferSize = 208*1024
         let data = Data(createRandomBuffer(45,9182, size: bufferSize))
@@ -859,7 +840,7 @@ class AWSClientTests: XCTestCase {
         }
         
         let config = createServiceConfig(endpoint: awsServer.address)
-        let client = AWSClient(credentialProvider: nil, serviceConfig: config, httpClientProvider: .shared(httpClient))
+        let client = AWSClient(credentialProvider: nil, httpClientProvider: .shared(httpClient))
 
         // supply buffer in 16k blocks
         let bufferSize = 145*1024
@@ -900,7 +881,7 @@ class AWSClientTests: XCTestCase {
             XCTAssertNoThrow(try httpClient.syncShutdown())
         }
         let config = createServiceConfig(endpoint: awsServer.address)
-        let client = AWSClient(credentialProvider: nil, serviceConfig: config, httpClientProvider: .shared(httpClient))
+        let client = AWSClient(credentialProvider: nil, httpClientProvider: .shared(httpClient))
         let response = client.execute(operation: "test", path: "/", httpMethod: "POST", with: config)
 
         XCTAssertNoThrow(try awsServer.processRaw { request in
@@ -934,7 +915,6 @@ class AWSClientTests: XCTestCase {
         let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
         let client = AWSClient(
             credentialProvider: nil,
-            serviceConfig: config,
             retryPolicy: ExponentialRetry(base: .milliseconds(200), maxRetries: maxRetries),
             httpClientProvider: .shared(httpClient))
         
@@ -970,7 +950,6 @@ class AWSClientTests: XCTestCase {
         let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
         let client = AWSClient(
             credentialProvider: nil,
-            serviceConfig: config,
             retryPolicy: JitterRetry(),
             httpClientProvider: .shared(httpClient))
         let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: "POST", with: config)
@@ -1008,7 +987,6 @@ class AWSClientTests: XCTestCase {
         let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
         let client = AWSClient(
             credentialProvider: nil,
-            serviceConfig: config,
             retryPolicy: JitterRetry(),
             httpClientProvider: .shared(httpClient))
 
@@ -1041,7 +1019,6 @@ class AWSClientTests: XCTestCase {
         let config = createServiceConfig(endpoint: awsServer.address)
         let client = AWSClient(
             credentialProvider: nil,
-            serviceConfig: config,
             httpClientProvider: .shared(httpClient))
 
         let iterations = 10

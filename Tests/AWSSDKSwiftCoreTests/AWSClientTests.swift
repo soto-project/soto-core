@@ -920,7 +920,7 @@ class AWSClientTests: XCTestCase {
         XCTAssertEqual(region.rawValue, "my-region")
     }
 
-    func testServerError() {
+    func testClientStopsRetryingAfterMaxRetriesHasBeenReached() {
         let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew)
         let awsServer = AWSTestServer(serviceProtocol: .json)
         defer {
@@ -928,11 +928,14 @@ class AWSClientTests: XCTestCase {
             XCTAssertNoThrow(try httpClient.syncShutdown())
         }
         
+        let maxRetries = 3
+        let expectedRequests = maxRetries + 1 // retries + first invoke
+        
         let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
         let client = AWSClient(
             credentialProvider: nil,
             serviceConfig: config,
-            retryPolicy: ExponentialRetry(base: .milliseconds(200), maxRetries: 4),
+            retryPolicy: ExponentialRetry(base: .milliseconds(200), maxRetries: maxRetries),
             httpClientProvider: .shared(httpClient))
         
         let response = client.execute(operation: "test", path: "/", httpMethod: "POST", with: config)
@@ -940,11 +943,7 @@ class AWSClientTests: XCTestCase {
         var count = 0
         XCTAssertNoThrow(try awsServer.processRaw { request in
             count += 1
-            if count < 5 {
-                return .error(.internal, continueProcessing: true)
-            } else {
-                return .result(.ok)
-            }
+            return .error(.internal, continueProcessing: count < expectedRequests)
         })
 
         XCTAssertThrowsError(try response.wait()) { (error) in
@@ -954,7 +953,7 @@ class AWSClientTests: XCTestCase {
             XCTAssertEqual(serverError?.message, AWSTestServer.ErrorType.internal.message)
         }
         
-        XCTAssertEqual(count, 4)
+        XCTAssertEqual(count, expectedRequests)
     }
 
     func testClientRetry() {

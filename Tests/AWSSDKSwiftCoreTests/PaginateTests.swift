@@ -19,6 +19,7 @@ import AWSTestUtils
 @testable import AWSSDKSwiftCore
 
 class PaginateTests: XCTestCase {
+    #if false
     enum Error: Swift.Error {
         case didntFindToken
     }
@@ -276,4 +277,5 @@ class PaginateTests: XCTestCase {
             print(error)
         }
     }
+    #endif
 }

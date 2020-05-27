@@ -100,7 +100,7 @@ class AWSClientTests: XCTestCase {
             // credentials request should fail. One possible error is a connectTimerout
         } catch is NIOConnectionError {
                 // credentials request should fail. One possible error is a connection error
-        } catch MetaDataServiceError.couldNotGetInstanceRoleName {
+//        } catch MetaDataServiceError.couldNotGetInstanceRoleName {
             // credentials request fails in a slightly different way if it finds the IP
         } catch {
             XCTFail("Unexpected error \(error)")

@@ -100,8 +100,9 @@ public class AWSTestServer {
         public let url: String
     }
 
-    public var addressURL: URL { return URL(string: "http://localhost:\(web.serverPort)")!}
-    public var address: String { return "http://localhost:\(web.serverPort)"}
+    public var addressURL: URL { return URL(string: self.address)!}
+    public var address: String { return "http://\(self.host):\(web.serverPort)"}
+    public var host: String { return "localhost" }
     public var serverPort: Int { return web.serverPort }
     public let serviceProtocol: ServiceProtocol
 

@@ -72,17 +72,13 @@ public final class AWSClient {
 
     /// Initialize an AWSClient struct
     /// - parameters:
-    ///     - accessKeyId: Public access key provided by AWS
-    ///     - secretAccessKey: Private access key provided by AWS
-    ///     - sessionToken: Token provided by STS.AssumeRole() which allows access to another AWS account
+    ///     - credentialProvider: An object that returns valid signing credentials for request signing.
     ///     - serviceConfig: AWS service configuration
     ///     - retryPolicy: Object returning whether retries should be attempted. Possible options are NoRetry(), ExponentialRetry() or JitterRetry()
     ///     - middlewares: Array of middlewares to apply to requests and responses
     ///     - httpClientProvider: HTTPClient to use. Use `.createNew` if you want the client to manage its own HTTPClient.
     public init(
-        accessKeyId: String? = nil,
-        secretAccessKey: String? = nil,
-        sessionToken: String? = nil,
+        credentialProvider: CredentialProvider?,
         serviceConfig: ServiceConfig,
         retryPolicy: RetryPolicy = JitterRetry(),
         middlewares: [AWSServiceMiddleware] = [],
@@ -91,26 +87,21 @@ public final class AWSClient {
         self.serviceConfig = serviceConfig
 
         // setup httpClient
-         self.httpClientProvider = httpClientProvider
-         switch httpClientProvider {
-         case .shared(let providedHTTPClient):
-             self.httpClient = providedHTTPClient
-         case .createNew:
-             self.httpClient = AWSClient.createHTTPClient()
+        self.httpClientProvider = httpClientProvider
+        switch httpClientProvider {
+        case .shared(let providedHTTPClient):
+            self.httpClient = providedHTTPClient
+        case .createNew:
+            self.httpClient = AWSClient.createHTTPClient()
         }
 
-        // create credentialProvider
-        if let accessKey = accessKeyId, let secretKey = secretAccessKey {
-            let credential = StaticCredential(accessKeyId: accessKey, secretAccessKey: secretKey, sessionToken: sessionToken)
-            self.credentialProvider = StaticCredentialProvider(credential: credential)
-        } else if let ecredential = EnvironmentCredential() {
-            let credential = ecredential
-            self.credentialProvider = StaticCredentialProvider(credential: credential)
-        } else if let scredential = try? SharedCredential() {
-            let credential = scredential
-            self.credentialProvider = StaticCredentialProvider(credential: credential)
-        } else {
-            self.credentialProvider = MetaDataCredentialProvider(httpClient: self.httpClient)
+        if let credentialProvider = credentialProvider {
+            self.credentialProvider = credentialProvider
+        }
+        else {
+            self.credentialProvider = RuntimeCredentialProvider.createProvider(
+                on: self.httpClient.eventLoopGroup.next(),
+                httpClient: self.httpClient)
         }
 
         self.middlewares = middlewares
@@ -168,11 +159,14 @@ public final class AWSClient {
             partitionEndpoints: partitionEndpoints,
             possibleErrorTypes: possibleErrorTypes,
             middlewares: middlewares)
+        
+        var credentials: StaticCredential? = nil
+        if let accessKeyId = accessKeyId, let secretAccessKey = secretAccessKey {
+            credentials = StaticCredential(accessKeyId: accessKeyId, secretAccessKey: secretAccessKey, sessionToken: sessionToken)
+        }
 
         self.init(
-            accessKeyId: accessKeyId,
-            secretAccessKey: secretAccessKey,
-            sessionToken: sessionToken,
+            credentialProvider: credentials,
             serviceConfig: serviceConfig,
             retryPolicy: retryPolicy,
             middlewares: [],

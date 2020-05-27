@@ -33,7 +33,7 @@ import Foundation
 }
 
 public func createServiceConfig(
-    region: Region = .useast1,
+    region: Region? = nil,
     partition: Partition = .aws,
     amzTarget: String? = nil,
     service: String = "test",

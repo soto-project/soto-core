@@ -31,7 +31,7 @@ for language in swift-or-c; do
   matching_files=( -name '*' )
   case "$language" in
       swift-or-c)
-        exceptions=( -path '*.build/*' -o -path '*Sources/INIParser/*' -o -name Package.swift)
+        exceptions=( -path '*Sources/INIParser/*' -o -name Package.swift)
         matching_files=( -name '*.swift' -o -name '*.c' -o -name '*.h' )
         cat > "$tmp" <<"EOF"
 //===----------------------------------------------------------------------===//
@@ -72,7 +72,9 @@ EOF
       ;;
   esac
 
-  expected_lines=$(cat "$tmp" | wc -l)
+  lines_to_compare=$(cat "$tmp" | wc -l | tr -d " ")
+  # need to read one more line as we remove the '#!' line
+  lines_to_read=$(expr "$lines_to_compare" + 1)
   expected_sha=$(cat "$tmp" | shasum)
 
   (
@@ -81,9 +83,9 @@ EOF
       \( \! -path './.build/*' -a \
       \( "${matching_files[@]}" \) -a \
       \( \! \( "${exceptions[@]}" \) \) \) | while read line; do
-      if [[ "$(cat "$line" | replace_acceptable_years | head -n $expected_lines | shasum)" != "$expected_sha" ]]; then
+      if [[ "$(cat "$line" | head -n $lines_to_read | replace_acceptable_years | head -n $lines_to_compare | shasum)" != "$expected_sha" ]]; then
         printf "\033[0;31mmissing headers in file '$line'!\033[0m\n"
-        diff -u <(cat "$line" | replace_acceptable_years | head -n $expected_lines) "$tmp"
+        diff -u <(cat "$line" | head -n $lines_to_read | replace_acceptable_years | head -n $lines_to_compare) "$tmp"
         exit 1
       fi
     done

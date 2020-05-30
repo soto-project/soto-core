@@ -45,6 +45,7 @@ extension StaticCredential {
         on eventLoop: EventLoop) -> EventLoopFuture<StaticCredential>
     {
         let threadPool = NIOThreadPool(numberOfThreads: 1)
+        threadPool.start()
         let fileIO = NonBlockingFileIO(threadPool: threadPool)
         
         return Self.getSharedCredentialsFromDisk(credentialsFilePath: credentialsFilePath, profile: profile, on: eventLoop, using: fileIO)
@@ -64,10 +65,11 @@ extension StaticCredential {
         
         return fileIO.openFile(path: filePath, eventLoop: eventLoop)
             .flatMap { (handle, region) in
-                fileIO.read(fileRegion: region, allocator: ByteBufferAllocator(), eventLoop: eventLoop)
+                fileIO.read(fileRegion: region, allocator: ByteBufferAllocator(), eventLoop: eventLoop).map { ($0, handle) }
             }
-            .flatMapThrowing {
-                try Self.sharedCredentials(from: $0, for: profile)
+            .flatMapThrowing { (byteBuffer, handle) in
+                try handle.close()
+                return try Self.sharedCredentials(from: byteBuffer, for: profile)
             }
     }
     

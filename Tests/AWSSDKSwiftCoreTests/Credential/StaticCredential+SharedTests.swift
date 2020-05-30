@@ -139,39 +139,28 @@ class StaticCredential_SharedTests: XCTestCase {
         XCTAssertEqual(unexpandedNewPath, unexpandedNSString)
         XCTAssertEqual(unexpandedNewPath, unexpandableFilePath)
     }
-    
-    #if false
-    func testExpiringCredential() {
-        let credential: Credential = ExpiringCredential(accessKeyId: "", secretAccessKey: "", expiration: Date.init(timeIntervalSince1970: 0))
-        guard let ecredential = credential as? ExpiringCredential else {XCTFail(); return }
-        XCTAssertEqual(ecredential.nearExpiration(), true)
 
-        let credential2: Credential = ExpiringCredential(accessKeyId: "", secretAccessKey: "", expiration: Date(timeIntervalSinceNow: 3600))
-        guard let ecredential2 = credential2 as? ExpiringCredential else {XCTFail(); return }
-        XCTAssertEqual(ecredential2.nearExpiration(), false)
-    }
-    
     func testSharedCredentialINIParser() {
+        // setup
         let credentials = """
-                          [default]
-                          aws_access_key_id = AWSACCESSKEYID
-                          aws_secret_access_key = AWSSECRETACCESSKEY
-                          """
+            [default]
+            aws_access_key_id = AWSACCESSKEYID
+            aws_secret_access_key = AWSSECRETACCESSKEY
+            """
         let filename = "credentials"
         let filenameURL = URL(fileURLWithPath: filename)
         XCTAssertNoThrow(try Data(credentials.utf8).write(to: filenameURL))
-        defer {
-            XCTAssertNoThrow(try FileManager.default.removeItem(at: filenameURL))
-        }
+        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: filenameURL)) }
+
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+        let eventLoop = eventLoopGroup.next()
+//        let path = filenameURL.absoluteString
+        let future = StaticCredential.fromSharedCredentials(credentialsFilePath: filenameURL.path, on: eventLoop)
         
-        do {
-            let credentials = try SharedCredential(filename: filename)
-            
-            XCTAssertEqual(credentials.accessKeyId, "AWSACCESSKEYID")
-            XCTAssertEqual(credentials.secretAccessKey, "AWSSECRETACCESSKEY")
-        } catch {
-            XCTFail("\(error)")
-        }
+        var credential: StaticCredential?
+        XCTAssertNoThrow(credential = try future.wait())
+        XCTAssertEqual(credential?.accessKeyId, "AWSACCESSKEYID")
+        XCTAssertEqual(credential?.secretAccessKey, "AWSSECRETACCESSKEY")
     }
-    #endif
 }

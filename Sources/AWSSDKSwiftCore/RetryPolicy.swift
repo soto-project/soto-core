@@ -92,7 +92,7 @@ public struct JitterRetry: StandardRetryPolicy {
     
     public func calculateRetryWaitTime(attempt: Int) -> TimeAmount {
         let exp = Int64(exp2(Double(attempt)))
-        return .nanoseconds(Int64.random(in: 0..<(base.nanoseconds * exp)))
+        return .nanoseconds(Int64.random(in: (base.nanoseconds * exp / 2)..<(base.nanoseconds * exp)))
     }
 }
 

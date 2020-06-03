@@ -457,7 +457,7 @@ public enum XML {
 
         func parser(_ parser: XMLParser, foundCharacters: String) {
             // if string with white space removed still has characters, add text node
-            if foundCharacters.components(separatedBy: .whitespacesAndNewlines).joined().count > 0 {
+            if foundCharacters.split(omittingEmptySubsequences: true, whereSeparator: { $0.isWhitespaceOrNewline }).joined().count > 0 {
                 currentElement?.addChild(XML.Node.text(stringValue: foundCharacters))
             }
         }
@@ -488,3 +488,6 @@ extension XML.Node : CustomStringConvertible, CustomDebugStringConvertible {
     public var debugDescription: String {return xmlString}
 }
 
+extension Character {
+    var isWhitespaceOrNewline: Bool { return isWhitespace || isNewline }
+}

@@ -676,6 +676,7 @@ extension AWSClient {
     }
 
     internal func createError(for response: AWSHTTPResponse) -> Error {
+        var errorMessage: ErrorMessage? = nil
         do {
             let awsResponse = try AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol)
             struct XMLError: Codable, ErrorMessage {
@@ -715,8 +716,6 @@ extension AWSClient {
                 }
             }
 
-            var errorMessage: ErrorMessage? = nil
-
             switch serviceConfig.serviceProtocol {
             case .query:
                 guard case .xml(var element) = awsResponse.body else { break }
@@ -753,32 +752,35 @@ extension AWSClient {
                 errorMessage = try? XMLDecoder().decode(QueryError.self, from: errorElement)
             }
 
-            if let errorMessage = errorMessage, var code = errorMessage.code {
-                // remove code prefix before #
-                if let index = code.firstIndex(of: "#") {
-                    code = String(code[code.index(index, offsetBy: 1)...])
-                }
-                for errorType in serviceConfig.possibleErrorTypes {
-                    if let error = errorType.init(errorCode: code, message: errorMessage.message) {
-                        return error
-                    }
-                }
-                if let error = AWSClientError(errorCode: code, message: errorMessage.message) {
+        } catch {
+        }
+
+        if let errorMessage = errorMessage, var code = errorMessage.code {
+            // remove code prefix before #
+            if let index = code.firstIndex(of: "#") {
+                code = String(code[code.index(index, offsetBy: 1)...])
+            }
+            for errorType in serviceConfig.possibleErrorTypes {
+                if let error = errorType.init(errorCode: code, message: errorMessage.message) {
                     return error
                 }
-
-                if let error = AWSServerError(errorCode: code, message: errorMessage.message) {
-                    return error
-                }
-
-                return AWSResponseError(errorCode: code, message: errorMessage.message)
+            }
+            if let error = AWSClientError(errorCode: code, message: errorMessage.message) {
+                return error
             }
 
-            let rawBodyString = awsResponse.body.asString()
-            return AWSError(statusCode: response.status, message: errorMessage?.message ?? "Unhandled Error. Response Code: \(response.status.code)", rawBody: rawBodyString ?? "")
-        } catch {
-            return error
+            if let error = AWSServerError(errorCode: code, message: errorMessage.message) {
+                return error
+            }
+
+            return AWSResponseError(errorCode: code, message: errorMessage.message)
         }
+
+        var rawBodyString: String? = nil
+        if var body = response.body {
+            rawBodyString = body.readString(length: body.readableBytes)
+        }
+        return AWSError(statusCode: response.status, message: errorMessage?.message ?? "Unhandled Error", rawBody: rawBodyString)
     }
 }
 

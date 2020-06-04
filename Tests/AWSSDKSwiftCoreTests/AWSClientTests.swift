@@ -1011,7 +1011,7 @@ class AWSClientTests: XCTestCase {
             try response.wait()
             XCTFail("Shouldn't get here as the provided client doesn't follow redirects")
         } catch let error as AWSError {
-            XCTAssertEqual(error.message, "Unhandled Error. Response Code: 307")
+            XCTAssertEqual(error.message, "Unhandled Error")
         } catch {
             XCTFail("Unexpected error: \(error)")
         }

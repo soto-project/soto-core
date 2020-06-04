@@ -43,16 +43,16 @@ public struct AWSResponseError: AWSErrorType {
 /// Unrecognised error. Used when we cannot recognise the error code from the AWS response
 public struct AWSError: Error, CustomStringConvertible {
     public let message: String
-    public let rawBody: String
+    public let rawBody: String?
     public let statusCode: HTTPResponseStatus
 
-    init(statusCode: HTTPResponseStatus, message: String, rawBody: String){
+    init(statusCode: HTTPResponseStatus, message: String, rawBody: String?){
         self.statusCode = statusCode
         self.message = message
         self.rawBody = rawBody
     }
 
     public var description: String {
-        return "\(message)"
+        return "\(message), code: \(statusCode.code)\(rawBody.map {", body: \($0)"} ?? "")"
     }
 }

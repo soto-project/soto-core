@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-@_implementationOnly import AWSXML
+import AWSXML
 import AsyncHTTPClient
 import Dispatch
 import Metrics

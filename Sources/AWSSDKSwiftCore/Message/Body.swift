@@ -14,8 +14,7 @@
 
 import NIO
 import NIOFoundationCompat
-@_implementationOnly import AWSXML
-@_exported import enum AWSXML.XML
+import enum AWSXML.XML
 import struct Foundation.Data
 import class  Foundation.InputStream
 

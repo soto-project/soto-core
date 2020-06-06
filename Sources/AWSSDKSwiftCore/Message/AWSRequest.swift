@@ -74,6 +74,8 @@ public struct AWSRequest {
                 }
             }
         }
+        headers["User-Agent"] = "AWSSDKSwift/5.0"
+        
         return HTTPHeaders(headers.map { ($0, $1) })
     }
 

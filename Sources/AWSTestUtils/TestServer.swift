@@ -93,7 +93,7 @@ public class AWSTestServer {
     }
     
     // httpBin function response
-    public struct HTTPBinResponse: Codable {
+    public struct HTTPBinResponse: AWSDecodableShape & Encodable {
         public let method: String?
         public let data: String?
         public let headers: [String: String]
@@ -140,7 +140,11 @@ public class AWSTestServer {
             headers: request.headers,
             url: request.uri)
         let responseBody = try JSONEncoder().encodeAsByteBuffer(httpBinResponse, allocator: ByteBufferAllocator())
-        try writeResponse(Response(httpStatus: .ok, headers: [:], body: responseBody))
+        let headers = [
+            "Content-Type":"application/json",
+            "Content-Length":responseBody.readableBytes.description
+        ]
+        try writeResponse(Response(httpStatus: .ok, headers: headers, body: responseBody))
     }
 
     public func stop() throws {

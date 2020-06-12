@@ -21,15 +21,6 @@ import AWSTestUtils
 
 @testable import AWSSDKSwiftCore
 
-extension AWSHTTPResponse {
-    var bodyData: Data? {
-        if let body = self.body {
-            return body.getData(at: body.readerIndex, length: body.readableBytes, byteTransferStrategy: .noCopy)
-        }
-        return nil
-    }
-}
-
 #if canImport(Network)
 
 @available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)
@@ -141,8 +132,8 @@ class HTTPClientTests {
     func execute(_ request: AWSHTTPRequest) -> EventLoopFuture<AWSTestServer.HTTPBinResponse> {
         return client.execute(request: request, timeout: .seconds(5), on: client.eventLoopGroup.next())
             .flatMapThrowing { response in
-                print(String(data: response.bodyData ?? Data(), encoding: .utf8)!)
-                return try JSONDecoder().decode(AWSTestServer.HTTPBinResponse.self, from: response.bodyData ?? Data())
+                guard let body = response.body else { throw AWSTestServer.Error.emptyBody }
+                return try JSONDecoder().decode(AWSTestServer.HTTPBinResponse.self, from: body)
         }
     }
 

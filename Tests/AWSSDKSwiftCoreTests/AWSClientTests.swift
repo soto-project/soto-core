@@ -705,6 +705,31 @@ class AWSClientTests: XCTestCase {
         }
     }
 
+    func testHeadersAreWritten() {
+        let awsServer = AWSTestServer(serviceProtocol: .json)
+        let elg = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(elg))
+        defer {
+            try? awsServer.stop()
+            try? httpClient.syncShutdown()
+            try? elg.syncShutdownGracefully()
+        }
+        let client = createAWSClient(accessKeyId: "foo", secretAccessKey: "bar", serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
+        let response: EventLoopFuture<AWSTestServer.HTTPBinResponse> = client.send(operation: "test", path: "/", httpMethod: "POST")
+        
+        XCTAssertNoThrow(try awsServer.httpBin())
+        var httpBinResponse: AWSTestServer.HTTPBinResponse? = nil
+        XCTAssertNoThrow(httpBinResponse = try response.wait())
+        let httpHeaders = httpBinResponse.map { HTTPHeaders($0.headers.map { ($0, $1) }) }
+        
+        XCTAssertEqual(httpHeaders?["Content-Length"].first, "0")
+        XCTAssertEqual(httpHeaders?["Content-Type"].first, "application/x-amz-json-1.1")
+        XCTAssertNotNil(httpHeaders?["Authorization"].first)
+        XCTAssertNotNil(httpHeaders?["X-Amz-Date"].first)
+        XCTAssertEqual(httpHeaders?["User-Agent"].first, "AWSSDKSwift/5.0")
+        XCTAssertEqual(httpHeaders?["Host"].first, "localhost:\(awsServer.serverPort)")
+    }
+    
     func testClientNoInputNoOutput() {
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)

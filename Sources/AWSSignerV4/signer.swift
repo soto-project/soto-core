@@ -58,7 +58,7 @@ public struct AWSSigner {
         var headers = headers
         // add date, host, sha256 and if available security token headers
         headers.add(name: "X-Amz-Date", value: dateString)
-        headers.add(name: "host", value: url.host ?? "")
+        headers.add(name: "host", value: "\(url.host ?? "")\(url.port.map {":\($0)"} ?? "")")
         headers.add(name: "x-amz-content-sha256", value: bodyHash)
         if let sessionToken = credentials.sessionToken {
             headers.add(name: "x-amz-security-token", value: sessionToken)

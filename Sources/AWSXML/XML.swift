@@ -48,12 +48,6 @@ public enum XML {
         public fileprivate(set) var children : [XML.Node]?
         public weak var parent : XML.Node?
 
-        init(kind: Kind) {
-            self.kind = kind
-            self.children = nil
-            self.parent = nil
-        }
-
         fileprivate init(_ kind: Kind, name: String? = nil, stringValue: String? = nil) {
             self.kind = kind
             self.name = name
@@ -242,6 +236,7 @@ public enum XML {
                 if let error = parserDelegate.error {
                     throw error
                 }
+                throw ParsingError.noXMLFound
             } else if let rootElement = parserDelegate.rootElement {
                 // copy contents of rootElement
                 self.setChildren(rootElement.children)
@@ -417,11 +412,14 @@ public enum XML {
     /// XML parsing errors
     enum ParsingError : Error {
         case emptyFile
+        case noXMLFound
 
         var localizedDescription: String {
             switch self {
             case .emptyFile:
                 return "File contained nothing"
+            case .noXMLFound:
+                return "File didn't contain any XML"
             }
         }
     }

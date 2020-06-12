@@ -18,14 +18,11 @@ import XCTest
 class XMLTests: XCTestCase {
 
     /// helper test function to use throughout all the decode/encode tests
-    func testDecodeEncode(xml: String) {
-        do {
-            let xmlDocument = try XML.Document(data: xml.data(using: .utf8)!)
-            let xml2 = xmlDocument.xmlString
-            XCTAssertEqual(xml, xml2)
-        } catch {
-            XCTFail(error.localizedDescription)
-        }
+    func testDecodeEncode(xml: String) throws {
+        var xmlDocument: XML.Document? = nil
+        XCTAssertNoThrow(xmlDocument = try XML.Document(data: Data(xml.utf8)))
+        let xml2 = xmlDocument?.xmlString
+        XCTAssertEqual(xml, xml2)
     }
     
     func testAddChild() {
@@ -77,40 +74,39 @@ class XMLTests: XCTestCase {
     }
     func testAttributesDecodeEncode() {
         let xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test name=\"test\">testing</test>"
-        testDecodeEncode(xml: xml)
+        XCTAssertNoThrow(try testDecodeEncode(xml: xml))
     }
     func testNamespacesDecodeEncode() {
         let xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test xmlns:h=\"http://www.w3.org/TR/html4/\">testing</test>"
-        testDecodeEncode(xml: xml)
+        XCTAssertNoThrow(try testDecodeEncode(xml: xml))
     }
     func testArrayDecodeEncode() {
         let xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><array><test>testing1</test><test>testing2</test><test>testing3</test></array>"
-        testDecodeEncode(xml: xml)
+        XCTAssertNoThrow(try testDecodeEncode(xml: xml))
     }
     func testCommentDecodeEncode() {
         let xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test>testing<!--Test Comment--></test>"
-        testDecodeEncode(xml: xml)
+        XCTAssertNoThrow(try testDecodeEncode(xml: xml))
     }
     func testCDATADecodeEncode() {
         let xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test><![CDATA[CDATA test]]></test>"
-        do {
-            let xmlDocument = try XML.Document(data: xml.data(using: .utf8)!)
-            let xml2 = xmlDocument.xmlString
-            XCTAssertEqual(xml2, "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test>CDATA test</test>")
-        } catch {
-            XCTFail(error.localizedDescription)
-        }
+        var xmlDocument: XML.Document? = nil
+        XCTAssertNoThrow(xmlDocument = try XML.Document(data: Data(xml.utf8)))
+        let xml2 = xmlDocument?.xmlString
+        XCTAssertEqual(xml2, "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test>CDATA test</test>")
     }
     
     func testWhitespaceDecodeEncode() {
         let xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test> <a> before</a><b></b> <c>after </c></test>"
-        do {
-            let xmlDocument = try XML.Document(data: xml.data(using: .utf8)!)
-            let xml2 = xmlDocument.xmlString
-            XCTAssertEqual(xml2, "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test><a> before</a><b></b><c>after </c></test>")
-        } catch {
-            XCTFail(error.localizedDescription)
-        }
+        var xmlDocument: XML.Document? = nil
+        XCTAssertNoThrow(xmlDocument = try XML.Document(data: Data(xml.utf8)))
+        let xml2 = xmlDocument?.xmlString
+        XCTAssertEqual(xml2, "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test><a> before</a><b></b><c>after </c></test>")
+    }
+
+    func testDecodeRubbish() {
+        let xml = "{}"
+        XCTAssertThrowsError(try XML.Document(data: Data(xml.utf8)))
     }
 }
 

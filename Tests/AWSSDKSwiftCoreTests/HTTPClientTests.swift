@@ -78,10 +78,6 @@ class NIOTSHTTPClientTests: XCTestCase {
         HTTPClientTests(client).testGet()
     }
 
-    func testHTTPS() {
-        HTTPClientTests(client).testHTTPS()
-    }
-
     func testHeaders() {
         HTTPClientTests(client).testHeaders()
     }

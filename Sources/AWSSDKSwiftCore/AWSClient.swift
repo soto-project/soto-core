@@ -17,6 +17,7 @@ import AsyncHTTPClient
 import Dispatch
 import Metrics
 import NIO
+import NIOConcurrencyHelpers
 import NIOHTTP1
 import NIOTransportServices
 import class  Foundation.JSONSerialization
@@ -33,6 +34,7 @@ import struct Foundation.CharacterSet
 public final class AWSClient {
 
     public enum ClientError: Swift.Error {
+        case alreadyShutdown
         case invalidURL(String)
         case tooMuchData
     }
@@ -64,6 +66,8 @@ public final class AWSClient {
     public var eventLoopGroup: EventLoopGroup { return httpClient.eventLoopGroup }
     /// Retry Controller specifying what to do when a request fails
     public let retryPolicy: RetryPolicy
+
+    private let isShutdown = NIOAtomic<Bool>.makeAtomic(value: false)
 
     // public accessors to ensure code outside of aws-sdk-swift-core still compiles
     public var region: Region { return serviceConfig.region }
@@ -172,8 +176,16 @@ public final class AWSClient {
             middlewares: [],
             httpClientProvider: httpClientProvider)
     }
-
+    
     deinit {
+        assert(self.isShutdown.load(), "AWSClient not shut down before the deinit. Please call client.syncShutdown() when no longer needed.")
+    }
+    
+    func syncShutdown() throws {
+        guard self.isShutdown.compareAndExchange(expected: false, desired: true) else {
+            throw ClientError.alreadyShutdown
+        }
+        try credentialProvider.syncShutdown()
         // if httpClient was created by AWSClient then it is required to shutdown the httpClient
         if case .createNew = httpClientProvider {
             do {
@@ -792,6 +804,8 @@ protocol ErrorMessage {
 extension AWSClient.ClientError: CustomStringConvertible {
     public var description: String {
         switch self {
+        case .alreadyShutdown:
+            return "The AWSClient is already shutdown"
         case .invalidURL(let urlString):
             return """
             The request url \(urlString) is invalid format.

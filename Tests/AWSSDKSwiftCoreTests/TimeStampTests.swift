@@ -103,6 +103,9 @@ class TimeStampTests: XCTestCase {
             }
             let a = A(date: TimeStamp("2019-05-01T00:00:00.001Z")!)
             let client = createAWSClient()
+            defer {
+                XCTAssertNoThrow(try client.syncShutdown())
+            }
             let request = try client.createAWSRequest(operation: "test", path: "/", httpMethod: "GET", input: a)
             XCTAssertEqual(request.body.asString(), "{\"date\":\"Wed, 1 May 2019 00:00:00 GMT\"}")
         } catch {

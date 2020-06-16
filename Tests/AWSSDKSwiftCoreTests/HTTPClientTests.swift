@@ -89,33 +89,6 @@ class NIOTSHTTPClientTests: XCTestCase {
 
 #endif //canImport(Network)
 
-class AsyncHTTPClientTests: XCTestCase {
-    var client: AsyncHTTPClient.HTTPClient!
-    override func setUp() {
-        self.client = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew)
-    }
-
-    override func tearDown() {
-        XCTAssertNoThrow(try self.client.syncShutdown())
-    }
-
-    deinit {
-        try? client.syncShutdown()
-    }
-
-    func testGet() {
-        HTTPClientTests(client).testGet()
-    }
-
-    func testHeaders() {
-        HTTPClientTests(client).testHeaders()
-    }
-
-    func testBody() {
-        HTTPClientTests(client).testBody()
-    }
-}
-
 /// HTTP Client tests, to be used with any HTTP client that conforms to AWSHTTPClient
 class HTTPClientTests {
 

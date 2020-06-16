@@ -47,6 +47,7 @@ class PaginateTests: XCTestCase {
 
     override func tearDown() {
         XCTAssertNoThrow(try self.awsServer.stop())
+        XCTAssertNoThrow(try self.client.syncShutdown())
         XCTAssertNoThrow(try self.httpClient.syncShutdown())
         XCTAssertNoThrow(try self.eventLoopGroup.syncShutdownGracefully())
     }

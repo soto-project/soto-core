@@ -19,7 +19,7 @@ services:
     volumes:
       - ..:/working
     working_dir: /working
-    command: /bin/bash -xcl "swift test --enable-test-discovery --parallel"
+    command: /bin/bash -xcl "swift test --enable-test-discovery"
 
   test-thread:
     <<: *common

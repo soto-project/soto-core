@@ -208,18 +208,121 @@ extension AWSTestServer {
         }
     }
 
+    enum ReadChunkStatus {
+        case none
+        case readingSize(String = "")
+        case readingSignature(Int, Int)
+        case readingChunk(Int)
+        case readingEnd(String = "")
+        case finishing(String = "")
+        case finished
+    }
+
+    /// read chunked data see
+    func readChunkedData(status: ReadChunkStatus, input: inout ByteBuffer, output: inout ByteBuffer) throws -> ReadChunkStatus {
+        var status = status
+
+        func _readChunkSize(chunkSize: String, input: inout ByteBuffer) throws -> ReadChunkStatus {
+            var chunkSize = chunkSize
+            while(input.readableBytes > 0) {
+                guard let char = input.readString(length: 1) else { throw Error.corruptChunkedData }
+                chunkSize += char
+                if chunkSize.hasSuffix(";") {
+                    let hexChunkSize = String(chunkSize.dropLast(1))
+                    guard let chunkSize = Int(hexChunkSize, radix: 16) else { throw Error.corruptChunkedData }
+                    return .readingSignature(16 + 64 + 2, chunkSize) // "chunk-signature=" + hex(sha256) + "\r\n"
+                }
+            }
+            return .readingSize(chunkSize)
+        }
+
+        func _readChunkEnd(chunkEnd: String, input: inout ByteBuffer) throws -> ReadChunkStatus {
+            var chunkEnd = chunkEnd
+            while(input.readableBytes > 0) {
+                guard let char = input.readString(length: 1) else { throw Error.corruptChunkedData }
+                chunkEnd += char
+                if chunkEnd == "\r\n" {
+                    return .none
+                } else if chunkEnd.count > 2 {
+                    throw Error.corruptChunkedData
+                }
+            }
+            return .readingEnd(chunkEnd)
+        }
+
+        while(input.readableBytes > 0) {
+            switch status {
+            case .none:
+                status = try _readChunkSize(chunkSize: "", input: &input)
+
+            case .readingSize(let chunkSize):
+                status = try _readChunkSize(chunkSize: chunkSize, input: &input)
+
+            case .readingSignature(let size, let chunkSize):
+                let blockSize = min(size, input.readableBytes)
+                _ = input.readSlice(length: blockSize)
+                if blockSize == size {
+                    if chunkSize == 0 {
+                        status = .finishing()
+                    } else {
+                        status = .readingChunk(chunkSize)
+                    }
+                } else {
+                    status = .readingSignature(size - blockSize, chunkSize)
+                }
+
+            case .readingChunk(let size):
+                let blockSize = min(size, input.readableBytes)
+                var slice = input.readSlice(length: blockSize)!
+                output.writeBuffer(&slice)
+                if blockSize == size {
+                    status = .readingEnd()
+                } else {
+                    status = .readingChunk(size - blockSize)
+                }
+
+            case .readingEnd(let chunkEnd):
+                status = try _readChunkEnd(chunkEnd: chunkEnd, input: &input)
+
+            case .finishing(let chunkEnd):
+                status = try _readChunkEnd(chunkEnd: chunkEnd, input: &input)
+                if case .none = status {
+                    status = .finished
+                }
+            case .finished:
+                throw Error.corruptChunkedData
+            }
+        }
+        return status
+    }
+
     /// read inbound request
     func readRequest() throws -> Request {
         var byteBuffer = byteBufferAllocator.buffer(capacity: 0)
 
         // read inbound
         guard case .head(let head) = try web.readInbound() else {throw Error.notHead}
+        // is content-encoding: aws-chunked header set
+        let isChunked = head.headers["Content-Encoding"].filter { $0 == "aws-chunked" }.count > 0
+        var chunkStatus: ReadChunkStatus = .none
         // read body
         while(true) {
             let inbound = try web.readInbound()
             if case .body(var buffer) = inbound {
-                byteBuffer.writeBuffer(&buffer)
+                if isChunked == true {
+                     chunkStatus = try readChunkedData(status: chunkStatus, input: &buffer, output: &byteBuffer)
+                 } else {
+                     byteBuffer.writeBuffer(&buffer)
+                 }
             } else if case .end(_) = inbound {
+                if isChunked == true {
+                    switch chunkStatus {
+                    case .finished:
+                        break
+                    default:
+                        throw Error.corruptChunkedData
+                    }
+                }
                 break
             } else {
                 throw Error.notEnd

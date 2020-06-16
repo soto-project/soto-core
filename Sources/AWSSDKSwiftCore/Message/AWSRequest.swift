@@ -103,8 +103,24 @@ public struct AWSRequest {
         switch payload.payload {
         case .byteBuffer(let buffer):
             bodyDataForSigning = .byteBuffer(buffer)
-        case .stream:
-            bodyDataForSigning = .unsignedPayload
+        case .stream(let reader):
+            if signer.name == "s3" {
+                assert(reader.size != nil, "S3 stream requires size")
+                var headers = getHttpHeaders()
+                // need to add this header here as it needs to be included in the signed headers
+                headers.add(name: "x-amz-decoded-content-length", value: reader.size!.description)
+                let (signedHeaders, seedSigningData) = signer.startSigningChunks(url: url, method: method, headers: headers, date: Date())
+                let s3Reader = S3ChunkedStreamReader(
+                    size: reader.size!,
+                    seedSigningData: seedSigningData,
+                    signer: signer,
+                    byteBufferAllocator: reader.byteBufferAllocator,
+                    read: reader.read)
+                let payload = AWSPayload.streamReader(s3Reader)
+                return AWSHTTPRequest.init(url: url, method: method, headers: signedHeaders, body: payload)
+            } else {
+                bodyDataForSigning = .unsignedPayload
+            }
         case .empty:
             bodyDataForSigning = nil
         }

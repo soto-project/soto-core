@@ -200,14 +200,13 @@ public final class AWSClient {
 // invoker
 extension AWSClient {
 
-    /// invoke HTTP request
-    fileprivate func invoke(_ httpRequest: AWSHTTPRequest, on eventLoop: EventLoop) -> EventLoopFuture<AWSHTTPResponse> {
+    fileprivate func invoke(_ request: @escaping () -> EventLoopFuture<AWSHTTPResponse>) -> EventLoopFuture<AWSHTTPResponse> {
         let eventloop = self.eventLoopGroup.next()
         let promise = eventloop.makePromise(of: AWSHTTPResponse.self)
 
-        func execute(_ httpRequest: AWSHTTPRequest, attempt: Int) {
+        func execute(attempt: Int) {
             // execute HTTP request
-            _ = httpClient.execute(request: httpRequest, timeout: .seconds(20), on: eventLoop)
+            _ = request()
                 .flatMapThrowing { (response) throws -> Void in
                     // if it returns an HTTP status code outside 2xx then throw an error
                     guard (200..<300).contains(response.status.code) else { throw AWSClient.InternalError.httpResponseError(response) }
@@ -218,7 +217,7 @@ extension AWSClient {
                     if case .retry(let retryTime) = self.retryPolicy.getRetryWaitTime(error: error, attempt: attempt) {
                         // schedule task for retrying AWS request
                         eventloop.scheduleTask(in: retryTime) {
-                            execute(httpRequest, attempt: attempt + 1)
+                            execute(attempt: attempt + 1)
                         }
                     } else if case AWSClient.InternalError.httpResponseError(let response) = error {
                         // if there was no retry and error was a response status code then attempt to convert to AWS error
@@ -229,9 +228,23 @@ extension AWSClient {
             }
         }
 
-        execute(httpRequest, attempt: 0)
+        execute(attempt: 0)
 
         return promise.futureResult
+    }
+
+    /// invoke HTTP request
+    fileprivate func invoke(_ httpRequest: AWSHTTPRequest, on eventLoop: EventLoop) -> EventLoopFuture<AWSHTTPResponse> {
+        return invoke {
+            return self.httpClient.execute(request: httpRequest, timeout: .seconds(20), on: eventLoop)
+        }
+    }
+
+    /// invoke HTTP request with response streaming
+    fileprivate func invoke(_ httpRequest: AWSHTTPRequest, on eventLoop: EventLoop, stream: @escaping AWSHTTPClient.ResponseStream) -> EventLoopFuture<AWSHTTPResponse> {
+        return invoke {
+            return self.httpClient.execute(request: httpRequest, timeout: .seconds(20), on: eventLoop, stream: stream)
+        }
     }
 
     /// create HTTPClient
@@ -349,6 +362,30 @@ extension AWSClient {
         return recordMetrics(future, service: serviceConfig.service, operation: operationName)
     }
 
+    public func send<Output: AWSDecodableShape, Input: AWSEncodableShape>(
+        operation operationName: String,
+        path: String,
+        httpMethod: String,
+        input: Input,
+        on eventLoop: EventLoop? = nil,
+        stream: @escaping AWSHTTPClient.ResponseStream
+    ) -> EventLoopFuture<Output> {
+        let eventLoop = eventLoop ?? eventLoopGroup.next()
+        return credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
+            let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
+            let awsRequest = try self.createAWSRequest(
+                        operation: operationName,
+                        path: path,
+                        httpMethod: httpMethod,
+                        input: input)
+            return awsRequest.createHTTPRequest(signer: signer)
+        }.flatMap { request in
+            return self.invoke(request, on: eventLoop, stream: stream)
+        }.flatMapThrowing { response in
+            return try self.validate(operation: operationName, response: response)
+        }
+    }
+
     /// generate a signed URL
     /// - parameters:
     ///     - url : URL to sign
@@ -398,7 +435,7 @@ extension AWSClient {
         precondition(input.options.contains(.allowStreaming), "\(operation) does not allow streaming of data")
         precondition(reader.size != nil || input.options.contains(.allowChunkedStreaming), "\(operation) does not allow chunked streaming of data. Please supply a data size.")
     }
-    
+
     internal func createAWSRequest<Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
         var headers: [String: Any] = [:]
         var path = path
@@ -823,7 +860,7 @@ extension AWSClient {
         let startTime = DispatchTime.now().uptimeNanoseconds
 
         Counter(label: "aws_requests_total", dimensions: dimensions).increment()
-        
+
         return future.map { response in
             Metrics.Timer(
                 label: "aws_request_duration",

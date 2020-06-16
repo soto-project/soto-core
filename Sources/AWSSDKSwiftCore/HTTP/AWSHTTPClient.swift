@@ -40,12 +40,25 @@ public protocol AWSHTTPResponse {
 
 /// Protocol defining requirements for a HTTPClient
 public protocol AWSHTTPClient {
+    typealias ResponseStream = (ByteBuffer, EventLoop)->EventLoopFuture<Void>
+
     /// Execute HTTP request and return a future holding a HTTP Response
     func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop?) -> EventLoopFuture<AWSHTTPResponse>
+
+    /// Execute an HTTP request with a streamed response
+    func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop?, stream: @escaping ResponseStream) -> EventLoopFuture<AWSHTTPResponse>
 
     /// This should be called before an HTTP Client can be de-initialised
     func syncShutdown() throws
 
     /// Event loop group used by client
     var eventLoopGroup: EventLoopGroup { get }
+}
+
+extension AWSHTTPClient {
+    /// Execute an HTTP request with a streamed response
+    public func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop?, stream: @escaping ResponseStream) -> EventLoopFuture<AWSHTTPResponse> {
+        preconditionFailure("Response streaming isn't supported")
+    }
+
 }

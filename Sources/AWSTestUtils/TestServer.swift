@@ -340,8 +340,16 @@ extension AWSTestServer {
         XCTAssertNoThrow(try web.writeOutbound(.head(.init(version: .init(major: 1, minor: 1),
                                                            status: response.httpStatus,
                                                            headers: HTTPHeaders(response.headers.map { ($0,$1) })))))
-        if let body = response.body, body.readableBytes > 0 {
-            XCTAssertNoThrow(try web.writeOutbound(.body(.byteBuffer(body))))
+        if var body = response.body {
+            while body.readableBytes > 0 {
+                let slice: ByteBuffer?
+                if body.readableBytes > 16384 {
+                    slice = body.readSlice(length: 16384)
+                } else {
+                    slice = body.readSlice(length: body.readableBytes)
+                }
+                XCTAssertNoThrow(try web.writeOutbound(.body(.byteBuffer(slice!))))
+            }
         }
         do {
             try web.writeOutbound(.end(nil))

@@ -14,6 +14,7 @@
 
 import AsyncHTTPClient
 import NIO
+import NIOHTTP1
 
 /// comply with AWSHTTPClient protocol
 extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
@@ -52,4 +53,29 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
     }
 }
 
+/// extend to include response streaming support
+extension AsyncHTTPClient.HTTPClient {
+    public func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop?, stream: @escaping ResponseStream) -> EventLoopFuture<AWSHTTPResponse> {
+        if let eventLoop = eventLoop {
+            precondition(self.eventLoopGroup.makeIterator().contains { $0 === eventLoop }, "EventLoop provided to AWSClient must be part of the HTTPClient's EventLoopGroup.")
+        }
+        let requestBody: AsyncHTTPClient.HTTPClient.Body?
+        if case .byteBuffer(let body) = request.body.payload {
+            requestBody = .byteBuffer(body)
+        } else {
+            requestBody = nil
+        }
+        do {
+            let eventLoop = eventLoop ?? eventLoopGroup.next()
+            let asyncRequest = try AsyncHTTPClient.HTTPClient.Request(url: request.url, method: request.method, headers: request.headers, body: requestBody)
+            let delegate = AWSHTTPClientResponseDelegate(host: asyncRequest.host, stream: stream)
+            return execute(request: asyncRequest, delegate: delegate, eventLoop: .delegate(on: eventLoop), deadline: .now() + timeout).futureResult
+        } catch {
+            return eventLoopGroup.next().makeFailedFuture(error)
+        }
+    }
+}
+
+
 extension AsyncHTTPClient.HTTPClient.Response: AWSHTTPResponse {}
+

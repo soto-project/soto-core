@@ -181,7 +181,7 @@ public final class AWSClient {
         assert(self.isShutdown.load(), "AWSClient not shut down before the deinit. Please call client.syncShutdown() when no longer needed.")
     }
     
-    func syncShutdown() throws {
+    public func syncShutdown() throws {
         guard self.isShutdown.compareAndExchange(expected: false, desired: true) else {
             throw ClientError.alreadyShutdown
         }

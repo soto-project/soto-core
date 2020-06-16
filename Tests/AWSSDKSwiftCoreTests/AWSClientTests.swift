@@ -997,11 +997,12 @@ let response = AWSHTTPResponseImpl(
     func testRequestS3Streaming() {
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+        let client = createAWSClient(accessKeyId: "foo", secretAccessKey: "bar", service: "s3", endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
         defer {
+            XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
             XCTAssertNoThrow(try httpClient.syncShutdown())
         }
-        let client = createAWSClient(accessKeyId: "foo", secretAccessKey: "bar", service: "s3", endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
 
         XCTAssertNoThrow(try testRequestStreaming(client: client, server: awsServer, bufferSize: 128*1024, blockSize: 16*1024))
         XCTAssertNoThrow(try testRequestStreaming(client: client, server: awsServer, bufferSize: 81*1024, blockSize: 16*1024))

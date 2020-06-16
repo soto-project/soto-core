@@ -33,6 +33,14 @@ public final class RotatingCredentialProvider<Client: CredentialProvider>: Crede
         self.remainingTokenLifetimeForUse = remainingTokenLifetimeForUse ?? 3 * 60
     }
     
+    public func syncShutdown() throws {
+        self.lock.lock()
+        defer { self.lock.unlock() }
+        if let future = credentialFuture {
+            _ = try future.wait()
+        }
+    }
+    
     public func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
         self.lock.lock()
         let cred = credential

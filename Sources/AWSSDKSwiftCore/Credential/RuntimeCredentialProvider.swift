@@ -49,6 +49,10 @@ class RuntimeCredentialProvider: CredentialProvider {
         self.createInternalProvider(on: eventLoop, httpClient: httpClient)
     }
     
+    func syncShutdown() throws {
+        try startupPromise.futureResult.wait()
+    }
+    
     func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
         if let provider = self.internalProvider {
             return provider.getCredential(on: eventLoop)

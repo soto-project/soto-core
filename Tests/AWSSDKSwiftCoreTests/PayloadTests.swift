@@ -40,6 +40,9 @@ class PayloadTests: XCTestCase {
                 middlewares: [AWSLoggingMiddleware()],
                 httpClientProvider: .createNew
             )
+            defer {
+                XCTAssertNoThrow(try client.syncShutdown())
+            }
             let input = DataPayload(data: payload)
             let response = client.send(operation: "test", path: "/", httpMethod: "POST", input: input)
 
@@ -90,6 +93,9 @@ class PayloadTests: XCTestCase {
                 middlewares: [AWSLoggingMiddleware()],
                 httpClientProvider: .createNew
             )
+            defer {
+                XCTAssertNoThrow(try client.syncShutdown())
+            }
             let response: EventLoopFuture<Output> = client.send(operation: "test", path: "/", httpMethod: "POST")
 
             try awsServer.processRaw { request in

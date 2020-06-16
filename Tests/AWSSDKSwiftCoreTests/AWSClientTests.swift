@@ -79,6 +79,9 @@ class AWSClientTests: XCTestCase {
 
     func testGetCredential() {
         let client = createAWSClient(accessKeyId: "key", secretAccessKey: "secret")
+        defer {
+            XCTAssertNoThrow(try client.syncShutdown())
+        }
 
         do {
             let credentialForSignature = try client.credentialProvider.getCredential(on: client.eventLoopGroup.next()).wait()
@@ -92,6 +95,9 @@ class AWSClientTests: XCTestCase {
     // this test only really works on Linux as it requires the MetaDataService. On mac it will just pass automatically
     func testExpiredCredential() {
         let client = createAWSClient()
+        defer {
+            XCTAssertNoThrow(try client.syncShutdown())
+        }
 
         do {
             let credentials = try client.credentialProvider.getCredential(on: client.eventLoopGroup.next()).wait()
@@ -112,6 +118,9 @@ class AWSClientTests: XCTestCase {
             serviceEndpoints: ["aws-global":"service.aws.amazon.com"],
             partitionEndpoints: [.aws: (endpoint: "aws-global", region: .euwest1)]
         )
+        defer {
+            XCTAssertNoThrow(try client.syncShutdown())
+        }
         XCTAssertEqual(client.region, .euwest1)
 
         let awsRequest = try client.createAWSRequest(operation: "test", path: "/", httpMethod: "GET")
@@ -126,6 +135,9 @@ class AWSClientTests: XCTestCase {
             let `repeat`: String
         }
         let client = createAWSClient()
+        defer {
+            XCTAssertNoThrow(try client.syncShutdown())
+        }
         do {
             let request = KeywordRequest(repeat: "Repeat")
             let awsRequest = try client.createAWSRequest(operation: "Keyword", path: "/", httpMethod: "POST", input: request)
@@ -144,6 +156,9 @@ class AWSClientTests: XCTestCase {
             let `self`: String
         }
         let client = createAWSClient(region: .cacentral1, service: "s3")
+        defer {
+            XCTAssertNoThrow(try client.syncShutdown())
+        }
         do {
             let request = KeywordRequest(self: "KeywordRequest")
             let awsRequest = try client.createAWSRequest(operation: "Keyword", path: "/", httpMethod: "POST", input: request)
@@ -157,20 +172,10 @@ class AWSClientTests: XCTestCase {
     func testCreateNIORequest() {
         let input2 = E()
 
-        let kinesisClient = AWSClient(
-            accessKeyId: "foo",
-            secretAccessKey: "bar",
-            region: nil,
-            amzTarget: "Kinesis_20131202",
-            service: "kinesis",
-            serviceProtocol: .json(version: "1.1"),
-            apiVersion: "2013-12-02",
-            middlewares: [],
-            possibleErrorTypes: [ServiceErrorType.self],
-            httpClientProvider: .createNew
-        )
-
         let client = createAWSClient(service: "kinesis", serviceProtocol: .json(version: "1.1"))
+        defer {
+            XCTAssertNoThrow(try client.syncShutdown())
+        }
         do {
             let awsRequest = try client.createAWSRequest(
                 operation: "PutRecord",
@@ -179,7 +184,7 @@ class AWSClientTests: XCTestCase {
                 input: input2
             )
 
-            let awsHTTPRequest: AWSHTTPRequest = awsRequest.createHTTPRequest(signer: try kinesisClient.signer.wait())
+            let awsHTTPRequest: AWSHTTPRequest = awsRequest.createHTTPRequest(signer: try client.signer.wait())
             XCTAssertEqual(awsHTTPRequest.method, HTTPMethod.POST)
             if let host = awsHTTPRequest.headers.first(where: { $0.name == "Host" }) {
                 XCTAssertEqual(host.value, "kinesis.us-east-1.amazonaws.com")
@@ -198,7 +203,10 @@ class AWSClientTests: XCTestCase {
     func testUnsignedClient() {
         let input = E()
         let client = createAWSClient(accessKeyId: "", secretAccessKey: "")
-        
+        defer {
+            XCTAssertNoThrow(try client.syncShutdown())
+        }
+
         var awsRequest: AWSRequest?
         XCTAssertNoThrow(awsRequest = try client.createAWSRequest(
             operation: "CopyObject",
@@ -215,7 +223,10 @@ class AWSClientTests: XCTestCase {
     func testSignedClient() {
         let input = E()
         let client = createAWSClient(accessKeyId: "foo", secretAccessKey: "bar")
-        
+        defer {
+            XCTAssertNoThrow(try client.syncShutdown())
+        }
+
         for httpMethod in ["GET","HEAD","PUT","DELETE","POST","PATCH"] {
             var awsRequest: AWSRequest?
             
@@ -245,24 +256,39 @@ class AWSClientTests: XCTestCase {
         let object2 = Object2(payload: .string("Payload"))
 
         let client = createAWSClient(serviceProtocol: .json(version: "1.1"))
+        defer {
+            XCTAssertNoThrow(try client.syncShutdown())
+        }
         let request = try client.createAWSRequest(operation: "test", path: "/", httpMethod: "POST", input: object)
         XCTAssertEqual(request.getHttpHeaders()["content-type"].first, "application/x-amz-json-1.1")
 
         let client2 = createAWSClient(serviceProtocol: .restjson)
+        defer {
+            XCTAssertNoThrow(try client2.syncShutdown())
+        }
         let request2 = try client2.createAWSRequest(operation: "test", path: "/", httpMethod: "POST", input: object)
         XCTAssertEqual(request2.getHttpHeaders()["content-type"].first, "application/json")
         let rawRequest2 = try client2.createAWSRequest(operation: "test", path: "/", httpMethod: "POST", input: object2)
         XCTAssertEqual(rawRequest2.getHttpHeaders()["content-type"].first, "binary/octet-stream")
 
         let client3 = createAWSClient(serviceProtocol: .query)
+        defer {
+            XCTAssertNoThrow(try client3.syncShutdown())
+        }
         let request3 = try client3.createAWSRequest(operation: "test", path: "/", httpMethod: "POST", input: object)
         XCTAssertEqual(request3.getHttpHeaders()["content-type"].first, "application/x-www-form-urlencoded; charset=utf-8")
 
         let client4 = createAWSClient(serviceProtocol: .ec2)
+        defer {
+            XCTAssertNoThrow(try client4.syncShutdown())
+        }
         let request4 = try client4.createAWSRequest(operation: "test", path: "/", httpMethod: "POST", input: object)
         XCTAssertEqual(request4.getHttpHeaders()["content-type"].first, "application/x-www-form-urlencoded; charset=utf-8")
 
         let client5 = createAWSClient(serviceProtocol: .restxml)
+        defer {
+            XCTAssertNoThrow(try client5.syncShutdown())
+        }
         let request5 = try client5.createAWSRequest(operation: "test", path: "/", httpMethod: "POST", input: object)
         XCTAssertEqual(request5.getHttpHeaders()["content-type"].first, "application/octet-stream")
     }
@@ -273,6 +299,9 @@ class AWSClientTests: XCTestCase {
             let h: String
         }
         let client = createAWSClient()
+        defer {
+            XCTAssertNoThrow(try client.syncShutdown())
+        }
         do {
             let input = Input(h: "TestHeader")
             let request = try client.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input)
@@ -288,6 +317,9 @@ class AWSClientTests: XCTestCase {
             let q: String
         }
         let client = createAWSClient()
+        defer {
+            XCTAssertNoThrow(try client.syncShutdown())
+        }
         do {
             let input = Input(q: "=3+5897^sdfjh&")
             let request = try client.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input)
@@ -303,6 +335,9 @@ class AWSClientTests: XCTestCase {
             let q: [String]
         }
         let client = createAWSClient()
+        defer {
+            XCTAssertNoThrow(try client.syncShutdown())
+        }
         do {
             let input = Input(q: ["=3+5897^sdfjh&", "test"])
             let request = try client.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input)
@@ -318,6 +353,9 @@ class AWSClientTests: XCTestCase {
             let q: [String: Int]
         }
         let client = createAWSClient(region: .useast2, service: "myservice")
+        defer {
+            XCTAssertNoThrow(try client.syncShutdown())
+        }
         do {
             let input = Input(q: ["one": 1, "two": 2])
             let request = try client.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input)
@@ -333,6 +371,9 @@ class AWSClientTests: XCTestCase {
             let u: String
         }
         let client = createAWSClient(region: .cacentral1, service: "s3")
+        defer {
+            XCTAssertNoThrow(try client.syncShutdown())
+        }
         do {
             let input = Input(u: "MyKey")
             let request = try client.createAWSRequest(operation: "Test", path: "/{key}", httpMethod: "GET", input: input)
@@ -358,6 +399,9 @@ class AWSClientTests: XCTestCase {
 
         // XML
         let queryClient = createAWSClient(serviceProtocol: .query)
+        defer {
+            XCTAssertNoThrow(try queryClient.syncShutdown())
+        }
         do {
             let result: Output = try queryClient.validate(operation: "Test", response: response)
             XCTAssertEqual(result.h, "test-header")
@@ -367,6 +411,9 @@ class AWSClientTests: XCTestCase {
 
         // JSON
         let jsonClient = createAWSClient(serviceProtocol: .restjson)
+        defer {
+            XCTAssertNoThrow(try jsonClient.syncShutdown())
+        }
         do {
             let result: Output = try jsonClient.validate(operation: "Test", response: response)
             XCTAssertEqual(result.h, "test-header")
@@ -388,6 +435,9 @@ class AWSClientTests: XCTestCase {
 
         // XML
         let xmlClient = createAWSClient(serviceProtocol: .restxml)
+        defer {
+            XCTAssertNoThrow(try xmlClient.syncShutdown())
+        }
         do {
             let result: Output = try xmlClient.validate(operation: "Test", response: response)
             XCTAssertEqual(result.status, 200)
@@ -396,6 +446,9 @@ class AWSClientTests: XCTestCase {
         }
         // JSON
         let jsonClient = createAWSClient(serviceProtocol: .restjson)
+        defer {
+            XCTAssertNoThrow(try jsonClient.syncShutdown())
+        }
         do {
             let result: Output = try jsonClient.validate(operation: "Test", response: response)
             XCTAssertEqual(result.status, 200)
@@ -410,6 +463,9 @@ class AWSClientTests: XCTestCase {
             let number: Int
         }
         let xmlClient = createAWSClient(serviceProtocol: .restxml)
+        defer {
+            XCTAssertNoThrow(try xmlClient.syncShutdown())
+        }
         do {
             let input = Input(number: 5)
             let request = try xmlClient.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input)
@@ -434,6 +490,9 @@ class AWSClientTests: XCTestCase {
             let payload: Payload
         }
         let xmlClient = createAWSClient(serviceProtocol: .restxml)
+        defer {
+            XCTAssertNoThrow(try xmlClient.syncShutdown())
+        }
         do {
             let input = Input(payload: Payload(number: 5))
             let request = try xmlClient.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input)
@@ -452,6 +511,9 @@ class AWSClientTests: XCTestCase {
             let name : String
         }
         let xmlClient = createAWSClient(serviceProtocol: .restxml)
+        defer {
+            XCTAssertNoThrow(try xmlClient.syncShutdown())
+        }
         let responseBody = "<Output><name>hello</name></Output>"
         let awsHTTPResponse = AWSHTTPResponseImpl(
             status: .ok,
@@ -479,7 +541,10 @@ class AWSClientTests: XCTestCase {
             }
         }
         let xmlClient = createAWSClient(serviceProtocol: .restxml)
-        let response = AWSHTTPResponseImpl(
+        defer {
+            XCTAssertNoThrow(try xmlClient.syncShutdown())
+        }
+let response = AWSHTTPResponseImpl(
             status: .ok,
             headers: ["Content-Type":"application/json"],
             bodyData: "<name>hello</name>".data(using: .utf8)!
@@ -502,6 +567,9 @@ class AWSClientTests: XCTestCase {
             let body : AWSPayload
         }
         let xmlClient = createAWSClient(serviceProtocol: .restxml)
+        defer {
+            XCTAssertNoThrow(try xmlClient.syncShutdown())
+        }
         let response = AWSHTTPResponseImpl(
             status: .ok,
             headers: HTTPHeaders(),
@@ -522,6 +590,9 @@ class AWSClientTests: XCTestCase {
             bodyData: "<Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message></Error>".data(using: .utf8)!
         )
         let xmlClient = createAWSClient(serviceProtocol: .restxml, possibleErrorTypes: [ServiceErrorType.self])
+        defer {
+            XCTAssertNoThrow(try xmlClient.syncShutdown())
+        }
         let error = xmlClient.createError(for: response)
         if case ServiceErrorType.noSuchKey(let message) = error {
             XCTAssertEqual(message, "It doesn't exist")
@@ -537,6 +608,9 @@ class AWSClientTests: XCTestCase {
             bodyData: "<ErrorResponse><Error><Code>MessageRejected</Code><Message>Don't like it</Message></Error></ErrorResponse>".data(using: .utf8)!
         )
         let queryClient = createAWSClient(serviceProtocol: .query, possibleErrorTypes: [ServiceErrorType.self])
+        defer {
+            XCTAssertNoThrow(try queryClient.syncShutdown())
+        }
         let error = queryClient.createError(for: response)
         if case ServiceErrorType.messageRejected(let message) = error {
             XCTAssertEqual(message, "Don't like it")
@@ -556,6 +630,9 @@ class AWSClientTests: XCTestCase {
             bodyData: "{\"name\":\"hello\"}".data(using: .utf8)!
         )
         let jsonClient = createAWSClient(serviceProtocol: .json(version: "1.1"))
+        defer {
+            XCTAssertNoThrow(try jsonClient.syncShutdown())
+        }
         do {
             let output : Output = try jsonClient.validate(operation: "Output", response: response)
             XCTAssertEqual(output.name, "hello")
@@ -573,6 +650,9 @@ class AWSClientTests: XCTestCase {
             let output2 : Output2
         }
         let jsonClient = createAWSClient(serviceProtocol: .json(version: "1.1"))
+        defer {
+            XCTAssertNoThrow(try jsonClient.syncShutdown())
+        }
         let response = AWSHTTPResponseImpl(
             status: .ok,
             headers: HTTPHeaders(),
@@ -596,6 +676,9 @@ class AWSClientTests: XCTestCase {
             let body : AWSPayload
         }
         let jsonClient = createAWSClient(serviceProtocol: .json(version: "1.1"))
+        defer {
+            XCTAssertNoThrow(try jsonClient.syncShutdown())
+        }
         let response = AWSHTTPResponseImpl(
             status: .ok,
             headers: ["Content-Type":"application/json"],
@@ -616,6 +699,9 @@ class AWSClientTests: XCTestCase {
             bodyData: "{\"__type\":\"ResourceNotFoundException\", \"message\": \"Donald Where's Your Troosers?\"}".data(using: .utf8)!
         )
         let jsonClient = createAWSClient(serviceProtocol: .json(version: "1.1"), possibleErrorTypes: [ServiceErrorType.self])
+        defer {
+            XCTAssertNoThrow(try jsonClient.syncShutdown())
+        }
         let error = jsonClient.createError(for: response)
         if case ServiceErrorType.resourceNotFoundException(let message) = error {
             XCTAssertEqual(message, "Donald Where's Your Troosers?")
@@ -636,6 +722,9 @@ class AWSClientTests: XCTestCase {
             let b: Bool
         }
         let jsonClient = createAWSClient(serviceProtocol: .json(version: "1.1"))
+        defer {
+            XCTAssertNoThrow(try jsonClient.syncShutdown())
+        }
         var buffer = ByteBufferAllocator().buffer(capacity: 0)
         buffer.writeString(
             """
@@ -667,6 +756,9 @@ class AWSClientTests: XCTestCase {
             let dataContainer: DataContainer
         }
         let jsonClient = createAWSClient(serviceProtocol: .json(version: "1.1"))
+        defer {
+            XCTAssertNoThrow(try jsonClient.syncShutdown())
+        }
         let input = J(dataContainer: DataContainer(data: Data("test data".utf8)))
         do {
             _ = try jsonClient.createAWSRequest(
@@ -689,6 +781,9 @@ class AWSClientTests: XCTestCase {
             let payload: AWSPayload
         }
         let jsonClient = createAWSClient(serviceProtocol: .json(version: "1.1"))
+        defer {
+            XCTAssertNoThrow(try jsonClient.syncShutdown())
+        }
         var buffer = ByteBufferAllocator().buffer(capacity: 0)
         buffer.writeString("TestString")
         let response = HTTPClient.Response(
@@ -715,6 +810,9 @@ class AWSClientTests: XCTestCase {
             try? elg.syncShutdownGracefully()
         }
         let client = createAWSClient(accessKeyId: "foo", secretAccessKey: "bar", serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
+        defer {
+            XCTAssertNoThrow(try client.syncShutdown())
+        }
         let response: EventLoopFuture<AWSTestServer.HTTPBinResponse> = client.send(operation: "test", path: "/", httpMethod: "POST")
         
         XCTAssertNoThrow(try awsServer.httpBin())
@@ -734,6 +832,10 @@ class AWSClientTests: XCTestCase {
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let client = createAWSClient(accessKeyId: "", secretAccessKey: "", serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
+            defer {
+                XCTAssertNoThrow(try client.syncShutdown())
+                XCTAssertNoThrow(try awsServer.stop())
+            }
             let response = client.send(operation: "test", path: "/", httpMethod: "POST")
 
             try awsServer.processRaw { request in
@@ -742,7 +844,6 @@ class AWSClientTests: XCTestCase {
             }
 
             try response.wait()
-            try awsServer.stop()
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
@@ -761,6 +862,10 @@ class AWSClientTests: XCTestCase {
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let client = createAWSClient(accessKeyId: "", secretAccessKey: "", serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
+            defer {
+                XCTAssertNoThrow(try client.syncShutdown())
+                XCTAssertNoThrow(try awsServer.stop())
+            }
             let input = Input(e:.second, i: [1,2,4,8])
             let response = client.send(operation: "test", path: "/", httpMethod: "POST", input: input)
 
@@ -773,7 +878,6 @@ class AWSClientTests: XCTestCase {
             }
 
             try response.wait()
-            try awsServer.stop()
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
@@ -787,6 +891,10 @@ class AWSClientTests: XCTestCase {
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let client = createAWSClient(accessKeyId: "", secretAccessKey: "", serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
+            defer {
+                XCTAssertNoThrow(try client.syncShutdown())
+                XCTAssertNoThrow(try awsServer.stop())
+            }
             let response: EventLoopFuture<Output> = client.send(operation: "test", path: "/", httpMethod: "POST")
 
             try awsServer.processRaw { request in
@@ -800,7 +908,6 @@ class AWSClientTests: XCTestCase {
 
             XCTAssertEqual(output.s, "TestOutputString")
             XCTAssertEqual(output.i, 547)
-            try awsServer.stop()
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
@@ -811,6 +918,9 @@ class AWSClientTests: XCTestCase {
             let array: [String]
         }
         let client = createAWSClient(serviceProtocol: .ec2, apiVersion: "2013-12-02")
+        defer {
+            XCTAssertNoThrow(try client.syncShutdown())
+        }
         do {
             let input = Input(array: ["entry1", "entry2"])
             let request = try client.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input)
@@ -827,6 +937,9 @@ class AWSClientTests: XCTestCase {
             bodyData: "<Errors><Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message></Error></Errors>".data(using: .utf8)!
         )
         let client = createAWSClient(serviceProtocol: .ec2)
+        defer {
+            XCTAssertNoThrow(try client.syncShutdown())
+        }
         if let error = client.createError(for: response) as? AWSResponseError {
             XCTAssertEqual(error.errorCode, "NoSuchKey")
             XCTAssertEqual(error.message, "It doesn't exist")
@@ -845,12 +958,13 @@ class AWSClientTests: XCTestCase {
 
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+        let client = createAWSClient(accessKeyId: "", secretAccessKey: "", endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
         defer {
             XCTAssertNoThrow(try awsServer.stop())
+            XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try httpClient.syncShutdown())
         }
         do {
-            let client = createAWSClient(accessKeyId: "", secretAccessKey: "", endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
 
             // supply buffer in 16k blocks
             let bufferSize = 1024*1024
@@ -890,12 +1004,14 @@ class AWSClientTests: XCTestCase {
 
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+        let client = createAWSClient(accessKeyId: "", secretAccessKey: "", endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
         defer {
+            // ignore error
             try? awsServer.stop()
+            XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try httpClient.syncShutdown())
         }
         do {
-            let client = createAWSClient(accessKeyId: "", secretAccessKey: "", endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
 
             // set up stream of 8 bytes but supply more than that
             let payload = AWSPayload.stream(size: 8) { eventLoop in
@@ -922,13 +1038,13 @@ class AWSClientTests: XCTestCase {
 
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+        let client = createAWSClient(accessKeyId: "", secretAccessKey: "", endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
         defer {
-            try? awsServer.stop()
+            XCTAssertNoThrow(try awsServer.stop())
+            XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try httpClient.syncShutdown())
         }
         do {
-            let client = createAWSClient(accessKeyId: "", secretAccessKey: "", endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
-
             let bufferSize = 208*1024
             let data = Data(createRandomBuffer(45,9182, size: bufferSize))
             let filename = "testRequestStreamingFile"
@@ -976,12 +1092,13 @@ class AWSClientTests: XCTestCase {
 
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+        let client = createAWSClient(accessKeyId: "", secretAccessKey: "", endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
         defer {
             XCTAssertNoThrow(try awsServer.stop())
+            XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try httpClient.syncShutdown())
         }
         do {
-            let client = createAWSClient(accessKeyId: "", secretAccessKey: "", endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
 
             // supply buffer in 16k blocks
             let bufferSize = 145*1024
@@ -1021,11 +1138,12 @@ class AWSClientTests: XCTestCase {
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let httpClientConfig = AsyncHTTPClient.HTTPClient.Configuration(redirectConfiguration: .init(.disallow))
             let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew, configuration: httpClientConfig)
+            let client = createAWSClient(accessKeyId: "", secretAccessKey: "", serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
             defer {
                 XCTAssertNoThrow(try awsServer.stop())
+                XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try httpClient.syncShutdown())
             }
-            let client = createAWSClient(accessKeyId: "", secretAccessKey: "", serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
             let response = client.send(operation: "test", path: "/", httpMethod: "POST")
 
             try awsServer.processRaw { request in
@@ -1055,11 +1173,12 @@ class AWSClientTests: XCTestCase {
         do {
             let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew)
             let awsServer = AWSTestServer(serviceProtocol: .json)
+            let client = createAWSClient(accessKeyId: "", secretAccessKey: "", serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address, retryPolicy: ExponentialRetry(base: .milliseconds(200)), httpClientProvider: .shared(httpClient))
             defer {
                 XCTAssertNoThrow(try awsServer.stop())
+                XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try httpClient.syncShutdown())
             }
-            let client = createAWSClient(accessKeyId: "", secretAccessKey: "", serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address, retryPolicy: ExponentialRetry(base: .milliseconds(200)), httpClientProvider: .shared(httpClient))
             let response = client.send(operation: "test", path: "/", httpMethod: "POST")
 
             var count = 0
@@ -1092,10 +1211,6 @@ class AWSClientTests: XCTestCase {
         do {
             let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew)
             let awsServer = AWSTestServer(serviceProtocol: .json)
-            defer {
-                XCTAssertNoThrow(try awsServer.stop())
-                XCTAssertNoThrow(try httpClient.syncShutdown())
-            }
             let client = createAWSClient(
                 accessKeyId: "",
                 secretAccessKey: "",
@@ -1104,6 +1219,11 @@ class AWSClientTests: XCTestCase {
                 retryPolicy: JitterRetry(),
                 httpClientProvider: .shared(httpClient)
             )
+            defer {
+                XCTAssertNoThrow(try awsServer.stop())
+                XCTAssertNoThrow(try client.syncShutdown())
+                XCTAssertNoThrow(try httpClient.syncShutdown())
+            }
             let response: EventLoopFuture<Output> = client.send(operation: "test", path: "/", httpMethod: "POST")
 
             var count = 0
@@ -1134,10 +1254,6 @@ class AWSClientTests: XCTestCase {
         do {
             let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew)
             let awsServer = AWSTestServer(serviceProtocol: .json)
-            defer {
-                XCTAssertNoThrow(try awsServer.stop())
-                XCTAssertNoThrow(try httpClient.syncShutdown())
-            }
             let client = createAWSClient(
                 accessKeyId: "",
                 secretAccessKey: "",
@@ -1146,6 +1262,11 @@ class AWSClientTests: XCTestCase {
                 retryPolicy: JitterRetry(),
                 httpClientProvider: .shared(httpClient)
             )
+            defer {
+                XCTAssertNoThrow(try awsServer.stop())
+                XCTAssertNoThrow(try client.syncShutdown())
+                XCTAssertNoThrow(try httpClient.syncShutdown())
+            }
             let response: EventLoopFuture<Output> = client.send(operation: "test", path: "/", httpMethod: "POST")
 
             try awsServer.processRaw { request in
@@ -1167,17 +1288,18 @@ class AWSClientTests: XCTestCase {
             let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 5)
             let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
             let awsServer = AWSTestServer(serviceProtocol: .json)
-            defer {
-                XCTAssertNoThrow(try httpClient.syncShutdown())
-                XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
-                XCTAssertNoThrow(try awsServer.stop())
-            }
             let client = createAWSClient(
                 accessKeyId: "",
                 secretAccessKey: "",
                 endpoint: awsServer.address,
                 httpClientProvider: .shared(httpClient)
             )
+            defer {
+                XCTAssertNoThrow(try client.syncShutdown())
+                XCTAssertNoThrow(try httpClient.syncShutdown())
+                XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
+                XCTAssertNoThrow(try awsServer.stop())
+            }
             let eventLoop = client.eventLoopGroup.next()
             let response: EventLoopFuture<Void> = client.send(operation: "test", path: "/", httpMethod: "POST", on: eventLoop)
 
@@ -1201,6 +1323,9 @@ class AWSClientTests: XCTestCase {
             }
         }
         let client = createAWSClient(middlewares: [URLAppendMiddleware()])
+        defer {
+            XCTAssertNoThrow(try client.syncShutdown())
+        }
         let request = try client.createAWSRequest(operation: "test", path: "/", httpMethod: "GET")
         XCTAssertEqual(request.url.absoluteString, "https://testService.us-east-1.amazonaws.com/test")
     }

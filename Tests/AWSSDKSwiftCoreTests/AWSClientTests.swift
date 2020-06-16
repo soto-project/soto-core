@@ -1359,14 +1359,9 @@ let response = AWSHTTPResponseImpl(
         let data = createRandomBuffer(45, 109, size: 128*1024)
 
         do {
+            let awsServer = AWSTestServer(serviceProtocol: .json)
             let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 5)
             let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
-            let awsServer = AWSTestServer(serviceProtocol: .json)
-            defer {
-                XCTAssertNoThrow(try httpClient.syncShutdown())
-                XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
-                XCTAssertNoThrow(try awsServer.stop())
-            }
             let client = AWSClient(
                 accessKeyId: "",
                 secretAccessKey: "",
@@ -1378,6 +1373,12 @@ let response = AWSHTTPResponseImpl(
                 middlewares: [AWSLoggingMiddleware()],
                 httpClientProvider: .shared(httpClient)
             )
+            defer {
+                XCTAssertNoThrow(try client.syncShutdown())
+                XCTAssertNoThrow(try httpClient.syncShutdown())
+                XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
+                XCTAssertNoThrow(try awsServer.stop())
+            }
             var count = 0
             let response: EventLoopFuture<Output> = client.send(operation: "test", path: "/", httpMethod: "GET", input: Input()) { (payload: ByteBuffer, eventLoop: EventLoop) in
                 let payloadSize = payload.readableBytes

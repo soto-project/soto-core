@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import class Foundation.JSONSerialization
+import class Foundation.JSONDecoder
 import NIO
 import NIOHTTP1
 import AWSXML
@@ -78,4 +80,201 @@ public struct AWSResponse {
         }
         self.body = responseBody
     }
+    
+    /// return new response with middleware applied
+    func applyMiddlewares(_ middlewares: [AWSServiceMiddleware]) throws -> AWSResponse {
+        var awsResponse = self
+        // apply middleware to respons
+        for middleware in middlewares {
+            awsResponse = try middleware.chain(response: awsResponse)
+        }
+        return awsResponse
+    }
+    
+    /// Generate AWSShape from AWSResponse
+    func generateOutputShape<Output: AWSDecodableShape>(operation: String) throws -> Output {
+        var payloadKey: String? = (Output.self as? AWSShapeWithPayload.Type)?.payloadPath
+
+        // if response has a payload with encoding info
+        if let payloadPath = payloadKey, let encoding = Output.getEncoding(for: payloadPath) {
+            // get CodingKey string for payload to insert in output
+            if let location = encoding.location, case .body(let name) = location {
+                payloadKey = name
+            }
+        }
+        let decoder = DictionaryDecoder()
+
+        // if required apply hypertext application language transform to body
+        let body = try getHypertextApplicationLanguageBody()
+        
+        var outputDict: [String: Any] = [:]
+        switch body {
+        case .json(let data):
+            outputDict = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] ?? [:]
+            // if payload path is set then the decode will expect the payload to decode to the relevant member variable
+            if let payloadKey = payloadKey {
+                outputDict = [payloadKey : outputDict]
+            }
+
+        case .xml(let node):
+            var outputNode = node
+            // if payload path is set then the decode will expect the payload to decode to the relevant member variable. Most CloudFront responses have this.
+            if let payloadKey = payloadKey {
+                // set output node name
+                outputNode.name = payloadKey
+                // create parent node and add output node and set output node to parent
+                let parentNode = XML.Element(name: "Container")
+                parentNode.addChild(outputNode)
+                outputNode = parentNode
+            } else if let child = node.children(of:.element)?.first as? XML.Element, (node.name == operation + "Response" && child.name == operation + "Result") {
+                outputNode = child
+            }
+
+            // add header values to xmlnode as children nodes, so they can be decoded into the response object
+            for (key, value) in self.headers {
+                let headerParams = Output.headerParams
+                if let index = headerParams.firstIndex(where: { $0.key.lowercased() == key.lowercased() }) {
+                    guard let stringValue = value as? String else { continue }
+                    let node = XML.Element(name: headerParams[index].key, stringValue: stringValue)
+                    outputNode.addChild(node)
+                }
+            }
+            // add status code to output dictionary
+            if let statusCodeParam = Output.statusCodeParam {
+                let node = XML.Element(name: statusCodeParam, stringValue: "\(self.status.code)")
+                outputNode.addChild(node)
+            }
+            return try XMLDecoder().decode(Output.self, from: outputNode)
+
+        case .raw(let payload):
+            if let payloadKey = payloadKey {
+                outputDict[payloadKey] = payload
+            }
+
+        default:
+            break
+        }
+
+        // add header values to output dictionary, so they can be decoded into the response object
+        for (key, value) in self.headers {
+            let headerParams = Output.headerParams
+            if let index = headerParams.firstIndex(where: { $0.key.lowercased() == key.lowercased() }) {
+                // check we can convert to a String. If not just put value straight into output dictionary
+                guard let stringValue = value as? String else {
+                    outputDict[headerParams[index].key] = value
+                    continue
+                }
+                if let number = Double(stringValue) {
+                    outputDict[headerParams[index].key] = number.truncatingRemainder(dividingBy: 1) == 0 ? Int(number) : number
+                } else if let boolean = Bool(stringValue) {
+                    outputDict[headerParams[index].key] = boolean
+                } else {
+                    outputDict[headerParams[index].key] = stringValue
+                }
+            }
+        }
+        // add status code to output dictionary
+        if let statusCodeParam = Output.statusCodeParam {
+            outputDict[statusCodeParam] = self.status.code
+        }
+
+        return try decoder.decode(Output.self, from: outputDict)
+    }
+    
+    /// extract error code and message from AWSResponse
+    func generateError(serviceConfig: ServiceConfig) -> Error? {
+        var errorMessage: ErrorMessage? = nil
+        struct XMLQueryError: Codable, ErrorMessage {
+            var code: String?
+            var message: String
+
+            private enum CodingKeys: String, CodingKey {
+                case code = "Code"
+                case message = "Message"
+            }
+        }
+        struct JSONError: Codable, ErrorMessage {
+            var code: String?
+            var message: String
+
+            private enum CodingKeys: String, CodingKey {
+                case code = "__type"
+                case message = "message"
+            }
+        }
+        struct RESTJSONError: Codable, ErrorMessage {
+            var code: String?
+            var message: String
+
+            private enum CodingKeys: String, CodingKey {
+                case code = "code"
+                case message = "message"
+            }
+        }
+
+        switch serviceConfig.serviceProtocol {
+        case .query:
+            guard case .xml(var element) = self.body else { break }
+            if let errors = element.elements(forName: "Errors").first {
+                element = errors
+            }
+            guard let errorElement = element.elements(forName: "Error").first else { break }
+            errorMessage = try? XMLDecoder().decode(XMLQueryError.self, from: errorElement)
+
+        case .restxml:
+            guard case .xml(var element) = self.body else { break }
+            if let error = element.elements(forName: "Error").first {
+                element = error
+            }
+            errorMessage = try? XMLDecoder().decode(XMLQueryError.self, from: element)
+
+        case .restjson:
+            guard case .json(let data) = self.body else { break }
+            errorMessage = try? JSONDecoder().decode(RESTJSONError.self, from: data)
+            if errorMessage?.code == nil {
+                errorMessage?.code = self.headers["x-amzn-ErrorType"] as? String
+            }
+
+        case .json:
+            guard case .json(let data) = self.body else { break }
+            errorMessage = try? JSONDecoder().decode(JSONError.self, from: data)
+
+        case .ec2:
+            guard case .xml(var element) = self.body else { break }
+            if let errors = element.elements(forName: "Errors").first {
+                element = errors
+            }
+            guard let errorElement = element.elements(forName: "Error").first else { break }
+            errorMessage = try? XMLDecoder().decode(XMLQueryError.self, from: errorElement)
+        }
+
+        if let errorMessage = errorMessage, var code = errorMessage.code {
+            // remove code prefix before #
+            if let index = code.firstIndex(of: "#") {
+                code = String(code[code.index(index, offsetBy: 1)...])
+            }
+            for errorType in serviceConfig.possibleErrorTypes {
+                if let error = errorType.init(errorCode: code, message: errorMessage.message) {
+                    return error
+                }
+            }
+            if let error = AWSClientError(errorCode: code, message: errorMessage.message) {
+                return error
+            }
+
+            if let error = AWSServerError(errorCode: code, message: errorMessage.message) {
+                return error
+            }
+
+            return AWSResponseError(errorCode: code, message: errorMessage.message)
+        }
+        
+        return nil
+    }
 }
+
+protocol ErrorMessage {
+    var code: String? {get set}
+    var message: String {get set}
+}
+

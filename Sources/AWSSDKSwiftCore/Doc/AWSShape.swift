@@ -176,15 +176,16 @@ public struct PayloadOptions: OptionSet {
     
     public static let allowStreaming = PayloadOptions(rawValue: 1<<0)
     public static let allowChunkedStreaming = PayloadOptions(rawValue: 1<<1)
+    public static let raw = PayloadOptions(rawValue: 1<<2)
 }
 
 /// Root AWSShape which include a payload
 public protocol AWSShapeWithPayload {
     /// The path to the object that is included in the request body
-    static var payloadPath: String { get }
-    static var options: PayloadOptions { get }
+    static var _payloadPath: String { get }
+    static var _payloadOptions: PayloadOptions { get }
 }
 
 extension AWSShapeWithPayload {
-    public static var options: PayloadOptions { return [] }
+    public static var _payloadOptions: PayloadOptions { return [] }
 }

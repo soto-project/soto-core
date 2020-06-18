@@ -138,7 +138,7 @@ class AWSResponseTests: XCTestCase {
         var output: Output? = nil
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml, raw: true))
         XCTAssertNoThrow(output = try awsResponse?.generateOutputShape(operation: "Test"))
-        XCTAssertEqual(output?.body.asString(), "{\"name\":\"hello\"}")
+        XCTAssertEqual(output?.body.asData(), Data("{\"name\":\"hello\"}".utf8))
     }
 
     //MARK: JSON tests

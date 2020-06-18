@@ -624,14 +624,9 @@ extension AWSClient {
 
     /// Validate the operation response and return a response shape
     internal func validate<Output: AWSDecodableShape>(operation operationName: String, response: AWSHTTPResponse) throws -> Output {
-        var raw: Bool
-        if (Output.self as? AWSShapeWithPayload.Type)?._payloadOptions.contains(.raw) == true &&
-            (200..<300).contains(response.status.code) {
-            raw = true
-        } else {
-            raw = false
-        }
-
+        assert((200..<300).contains(response.status.code), "Shouldn't get here if error was returned")
+        
+        let raw = (Output.self as? AWSShapeWithPayload.Type)?._payloadOptions.contains(.raw) == true
         let awsResponse = try AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol, raw: raw)
             .applyMiddlewares(serviceConfig.middlewares + middlewares)
 

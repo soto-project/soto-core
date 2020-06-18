@@ -183,7 +183,7 @@ public struct AWSResponse {
     
     /// extract error code and message from AWSResponse
     func generateError(serviceConfig: ServiceConfig) -> Error? {
-        var errorMessage: ErrorMessage? = nil
+        var apiError: APIError? = nil
         switch serviceConfig.serviceProtocol {
         case .query:
             guard case .xml(var element) = self.body else { break }
@@ -191,25 +191,25 @@ public struct AWSResponse {
                 element = errors
             }
             guard let errorElement = element.elements(forName: "Error").first else { break }
-            errorMessage = try? XMLDecoder().decode(XMLQueryError.self, from: errorElement)
+            apiError = try? XMLDecoder().decode(XMLQueryError.self, from: errorElement)
 
         case .restxml:
             guard case .xml(var element) = self.body else { break }
             if let error = element.elements(forName: "Error").first {
                 element = error
             }
-            errorMessage = try? XMLDecoder().decode(XMLQueryError.self, from: element)
+            apiError = try? XMLDecoder().decode(XMLQueryError.self, from: element)
 
         case .restjson:
             guard case .json(let data) = self.body else { break }
-            errorMessage = try? JSONDecoder().decode(RESTJSONError.self, from: data)
-            if errorMessage?.code == nil {
-                errorMessage?.code = self.headers["x-amzn-ErrorType"] as? String
+            apiError = try? JSONDecoder().decode(RESTJSONError.self, from: data)
+            if apiError?.code == nil {
+                apiError?.code = self.headers["x-amzn-ErrorType"] as? String
             }
 
         case .json:
             guard case .json(let data) = self.body else { break }
-            errorMessage = try? JSONDecoder().decode(JSONError.self, from: data)
+            apiError = try? JSONDecoder().decode(JSONError.self, from: data)
 
         case .ec2:
             guard case .xml(var element) = self.body else { break }
@@ -217,10 +217,10 @@ public struct AWSResponse {
                 element = errors
             }
             guard let errorElement = element.elements(forName: "Error").first else { break }
-            errorMessage = try? XMLDecoder().decode(XMLQueryError.self, from: errorElement)
+            apiError = try? XMLDecoder().decode(XMLQueryError.self, from: errorElement)
         }
 
-        if let errorMessage = errorMessage, var code = errorMessage.code {
+        if let errorMessage = apiError, var code = errorMessage.code {
             // remove code prefix before #
             if let index = code.firstIndex(of: "#") {
                 code = String(code[code.index(index, offsetBy: 1)...])
@@ -244,7 +244,7 @@ public struct AWSResponse {
         return nil
     }
 
-    struct XMLQueryError: Codable, ErrorMessage {
+    private struct XMLQueryError: Codable, APIError {
         var code: String?
         var message: String
 
@@ -253,7 +253,7 @@ public struct AWSResponse {
             case message = "Message"
         }
     }
-    struct JSONError: Codable, ErrorMessage {
+    private struct JSONError: Codable, APIError {
         var code: String?
         var message: String
 
@@ -262,7 +262,7 @@ public struct AWSResponse {
             case message = "message"
         }
     }
-    struct RESTJSONError: Codable, ErrorMessage {
+    private struct RESTJSONError: Codable, APIError {
         var code: String?
         var message: String
 
@@ -273,7 +273,7 @@ public struct AWSResponse {
     }
 }
 
-protocol ErrorMessage {
+fileprivate protocol APIError {
     var code: String? {get set}
     var message: String {get set}
 }

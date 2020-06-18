@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
+import class Foundation.JSONSerialization
 
 // AWS HAL services I know of are APIGateway, Pinpoint, Greengrass
 extension AWSResponse {

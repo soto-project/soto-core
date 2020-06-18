@@ -622,7 +622,7 @@ extension AWSClient {
 // response validator
 extension AWSClient {
 
-    /// Validate the operation response and return a response shape
+    /// Generate an AWS Response from  the operation HTTP response and return the output shape from it. This is only every called if the response includes a successful http status code
     internal func validate<Output: AWSDecodableShape>(operation operationName: String, response: AWSHTTPResponse) throws -> Output {
         assert((200..<300).contains(response.status.code), "Shouldn't get here if error was returned")
         
@@ -633,11 +633,11 @@ extension AWSClient {
         return try awsResponse.generateOutputShape(operation: operationName)
     }
 
-    /// create error from HTTPResponse
+    /// Create error from HTTPResponse. This is only called if we received an unsuccessful http status code.
     internal func createError(for response: AWSHTTPResponse) -> Error {
         // if we can create an AWSResponse and create an error from it return that
-        let awsResponse = try? AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol)
-        if let error = awsResponse?.generateError(serviceConfig: serviceConfig) {
+        if let awsResponse = try? AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol),
+            let error = awsResponse.generateError(serviceConfig: serviceConfig) {
             return error
         } else {
             // else return "Unhandled error message" with rawBody attached

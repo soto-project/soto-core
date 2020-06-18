@@ -184,34 +184,6 @@ public struct AWSResponse {
     /// extract error code and message from AWSResponse
     func generateError(serviceConfig: ServiceConfig) -> Error? {
         var errorMessage: ErrorMessage? = nil
-        struct XMLQueryError: Codable, ErrorMessage {
-            var code: String?
-            var message: String
-
-            private enum CodingKeys: String, CodingKey {
-                case code = "Code"
-                case message = "Message"
-            }
-        }
-        struct JSONError: Codable, ErrorMessage {
-            var code: String?
-            var message: String
-
-            private enum CodingKeys: String, CodingKey {
-                case code = "__type"
-                case message = "message"
-            }
-        }
-        struct RESTJSONError: Codable, ErrorMessage {
-            var code: String?
-            var message: String
-
-            private enum CodingKeys: String, CodingKey {
-                case code = "code"
-                case message = "message"
-            }
-        }
-
         switch serviceConfig.serviceProtocol {
         case .query:
             guard case .xml(var element) = self.body else { break }
@@ -270,6 +242,34 @@ public struct AWSResponse {
         }
         
         return nil
+    }
+
+    struct XMLQueryError: Codable, ErrorMessage {
+        var code: String?
+        var message: String
+
+        private enum CodingKeys: String, CodingKey {
+            case code = "Code"
+            case message = "Message"
+        }
+    }
+    struct JSONError: Codable, ErrorMessage {
+        var code: String?
+        var message: String
+
+        private enum CodingKeys: String, CodingKey {
+            case code = "__type"
+            case message = "message"
+        }
+    }
+    struct RESTJSONError: Codable, ErrorMessage {
+        var code: String?
+        var message: String
+
+        private enum CodingKeys: String, CodingKey {
+            case code = "code"
+            case message = "message"
+        }
     }
 }
 

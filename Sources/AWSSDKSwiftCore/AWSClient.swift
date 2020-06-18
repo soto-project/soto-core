@@ -432,8 +432,8 @@ extension AWSClient {
 
     internal func verifyStream(operation: String, payload: AWSPayload, input: AWSShapeWithPayload.Type) {
         guard case .stream(let reader) = payload.payload else { return }
-        precondition(input.options.contains(.allowStreaming), "\(operation) does not allow streaming of data")
-        precondition(reader.size != nil || input.options.contains(.allowChunkedStreaming), "\(operation) does not allow chunked streaming of data. Please supply a data size.")
+        precondition(input._payloadOptions.contains(.allowStreaming), "\(operation) does not allow streaming of data")
+        precondition(reader.size != nil || input._payloadOptions.contains(.allowChunkedStreaming), "\(operation) does not allow chunked streaming of data. Please supply a data size.")
     }
 
     internal func createAWSRequest<Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
@@ -490,7 +490,7 @@ extension AWSClient {
         switch serviceConfig.serviceProtocol {
         case .json, .restjson:
             if let shapeWithPayload = Input.self as? AWSShapeWithPayload.Type {
-                let payload = shapeWithPayload.payloadPath
+                let payload = shapeWithPayload._payloadPath
                 if let payloadBody = mirror.getAttribute(forKey: payload) {
                     switch payloadBody {
                     case let awsPayload as AWSPayload:
@@ -528,7 +528,7 @@ extension AWSClient {
 
         case .restxml:
             if let shapeWithPayload = Input.self as? AWSShapeWithPayload.Type {
-                let payload = shapeWithPayload.payloadPath
+                let payload = shapeWithPayload._payloadPath
                 if let payloadBody = mirror.getAttribute(forKey: payload) {
                     switch payloadBody {
                     case let awsPayload as AWSPayload:
@@ -624,15 +624,17 @@ extension AWSClient {
 
     /// Validate the operation response and return a response shape
     internal func validate<Output: AWSDecodableShape>(operation operationName: String, response: AWSHTTPResponse) throws -> Output {
-        var raw: Bool = false
-        var payloadKey: String? = (Output.self as? AWSShapeWithPayload.Type)?.payloadPath
+        var raw: Bool
+        if (Output.self as? AWSShapeWithPayload.Type)?._payloadOptions.contains(.raw) == true &&
+            (200..<300).contains(response.status.code) {
+            raw = true
+        } else {
+            raw = false
+        }
+        var payloadKey: String? = (Output.self as? AWSShapeWithPayload.Type)?._payloadPath
 
         // if response has a payload with encoding info
         if let payloadPath = payloadKey, let encoding = Output.getEncoding(for: payloadPath) {
-            // is payload raw
-            if case .blob = encoding.shapeEncoding, (200..<300).contains(response.status.code) {
-                raw = true
-            }
             // get CodingKey string for payload to insert in output
             if let location = encoding.location, case .body(let name) = location {
                 payloadKey = name

@@ -64,7 +64,7 @@ class AWSClientTests: XCTestCase {
     }
 
     struct F: AWSEncodableShape & AWSShapeWithPayload {
-        public static let payloadPath: String = "fooParams"
+        public static let _payloadPath: String = "fooParams"
 
         public let fooParams: E?
 
@@ -249,7 +249,7 @@ class AWSClientTests: XCTestCase {
             let string: String
         }
         struct Object2: AWSEncodableShape & AWSShapeWithPayload {
-            static var payloadPath = "payload"
+            static var _payloadPath = "payload"
             let payload: AWSPayload
             private enum CodingKeys: CodingKey {}
         }
@@ -487,7 +487,7 @@ class AWSClientTests: XCTestCase {
             let number: Int
         }
         struct Input: AWSEncodableShape & AWSShapeWithPayload {
-            public static let payloadPath: String = "payload"
+            public static let _payloadPath: String = "payload"
             let payload: Payload
         }
         let xmlClient = createAWSClient(serviceProtocol: .restxml)
@@ -532,7 +532,7 @@ class AWSClientTests: XCTestCase {
     func testValidateXMLCodablePayloadResponse() {
         class Output : AWSDecodableShape & AWSShapeWithPayload {
             static let _encoding = [AWSMemberEncoding(label: "contentType", location: .header(locationName: "content-type"))]
-            static let payloadPath: String = "name"
+            static let _payloadPath: String = "name"
             let name : String
             let contentType: String
 
@@ -561,10 +561,8 @@ let response = AWSHTTPResponseImpl(
 
     func testValidateXMLRawPayloadResponse() {
         class Output : AWSDecodableShape, AWSShapeWithPayload {
-            static let payloadPath: String = "body"
-            public static var _encoding = [
-                AWSMemberEncoding(label: "body", encoding: .blob)
-            ]
+            static let _payloadPath: String = "body"
+            static let _payloadOptions: PayloadOptions = .raw
             let body : AWSPayload
         }
         let xmlClient = createAWSClient(serviceProtocol: .restxml)
@@ -647,7 +645,7 @@ let response = AWSHTTPResponseImpl(
             let name : String
         }
         struct Output : AWSDecodableShape & AWSShapeWithPayload {
-            static let payloadPath: String = "output2"
+            static let _payloadPath: String = "output2"
             let output2 : Output2
         }
         let jsonClient = createAWSClient(serviceProtocol: .json(version: "1.1"))
@@ -669,10 +667,10 @@ let response = AWSHTTPResponseImpl(
 
     func testValidateJSONRawPayloadResponse() {
         struct Output : AWSDecodableShape, AWSShapeWithPayload {
-            static let payloadPath: String = "body"
+            static let _payloadPath: String = "body"
+            static let _payloadOptions: PayloadOptions = .raw
             public static var _encoding = [
                 AWSMemberEncoding(label: "contentType", location: .header(locationName: "content-type")),
-                AWSMemberEncoding(label: "body", encoding: .blob)
             ]
             let body : AWSPayload
         }
@@ -753,7 +751,7 @@ let response = AWSHTTPResponseImpl(
             let data: Data
         }
         struct J: AWSEncodableShape & AWSShapeWithPayload {
-            public static let payloadPath: String = "dataContainer"
+            public static let _payloadPath: String = "dataContainer"
             let dataContainer: DataContainer
         }
         let jsonClient = createAWSClient(serviceProtocol: .json(version: "1.1"))
@@ -775,10 +773,8 @@ let response = AWSHTTPResponseImpl(
 
     func testPayloadDataInResponse() {
         struct Response: AWSDecodableShape, AWSShapeWithPayload {
-            public static let payloadPath: String = "payload"
-            public static var _encoding = [
-                AWSMemberEncoding(label: "payload", encoding: .blob),
-            ]
+            public static let _payloadPath: String = "payload"
+            public static let _payloadOptions: PayloadOptions = .raw
             let payload: AWSPayload
         }
         let jsonClient = createAWSClient(serviceProtocol: .json(version: "1.1"))
@@ -951,8 +947,8 @@ let response = AWSHTTPResponseImpl(
 
     func testRequestStreaming(client: AWSClient, server: AWSTestServer, bufferSize: Int, blockSize: Int) throws {
         struct Input : AWSEncodableShape & AWSShapeWithPayload {
-            static var payloadPath: String = "payload"
-            static var options: PayloadOptions = [.allowStreaming]
+            static var _payloadPath: String = "payload"
+            static var _payloadOptions: PayloadOptions = [.allowStreaming, .raw]
             let payload: AWSPayload
             private enum CodingKeys: CodingKey {}
         }
@@ -1015,8 +1011,8 @@ let response = AWSHTTPResponseImpl(
 
     func testRequestStreamingTooMuchData() {
         struct Input : AWSEncodableShape & AWSShapeWithPayload {
-            static var payloadPath: String = "payload"
-            static var options: PayloadOptions = [.allowStreaming]
+            static var _payloadPath: String = "payload"
+            static var _payloadOptions: PayloadOptions = [.allowStreaming]
             let payload: AWSPayload
             private enum CodingKeys: CodingKey {}
         }
@@ -1049,8 +1045,8 @@ let response = AWSHTTPResponseImpl(
 
     func testRequestStreamingFile() {
         struct Input : AWSEncodableShape & AWSShapeWithPayload {
-            static var payloadPath: String = "payload"
-            static var options: PayloadOptions = [.allowStreaming]
+            static var _payloadPath: String = "payload"
+            static var _payloadOptions: PayloadOptions = [.allowStreaming]
             let payload: AWSPayload
             private enum CodingKeys: CodingKey {}
         }
@@ -1103,8 +1099,8 @@ let response = AWSHTTPResponseImpl(
 
     func testRequestChunkedStreaming() {
         struct Input : AWSEncodableShape & AWSShapeWithPayload {
-            static var payloadPath: String = "payload"
-            static var options: PayloadOptions = [.allowStreaming, .allowChunkedStreaming]
+            static var _payloadPath: String = "payload"
+            static var _payloadOptions: PayloadOptions = [.allowStreaming, .allowChunkedStreaming, .raw]
             let payload: AWSPayload
             private enum CodingKeys: CodingKey {}
         }

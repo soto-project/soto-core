@@ -21,7 +21,7 @@ class PayloadTests: XCTestCase {
 
     func testRequestPayload(_ payload: AWSPayload, expectedResult: String) {
         struct DataPayload: AWSEncodableShape & AWSShapeWithPayload {
-            static var payloadPath: String = "data"
+            static var _payloadPath: String = "data"
             let data: AWSPayload
 
             private enum CodingKeys: CodingKey {}
@@ -74,10 +74,8 @@ class PayloadTests: XCTestCase {
 
     func testResponsePayload() {
         struct Output : AWSDecodableShape, AWSShapeWithPayload {
-            static let payloadPath: String = "payload"
-            public static var _encoding = [
-                AWSMemberEncoding(label: "payload", encoding: .blob)
-            ]
+            static let _payloadPath: String = "payload"
+            static let _payloadOptions: PayloadOptions = .raw
             let payload: AWSPayload
         }
         do {

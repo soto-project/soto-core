@@ -72,6 +72,36 @@ public func createAWSClient(
     )
 }
 
+public func createServiceConfig(
+    region: Region? = nil,
+    partition: Partition = .aws,
+    amzTarget: String? = nil,
+    service: String = "test",
+    signingName: String? = nil,
+    serviceProtocol: ServiceProtocol = .restjson,
+    apiVersion: String = "01-01-2001",
+    endpoint: String? = nil,
+    serviceEndpoints: [String: String] = [:],
+    partitionEndpoints: [Partition: (endpoint: String, region: Region)] = [:],
+    possibleErrorTypes: [AWSErrorType.Type] = [],
+    middlewares: [AWSServiceMiddleware] = []) -> ServiceConfig
+{
+    ServiceConfig(
+        region: region,
+        partition: partition,
+        amzTarget: amzTarget,
+        service: service,
+        signingName: signingName,
+        serviceProtocol: serviceProtocol,
+        apiVersion: apiVersion,
+        endpoint: endpoint,
+        serviceEndpoints: serviceEndpoints,
+        partitionEndpoints: partitionEndpoints,
+        possibleErrorTypes: possibleErrorTypes,
+        middlewares: middlewares)
+}
+
+
 // create a buffer of random values. Will always create the same given you supply the same z and w values
 // Random number generator from https://www.codeproject.com/Articles/25172/Simple-Random-Number-Generation
 public func createRandomBuffer(_ w: UInt, _ z: UInt, size: Int) -> [UInt8] {

@@ -163,7 +163,7 @@ public final class AWSClient {
             partitionEndpoints: partitionEndpoints,
             possibleErrorTypes: possibleErrorTypes,
             middlewares: middlewares)
-        
+
         var credentials: StaticCredential? = nil
         if let accessKeyId = accessKeyId, let secretAccessKey = secretAccessKey {
             credentials = StaticCredential(accessKeyId: accessKeyId, secretAccessKey: secretAccessKey, sessionToken: sessionToken)
@@ -176,11 +176,11 @@ public final class AWSClient {
             middlewares: [],
             httpClientProvider: httpClientProvider)
     }
-    
+
     deinit {
         assert(self.isShutdown.load(), "AWSClient not shut down before the deinit. Please call client.syncShutdown() when no longer needed.")
     }
-    
+
     public func syncShutdown() throws {
         guard self.isShutdown.compareAndExchange(expected: false, desired: true) else {
             throw ClientError.alreadyShutdown
@@ -622,222 +622,32 @@ extension AWSClient {
 // response validator
 extension AWSClient {
 
-    /// Validate the operation response and return a response shape
+    /// Generate an AWS Response from  the operation HTTP response and return the output shape from it. This is only every called if the response includes a successful http status code
     internal func validate<Output: AWSDecodableShape>(operation operationName: String, response: AWSHTTPResponse) throws -> Output {
-        var raw: Bool
-        if (Output.self as? AWSShapeWithPayload.Type)?._payloadOptions.contains(.raw) == true &&
-            (200..<300).contains(response.status.code) {
-            raw = true
-        } else {
-            raw = false
-        }
-        var payloadKey: String? = (Output.self as? AWSShapeWithPayload.Type)?._payloadPath
+        assert((200..<300).contains(response.status.code), "Shouldn't get here if error was returned")
+        
+        let raw = (Output.self as? AWSShapeWithPayload.Type)?._payloadOptions.contains(.raw) == true
+        let awsResponse = try AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol, raw: raw)
+            .applyMiddlewares(serviceConfig.middlewares + middlewares)
 
-        // if response has a payload with encoding info
-        if let payloadPath = payloadKey, let encoding = Output.getEncoding(for: payloadPath) {
-            // get CodingKey string for payload to insert in output
-            if let location = encoding.location, case .body(let name) = location {
-                payloadKey = name
-            }
-        }
-
-        var awsResponse = try AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol, raw: raw)
-
-        // do we need to fix up the response before processing it
-        for middleware in serviceConfig.middlewares + middlewares {
-            awsResponse = try middleware.chain(response: awsResponse)
-        }
-
-        awsResponse = try hypertextApplicationLanguageProcess(response: awsResponse)
-
-        let decoder = DictionaryDecoder()
-
-        var outputDict: [String: Any] = [:]
-        switch awsResponse.body {
-        case .json(let data):
-            outputDict = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] ?? [:]
-            // if payload path is set then the decode will expect the payload to decode to the relevant member variable
-            if let payloadKey = payloadKey {
-                outputDict = [payloadKey : outputDict]
-            }
-
-        case .xml(let node):
-            var outputNode = node
-            // if payload path is set then the decode will expect the payload to decode to the relevant member variable. Most CloudFront responses have this.
-            if let payloadKey = payloadKey {
-                // set output node name
-                outputNode.name = payloadKey
-                // create parent node and add output node and set output node to parent
-                let parentNode = XML.Element(name: "Container")
-                parentNode.addChild(outputNode)
-                outputNode = parentNode
-            } else if let child = node.children(of:.element)?.first as? XML.Element, (node.name == operationName + "Response" && child.name == operationName + "Result") {
-                outputNode = child
-            }
-
-            // add header values to xmlnode as children nodes, so they can be decoded into the response object
-            for (key, value) in awsResponse.headers {
-                let headerParams = Output.headerParams
-                if let index = headerParams.firstIndex(where: { $0.key.lowercased() == key.lowercased() }) {
-                    guard let stringValue = value as? String else { continue }
-                    let node = XML.Element(name: headerParams[index].key, stringValue: stringValue)
-                    outputNode.addChild(node)
-                }
-            }
-            // add status code to output dictionary
-            if let statusCodeParam = Output.statusCodeParam {
-                let node = XML.Element(name: statusCodeParam, stringValue: "\(response.status.code)")
-                outputNode.addChild(node)
-            }
-            return try XMLDecoder().decode(Output.self, from: outputNode)
-
-        case .raw(let payload):
-            if let payloadKey = payloadKey {
-                outputDict[payloadKey] = payload
-            }
-
-        default:
-            break
-        }
-
-        // add header values to output dictionary, so they can be decoded into the response object
-        for (key, value) in awsResponse.headers {
-            let headerParams = Output.headerParams
-            if let index = headerParams.firstIndex(where: { $0.key.lowercased() == key.lowercased() }) {
-                // check we can convert to a String. If not just put value straight into output dictionary
-                guard let stringValue = value as? String else {
-                    outputDict[headerParams[index].key] = value
-                    continue
-                }
-                if let number = Double(stringValue) {
-                    outputDict[headerParams[index].key] = number.truncatingRemainder(dividingBy: 1) == 0 ? Int(number) : number
-                } else if let boolean = Bool(stringValue) {
-                    outputDict[headerParams[index].key] = boolean
-                } else {
-                    outputDict[headerParams[index].key] = stringValue
-                }
-            }
-        }
-        // add status code to output dictionary
-        if let statusCodeParam = Output.statusCodeParam {
-            outputDict[statusCodeParam] = response.status.code
-        }
-
-        return try decoder.decode(Output.self, from: outputDict)
+        return try awsResponse.generateOutputShape(operation: operationName)
     }
 
+    /// Create error from HTTPResponse. This is only called if we received an unsuccessful http status code.
     internal func createError(for response: AWSHTTPResponse) -> Error {
-        var errorMessage: ErrorMessage? = nil
-        do {
-            let awsResponse = try AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol)
-            struct XMLError: Codable, ErrorMessage {
-                var code: String?
-                var message: String
-
-                private enum CodingKeys: String, CodingKey {
-                    case code = "Code"
-                    case message = "Message"
-                }
+        // if we can create an AWSResponse and create an error from it return that
+        if let awsResponse = try? AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol),
+            let error = awsResponse.generateError(serviceConfig: serviceConfig) {
+            return error
+        } else {
+            // else return "Unhandled error message" with rawBody attached
+            var rawBodyString: String? = nil
+            if var body = response.body {
+                rawBodyString = body.readString(length: body.readableBytes)
             }
-            struct QueryError: Codable, ErrorMessage {
-                var code: String?
-                var message: String
-
-                private enum CodingKeys: String, CodingKey {
-                    case code = "Code"
-                    case message = "Message"
-                }
-            }
-            struct JSONError: Codable, ErrorMessage {
-                var code: String?
-                var message: String
-
-                private enum CodingKeys: String, CodingKey {
-                    case code = "__type"
-                    case message = "message"
-                }
-            }
-            struct RESTJSONError: Codable, ErrorMessage {
-                var code: String?
-                var message: String
-
-                private enum CodingKeys: String, CodingKey {
-                    case code = "code"
-                    case message = "message"
-                }
-            }
-
-            switch serviceConfig.serviceProtocol {
-            case .query:
-                guard case .xml(var element) = awsResponse.body else { break }
-                if let errors = element.elements(forName: "Errors").first {
-                    element = errors
-                }
-                guard let errorElement = element.elements(forName: "Error").first else { break }
-                errorMessage = try? XMLDecoder().decode(QueryError.self, from: errorElement)
-
-            case .restxml:
-                guard case .xml(var element) = awsResponse.body else { break }
-                if let error = element.elements(forName: "Error").first {
-                    element = error
-                }
-                errorMessage = try? XMLDecoder().decode(XMLError.self, from: element)
-
-            case .restjson:
-                guard case .json(let data) = awsResponse.body else { break }
-                errorMessage = try? JSONDecoder().decode(RESTJSONError.self, from: data)
-                if errorMessage?.code == nil {
-                    errorMessage?.code = awsResponse.headers["x-amzn-ErrorType"] as? String
-                }
-
-            case .json:
-                guard case .json(let data) = awsResponse.body else { break }
-                errorMessage = try? JSONDecoder().decode(JSONError.self, from: data)
-
-            case .ec2:
-                guard case .xml(var element) = awsResponse.body else { break }
-                if let errors = element.elements(forName: "Errors").first {
-                    element = errors
-                }
-                guard let errorElement = element.elements(forName: "Error").first else { break }
-                errorMessage = try? XMLDecoder().decode(QueryError.self, from: errorElement)
-            }
-
-        } catch {
+            return AWSError(statusCode: response.status, message: "Unhandled Error", rawBody: rawBodyString)
         }
-
-        if let errorMessage = errorMessage, var code = errorMessage.code {
-            // remove code prefix before #
-            if let index = code.firstIndex(of: "#") {
-                code = String(code[code.index(index, offsetBy: 1)...])
-            }
-            for errorType in serviceConfig.possibleErrorTypes {
-                if let error = errorType.init(errorCode: code, message: errorMessage.message) {
-                    return error
-                }
-            }
-            if let error = AWSClientError(errorCode: code, message: errorMessage.message) {
-                return error
-            }
-
-            if let error = AWSServerError(errorCode: code, message: errorMessage.message) {
-                return error
-            }
-
-            return AWSResponseError(errorCode: code, message: errorMessage.message)
-        }
-
-        var rawBodyString: String? = nil
-        if var body = response.body {
-            rawBodyString = body.readString(length: body.readableBytes)
-        }
-        return AWSError(statusCode: response.status, message: errorMessage?.message ?? "Unhandled Error", rawBody: rawBodyString)
     }
-}
-
-protocol ErrorMessage {
-    var code: String? {get set}
-    var message: String {get set}
 }
 
 extension AWSClient.ClientError: CustomStringConvertible {

@@ -12,16 +12,16 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
+import class Foundation.JSONSerialization
 
 // AWS HAL services I know of are APIGateway, Pinpoint, Greengrass
-extension AWSClient {
+extension AWSResponse {
     /// process hal+json date. Extract properties from HAL
-    func hypertextApplicationLanguageProcess(response: AWSResponse) throws -> AWSResponse {
-        guard case .json(let data) = response.body,
-            let contentType = response.headers["Content-Type"] as? String,
+    func getHypertextApplicationLanguageBody() throws -> Body {
+        guard case .json(let data) = self.body,
+            let contentType = self.headers["Content-Type"] as? String,
             contentType.contains("hal+json") else {
-                return response
+                return self.body
         }
         
         // extract embedded resources from HAL
@@ -29,16 +29,14 @@ extension AWSClient {
         guard var dictionary = json as? [String: Any],
             let embedded = dictionary["_embedded"],
             let embeddedDictionary = embedded as? [String: Any] else {
-                return response
+                return self.body
         }
 
-        var response = response
         // remove _links and _embedded elements of dictionary to reduce the size of the new dictionary
         dictionary["_links"] = nil
         dictionary["_embedded"] = nil
         // merge embedded resources into original dictionary
         dictionary.merge(embeddedDictionary) { first,_ in return first }
-        response.body = .json(try JSONSerialization.data(withJSONObject: dictionary, options: []))
-        return response
+        return .json(try JSONSerialization.data(withJSONObject: dictionary, options: []))
     }
 }

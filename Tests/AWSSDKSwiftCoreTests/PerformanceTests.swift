@@ -90,7 +90,7 @@ class PerformanceTests: XCTestCase {
                     _ = try client.createAWSRequest(operation: "Test", path: "/", httpMethod: "POST", input: request)
                 }
             } catch {
-                XCTFail(error.localizedDescription)
+                XCTFail("\(error)")
             }
         }
     }
@@ -115,7 +115,7 @@ class PerformanceTests: XCTestCase {
                     _ = try client.createAWSRequest(operation: "Test", path: "/", httpMethod: "POST", input: request)
                 }
             } catch {
-                XCTFail(error.localizedDescription)
+                XCTFail("\(error)")
             }
         }
     }
@@ -140,7 +140,7 @@ class PerformanceTests: XCTestCase {
                     _ = try client.createAWSRequest(operation: "Test", path: "/", httpMethod: "POST", input: request)
                 }
             } catch {
-                XCTFail(error.localizedDescription)
+                XCTFail("\(error)")
             }
         }
     }
@@ -165,7 +165,7 @@ class PerformanceTests: XCTestCase {
                     _ = try client.createAWSRequest(operation: "Test", path: "/", httpMethod: "POST", input: request)
                 }
             } catch {
-                XCTFail(error.localizedDescription)
+                XCTFail("\(error)")
             }
         }
     }
@@ -190,7 +190,7 @@ class PerformanceTests: XCTestCase {
                     _ = try client.createAWSRequest(operation: "Test", path: "/", httpMethod: "POST", input: request)
                 }
             } catch {
-                XCTFail(error.localizedDescription)
+                XCTFail("\(error)")
             }
         }
     }
@@ -215,7 +215,7 @@ class PerformanceTests: XCTestCase {
                     _ = try client.createAWSRequest(operation: "Test", path: "/", httpMethod: "POST", input: request)
                 }
             } catch {
-                XCTFail(error.localizedDescription)
+                XCTFail("\(error)")
             }
         }
     }
@@ -293,16 +293,6 @@ class PerformanceTests: XCTestCase {
 
     func testValidateXMLResponse() {
         guard Self.enableTimingTests == true else { return }
-        let client = AWSClient(
-            region: .useast1,
-            service:"Test",
-            serviceProtocol: .restxml,
-            apiVersion: "1.0",
-            httpClientProvider: .createNew
-        )
-        defer {
-            XCTAssertNoThrow(try client.syncShutdown())
-        }
         var buffer = ByteBufferAllocator().buffer(capacity: 0)
         buffer.writeString("<Output><item1>Hello</item1><item2>5</item2><item3>3.141</item3><item4>2001-12-23T15:34:12.590Z</item4><item5>3</item5><item5>6</item5><item5>325</item5></Output>")
         let response = HTTPClient.Response(
@@ -311,29 +301,21 @@ class PerformanceTests: XCTestCase {
             headers: HTTPHeaders(),
             body: buffer
         )
+
         measure {
             do {
                 for _ in 0..<1000 {
-                    let _: StandardResponse = try client.validate(operation: "Output", response: response)
+                    let awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml, raw: false)
+                    let _: StandardResponse = try awsResponse.generateOutputShape(operation: "Test")
                 }
             } catch {
-                XCTFail(error.localizedDescription)
+                XCTFail("\(error)")
             }
         }
     }
 
     func testValidateJSONResponse() {
         guard Self.enableTimingTests == true else { return }
-        let client = AWSClient(
-            region: .useast1,
-            service:"Test",
-            serviceProtocol: .restjson,
-            apiVersion: "1.0",
-            httpClientProvider: .createNew
-        )
-        defer {
-            XCTAssertNoThrow(try client.syncShutdown())
-        }
         var buffer = ByteBufferAllocator().buffer(capacity: 0)
         buffer.writeString("{\"item1\":\"Hello\", \"item2\":5, \"item3\":3.14, \"item4\":\"2001-12-23T15:34:12.590Z\", \"item5\": [1,56,3,7]}")
         let response = HTTPClient.Response(
@@ -345,10 +327,11 @@ class PerformanceTests: XCTestCase {
         measure {
             do {
                 for _ in 0..<1000 {
-                    let _: StandardResponse = try client.validate(operation: "Output", response: response)
+                    let awsResponse = try AWSResponse(from: response, serviceProtocol: .restjson, raw: false)
+                    let _: StandardResponse = try awsResponse.generateOutputShape(operation: "Test")
                 }
             } catch {
-                XCTFail(error.localizedDescription)
+                XCTFail("\(error)")
             }
         }
     }

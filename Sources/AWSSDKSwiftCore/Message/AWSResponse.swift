@@ -93,7 +93,7 @@ public struct AWSResponse {
     
     /// Generate AWSShape from AWSResponse
     func generateOutputShape<Output: AWSDecodableShape>(operation: String) throws -> Output {
-        var payloadKey: String? = (Output.self as? AWSShapeWithPayload.Type)?.payloadPath
+        var payloadKey: String? = (Output.self as? AWSShapeWithPayload.Type)?._payloadPath
 
         // if response has a payload with encoding info
         if let payloadPath = payloadKey, let encoding = Output.getEncoding(for: payloadPath) {

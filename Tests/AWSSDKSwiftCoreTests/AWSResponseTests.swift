@@ -99,7 +99,7 @@ class AWSResponseTests: XCTestCase {
     func testValidateXMLCodablePayloadResponse() {
         class Output : AWSDecodableShape & AWSShapeWithPayload {
             static let _encoding = [AWSMemberEncoding(label: "contentType", location: .header(locationName: "content-type"))]
-            static let payloadPath: String = "name"
+            static let _payloadPath: String = "name"
             let name : String
             let contentType: String
 
@@ -124,10 +124,8 @@ class AWSResponseTests: XCTestCase {
 
     func testValidateXMLRawPayloadResponse() {
         class Output : AWSDecodableShape, AWSShapeWithPayload {
-            static let payloadPath: String = "body"
-            public static var _encoding = [
-                AWSMemberEncoding(label: "body", encoding: .blob)
-            ]
+            static let _payloadPath: String = "body"
+            static let _payloadOptions: PayloadOptions = .raw
             let body : AWSPayload
         }
         let response = AWSHTTPResponseImpl(
@@ -167,7 +165,7 @@ class AWSResponseTests: XCTestCase {
             let name : String
         }
         struct Output : AWSDecodableShape & AWSShapeWithPayload {
-            static let payloadPath: String = "output2"
+            static let _payloadPath: String = "output2"
             let output2 : Output2
         }
         let response = AWSHTTPResponseImpl(
@@ -185,10 +183,10 @@ class AWSResponseTests: XCTestCase {
 
     func testValidateJSONRawPayloadResponse() {
         struct Output : AWSDecodableShape, AWSShapeWithPayload {
-            static let payloadPath: String = "body"
+            static let _payloadPath: String = "body"
+            static let _payloadOptions: PayloadOptions = .raw
             public static var _encoding = [
                 AWSMemberEncoding(label: "contentType", location: .header(locationName: "content-type")),
-                AWSMemberEncoding(label: "body", encoding: .blob)
             ]
             let body : AWSPayload
         }

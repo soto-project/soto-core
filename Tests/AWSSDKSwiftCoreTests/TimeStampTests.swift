@@ -97,20 +97,15 @@ class TimeStampTests: XCTestCase {
     }
 
     func testEncodeHTTPHeaderToJSON() {
-        do {
-            struct A: AWSEncodableShape {
-                @Coding<HTTPHeaderTimeStampCoder> var date: TimeStamp
-            }
-            let a = A(date: TimeStamp("2019-05-01T00:00:00.001Z")!)
-            let client = createAWSClient()
-            defer {
-                XCTAssertNoThrow(try client.syncShutdown())
-            }
-            let request = try client.createAWSRequest(operation: "test", path: "/", httpMethod: "GET", input: a)
-            XCTAssertEqual(request.body.asString(), "{\"date\":\"Wed, 1 May 2019 00:00:00 GMT\"}")
-        } catch {
-            XCTFail("\(error)")
+        struct A: AWSEncodableShape {
+            @Coding<HTTPHeaderTimeStampCoder> var date: TimeStamp
         }
+        let a = A(date: TimeStamp("2019-05-01T00:00:00.001Z")!)
+        let config = createServiceConfig()
+        
+        var request: AWSRequest?
+        XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", httpMethod: "GET", input: a, configuration: config))
+        XCTAssertEqual(request?.body.asString(), "{\"date\":\"Wed, 1 May 2019 00:00:00 GMT\"}")
     }
 
     func testEncodeUnixEpochToJSON() {

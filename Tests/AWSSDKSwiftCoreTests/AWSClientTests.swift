@@ -93,18 +93,16 @@ class AWSClientTests: XCTestCase {
         }
     }
 
-    func testPartitionEndpoints() throws {
-        let client = createAWSClient(
+    func testPartitionEndpoints() {
+        let config = createServiceConfig(
             serviceEndpoints: ["aws-global":"service.aws.amazon.com"],
-            partitionEndpoints: [.aws: (endpoint: "aws-global", region: .euwest1)]
-        )
-        defer {
-            XCTAssertNoThrow(try client.syncShutdown())
-        }
-        XCTAssertEqual(client.region, .euwest1)
-
-        let awsRequest = try client.createAWSRequest(operation: "test", path: "/", httpMethod: "GET")
-        XCTAssertEqual(awsRequest.url.absoluteString, "https://service.aws.amazon.com/")
+            partitionEndpoints: [.aws: (endpoint: "aws-global", region: .euwest1)])
+        
+        XCTAssertEqual(config.region, .euwest1)
+        
+        var request: AWSRequest?
+        XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", httpMethod: "GET", configuration: config))
+        XCTAssertEqual(request?.url.absoluteString, "https://service.aws.amazon.com/")
     }
 
     func testCreateAwsRequestWithKeywordInHeader() {
@@ -959,12 +957,18 @@ class AWSClientTests: XCTestCase {
                 return request
             }
         }
-        let client = createAWSClient(middlewares: [URLAppendMiddleware()])
-        defer {
-            XCTAssertNoThrow(try client.syncShutdown())
-        }
-        let request = try client.createAWSRequest(operation: "test", path: "/", httpMethod: "GET")
-        XCTAssertEqual(request.url.absoluteString, "https://testService.us-east-1.amazonaws.com/test")
+        
+        let config = createServiceConfig(
+            service: "testservice",
+            middlewares: [URLAppendMiddleware()])
+        var request: AWSRequest?
+        XCTAssertNoThrow(request = try AWSRequest(
+            operation: "test",
+            path: "/",
+            httpMethod: "GET",
+            configuration: config
+        ).applyMiddlewares(config.middlewares))
+        XCTAssertEqual(request?.url.absoluteString, "https://testService.us-east-1.amazonaws.com/test")
     }
 
     func testStreamingResponse() {

@@ -220,25 +220,28 @@ class PerformanceTests: XCTestCase {
         }
     }
 
-    func testUnsignedRequest() {
-        guard Self.enableTimingTests == true else { return }
-        let client = AWSClient(
-            accessKeyId: "",
-            secretAccessKey: "",
+    func testUnsignedRequest() throws {
+        try XCTSkipUnless(Self.enableTimingTests)
+        
+        let config = createServiceConfig(
             region: .useast1,
             service:"Test",
             serviceProtocol: .json(version: "1.1"),
-            apiVersion: "1.0",
-            httpClientProvider: .createNew
-        )
-        defer {
-            XCTAssertNoThrow(try client.syncShutdown())
-        }
-        let awsRequest = try! client.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET")
-        let signer = try! client.signer.wait()
+            apiVersion: "1.0")
+        
+        let request = try! AWSRequest(
+            operation: "Test",
+            path: "/",
+            httpMethod: "GET",
+            configuration: config)
+        
+        let signer = AWSSigner(
+            credentials: StaticCredential(accessKeyId: "", secretAccessKey: ""),
+            name: config.service,
+            region: config.region.rawValue)
         measure {
             for _ in 0..<1000 {
-                _ = awsRequest.createHTTPRequest(signer: signer)
+                _ = request.createHTTPRequest(signer: signer)
             }
         }
     }
@@ -257,7 +260,13 @@ class PerformanceTests: XCTestCase {
         defer {
             XCTAssertNoThrow(try client.syncShutdown())
         }
-        let awsRequest = try! client.createAWSRequest(operation: "Test", path: "/", httpMethod: "GET")
+        let awsRequest = try! AWSRequest(
+            operation: "Test",
+            path: "/",
+            httpMethod: "GET",
+            configuration: client.serviceConfig
+        ).applyMiddlewares(client.serviceConfig.middlewares + client.middlewares)
+        
         let signer = try! client.signer.wait()
         measure {
             for _ in 0..<1000 {

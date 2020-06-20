@@ -299,11 +299,15 @@ extension AWSClient {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let future: EventLoopFuture<Void> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
-            let awsRequest = try self.createAWSRequest(
-                        operation: operationName,
-                        path: path,
-                        httpMethod: httpMethod)
-            return awsRequest.createHTTPRequest(signer: signer)
+            let awsRequest = try AWSRequest(
+                operation: operationName,
+                path: path,
+                httpMethod: httpMethod,
+                configuration: self.serviceConfig)
+            return try awsRequest
+                .applyMiddlewares(self.serviceConfig.middlewares + self.middlewares)
+                .createHTTPRequest(signer: signer)
+            
         }.flatMap { request in
             return self.invoke(request, on: eventLoop)
         }.map { _ in
@@ -323,11 +327,14 @@ extension AWSClient {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
-            let awsRequest = try self.createAWSRequest(
-                        operation: operationName,
-                        path: path,
-                        httpMethod: httpMethod)
-            return awsRequest.createHTTPRequest(signer: signer)
+            let awsRequest = try AWSRequest(
+                operation: operationName,
+                path: path,
+                httpMethod: httpMethod,
+                configuration: self.serviceConfig)
+            return try awsRequest
+                .applyMiddlewares(self.serviceConfig.middlewares + self.middlewares)
+                .createHTTPRequest(signer: signer)
         }.flatMap { request in
             return self.invoke(request, on: eventLoop)
         }.flatMapThrowing { response in
@@ -405,29 +412,6 @@ extension AWSClient {
         return credentialProvider.getCredential(on: eventLoopGroup.next()).map { credential in
             return AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
         }
-    }
-
-    internal func createAWSRequest(operation operationName: String, path: String, httpMethod: String) throws -> AWSRequest {
-        var headers: [String: Any] = [:]
-
-        guard let url = URL(string: "\(serviceConfig.endpoint)\(path)"), let _ = url.host else {
-            throw AWSClient.ClientError.invalidURL("\(serviceConfig.endpoint)\(path) must specify url host and scheme")
-        }
-
-        // set x-amz-target header
-        if let target = serviceConfig.amzTarget {
-            headers["x-amz-target"] = "\(target).\(operationName)"
-        }
-
-        return try AWSRequest(
-            region: serviceConfig.region,
-            url: url,
-            serviceProtocol: serviceConfig.serviceProtocol,
-            operation: operationName,
-            httpMethod: httpMethod,
-            httpHeaders: headers,
-            body: .empty
-        ).applyMiddlewares(serviceConfig.middlewares + middlewares)
     }
 
     internal func verifyStream(operation: String, payload: AWSPayload, input: AWSShapeWithPayload.Type) {
@@ -617,6 +601,32 @@ extension AWSClient {
         }
         return query
     }
+}
+
+// request creation
+extension AWSRequest {
+    
+    internal init(operation operationName: String, path: String, httpMethod: String, configuration: ServiceConfig) throws {
+        var headers: [String: Any] = [:]
+
+        guard let url = URL(string: "\(configuration.endpoint)\(path)"), let _ = url.host else {
+            throw AWSClient.ClientError.invalidURL("\(configuration.endpoint)\(path) must specify url host and scheme")
+        }
+
+        // set x-amz-target header
+        if let target = configuration.amzTarget {
+            headers["x-amz-target"] = "\(target).\(operationName)"
+        }
+        
+        self.region = configuration.region
+        self.url = url
+        self.serviceProtocol = configuration.serviceProtocol
+        self.operation = operationName
+        self.httpMethod = httpMethod
+        self.httpHeaders = headers
+        self.body = .empty
+    }
+    
 }
 
 // response validator

@@ -155,12 +155,11 @@ class AWSClientTests: XCTestCase {
             name: config.service,
             region: config.region.rawValue)
 
-        let awsHTTPRequest = awsRequest?.createHTTPRequest(signer: signer)
-        XCTAssertNotNil(awsHTTPRequest)
-        XCTAssertEqual(awsHTTPRequest?.method, HTTPMethod.POST)
-        XCTAssertEqual(awsHTTPRequest?.headers["Host"].first, "kinesis.us-east-1.amazonaws.com")
-        XCTAssertEqual(awsHTTPRequest?.headers["Content-Type"].first, "application/x-amz-json-1.1")
-        XCTAssertEqual(awsHTTPRequest?.headers["x-amz-target"].first, "Kinesis_20131202.PutRecord")
+        let signedRequest = awsRequest?.createHTTPRequest(signer: signer)
+        XCTAssertNotNil(signedRequest)
+        XCTAssertEqual(signedRequest?.method, HTTPMethod.POST)
+        XCTAssertEqual(signedRequest?.headers["Host"].first, "kinesis.us-east-1.amazonaws.com")
+        XCTAssertEqual(signedRequest?.headers["Content-Type"].first, "application/x-amz-json-1.1")
     }
 
     func testUnsignedClient() {
@@ -177,7 +176,7 @@ class AWSClientTests: XCTestCase {
         ))
         
         let signer = AWSSigner(
-            credentials: StaticCredential(accessKeyId: "foo", secretAccessKey: "bar"),
+            credentials: StaticCredential(accessKeyId: "", secretAccessKey: ""),
             name: config.service,
             region: config.region.rawValue)
 
@@ -272,7 +271,7 @@ class AWSClientTests: XCTestCase {
         let config = createServiceConfig()
         var request: AWSRequest?
         XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input, configuration: config))
-        XCTAssertEqual(request?.url.absoluteString, "https://testService.us-east-1.amazonaws.com/?query=%3D3%2B5897%5Esdfjh%26")
+        XCTAssertEqual(request?.url.absoluteString, "https://test.us-east-1.amazonaws.com/?query=%3D3%2B5897%5Esdfjh%26")
     }
 
     func testQueryEncodedArray() {
@@ -285,7 +284,7 @@ class AWSClientTests: XCTestCase {
         
         var request: AWSRequest?
         XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input, configuration: config))
-        XCTAssertEqual(request?.url.absoluteString, "https://testService.us-east-1.amazonaws.com/?query=%3D3%2B5897%5Esdfjh%26&query=test")
+        XCTAssertEqual(request?.url.absoluteString, "https://test.us-east-1.amazonaws.com/?query=%3D3%2B5897%5Esdfjh%26&query=test")
     }
 
     func testQueryEncodedDictionary() {
@@ -877,9 +876,7 @@ class AWSClientTests: XCTestCase {
             }
         }
         
-        let config = createServiceConfig(
-            service: "testservice",
-            middlewares: [URLAppendMiddleware()])
+        let config = createServiceConfig(middlewares: [URLAppendMiddleware()])
         var request: AWSRequest?
         XCTAssertNoThrow(request = try AWSRequest(
             operation: "test",
@@ -887,7 +884,7 @@ class AWSClientTests: XCTestCase {
             httpMethod: "GET",
             configuration: config
         ).applyMiddlewares(config.middlewares))
-        XCTAssertEqual(request?.url.absoluteString, "https://testService.us-east-1.amazonaws.com/test")
+        XCTAssertEqual(request?.url.absoluteString, "https://test.us-east-1.amazonaws.com/test")
     }
 
     func testStreamingResponse() {

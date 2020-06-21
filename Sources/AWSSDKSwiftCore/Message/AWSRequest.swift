@@ -326,8 +326,6 @@ extension AWSRequest {
         self.httpMethod = httpMethod
         self.httpHeaders = headers
         self.body = body
-
-//        .applyMiddlewares(serviceConfig.middlewares + middlewares)
     }
     
     // this list of query allowed characters comes from https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html

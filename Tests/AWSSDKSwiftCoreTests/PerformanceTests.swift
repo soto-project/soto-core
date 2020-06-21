@@ -70,8 +70,8 @@ struct StandardResponse: AWSDecodableShape {
 class PerformanceTests: XCTestCase {
     @EnvironmentVariable("ENABLE_TIMING_TESTS", default: true) static var enableTimingTests: Bool
     
-    func testHeaderRequest() throws {
-        try XCTSkipUnless(Self.enableTimingTests)
+    func testHeaderRequest() {
+        guard Self.enableTimingTests == true else { return }
         let config = createServiceConfig(
             region: .useast1,
             service:"Test",
@@ -90,8 +90,8 @@ class PerformanceTests: XCTestCase {
         }
     }
 
-    func testXMLRequest() throws {
-        try XCTSkipUnless(Self.enableTimingTests)
+    func testXMLRequest() {
+        guard Self.enableTimingTests == true else { return }
         let config = createServiceConfig(
             region: .useast1,
             service:"Test",
@@ -110,8 +110,8 @@ class PerformanceTests: XCTestCase {
         }
     }
 
-    func testXMLPayloadRequest() throws {
-        try XCTSkipUnless(Self.enableTimingTests)
+    func testXMLPayloadRequest() {
+        guard Self.enableTimingTests == true else { return }
         let config = createServiceConfig(
             region: .useast1,
             service:"Test",
@@ -130,8 +130,8 @@ class PerformanceTests: XCTestCase {
         }
     }
 
-    func testJSONRequest() throws {
-        try XCTSkipUnless(Self.enableTimingTests)
+    func testJSONRequest() {
+        guard Self.enableTimingTests == true else { return }
         let config = createServiceConfig(
             region: .useast1,
             service:"Test",
@@ -150,8 +150,8 @@ class PerformanceTests: XCTestCase {
         }
     }
 
-    func testJSONPayloadRequest() throws {
-        try XCTSkipUnless(Self.enableTimingTests)
+    func testJSONPayloadRequest() {
+        guard Self.enableTimingTests == true else { return }
         let config = createServiceConfig(
             region: .useast1,
             service:"Test",
@@ -170,8 +170,8 @@ class PerformanceTests: XCTestCase {
         }
     }
 
-    func testQueryRequest() throws {
-        try XCTSkipUnless(Self.enableTimingTests)
+    func testQueryRequest() {
+        guard Self.enableTimingTests == true else { return }
         let config = createServiceConfig(
             region: .useast1,
             service:"Test",
@@ -190,8 +190,8 @@ class PerformanceTests: XCTestCase {
         }
     }
 
-    func testUnsignedRequest() throws {
-        try XCTSkipUnless(Self.enableTimingTests)
+    func testUnsignedRequest() {
+        guard Self.enableTimingTests == true else { return }
         let config = createServiceConfig(
             region: .useast1,
             service:"Test",
@@ -215,8 +215,8 @@ class PerformanceTests: XCTestCase {
         }
     }
 
-    func testSignedURLRequest() throws {
-        try XCTSkipUnless(Self.enableTimingTests)
+    func testSignedURLRequest() {
+        guard Self.enableTimingTests == true else { return }
         let client = AWSClient(
             accessKeyId: "MyAccessKeyId",
             secretAccessKey: "MySecretAccessKey",
@@ -244,8 +244,8 @@ class PerformanceTests: XCTestCase {
         }
     }
 
-    func testSignedHeadersRequest() throws {
-        try XCTSkipUnless(Self.enableTimingTests)
+    func testSignedHeadersRequest() {
+        guard Self.enableTimingTests == true else { return }
         let config = createServiceConfig(
             region: .useast1,
             service:"Test",
@@ -265,8 +265,8 @@ class PerformanceTests: XCTestCase {
         }
     }
 
-    func testValidateXMLResponse() throws {
-        try XCTSkipUnless(Self.enableTimingTests)
+    func testValidateXMLResponse() {
+        guard Self.enableTimingTests == true else { return }
         var buffer = ByteBufferAllocator().buffer(capacity: 0)
         buffer.writeString("<Output><item1>Hello</item1><item2>5</item2><item3>3.141</item3><item4>2001-12-23T15:34:12.590Z</item4><item5>3</item5><item5>6</item5><item5>325</item5></Output>")
         let response = HTTPClient.Response(
@@ -288,8 +288,8 @@ class PerformanceTests: XCTestCase {
         }
     }
 
-    func testValidateJSONResponse() throws {
-        try XCTSkipUnless(Self.enableTimingTests)
+    func testValidateJSONResponse() {
+        guard Self.enableTimingTests == true else { return }
         var buffer = ByteBufferAllocator().buffer(capacity: 0)
         buffer.writeString("{\"item1\":\"Hello\", \"item2\":5, \"item3\":3.14, \"item4\":\"2001-12-23T15:34:12.590Z\", \"item5\": [1,56,3,7]}")
         let response = HTTPClient.Response(

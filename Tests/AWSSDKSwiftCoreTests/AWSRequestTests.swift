@@ -304,24 +304,4 @@ class AWSRequestTests: XCTestCase {
         XCTAssertEqual(request?.body.asString(), "Action=Test&Array.1=entry1&Array.2=entry2&Version=2013-12-02")
     }
     
-    func testMiddlewareIsOnlyAppliedOnce() throws {
-        struct URLAppendMiddleware: AWSServiceMiddleware {
-            func chain(request: AWSRequest) throws -> AWSRequest {
-                var request = request
-                request.url.appendPathComponent("test")
-                return request
-            }
-        }
-        
-        let config = createServiceConfig(middlewares: [URLAppendMiddleware()])
-        var request: AWSRequest?
-        XCTAssertNoThrow(request = try AWSRequest(
-            operation: "test",
-            path: "/",
-            httpMethod: "GET",
-            configuration: config
-        ).applyMiddlewares(config.middlewares))
-        XCTAssertEqual(request?.url.absoluteString, "https://test.us-east-1.amazonaws.com/test")
-    }
-    
 }

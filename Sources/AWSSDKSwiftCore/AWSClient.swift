@@ -24,9 +24,8 @@ import class  Foundation.JSONSerialization
 import class  Foundation.JSONDecoder
 import struct Foundation.Data
 import struct Foundation.URL
-import struct Foundation.URLComponents
 import struct Foundation.URLQueryItem
-import struct Foundation.CharacterSet
+
 
 /// This is the workhorse of aws-sdk-swift-core. You provide it with a `AWSShape` Input object, it converts it to `AWSRequest` which is then converted
 /// to a raw `HTTPClient` Request. This is then sent to AWS. When the response from AWS is received if it is successful it is converted to a `AWSResponse`
@@ -274,12 +273,15 @@ extension AWSClient {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let future: EventLoopFuture<Void> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
-            let awsRequest = try self.createAWSRequest(
+            let awsRequest = try AWSRequest(
                         operation: operationName,
                         path: path,
                         httpMethod: httpMethod,
-                        input: input)
-            return awsRequest.createHTTPRequest(signer: signer)
+                        input: input,
+                        configuration: self.serviceConfig)
+            return try awsRequest
+                .applyMiddlewares(self.serviceConfig.middlewares + self.middlewares)
+                .createHTTPRequest(signer: signer)
         }.flatMap { request in
             return self.invoke(request, on: eventLoop)
         }.map { _ in
@@ -299,11 +301,15 @@ extension AWSClient {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let future: EventLoopFuture<Void> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
-            let awsRequest = try self.createAWSRequest(
-                        operation: operationName,
-                        path: path,
-                        httpMethod: httpMethod)
-            return awsRequest.createHTTPRequest(signer: signer)
+            let awsRequest = try AWSRequest(
+                operation: operationName,
+                path: path,
+                httpMethod: httpMethod,
+                configuration: self.serviceConfig)
+            return try awsRequest
+                .applyMiddlewares(self.serviceConfig.middlewares + self.middlewares)
+                .createHTTPRequest(signer: signer)
+            
         }.flatMap { request in
             return self.invoke(request, on: eventLoop)
         }.map { _ in
@@ -323,11 +329,14 @@ extension AWSClient {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
-            let awsRequest = try self.createAWSRequest(
-                        operation: operationName,
-                        path: path,
-                        httpMethod: httpMethod)
-            return awsRequest.createHTTPRequest(signer: signer)
+            let awsRequest = try AWSRequest(
+                operation: operationName,
+                path: path,
+                httpMethod: httpMethod,
+                configuration: self.serviceConfig)
+            return try awsRequest
+                .applyMiddlewares(self.serviceConfig.middlewares + self.middlewares)
+                .createHTTPRequest(signer: signer)
         }.flatMap { request in
             return self.invoke(request, on: eventLoop)
         }.flatMapThrowing { response in
@@ -348,12 +357,15 @@ extension AWSClient {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
-            let awsRequest = try self.createAWSRequest(
+            let awsRequest = try AWSRequest(
                         operation: operationName,
                         path: path,
                         httpMethod: httpMethod,
-                        input: input)
-            return awsRequest.createHTTPRequest(signer: signer)
+                        input: input,
+                        configuration: self.serviceConfig)
+            return try awsRequest
+                .applyMiddlewares(self.serviceConfig.middlewares + self.middlewares)
+                .createHTTPRequest(signer: signer)
         }.flatMap { request in
             return self.invoke(request, on: eventLoop)
         }.flatMapThrowing { response in
@@ -373,12 +385,15 @@ extension AWSClient {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         return credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
-            let awsRequest = try self.createAWSRequest(
-                        operation: operationName,
-                        path: path,
-                        httpMethod: httpMethod,
-                        input: input)
-            return awsRequest.createHTTPRequest(signer: signer)
+            let awsRequest = try AWSRequest(
+                operation: operationName,
+                path: path,
+                httpMethod: httpMethod,
+                input: input,
+                configuration: self.serviceConfig)
+            return try awsRequest
+                .applyMiddlewares(self.serviceConfig.middlewares + self.middlewares)
+                .createHTTPRequest(signer: signer)
         }.flatMap { request in
             return self.invoke(request, on: eventLoop, stream: stream)
         }.flatMapThrowing { response in
@@ -406,217 +421,7 @@ extension AWSClient {
             return AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
         }
     }
-
-    internal func createAWSRequest(operation operationName: String, path: String, httpMethod: String) throws -> AWSRequest {
-        var headers: [String: Any] = [:]
-
-        guard let url = URL(string: "\(serviceConfig.endpoint)\(path)"), let _ = url.host else {
-            throw AWSClient.ClientError.invalidURL("\(serviceConfig.endpoint)\(path) must specify url host and scheme")
-        }
-
-        // set x-amz-target header
-        if let target = serviceConfig.amzTarget {
-            headers["x-amz-target"] = "\(target).\(operationName)"
-        }
-
-        return try AWSRequest(
-            region: serviceConfig.region,
-            url: url,
-            serviceProtocol: serviceConfig.serviceProtocol,
-            operation: operationName,
-            httpMethod: httpMethod,
-            httpHeaders: headers,
-            body: .empty
-        ).applyMiddlewares(serviceConfig.middlewares + middlewares)
-    }
-
-    internal func verifyStream(operation: String, payload: AWSPayload, input: AWSShapeWithPayload.Type) {
-        guard case .stream(let reader) = payload.payload else { return }
-        precondition(input._payloadOptions.contains(.allowStreaming), "\(operation) does not allow streaming of data")
-        precondition(reader.size != nil || input._payloadOptions.contains(.allowChunkedStreaming), "\(operation) does not allow chunked streaming of data. Please supply a data size.")
-    }
-
-    internal func createAWSRequest<Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, input: Input) throws -> AWSRequest {
-        var headers: [String: Any] = [:]
-        var path = path
-        var body: Body = .empty
-        var queryParams: [(key:String, value:Any)] = []
-
-        // validate input parameters
-        try input.validate()
-
-        guard let baseURL = URL(string: "\(serviceConfig.endpoint)"), let _ = baseURL.host else {
-            throw ClientError.invalidURL("\(serviceConfig.endpoint) must specify url host and scheme")
-        }
-
-        // set x-amz-target header
-        if let target = serviceConfig.amzTarget {
-            headers["x-amz-target"] = "\(target).\(operationName)"
-        }
-
-        // TODO should replace with Encodable
-        let mirror = Mirror(reflecting: input)
-        var memberVariablesCount = mirror.children.count - Input._encoding.count
-
-        // extract header, query and uri params
-        for encoding in Input._encoding {
-            if let value = mirror.getAttribute(forKey: encoding.label) {
-                switch encoding.location {
-                case .header(let location):
-                    headers[location] = value
-
-                case .querystring(let location):
-                    switch value {
-                    case let array as QueryEncodableArray:
-                        array.queryEncoded.forEach { queryParams.append((key:location, value:$0)) }
-                    case let dictionary as QueryEncodableDictionary:
-                        dictionary.queryEncoded.forEach { queryParams.append($0) }
-                    default:
-                        queryParams.append((key:location, value:"\(value)"))
-                    }
-
-                case .uri(let location):
-                    path = path
-                        .replacingOccurrences(of: "{\(location)}", with: "\(value)")
-                        // percent-encode key which is part of the path
-                        .replacingOccurrences(of: "{\(location)+}", with: "\(value)".addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)!)
-
-                default:
-                    memberVariablesCount += 1
-                }
-            }
-        }
-
-        switch serviceConfig.serviceProtocol {
-        case .json, .restjson:
-            if let shapeWithPayload = Input.self as? AWSShapeWithPayload.Type {
-                let payload = shapeWithPayload._payloadPath
-                if let payloadBody = mirror.getAttribute(forKey: payload) {
-                    switch payloadBody {
-                    case let awsPayload as AWSPayload:
-                        verifyStream(operation: operationName, payload: awsPayload, input: shapeWithPayload)
-                        body = .raw(awsPayload)
-                    case let shape as AWSEncodableShape:
-                        body = .json(try shape.encodeAsJSON())
-                    default:
-                        preconditionFailure("Cannot add this as a payload")
-                    }
-                } else {
-                    body = .empty
-                }
-            } else {
-                // only include the body if there are members that are output in the body.
-                if memberVariablesCount > 0 {
-                    body = .json(try input.encodeAsJSON())
-                }
-            }
-
-        case .query:
-            var dict = try input.encodeAsQuery()
-
-            dict["Action"] = operationName
-            dict["Version"] = serviceConfig.apiVersion
-
-            switch httpMethod {
-            case "GET":
-                queryParams.append(contentsOf: dict.map {(key:$0.key, value:$0)})
-            default:
-                if let urlEncodedQueryParams = urlEncodeQueryParams(fromDictionary: dict) {
-                    body = .text(urlEncodedQueryParams)
-                }
-            }
-
-        case .restxml:
-            if let shapeWithPayload = Input.self as? AWSShapeWithPayload.Type {
-                let payload = shapeWithPayload._payloadPath
-                if let payloadBody = mirror.getAttribute(forKey: payload) {
-                    switch payloadBody {
-                    case let awsPayload as AWSPayload:
-                        verifyStream(operation: operationName, payload: awsPayload, input: shapeWithPayload)
-                        body = .raw(awsPayload)
-                    case let shape as AWSEncodableShape:
-                        var rootName: String? = nil
-                        // extract custom payload name
-                        if let encoding = Input.getEncoding(for: payload), case .body(let locationName) = encoding.location {
-                            rootName = locationName
-                        }
-                        body = .xml(try shape.encodeAsXML(rootName: rootName))
-                    default:
-                        preconditionFailure("Cannot add this as a payload")
-                    }
-                } else {
-                    body = .empty
-                }
-            } else {
-                // only include the body if there are members that are output in the body.
-                if memberVariablesCount > 0 {
-                    body = .xml(try input.encodeAsXML())
-                }
-            }
-
-        case .ec2:
-            var params = try input.encodeAsQueryForEC2()
-            params["Action"] = operationName
-            params["Version"] = serviceConfig.apiVersion
-            if let urlEncodedQueryParams = urlEncodeQueryParams(fromDictionary: params) {
-                body = .text(urlEncodedQueryParams)
-            }
-        }
-
-        guard let parsedPath = URLComponents(string: path) else {
-            throw ClientError.invalidURL("\(serviceConfig.endpoint)\(path)")
-        }
-
-        // add queries from the parsed path to the query params list
-        if let pathQueryItems = parsedPath.queryItems {
-            for item in pathQueryItems {
-                queryParams.append((key:item.name, value: item.value ?? ""))
-            }
-        }
-
-        // Build URL. Don't use URLComponents as Foundation and AWS disagree on what should be percent encoded in the query values
-        var urlString = "\(baseURL.absoluteString)\(parsedPath.path)"
-        if queryParams.count > 0 {
-            urlString.append("?")
-            urlString.append(queryParams.sorted{$0.key < $1.key}.map{"\($0.key)=\(urlEncodeQueryParam("\($0.value)"))"}.joined(separator:"&"))
-        }
-
-        guard let url = URL(string: urlString) else {
-            throw ClientError.invalidURL("\(urlString)")
-        }
-
-        return try AWSRequest(
-            region: serviceConfig.region,
-            url: url,
-            serviceProtocol: serviceConfig.serviceProtocol,
-            operation: operationName,
-            httpMethod: httpMethod,
-            httpHeaders: headers,
-            body: body
-        ).applyMiddlewares(serviceConfig.middlewares + middlewares)
-    }
-
-    // this list of query allowed characters comes from https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html
-    static let queryAllowedCharacters = CharacterSet(charactersIn:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
-
-    fileprivate func urlEncodeQueryParam(_ value: String) -> String {
-        return value.addingPercentEncoding(withAllowedCharacters: AWSClient.queryAllowedCharacters) ?? value
-    }
-
-    fileprivate func urlEncodeQueryParams(fromDictionary dict: [String:Any]) -> String? {
-        guard dict.count > 0 else {return nil}
-        var query = ""
-        let keys = Array(dict.keys).sorted()
-
-        for iterator in keys.enumerated() {
-            let value = dict[iterator.element]
-            query += iterator.element + "=" + (urlEncodeQueryParam(String(describing: value ?? "")))
-            if iterator.offset < dict.count - 1 {
-                query += "&"
-            }
-        }
-        return query
-    }
+    
 }
 
 // response validator

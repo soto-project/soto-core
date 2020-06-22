@@ -90,10 +90,10 @@ public final class NIOTSHTTPClient {
     }
 
     /// send request to HTTP client, return a future holding the Response
-    public func connect(_ request: Request, timeout: TimeAmount, on eventLoop: EventLoop?) -> EventLoopFuture<Response> {
+    public func connect(url: URL, _ request: Request, timeout: TimeAmount, on eventLoop: EventLoop?) -> EventLoopFuture<Response> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         // extract details from request URL
-        guard let url = URL(string:request.head.uri) else { return eventLoop.makeFailedFuture(HTTPError.malformedURL(url: request.head.uri)) }
+        //guard let url = URL(string:request.head.uri) else { return eventLoop.makeFailedFuture(HTTPError.malformedURL(url: request.head.uri)) }
         guard let scheme = url.scheme else { return eventLoop.makeFailedFuture(HTTPError.malformedURL(url: request.head.uri)) }
         guard let hostname = url.host else { return eventLoop.makeFailedFuture(HTTPError.malformedURL(url: request.head.uri)) }
 
@@ -248,7 +248,7 @@ extension NIOTSHTTPClient: AWSHTTPClient {
         var head = HTTPRequestHead(
           version: HTTPVersion(major: 1, minor: 1),
           method: request.method,
-          uri: request.url.absoluteString
+          uri: request.url.uri
         )
         head.headers = request.headers
 
@@ -261,9 +261,10 @@ extension NIOTSHTTPClient: AWSHTTPClient {
         case .empty:
             requestBody = nil
         }
+        let url = request.url
         let request = Request(head: head, body: requestBody)
 
-        return connect(request, timeout: timeout, on: eventLoop).map { return $0 }
+        return connect(url: url, request, timeout: timeout, on: eventLoop).map { return $0 }
     }
 }
 
@@ -271,6 +272,48 @@ extension NIOTSHTTPClient: AWSHTTPClient {
 extension NIOTSHTTPClient.Response: AWSHTTPResponse {
     public var status: HTTPResponseStatus { return head.status }
     public var headers: HTTPHeaders { return head.headers }
+}
+
+// copied from AsyncHTTPClient
+extension URL {
+    var percentEncodedPath: String {
+        if self.path.isEmpty {
+            return "/"
+        }
+        return self.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? self.path
+    }
+
+    var pathHasTrailingSlash: Bool {
+        if #available(OSX 10.11, iOS 9.0, tvOS 9.0, watchOS 2.0, *) {
+            return self.hasDirectoryPath
+        } else {
+            // Most platforms should use `self.hasDirectoryPath`, but on older darwin platforms
+            // we have this approximation instead.
+            let url = self.absoluteString
+
+            var pathEndIndex = url.index(before: url.endIndex)
+            if let queryIndex = url.firstIndex(of: "?") {
+                pathEndIndex = url.index(before: queryIndex)
+            } else if let fragmentIndex = url.suffix(from: url.firstIndex(of: "@") ?? url.startIndex).lastIndex(of: "#") {
+                pathEndIndex = url.index(before: fragmentIndex)
+            }
+
+            return url[pathEndIndex] == "/"
+        }
+    }
+
+    var uri: String {
+        var uri = self.percentEncodedPath
+        if self.pathHasTrailingSlash, uri != "/" {
+            uri += "/"
+        }
+        
+        if let query = self.query {
+            uri += "?" + query
+        }
+
+        return uri
+    }
 }
 
 #endif

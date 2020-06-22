@@ -23,40 +23,6 @@ import AWSXML
 
 class AWSClientTests: XCTestCase {
 
-    struct C: AWSEncodableShape {
-        public static var _encoding: [AWSMemberEncoding] = [
-             AWSMemberEncoding(label: "value", location: .header(locationName: "value"))
-        ]
-        let value = "<html><body><a href=\"https://redsox.com\">Test</a></body></html>"
-
-        private enum CodingKeys: String, CodingKey {
-            case value = "Value"
-        }
-    }
-
-    struct E: AWSEncodableShape & Decodable {
-        let Member = ["memberKey": "memberValue", "memberKey2" : "memberValue2"]
-
-        private enum CodingKeys: String, CodingKey {
-            case Member = "Member"
-        }
-    }
-
-    struct F: AWSEncodableShape & AWSShapeWithPayload {
-        public static let _payloadPath: String = "fooParams"
-
-        public let fooParams: E?
-
-        public init(fooParams: E? = nil) {
-            self.fooParams = fooParams
-        }
-
-        private enum CodingKeys: String, CodingKey {
-            case fooParams = "fooParams"
-        }
-    }
-
-
     func testGetCredential() {
         let client = createAWSClient(accessKeyId: "key", secretAccessKey: "secret")
         defer {
@@ -645,4 +611,31 @@ class AWSClientTests: XCTestCase {
         }
 
     }
+
+    func testMiddlewareAppliedOnce() {
+        struct URLAppendMiddleware: AWSServiceMiddleware {
+             func chain(request: AWSRequest) throws -> AWSRequest {
+                 var request = request
+                 request.url.appendPathComponent("test")
+                 return request
+             }
+         }
+
+        let awsServer = AWSTestServer(serviceProtocol: .json)
+        let client = createAWSClient(accessKeyId: "", secretAccessKey: "", endpoint: awsServer.address, middlewares: [URLAppendMiddleware()])
+        defer {
+            XCTAssertNoThrow(try client.syncShutdown())
+            XCTAssertNoThrow(try awsServer.stop())
+        }
+        
+        let response = client.send(operation: "test", path: "/", httpMethod: "POST")
+
+        XCTAssertNoThrow(try awsServer.processRaw { request in
+            XCTAssertEqual(request.uri, "/test")
+            return .result(AWSTestServer.Response.ok)
+        })
+
+        XCTAssertNoThrow(try response.wait())
+    }
+
 }

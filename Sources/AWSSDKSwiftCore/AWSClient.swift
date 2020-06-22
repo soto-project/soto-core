@@ -491,21 +491,3 @@ extension AWSClient {
         }
     }
 }
-
-protocol QueryEncodableArray {
-    var queryEncoded: [String] { get }
-}
-
-extension Array : QueryEncodableArray {
-    var queryEncoded: [String] { return self.map{ "\($0)" }}
-}
-
-protocol QueryEncodableDictionary {
-    var queryEncoded: [(key:String, entry: String)] { get }
-}
-
-extension Dictionary : QueryEncodableDictionary {
-    var queryEncoded: [(key:String, entry: String)] {
-        return self.map{ (key:"\($0.key)", value:"\($0.value)") }
-    }
-}

@@ -50,7 +50,7 @@ class AWSRequestTests: XCTestCase {
         let request = KeywordRequest(repeat: "Repeat")
         var awsRequest: AWSRequest?
         XCTAssertNoThrow(awsRequest = try AWSRequest(operation: "Keyword", path: "/", httpMethod: "POST", input: request, configuration: config))
-        XCTAssertEqual(awsRequest?.httpHeaders["repeat"] as? String, "Repeat")
+        XCTAssertEqual(awsRequest?.httpHeaders["repeat"].first, "Repeat")
         XCTAssertTrue(try XCTUnwrap(awsRequest).body.asPayload().isEmpty)
     }
 
@@ -158,30 +158,30 @@ class AWSRequestTests: XCTestCase {
         let config = createServiceConfig(serviceProtocol: .json(version: "1.1"))
         var request: AWSRequest?
         XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", httpMethod: "POST", input: object, configuration: config))
-        XCTAssertEqual(request?.getHttpHeaders()["content-type"].first, "application/x-amz-json-1.1")
+        XCTAssertEqual(request?.httpHeaders["content-type"].first, "application/x-amz-json-1.1")
 
         let config2 = createServiceConfig(serviceProtocol: .restjson)
         var request2: AWSRequest?
         XCTAssertNoThrow(request2 = try AWSRequest(operation: "test", path: "/", httpMethod: "POST", input: object, configuration: config2))
-        XCTAssertEqual(request2?.getHttpHeaders()["content-type"].first, "application/json")
+        XCTAssertEqual(request2?.httpHeaders["content-type"].first, "application/json")
         var rawRequest2: AWSRequest?
         XCTAssertNoThrow(rawRequest2 = try AWSRequest(operation: "test", path: "/", httpMethod: "POST", input: object2, configuration: config2))
-        XCTAssertEqual(rawRequest2?.getHttpHeaders()["content-type"].first, "binary/octet-stream")
+        XCTAssertEqual(rawRequest2?.httpHeaders["content-type"].first, "binary/octet-stream")
 
         let config3 = createServiceConfig(serviceProtocol: .query)
         var request3: AWSRequest?
         XCTAssertNoThrow(request3 = try AWSRequest(operation: "test", path: "/", httpMethod: "POST", input: object, configuration: config3))
-        XCTAssertEqual(request3?.getHttpHeaders()["content-type"].first, "application/x-www-form-urlencoded; charset=utf-8")
+        XCTAssertEqual(request3?.httpHeaders["content-type"].first, "application/x-www-form-urlencoded; charset=utf-8")
 
         let config4 = createServiceConfig(serviceProtocol: .ec2)
         var request4: AWSRequest?
         XCTAssertNoThrow(request4 = try AWSRequest(operation: "test", path: "/", httpMethod: "POST", input: object, configuration: config4))
-        XCTAssertEqual(request4?.getHttpHeaders()["content-type"].first, "application/x-www-form-urlencoded; charset=utf-8")
+        XCTAssertEqual(request4?.httpHeaders["content-type"].first, "application/x-www-form-urlencoded; charset=utf-8")
 
         let config5 = createServiceConfig(serviceProtocol: .restxml)
         var request5: AWSRequest?
         XCTAssertNoThrow(request5 = try AWSRequest(operation: "test", path: "/", httpMethod: "POST", input: object, configuration: config5))
-        XCTAssertEqual(request5?.getHttpHeaders()["content-type"].first, "application/octet-stream")
+        XCTAssertEqual(request5?.httpHeaders["content-type"].first, "application/octet-stream")
     }
 
     func testHeaderEncoding() {
@@ -193,7 +193,7 @@ class AWSRequestTests: XCTestCase {
         let config = createServiceConfig()
         var request: AWSRequest?
         XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input, configuration: config))
-        XCTAssertEqual(request?.httpHeaders["header-member"] as? String, "TestHeader")
+        XCTAssertEqual(request?.httpHeaders["header-member"].first, "TestHeader")
     }
 
     func testQueryEncoding() {

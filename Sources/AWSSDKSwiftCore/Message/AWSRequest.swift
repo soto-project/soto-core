@@ -18,6 +18,7 @@ import struct Foundation.URL
 import struct Foundation.Date
 import struct Foundation.Data
 import struct Foundation.CharacterSet
+import class Foundation.JSONEncoder
 import struct Foundation.URLComponents
 
 /// Object encapsulating all the information needed to generate a raw HTTP request to AWS
@@ -148,14 +149,19 @@ extension AWSRequest {
             if let value = mirror.getAttribute(forKey: encoding.label) {
                 switch encoding.location {
                 case .header(let location):
-                    headers.replaceOrAdd(name: location, value: "\(value)")
+                    switch value {
+                    case let dictionary as AWSRequestEncodableDictionary:
+                        dictionary.encoded.forEach { headers.replaceOrAdd(name: "\(location)\($0.key)", value: $0.value) }
+                    default:
+                        headers.replaceOrAdd(name: location, value: "\(value)")
+                    }
 
                 case .querystring(let location):
                     switch value {
-                    case let array as QueryEncodableArray:
-                        array.queryEncoded.forEach { queryParams.append((key:location, value:$0)) }
-                    case let dictionary as QueryEncodableDictionary:
-                        dictionary.queryEncoded.forEach { queryParams.append($0) }
+                    case let array as AWSRequestEncodableArray:
+                        array.encoded.forEach { queryParams.append((key:location, value:$0)) }
+                    case let dictionary as AWSRequestEncodableDictionary:
+                        dictionary.encoded.forEach { queryParams.append($0) }
                     default:
                         queryParams.append((key:location, value:"\(value)"))
                     }
@@ -328,20 +334,20 @@ extension AWSRequest {
     
 }
 
-fileprivate protocol QueryEncodableArray {
-    var queryEncoded: [String] { get }
+fileprivate protocol AWSRequestEncodableArray {
+    var encoded: [String] { get }
 }
 
-extension Array : QueryEncodableArray {
-    var queryEncoded: [String] { return self.map{ "\($0)" }}
+extension Array : AWSRequestEncodableArray {
+    var encoded: [String] { return self.map{ "\($0)" }}
 }
 
-fileprivate protocol QueryEncodableDictionary {
-    var queryEncoded: [(key:String, entry: String)] { get }
+fileprivate protocol AWSRequestEncodableDictionary {
+    var encoded: [(key:String, value: String)] { get }
 }
 
-extension Dictionary : QueryEncodableDictionary {
-    var queryEncoded: [(key:String, entry: String)] {
-        return self.map{ (key:"\($0.key)", value:"\($0.value)") }
+extension Dictionary : AWSRequestEncodableDictionary {
+    var encoded: [(key:String, value: String)] {
+        return self.map { (key:"\($0.key)", value:"\($0.value)") }
     }
 }

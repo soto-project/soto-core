@@ -79,20 +79,17 @@ class RuntimeCredentialProvider: CredentialProvider {
         #if os(Linux)
             // 3. if we are on linux is an ECSMetaData endpoint in the environment. Do we reach the ECSMetaDataService?
             future = future.flatMapError { (error) -> EventLoopFuture<CredentialProvider> in
-                if let ecsMetaDataClient = ECSMetaDataClient(httpClient: httpClient) {
-                    let credentialProvider = RotatingCredentialProvider(eventLoop: eventLoop, client: ecsMetaDataClient)
-                    return credentialProvider.getCredential(on: eventLoop).map { _ in
-                        // first refresh has been successful. we could access meta data!
-                        return credentialProvider
-                    }
+                let ecsMetaDataClient = ECSMetaDataClient(httpClient: httpClient)
+                let credentialProvider = RotatingCredentialProvider(client: ecsMetaDataClient)
+                return credentialProvider.getCredential(on: eventLoop).map { _ in
+                    // first refresh has been successful. we could access meta data!
+                    return credentialProvider
                 }
-                
-                return eventLoop.makeFailedFuture(error)
             }
             // 4. if we are on linux can we access the ec2 meta data service?
             .flatMapError { (error) -> EventLoopFuture<CredentialProvider> in
                 let ec2MetaDataClient = InstanceMetaDataClient(httpClient: httpClient)
-                let credentialProvider = RotatingCredentialProvider(eventLoop: eventLoop, client: ec2MetaDataClient)
+                let credentialProvider = RotatingCredentialProvider(client: ec2MetaDataClient)
                 return credentialProvider.getCredential(on: eventLoop).map { _ in
                     // first refresh has been successful. we could access meta data, let's use this credential provider
                     return credentialProvider

@@ -37,7 +37,7 @@ class MetaDataCredentialProviderTests: XCTestCase {
         defer { Environment.unset(name: ECSMetaDataClient.RelativeURIEnvironmentName) }
         
         let client = ECSMetaDataClient(httpClient: httpClient, host: "\(testServer.host):\(testServer.serverPort)")
-        let future = client!.getMetaData(on: loop)
+        let future = client.getMetaData(on: loop)
         
         let accessKeyId = "abc123"
         let secretAccessKey = "123abc"
@@ -89,7 +89,7 @@ class MetaDataCredentialProviderTests: XCTestCase {
         XCTAssertEqual(ECSMetaDataClient.RelativeURIEnvironmentName, "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI")
     }
     
-    func testECSMetaDataClientIsNotCreatedWithoutEnvVariable() {
+    func testECSMetaDataClientThrowsErrorWithoutEnvVariable() {
         let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
         
@@ -99,7 +99,15 @@ class MetaDataCredentialProviderTests: XCTestCase {
 
         Environment.unset(name: ECSMetaDataClient.RelativeURIEnvironmentName)
         
-        XCTAssertNil(ECSMetaDataClient(httpClient: httpClient, host: "localhost"))
+        let ecsClient = ECSMetaDataClient(httpClient: httpClient, host: "localhost")
+        XCTAssertThrowsError(_ = try ecsClient.getCredential(on: loop).wait()) { error in
+            switch error {
+            case MetaDataClientError.noECSMetaDataService:
+                break
+            default:
+                XCTFail()
+            }
+        }
     }
     
     // MARK: - InstanceMetaDataClient -

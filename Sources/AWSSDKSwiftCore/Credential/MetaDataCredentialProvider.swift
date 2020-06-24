@@ -48,6 +48,7 @@ extension MetaDataClient {
 enum MetaDataClientError: Error {
     case failedToDecode(underlyingError: Error)
     case unexpectedTokenResponseStatus(status: HTTPResponseStatus)
+    case noECSMetaDataService
     case couldNotReadTokenFromResponse
     case couldNotGetInstanceRoleName
     case couldNotGetInstanceMetaData
@@ -102,20 +103,20 @@ public struct ECSMetaDataClient: MetaDataClient {
         }
     }
     
-    let httpClient    : AWSHTTPClient
-    let endpointURL   : String
-    let decoder       = Self.createJSONDecoder()
+    let httpClient : AWSHTTPClient
+    let host: String
+    let decoder = Self.createJSONDecoder()
     
-    init?(httpClient: AWSHTTPClient, host: String = ECSMetaDataClient.Host) {
-        guard let relativeURL = Environment[Self.RelativeURIEnvironmentName] else {
-            return nil
-        }
-        
-        self.httpClient     = httpClient
-        self.endpointURL    = "http://\(host)\(relativeURL)"
+    init(httpClient: AWSHTTPClient, host: String = ECSMetaDataClient.Host) {
+        self.host = host
+        self.httpClient = httpClient
     }
     
     public func getMetaData(on eventLoop: EventLoop) -> EventLoopFuture<ECSMetaData> {
+        guard let relativeURL = Environment[Self.RelativeURIEnvironmentName] else {
+            return eventLoop.makeFailedFuture(MetaDataClientError.noECSMetaDataService)
+        }
+        let endpointURL    = "http://\(host)\(relativeURL)"
         return request(url: endpointURL, timeout: 2, on: eventLoop)
             .flatMapThrowing { response in
                 guard let body = response.body else {

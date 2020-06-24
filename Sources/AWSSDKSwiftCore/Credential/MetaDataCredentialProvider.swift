@@ -71,13 +71,13 @@ extension MetaDataClient {
 }
 
 
-struct ECSMetaDataClient: MetaDataClient {
+public struct ECSMetaDataClient: MetaDataClient {
     public typealias MetaData = ECSMetaData
     
     static let Host = "169.254.170.2"
     static let RelativeURIEnvironmentName = "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"
     
-    struct ECSMetaData: CredentialContainer {
+    public struct ECSMetaData: CredentialContainer {
         let accessKeyId: String
         let secretAccessKey: String
         let token: String
@@ -115,7 +115,7 @@ struct ECSMetaDataClient: MetaDataClient {
         self.endpointURL    = "http://\(host)\(relativeURL)"
     }
     
-    func getMetaData(on eventLoop: EventLoop) -> EventLoopFuture<ECSMetaData> {
+    public func getMetaData(on eventLoop: EventLoop) -> EventLoopFuture<ECSMetaData> {
         return request(url: endpointURL, timeout: 2, on: eventLoop)
             .flatMapThrowing { response in
                 guard let body = response.body else {
@@ -133,8 +133,8 @@ struct ECSMetaDataClient: MetaDataClient {
 
 //MARK: InstanceMetaDataServiceProvider
 /// Provide AWS credentials for instances
-struct InstanceMetaDataClient: MetaDataClient {
-    typealias MetaData = InstanceMetaData
+public struct InstanceMetaDataClient: MetaDataClient {
+    public typealias MetaData = InstanceMetaData
     
     static let Host = "169.254.169.254"
     static let CredentialUri = "/latest/meta-data/iam/security-credentials/"
@@ -142,7 +142,7 @@ struct InstanceMetaDataClient: MetaDataClient {
     static let TokenTimeToLiveHeader = (name: "X-aws-ec2-metadata-token-ttl-seconds", value: "21600")
     static let TokenHeaderName = "X-aws-ec2-metadata-token"
     
-    struct InstanceMetaData: CredentialContainer {
+    public struct InstanceMetaData: CredentialContainer {
         let accessKeyId: String
         let secretAccessKey: String
         let token: String
@@ -151,7 +151,7 @@ struct InstanceMetaDataClient: MetaDataClient {
         let lastUpdated: Date
         let type: String
 
-        var credential: ExpiringCredential {
+        public var credential: ExpiringCredential {
             return RotatingCredential(
                 accessKeyId: accessKeyId,
                 secretAccessKey: secretAccessKey,
@@ -187,7 +187,7 @@ struct InstanceMetaDataClient: MetaDataClient {
         self.host       = host
     }
     
-    func getMetaData(on eventLoop: EventLoop) -> EventLoopFuture<InstanceMetaData> {
+    public func getMetaData(on eventLoop: EventLoop) -> EventLoopFuture<InstanceMetaData> {
         return getToken(on: eventLoop)
             .map() { token in
                 HTTPHeaders([(Self.TokenHeaderName, token)])

@@ -288,19 +288,19 @@ extension AWSRequest {
     }
 
     private mutating func addStandardHeaders() {
-        if httpHeaders["content-type"].first == nil {
-            switch httpMethod {
-            case "GET","HEAD":
-                break
-            default:
-                if case .restjson = serviceProtocol, case .raw(_) = body {
-                    httpHeaders.replaceOrAdd(name: "content-type", value: "binary/octet-stream")
-                } else {
-                    httpHeaders.replaceOrAdd(name: "content-type", value: serviceProtocol.contentType)
-                }
-            }
-        }
         httpHeaders.replaceOrAdd(name: "user-agent", value: "AWSSDKSwift/5.0")
+        guard httpHeaders["content-type"].first == nil else {
+            return
+        }
+        guard httpMethod != "GET", httpMethod != "HEAD" else {
+            return
+        }
+
+        if case .restjson = serviceProtocol, case .raw(_) = body {
+            httpHeaders.replaceOrAdd(name: "content-type", value: "binary/octet-stream")
+        } else {
+            httpHeaders.replaceOrAdd(name: "content-type", value: serviceProtocol.contentType)
+        }
     }
 
     // this list of query allowed characters comes from https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html

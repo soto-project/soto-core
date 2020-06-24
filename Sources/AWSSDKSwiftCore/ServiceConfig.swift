@@ -59,7 +59,7 @@ public class ServiceConfig {
         apiVersion: String,
         endpoint: String? = nil,
         serviceEndpoints: [String: String] = [:],
-        partitionEndpoints: [Partition: (endpoint: String, region: Region)],
+        partitionEndpoints: [Partition: (endpoint: String, region: Region)] = [:],
         possibleErrorTypes: [AWSErrorType.Type] = [],
         middlewares: [AWSServiceMiddleware] = []
     )

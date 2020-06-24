@@ -18,7 +18,6 @@ import struct Foundation.URL
 import struct Foundation.Date
 import struct Foundation.Data
 import struct Foundation.CharacterSet
-import class Foundation.JSONEncoder
 import struct Foundation.URLComponents
 
 /// Object encapsulating all the information needed to generate a raw HTTP request to AWS

@@ -30,9 +30,9 @@ struct RotatingCredential: ExpiringCredential {
     let accessKeyId: String
     let secretAccessKey: String
     let sessionToken: String?
-    let expiration: Date?
+    let expiration: Date
 
-    init(accessKeyId: String, secretAccessKey: String, sessionToken: String? = nil, expiration: Date? = nil) {
+    init(accessKeyId: String, secretAccessKey: String, sessionToken: String? = nil, expiration: Date) {
         self.accessKeyId = accessKeyId
         self.secretAccessKey = secretAccessKey
         self.sessionToken = sessionToken
@@ -40,9 +40,6 @@ struct RotatingCredential: ExpiringCredential {
     }
     
     func isExpiring(within interval: TimeInterval) -> Bool {
-        if let expiration = self.expiration {
-            return expiration.timeIntervalSinceNow < interval
-        }
-        return false
+        return expiration.timeIntervalSinceNow < interval
     }
 }

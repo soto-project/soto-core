@@ -50,7 +50,7 @@ class RotatingCredentialProviderTests: XCTestCase {
             hitCount += 1
             return $0.makeSucceededFuture(cred)
         }
-        let provider = RotatingCredentialProvider(client: client)
+        let provider = RotatingCredentialProvider(provider: client)
         
         // get credentials for first time
         var returned: Credential?
@@ -90,7 +90,7 @@ class RotatingCredentialProviderTests: XCTestCase {
             hitCount += 1
             return promise.futureResult
         }
-        let provider = RotatingCredentialProvider(client: client)
+        let provider = RotatingCredentialProvider(provider: client)
         
         var resultFutures = [EventLoopFuture<Void>]()
         var setupFutures = [EventLoopFuture<Void>]()
@@ -147,7 +147,7 @@ class RotatingCredentialProviderTests: XCTestCase {
                 expiration: Date(timeIntervalSinceNow: 60 * 2))
             return eventLoop.makeSucceededFuture(cred)
         }
-        let provider = RotatingCredentialProvider(client: client)
+        let provider = RotatingCredentialProvider(provider: client)
         
         let iterations = 100
         for _ in 0..<100 {

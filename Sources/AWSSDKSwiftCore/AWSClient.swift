@@ -81,7 +81,7 @@ public final class AWSClient {
     ///     - middlewares: Array of middlewares to apply to requests and responses
     ///     - httpClientProvider: HTTPClient to use. Use `.createNew` if you want the client to manage its own HTTPClient.
     public init(
-        credentialProvider: CredentialProvider?,
+        credentialProvider: CredentialProvider? = nil,
         serviceConfig: ServiceConfig,
         retryPolicy: RetryPolicy = JitterRetry(),
         middlewares: [AWSServiceMiddleware] = [],
@@ -100,15 +100,13 @@ public final class AWSClient {
 
         if let credentialProvider = credentialProvider {
             self.credentialProvider = credentialProvider
+        } else {
+            self.credentialProvider = GroupCredentialProvider()
         }
-        else {
-            self.credentialProvider = RuntimeCredentialProvider.createProvider(
-                on: self.httpClient.eventLoopGroup.next(),
-                httpClient: self.httpClient)
-        }
-
         self.middlewares = middlewares
         self.retryPolicy = retryPolicy
+
+        _ = self.credentialProvider.setup(with: self)
     }
 
     /// Initialize an AWSClient struct

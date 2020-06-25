@@ -72,10 +72,10 @@ extension MetaDataClient {
 }
 
 
-public struct ECSMetaDataClient: MetaDataClient {
+public class ECSMetaDataClient: MetaDataClient {
     public typealias MetaData = ECSMetaData
     
-    static let Host = "169.254.170.2"
+    public static let Host = "http://169.254.170.2"
     static let RelativeURIEnvironmentName = "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"
     
     public struct ECSMetaData: CredentialContainer {
@@ -90,7 +90,7 @@ public struct ECSMetaDataClient: MetaDataClient {
                 accessKeyId: accessKeyId,
                 secretAccessKey: secretAccessKey,
                 sessionToken: token,
-                expiration: expiration
+                expiration: self.expiration
             )
         }
 
@@ -103,20 +103,30 @@ public struct ECSMetaDataClient: MetaDataClient {
         }
     }
     
-    let httpClient : AWSHTTPClient
+    var httpClient : AWSHTTPClient!
     let host: String
-    let decoder = Self.createJSONDecoder()
+    let decoder = ECSMetaDataClient.createJSONDecoder()
+    let relativeURL: String?
     
-    init(httpClient: AWSHTTPClient, host: String = ECSMetaDataClient.Host) {
+    public init(host: String = ECSMetaDataClient.Host) {
         self.host = host
-        self.httpClient = httpClient
+        self.relativeURL = Environment[Self.RelativeURIEnvironmentName]
+        self.httpClient = nil
+    }
+    
+    public func setup(with client: AWSClient) -> Bool {
+        guard relativeURL != nil else {
+            return false
+        }
+        httpClient = client.httpClient
+        return true
     }
     
     public func getMetaData(on eventLoop: EventLoop) -> EventLoopFuture<ECSMetaData> {
-        guard let relativeURL = Environment[Self.RelativeURIEnvironmentName] else {
+        guard relativeURL != nil else {
             return eventLoop.makeFailedFuture(MetaDataClientError.noECSMetaDataService)
         }
-        let endpointURL    = "http://\(host)\(relativeURL)"
+        let endpointURL    = "\(host)\(relativeURL!)"
         return request(url: endpointURL, timeout: 2, on: eventLoop)
             .flatMapThrowing { response in
                 guard let body = response.body else {
@@ -134,10 +144,10 @@ public struct ECSMetaDataClient: MetaDataClient {
 
 //MARK: InstanceMetaDataServiceProvider
 /// Provide AWS credentials for instances
-public struct InstanceMetaDataClient: MetaDataClient {
+public class InstanceMetaDataClient: MetaDataClient {
     public typealias MetaData = InstanceMetaData
     
-    static let Host = "169.254.169.254"
+    public static let Host = "169.254.169.254"
     static let CredentialUri = "/latest/meta-data/iam/security-credentials/"
     static let TokenUri = "/latest/api/token"
     static let TokenTimeToLiveHeader = (name: "X-aws-ec2-metadata-token-ttl-seconds", value: "21600")
@@ -179,13 +189,17 @@ public struct InstanceMetaDataClient: MetaDataClient {
         return URL(string: "http://\(self.host)\(Self.CredentialUri)")!
     }
     
-    let httpClient: AWSHTTPClient
+    var httpClient: AWSHTTPClient!
     let host      : String
-    let decoder   = Self.createJSONDecoder()
+    let decoder   = InstanceMetaDataClient.createJSONDecoder()
   
-    init(httpClient: AWSHTTPClient, host: String = InstanceMetaDataClient.Host) {
-        self.httpClient = httpClient
+    public init(host: String = InstanceMetaDataClient.Host) {
         self.host       = host
+    }
+    
+    public func setup(with client: AWSClient) -> Bool {
+        httpClient = client.httpClient
+        return true
     }
     
     public func getMetaData(on eventLoop: EventLoop) -> EventLoopFuture<InstanceMetaData> {

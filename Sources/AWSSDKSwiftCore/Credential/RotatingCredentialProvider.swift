@@ -20,16 +20,16 @@ import struct Foundation.TimeInterval
 /// strategy. If your Credential conforms to the `ExpiringCredential` protocol, the `RotatingCredentialProvider`
 /// checks whether your `credential` is still valid before every request.
 /// If needed the `RotatingCrendentialProvider` requests a new credential from the provided `Client`.
-public final class RotatingCredentialProvider<Client: CredentialProvider>: CredentialProvider {
+public final class RotatingCredentialProvider<Provider: CredentialProvider>: CredentialProvider {
     let remainingTokenLifetimeForUse: TimeInterval
     
-    public  let client          : Client
+    public  let provider        : Provider
     private let lock            = NIOConcurrencyHelpers.Lock()
     private var credential      : Credential? = nil
     private var credentialFuture: EventLoopFuture<Credential>? = nil
 
-    init(client: Client, remainingTokenLifetimeForUse: TimeInterval? = nil) {
-        self.client = client
+    init(provider: Provider, remainingTokenLifetimeForUse: TimeInterval? = nil) {
+        self.provider = provider
         self.remainingTokenLifetimeForUse = remainingTokenLifetimeForUse ?? 3 * 60
     }
     
@@ -39,6 +39,12 @@ public final class RotatingCredentialProvider<Client: CredentialProvider>: Crede
         if let future = credentialFuture {
             _ = try future.wait()
         }
+    }
+    
+    public func setup(with client: AWSClient) -> Bool {
+        guard provider.setup(with: client) else { return false }
+        _ = refreshCredentials(on: client.eventLoopGroup.next())
+        return true
     }
     
     public func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
@@ -76,7 +82,7 @@ public final class RotatingCredentialProvider<Client: CredentialProvider>: Crede
             return future
         }
         
-        credentialFuture = self.client.getCredential(on: eventLoop)
+        credentialFuture = self.provider.getCredential(on: eventLoop)
             .map { (credential) -> (Credential) in
                 // update the internal credential locked
                 self.lock.withLock {

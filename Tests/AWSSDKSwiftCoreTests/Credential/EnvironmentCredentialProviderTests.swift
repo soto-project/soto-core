@@ -35,7 +35,7 @@ extension Environment {
     
 }
 
-class StaticCredential_EnvironmentTests: XCTestCase {
+class EnvironmentCredentialProviderTests: XCTestCase {
     
     override func tearDown() {
         Environment.unset(name: "AWS_ACCESS_KEY_ID")
@@ -52,11 +52,11 @@ class StaticCredential_EnvironmentTests: XCTestCase {
         Environment.set(secretAccessKet, for: "AWS_SECRET_ACCESS_KEY")
         Environment.set(sessionToken, for: "AWS_SESSION_TOKEN")
         
-        let cred = StaticCredential.fromEnvironment()
+        let cred = EnvironmentCredentialProvider()
         
-        XCTAssertEqual(cred?.accessKeyId, accessKeyId)
-        XCTAssertEqual(cred?.secretAccessKey, secretAccessKet)
-        XCTAssertEqual(cred?.sessionToken, sessionToken)
+        XCTAssertEqual(cred.credential.accessKeyId, accessKeyId)
+        XCTAssertEqual(cred.credential.secretAccessKey, secretAccessKet)
+        XCTAssertEqual(cred.credential.sessionToken, sessionToken)
     }
     
     func testFailWithoutAccessKeyId() {
@@ -66,9 +66,9 @@ class StaticCredential_EnvironmentTests: XCTestCase {
         Environment.set(secretAccessKet, for: "AWS_SECRET_ACCESS_KEY")
         Environment.set(sessionToken, for: "AWS_SESSION_TOKEN")
         
-        let cred = StaticCredential.fromEnvironment()
-        
-        XCTAssertNil(cred)
+        let cred = EnvironmentCredentialProvider()
+
+        XCTAssert(cred.credential.isEmpty())
     }
     
     func testFailWithoutSecretAccessKey() {
@@ -78,9 +78,9 @@ class StaticCredential_EnvironmentTests: XCTestCase {
         Environment.set(accessKeyId, for: "AWS_ACCESS_KEY_ID")
         Environment.set(sessionToken, for: "AWS_SESSION_TOKEN")
         
-        let cred = StaticCredential.fromEnvironment()
-        
-        XCTAssertNil(cred)
+        let cred = EnvironmentCredentialProvider()
+
+        XCTAssert(cred.credential.isEmpty())
     }
     
     func testSuccessWithoutSessionToken() {
@@ -90,10 +90,10 @@ class StaticCredential_EnvironmentTests: XCTestCase {
         Environment.set(accessKeyId, for: "AWS_ACCESS_KEY_ID")
         Environment.set(secretAccessKet, for: "AWS_SECRET_ACCESS_KEY")
         
-        let cred = StaticCredential.fromEnvironment()
-        
-        XCTAssertEqual(cred?.accessKeyId, accessKeyId)
-        XCTAssertEqual(cred?.secretAccessKey, secretAccessKet)
-        XCTAssertNil(cred?.sessionToken)
+        let cred = EnvironmentCredentialProvider()
+
+        XCTAssertEqual(cred.credential.accessKeyId, accessKeyId)
+        XCTAssertEqual(cred.credential.secretAccessKey, secretAccessKet)
+        XCTAssertNil(cred.credential.sessionToken)
     }
 }

@@ -22,17 +22,65 @@ import Foundation.NSString
 #endif
 
 
-extension StaticCredential {
+public final class ConfigFileCredentialProvider: CredentialProvider {
+
     /// Errors occurring when initializing a FileCredential
     ///
     /// - missingProfile: If the profile requested was not found
     /// - missingAccessKeyId: If the access key ID was not found
     /// - missingSecretAccessKey: If the secret access key was not found
-    enum SharedCredentialError: Error, Equatable {
+    public enum ConfigFileCredentialError: Error, Equatable {
         case invalidCredentialFileSyntax
         case missingProfile(String)
         case missingAccessKeyId
         case missingSecretAccessKey
+    }
+    
+    public let credentialsFilePath: String
+    public let profile: String
+    public var credential: Credential?
+    
+    var setupPromise: EventLoopPromise<Credential>?
+    
+    public init(profile: String? = nil, credentialsFilePath: String = "~/.aws/credentials") {
+        self.credentialsFilePath = credentialsFilePath
+        self.profile = profile ?? Environment["AWS_PROFILE"] ?? "default"
+        self.setupPromise = nil
+    }
+    
+    public func syncShutdown() throws {
+        _ = try setupPromise?.futureResult.wait()
+    }
+    
+    public func setup(with client: AWSClient) -> Bool {
+        let eventLoop = client.eventLoopGroup.next()
+        self.setupPromise = eventLoop.makePromise()
+        
+        let threadPool = NIOThreadPool(numberOfThreads: 1)
+        threadPool.start()
+        let fileIO = NonBlockingFileIO(threadPool: threadPool)
+        
+        Self.getSharedCredentialsFromDisk(credentialsFilePath: credentialsFilePath, profile: profile, on: eventLoop, using: fileIO)
+            .whenComplete { result in
+                switch result {
+                case .success(let credential):
+                    self.credential = credential
+                    self.setupPromise?.succeed(credential)
+                case .failure(let error):
+                    self.setupPromise?.fail(error)
+                }
+                // shutdown the threadpool async
+                threadPool.shutdownGracefully { (_) in }
+        }
+        return true
+    }
+    
+    public func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
+        assert(setupPromise != nil, "ConfigFileCredentialProvider.getCredential should not be called from outside AWSClient. If this is required then call ConfigFileCredentialProvider.setup first.")
+        guard let credential = self.credential else {
+            return setupPromise!.futureResult.hop(to: eventLoop)
+        }
+        return eventLoop.makeSucceededFuture(credential)
     }
     
     /// Load static credentials from the aws cli config path `~/.aws/credentials`
@@ -42,7 +90,7 @@ extension StaticCredential {
     static func fromSharedCredentials(
         credentialsFilePath: String,
         profile: String = Environment["AWS_PROFILE"] ?? "default",
-        on eventLoop: EventLoop) -> EventLoopFuture<StaticCredential>
+        on eventLoop: EventLoop) -> EventLoopFuture<Credential>
     {
         let threadPool = NIOThreadPool(numberOfThreads: 1)
         threadPool.start()
@@ -59,7 +107,7 @@ extension StaticCredential {
         credentialsFilePath: String,
         profile: String,
         on eventLoop: EventLoop,
-        using fileIO: NonBlockingFileIO) -> EventLoopFuture<StaticCredential>
+        using fileIO: NonBlockingFileIO) -> EventLoopFuture<Credential>
     {
         let filePath = Self.expandTildeInFilePath(credentialsFilePath)
         
@@ -80,19 +128,19 @@ extension StaticCredential {
             parser = try INIParser(string)
         }
         catch INIParser.Error.invalidSyntax {
-            throw SharedCredentialError.invalidCredentialFileSyntax
+            throw ConfigFileCredentialError.invalidCredentialFileSyntax
         }
         
         guard let config = parser.sections[profile] else {
-            throw SharedCredentialError.missingProfile(profile)
+            throw ConfigFileCredentialError.missingProfile(profile)
         }
         
         guard let accessKeyId = config["aws_access_key_id"] else {
-            throw SharedCredentialError.missingAccessKeyId
+            throw ConfigFileCredentialError.missingAccessKeyId
         }
         
         guard let secretAccessKey = config["aws_secret_access_key"] else {
-            throw SharedCredentialError.missingSecretAccessKey
+            throw ConfigFileCredentialError.missingSecretAccessKey
         }
         
         let sessionToken = config["aws_session_token"]
@@ -126,3 +174,4 @@ extension StaticCredential {
         #endif
     }
 }
+

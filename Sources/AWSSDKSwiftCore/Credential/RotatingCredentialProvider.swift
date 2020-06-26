@@ -20,16 +20,16 @@ import struct Foundation.TimeInterval
 /// strategy. If your Credential conforms to the `ExpiringCredential` protocol, the `RotatingCredentialProvider`
 /// checks whether your `credential` is still valid before every request.
 /// If needed the `RotatingCrendentialProvider` requests a new credential from the provided `Client`.
-public final class RotatingCredentialProvider<Provider: CredentialProvider>: CredentialProvider {
+public final class RotatingCredentialProvider<Client: CredentialProvider>: CredentialProvider {
     let remainingTokenLifetimeForUse: TimeInterval
     
-    public  let provider        : Provider
+    public  let client          : Client
     private let lock            = NIOConcurrencyHelpers.Lock()
     private var credential      : Credential? = nil
     private var credentialFuture: EventLoopFuture<Credential>? = nil
 
-    init(provider: Provider, remainingTokenLifetimeForUse: TimeInterval? = nil) {
-        self.provider = provider
+    init(client: Client, remainingTokenLifetimeForUse: TimeInterval? = nil) {
+        self.client = client
         self.remainingTokenLifetimeForUse = remainingTokenLifetimeForUse ?? 3 * 60
     }
     
@@ -76,7 +76,7 @@ public final class RotatingCredentialProvider<Provider: CredentialProvider>: Cre
             return future
         }
         
-        credentialFuture = self.provider.getCredential(on: eventLoop)
+        credentialFuture = self.client.getCredential(on: eventLoop)
             .map { (credential) -> (Credential) in
                 // update the internal credential locked
                 self.lock.withLock {

@@ -48,7 +48,6 @@ extension MetaDataClient {
 enum MetaDataClientError: Error {
     case failedToDecode(underlyingError: Error)
     case unexpectedTokenResponseStatus(status: HTTPResponseStatus)
-    case noECSMetaDataService
     case couldNotReadTokenFromResponse
     case couldNotGetInstanceRoleName
     case couldNotGetInstanceMetaData
@@ -86,7 +85,7 @@ public struct ECSCredentialProvider: CredentialProviderWrapper {
             return NullCredentialProvider()
         }
         let url = "\(host)\(relativeURL)"
-        return RotatingCredentialProvider(provider: ECSMetaDataClient(url: url, httpClient: httpClient))
+        return RotatingCredentialProvider(client: ECSMetaDataClient(url: url, httpClient: httpClient))
     }
 }
 
@@ -105,7 +104,7 @@ class ECSMetaDataClient: MetaDataClient {
                 accessKeyId: accessKeyId,
                 secretAccessKey: secretAccessKey,
                 sessionToken: token,
-                expiration: self.expiration
+                expiration: expiration
             )
         }
 
@@ -155,14 +154,14 @@ public struct EC2InstanceCredentialProvider: CredentialProviderWrapper {
     }
 
     public func getProvider(httpClient: AWSHTTPClient, on eventLoop: EventLoop) -> CredentialProvider {
-        return RotatingCredentialProvider(provider: InstanceMetaDataClient(host: host, httpClient: httpClient))
+        return RotatingCredentialProvider(client: InstanceMetaDataClient(host: host, httpClient: httpClient))
     }
 }
 
 
 /// Provide AWS credentials for instances
-class InstanceMetaDataClient: MetaDataClient {
-    public typealias MetaData = InstanceMetaData
+struct InstanceMetaDataClient: MetaDataClient {
+    typealias MetaData = InstanceMetaData
     
     static let CredentialUri = "/latest/meta-data/iam/security-credentials/"
     static let TokenUri = "/latest/api/token"
@@ -178,7 +177,7 @@ class InstanceMetaDataClient: MetaDataClient {
         let lastUpdated: Date
         let type: String
 
-        public var credential: ExpiringCredential {
+        var credential: ExpiringCredential {
             return RotatingCredential(
                 accessKeyId: accessKeyId,
                 secretAccessKey: secretAccessKey,
@@ -205,9 +204,9 @@ class InstanceMetaDataClient: MetaDataClient {
         return URL(string: "\(self.host)\(Self.CredentialUri)")!
     }
     
-    var httpClient: AWSHTTPClient!
+    let httpClient: AWSHTTPClient
     let host      : String
-    let decoder   = InstanceMetaDataClient.createJSONDecoder()
+    let decoder   = Self.createJSONDecoder()
   
     init(host: String, httpClient: AWSHTTPClient) {
         self.host = host

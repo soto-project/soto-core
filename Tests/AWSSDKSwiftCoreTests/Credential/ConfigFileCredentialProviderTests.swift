@@ -33,7 +33,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
         byteBuffer.writeString(credential)
         var cred: StaticCredential?
-        XCTAssertNoThrow(cred = try ConfigFileCredentialProvider.Provider.sharedCredentials(from: byteBuffer, for: profile))
+        XCTAssertNoThrow(cred = try ConfigFileCredentialProviderWorker.sharedCredentials(from: byteBuffer, for: profile))
         
         XCTAssertEqual(cred?.accessKeyId, accessKey)
         XCTAssertEqual(cred?.secretAccessKey, secretKey)
@@ -50,7 +50,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         
         var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
         byteBuffer.writeString(credential)
-        XCTAssertThrowsError(_ = try ConfigFileCredentialProvider.Provider.sharedCredentials(from: byteBuffer, for: profile)) {
+        XCTAssertThrowsError(_ = try ConfigFileCredentialProviderWorker.sharedCredentials(from: byteBuffer, for: profile)) {
             XCTAssertEqual($0 as? ConfigFileCredentialProvider.ConfigFileCredentialError, .missingAccessKeyId)
         }
     }
@@ -65,7 +65,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         
         var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
         byteBuffer.writeString(credential)
-        XCTAssertThrowsError(_ = try ConfigFileCredentialProvider.Provider.sharedCredentials(from: byteBuffer, for: profile)) {
+        XCTAssertThrowsError(_ = try ConfigFileCredentialProviderWorker.sharedCredentials(from: byteBuffer, for: profile)) {
             XCTAssertEqual($0 as? ConfigFileCredentialProvider.ConfigFileCredentialError, .missingSecretAccessKey)
         }
     }
@@ -83,7 +83,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
         byteBuffer.writeString(credential)
         var cred: StaticCredential?
-        XCTAssertNoThrow(cred = try ConfigFileCredentialProvider.Provider.sharedCredentials(from: byteBuffer, for: profile))
+        XCTAssertNoThrow(cred = try ConfigFileCredentialProviderWorker.sharedCredentials(from: byteBuffer, for: profile))
         
         XCTAssertEqual(cred?.accessKeyId, accessKey)
         XCTAssertEqual(cred?.secretAccessKey, secretKey)
@@ -102,7 +102,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         
         var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
         byteBuffer.writeString(credential)
-        XCTAssertThrowsError(_ = try ConfigFileCredentialProvider.Provider.sharedCredentials(from: byteBuffer, for: "profile2")) {
+        XCTAssertThrowsError(_ = try ConfigFileCredentialProviderWorker.sharedCredentials(from: byteBuffer, for: "profile2")) {
             XCTAssertEqual($0 as? ConfigFileCredentialProvider.ConfigFileCredentialError, .missingProfile("profile2"))
         }
     }
@@ -115,14 +115,14 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         
         var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
         byteBuffer.writeString(credential)
-        XCTAssertThrowsError(_ = try ConfigFileCredentialProvider.Provider.sharedCredentials(from: byteBuffer, for: "default")) {
+        XCTAssertThrowsError(_ = try ConfigFileCredentialProviderWorker.sharedCredentials(from: byteBuffer, for: "default")) {
             XCTAssertEqual($0 as? ConfigFileCredentialProvider.ConfigFileCredentialError, .invalidCredentialFileSyntax)
         }
     }
     
     func testExpandTildeInFilePath() {
         let expandableFilePath = "~/.aws/credentials"
-        let expandedNewPath = ConfigFileCredentialProvider.Provider.expandTildeInFilePath(expandableFilePath)
+        let expandedNewPath = ConfigFileCredentialProviderWorker.expandTildeInFilePath(expandableFilePath)
         
         #if os(Linux)
         XCTAssert(!expandedNewPath.hasPrefix("~"))
@@ -133,7 +133,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         #endif
         
         let unexpandableFilePath = "/.aws/credentials"
-        let unexpandedNewPath = ConfigFileCredentialProvider.Provider.expandTildeInFilePath(unexpandableFilePath)
+        let unexpandedNewPath = ConfigFileCredentialProviderWorker.expandTildeInFilePath(unexpandableFilePath)
         let unexpandedNSString = NSString(string: unexpandableFilePath).expandingTildeInPath
         
         XCTAssertEqual(unexpandedNewPath, unexpandedNSString)
@@ -156,7 +156,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
         let eventLoop = eventLoopGroup.next()
 //        let path = filenameURL.absoluteString
-        let future = ConfigFileCredentialProvider.Provider.fromSharedCredentials(credentialsFilePath: filenameURL.path, on: eventLoop)
+        let future = ConfigFileCredentialProviderWorker.fromSharedCredentials(credentialsFilePath: filenameURL.path, on: eventLoop)
         
         var credential: Credential?
         XCTAssertNoThrow(credential = try future.wait())

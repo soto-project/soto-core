@@ -190,7 +190,7 @@ class GroupCredentialProviderTests: XCTestCase {
             XCTAssertEqual(credential.secretAccessKey, "AWSSECRETACCESSKEY")
             XCTAssertEqual(credential.sessionToken, nil)
             let internalProvider = try XCTUnwrap((client.credentialProvider as? GroupCredentialProvider.Provider)?.internalProvider)
-            XCTAssert(internalProvider is ConfigFileCredentialProvider.Provider)
+            XCTAssert(internalProvider is ConfigFileCredentialProviderWorker)
         }
         XCTAssertNoThrow(try futureResult.wait())
     }

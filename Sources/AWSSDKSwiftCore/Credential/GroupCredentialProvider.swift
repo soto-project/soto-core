@@ -75,6 +75,8 @@ public struct GroupCredentialProvider: CredentialProviderWrapper {
             }
         }
         
+        /// goes through list of providers. If provider is able to provide credentials then use that one, otherwise move onto the next
+        /// provider in the list
         private func setupInternalProvider(httpClient: AWSHTTPClient, on eventLoop: EventLoop) {
             func _setupInternalProvider(_ index: Int) {
                 guard index < self.providers.count else {

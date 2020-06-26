@@ -15,27 +15,16 @@
 import NIO
 import NIOConcurrencyHelpers
 
-class GroupCredentialProvider: CredentialProvider {
+public struct GroupCredentialProvider: CredentialProviderWrapper {
     
-    let lock = Lock()
-    var internalProvider: CredentialProvider? {
-        get {
-            self.lock.withLock {
-                _internalProvider
-            }
-        }
-    }
-    var providers: [CredentialProvider]
-    var startupPromise: EventLoopPromise<CredentialProvider>! = nil
+    let providers: [CredentialProviderWrapper]
 
-    private var _internalProvider: CredentialProvider? = nil
-    
-    init(_ providers: [CredentialProvider]? = nil) {
+    init(_ providers: [CredentialProviderWrapper]? = nil) {
         #if os(Linux)
         self.providers = providers ?? [
             EnvironmentCredentialProvider(),
-            RotatingCredentialProvider(provider: ECSMetaDataClient()),
-            RotatingCredentialProvider(provider: InstanceMetaDataClient()),
+            ECSCredentialProvider(),
+            EC2InstanceCredentialProvider(),
             ConfigFileCredentialProvider(),
             EmptyCredentialProvider()
         ]
@@ -48,49 +37,63 @@ class GroupCredentialProvider: CredentialProvider {
         #endif
     }
     
-    func syncShutdown() throws {
-        _ = try startupPromise?.futureResult.wait()
+    public func getProvider(httpClient: AWSHTTPClient, on eventLoop: EventLoop) -> CredentialProvider {
+        return Provider(providers: self.providers, httpClient: httpClient, on: eventLoop)
     }
     
-    func setup(with client: AWSClient) -> Bool {
-        let eventLoop = client.eventLoopGroup.next()
-        self.startupPromise = eventLoop.makePromise(of: CredentialProvider.self)
-        setupInternalProvider(on: eventLoop, with: client)
-        return true
-    }
-    
-    func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
-        if let provider = self.internalProvider {
-            return provider.getCredential(on: eventLoop)
+    class Provider: CredentialProvider {
+        let lock = Lock()
+        var internalProvider: CredentialProvider? {
+            get {
+                self.lock.withLock {
+                    _internalProvider
+                }
+            }
+        }
+        let providers: [CredentialProviderWrapper]
+        let startupPromise: EventLoopPromise<CredentialProvider>
+
+        private var _internalProvider: CredentialProvider? = nil
+        
+        init(providers: [CredentialProviderWrapper], httpClient: AWSHTTPClient, on eventLoop: EventLoop) {
+            self.providers = providers
+            self.startupPromise = eventLoop.makePromise(of: CredentialProvider.self)
+            setupInternalProvider(httpClient: httpClient, on: eventLoop)
         }
         
-        return self.startupPromise.futureResult.hop(to: eventLoop).flatMap { provider in
-            return provider.getCredential(on: eventLoop)
+        func syncShutdown() throws {
+            _ = try startupPromise.futureResult.wait()
         }
-    }
-    
-    private func setupInternalProvider(on eventLoop: EventLoop, with client: AWSClient) {
-        func _setupInternalProvider(_ index: Int) {
-            guard index < self.providers.count else {
-                startupPromise?.fail(CredentialProviderError.noProvider)
-                return
+        
+        func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
+            if let provider = self.internalProvider {
+                return provider.getCredential(on: eventLoop)
             }
-            let provider = self.providers[index]
-            if provider.setup(with: client) {
+            
+            return self.startupPromise.futureResult.hop(to: eventLoop).flatMap { provider in
+                return provider.getCredential(on: eventLoop)
+            }
+        }
+        
+        private func setupInternalProvider(httpClient: AWSHTTPClient, on eventLoop: EventLoop) {
+            func _setupInternalProvider(_ index: Int) {
+                guard index < self.providers.count else {
+                    startupPromise.fail(CredentialProviderError.noProvider)
+                    return
+                }
+                let provider = self.providers[index].getProvider(httpClient: httpClient, on: eventLoop)
                 provider.getCredential(on: eventLoop).whenComplete { result in
                     switch result {
                     case .success:
                         self._internalProvider = provider
-                        self.startupPromise?.succeed(provider)
+                        self.startupPromise.succeed(provider)
                     case .failure:
                         _setupInternalProvider(index + 1)
                     }
                 }
-            } else {
-                _setupInternalProvider(index + 1)
             }
+            
+            _setupInternalProvider(0)
         }
-        
-        _setupInternalProvider(0)
     }
 }

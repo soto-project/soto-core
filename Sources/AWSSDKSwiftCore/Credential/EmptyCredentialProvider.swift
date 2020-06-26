@@ -12,12 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-struct EmptyCredentialProvider: Credential, CredentialProvider {
-    var accessKeyId: String = ""
-    var secretAccessKey: String = ""
-    var sessionToken: String? = nil
-    
-    public func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
-        eventLoop.makeSucceededFuture(self)
+public struct EmptyCredentialProvider: CredentialProviderWrapper {
+    public func getProvider(httpClient: AWSHTTPClient, on eventLoop: EventLoop) -> CredentialProvider {
+        return StaticCredential(accessKeyId: "", secretAccessKey: "", sessionToken: nil)
     }
 }

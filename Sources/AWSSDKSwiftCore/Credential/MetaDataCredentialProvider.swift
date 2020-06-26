@@ -71,21 +71,36 @@ extension MetaDataClient {
     
 }
 
+public struct ECSCredentialProvider: CredentialProviderWrapper {
+    public static let defaultHost = "http://169.254.170.2"
+    static let relativeURIEnvironmentName = "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"
+    
+    let host: String
+    
+    init(host: String = Self.defaultHost) {
+        self.host = host
+    }
 
-public class ECSMetaDataClient: MetaDataClient {
-    public typealias MetaData = ECSMetaData
+    public func getProvider(httpClient: AWSHTTPClient, on eventLoop: EventLoop) -> CredentialProvider {
+        guard let relativeURL = Environment[Self.relativeURIEnvironmentName] else {
+            return NullCredentialProvider()
+        }
+        let url = "\(host)\(relativeURL)"
+        return RotatingCredentialProvider(provider: ECSMetaDataClient(url: url, httpClient: httpClient))
+    }
+}
+
+class ECSMetaDataClient: MetaDataClient {
+    typealias MetaData = ECSMetaData
     
-    public static let Host = "http://169.254.170.2"
-    static let RelativeURIEnvironmentName = "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"
-    
-    public struct ECSMetaData: CredentialContainer {
+    struct ECSMetaData: CredentialContainer {
         let accessKeyId: String
         let secretAccessKey: String
         let token: String
         let expiration: Date
         let roleArn: String
 
-        public var credential: ExpiringCredential {
+        var credential: ExpiringCredential {
             return RotatingCredential(
                 accessKeyId: accessKeyId,
                 secretAccessKey: secretAccessKey,
@@ -103,30 +118,16 @@ public class ECSMetaDataClient: MetaDataClient {
         }
     }
     
-    var httpClient : AWSHTTPClient!
-    let host: String
     let decoder = ECSMetaDataClient.createJSONDecoder()
-    let relativeURL: String?
-    
-    public init(host: String = ECSMetaDataClient.Host) {
-        self.host = host
-        self.relativeURL = Environment[Self.RelativeURIEnvironmentName]
-        self.httpClient = nil
+    let endpointURL: String
+    var httpClient : AWSHTTPClient
+
+    init(url: String, httpClient: AWSHTTPClient) {
+        self.endpointURL = url
+        self.httpClient = httpClient
     }
     
-    public func setup(with client: AWSClient) -> Bool {
-        guard relativeURL != nil else {
-            return false
-        }
-        httpClient = client.httpClient
-        return true
-    }
-    
-    public func getMetaData(on eventLoop: EventLoop) -> EventLoopFuture<ECSMetaData> {
-        guard relativeURL != nil else {
-            return eventLoop.makeFailedFuture(MetaDataClientError.noECSMetaDataService)
-        }
-        let endpointURL    = "\(host)\(relativeURL!)"
+    func getMetaData(on eventLoop: EventLoop) -> EventLoopFuture<ECSMetaData> {
         return request(url: endpointURL, timeout: 2, on: eventLoop)
             .flatMapThrowing { response in
                 guard let body = response.body else {
@@ -143,17 +144,32 @@ public class ECSMetaDataClient: MetaDataClient {
 }
 
 //MARK: InstanceMetaDataServiceProvider
+
+public struct EC2InstanceCredentialProvider: CredentialProviderWrapper {
+    public static let defaultHost = "http://169.254.169.254"
+
+    let host: String
+
+    init(host: String = Self.defaultHost) {
+        self.host = host
+    }
+
+    public func getProvider(httpClient: AWSHTTPClient, on eventLoop: EventLoop) -> CredentialProvider {
+        return RotatingCredentialProvider(provider: InstanceMetaDataClient(host: host, httpClient: httpClient))
+    }
+}
+
+
 /// Provide AWS credentials for instances
-public class InstanceMetaDataClient: MetaDataClient {
+class InstanceMetaDataClient: MetaDataClient {
     public typealias MetaData = InstanceMetaData
     
-    public static let Host = "169.254.169.254"
     static let CredentialUri = "/latest/meta-data/iam/security-credentials/"
     static let TokenUri = "/latest/api/token"
     static let TokenTimeToLiveHeader = (name: "X-aws-ec2-metadata-token-ttl-seconds", value: "21600")
     static let TokenHeaderName = "X-aws-ec2-metadata-token"
     
-    public struct InstanceMetaData: CredentialContainer {
+    struct InstanceMetaData: CredentialContainer {
         let accessKeyId: String
         let secretAccessKey: String
         let token: String
@@ -183,26 +199,22 @@ public class InstanceMetaDataClient: MetaDataClient {
     }
   
     private var tokenURL: URL {
-        return URL(string: "http://\(self.host)\(Self.TokenUri)")!
+        return URL(string: "\(self.host)\(Self.TokenUri)")!
     }
     private var credentialURL: URL {
-        return URL(string: "http://\(self.host)\(Self.CredentialUri)")!
+        return URL(string: "\(self.host)\(Self.CredentialUri)")!
     }
     
     var httpClient: AWSHTTPClient!
     let host      : String
     let decoder   = InstanceMetaDataClient.createJSONDecoder()
   
-    public init(host: String = InstanceMetaDataClient.Host) {
-        self.host       = host
+    init(host: String, httpClient: AWSHTTPClient) {
+        self.host = host
+        self.httpClient = httpClient
     }
     
-    public func setup(with client: AWSClient) -> Bool {
-        httpClient = client.httpClient
-        return true
-    }
-    
-    public func getMetaData(on eventLoop: EventLoop) -> EventLoopFuture<InstanceMetaData> {
+    func getMetaData(on eventLoop: EventLoop) -> EventLoopFuture<InstanceMetaData> {
         return getToken(on: eventLoop)
             .map() { token in
                 HTTPHeaders([(Self.TokenHeaderName, token)])

@@ -72,6 +72,45 @@ public func createAWSClient(
     )
 }
 
+public func createAWSClient(
+    credentialProvider: CredentialProviderWrapper? = nil,
+    region: Region? = nil,
+    partition: Partition = .aws,
+    amzTarget: String? = nil,
+    service: String = "testService",
+    signingName: String? = nil,
+    serviceProtocol: ServiceProtocol = .restjson,
+    apiVersion: String = "01-01-2001",
+    endpoint: String? = nil,
+    serviceEndpoints: [String: String] = [:],
+    partitionEndpoints: [Partition: (endpoint: String, region: Region)] = [:],
+    retryPolicy: RetryPolicy = NoRetry(),
+    middlewares: [AWSServiceMiddleware] = [],
+    possibleErrorTypes: [AWSErrorType.Type] = [],
+    httpClientProvider: AWSClient.HTTPClientProvider = .createNew
+) -> AWSClient {
+    let serviceConfig = createServiceConfig(
+        region: region,
+        partition: partition,
+        amzTarget: amzTarget,
+        service: service,
+        signingName: signingName,
+        serviceProtocol: serviceProtocol,
+        apiVersion: apiVersion,
+        endpoint: endpoint,
+        serviceEndpoints: serviceEndpoints,
+        partitionEndpoints: partitionEndpoints,
+        possibleErrorTypes: possibleErrorTypes
+    )
+    return AWSClient(
+        credentialProvider: credentialProvider,
+        serviceConfig: serviceConfig,
+        retryPolicy: retryPolicy,
+        middlewares: middlewares,
+        httpClientProvider: httpClientProvider
+    )
+}
+
 public func createServiceConfig(
     region: Region? = nil,
     partition: Partition = .aws,

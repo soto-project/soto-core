@@ -18,6 +18,7 @@ import Glibc
 #else
 import Darwin
 #endif
+import AWSTestUtils
 @testable import AWSSDKSwiftCore
 
 extension Environment {
@@ -43,7 +44,7 @@ class EnvironmentCredentialProviderTests: XCTestCase {
         Environment.unset(name: "AWS_SESSION_TOKEN")
     }
     
-    func testSuccess() {
+    func testSuccess() throws {
         let accessKeyId = "AWSACCESSKEYID"
         let secretAccessKet = "AWSSECRETACCESSKEY"
         let sessionToken = "AWSSESSIONTOKEN"
@@ -52,11 +53,13 @@ class EnvironmentCredentialProviderTests: XCTestCase {
         Environment.set(secretAccessKet, for: "AWS_SECRET_ACCESS_KEY")
         Environment.set(sessionToken, for: "AWS_SESSION_TOKEN")
         
-        let cred = EnvironmentCredentialProvider()
+        let client = createAWSClient(credentialProvider: EnvironmentCredentialProvider())
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         
-        XCTAssertEqual(cred.credential.accessKeyId, accessKeyId)
-        XCTAssertEqual(cred.credential.secretAccessKey, secretAccessKet)
-        XCTAssertEqual(cred.credential.sessionToken, sessionToken)
+        let credential = try XCTUnwrap(client.credentialProvider as? StaticCredential)
+        XCTAssertEqual(credential.accessKeyId, accessKeyId)
+        XCTAssertEqual(credential.secretAccessKey, secretAccessKet)
+        XCTAssertEqual(credential.sessionToken, sessionToken)
     }
     
     func testFailWithoutAccessKeyId() {
@@ -66,9 +69,10 @@ class EnvironmentCredentialProviderTests: XCTestCase {
         Environment.set(secretAccessKet, for: "AWS_SECRET_ACCESS_KEY")
         Environment.set(sessionToken, for: "AWS_SESSION_TOKEN")
         
-        let cred = EnvironmentCredentialProvider()
+        let client = createAWSClient(credentialProvider: EnvironmentCredentialProvider())
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
 
-        XCTAssert(cred.credential.isEmpty())
+        XCTAssert(client.credentialProvider is NullCredentialProvider)
     }
     
     func testFailWithoutSecretAccessKey() {
@@ -78,22 +82,25 @@ class EnvironmentCredentialProviderTests: XCTestCase {
         Environment.set(accessKeyId, for: "AWS_ACCESS_KEY_ID")
         Environment.set(sessionToken, for: "AWS_SESSION_TOKEN")
         
-        let cred = EnvironmentCredentialProvider()
+        let client = createAWSClient(credentialProvider: EnvironmentCredentialProvider())
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
 
-        XCTAssert(cred.credential.isEmpty())
+        XCTAssert(client.credentialProvider is NullCredentialProvider)
     }
     
-    func testSuccessWithoutSessionToken() {
+    func testSuccessWithoutSessionToken() throws {
         let accessKeyId = "AWSACCESSKEYID"
         let secretAccessKet = "AWSSECRETACCESSKEY"
         
         Environment.set(accessKeyId, for: "AWS_ACCESS_KEY_ID")
         Environment.set(secretAccessKet, for: "AWS_SECRET_ACCESS_KEY")
         
-        let cred = EnvironmentCredentialProvider()
-
-        XCTAssertEqual(cred.credential.accessKeyId, accessKeyId)
-        XCTAssertEqual(cred.credential.secretAccessKey, secretAccessKet)
-        XCTAssertNil(cred.credential.sessionToken)
+        let client = createAWSClient(credentialProvider: EnvironmentCredentialProvider())
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
+        
+        let credential = try XCTUnwrap(client.credentialProvider as? StaticCredential)
+        XCTAssertEqual(credential.accessKeyId, accessKeyId)
+        XCTAssertEqual(credential.secretAccessKey, secretAccessKet)
+        XCTAssertNil(credential.sessionToken)
     }
 }

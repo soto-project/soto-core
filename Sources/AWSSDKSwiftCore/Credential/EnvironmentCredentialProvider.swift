@@ -16,27 +16,18 @@ import NIO
 import AWSSignerV4
 
 /// Credential provider supplying credentials from environment variables
-public final class EnvironmentCredentialProvider: CredentialProvider {
-    var credential: Credential
-    
-    public init() {
+public final class EnvironmentCredentialProvider: CredentialProviderWrapper {
+
+    public func getProvider(httpClient: AWSHTTPClient, on eventLoop: EventLoop) -> CredentialProvider {
         if let accessKeyId = Environment["AWS_ACCESS_KEY_ID"],
             let secretAccessKey = Environment["AWS_SECRET_ACCESS_KEY"] {
-            self.credential = StaticCredential(
+            return StaticCredential(
                 accessKeyId: accessKeyId,
                 secretAccessKey: secretAccessKey,
                 sessionToken: Environment["AWS_SESSION_TOKEN"]
             )
         } else {
-            self.credential = EmptyCredentialProvider()
+            return NullCredentialProvider()
         }
-    }
-    
-    public func setup(with client:AWSClient) -> Bool {
-        return !self.credential.isEmpty()
-    }
-    
-    public func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
-        return eventLoop.makeSucceededFuture(credential)
     }
 }

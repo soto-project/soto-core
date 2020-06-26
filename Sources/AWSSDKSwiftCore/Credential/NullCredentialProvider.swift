@@ -12,16 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
+import NIO
 import AWSSignerV4
 
-extension StaticCredential: CredentialProvider {
+/// Credential provider supplying credentials from environment variables
+struct NullCredentialProvider: CredentialProvider {
+    
     public func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
-        eventLoop.makeSucceededFuture(self)
-    }
-}
-
-extension StaticCredential: CredentialProviderWrapper {
-    public func getProvider(httpClient: AWSHTTPClient, on eventLoop: EventLoop) -> CredentialProvider {
-        return self
+        return eventLoop.makeFailedFuture(CredentialProviderError.noProvider)
     }
 }

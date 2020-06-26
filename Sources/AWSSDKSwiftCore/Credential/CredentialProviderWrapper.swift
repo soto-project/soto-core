@@ -12,16 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
+import NIO
 import AWSSignerV4
 
-extension StaticCredential: CredentialProvider {
-    public func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
-        eventLoop.makeSucceededFuture(self)
-    }
-}
-
-extension StaticCredential: CredentialProviderWrapper {
-    public func getProvider(httpClient: AWSHTTPClient, on eventLoop: EventLoop) -> CredentialProvider {
-        return self
-    }
+/// Protocol providing future holding a credential
+public protocol CredentialProviderWrapper {
+    func getProvider(httpClient: AWSHTTPClient, on eventLoop: EventLoop) -> CredentialProvider
 }

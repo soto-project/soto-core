@@ -20,50 +20,15 @@ import NIO
 class GroupCredentialProviderTests: XCTestCase {
     
     func testSetupFail() {
-        struct MyCredentialProvider: CredentialProvider {
-            func setup(with client: AWSClient) -> Bool {
-                return false
-            }
-            func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
-                return eventLoop.makeSucceededFuture(EmptyCredentialProvider())
+        struct MyCredentialProvider: CredentialProviderWrapper {
+            func getProvider(httpClient: AWSHTTPClient, on eventLoop: EventLoop) -> CredentialProvider {
+                return NullCredentialProvider()
             }
         }
 
-        let client = createAWSClient(accessKeyId: "", secretAccessKey: "")
+        let client = createAWSClient(credentialProvider: GroupCredentialProvider([MyCredentialProvider()]))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
-        let provider = GroupCredentialProvider([
-            MyCredentialProvider()
-        ])
-        XCTAssertEqual(provider.setup(with: client), true)
-        let futureResult = provider.getCredential(on: client.eventLoopGroup.next())
-        XCTAssertThrowsError(try futureResult.wait()) { error in
-            switch error {
-            case let error as CredentialProviderError where error == CredentialProviderError.noProvider:
-                break
-            default:
-                XCTFail()
-            }
-        }
-
-    }
-    
-    func testGetCredentialFail() {
-        struct MyCredentialProvider: CredentialProvider {
-            func setup(with client: AWSClient) -> Bool {
-                return true
-            }
-            func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
-                return eventLoop.makeFailedFuture(CredentialProviderError.noCredentials)
-            }
-        }
-
-        let client = createAWSClient(accessKeyId: "", secretAccessKey: "")
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
-        let provider = GroupCredentialProvider([
-            MyCredentialProvider()
-        ])
-        XCTAssertEqual(provider.setup(with: client), true)
-        let futureResult = provider.getCredential(on: client.eventLoopGroup.next())
+        let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next())
         XCTAssertThrowsError(try futureResult.wait()) { error in
             switch error {
             case let error as CredentialProviderError where error == CredentialProviderError.noProvider:
@@ -84,33 +49,30 @@ class GroupCredentialProviderTests: XCTestCase {
         Environment.set(secretAccessKey, for: "AWS_SECRET_ACCESS_KEY")
         Environment.set(sessionToken, for: "AWS_SESSION_TOKEN")
 
-        let client = createAWSClient(accessKeyId: "", secretAccessKey: "")
+        let client = createAWSClient(credentialProvider: GroupCredentialProvider())
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
-        let provider = GroupCredentialProvider()
-        XCTAssertEqual(provider.setup(with: client), true)
-        let futureResult = provider.getCredential(on: client.eventLoopGroup.next()).flatMapThrowing { credential in
+        let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next()).flatMapThrowing { credential in
             XCTAssertEqual(credential.accessKeyId, accessKeyId)
             XCTAssertEqual(credential.secretAccessKey, secretAccessKey)
             XCTAssertEqual(credential.sessionToken, sessionToken)
-            let internalProvider = try XCTUnwrap(provider.internalProvider)
-            XCTAssert(internalProvider is EnvironmentCredentialProvider)
+            let internalProvider = try XCTUnwrap((client.credentialProvider as? GroupCredentialProvider.Provider)?.internalProvider)
+            XCTAssert(internalProvider is StaticCredential)
         }
         XCTAssertNoThrow(try futureResult.wait())
     }
     
     func testFoundEmptyProvider() throws {
-        let client = createAWSClient(accessKeyId: "", secretAccessKey: "")
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let provider = GroupCredentialProvider([
             EmptyCredentialProvider()
         ])
-        XCTAssertEqual(provider.setup(with: client), true)
-        let futureResult = provider.getCredential(on: client.eventLoopGroup.next()).flatMapThrowing { credential in
+        let client = createAWSClient(credentialProvider: provider)
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
+        let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next()).flatMapThrowing { credential in
             XCTAssertEqual(credential.accessKeyId, "")
             XCTAssertEqual(credential.secretAccessKey, "")
             XCTAssertEqual(credential.sessionToken, nil)
-            let internalProvider = try XCTUnwrap(provider.internalProvider)
-            XCTAssert(internalProvider is EmptyCredentialProvider)
+            let internalProvider = try XCTUnwrap((client.credentialProvider as? GroupCredentialProvider.Provider)?.internalProvider)
+            XCTAssert(internalProvider is StaticCredential)
         }
         XCTAssertNoThrow(try futureResult.wait())
     }
@@ -118,13 +80,12 @@ class GroupCredentialProviderTests: XCTestCase {
     func testEnvironmentProviderFail() throws {
         Environment.unset(name: "AWS_ACCESS_KEY_ID")
 
-        let client = createAWSClient(accessKeyId: "", secretAccessKey: "")
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let provider = GroupCredentialProvider([
             EnvironmentCredentialProvider()
         ])
-        XCTAssertEqual(provider.setup(with: client), true)
-        let futureResult = provider.getCredential(on: client.eventLoopGroup.next())
+        let client = createAWSClient(credentialProvider: provider)
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
+        let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next())
         XCTAssertThrowsError(try futureResult.wait()) { error in
             switch error {
             case let error as CredentialProviderError where error == CredentialProviderError.noProvider:
@@ -138,20 +99,19 @@ class GroupCredentialProviderTests: XCTestCase {
     func testECSProvider() {
         Environment.unset(name: "AWS_ACCESS_KEY_ID")
 
-        let client = createAWSClient(accessKeyId: "", secretAccessKey: "")
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let testServer = AWSTestServer(serviceProtocol: .json)
         defer { XCTAssertNoThrow(try testServer.stop()) }
         let path = "/" + UUID().uuidString
-        Environment.set(path, for: ECSMetaDataClient.RelativeURIEnvironmentName)
-        defer { Environment.unset(name: ECSMetaDataClient.RelativeURIEnvironmentName) }
+        Environment.set(path, for: ECSCredentialProvider.relativeURIEnvironmentName)
+        defer { Environment.unset(name: ECSCredentialProvider.relativeURIEnvironmentName) }
 
         let provider = GroupCredentialProvider([
             EnvironmentCredentialProvider(),
-            RotatingCredentialProvider(provider: ECSMetaDataClient(host: testServer.address)),
+            ECSCredentialProvider(host: testServer.address),
             EmptyCredentialProvider()
         ])
-        XCTAssertEqual(provider.setup(with: client), true)
+        let client = createAWSClient(credentialProvider: provider)
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
 
         let accessKeyId = "abc123"
         let secretAccessKey = "123abc"
@@ -179,11 +139,11 @@ class GroupCredentialProviderTests: XCTestCase {
             return .result(.init(httpStatus: .ok, body: byteButter), continueProcessing: false)
         })
 
-        let futureResult = provider.getCredential(on: client.eventLoopGroup.next()).flatMapThrowing { credential in
+        let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next()).flatMapThrowing { credential in
             XCTAssertEqual(credential.accessKeyId, accessKeyId)
             XCTAssertEqual(credential.secretAccessKey, secretAccessKey)
             XCTAssertEqual(credential.sessionToken, sessionToken)
-            let internalProvider = try XCTUnwrap(provider.internalProvider)
+            let internalProvider = try XCTUnwrap((client.credentialProvider as? GroupCredentialProvider.Provider)?.internalProvider)
             XCTAssert(internalProvider is RotatingCredentialProvider<ECSMetaDataClient>)
         }
         XCTAssertNoThrow(try futureResult.wait())
@@ -191,15 +151,14 @@ class GroupCredentialProviderTests: XCTestCase {
     
     func testECSProviderFail() {
         Environment.unset(name: "AWS_ACCESS_KEY_ID")
-        Environment.unset(name: ECSMetaDataClient.RelativeURIEnvironmentName)
+        Environment.unset(name: ECSCredentialProvider.relativeURIEnvironmentName)
         
-        let client = createAWSClient()
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let provider = GroupCredentialProvider([
-            RotatingCredentialProvider(provider: ECSMetaDataClient())
+            ECSCredentialProvider()
         ])
-        XCTAssertEqual(provider.setup(with: client), true)
-        let futureResult = provider.getCredential(on: client.eventLoopGroup.next())
+        let client = createAWSClient(credentialProvider: provider)
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
+        let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next())
         XCTAssertThrowsError(try futureResult.wait()) { error in
             switch error {
             case let error as CredentialProviderError where error == CredentialProviderError.noProvider:
@@ -221,33 +180,32 @@ class GroupCredentialProviderTests: XCTestCase {
         XCTAssertNoThrow(try Data(credentials.utf8).write(to: filenameURL))
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: filenameURL)) }
 
-        let client = createAWSClient(accessKeyId: "", secretAccessKey: "")
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let provider = GroupCredentialProvider([
             ConfigFileCredentialProvider(credentialsFilePath: filename)
         ])
-        XCTAssertEqual(provider.setup(with: client), true)
-        let futureResult = provider.getCredential(on: client.eventLoopGroup.next()).flatMapThrowing { credential in
+        let client = createAWSClient(credentialProvider: provider)
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
+        let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next()).flatMapThrowing { credential in
             XCTAssertEqual(credential.accessKeyId, "AWSACCESSKEYID")
             XCTAssertEqual(credential.secretAccessKey, "AWSSECRETACCESSKEY")
             XCTAssertEqual(credential.sessionToken, nil)
-            let internalProvider = try XCTUnwrap(provider.internalProvider)
-            XCTAssert(internalProvider is ConfigFileCredentialProvider)
+            let internalProvider = try XCTUnwrap((client.credentialProvider as? GroupCredentialProvider.Provider)?.internalProvider)
+            XCTAssert(internalProvider is ConfigFileCredentialProvider.Provider)
         }
         XCTAssertNoThrow(try futureResult.wait())
     }
     
     func testConfigFileProviderFail() {
-        let client = createAWSClient()
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let provider = GroupCredentialProvider([
             ConfigFileCredentialProvider(credentialsFilePath: "nonExistentCredentialFile"),
             EmptyCredentialProvider()
         ])
-        XCTAssertEqual(provider.setup(with: client), true)
-        let futureResult = provider.getCredential(on: client.eventLoopGroup.next()).flatMapThrowing { credential in
-            let internalProvider = try XCTUnwrap(provider.internalProvider)
-            XCTAssert(internalProvider is EmptyCredentialProvider)
+        let client = createAWSClient(credentialProvider: provider)
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
+        let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next()).flatMapThrowing { credential in
+            let internalProvider = try XCTUnwrap((client.credentialProvider as? GroupCredentialProvider.Provider)?.internalProvider)
+            XCTAssert(internalProvider is StaticCredential)
+            XCTAssert((internalProvider as? StaticCredential)?.isEmpty() == true)
         }
         XCTAssertNoThrow(try futureResult.wait())
     }

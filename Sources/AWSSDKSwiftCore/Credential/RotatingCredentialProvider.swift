@@ -41,12 +41,6 @@ public final class RotatingCredentialProvider<Provider: CredentialProvider>: Cre
         }
     }
     
-    public func setup(with client: AWSClient) -> Bool {
-        guard provider.setup(with: client) else { return false }
-        _ = refreshCredentials(on: client.eventLoopGroup.next())
-        return true
-    }
-    
     public func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
         self.lock.lock()
         let cred = credential

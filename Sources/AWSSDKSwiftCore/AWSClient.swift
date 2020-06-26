@@ -81,7 +81,7 @@ public final class AWSClient {
     ///     - middlewares: Array of middlewares to apply to requests and responses
     ///     - httpClientProvider: HTTPClient to use. Use `.createNew` if you want the client to manage its own HTTPClient.
     public init(
-        credentialProvider: CredentialProvider? = nil,
+        credentialProvider: CredentialProviderWrapper? = nil,
         serviceConfig: ServiceConfig,
         retryPolicy: RetryPolicy = JitterRetry(),
         middlewares: [AWSServiceMiddleware] = [],
@@ -91,22 +91,20 @@ public final class AWSClient {
 
         // setup httpClient
         self.httpClientProvider = httpClientProvider
+        let httpClient: AWSHTTPClient
         switch httpClientProvider {
         case .shared(let providedHTTPClient):
-            self.httpClient = providedHTTPClient
+            httpClient = providedHTTPClient
         case .createNew:
-            self.httpClient = AWSClient.createHTTPClient()
+            httpClient = AWSClient.createHTTPClient()
         }
-
-        if let credentialProvider = credentialProvider {
-            self.credentialProvider = credentialProvider
-        } else {
-            self.credentialProvider = GroupCredentialProvider()
-        }
+        
+        self.httpClient = httpClient
         self.middlewares = middlewares
         self.retryPolicy = retryPolicy
-
-        _ = self.credentialProvider.setup(with: self)
+        
+        let credentialProviderWrapper = credentialProvider ?? GroupCredentialProvider()
+        self.credentialProvider = credentialProviderWrapper.getProvider(httpClient: httpClient, on: httpClient.eventLoopGroup.next())
     }
 
     /// Initialize an AWSClient struct
@@ -182,7 +180,8 @@ public final class AWSClient {
         guard self.isShutdown.compareAndExchange(expected: false, desired: true) else {
             throw ClientError.alreadyShutdown
         }
-        try credentialProvider.syncShutdown()
+        // ignore errors from credential provider shutdown
+        try? credentialProvider.syncShutdown()
         // if httpClient was created by AWSClient then it is required to shutdown the httpClient
         if case .createNew = httpClientProvider {
             do {

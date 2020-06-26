@@ -18,16 +18,11 @@ import AWSSignerV4
 /// Protocol providing future holding a credential
 public protocol CredentialProvider {
     func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential>
-    func setup(with client: AWSClient) -> Bool
     func syncShutdown() throws
 }
 
 extension CredentialProvider {
     public func syncShutdown() throws {
         return
-    }
-
-    public func setup(with client: AWSClient) -> Bool {
-        return true
     }
 }

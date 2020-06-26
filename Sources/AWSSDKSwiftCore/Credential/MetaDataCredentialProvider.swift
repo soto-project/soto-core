@@ -25,14 +25,9 @@ import NIOHTTP1
 import NIOConcurrencyHelpers
 import AWSSignerV4
 
-/// protocol for decodable objects containing credential information
-public protocol CredentialContainer: Decodable {
-    var credential: ExpiringCredential { get }
-}
-
 /// protocol to get Credentials from the Client. With this the AWSClient requests the credentials for request signing from ecs and ec2.
 public protocol MetaDataClient: CredentialProvider {
-    associatedtype MetaData: CredentialContainer & Decodable
+    associatedtype MetaData: ExpiringCredential & Decodable
     
     func getMetaData(on eventLoop: EventLoop) -> EventLoopFuture<MetaData>
 }
@@ -40,7 +35,7 @@ public protocol MetaDataClient: CredentialProvider {
 extension MetaDataClient {
     public func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
         self.getMetaData(on: eventLoop).map { (metaData) in
-            metaData.credential
+            metaData
         }
     }
 }
@@ -77,20 +72,19 @@ struct ECSMetaDataClient: MetaDataClient {
     static let Host = "169.254.170.2"
     static let RelativeURIEnvironmentName = "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"
     
-    struct ECSMetaData: CredentialContainer {
+    struct ECSMetaData: ExpiringCredential, Decodable {
         let accessKeyId: String
         let secretAccessKey: String
         let token: String
         let expiration: Date
         let roleArn: String
+        
+        var sessionToken: String? {
+            self.token
+        }
 
-        public var credential: ExpiringCredential {
-            return RotatingCredential(
-                accessKeyId: accessKeyId,
-                secretAccessKey: secretAccessKey,
-                sessionToken: token,
-                expiration: expiration
-            )
+        func isExpiring(within interval: TimeInterval) -> Bool {
+            return self.expiration.timeIntervalSinceNow < interval
         }
 
         enum CodingKeys: String, CodingKey {
@@ -142,7 +136,7 @@ struct InstanceMetaDataClient: MetaDataClient {
     static let TokenTimeToLiveHeader = (name: "X-aws-ec2-metadata-token-ttl-seconds", value: "21600")
     static let TokenHeaderName = "X-aws-ec2-metadata-token"
     
-    struct InstanceMetaData: CredentialContainer {
+    struct InstanceMetaData: ExpiringCredential, Decodable {
         let accessKeyId: String
         let secretAccessKey: String
         let token: String
@@ -151,13 +145,12 @@ struct InstanceMetaDataClient: MetaDataClient {
         let lastUpdated: Date
         let type: String
 
-        var credential: ExpiringCredential {
-            return RotatingCredential(
-                accessKeyId: accessKeyId,
-                secretAccessKey: secretAccessKey,
-                sessionToken: token,
-                expiration: expiration
-            )
+        var sessionToken: String? {
+            self.token
+        }
+
+        func isExpiring(within interval: TimeInterval) -> Bool {
+            return self.expiration.timeIntervalSinceNow < interval
         }
 
         enum CodingKeys: String, CodingKey {

@@ -19,7 +19,7 @@ public struct GroupCredentialProvider: CredentialProviderWrapper {
     
     let providers: [CredentialProviderWrapper]
 
-    init(_ providers: [CredentialProviderWrapper]? = nil) {
+    public init(_ providers: [CredentialProviderWrapper]? = nil) {
         #if os(Linux)
         self.providers = providers ?? [
             EnvironmentCredentialProvider(),

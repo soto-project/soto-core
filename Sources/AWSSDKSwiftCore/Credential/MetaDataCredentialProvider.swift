@@ -77,7 +77,7 @@ public struct ECSCredentialProvider: CredentialProviderWrapper {
     
     let host: String
     
-    init(host: String = Self.defaultHost) {
+    public init(host: String = Self.defaultHost) {
         self.host = host
     }
 
@@ -150,7 +150,7 @@ public struct EC2InstanceCredentialProvider: CredentialProviderWrapper {
 
     let host: String
 
-    init(host: String = Self.defaultHost) {
+    public init(host: String = Self.defaultHost) {
         self.host = host
     }
 

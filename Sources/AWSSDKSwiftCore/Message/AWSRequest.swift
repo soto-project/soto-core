@@ -27,59 +27,8 @@ public struct AWSRequest {
     public let serviceProtocol: ServiceProtocol
     public let operation: String
     public let httpMethod: String
-    public var httpHeaders: [String: Any] = [:]
+    public var httpHeaders: HTTPHeaders
     public var body: Body
-
-    /// Initialize AWSRequest struct
-    /// - parameters:
-    ///     - region: Region of AWS server
-    ///     - url : Request URL
-    ///     - serviceProtocol: protocol of service (.json, .xml, .query etc)
-    ///     - operation: Name of AWS operation
-    ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
-    ///     - httpHeaders: HTTP request headers
-    ///     - body: HTTP Request body
-    public init(region: Region = .useast1, url: URL, serviceProtocol: ServiceProtocol, operation: String, httpMethod: String, httpHeaders: [String: Any] = [:], body: Body = .empty) {
-        self.region = region
-        self.url = url
-        self.serviceProtocol = serviceProtocol
-        self.operation = operation
-        self.httpMethod = httpMethod
-        self.httpHeaders = httpHeaders
-        self.body = body
-    }
-
-    /// Add a header value
-    /// - parameters:
-    ///     - value : value
-    ///     - forHTTPHeaderField: name of header
-    public mutating func addValue(_ value: String, forHTTPHeaderField field: String) {
-        httpHeaders[field] = value
-    }
-
-    func getHttpHeaders() -> HTTPHeaders {
-        var headers: [String:String] = [:]
-        for (key, value) in httpHeaders {
-            //guard let value = value else { continue }
-            headers[key] = "\(value)"
-        }
-
-        if headers["Content-Type"] == nil {
-            switch httpMethod {
-            case "GET","HEAD":
-                break
-            default:
-                if case .restjson = serviceProtocol, case .raw(_) = body {
-                    headers["Content-Type"] = "binary/octet-stream"
-                } else {
-                    headers["Content-Type"] = serviceProtocol.contentType
-                }
-            }
-        }
-        headers["User-Agent"] = "AWSSDKSwift/5.0"
-        
-        return HTTPHeaders(headers.map { ($0, $1) })
-    }
 
     /// Create HTTP Client request from AWSRequest.
     /// If the signer's credentials are available the request will be sigend. Otherweise defaults to an unsinged request
@@ -94,7 +43,7 @@ public struct AWSRequest {
 
     /// Create HTTP Client request from AWSRequest
     func toHTTPRequest() -> AWSHTTPRequest {
-        return AWSHTTPRequest.init(url: url, method: HTTPMethod(rawValue: httpMethod), headers: getHttpHeaders(), body: body.asPayload())
+        return AWSHTTPRequest.init(url: url, method: HTTPMethod(rawValue: httpMethod), headers: httpHeaders, body: body.asPayload())
     }
 
     /// Create HTTP Client request with signed headers from AWSRequest
@@ -108,7 +57,7 @@ public struct AWSRequest {
         case .stream(let reader):
             if signer.name == "s3" {
                 assert(reader.size != nil, "S3 stream requires size")
-                var headers = getHttpHeaders()
+                var headers = httpHeaders
                 // need to add this header here as it needs to be included in the signed headers
                 headers.add(name: "x-amz-decoded-content-length", value: reader.size!.description)
                 let (signedHeaders, seedSigningData) = signer.startSigningChunks(url: url, method: method, headers: headers, date: Date())
@@ -126,7 +75,7 @@ public struct AWSRequest {
         case .empty:
             bodyDataForSigning = nil
         }
-        let signedHeaders = signer.signHeaders(url: url, method: method, headers: getHttpHeaders(), body: bodyDataForSigning, date: Date())
+        let signedHeaders = signer.signHeaders(url: url, method: method, headers: httpHeaders, body: bodyDataForSigning, date: Date())
         return AWSHTTPRequest.init(url: url, method: method, headers: signedHeaders, body: payload)
     }
 
@@ -144,7 +93,7 @@ public struct AWSRequest {
 extension AWSRequest {
     
     internal init(operation operationName: String, path: String, httpMethod: String, configuration: ServiceConfig) throws {
-        var headers: [String: Any] = [:]
+        var headers = HTTPHeaders()
 
         guard let url = URL(string: "\(configuration.endpoint)\(path)"), let _ = url.host else {
             throw AWSClient.ClientError.invalidURL("\(configuration.endpoint)\(path) must specify url host and scheme")
@@ -152,7 +101,7 @@ extension AWSRequest {
 
         // set x-amz-target header
         if let target = configuration.amzTarget {
-            headers["x-amz-target"] = "\(target).\(operationName)"
+            headers.replaceOrAdd(name: "x-amz-target", value: "\(target).\(operationName)")
         }
         
         self.region = configuration.region
@@ -162,6 +111,8 @@ extension AWSRequest {
         self.httpMethod = httpMethod
         self.httpHeaders = headers
         self.body = .empty
+        
+        addStandardHeaders()
     }
     
     internal init<Input: AWSEncodableShape>(
@@ -171,7 +122,7 @@ extension AWSRequest {
         input: Input,
         configuration: ServiceConfig) throws
     {
-        var headers: [String: Any] = [:]
+        var headers = HTTPHeaders()
         var path = path
         var body: Body = .empty
         var queryParams: [(key:String, value:Any)] = []
@@ -185,7 +136,7 @@ extension AWSRequest {
 
         // set x-amz-target header
         if let target = configuration.amzTarget {
-            headers["x-amz-target"] = "\(target).\(operationName)"
+            headers.replaceOrAdd(name: "x-amz-target", value: "\(target).\(operationName)")
         }
 
         // TODO should replace with Encodable
@@ -197,14 +148,19 @@ extension AWSRequest {
             if let value = mirror.getAttribute(forKey: encoding.label) {
                 switch encoding.location {
                 case .header(let location):
-                    headers[location] = value
+                    switch value {
+                    case let dictionary as AWSRequestEncodableDictionary:
+                        dictionary.encoded.forEach { headers.replaceOrAdd(name: "\(location)\($0.key)", value: $0.value) }
+                    default:
+                        headers.replaceOrAdd(name: location, value: "\(value)")
+                    }
 
                 case .querystring(let location):
                     switch value {
-                    case let array as QueryEncodableArray:
-                        array.queryEncoded.forEach { queryParams.append((key:location, value:$0)) }
-                    case let dictionary as QueryEncodableDictionary:
-                        dictionary.queryEncoded.forEach { queryParams.append($0) }
+                    case let array as AWSRequestEncodableArray:
+                        array.encoded.forEach { queryParams.append((key:location, value:$0)) }
+                    case let dictionary as AWSRequestEncodableDictionary:
+                        dictionary.encoded.forEach { queryParams.append($0) }
                     default:
                         queryParams.append((key:location, value:"\(value)"))
                     }
@@ -326,8 +282,26 @@ extension AWSRequest {
         self.httpMethod = httpMethod
         self.httpHeaders = headers
         self.body = body
+        
+        addStandardHeaders()
     }
-    
+
+    private mutating func addStandardHeaders() {
+        httpHeaders.replaceOrAdd(name: "user-agent", value: "AWSSDKSwift/5.0")
+        guard httpHeaders["content-type"].first == nil else {
+            return
+        }
+        guard httpMethod != "GET", httpMethod != "HEAD" else {
+            return
+        }
+
+        if case .restjson = serviceProtocol, case .raw(_) = body {
+            httpHeaders.replaceOrAdd(name: "content-type", value: "binary/octet-stream")
+        } else {
+            httpHeaders.replaceOrAdd(name: "content-type", value: serviceProtocol.contentType)
+        }
+    }
+
     // this list of query allowed characters comes from https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html
     static let queryAllowedCharacters = CharacterSet(charactersIn:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
 
@@ -359,20 +333,20 @@ extension AWSRequest {
     
 }
 
-fileprivate protocol QueryEncodableArray {
-    var queryEncoded: [String] { get }
+fileprivate protocol AWSRequestEncodableArray {
+    var encoded: [String] { get }
 }
 
-extension Array : QueryEncodableArray {
-    var queryEncoded: [String] { return self.map{ "\($0)" }}
+extension Array : AWSRequestEncodableArray {
+    var encoded: [String] { return self.map{ "\($0)" }}
 }
 
-fileprivate protocol QueryEncodableDictionary {
-    var queryEncoded: [(key:String, entry: String)] { get }
+fileprivate protocol AWSRequestEncodableDictionary {
+    var encoded: [(key:String, value: String)] { get }
 }
 
-extension Dictionary : QueryEncodableDictionary {
-    var queryEncoded: [(key:String, entry: String)] {
-        return self.map{ (key:"\($0.key)", value:"\($0.value)") }
+extension Dictionary : AWSRequestEncodableDictionary {
+    var encoded: [(key:String, value: String)] {
+        return self.map { (key:"\($0.key)", value:"\($0.value)") }
     }
 }

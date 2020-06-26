@@ -79,12 +79,12 @@ class AWSClientTests: XCTestCase {
         XCTAssertNoThrow(httpBinResponse = try response.wait())
         let httpHeaders = httpBinResponse.map { HTTPHeaders($0.headers.map { ($0, $1) }) }
 
-        XCTAssertEqual(httpHeaders?["Content-Length"].first, "0")
-        XCTAssertEqual(httpHeaders?["Content-Type"].first, "application/x-amz-json-1.1")
-        XCTAssertNotNil(httpHeaders?["Authorization"].first)
-        XCTAssertNotNil(httpHeaders?["X-Amz-Date"].first)
-        XCTAssertEqual(httpHeaders?["User-Agent"].first, "AWSSDKSwift/5.0")
-        XCTAssertEqual(httpHeaders?["Host"].first, "localhost:\(awsServer.serverPort)")
+        XCTAssertEqual(httpHeaders?["content-length"].first, "0")
+        XCTAssertEqual(httpHeaders?["content-type"].first, "application/x-amz-json-1.1")
+        XCTAssertNotNil(httpHeaders?["authorization"].first)
+        XCTAssertNotNil(httpHeaders?["x-amz-date"].first)
+        XCTAssertEqual(httpHeaders?["user-agent"].first, "AWSSDKSwift/5.0")
+        XCTAssertEqual(httpHeaders?["host"].first, "localhost:\(awsServer.serverPort)")
     }
 
     func testClientNoInputNoOutput() {

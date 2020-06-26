@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import NIOHTTP1
+
 /// Middleware protocol. Gives ability to process requests before they are sent to AWS and process responses before they are converted into output shapes
 public protocol AWSServiceMiddleware {
     
@@ -61,13 +63,13 @@ public struct AWSLoggingMiddleware : AWSServiceMiddleware {
         return output
     }
 
-    func getHeadersOutput(_ headers: [String: Any?]) -> String {
+    func getHeadersOutput(_ headers: HTTPHeaders) -> String {
         if headers.count == 0 {
             return "[]"
         }
         var output = "["
         for header in headers {
-            output += "\n    \(header.key) : \(header.value ?? "nil")"
+            output += "\n    \(header.name) : \(header.value)"
         }
         return output + "\n  ]"
     }
@@ -86,7 +88,7 @@ public struct AWSLoggingMiddleware : AWSServiceMiddleware {
     public func chain(response: AWSResponse) throws -> AWSResponse {
         log("Response:")
         log("  Status : \(response.status.code)")
-        log("  Headers: " + getHeadersOutput(response.headers))
+        log("  Headers: " + getHeadersOutput(HTTPHeaders(response.headers.map { ($0,"\($1)") })))
         log("  Body: " + getBodyOutput(response.body))
         return response
     }

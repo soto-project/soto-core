@@ -19,7 +19,7 @@ extension AWSResponse {
     /// process hal+json date. Extract properties from HAL
     func getHypertextApplicationLanguageBody() throws -> Body {
         guard case .json(let data) = self.body,
-            let contentType = self.headers["Content-Type"] as? String,
+            let contentType = self.headers["content-type"] as? String,
             contentType.contains("hal+json") else {
                 return self.body
         }

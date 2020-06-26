@@ -39,7 +39,8 @@ public struct AWSResponse {
         // headers
         var responseHeaders: [String: String] = [:]
         for (key, value) in response.headers {
-            responseHeaders[key] = value
+            // use lowercase for all headers
+            responseHeaders[key.lowercased()] = value
         }
         self.headers = responseHeaders
 
@@ -204,7 +205,7 @@ public struct AWSResponse {
             guard case .json(let data) = self.body else { break }
             apiError = try? JSONDecoder().decode(RESTJSONError.self, from: data)
             if apiError?.code == nil {
-                apiError?.code = self.headers["x-amzn-ErrorType"] as? String
+                apiError?.code = self.headers["x-amzn-errortype"] as? String
             }
 
         case .json:

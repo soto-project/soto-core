@@ -12,7 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct Foundation.Date
 import struct Foundation.TimeInterval
 
 public protocol ExpiringCredential: Credential {
@@ -25,24 +24,3 @@ public extension ExpiringCredential {
     }
 }
 
-/// Provide AWS credentials directly
-struct RotatingCredential: ExpiringCredential {
-    let accessKeyId: String
-    let secretAccessKey: String
-    let sessionToken: String?
-    let expiration: Date?
-
-    init(accessKeyId: String, secretAccessKey: String, sessionToken: String? = nil, expiration: Date? = nil) {
-        self.accessKeyId = accessKeyId
-        self.secretAccessKey = secretAccessKey
-        self.sessionToken = sessionToken
-        self.expiration = expiration
-    }
-    
-    func isExpiring(within interval: TimeInterval) -> Bool {
-        if let expiration = self.expiration {
-            return expiration.timeIntervalSinceNow < interval
-        }
-        return false
-    }
-}

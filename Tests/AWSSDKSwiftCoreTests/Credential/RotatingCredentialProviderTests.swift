@@ -39,7 +39,7 @@ class RotatingCredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
         let loop = group.next()
         
-        let cred = RotatingCredential(
+        let cred = TestExpiringCredential(
             accessKeyId: "abc123",
             secretAccessKey: "abc123",
             sessionToken: "abc123",
@@ -59,14 +59,14 @@ class RotatingCredentialProviderTests: XCTestCase {
         XCTAssertEqual(returned?.accessKeyId, cred.accessKeyId)
         XCTAssertEqual(returned?.secretAccessKey, cred.secretAccessKey)
         XCTAssertEqual(returned?.sessionToken, cred.sessionToken)
-        XCTAssertEqual((returned as? RotatingCredential)?.expiration, cred.expiration)
+        XCTAssertEqual((returned as? TestExpiringCredential)?.expiration, cred.expiration)
         
         // get credentials a second time, callback must not be hit
         XCTAssertNoThrow(returned = try provider.getCredential(on: loop).wait())
         XCTAssertEqual(returned?.accessKeyId, cred.accessKeyId)
         XCTAssertEqual(returned?.secretAccessKey, cred.secretAccessKey)
         XCTAssertEqual(returned?.sessionToken, cred.sessionToken)
-        XCTAssertEqual((returned as? RotatingCredential)?.expiration, cred.expiration)
+        XCTAssertEqual((returned as? TestExpiringCredential)?.expiration, cred.expiration)
         
         // ensure callback was only hit once
         XCTAssertEqual(hitCount, 1)
@@ -77,7 +77,7 @@ class RotatingCredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
         let loop = group.next()
         
-        let cred = RotatingCredential(
+        let cred = TestExpiringCredential(
             accessKeyId: "abc123",
             secretAccessKey: "abc123",
             sessionToken: "abc123",
@@ -111,7 +111,7 @@ class RotatingCredentialProviderTests: XCTestCase {
                     XCTAssertEqual(returned.accessKeyId, cred.accessKeyId)
                     XCTAssertEqual(returned.secretAccessKey, cred.secretAccessKey)
                     XCTAssertEqual(returned.sessionToken, cred.sessionToken)
-                    XCTAssertEqual((returned as? RotatingCredential)?.expiration, cred.expiration)
+                    XCTAssertEqual((returned as? TestExpiringCredential)?.expiration, cred.expiration)
                     XCTAssert(loop.inEventLoop)
                     fulFillCount.add(1)
                 }
@@ -140,7 +140,7 @@ class RotatingCredentialProviderTests: XCTestCase {
         var hitCount = 0
         let client = MetaDataTestClient { (eventLoop) in
             hitCount += 1
-            let cred = RotatingCredential(
+            let cred = TestExpiringCredential(
                 accessKeyId: "abc123",
                 secretAccessKey: "abc123",
                 sessionToken: "abc123",
@@ -156,5 +156,27 @@ class RotatingCredentialProviderTests: XCTestCase {
         
         // ensure callback was only hit once
         XCTAssertEqual(hitCount, iterations)
+    }
+}
+
+/// Provide AWS credentials directly
+struct TestExpiringCredential: ExpiringCredential {
+    let accessKeyId: String
+    let secretAccessKey: String
+    let sessionToken: String?
+    let expiration: Date?
+
+    init(accessKeyId: String, secretAccessKey: String, sessionToken: String? = nil, expiration: Date? = nil) {
+        self.accessKeyId = accessKeyId
+        self.secretAccessKey = secretAccessKey
+        self.sessionToken = sessionToken
+        self.expiration = expiration
+    }
+    
+    func isExpiring(within interval: TimeInterval) -> Bool {
+        if let expiration = self.expiration {
+            return expiration.timeIntervalSinceNow < interval
+        }
+        return false
     }
 }

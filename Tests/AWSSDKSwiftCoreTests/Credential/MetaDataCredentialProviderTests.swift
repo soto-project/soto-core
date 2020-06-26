@@ -79,9 +79,9 @@ class MetaDataCredentialProviderTests: XCTestCase {
         XCTAssertEqual(metaData?.expiration, expiration)
         XCTAssertEqual(metaData?.roleArn, roleArn)
         
-        XCTAssertEqual(metaData?.credential.accessKeyId, accessKeyId)
-        XCTAssertEqual(metaData?.credential.secretAccessKey, secretAccessKey)
-        XCTAssertEqual(metaData?.credential.sessionToken, sessionToken)
+        XCTAssertEqual(metaData?.accessKeyId, accessKeyId)
+        XCTAssertEqual(metaData?.secretAccessKey, secretAccessKey)
+        XCTAssertEqual(metaData?.sessionToken, sessionToken)
     }
     
     func testECSMetaDataClientDefaultHost() {
@@ -188,9 +188,9 @@ class MetaDataCredentialProviderTests: XCTestCase {
         XCTAssertEqual(metaData?.lastUpdated, lastUpdated)
         XCTAssertEqual(metaData?.type, type)
         
-        XCTAssertEqual(metaData?.credential.accessKeyId, accessKeyId)
-        XCTAssertEqual(metaData?.credential.secretAccessKey, secretAccessKey)
-        XCTAssertEqual(metaData?.credential.sessionToken, sessionToken)
+        XCTAssertEqual(metaData?.accessKeyId, accessKeyId)
+        XCTAssertEqual(metaData?.secretAccessKey, secretAccessKey)
+        XCTAssertEqual(metaData?.sessionToken, sessionToken)
     }
     
     func testEC2InstanceMetaDataClientUsingVersion1() {
@@ -275,9 +275,9 @@ class MetaDataCredentialProviderTests: XCTestCase {
         XCTAssertEqual(metaData?.lastUpdated, lastUpdated)
         XCTAssertEqual(metaData?.type, type)
         
-        XCTAssertEqual(metaData?.credential.accessKeyId, accessKeyId)
-        XCTAssertEqual(metaData?.credential.secretAccessKey, secretAccessKey)
-        XCTAssertEqual(metaData?.credential.sessionToken, sessionToken)
+        XCTAssertEqual(metaData?.accessKeyId, accessKeyId)
+        XCTAssertEqual(metaData?.secretAccessKey, secretAccessKey)
+        XCTAssertEqual(metaData?.sessionToken, sessionToken)
     }
     
     func testEC2UInstanceMetaDataClientDefaultHost() {

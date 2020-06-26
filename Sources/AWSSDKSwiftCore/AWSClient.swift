@@ -441,7 +441,8 @@ extension AWSClient {
     /// Create error from HTTPResponse. This is only called if we received an unsuccessful http status code.
     internal func createError(for response: AWSHTTPResponse) -> Error {
         // if we can create an AWSResponse and create an error from it return that
-        if let awsResponse = try? AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol),
+        if let awsResponse = try? AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol)
+            .applyMiddlewares(serviceConfig.middlewares + middlewares),
             let error = awsResponse.generateError(serviceConfig: serviceConfig) {
             return error
         } else {

@@ -40,6 +40,7 @@ class PaginateTests: XCTestCase {
             serviceProtocol: .json(version: "1.1"),
             apiVersion: "2020-01-21",
             endpoint: "http://localhost:\(awsServer.serverPort)",
+            retryPolicy: NoRetry(),
             middlewares: [AWSLoggingMiddleware()],
             httpClientProvider: .shared(httpClient)
         )
@@ -92,26 +93,22 @@ class PaginateTests: XCTestCase {
         }
 
         let arraySize = 23
-        do {
-            // aws server process
-            try awsServer.process { (input: CounterInput) throws -> AWSTestServer.Result<CounterOutput> in
-                // send part of array of numbers based on input startIndex and pageSize
-                let startIndex = input.inputToken ?? 0
-                let endIndex = min(startIndex+input.pageSize, arraySize)
-                var array: [Int] = []
-                for i in startIndex..<endIndex {
-                    array.append(i)
-                }
-                let continueProcessing = (endIndex != arraySize)
-                let output = CounterOutput(array: array, outputToken: endIndex != arraySize ? endIndex : nil)
-                return .result(output, continueProcessing: continueProcessing)
+        // aws server process
+        XCTAssertNoThrow(try awsServer.process { (input: CounterInput) throws -> AWSTestServer.Result<CounterOutput> in
+            // send part of array of numbers based on input startIndex and pageSize
+            let startIndex = input.inputToken ?? 0
+            let endIndex = min(startIndex+input.pageSize, arraySize)
+            var array: [Int] = []
+            for i in startIndex..<endIndex {
+                array.append(i)
             }
+            let continueProcessing = (endIndex != arraySize)
+            let output = CounterOutput(array: array, outputToken: endIndex != arraySize ? endIndex : nil)
+            return .result(output, continueProcessing: continueProcessing)
+        })
 
-            // wait for response
-            try future.wait()
-        } catch {
-            print(error)
-        }
+        // wait for response
+        XCTAssertNoThrow(try future.wait())
 
         // verify contents of array
         XCTAssertEqual(finalArray.count, arraySize)
@@ -184,15 +181,11 @@ class PaginateTests: XCTestCase {
             return eventloop.makeSucceededFuture(true)
         }
 
-        do {
-            // aws server process
-            try awsServer.process(stringListServerProcess)
+        // aws server process
+        XCTAssertNoThrow(try awsServer.process(stringListServerProcess))
 
-            // wait for response
-            try future.wait()
-        } catch {
-            print(error)
-        }
+        // wait for response
+        XCTAssertNoThrow(try future.wait())
 
         // verify contents of array
         XCTAssertEqual(finalArray.count, stringList.count)
@@ -213,18 +206,14 @@ class PaginateTests: XCTestCase {
             return eventloop.makeSucceededFuture(true)
         }
 
-        do {
-            // aws server process
-            try awsServer.process { (request: StringListInput) -> AWSTestServer.Result<StringListOutput> in
-                return .error(.badRequest)
-            }
+        // aws server process
+        XCTAssertNoThrow(try awsServer.process { (request: StringListInput) -> AWSTestServer.Result<StringListOutput> in
+            return .error(.badRequest)
+        })
 
-            // wait for response
-            try future.wait()
-
-            XCTFail("testPaginateError: should have errored")
-        } catch {
-            print(error)
+        // wait for response
+        XCTAssertThrowsError(try future.wait()) { error in
+            XCTAssertEqual((error as? AWSResponseError)?.errorCode, "BadRequest")
         }
     }
 
@@ -236,24 +225,20 @@ class PaginateTests: XCTestCase {
             return eventloop.makeSucceededFuture(true)
         }
 
-        do {
-            // aws server process
-            var count = 0
-            try awsServer.process {(request: StringListInput) -> AWSTestServer.Result<StringListOutput> in
-                if count == 0 {
-                    count += 1
-                    return .error(.badRequest, continueProcessing: true)
-                } else {
-                    return try stringListServerProcess(request)
-                }
+        // aws server process
+        var count = 0
+        XCTAssertNoThrow(try awsServer.process {(request: StringListInput) -> AWSTestServer.Result<StringListOutput> in
+            if count > 0 {
+                return .error(.badRequest, continueProcessing: false)
+            } else {
+                count += 1
+                return try stringListServerProcess(request)
             }
+        })
 
-            // wait for response
-            try future.wait()
-
-            XCTFail("testPaginateError: should have errored")
-        } catch {
-            print(error)
+        // wait for response
+        XCTAssertThrowsError(try future.wait()) { error in
+            XCTAssertEqual((error as? AWSResponseError)?.errorCode, "BadRequest")
         }
     }
 
@@ -267,14 +252,9 @@ class PaginateTests: XCTestCase {
             return eventloop.makeSucceededFuture(true)
         }
 
-        do {
-            // aws server process
-            try awsServer.process(stringListServerProcess)
-
-            // wait for response
-            try future.wait()
-        } catch {
-            print(error)
-        }
+        // aws server process
+        XCTAssertNoThrow(try awsServer.process(stringListServerProcess))
+        // wait for response
+        XCTAssertNoThrow(try future.wait())
     }
 }

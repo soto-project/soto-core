@@ -81,7 +81,7 @@ public final class AWSClient {
     ///     - middlewares: Array of middlewares to apply to requests and responses
     ///     - httpClientProvider: HTTPClient to use. Use `.createNew` if you want the client to manage its own HTTPClient.
     public init(
-        credentialProvider: CredentialProvider?,
+        credentialProviderFactory: CredentialProviderFactory = .runtime,
         serviceConfig: ServiceConfig,
         retryPolicy: RetryPolicy = JitterRetry(),
         middlewares: [AWSServiceMiddleware] = [],
@@ -98,15 +98,10 @@ public final class AWSClient {
             self.httpClient = AWSClient.createHTTPClient()
         }
 
-        if let credentialProvider = credentialProvider {
-            self.credentialProvider = credentialProvider
-        }
-        else {
-            self.credentialProvider = RuntimeCredentialProvider.createProvider(
-                on: self.httpClient.eventLoopGroup.next(),
-                httpClient: self.httpClient)
-        }
-
+        self.credentialProvider = credentialProviderFactory.createProvider(context: .init(
+            httpClient: httpClient,
+            eventLoop: httpClient.eventLoopGroup.next()))
+        
         self.middlewares = middlewares
         self.retryPolicy = retryPolicy
     }
@@ -163,13 +158,13 @@ public final class AWSClient {
             possibleErrorTypes: possibleErrorTypes,
             middlewares: middlewares)
 
-        var credentials: StaticCredential? = nil
+        var credentials: CredentialProviderFactory? = nil
         if let accessKeyId = accessKeyId, let secretAccessKey = secretAccessKey {
-            credentials = StaticCredential(accessKeyId: accessKeyId, secretAccessKey: secretAccessKey, sessionToken: sessionToken)
+            credentials = .static(accessKeyId: accessKeyId, secretAccessKey: secretAccessKey, sessionToken: sessionToken)
         }
 
         self.init(
-            credentialProvider: credentials,
+            credentialProviderFactory: credentials ?? .runtime,
             serviceConfig: serviceConfig,
             retryPolicy: retryPolicy,
             middlewares: [],

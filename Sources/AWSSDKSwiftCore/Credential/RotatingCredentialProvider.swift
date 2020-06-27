@@ -28,7 +28,7 @@ public final class RotatingCredentialProvider<Client: CredentialProvider>: Crede
     private var credential      : Credential? = nil
     private var credentialFuture: EventLoopFuture<Credential>? = nil
 
-    init(eventLoop: EventLoop, client: Client, remainingTokenLifetimeForUse: TimeInterval? = nil) {
+    public init(eventLoop: EventLoop, client: Client, remainingTokenLifetimeForUse: TimeInterval? = nil) {
         self.client = client
         self.remainingTokenLifetimeForUse = remainingTokenLifetimeForUse ?? 3 * 60
     }

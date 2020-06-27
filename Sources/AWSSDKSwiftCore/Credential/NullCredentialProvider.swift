@@ -15,8 +15,8 @@
 import NIO
 import AWSSignerV4
 
- /// Credential provider supplying credentials from environment variables
-struct NullCredentialProvider: CredentialProvider {
+ /// Credential provider that always fails
+public struct NullCredentialProvider: CredentialProvider {
     public func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
         return eventLoop.makeFailedFuture(CredentialProviderError.noProvider)
     }

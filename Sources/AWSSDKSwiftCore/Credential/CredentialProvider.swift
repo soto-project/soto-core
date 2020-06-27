@@ -33,9 +33,9 @@ public struct CredentialProviderFactory {
     /// The initialization context for a `ContextProvider`
     public struct Context {
         /// The `AWSClient`s internal `HTTPClient`
-        let httpClient: AWSHTTPClient
+        public let httpClient: AWSHTTPClient
         /// The `EventLoop` that the `CredentialProvider` should use for credential refreshs
-        let eventLoop: EventLoop
+        public let eventLoop: EventLoop
     }
     
     private let cb: (Context) -> CredentialProvider

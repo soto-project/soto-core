@@ -74,7 +74,7 @@ class PayloadTests: XCTestCase {
             defer {
                 XCTAssertNoThrow(try client.syncShutdown())
             }
-            let response: EventLoopFuture<Output> = client.send(operation: "test", path: "/", httpMethod: "POST")
+            let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: "POST")
 
             try awsServer.processRaw { request in
                 var byteBuffer = ByteBufferAllocator().buffer(capacity: 0)

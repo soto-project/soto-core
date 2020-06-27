@@ -146,7 +146,7 @@ extension AWSClient {
                         }
                     } else if case AWSClient.InternalError.httpResponseError(let response) = error {
                         // if there was no retry and error was a response status code then attempt to convert to AWS error
-                        promise.fail(self.createError(for: response))
+                        promise.fail(self.createError(for: response, serviceConfig: self.serviceConfig))
                     } else {
                         promise.fail(error)
                     }
@@ -266,7 +266,7 @@ extension AWSClient {
         }.flatMap { request in
             return self.invoke(request, on: eventLoop)
         }.flatMapThrowing { response in
-            return try self.validate(operation: operationName, response: response)
+            return try self.validate(operation: operationName, response: response, serviceConfig: self.serviceConfig)
         }
         return recordMetrics(future, service: serviceConfig.service, operation: operationName)
     }
@@ -295,7 +295,7 @@ extension AWSClient {
         }.flatMap { request in
             return self.invoke(request, on: eventLoop)
         }.flatMapThrowing { response in
-            return try self.validate(operation: operationName, response: response)
+            return try self.validate(operation: operationName, response: response, serviceConfig: self.serviceConfig)
         }
         return recordMetrics(future, service: serviceConfig.service, operation: operationName)
     }
@@ -323,7 +323,7 @@ extension AWSClient {
         }.flatMap { request in
             return self.invoke(request, on: eventLoop, stream: stream)
         }.flatMapThrowing { response in
-            return try self.validate(operation: operationName, response: response)
+            return try self.validate(operation: operationName, response: response, serviceConfig: self.serviceConfig)
         }
     }
 
@@ -354,7 +354,7 @@ extension AWSClient {
 extension AWSClient {
 
     /// Generate an AWS Response from  the operation HTTP response and return the output shape from it. This is only every called if the response includes a successful http status code
-    internal func validate<Output: AWSDecodableShape>(operation operationName: String, response: AWSHTTPResponse) throws -> Output {
+    internal func validate<Output: AWSDecodableShape>(operation operationName: String, response: AWSHTTPResponse, serviceConfig: AWSServiceConfig) throws -> Output {
         assert((200..<300).contains(response.status.code), "Shouldn't get here if error was returned")
         
         let raw = (Output.self as? AWSShapeWithPayload.Type)?._payloadOptions.contains(.raw) == true
@@ -365,7 +365,7 @@ extension AWSClient {
     }
 
     /// Create error from HTTPResponse. This is only called if we received an unsuccessful http status code.
-    internal func createError(for response: AWSHTTPResponse) -> Error {
+    internal func createError(for response: AWSHTTPResponse, serviceConfig: AWSServiceConfig) -> Error {
         // if we can create an AWSResponse and create an error from it return that
         if let awsResponse = try? AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol)
             .applyMiddlewares(serviceConfig.middlewares + middlewares),

@@ -32,18 +32,7 @@ class PaginateTests: XCTestCase {
         awsServer = AWSTestServer(serviceProtocol: .json)
         eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 3)
         httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
-        client = AWSClient(
-            accessKeyId: "",
-            secretAccessKey: "",
-            region: .useast1,
-            service:"TestClient",
-            serviceProtocol: .json(version: "1.1"),
-            apiVersion: "2020-01-21",
-            endpoint: "http://localhost:\(awsServer.serverPort)",
-            retryPolicy: NoRetry(),
-            middlewares: [AWSLoggingMiddleware()],
-            httpClientProvider: .shared(httpClient)
-        )
+        client = createAWSClient(credentialProvider: .empty, serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address, retryPolicy: NoRetry(), httpClientProvider: .shared(httpClient))
     }
 
     override func tearDown() {

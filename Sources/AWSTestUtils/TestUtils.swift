@@ -33,9 +33,7 @@ import Foundation
 }
 
 public func createAWSClient(
-    accessKeyId: String? = nil,
-    secretAccessKey: String? = nil,
-    sessionToken: String? = nil,
+    credentialProvider: CredentialProviderFactory = .runtime,
     region: Region? = nil,
     partition: Partition = .aws,
     amzTarget: String? = nil,
@@ -51,10 +49,7 @@ public func createAWSClient(
     possibleErrorTypes: [AWSErrorType.Type] = [],
     httpClientProvider: AWSClient.HTTPClientProvider = .createNew
 ) -> AWSClient {
-    return AWSClient(
-        accessKeyId: accessKeyId,
-        secretAccessKey: secretAccessKey,
-        sessionToken: sessionToken,
+    let serviceConfig = createServiceConfig(
         region: region,
         partition: partition,
         amzTarget: amzTarget,
@@ -65,9 +60,13 @@ public func createAWSClient(
         endpoint: endpoint,
         serviceEndpoints: serviceEndpoints,
         partitionEndpoints: partitionEndpoints,
+        possibleErrorTypes: possibleErrorTypes
+    )
+    return AWSClient(
+        credentialProviderFactory: credentialProvider,
+        serviceConfig: serviceConfig,
         retryPolicy: retryPolicy,
         middlewares: middlewares,
-        possibleErrorTypes: possibleErrorTypes,
         httpClientProvider: httpClientProvider
     )
 }

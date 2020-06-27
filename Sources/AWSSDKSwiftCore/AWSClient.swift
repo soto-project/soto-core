@@ -192,6 +192,7 @@ extension AWSClient {
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - serviceConfig: configuration to be used to request creation and signing
     ///     - input: Input object
     /// - returns:
     ///     Empty Future that completes when response is received
@@ -221,6 +222,7 @@ extension AWSClient {
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - serviceConfig: configuration to be used to request creation and signing
     /// - returns:
     ///     Empty Future that completes when response is received
     public func execute(operation operationName: String, path: String, httpMethod: String, serviceConfig: AWSServiceConfig, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Void> {
@@ -249,6 +251,7 @@ extension AWSClient {
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - serviceConfig: configuration to be used to request creation and signing
     /// - returns:
     ///     Future containing output object that completes when response is received
     public func execute<Output: AWSDecodableShape>(operation operationName: String, path: String, httpMethod: String, serviceConfig: AWSServiceConfig, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Output> {
@@ -276,6 +279,7 @@ extension AWSClient {
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - serviceConfig: configuration to be used to request creation and signing
     ///     - input: Input object
     /// - returns:
     ///     Future containing output object that completes when response is received
@@ -300,6 +304,15 @@ extension AWSClient {
         return recordMetrics(future, service: serviceConfig.service, operation: operationName)
     }
 
+    /// execute a request with an input object and return a future with the output object generated from the response
+    /// - parameters:
+    ///     - operationName: Name of the AWS operation
+    ///     - path: path to append to endpoint URL
+    ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - serviceConfig: configuration to be used to request creation and signing
+    ///     - input: Input object
+    /// - returns:
+    ///     Future containing output object that completes when response is received
     public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, serviceConfig: AWSServiceConfig, input: Input, on eventLoop: EventLoop? = nil, stream: @escaping AWSHTTPClient.ResponseStream) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         return credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
@@ -325,7 +338,7 @@ extension AWSClient {
     ///     - url : URL to sign
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
     ///     - expires: How long before the signed URL expires
-    ///        - 
+    ///     - serviceConfig: Additional configuration to sign the url
     /// - returns:
     ///     A signed URL
     public func signURL(url: URL, httpMethod: String, expires: Int = 86400, serviceConfig: AWSServiceConfig) -> EventLoopFuture<URL> {

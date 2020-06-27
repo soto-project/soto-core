@@ -198,15 +198,15 @@ extension AWSClient {
     public func send<Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, serviceConfig: AWSServiceConfig, input: Input, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Void> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let future: EventLoopFuture<Void> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
-            let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
+            let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
             let awsRequest = try AWSRequest(
                         operation: operationName,
                         path: path,
                         httpMethod: httpMethod,
                         input: input,
-                        configuration: self.serviceConfig)
+                        configuration: serviceConfig)
             return try awsRequest
-                .applyMiddlewares(self.serviceConfig.middlewares + self.middlewares)
+                .applyMiddlewares(serviceConfig.middlewares + self.middlewares)
                 .createHTTPRequest(signer: signer)
         }.flatMap { request in
             return self.invoke(request, on: eventLoop)
@@ -226,14 +226,14 @@ extension AWSClient {
     public func execute(operation operationName: String, path: String, httpMethod: String, serviceConfig: AWSServiceConfig, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Void> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let future: EventLoopFuture<Void> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
-            let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
+            let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
             let awsRequest = try AWSRequest(
                 operation: operationName,
                 path: path,
                 httpMethod: httpMethod,
-                configuration: self.serviceConfig)
+                configuration: serviceConfig)
             return try awsRequest
-                .applyMiddlewares(self.serviceConfig.middlewares + self.middlewares)
+                .applyMiddlewares(serviceConfig.middlewares + self.middlewares)
                 .createHTTPRequest(signer: signer)
             
         }.flatMap { request in
@@ -254,19 +254,19 @@ extension AWSClient {
     public func execute<Output: AWSDecodableShape>(operation operationName: String, path: String, httpMethod: String, serviceConfig: AWSServiceConfig, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
-            let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
+            let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
             let awsRequest = try AWSRequest(
                 operation: operationName,
                 path: path,
                 httpMethod: httpMethod,
-                configuration: self.serviceConfig)
+                configuration: serviceConfig)
             return try awsRequest
-                .applyMiddlewares(self.serviceConfig.middlewares + self.middlewares)
+                .applyMiddlewares(serviceConfig.middlewares + self.middlewares)
                 .createHTTPRequest(signer: signer)
         }.flatMap { request in
             return self.invoke(request, on: eventLoop)
         }.flatMapThrowing { response in
-            return try self.validate(operation: operationName, response: response, serviceConfig: self.serviceConfig)
+            return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
         }
         return recordMetrics(future, service: serviceConfig.service, operation: operationName)
     }
@@ -282,20 +282,20 @@ extension AWSClient {
     public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, serviceConfig: AWSServiceConfig, input: Input, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
-            let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
+            let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
             let awsRequest = try AWSRequest(
                         operation: operationName,
                         path: path,
                         httpMethod: httpMethod,
                         input: input,
-                        configuration: self.serviceConfig)
+                        configuration: serviceConfig)
             return try awsRequest
-                .applyMiddlewares(self.serviceConfig.middlewares + self.middlewares)
+                .applyMiddlewares(serviceConfig.middlewares + self.middlewares)
                 .createHTTPRequest(signer: signer)
         }.flatMap { request in
             return self.invoke(request, on: eventLoop)
         }.flatMapThrowing { response in
-            return try self.validate(operation: operationName, response: response, serviceConfig: self.serviceConfig)
+            return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
         }
         return recordMetrics(future, service: serviceConfig.service, operation: operationName)
     }
@@ -303,20 +303,20 @@ extension AWSClient {
     public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, serviceConfig: AWSServiceConfig, input: Input, on eventLoop: EventLoop? = nil, stream: @escaping AWSHTTPClient.ResponseStream) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         return credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
-            let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
+            let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
             let awsRequest = try AWSRequest(
                 operation: operationName,
                 path: path,
                 httpMethod: httpMethod,
                 input: input,
-                configuration: self.serviceConfig)
+                configuration: serviceConfig)
             return try awsRequest
-                .applyMiddlewares(self.serviceConfig.middlewares + self.middlewares)
+                .applyMiddlewares(serviceConfig.middlewares + self.middlewares)
                 .createHTTPRequest(signer: signer)
         }.flatMap { request in
             return self.invoke(request, on: eventLoop, stream: stream)
         }.flatMapThrowing { response in
-            return try self.validate(operation: operationName, response: response, serviceConfig: self.serviceConfig)
+            return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
         }
     }
 

@@ -51,8 +51,6 @@ public final class AWSClient {
         case createNew
     }
 
-    /// AWS service configuration
-    public let serviceConfig: AWSServiceConfig
     /// AWS credentials provider
     let credentialProvider: CredentialProvider
     /// middleware code to be applied to requests and responses
@@ -71,19 +69,15 @@ public final class AWSClient {
     /// Initialize an AWSClient struct
     /// - parameters:
     ///     - credentialProvider: An object that returns valid signing credentials for request signing.
-    ///     - serviceConfig: AWS service configuration
     ///     - retryPolicy: Object returning whether retries should be attempted. Possible options are NoRetry(), ExponentialRetry() or JitterRetry()
     ///     - middlewares: Array of middlewares to apply to requests and responses
     ///     - httpClientProvider: HTTPClient to use. Use `.createNew` if you want the client to manage its own HTTPClient.
     public init(
         credentialProviderFactory: CredentialProviderFactory = .runtime,
-        serviceConfig: AWSServiceConfig,
         retryPolicy: RetryPolicy = JitterRetry(),
         middlewares: [AWSServiceMiddleware] = [],
         httpClientProvider: HTTPClientProvider
     ) {
-        self.serviceConfig = serviceConfig
-
         // setup httpClient
         self.httpClientProvider = httpClientProvider
         switch httpClientProvider {

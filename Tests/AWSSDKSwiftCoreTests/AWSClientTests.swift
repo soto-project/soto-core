@@ -68,16 +68,18 @@ class AWSClientTests: XCTestCase {
             try? httpClient.syncShutdown()
             try? elg.syncShutdownGracefully()
         }
+        let config = createServiceConfig(
+            serviceProtocol: .json(version: "1.1"),
+            endpoint: awsServer.address
+        )
         let client = createAWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
-            serviceProtocol: .json(version: "1.1"),
-            endpoint: awsServer.address,
             httpClientProvider: .shared(httpClient)
         )
         defer {
             XCTAssertNoThrow(try client.syncShutdown())
         }
-        let response: EventLoopFuture<AWSTestServer.HTTPBinResponse> = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: client.serviceConfig)
+        let response: EventLoopFuture<AWSTestServer.HTTPBinResponse> = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config)
 
         XCTAssertNoThrow(try awsServer.httpBin())
         var httpBinResponse: AWSTestServer.HTTPBinResponse? = nil
@@ -95,12 +97,13 @@ class AWSClientTests: XCTestCase {
     func testClientNoInputNoOutput() {
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)
-            let client = createAWSClient(credentialProvider: .empty, serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address, middlewares: [AWSLoggingMiddleware()])
+            let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
+            let client = createAWSClient(credentialProvider: .empty, middlewares: [AWSLoggingMiddleware()])
             defer {
                 XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try awsServer.stop())
             }
-            let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: client.serviceConfig)
+            let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config)
 
             try awsServer.processRaw { request in
                 let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
@@ -125,13 +128,14 @@ class AWSClientTests: XCTestCase {
 
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)
-            let client = createAWSClient(credentialProvider: .empty, serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address, middlewares: [AWSLoggingMiddleware()])
+            let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
+            let client = createAWSClient(credentialProvider: .empty, middlewares: [AWSLoggingMiddleware()])
             defer {
                 XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try awsServer.stop())
             }
             let input = Input(e:.second, i: [1,2,4,8])
-            let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: client.serviceConfig, input: input)
+            let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config, input: input)
 
             try awsServer.processRaw { request in
                 let receivedInput = try JSONDecoder().decode(Input.self, from: request.body)
@@ -154,12 +158,13 @@ class AWSClientTests: XCTestCase {
         }
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)
-            let client = createAWSClient(credentialProvider: .empty, serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address, middlewares: [AWSLoggingMiddleware()])
+            let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
+            let client = createAWSClient(credentialProvider: .empty, middlewares: [AWSLoggingMiddleware()])
             defer {
                 XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try awsServer.stop())
             }
-            let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: client.serviceConfig)
+            let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config)
 
             try awsServer.processRaw { request in
                 let output = Output(s: "TestOutputString", i: 547)
@@ -177,7 +182,7 @@ class AWSClientTests: XCTestCase {
         }
     }
 
-    func testRequestStreaming(client: AWSClient, server: AWSTestServer, bufferSize: Int, blockSize: Int) throws {
+    func testRequestStreaming(config: AWSServiceConfig, client: AWSClient, server: AWSTestServer, bufferSize: Int, blockSize: Int) throws {
         struct Input : AWSEncodableShape & AWSShapeWithPayload {
             static var _payloadPath: String = "payload"
             static var _payloadOptions: PayloadOptions = [.allowStreaming, .raw]
@@ -196,7 +201,7 @@ class AWSClientTests: XCTestCase {
             return eventLoop.makeSucceededFuture(buffer)
         }
         let input = Input(payload: payload)
-        let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: client.serviceConfig, input: input)
+        let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config, input: input)
 
         try server.processRaw { request in
             let bytes = request.body.getBytes(at: 0, length: request.body.readableBytes)
@@ -211,34 +216,36 @@ class AWSClientTests: XCTestCase {
     func testRequestStreaming() {
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
-        let client = createAWSClient(credentialProvider: .empty, endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
+        let config = createServiceConfig(endpoint: awsServer.address)
+        let client = createAWSClient(credentialProvider: .empty, httpClientProvider: .shared(httpClient))
         defer {
             XCTAssertNoThrow(try awsServer.stop())
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try httpClient.syncShutdown())
         }
 
-        XCTAssertNoThrow(try testRequestStreaming(client: client, server: awsServer, bufferSize: 128*1024, blockSize: 16*1024))
-        XCTAssertNoThrow(try testRequestStreaming(client: client, server: awsServer, bufferSize: 128*1024, blockSize: 17*1024))
-        XCTAssertNoThrow(try testRequestStreaming(client: client, server: awsServer, bufferSize: 18*1024, blockSize: 47*1024))
+        XCTAssertNoThrow(try testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128*1024, blockSize: 16*1024))
+        XCTAssertNoThrow(try testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128*1024, blockSize: 17*1024))
+        XCTAssertNoThrow(try testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 18*1024, blockSize: 47*1024))
     }
 
     func testRequestS3Streaming() {
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
-        let client = createAWSClient(credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"), service: "s3", endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
+        let config = createServiceConfig(service: "s3", endpoint: awsServer.address)
+        let client = createAWSClient(credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"), httpClientProvider: .shared(httpClient))
         defer {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
             XCTAssertNoThrow(try httpClient.syncShutdown())
         }
 
-        XCTAssertNoThrow(try testRequestStreaming(client: client, server: awsServer, bufferSize: 128*1024, blockSize: 16*1024))
-        XCTAssertNoThrow(try testRequestStreaming(client: client, server: awsServer, bufferSize: 81*1024, blockSize: 16*1024))
-        XCTAssertNoThrow(try testRequestStreaming(client: client, server: awsServer, bufferSize: 128*1024, blockSize: S3ChunkedStreamReader.bufferSize))
-        XCTAssertNoThrow(try testRequestStreaming(client: client, server: awsServer, bufferSize: 130*1024, blockSize: S3ChunkedStreamReader.bufferSize))
-        XCTAssertNoThrow(try testRequestStreaming(client: client, server: awsServer, bufferSize: 128*1024, blockSize: 17*1024))
-        XCTAssertNoThrow(try testRequestStreaming(client: client, server: awsServer, bufferSize: 18*1024, blockSize: 47*1024))
+        XCTAssertNoThrow(try testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128*1024, blockSize: 16*1024))
+        XCTAssertNoThrow(try testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 81*1024, blockSize: 16*1024))
+        XCTAssertNoThrow(try testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128*1024, blockSize: S3ChunkedStreamReader.bufferSize))
+        XCTAssertNoThrow(try testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 130*1024, blockSize: S3ChunkedStreamReader.bufferSize))
+        XCTAssertNoThrow(try testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128*1024, blockSize: 17*1024))
+        XCTAssertNoThrow(try testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 18*1024, blockSize: 47*1024))
     }
 
     func testRequestStreamingTooMuchData() {
@@ -251,7 +258,8 @@ class AWSClientTests: XCTestCase {
 
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
-        let client = createAWSClient(credentialProvider: .empty, endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
+        let config = createServiceConfig(endpoint: awsServer.address)
+        let client = createAWSClient(credentialProvider: .empty, httpClientProvider: .shared(httpClient))
         defer {
             // ignore error
             try? awsServer.stop()
@@ -267,7 +275,7 @@ class AWSClientTests: XCTestCase {
                 return eventLoop.makeSucceededFuture(buffer)
             }
             let input = Input(payload: payload)
-            let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: client.serviceConfig, input: input)
+            let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config, input: input)
             try response.wait()
         } catch AWSClient.ClientError.tooMuchData {
         } catch {
@@ -285,7 +293,8 @@ class AWSClientTests: XCTestCase {
 
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
-        let client = createAWSClient(credentialProvider: .empty, endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
+        let config = createServiceConfig(endpoint: awsServer.address)
+        let client = createAWSClient(credentialProvider: .empty, httpClientProvider: .shared(httpClient))
         defer {
             XCTAssertNoThrow(try awsServer.stop())
             XCTAssertNoThrow(try client.syncShutdown())
@@ -311,7 +320,7 @@ class AWSClientTests: XCTestCase {
             }
 
             let input = Input(payload: .fileHandle(fileHandle, size: bufferSize, fileIO: fileIO))
-            let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: client.serviceConfig, input: input)
+            let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config, input: input)
 
             try awsServer.processRaw { request in
                 XCTAssertNil(request.headers["transfer-encoding"])
@@ -339,7 +348,8 @@ class AWSClientTests: XCTestCase {
 
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
-        let client = createAWSClient(credentialProvider: .empty, endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
+        let config = createServiceConfig(endpoint: awsServer.address)
+        let client = createAWSClient(credentialProvider: .empty, httpClientProvider: .shared(httpClient))
         defer {
             XCTAssertNoThrow(try awsServer.stop())
             XCTAssertNoThrow(try client.syncShutdown())
@@ -363,7 +373,7 @@ class AWSClientTests: XCTestCase {
                 }
             }
             let input = Input(payload: payload)
-            let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: client.serviceConfig, input: input)
+            let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config, input: input)
 
             try awsServer.processRaw { request in
                 let bytes = request.body.getBytes(at: 0, length: request.body.readableBytes)
@@ -385,18 +395,14 @@ class AWSClientTests: XCTestCase {
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let httpClientConfig = AsyncHTTPClient.HTTPClient.Configuration(redirectConfiguration: .init(.disallow))
             let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew, configuration: httpClientConfig)
-            let client = createAWSClient(
-                credentialProvider: .empty,
-                serviceProtocol: .json(version: "1.1"),
-                endpoint: awsServer.address,
-                httpClientProvider: .shared(httpClient)
-            )
+            let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
+            let client = createAWSClient(credentialProvider: .empty, httpClientProvider: .shared(httpClient))
             defer {
                 XCTAssertNoThrow(try awsServer.stop())
                 XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try httpClient.syncShutdown())
             }
-            let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: client.serviceConfig)
+            let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config)
 
             try awsServer.processRaw { request in
                 let response = AWSTestServer.Response(httpStatus: .temporaryRedirect, headers: ["Location":awsServer.address], body: nil)
@@ -425,19 +431,14 @@ class AWSClientTests: XCTestCase {
         do {
             let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew)
             let awsServer = AWSTestServer(serviceProtocol: .json)
-            let client = createAWSClient(
-                credentialProvider: .empty,
-                serviceProtocol: .json(version: "1.1"),
-                endpoint: awsServer.address,
-                retryPolicy: ExponentialRetry(base: .milliseconds(200)),
-                httpClientProvider: .shared(httpClient)
-            )
+            let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
+            let client = createAWSClient(credentialProvider: .empty, retryPolicy: ExponentialRetry(base: .milliseconds(200)), httpClientProvider: .shared(httpClient))
             defer {
                 XCTAssertNoThrow(try awsServer.stop())
                 XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try httpClient.syncShutdown())
             }
-            let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: client.serviceConfig)
+            let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config)
 
             var count = 0
             try awsServer.processRaw { request in
@@ -469,19 +470,14 @@ class AWSClientTests: XCTestCase {
         do {
             let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew)
             let awsServer = AWSTestServer(serviceProtocol: .json)
-            let client = createAWSClient(
-                credentialProvider: .empty,
-                serviceProtocol: .json(version: "1.1"),
-                endpoint: awsServer.address,
-                retryPolicy: JitterRetry(),
-                httpClientProvider: .shared(httpClient)
-            )
+            let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
+            let client = createAWSClient(credentialProvider: .empty, retryPolicy: JitterRetry(), httpClientProvider: .shared(httpClient))
             defer {
                 XCTAssertNoThrow(try awsServer.stop())
                 XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try httpClient.syncShutdown())
             }
-            let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: client.serviceConfig)
+            let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config)
 
             var count = 0
             try awsServer.processRaw { request in
@@ -511,19 +507,14 @@ class AWSClientTests: XCTestCase {
         do {
             let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew)
             let awsServer = AWSTestServer(serviceProtocol: .json)
-            let client = createAWSClient(
-                credentialProvider: .empty,
-                serviceProtocol: .json(version: "1.1"),
-                endpoint: awsServer.address,
-                retryPolicy: JitterRetry(),
-                httpClientProvider: .shared(httpClient)
-            )
+            let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
+            let client = createAWSClient(credentialProvider: .empty, retryPolicy: JitterRetry(), httpClientProvider: .shared(httpClient))
             defer {
                 XCTAssertNoThrow(try awsServer.stop())
                 XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try httpClient.syncShutdown())
             }
-            let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: client.serviceConfig)
+            let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config)
 
             try awsServer.processRaw { request in
                 return .error(.accessDenied, continueProcessing: false)
@@ -544,11 +535,8 @@ class AWSClientTests: XCTestCase {
             let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 5)
             let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
             let awsServer = AWSTestServer(serviceProtocol: .json)
-            let client = createAWSClient(
-                credentialProvider: .empty,
-                endpoint: awsServer.address,
-                httpClientProvider: .shared(httpClient)
-            )
+            let config = createServiceConfig(endpoint: awsServer.address)
+            let client = createAWSClient(credentialProvider: .empty, httpClientProvider: .shared(httpClient))
             defer {
                 XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try httpClient.syncShutdown())
@@ -556,7 +544,7 @@ class AWSClientTests: XCTestCase {
                 XCTAssertNoThrow(try awsServer.stop())
             }
             let eventLoop = client.eventLoopGroup.next()
-            let response: EventLoopFuture<Void> = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: client.serviceConfig, on: eventLoop)
+            let response: EventLoopFuture<Void> = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config, on: eventLoop)
 
             try awsServer.processRaw { request in
                 return .result(.ok)
@@ -582,11 +570,8 @@ class AWSClientTests: XCTestCase {
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 5)
             let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
-            let client = createAWSClient(
-                credentialProvider: .empty,
-                endpoint: awsServer.address,
-                httpClientProvider: .shared(httpClient)
-            )
+            let config = createServiceConfig(endpoint: awsServer.address)
+            let client = createAWSClient(credentialProvider: .empty, httpClientProvider: .shared(httpClient))
             defer {
                 XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try httpClient.syncShutdown())
@@ -594,7 +579,7 @@ class AWSClientTests: XCTestCase {
                 XCTAssertNoThrow(try awsServer.stop())
             }
             var count = 0
-            let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: "GET", serviceConfig: client.serviceConfig, input: Input()) { (payload: ByteBuffer, eventLoop: EventLoop) in
+            let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: "GET", serviceConfig: config, input: Input()) { (payload: ByteBuffer, eventLoop: EventLoop) in
                 let payloadSize = payload.readableBytes
                 let slice = Data(data[count..<(count+payloadSize)])
                 let payloadData = payload.getData(at: 0, length: payload.readableBytes)
@@ -629,13 +614,14 @@ class AWSClientTests: XCTestCase {
          }
 
         let awsServer = AWSTestServer(serviceProtocol: .json)
-        let client = createAWSClient(credentialProvider: .empty, endpoint: awsServer.address, middlewares: [URLAppendMiddleware()])
+        let config = createServiceConfig(endpoint: awsServer.address)
+        let client = createAWSClient(credentialProvider: .empty, middlewares: [URLAppendMiddleware()])
         defer {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
         }
         
-        let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: client.serviceConfig)
+        let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config)
 
         XCTAssertNoThrow(try awsServer.processRaw { request in
             XCTAssertEqual(request.uri, "/test")

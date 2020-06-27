@@ -26,13 +26,15 @@ class PaginateTests: XCTestCase {
     var eventLoopGroup: EventLoopGroup!
     var httpClient: AWSHTTPClient!
     var client: AWSClient!
+    var config: AWSServiceConfig!
 
     override func setUp() {
         // create server and client
         awsServer = AWSTestServer(serviceProtocol: .json)
         eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 3)
         httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
-        client = createAWSClient(credentialProvider: .empty, serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address, retryPolicy: NoRetry(), httpClientProvider: .shared(httpClient))
+        config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
+        client = createAWSClient(credentialProvider: .empty, retryPolicy: NoRetry(), httpClientProvider: .shared(httpClient))
     }
 
     override func tearDown() {
@@ -63,7 +65,7 @@ class PaginateTests: XCTestCase {
     }
 
     func counter(_ input: CounterInput, on eventLoop: EventLoop?) -> EventLoopFuture<CounterOutput> {
-        return client.execute(operation: "TestOperation", path: "/", httpMethod: "POST", serviceConfig: client.serviceConfig, input: input, on: eventLoop)
+        return client.execute(operation: "TestOperation", path: "/", httpMethod: "POST", serviceConfig: config, input: input, on: eventLoop)
     }
 
     func counterPaginator(_ input: CounterInput, onPage: @escaping (CounterOutput, EventLoop)->EventLoopFuture<Bool>) -> EventLoopFuture<Void> {
@@ -127,7 +129,7 @@ class PaginateTests: XCTestCase {
     }
 
     func stringList(_ input: StringListInput, on eventLoop: EventLoop? = nil) -> EventLoopFuture<StringListOutput> {
-        return client.execute(operation: "TestOperation", path: "/", httpMethod: "POST", serviceConfig: client.serviceConfig, input: input, on: eventLoop)
+        return client.execute(operation: "TestOperation", path: "/", httpMethod: "POST", serviceConfig: config, input: input, on: eventLoop)
     }
 
     func stringListPaginator(_ input: StringListInput, on eventLoop: EventLoop? = nil, onPage: @escaping (StringListOutput, EventLoop)->EventLoopFuture<Bool>) -> EventLoopFuture<Void> {

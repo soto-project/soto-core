@@ -183,7 +183,7 @@ public struct AWSResponse {
     }
     
     /// extract error code and message from AWSResponse
-    func generateError(serviceConfig: ServiceConfig) -> Error? {
+    func generateError(serviceConfig: AWSServiceConfig) -> Error? {
         var apiError: APIError? = nil
         switch serviceConfig.serviceProtocol {
         case .query:

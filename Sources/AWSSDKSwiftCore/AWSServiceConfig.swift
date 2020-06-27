@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 /// Configuration class defining an AWS service
-public class ServiceConfig {
+public class AWSServiceConfig {
 
     /// Region where service is running
     public let region: Region

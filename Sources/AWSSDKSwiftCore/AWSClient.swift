@@ -52,7 +52,7 @@ public final class AWSClient {
     }
 
     /// AWS service configuration
-    public let serviceConfig: ServiceConfig
+    public let serviceConfig: AWSServiceConfig
     /// AWS credentials provider
     let credentialProvider: CredentialProvider
     /// middleware code to be applied to requests and responses
@@ -82,7 +82,7 @@ public final class AWSClient {
     ///     - httpClientProvider: HTTPClient to use. Use `.createNew` if you want the client to manage its own HTTPClient.
     public init(
         credentialProviderFactory: CredentialProviderFactory = .runtime,
-        serviceConfig: ServiceConfig,
+        serviceConfig: AWSServiceConfig,
         retryPolicy: RetryPolicy = JitterRetry(),
         middlewares: [AWSServiceMiddleware] = [],
         httpClientProvider: HTTPClientProvider

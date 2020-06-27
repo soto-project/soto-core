@@ -83,9 +83,9 @@ public func createServiceConfig(
     serviceEndpoints: [String: String] = [:],
     partitionEndpoints: [Partition: (endpoint: String, region: Region)] = [:],
     possibleErrorTypes: [AWSErrorType.Type] = [],
-    middlewares: [AWSServiceMiddleware] = []) -> ServiceConfig
+    middlewares: [AWSServiceMiddleware] = []) -> AWSServiceConfig
 {
-    ServiceConfig(
+    AWSServiceConfig(
         region: region,
         partition: partition,
         amzTarget: amzTarget,

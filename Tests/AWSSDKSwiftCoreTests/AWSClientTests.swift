@@ -24,7 +24,7 @@ import AWSXML
 class AWSClientTests: XCTestCase {
 
     func testGetCredential() {
-        let client = createAWSClient(accessKeyId: "key", secretAccessKey: "secret")
+        let client = createAWSClient(credentialProvider: .static(accessKeyId: "key", secretAccessKey: "secret"))
         defer {
             XCTAssertNoThrow(try client.syncShutdown())
         }
@@ -68,7 +68,12 @@ class AWSClientTests: XCTestCase {
             try? httpClient.syncShutdown()
             try? elg.syncShutdownGracefully()
         }
-        let client = createAWSClient(accessKeyId: "foo", secretAccessKey: "bar", serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
+        let client = createAWSClient(
+            credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
+            serviceProtocol: .json(version: "1.1"),
+            endpoint: awsServer.address,
+            httpClientProvider: .shared(httpClient)
+        )
         defer {
             XCTAssertNoThrow(try client.syncShutdown())
         }
@@ -90,7 +95,7 @@ class AWSClientTests: XCTestCase {
     func testClientNoInputNoOutput() {
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)
-            let client = createAWSClient(accessKeyId: "", secretAccessKey: "", serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
+            let client = createAWSClient(credentialProvider: .empty, serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address, middlewares: [AWSLoggingMiddleware()])
             defer {
                 XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try awsServer.stop())
@@ -120,7 +125,7 @@ class AWSClientTests: XCTestCase {
 
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)
-            let client = createAWSClient(accessKeyId: "", secretAccessKey: "", serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
+            let client = createAWSClient(credentialProvider: .empty, serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address, middlewares: [AWSLoggingMiddleware()])
             defer {
                 XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try awsServer.stop())
@@ -149,7 +154,7 @@ class AWSClientTests: XCTestCase {
         }
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)
-            let client = createAWSClient(accessKeyId: "", secretAccessKey: "", serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
+            let client = createAWSClient(credentialProvider: .empty, serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address, middlewares: [AWSLoggingMiddleware()])
             defer {
                 XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try awsServer.stop())
@@ -206,7 +211,7 @@ class AWSClientTests: XCTestCase {
     func testRequestStreaming() {
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
-        let client = createAWSClient(accessKeyId: "", secretAccessKey: "", endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
+        let client = createAWSClient(credentialProvider: .empty, endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
         defer {
             XCTAssertNoThrow(try awsServer.stop())
             XCTAssertNoThrow(try client.syncShutdown())
@@ -221,7 +226,7 @@ class AWSClientTests: XCTestCase {
     func testRequestS3Streaming() {
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
-        let client = createAWSClient(accessKeyId: "foo", secretAccessKey: "bar", service: "s3", endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
+        let client = createAWSClient(credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"), service: "s3", endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
         defer {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
@@ -246,7 +251,7 @@ class AWSClientTests: XCTestCase {
 
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
-        let client = createAWSClient(accessKeyId: "", secretAccessKey: "", endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
+        let client = createAWSClient(credentialProvider: .empty, endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
         defer {
             // ignore error
             try? awsServer.stop()
@@ -280,7 +285,7 @@ class AWSClientTests: XCTestCase {
 
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
-        let client = createAWSClient(accessKeyId: "", secretAccessKey: "", endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
+        let client = createAWSClient(credentialProvider: .empty, endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
         defer {
             XCTAssertNoThrow(try awsServer.stop())
             XCTAssertNoThrow(try client.syncShutdown())
@@ -334,7 +339,7 @@ class AWSClientTests: XCTestCase {
 
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
-        let client = createAWSClient(accessKeyId: "", secretAccessKey: "", endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
+        let client = createAWSClient(credentialProvider: .empty, endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
         defer {
             XCTAssertNoThrow(try awsServer.stop())
             XCTAssertNoThrow(try client.syncShutdown())
@@ -380,7 +385,12 @@ class AWSClientTests: XCTestCase {
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let httpClientConfig = AsyncHTTPClient.HTTPClient.Configuration(redirectConfiguration: .init(.disallow))
             let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew, configuration: httpClientConfig)
-            let client = createAWSClient(accessKeyId: "", secretAccessKey: "", serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address, httpClientProvider: .shared(httpClient))
+            let client = createAWSClient(
+                credentialProvider: .empty,
+                serviceProtocol: .json(version: "1.1"),
+                endpoint: awsServer.address,
+                httpClientProvider: .shared(httpClient)
+            )
             defer {
                 XCTAssertNoThrow(try awsServer.stop())
                 XCTAssertNoThrow(try client.syncShutdown())
@@ -415,7 +425,13 @@ class AWSClientTests: XCTestCase {
         do {
             let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew)
             let awsServer = AWSTestServer(serviceProtocol: .json)
-            let client = createAWSClient(accessKeyId: "", secretAccessKey: "", serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address, retryPolicy: ExponentialRetry(base: .milliseconds(200)), httpClientProvider: .shared(httpClient))
+            let client = createAWSClient(
+                credentialProvider: .empty,
+                serviceProtocol: .json(version: "1.1"),
+                endpoint: awsServer.address,
+                retryPolicy: ExponentialRetry(base: .milliseconds(200)),
+                httpClientProvider: .shared(httpClient)
+            )
             defer {
                 XCTAssertNoThrow(try awsServer.stop())
                 XCTAssertNoThrow(try client.syncShutdown())
@@ -454,8 +470,7 @@ class AWSClientTests: XCTestCase {
             let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew)
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let client = createAWSClient(
-                accessKeyId: "",
-                secretAccessKey: "",
+                credentialProvider: .empty,
                 serviceProtocol: .json(version: "1.1"),
                 endpoint: awsServer.address,
                 retryPolicy: JitterRetry(),
@@ -497,8 +512,7 @@ class AWSClientTests: XCTestCase {
             let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew)
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let client = createAWSClient(
-                accessKeyId: "",
-                secretAccessKey: "",
+                credentialProvider: .empty,
                 serviceProtocol: .json(version: "1.1"),
                 endpoint: awsServer.address,
                 retryPolicy: JitterRetry(),
@@ -531,8 +545,7 @@ class AWSClientTests: XCTestCase {
             let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let client = createAWSClient(
-                accessKeyId: "",
-                secretAccessKey: "",
+                credentialProvider: .empty,
                 endpoint: awsServer.address,
                 httpClientProvider: .shared(httpClient)
             )
@@ -569,15 +582,9 @@ class AWSClientTests: XCTestCase {
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 5)
             let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
-            let client = AWSClient(
-                accessKeyId: "",
-                secretAccessKey: "",
-                region: .useast1,
-                service:"TestClient",
-                serviceProtocol: .json(version: "1.1"),
-                apiVersion: "2020-01-21",
+            let client = createAWSClient(
+                credentialProvider: .empty,
                 endpoint: awsServer.address,
-                middlewares: [AWSLoggingMiddleware()],
                 httpClientProvider: .shared(httpClient)
             )
             defer {
@@ -622,7 +629,7 @@ class AWSClientTests: XCTestCase {
          }
 
         let awsServer = AWSTestServer(serviceProtocol: .json)
-        let client = createAWSClient(accessKeyId: "", secretAccessKey: "", endpoint: awsServer.address, middlewares: [URLAppendMiddleware()])
+        let client = createAWSClient(credentialProvider: .empty, endpoint: awsServer.address, middlewares: [URLAppendMiddleware()])
         defer {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())

@@ -29,17 +29,7 @@ class PayloadTests: XCTestCase {
 
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)
-            let client = AWSClient(
-                accessKeyId: "",
-                secretAccessKey: "",
-                region: .useast1,
-                service:"TestClient",
-                serviceProtocol: .json(version: "1.1"),
-                apiVersion: "2020-01-21",
-                endpoint: awsServer.address,
-                middlewares: [AWSLoggingMiddleware()],
-                httpClientProvider: .createNew
-            )
+            let client = createAWSClient(credentialProvider: .empty, endpoint: awsServer.address)
             defer {
                 XCTAssertNoThrow(try client.syncShutdown())
             }
@@ -80,17 +70,7 @@ class PayloadTests: XCTestCase {
         }
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)
-            let client = AWSClient(
-                accessKeyId: "",
-                secretAccessKey: "",
-                region: .useast1,
-                service:"TestClient",
-                serviceProtocol: .json(version: "1.1"),
-                apiVersion: "2020-01-21",
-                endpoint: awsServer.address,
-                middlewares: [AWSLoggingMiddleware()],
-                httpClientProvider: .createNew
-            )
+            let client = createAWSClient(credentialProvider: .empty, endpoint: awsServer.address)
             defer {
                 XCTAssertNoThrow(try client.syncShutdown())
             }

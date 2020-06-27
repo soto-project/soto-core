@@ -217,15 +217,7 @@ class PerformanceTests: XCTestCase {
 
     func testSignedURLRequest() {
         guard Self.enableTimingTests == true else { return }
-        let client = AWSClient(
-            accessKeyId: "MyAccessKeyId",
-            secretAccessKey: "MySecretAccessKey",
-            region: .useast1,
-            service:"Test",
-            serviceProtocol: .json(version: "1.1"),
-            apiVersion: "1.0",
-            httpClientProvider: .createNew
-        )
+        let client = createAWSClient(credentialProvider: .static(accessKeyId: "MyAccessKeyId", secretAccessKey: "MySecretAccessKey"))
         defer {
             XCTAssertNoThrow(try client.syncShutdown())
         }

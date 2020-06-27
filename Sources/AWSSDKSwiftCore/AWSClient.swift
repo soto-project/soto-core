@@ -73,7 +73,7 @@ public final class AWSClient {
     ///     - middlewares: Array of middlewares to apply to requests and responses
     ///     - httpClientProvider: HTTPClient to use. Use `.createNew` if you want the client to manage its own HTTPClient.
     public init(
-        credentialProviderFactory: CredentialProviderFactory = .runtime,
+        credentialProvider credentialProviderFactory: CredentialProviderFactory = .runtime,
         retryPolicy: RetryPolicy = JitterRetry(),
         middlewares: [AWSServiceMiddleware] = [],
         httpClientProvider: HTTPClientProvider
@@ -90,7 +90,7 @@ public final class AWSClient {
         self.credentialProvider = credentialProviderFactory.createProvider(context: .init(
             httpClient: httpClient,
             eventLoop: httpClient.eventLoopGroup.next()))
-        
+
         self.middlewares = middlewares
         self.retryPolicy = retryPolicy
     }
@@ -244,7 +244,7 @@ extension AWSClient {
             return try awsRequest
                 .applyMiddlewares(serviceConfig.middlewares + self.middlewares)
                 .createHTTPRequest(signer: signer)
-            
+
         }.flatMap { request in
             return self.invoke(request, with: serviceConfig, on: eventLoop)
         }.map { _ in
@@ -374,7 +374,7 @@ extension AWSClient {
             signer.signURL(url: url, method: HTTPMethod(rawValue: httpMethod), expires: expires)
         }
     }
-    
+
     public func createSigner(serviceConfig: AWSServiceConfig) -> EventLoopFuture<AWSSigner> {
         return credentialProvider.getCredential(on: eventLoopGroup.next()).map { credential in
             return AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
@@ -388,7 +388,7 @@ extension AWSClient {
     /// Generate an AWS Response from  the operation HTTP response and return the output shape from it. This is only every called if the response includes a successful http status code
     internal func validate<Output: AWSDecodableShape>(operation operationName: String, response: AWSHTTPResponse, serviceConfig: AWSServiceConfig) throws -> Output {
         assert((200..<300).contains(response.status.code), "Shouldn't get here if error was returned")
-        
+
         let raw = (Output.self as? AWSShapeWithPayload.Type)?._payloadOptions.contains(.raw) == true
         let awsResponse = try AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol, raw: raw)
             .applyMiddlewares(serviceConfig.middlewares + middlewares)

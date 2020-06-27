@@ -125,7 +125,7 @@ public final class AWSClient {
 // invoker
 extension AWSClient {
 
-    fileprivate func invoke(_ request: @escaping () -> EventLoopFuture<AWSHTTPResponse>) -> EventLoopFuture<AWSHTTPResponse> {
+    fileprivate func invoke(with serviceConfig: AWSServiceConfig, _ request: @escaping () -> EventLoopFuture<AWSHTTPResponse>) -> EventLoopFuture<AWSHTTPResponse> {
         let eventloop = self.eventLoopGroup.next()
         let promise = eventloop.makePromise(of: AWSHTTPResponse.self)
 
@@ -146,7 +146,7 @@ extension AWSClient {
                         }
                     } else if case AWSClient.InternalError.httpResponseError(let response) = error {
                         // if there was no retry and error was a response status code then attempt to convert to AWS error
-                        promise.fail(self.createError(for: response, serviceConfig: self.serviceConfig))
+                        promise.fail(self.createError(for: response, serviceConfig: serviceConfig))
                     } else {
                         promise.fail(error)
                     }
@@ -159,15 +159,15 @@ extension AWSClient {
     }
 
     /// invoke HTTP request
-    fileprivate func invoke(_ httpRequest: AWSHTTPRequest, on eventLoop: EventLoop) -> EventLoopFuture<AWSHTTPResponse> {
-        return invoke {
+    fileprivate func invoke(_ httpRequest: AWSHTTPRequest, with serviceConfig: AWSServiceConfig, on eventLoop: EventLoop) -> EventLoopFuture<AWSHTTPResponse> {
+        return invoke(with: serviceConfig) {
             return self.httpClient.execute(request: httpRequest, timeout: .seconds(20), on: eventLoop)
         }
     }
 
     /// invoke HTTP request with response streaming
-    fileprivate func invoke(_ httpRequest: AWSHTTPRequest, on eventLoop: EventLoop, stream: @escaping AWSHTTPClient.ResponseStream) -> EventLoopFuture<AWSHTTPResponse> {
-        return invoke {
+    fileprivate func invoke(_ httpRequest: AWSHTTPRequest, with serviceConfig: AWSServiceConfig, on eventLoop: EventLoop, stream: @escaping AWSHTTPClient.ResponseStream) -> EventLoopFuture<AWSHTTPResponse> {
+        return invoke(with: serviceConfig) {
             return self.httpClient.execute(request: httpRequest, timeout: .seconds(20), on: eventLoop, stream: stream)
         }
     }
@@ -209,7 +209,7 @@ extension AWSClient {
                 .applyMiddlewares(serviceConfig.middlewares + self.middlewares)
                 .createHTTPRequest(signer: signer)
         }.flatMap { request in
-            return self.invoke(request, on: eventLoop)
+            return self.invoke(request, with: serviceConfig, on: eventLoop)
         }.map { _ in
             return
         }
@@ -237,7 +237,7 @@ extension AWSClient {
                 .createHTTPRequest(signer: signer)
             
         }.flatMap { request in
-            return self.invoke(request, on: eventLoop)
+            return self.invoke(request, with: serviceConfig, on: eventLoop)
         }.map { _ in
             return
         }
@@ -264,7 +264,7 @@ extension AWSClient {
                 .applyMiddlewares(serviceConfig.middlewares + self.middlewares)
                 .createHTTPRequest(signer: signer)
         }.flatMap { request in
-            return self.invoke(request, on: eventLoop)
+            return self.invoke(request, with: serviceConfig, on: eventLoop)
         }.flatMapThrowing { response in
             return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
         }
@@ -293,7 +293,7 @@ extension AWSClient {
                 .applyMiddlewares(serviceConfig.middlewares + self.middlewares)
                 .createHTTPRequest(signer: signer)
         }.flatMap { request in
-            return self.invoke(request, on: eventLoop)
+            return self.invoke(request, with: serviceConfig, on: eventLoop)
         }.flatMapThrowing { response in
             return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
         }
@@ -314,7 +314,7 @@ extension AWSClient {
                 .applyMiddlewares(serviceConfig.middlewares + self.middlewares)
                 .createHTTPRequest(signer: signer)
         }.flatMap { request in
-            return self.invoke(request, on: eventLoop, stream: stream)
+            return self.invoke(request, with: serviceConfig, on: eventLoop, stream: stream)
         }.flatMapThrowing { response in
             return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
         }

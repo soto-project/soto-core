@@ -68,11 +68,6 @@ public final class AWSClient {
 
     private let isShutdown = NIOAtomic<Bool>.makeAtomic(value: false)
 
-    // public accessors to ensure code outside of aws-sdk-swift-core still compiles
-    public var region: Region { return serviceConfig.region }
-    public var endpoint: String { return serviceConfig.endpoint }
-    public var serviceProtocol: ServiceProtocol { return serviceConfig.serviceProtocol }
-
     /// Initialize an AWSClient struct
     /// - parameters:
     ///     - credentialProvider: An object that returns valid signing credentials for request signing.

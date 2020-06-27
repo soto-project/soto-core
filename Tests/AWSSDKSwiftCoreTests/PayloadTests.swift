@@ -34,7 +34,7 @@ class PayloadTests: XCTestCase {
                 XCTAssertNoThrow(try client.syncShutdown())
             }
             let input = DataPayload(data: payload)
-            let response = client.send(operation: "test", path: "/", httpMethod: "POST", serviceConfig: client.serviceConfig, input: input)
+            let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: client.serviceConfig, input: input)
 
             try awsServer.processRaw { request in
                 XCTAssertEqual(request.body.getString(at: 0, length: request.body.readableBytes), expectedResult)

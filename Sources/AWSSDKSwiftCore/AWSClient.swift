@@ -195,7 +195,7 @@ extension AWSClient {
     ///     - input: Input object
     /// - returns:
     ///     Empty Future that completes when response is received
-    public func send<Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, serviceConfig: AWSServiceConfig, input: Input, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Void> {
+    public func execute<Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, serviceConfig: AWSServiceConfig, input: Input, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Void> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let future: EventLoopFuture<Void> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)

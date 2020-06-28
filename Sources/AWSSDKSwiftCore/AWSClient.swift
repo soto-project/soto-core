@@ -73,7 +73,7 @@ public final class AWSClient {
     ///     - middlewares: Array of middlewares to apply to requests and responses
     ///     - httpClientProvider: HTTPClient to use. Use `.createNew` if you want the client to manage its own HTTPClient.
     public init(
-        credentialProvider credentialProviderFactory: CredentialProviderFactory = .runtime,
+        credentialProvider credentialProviderFactory: CredentialProviderFactory = .default,
         retryPolicy: RetryPolicy = JitterRetry(),
         middlewares: [AWSServiceMiddleware] = [],
         httpClientProvider: HTTPClientProvider

@@ -186,7 +186,7 @@ extension AWSClient {
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
-    ///     - serviceConfig: configuration to be used to request creation and signing
+    ///     - serviceConfig: AWS service configuration used in request creation and signing
     ///     - input: Input object
     /// - returns:
     ///     Empty Future that completes when response is received
@@ -223,7 +223,7 @@ extension AWSClient {
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
-    ///     - serviceConfig: configuration to be used to request creation and signing
+    ///     - serviceConfig: AWS service configuration used in request creation and signing
     /// - returns:
     ///     Empty Future that completes when response is received
     public func execute(
@@ -258,7 +258,7 @@ extension AWSClient {
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
-    ///     - serviceConfig: configuration to be used to request creation and signing
+    ///     - serviceConfig: AWS service configuration used in request creation and signing
     /// - returns:
     ///     Future containing output object that completes when response is received
     public func execute<Output: AWSDecodableShape>(
@@ -292,7 +292,7 @@ extension AWSClient {
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
-    ///     - serviceConfig: configuration to be used to request creation and signing
+    ///     - serviceConfig: AWS service configuration used in request creation and signing
     ///     - input: Input object
     /// - returns:
     ///     Future containing output object that completes when response is received
@@ -329,7 +329,7 @@ extension AWSClient {
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
-    ///     - serviceConfig: configuration to be used to request creation and signing
+    ///     - serviceConfig: AWS service configuration used in request creation and signing
     ///     - input: Input object
     /// - returns:
     ///     Future containing output object that completes when response is received
@@ -366,7 +366,7 @@ extension AWSClient {
     ///     - url : URL to sign
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
     ///     - expires: How long before the signed URL expires
-    ///     - serviceConfig: Additional configuration to sign the url
+    ///     - serviceConfig: additional AWS service configuration used to sign the url
     /// - returns:
     ///     A signed URL
     public func signURL(url: URL, httpMethod: String, expires: Int = 86400, serviceConfig: AWSServiceConfig) -> EventLoopFuture<URL> {

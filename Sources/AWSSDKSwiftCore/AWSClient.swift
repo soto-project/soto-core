@@ -190,7 +190,14 @@ extension AWSClient {
     ///     - input: Input object
     /// - returns:
     ///     Empty Future that completes when response is received
-    public func execute<Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, serviceConfig: AWSServiceConfig, input: Input, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Void> {
+    public func execute<Input: AWSEncodableShape>(
+        operation operationName: String,
+        path: String,
+        httpMethod: String,
+        serviceConfig: AWSServiceConfig,
+        input: Input,
+        on eventLoop: EventLoop? = nil
+    ) -> EventLoopFuture<Void> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let future: EventLoopFuture<Void> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
@@ -219,7 +226,13 @@ extension AWSClient {
     ///     - serviceConfig: configuration to be used to request creation and signing
     /// - returns:
     ///     Empty Future that completes when response is received
-    public func execute(operation operationName: String, path: String, httpMethod: String, serviceConfig: AWSServiceConfig, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Void> {
+    public func execute(
+        operation operationName: String,
+        path: String,
+        httpMethod: String,
+        serviceConfig: AWSServiceConfig,
+        on eventLoop: EventLoop? = nil
+    ) -> EventLoopFuture<Void> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let future: EventLoopFuture<Void> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
@@ -248,7 +261,13 @@ extension AWSClient {
     ///     - serviceConfig: configuration to be used to request creation and signing
     /// - returns:
     ///     Future containing output object that completes when response is received
-    public func execute<Output: AWSDecodableShape>(operation operationName: String, path: String, httpMethod: String, serviceConfig: AWSServiceConfig, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Output> {
+    public func execute<Output: AWSDecodableShape>(
+        operation operationName: String,
+        path: String,
+        httpMethod: String,
+        serviceConfig: AWSServiceConfig,
+        on eventLoop: EventLoop? = nil
+    ) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
@@ -277,7 +296,14 @@ extension AWSClient {
     ///     - input: Input object
     /// - returns:
     ///     Future containing output object that completes when response is received
-    public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, serviceConfig: AWSServiceConfig, input: Input, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Output> {
+    public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(
+        operation operationName: String,
+        path: String,
+        httpMethod: String,
+        serviceConfig: AWSServiceConfig,
+        input: Input,
+        on eventLoop: EventLoop? = nil
+    ) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
@@ -307,7 +333,15 @@ extension AWSClient {
     ///     - input: Input object
     /// - returns:
     ///     Future containing output object that completes when response is received
-    public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, serviceConfig: AWSServiceConfig, input: Input, on eventLoop: EventLoop? = nil, stream: @escaping AWSHTTPClient.ResponseStream) -> EventLoopFuture<Output> {
+    public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(
+        operation operationName: String,
+        path: String,
+        httpMethod: String,
+        serviceConfig: AWSServiceConfig,
+        input: Input,
+        on eventLoop: EventLoop? = nil,
+        stream: @escaping AWSHTTPClient.ResponseStream
+    ) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         return credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)

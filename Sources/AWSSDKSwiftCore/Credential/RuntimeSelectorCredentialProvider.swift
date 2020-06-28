@@ -16,7 +16,7 @@ import NIO
 import NIOConcurrencyHelpers
 
 /// get credentials from a list of possible credential providers
-class GroupCredentialProvider: CredentialProvider {
+class RuntimeSelectorCredentialProvider: CredentialProvider {
     /// the provider chosen to supply credentials
     var internalProvider: CredentialProvider? {
         get {

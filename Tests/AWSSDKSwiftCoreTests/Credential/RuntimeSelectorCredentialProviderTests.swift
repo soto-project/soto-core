@@ -17,10 +17,10 @@ import AWSTestUtils
 import NIO
 @testable import AWSSDKSwiftCore
 
-class GroupCredentialProviderTests: XCTestCase {
+class RuntimeSelectorCredentialProviderTests: XCTestCase {
     
     func testSetupFail() {
-        let client = createAWSClient(credentialProvider: .group([.custom({_ in return NullCredentialProvider()}) ]))
+        let client = createAWSClient(credentialProvider: .selector([.custom({_ in return NullCredentialProvider()}) ]))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next())
         XCTAssertThrowsError(try futureResult.wait()) { error in
@@ -43,13 +43,13 @@ class GroupCredentialProviderTests: XCTestCase {
         Environment.set(secretAccessKey, for: "AWS_SECRET_ACCESS_KEY")
         Environment.set(sessionToken, for: "AWS_SESSION_TOKEN")
 
-        let client = createAWSClient(credentialProvider: .group([.environment]))
+        let client = createAWSClient(credentialProvider: .selector([.environment]))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next()).flatMapThrowing { credential in
             XCTAssertEqual(credential.accessKeyId, accessKeyId)
             XCTAssertEqual(credential.secretAccessKey, secretAccessKey)
             XCTAssertEqual(credential.sessionToken, sessionToken)
-            let internalProvider = try XCTUnwrap((client.credentialProvider as? GroupCredentialProvider)?.internalProvider)
+            let internalProvider = try XCTUnwrap((client.credentialProvider as? RuntimeSelectorCredentialProvider)?.internalProvider)
             XCTAssert(internalProvider is StaticCredential)
         }
         XCTAssertNoThrow(try futureResult.wait())
@@ -60,14 +60,14 @@ class GroupCredentialProviderTests: XCTestCase {
     }
     
     func testFoundEmptyProvider() throws {
-        let provider: CredentialProviderFactory = .group([.empty])
+        let provider: CredentialProviderFactory = .selector([.empty])
         let client = createAWSClient(credentialProvider: provider)
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next()).flatMapThrowing { credential in
             XCTAssertEqual(credential.accessKeyId, "")
             XCTAssertEqual(credential.secretAccessKey, "")
             XCTAssertEqual(credential.sessionToken, nil)
-            let internalProvider = try XCTUnwrap((client.credentialProvider as? GroupCredentialProvider)?.internalProvider)
+            let internalProvider = try XCTUnwrap((client.credentialProvider as? RuntimeSelectorCredentialProvider)?.internalProvider)
             XCTAssert(internalProvider is StaticCredential)
         }
         XCTAssertNoThrow(try futureResult.wait())
@@ -76,7 +76,7 @@ class GroupCredentialProviderTests: XCTestCase {
     func testEnvironmentProviderFail() throws {
         Environment.unset(name: "AWS_ACCESS_KEY_ID")
 
-        let provider: CredentialProviderFactory = .group([.environment])
+        let provider: CredentialProviderFactory = .selector([.environment])
         let client = createAWSClient(credentialProvider: provider)
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next())
@@ -106,7 +106,7 @@ class GroupCredentialProviderTests: XCTestCase {
             // fallback
             return NullCredentialProvider()
         }
-        let provider: CredentialProviderFactory = .group([.environment, customECS, .empty])
+        let provider: CredentialProviderFactory = .selector([.environment, customECS, .empty])
         let client = createAWSClient(credentialProvider: provider)
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
 
@@ -140,7 +140,7 @@ class GroupCredentialProviderTests: XCTestCase {
             XCTAssertEqual(credential.accessKeyId, accessKeyId)
             XCTAssertEqual(credential.secretAccessKey, secretAccessKey)
             XCTAssertEqual(credential.sessionToken, sessionToken)
-            let internalProvider = try XCTUnwrap((client.credentialProvider as? GroupCredentialProvider)?.internalProvider)
+            let internalProvider = try XCTUnwrap((client.credentialProvider as? RuntimeSelectorCredentialProvider)?.internalProvider)
             XCTAssert(internalProvider is RotatingCredentialProvider<ECSMetaDataClient>)
         }
         XCTAssertNoThrow(try futureResult.wait())
@@ -150,7 +150,7 @@ class GroupCredentialProviderTests: XCTestCase {
         Environment.unset(name: "AWS_ACCESS_KEY_ID")
         Environment.unset(name: ECSMetaDataClient.RelativeURIEnvironmentName)
         
-        let provider: CredentialProviderFactory = .group([.ecs])
+        let provider: CredentialProviderFactory = .selector([.ecs])
         let client = createAWSClient(credentialProvider: provider)
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next())

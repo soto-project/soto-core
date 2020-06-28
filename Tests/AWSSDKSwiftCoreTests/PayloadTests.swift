@@ -29,12 +29,13 @@ class PayloadTests: XCTestCase {
 
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)
-            let client = createAWSClient(credentialProvider: .empty, endpoint: awsServer.address)
+            let config = createServiceConfig(endpoint: awsServer.address)
+            let client = createAWSClient(credentialProvider: .empty)
             defer {
                 XCTAssertNoThrow(try client.syncShutdown())
             }
             let input = DataPayload(data: payload)
-            let response = client.send(operation: "test", path: "/", httpMethod: "POST", input: input)
+            let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config, input: input)
 
             try awsServer.processRaw { request in
                 XCTAssertEqual(request.body.getString(at: 0, length: request.body.readableBytes), expectedResult)
@@ -70,11 +71,12 @@ class PayloadTests: XCTestCase {
         }
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)
-            let client = createAWSClient(credentialProvider: .empty, endpoint: awsServer.address)
+            let config = createServiceConfig(endpoint: awsServer.address)
+            let client = createAWSClient(credentialProvider: .empty)
             defer {
                 XCTAssertNoThrow(try client.syncShutdown())
             }
-            let response: EventLoopFuture<Output> = client.send(operation: "test", path: "/", httpMethod: "POST")
+            let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config)
 
             try awsServer.processRaw { request in
                 var byteBuffer = ByteBufferAllocator().buffer(capacity: 0)

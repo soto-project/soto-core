@@ -34,37 +34,12 @@ import Foundation
 
 public func createAWSClient(
     credentialProvider: CredentialProviderFactory = .runtime,
-    region: Region? = nil,
-    partition: Partition = .aws,
-    amzTarget: String? = nil,
-    service: String = "testService",
-    signingName: String? = nil,
-    serviceProtocol: ServiceProtocol = .restjson,
-    apiVersion: String = "01-01-2001",
-    endpoint: String? = nil,
-    serviceEndpoints: [String: String] = [:],
-    partitionEndpoints: [Partition: (endpoint: String, region: Region)] = [:],
     retryPolicy: RetryPolicy = NoRetry(),
     middlewares: [AWSServiceMiddleware] = [],
-    possibleErrorTypes: [AWSErrorType.Type] = [],
     httpClientProvider: AWSClient.HTTPClientProvider = .createNew
 ) -> AWSClient {
-    let serviceConfig = createServiceConfig(
-        region: region,
-        partition: partition,
-        amzTarget: amzTarget,
-        service: service,
-        signingName: signingName,
-        serviceProtocol: serviceProtocol,
-        apiVersion: apiVersion,
-        endpoint: endpoint,
-        serviceEndpoints: serviceEndpoints,
-        partitionEndpoints: partitionEndpoints,
-        possibleErrorTypes: possibleErrorTypes
-    )
     return AWSClient(
         credentialProviderFactory: credentialProvider,
-        serviceConfig: serviceConfig,
         retryPolicy: retryPolicy,
         middlewares: middlewares,
         httpClientProvider: httpClientProvider
@@ -83,9 +58,9 @@ public func createServiceConfig(
     serviceEndpoints: [String: String] = [:],
     partitionEndpoints: [Partition: (endpoint: String, region: Region)] = [:],
     possibleErrorTypes: [AWSErrorType.Type] = [],
-    middlewares: [AWSServiceMiddleware] = []) -> ServiceConfig
+    middlewares: [AWSServiceMiddleware] = []) -> AWSServiceConfig
 {
-    ServiceConfig(
+    AWSServiceConfig(
         region: region,
         partition: partition,
         amzTarget: amzTarget,

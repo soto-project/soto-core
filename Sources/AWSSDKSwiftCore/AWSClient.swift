@@ -51,8 +51,6 @@ public final class AWSClient {
         case createNew
     }
 
-    /// AWS service configuration
-    public let serviceConfig: ServiceConfig
     /// AWS credentials provider
     let credentialProvider: CredentialProvider
     /// middleware code to be applied to requests and responses
@@ -68,27 +66,18 @@ public final class AWSClient {
 
     private let isShutdown = NIOAtomic<Bool>.makeAtomic(value: false)
 
-    // public accessors to ensure code outside of aws-sdk-swift-core still compiles
-    public var region: Region { return serviceConfig.region }
-    public var endpoint: String { return serviceConfig.endpoint }
-    public var serviceProtocol: ServiceProtocol { return serviceConfig.serviceProtocol }
-
     /// Initialize an AWSClient struct
     /// - parameters:
     ///     - credentialProvider: An object that returns valid signing credentials for request signing.
-    ///     - serviceConfig: AWS service configuration
     ///     - retryPolicy: Object returning whether retries should be attempted. Possible options are NoRetry(), ExponentialRetry() or JitterRetry()
     ///     - middlewares: Array of middlewares to apply to requests and responses
     ///     - httpClientProvider: HTTPClient to use. Use `.createNew` if you want the client to manage its own HTTPClient.
     public init(
         credentialProviderFactory: CredentialProviderFactory = .runtime,
-        serviceConfig: ServiceConfig,
         retryPolicy: RetryPolicy = JitterRetry(),
         middlewares: [AWSServiceMiddleware] = [],
         httpClientProvider: HTTPClientProvider
     ) {
-        self.serviceConfig = serviceConfig
-
         // setup httpClient
         self.httpClientProvider = httpClientProvider
         switch httpClientProvider {
@@ -130,7 +119,7 @@ public final class AWSClient {
 // invoker
 extension AWSClient {
 
-    fileprivate func invoke(_ request: @escaping () -> EventLoopFuture<AWSHTTPResponse>) -> EventLoopFuture<AWSHTTPResponse> {
+    fileprivate func invoke(with serviceConfig: AWSServiceConfig, _ request: @escaping () -> EventLoopFuture<AWSHTTPResponse>) -> EventLoopFuture<AWSHTTPResponse> {
         let eventloop = self.eventLoopGroup.next()
         let promise = eventloop.makePromise(of: AWSHTTPResponse.self)
 
@@ -151,7 +140,7 @@ extension AWSClient {
                         }
                     } else if case AWSClient.InternalError.httpResponseError(let response) = error {
                         // if there was no retry and error was a response status code then attempt to convert to AWS error
-                        promise.fail(self.createError(for: response))
+                        promise.fail(self.createError(for: response, serviceConfig: serviceConfig))
                     } else {
                         promise.fail(error)
                     }
@@ -164,15 +153,15 @@ extension AWSClient {
     }
 
     /// invoke HTTP request
-    fileprivate func invoke(_ httpRequest: AWSHTTPRequest, on eventLoop: EventLoop) -> EventLoopFuture<AWSHTTPResponse> {
-        return invoke {
+    fileprivate func invoke(_ httpRequest: AWSHTTPRequest, with serviceConfig: AWSServiceConfig, on eventLoop: EventLoop) -> EventLoopFuture<AWSHTTPResponse> {
+        return invoke(with: serviceConfig) {
             return self.httpClient.execute(request: httpRequest, timeout: .seconds(20), on: eventLoop)
         }
     }
 
     /// invoke HTTP request with response streaming
-    fileprivate func invoke(_ httpRequest: AWSHTTPRequest, on eventLoop: EventLoop, stream: @escaping AWSHTTPClient.ResponseStream) -> EventLoopFuture<AWSHTTPResponse> {
-        return invoke {
+    fileprivate func invoke(_ httpRequest: AWSHTTPRequest, with serviceConfig: AWSServiceConfig, on eventLoop: EventLoop, stream: @escaping AWSHTTPClient.ResponseStream) -> EventLoopFuture<AWSHTTPResponse> {
+        return invoke(with: serviceConfig) {
             return self.httpClient.execute(request: httpRequest, timeout: .seconds(20), on: eventLoop, stream: stream)
         }
     }
@@ -192,143 +181,183 @@ extension AWSClient {
 // public facing apis
 extension AWSClient {
 
-    /// send a request with an input object and return a future with an empty response
+    /// execute a request with an input object and return a future with an empty response
     /// - parameters:
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - serviceConfig: AWS service configuration used in request creation and signing
     ///     - input: Input object
     /// - returns:
     ///     Empty Future that completes when response is received
-    public func send<Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, input: Input, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Void> {
-        let eventLoop = eventLoop ?? eventLoopGroup.next()
-        let future: EventLoopFuture<Void> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
-            let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
-            let awsRequest = try AWSRequest(
-                        operation: operationName,
-                        path: path,
-                        httpMethod: httpMethod,
-                        input: input,
-                        configuration: self.serviceConfig)
-            return try awsRequest
-                .applyMiddlewares(self.serviceConfig.middlewares + self.middlewares)
-                .createHTTPRequest(signer: signer)
-        }.flatMap { request in
-            return self.invoke(request, on: eventLoop)
-        }.map { _ in
-            return
-        }
-        return recordMetrics(future, service: serviceConfig.service, operation: operationName)
-    }
-
-    /// send an empty request and return a future with an empty response
-    /// - parameters:
-    ///     - operationName: Name of the AWS operation
-    ///     - path: path to append to endpoint URL
-    ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
-    /// - returns:
-    ///     Empty Future that completes when response is received
-    public func send(operation operationName: String, path: String, httpMethod: String, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Void> {
-        let eventLoop = eventLoop ?? eventLoopGroup.next()
-        let future: EventLoopFuture<Void> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
-            let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
-            let awsRequest = try AWSRequest(
-                operation: operationName,
-                path: path,
-                httpMethod: httpMethod,
-                configuration: self.serviceConfig)
-            return try awsRequest
-                .applyMiddlewares(self.serviceConfig.middlewares + self.middlewares)
-                .createHTTPRequest(signer: signer)
-            
-        }.flatMap { request in
-            return self.invoke(request, on: eventLoop)
-        }.map { _ in
-            return
-        }
-        return recordMetrics(future, service: serviceConfig.service, operation: operationName)
-    }
-
-    /// send an empty request and return a future with the output object generated from the response
-    /// - parameters:
-    ///     - operationName: Name of the AWS operation
-    ///     - path: path to append to endpoint URL
-    ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
-    /// - returns:
-    ///     Future containing output object that completes when response is received
-    public func send<Output: AWSDecodableShape>(operation operationName: String, path: String, httpMethod: String, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Output> {
-        let eventLoop = eventLoop ?? eventLoopGroup.next()
-        let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
-            let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
-            let awsRequest = try AWSRequest(
-                operation: operationName,
-                path: path,
-                httpMethod: httpMethod,
-                configuration: self.serviceConfig)
-            return try awsRequest
-                .applyMiddlewares(self.serviceConfig.middlewares + self.middlewares)
-                .createHTTPRequest(signer: signer)
-        }.flatMap { request in
-            return self.invoke(request, on: eventLoop)
-        }.flatMapThrowing { response in
-            return try self.validate(operation: operationName, response: response)
-        }
-        return recordMetrics(future, service: serviceConfig.service, operation: operationName)
-    }
-
-    /// send a request with an input object and return a future with the output object generated from the response
-    /// - parameters:
-    ///     - operationName: Name of the AWS operation
-    ///     - path: path to append to endpoint URL
-    ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
-    ///     - input: Input object
-    /// - returns:
-    ///     Future containing output object that completes when response is received
-    public func send<Output: AWSDecodableShape, Input: AWSEncodableShape>(operation operationName: String, path: String, httpMethod: String, input: Input, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Output> {
-        let eventLoop = eventLoop ?? eventLoopGroup.next()
-        let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
-            let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
-            let awsRequest = try AWSRequest(
-                        operation: operationName,
-                        path: path,
-                        httpMethod: httpMethod,
-                        input: input,
-                        configuration: self.serviceConfig)
-            return try awsRequest
-                .applyMiddlewares(self.serviceConfig.middlewares + self.middlewares)
-                .createHTTPRequest(signer: signer)
-        }.flatMap { request in
-            return self.invoke(request, on: eventLoop)
-        }.flatMapThrowing { response in
-            return try self.validate(operation: operationName, response: response)
-        }
-        return recordMetrics(future, service: serviceConfig.service, operation: operationName)
-    }
-
-    public func send<Output: AWSDecodableShape, Input: AWSEncodableShape>(
+    public func execute<Input: AWSEncodableShape>(
         operation operationName: String,
         path: String,
         httpMethod: String,
+        serviceConfig: AWSServiceConfig,
+        input: Input,
+        on eventLoop: EventLoop? = nil
+    ) -> EventLoopFuture<Void> {
+        let eventLoop = eventLoop ?? eventLoopGroup.next()
+        let future: EventLoopFuture<Void> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
+            let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
+            let awsRequest = try AWSRequest(
+                        operation: operationName,
+                        path: path,
+                        httpMethod: httpMethod,
+                        input: input,
+                        configuration: serviceConfig)
+            return try awsRequest
+                .applyMiddlewares(serviceConfig.middlewares + self.middlewares)
+                .createHTTPRequest(signer: signer)
+        }.flatMap { request in
+            return self.invoke(request, with: serviceConfig, on: eventLoop)
+        }.map { _ in
+            return
+        }
+        return recordMetrics(future, service: serviceConfig.service, operation: operationName)
+    }
+
+    /// execute an empty request and return a future with an empty response
+    /// - parameters:
+    ///     - operationName: Name of the AWS operation
+    ///     - path: path to append to endpoint URL
+    ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - serviceConfig: AWS service configuration used in request creation and signing
+    /// - returns:
+    ///     Empty Future that completes when response is received
+    public func execute(
+        operation operationName: String,
+        path: String,
+        httpMethod: String,
+        serviceConfig: AWSServiceConfig,
+        on eventLoop: EventLoop? = nil
+    ) -> EventLoopFuture<Void> {
+        let eventLoop = eventLoop ?? eventLoopGroup.next()
+        let future: EventLoopFuture<Void> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
+            let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
+            let awsRequest = try AWSRequest(
+                operation: operationName,
+                path: path,
+                httpMethod: httpMethod,
+                configuration: serviceConfig)
+            return try awsRequest
+                .applyMiddlewares(serviceConfig.middlewares + self.middlewares)
+                .createHTTPRequest(signer: signer)
+            
+        }.flatMap { request in
+            return self.invoke(request, with: serviceConfig, on: eventLoop)
+        }.map { _ in
+            return
+        }
+        return recordMetrics(future, service: serviceConfig.service, operation: operationName)
+    }
+
+    /// execute an empty request and return a future with the output object generated from the response
+    /// - parameters:
+    ///     - operationName: Name of the AWS operation
+    ///     - path: path to append to endpoint URL
+    ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - serviceConfig: AWS service configuration used in request creation and signing
+    /// - returns:
+    ///     Future containing output object that completes when response is received
+    public func execute<Output: AWSDecodableShape>(
+        operation operationName: String,
+        path: String,
+        httpMethod: String,
+        serviceConfig: AWSServiceConfig,
+        on eventLoop: EventLoop? = nil
+    ) -> EventLoopFuture<Output> {
+        let eventLoop = eventLoop ?? eventLoopGroup.next()
+        let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
+            let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
+            let awsRequest = try AWSRequest(
+                operation: operationName,
+                path: path,
+                httpMethod: httpMethod,
+                configuration: serviceConfig)
+            return try awsRequest
+                .applyMiddlewares(serviceConfig.middlewares + self.middlewares)
+                .createHTTPRequest(signer: signer)
+        }.flatMap { request in
+            return self.invoke(request, with: serviceConfig, on: eventLoop)
+        }.flatMapThrowing { response in
+            return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
+        }
+        return recordMetrics(future, service: serviceConfig.service, operation: operationName)
+    }
+
+    /// execute a request with an input object and return a future with the output object generated from the response
+    /// - parameters:
+    ///     - operationName: Name of the AWS operation
+    ///     - path: path to append to endpoint URL
+    ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - serviceConfig: AWS service configuration used in request creation and signing
+    ///     - input: Input object
+    /// - returns:
+    ///     Future containing output object that completes when response is received
+    public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(
+        operation operationName: String,
+        path: String,
+        httpMethod: String,
+        serviceConfig: AWSServiceConfig,
+        input: Input,
+        on eventLoop: EventLoop? = nil
+    ) -> EventLoopFuture<Output> {
+        let eventLoop = eventLoop ?? eventLoopGroup.next()
+        let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
+            let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
+            let awsRequest = try AWSRequest(
+                        operation: operationName,
+                        path: path,
+                        httpMethod: httpMethod,
+                        input: input,
+                        configuration: serviceConfig)
+            return try awsRequest
+                .applyMiddlewares(serviceConfig.middlewares + self.middlewares)
+                .createHTTPRequest(signer: signer)
+        }.flatMap { request in
+            return self.invoke(request, with: serviceConfig, on: eventLoop)
+        }.flatMapThrowing { response in
+            return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
+        }
+        return recordMetrics(future, service: serviceConfig.service, operation: operationName)
+    }
+
+    /// execute a request with an input object and return a future with the output object generated from the response
+    /// - parameters:
+    ///     - operationName: Name of the AWS operation
+    ///     - path: path to append to endpoint URL
+    ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - serviceConfig: AWS service configuration used in request creation and signing
+    ///     - input: Input object
+    /// - returns:
+    ///     Future containing output object that completes when response is received
+    public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(
+        operation operationName: String,
+        path: String,
+        httpMethod: String,
+        serviceConfig: AWSServiceConfig,
         input: Input,
         on eventLoop: EventLoop? = nil,
         stream: @escaping AWSHTTPClient.ResponseStream
     ) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         return credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
-            let signer = AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
+            let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
             let awsRequest = try AWSRequest(
                 operation: operationName,
                 path: path,
                 httpMethod: httpMethod,
                 input: input,
-                configuration: self.serviceConfig)
+                configuration: serviceConfig)
             return try awsRequest
-                .applyMiddlewares(self.serviceConfig.middlewares + self.middlewares)
+                .applyMiddlewares(serviceConfig.middlewares + self.middlewares)
                 .createHTTPRequest(signer: signer)
         }.flatMap { request in
-            return self.invoke(request, on: eventLoop, stream: stream)
+            return self.invoke(request, with: serviceConfig, on: eventLoop, stream: stream)
         }.flatMapThrowing { response in
-            return try self.validate(operation: operationName, response: response)
+            return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
         }
     }
 
@@ -337,29 +366,27 @@ extension AWSClient {
     ///     - url : URL to sign
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
     ///     - expires: How long before the signed URL expires
+    ///     - serviceConfig: additional AWS service configuration used to sign the url
     /// - returns:
     ///     A signed URL
-    public func signURL(url: URL, httpMethod: String, expires: Int = 86400) -> EventLoopFuture<URL> {
-        return signer.map { signer in signer.signURL(url: url, method: HTTPMethod(rawValue: httpMethod), expires: expires) }
-    }
-}
-
-// request creator
-extension AWSClient {
-
-    var signer: EventLoopFuture<AWSSigner> {
-        return credentialProvider.getCredential(on: eventLoopGroup.next()).map { credential in
-            return AWSSigner(credentials: credential, name: self.serviceConfig.signingName, region: self.serviceConfig.region.rawValue)
+    public func signURL(url: URL, httpMethod: String, expires: Int = 86400, serviceConfig: AWSServiceConfig) -> EventLoopFuture<URL> {
+        return createSigner(serviceConfig: serviceConfig).map { signer in
+            signer.signURL(url: url, method: HTTPMethod(rawValue: httpMethod), expires: expires)
         }
     }
     
+    public func createSigner(serviceConfig: AWSServiceConfig) -> EventLoopFuture<AWSSigner> {
+        return credentialProvider.getCredential(on: eventLoopGroup.next()).map { credential in
+            return AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
+        }
+    }
 }
 
 // response validator
 extension AWSClient {
 
     /// Generate an AWS Response from  the operation HTTP response and return the output shape from it. This is only every called if the response includes a successful http status code
-    internal func validate<Output: AWSDecodableShape>(operation operationName: String, response: AWSHTTPResponse) throws -> Output {
+    internal func validate<Output: AWSDecodableShape>(operation operationName: String, response: AWSHTTPResponse, serviceConfig: AWSServiceConfig) throws -> Output {
         assert((200..<300).contains(response.status.code), "Shouldn't get here if error was returned")
         
         let raw = (Output.self as? AWSShapeWithPayload.Type)?._payloadOptions.contains(.raw) == true
@@ -370,7 +397,7 @@ extension AWSClient {
     }
 
     /// Create error from HTTPResponse. This is only called if we received an unsuccessful http status code.
-    internal func createError(for response: AWSHTTPResponse) -> Error {
+    internal func createError(for response: AWSHTTPResponse, serviceConfig: AWSServiceConfig) -> Error {
         // if we can create an AWSResponse and create an error from it return that
         if let awsResponse = try? AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol)
             .applyMiddlewares(serviceConfig.middlewares + middlewares),

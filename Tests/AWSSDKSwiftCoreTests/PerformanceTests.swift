@@ -217,6 +217,7 @@ class PerformanceTests: XCTestCase {
 
     func testSignedURLRequest() {
         guard Self.enableTimingTests == true else { return }
+        let config = createServiceConfig()
         let client = createAWSClient(credentialProvider: .static(accessKeyId: "MyAccessKeyId", secretAccessKey: "MySecretAccessKey"))
         defer {
             XCTAssertNoThrow(try client.syncShutdown())
@@ -225,10 +226,10 @@ class PerformanceTests: XCTestCase {
             operation: "Test",
             path: "/",
             httpMethod: "GET",
-            configuration: client.serviceConfig
-        ).applyMiddlewares(client.serviceConfig.middlewares + client.middlewares)
+            configuration: config
+        ).applyMiddlewares(config.middlewares + client.middlewares)
         
-        let signer = try! client.signer.wait()
+        let signer = try! client.createSigner(serviceConfig: config).wait()
         measure {
             for _ in 0..<1000 {
                 _ = awsRequest.createHTTPRequest(signer: signer)

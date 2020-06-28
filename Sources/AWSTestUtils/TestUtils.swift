@@ -33,13 +33,13 @@ import Foundation
 }
 
 public func createAWSClient(
-    credentialProvider: CredentialProviderFactory = .runtime,
+    credentialProvider: CredentialProviderFactory = .default,
     retryPolicy: RetryPolicy = NoRetry(),
     middlewares: [AWSServiceMiddleware] = [],
     httpClientProvider: AWSClient.HTTPClientProvider = .createNew
 ) -> AWSClient {
     return AWSClient(
-        credentialProviderFactory: credentialProvider,
+        credentialProvider: credentialProvider,
         retryPolicy: retryPolicy,
         middlewares: middlewares,
         httpClientProvider: httpClientProvider

@@ -51,6 +51,11 @@ public struct CredentialProviderFactory {
 
 extension CredentialProviderFactory {
     
+    /// The default CredentialProvider used to access credentials
+    public static var `default`: CredentialProviderFactory {
+        return .runtime
+    }
+    
     /// Use this method to initialize your custom `CredentialProvider`
     public static func custom(_ factory: @escaping (Context) -> CredentialProvider) -> CredentialProviderFactory {
         Self(cb: factory)

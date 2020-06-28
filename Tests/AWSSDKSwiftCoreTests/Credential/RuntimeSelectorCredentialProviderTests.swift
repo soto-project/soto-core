@@ -43,7 +43,7 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
         Environment.set(secretAccessKey, for: "AWS_SECRET_ACCESS_KEY")
         Environment.set(sessionToken, for: "AWS_SESSION_TOKEN")
 
-        let client = createAWSClient(credentialProvider: .selector([.environment]))
+        let client = createAWSClient(credentialProvider: .selector([.environment, .empty]))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next()).flatMapThrowing { credential in
             XCTAssertEqual(credential.accessKeyId, accessKeyId)
@@ -57,20 +57,6 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
         Environment.unset(name: "AWS_ACCESS_KEY_ID")
         Environment.unset(name: "AWS_SECRET_ACCESS_KEY")
         Environment.unset(name: "AWS_SESSION_TOKEN")
-    }
-    
-    func testFoundEmptyProvider() throws {
-        let provider: CredentialProviderFactory = .selector([.empty])
-        let client = createAWSClient(credentialProvider: provider)
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
-        let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next()).flatMapThrowing { credential in
-            XCTAssertEqual(credential.accessKeyId, "")
-            XCTAssertEqual(credential.secretAccessKey, "")
-            XCTAssertEqual(credential.sessionToken, nil)
-            let internalProvider = try XCTUnwrap((client.credentialProvider as? RuntimeSelectorCredentialProvider)?.internalProvider)
-            XCTAssert(internalProvider is StaticCredential)
-        }
-        XCTAssertNoThrow(try futureResult.wait())
     }
     
     func testEnvironmentProviderFail() throws {
@@ -88,6 +74,31 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
                 XCTFail()
             }
         }
+    }
+    
+    func testFoundEmptyProvider() throws {
+        let provider: CredentialProviderFactory = .selector([.empty, .environment])
+        let client = createAWSClient(credentialProvider: provider)
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
+        let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next()).flatMapThrowing { credential in
+            XCTAssertEqual(credential.accessKeyId, "")
+            XCTAssertEqual(credential.secretAccessKey, "")
+            XCTAssertEqual(credential.sessionToken, nil)
+            let internalProvider = try XCTUnwrap((client.credentialProvider as? RuntimeSelectorCredentialProvider)?.internalProvider)
+            XCTAssert(internalProvider is StaticCredential)
+        }
+        XCTAssertNoThrow(try futureResult.wait())
+    }
+    
+    func testFoundSelectorWithOneProvider() throws {
+        let provider: CredentialProviderFactory = .selector([.empty])
+        let client = createAWSClient(credentialProvider: provider)
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
+        let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next()).flatMapThrowing { credential in
+            XCTAssert(credential.isEmpty())
+            XCTAssert(client.credentialProvider is StaticCredential)
+        }
+        XCTAssertNoThrow(try futureResult.wait())
     }
     
     func testECSProvider() {

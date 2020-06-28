@@ -127,7 +127,11 @@ extension CredentialProviderFactory {
     /// Use the list of credential providers supplied to get credentials. The first one in the list that manages to supply credentials is the one to use
     public static func selector(_ providers: [CredentialProviderFactory]) -> CredentialProviderFactory {
         Self() { context in
-            RuntimeSelectorCredentialProvider(providers: providers, context: context)
+            if providers.count == 1 {
+                return providers[0].createProvider(context: context)
+            } else {
+                return RuntimeSelectorCredentialProvider(providers: providers, context: context)
+            }
         }
     }
 }

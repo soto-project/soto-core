@@ -15,6 +15,7 @@ needs to be listed here.
 - Jonathan McAllister <jonny.mcallister@leagueheads.com>
 - Kyle Ishie <kyle@kyleishie.com>
 - Oliver O'Neill <oliveroneill@users.noreply.github.com>
+- Roland Möller <moeller.rol@gmail.com>
 - Yifei Teng <tengyifei@users.noreply.github.com>
 - Yuki Takei <yuki@miketokyo.com>
 - giginet <giginet.net@gmail.com>

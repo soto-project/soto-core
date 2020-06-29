@@ -15,6 +15,7 @@
 import XCTest
 import AsyncHTTPClient
 import NIO
+import NIOConcurrencyHelpers
 import NIOFoundationCompat
 import NIOHTTP1
 import AWSTestUtils
@@ -602,6 +603,47 @@ class AWSClientTests: XCTestCase {
             XCTFail("Unexpected error: \(error)")
         }
 
+    }
+
+    func testStreamingDelegateFinished() {
+        struct Input : AWSEncodableShape {
+        }
+        struct Output : AWSDecodableShape & Encodable {
+            static let _encoding = [AWSMemberEncoding(label: "test", location: .header(locationName: "test"))]
+            let test: String
+        }
+        let bufferSize = 200*1024
+        let data = createRandomBuffer(45, 109, size: bufferSize)
+
+        let awsServer = AWSTestServer(serviceProtocol: .json)
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 5)
+        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
+        let config = createServiceConfig(endpoint: awsServer.address)
+        let client = createAWSClient(credentialProvider: .empty, httpClientProvider: .shared(httpClient))
+        defer {
+            XCTAssertNoThrow(try client.syncShutdown())
+            XCTAssertNoThrow(try httpClient.syncShutdown())
+            XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
+            XCTAssertNoThrow(try awsServer.stop())
+        }
+        var count = 0
+        let lock = Lock()
+        let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: "GET", serviceConfig: config, input: Input()) { (payload: ByteBuffer, eventLoop: EventLoop) in
+            lock.withLock { count += 1 }
+            return eventLoop.scheduleTask(in: .milliseconds(200)) {
+                lock.withLock { count -= 1 }
+            }.futureResult
+        }
+
+        XCTAssertNoThrow(try awsServer.processRaw { request in
+            var byteBuffer = ByteBufferAllocator().buffer(capacity: bufferSize)
+            byteBuffer.writeBytes(data)
+            let response = AWSTestServer.Response(httpStatus: .ok, headers: ["test":"TestHeader"], body: byteBuffer)
+            return .result(response)
+        })
+
+        XCTAssertNoThrow(_ = try response.wait())
+        XCTAssertEqual(count, 0)
     }
 
     func testMiddlewareAppliedOnce() {

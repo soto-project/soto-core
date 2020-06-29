@@ -33,7 +33,7 @@ class StaticCredential_SharedTests: XCTestCase {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
         byteBuffer.writeString(credential)
         var cred: StaticCredential?
-        XCTAssertNoThrow(cred = try StaticCredential.sharedCredentials(from: byteBuffer, for: profile))
+        XCTAssertNoThrow(cred = try ConfigFileCredentialProvider.sharedCredentials(from: byteBuffer, for: profile))
         
         XCTAssertEqual(cred?.accessKeyId, accessKey)
         XCTAssertEqual(cred?.secretAccessKey, secretKey)
@@ -50,8 +50,8 @@ class StaticCredential_SharedTests: XCTestCase {
         
         var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
         byteBuffer.writeString(credential)
-        XCTAssertThrowsError(_ = try StaticCredential.sharedCredentials(from: byteBuffer, for: profile)) {
-            XCTAssertEqual($0 as? StaticCredential.SharedCredentialError, .missingAccessKeyId)
+        XCTAssertThrowsError(_ = try ConfigFileCredentialProvider.sharedCredentials(from: byteBuffer, for: profile)) {
+            XCTAssertEqual($0 as? ConfigFileCredentialProvider.SharedCredentialError, .missingAccessKeyId)
         }
     }
 
@@ -65,8 +65,8 @@ class StaticCredential_SharedTests: XCTestCase {
         
         var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
         byteBuffer.writeString(credential)
-        XCTAssertThrowsError(_ = try StaticCredential.sharedCredentials(from: byteBuffer, for: profile)) {
-            XCTAssertEqual($0 as? StaticCredential.SharedCredentialError, .missingSecretAccessKey)
+        XCTAssertThrowsError(_ = try ConfigFileCredentialProvider.sharedCredentials(from: byteBuffer, for: profile)) {
+            XCTAssertEqual($0 as? ConfigFileCredentialProvider.SharedCredentialError, .missingSecretAccessKey)
         }
     }
     
@@ -83,7 +83,7 @@ class StaticCredential_SharedTests: XCTestCase {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
         byteBuffer.writeString(credential)
         var cred: StaticCredential?
-        XCTAssertNoThrow(cred = try StaticCredential.sharedCredentials(from: byteBuffer, for: profile))
+        XCTAssertNoThrow(cred = try ConfigFileCredentialProvider.sharedCredentials(from: byteBuffer, for: profile))
         
         XCTAssertEqual(cred?.accessKeyId, accessKey)
         XCTAssertEqual(cred?.secretAccessKey, secretKey)
@@ -102,8 +102,8 @@ class StaticCredential_SharedTests: XCTestCase {
         
         var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
         byteBuffer.writeString(credential)
-        XCTAssertThrowsError(_ = try StaticCredential.sharedCredentials(from: byteBuffer, for: "profile2")) {
-            XCTAssertEqual($0 as? StaticCredential.SharedCredentialError, .missingProfile("profile2"))
+        XCTAssertThrowsError(_ = try ConfigFileCredentialProvider.sharedCredentials(from: byteBuffer, for: "profile2")) {
+            XCTAssertEqual($0 as? ConfigFileCredentialProvider.SharedCredentialError, .missingProfile("profile2"))
         }
     }
     
@@ -115,14 +115,14 @@ class StaticCredential_SharedTests: XCTestCase {
         
         var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
         byteBuffer.writeString(credential)
-        XCTAssertThrowsError(_ = try StaticCredential.sharedCredentials(from: byteBuffer, for: "default")) {
-            XCTAssertEqual($0 as? StaticCredential.SharedCredentialError, .invalidCredentialFileSyntax)
+        XCTAssertThrowsError(_ = try ConfigFileCredentialProvider.sharedCredentials(from: byteBuffer, for: "default")) {
+            XCTAssertEqual($0 as? ConfigFileCredentialProvider.SharedCredentialError, .invalidCredentialFileSyntax)
         }
     }
     
     func testExpandTildeInFilePath() {
         let expandableFilePath = "~/.aws/credentials"
-        let expandedNewPath = StaticCredential.expandTildeInFilePath(expandableFilePath)
+        let expandedNewPath = ConfigFileCredentialProvider.expandTildeInFilePath(expandableFilePath)
         
         #if os(Linux)
         XCTAssert(!expandedNewPath.hasPrefix("~"))
@@ -133,7 +133,7 @@ class StaticCredential_SharedTests: XCTestCase {
         #endif
         
         let unexpandableFilePath = "/.aws/credentials"
-        let unexpandedNewPath = StaticCredential.expandTildeInFilePath(unexpandableFilePath)
+        let unexpandedNewPath = ConfigFileCredentialProvider.expandTildeInFilePath(unexpandableFilePath)
         let unexpandedNSString = NSString(string: unexpandableFilePath).expandingTildeInPath
         
         XCTAssertEqual(unexpandedNewPath, unexpandedNSString)
@@ -156,7 +156,7 @@ class StaticCredential_SharedTests: XCTestCase {
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
         let eventLoop = eventLoopGroup.next()
 //        let path = filenameURL.absoluteString
-        let future = StaticCredential.fromSharedCredentials(credentialsFilePath: filenameURL.path, on: eventLoop)
+        let future = ConfigFileCredentialProvider.fromSharedCredentials(credentialsFilePath: filenameURL.path, on: eventLoop)
         
         var credential: StaticCredential?
         XCTAssertNoThrow(credential = try future.wait())

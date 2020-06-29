@@ -102,8 +102,11 @@ class RuntimeCredentialProvider: CredentialProvider {
         
         // 5. can we find credentials in the aws cli config file? If yes, let's use those
         future.flatMapError { (error) -> EventLoopFuture<CredentialProvider> in
-                let profile = Environment["AWS_PROFILE"] ?? "default"
-                return StaticCredential.fromSharedCredentials(credentialsFilePath: "~/.aws/credentials", profile: profile, on: eventLoop).map { $0 }
+                let client = ConfigFileCredentialProvider(credentialsFilePath: "~/.aws/credentials")
+                let credentialProvider = DeferredCredentialProvider(eventLoop: eventLoop, client: client)
+                return credentialProvider.getCredential(on: eventLoop).map { _ in
+                    return credentialProvider
+                }
             }
             // 6. if we haven't found something yet, we will not be able to sign. Create empty static credentials
             .flatMapErrorThrowing { (_) -> CredentialProvider in

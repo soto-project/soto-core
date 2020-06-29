@@ -22,7 +22,7 @@ import Foundation.NSString
 #endif
 
 
-extension StaticCredential {
+struct ConfigFileCredentialProvider: CredentialProvider {
     /// Errors occurring when initializing a FileCredential
     ///
     /// - missingProfile: If the profile requested was not found
@@ -34,7 +34,20 @@ extension StaticCredential {
         case missingAccessKeyId
         case missingSecretAccessKey
     }
-    
+
+    let credentialsFilePath: String
+    let profile: String
+
+    init(credentialsFilePath: String, profile: String? = nil) {
+        self.credentialsFilePath = credentialsFilePath
+        self.profile = profile ?? Environment["AWS_PROFILE"] ?? "default"
+    }
+
+    func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
+        return ConfigFileCredentialProvider.fromSharedCredentials(credentialsFilePath: credentialsFilePath, profile: profile, on: eventLoop)
+            .map { $0 }
+    }
+
     /// Load static credentials from the aws cli config path `~/.aws/credentials`
     ///
     /// - returns: An `EventLoopFuture` with a `SharedCredentialError` in the error

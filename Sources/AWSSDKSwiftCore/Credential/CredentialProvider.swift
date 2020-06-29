@@ -111,14 +111,9 @@ extension CredentialProviderFactory {
     
     /// Use this method to load credentials from your aws cli credential file, normally located at `~/.aws/credentials`
     public static func configFile(credentialsFilePath: String = "~/.aws/credentials", profile: String? = nil) -> CredentialProviderFactory {
-        let profile = profile ?? Environment["AWS_PROFILE"] ?? "default"
         return Self() { context in
-            DeferredCredentialProvider(context: context) { (context) -> EventLoopFuture<CredentialProvider> in
-                return StaticCredential.fromSharedCredentials(
-                    credentialsFilePath: credentialsFilePath,
-                    profile: profile,
-                    on: context.eventLoop).map { $0 }
-            }
+            let client = ConfigFileCredentialProvider(credentialsFilePath: credentialsFilePath, profile: profile)
+            return DeferredCredentialProvider(eventLoop: context.eventLoop, client: client)
         }
     }
     
@@ -130,35 +125,28 @@ extension CredentialProviderFactory {
     }
 }
 
-private class DeferredCredentialProvider: CredentialProvider {
-    
+class DeferredCredentialProvider: CredentialProvider {
     let lock = Lock()
-    var internalProvider: CredentialProvider? {
+    var credential: Credential? {
         get {
             self.lock.withLock {
-                _internalProvider
+                internalCredential
             }
         }
     }
 
-    private var startupPromise: EventLoopPromise<CredentialProvider>
-    private var _internalProvider: CredentialProvider? = nil
+    private var startupPromise: EventLoopPromise<Credential>
+    private var internalCredential: Credential? = nil
 
-    init(context: CredentialProviderFactory.Context, cb: @escaping (CredentialProviderFactory.Context) -> EventLoopFuture<CredentialProvider>) {
-        
-        self.startupPromise = context.eventLoop.makePromise(of: CredentialProvider.self)
-        self.startupPromise.futureResult.whenComplete { result in
-            self.lock.withLock { () in
-                switch result {
-                case .success(let provider):
-                    self._internalProvider = provider
-                case .failure(_):
-                    self._internalProvider = NullCredentialProvider()
-                }
+    init(eventLoop: EventLoop, client: CredentialProvider) {
+        self.startupPromise = eventLoop.makePromise(of: Credential.self)
+        client.getCredential(on: eventLoop)
+            .flatMapErrorThrowing { _ in throw CredentialProviderError.noProvider }
+            .map { credential in
+                self.internalCredential = credential
+                return credential
             }
-        }
-        
-        cb(context).cascade(to: self.startupPromise)
+            .cascade(to: self.startupPromise)
     }
 
     func syncShutdown() throws {
@@ -166,12 +154,10 @@ private class DeferredCredentialProvider: CredentialProvider {
     }
 
     func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
-        if let provider = self.internalProvider {
-            return provider.getCredential(on: eventLoop)
+        if let credential = self.credential {
+            return eventLoop.makeSucceededFuture(credential)
         }
 
-        return self.startupPromise.futureResult.hop(to: eventLoop).flatMap { provider in
-            return provider.getCredential(on: eventLoop)
-        }
+        return self.startupPromise.futureResult.hop(to: eventLoop)
     }
 }

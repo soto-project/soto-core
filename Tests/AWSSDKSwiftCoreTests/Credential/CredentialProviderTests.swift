@@ -19,6 +19,27 @@ import AsyncHTTPClient
 
 class CredentialProviderTests: XCTestCase {
 
+    // make sure getCredential in client CredentialProvider doesnt get called more than once
+    func testDeferredCredentialProvider() {
+        class MyCredentialProvider: CredentialProvider {
+            var alreadyCalled = false
+            func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
+                if alreadyCalled == false {
+                    self.alreadyCalled = true
+                    return eventLoop.makeSucceededFuture(StaticCredential(accessKeyId: "ACCESSKEYID", secretAccessKey: "SECRETACCESSKET"))
+                } else {
+                    return eventLoop.makeFailedFuture(CredentialProviderError.noProvider)
+                }
+            }
+        }
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+        let eventLoop = eventLoopGroup.next()
+        let deferredProvider = DeferredCredentialProvider(eventLoop: eventLoop, client: MyCredentialProvider())
+        XCTAssertNoThrow(_ = try deferredProvider.getCredential(on: eventLoop).wait())
+        XCTAssertNoThrow(_ = try deferredProvider.getCredential(on: eventLoop).wait())
+    }
+
     func testConfigFileSuccess() {
         let credentials = """
             [default]
@@ -59,10 +80,7 @@ class CredentialProviderTests: XCTestCase {
         let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop))
         
         XCTAssertThrowsError(_ = try provider.getCredential(on: eventLoop).wait()) { (error) in
-            XCTAssertNotNil(error as? NIO.IOError)
-        }
-        
-        XCTAssertThrowsError(_ = try provider.getCredential(on: eventLoop).wait()) { (error) in
+            print("\(error)")
             XCTAssertEqual(error as? CredentialProviderError, .noProvider)
         }
     }

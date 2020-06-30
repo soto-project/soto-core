@@ -20,7 +20,7 @@ import NIO
 class RuntimeSelectorCredentialProviderTests: XCTestCase {
     
     func testSetupFail() {
-        let client = createAWSClient(credentialProvider: .selector([.custom({_ in return NullCredentialProvider()}) ]))
+        let client = createAWSClient(credentialProvider: .selector(.custom({_ in return NullCredentialProvider()})))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next())
         XCTAssertThrowsError(try futureResult.wait()) { error in
@@ -43,7 +43,7 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
         Environment.set(secretAccessKey, for: "AWS_SECRET_ACCESS_KEY")
         Environment.set(sessionToken, for: "AWS_SESSION_TOKEN")
 
-        let client = createAWSClient(credentialProvider: .selector([.environment, .empty]))
+        let client = createAWSClient(credentialProvider: .selector(.environment, .empty))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next()).flatMapThrowing { credential in
             XCTAssertEqual(credential.accessKeyId, accessKeyId)
@@ -62,7 +62,7 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
     func testEnvironmentProviderFail() throws {
         Environment.unset(name: "AWS_ACCESS_KEY_ID")
 
-        let provider: CredentialProviderFactory = .selector([.environment])
+        let provider: CredentialProviderFactory = .selector(.environment)
         let client = createAWSClient(credentialProvider: provider)
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next())
@@ -77,7 +77,7 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
     }
     
     func testFoundEmptyProvider() throws {
-        let provider: CredentialProviderFactory = .selector([.empty, .environment])
+        let provider: CredentialProviderFactory = .selector(.empty, .environment)
         let client = createAWSClient(credentialProvider: provider)
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next()).flatMapThrowing { credential in
@@ -91,7 +91,7 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
     }
     
     func testFoundSelectorWithOneProvider() throws {
-        let provider: CredentialProviderFactory = .selector([.empty])
+        let provider: CredentialProviderFactory = .selector(.empty)
         let client = createAWSClient(credentialProvider: provider)
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next()).flatMapThrowing { credential in
@@ -117,7 +117,7 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
             // fallback
             return NullCredentialProvider()
         }
-        let provider: CredentialProviderFactory = .selector([.environment, customECS, .empty])
+        let provider: CredentialProviderFactory = .selector(.environment, customECS, .empty)
         let client = createAWSClient(credentialProvider: provider)
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
 
@@ -161,7 +161,7 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
         Environment.unset(name: "AWS_ACCESS_KEY_ID")
         Environment.unset(name: ECSMetaDataClient.RelativeURIEnvironmentName)
         
-        let provider: CredentialProviderFactory = .selector([.ecs])
+        let provider: CredentialProviderFactory = .selector(.ecs)
         let client = createAWSClient(credentialProvider: provider)
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next())

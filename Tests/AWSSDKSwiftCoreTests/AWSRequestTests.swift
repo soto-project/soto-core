@@ -73,7 +73,7 @@ class AWSRequestTests: XCTestCase {
     func testCreateNIORequest() {
         let input2 = E()
 
-        let config = createServiceConfig(service: "kinesis", serviceProtocol: .json(version: "1.1"))
+        let config = createServiceConfig(region: .useast1, service: "kinesis", serviceProtocol: .json(version: "1.1"))
         
         var awsRequest: AWSRequest?
         XCTAssertNoThrow(awsRequest = try AWSRequest(
@@ -202,7 +202,7 @@ class AWSRequestTests: XCTestCase {
             let q: String
         }
         let input = Input(q: "=3+5897^sdfjh&")
-        let config = createServiceConfig()
+        let config = createServiceConfig(region: .useast1)
         var request: AWSRequest?
         XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input, configuration: config))
         XCTAssertEqual(request?.url.absoluteString, "https://test.us-east-1.amazonaws.com/?query=%3D3%2B5897%5Esdfjh%26")
@@ -214,7 +214,7 @@ class AWSRequestTests: XCTestCase {
             let q: [String]
         }
         let input = Input(q: ["=3+5897^sdfjh&", "test"])
-        let config = createServiceConfig()
+        let config = createServiceConfig(region: .useast1)
         
         var request: AWSRequest?
         XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input, configuration: config))

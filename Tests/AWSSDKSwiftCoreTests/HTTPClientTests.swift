@@ -42,7 +42,7 @@ class NIOTSHTTPClientTests: XCTestCase {
     func testInitWithInvalidURL() {
       do {
         let request = AWSHTTPRequest(url: URL(string:"no_protocol.com")!, method: .GET, headers: HTTPHeaders())
-        _ = try client.execute(request: request, timeout: .seconds(5), on: client.eventLoopGroup.next()).wait()
+        _ = try client.execute(request: request, timeout: .seconds(5), on: client.eventLoopGroup.next(), logger: AWSClient.loggingDisabled).wait()
         XCTFail("Should throw malformedURL error")
       } catch {
         if case NIOTSHTTPClient.HTTPError.malformedURL = error {}
@@ -55,7 +55,7 @@ class NIOTSHTTPClientTests: XCTestCase {
     func testConnectGet() {
         do {
             let request = AWSHTTPRequest(url: awsServer.addressURL, method: .GET, headers: HTTPHeaders())
-            let future = client.execute(request: request, timeout: .seconds(5), on: client.eventLoopGroup.next())
+            let future = client.execute(request: request, timeout: .seconds(5), on: client.eventLoopGroup.next(), logger: AWSClient.loggingDisabled)
             try awsServer.httpBin()
             _ = try future.wait()
         } catch {
@@ -66,7 +66,7 @@ class NIOTSHTTPClientTests: XCTestCase {
     func testConnectPost() {
         do {
             let request = AWSHTTPRequest(url: awsServer.addressURL, method: .POST, headers: HTTPHeaders())
-            let future = client.execute(request: request, timeout: .seconds(5), on: client.eventLoopGroup.next())
+            let future = client.execute(request: request, timeout: .seconds(5), on: client.eventLoopGroup.next(), logger: AWSClient.loggingDisabled)
             try awsServer.httpBin()
             _ = try future.wait()
         } catch {
@@ -99,7 +99,7 @@ class HTTPClientTests {
     }
 
     func execute(_ request: AWSHTTPRequest) -> EventLoopFuture<AWSTestServer.HTTPBinResponse> {
-        return client.execute(request: request, timeout: .seconds(5), on: client.eventLoopGroup.next())
+        return client.execute(request: request, timeout: .seconds(5), on: client.eventLoopGroup.next(), logger: AWSClient.loggingDisabled)
             .flatMapThrowing { response in
                 guard let body = response.body else { throw AWSTestServer.Error.emptyBody }
                 return try JSONDecoder().decode(AWSTestServer.HTTPBinResponse.self, from: body)
@@ -122,18 +122,6 @@ class HTTPClientTests {
             print(response)
 
             XCTAssertEqual(response.method, "GET")
-        } catch {
-            XCTFail(error.localizedDescription)
-        }
-    }
-
-    func testHTTPS() {
-        do {
-            let headers: HTTPHeaders = [:]
-            let request = AWSHTTPRequest(url: URL(string:"https://httpbin.org/get")!, method: .GET, headers: headers)
-            let response = try execute(request).wait()
-
-            XCTAssertEqual(response.url, "https://httpbin.org/get")
         } catch {
             XCTFail(error.localizedDescription)
         }

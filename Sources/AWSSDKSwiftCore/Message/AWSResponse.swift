@@ -14,6 +14,7 @@
 
 import class Foundation.JSONSerialization
 import class Foundation.JSONDecoder
+import Logging
 import NIO
 import NIOHTTP1
 import AWSXML
@@ -183,7 +184,7 @@ public struct AWSResponse {
     }
     
     /// extract error code and message from AWSResponse
-    func generateError(serviceConfig: AWSServiceConfig) -> Error? {
+    func generateError(serviceConfig: AWSServiceConfig, logger: Logger) -> Error? {
         var apiError: APIError? = nil
         switch serviceConfig.serviceProtocol {
         case .query:
@@ -226,6 +227,12 @@ public struct AWSResponse {
             if let index = code.firstIndex(of: "#") {
                 code = String(code[code.index(index, offsetBy: 1)...])
             }
+
+            logger.error("AWS error", metadata: [
+                "aws-error-code": .string(code),
+                "aws-error-message": .string(errorMessage.message)
+            ])
+
             for errorType in serviceConfig.possibleErrorTypes {
                 if let error = errorType.init(errorCode: code, message: errorMessage.message) {
                     return error

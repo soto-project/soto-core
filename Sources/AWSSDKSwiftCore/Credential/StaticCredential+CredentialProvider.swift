@@ -13,9 +13,10 @@
 //===----------------------------------------------------------------------===//
 
 import AWSSignerV4
+import Logging
 
 extension StaticCredential: CredentialProvider {
-    public func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
+    public func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
         eventLoop.makeSucceededFuture(self)
     }
 }

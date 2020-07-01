@@ -68,6 +68,8 @@ public final class AWSClient {
     public var eventLoopGroup: EventLoopGroup { return httpClient.eventLoopGroup }
     /// Retry Controller specifying what to do when a request fails
     public let retryPolicy: RetryPolicy
+    /// Logger used for non-request based output
+    let clientLogger: Logger
 
     private let isShutdown = NIOAtomic<Bool>.makeAtomic(value: false)
 
@@ -99,6 +101,7 @@ public final class AWSClient {
 
         self.middlewares = middlewares
         self.retryPolicy = retryPolicyFactory.retryPolicy
+        self.clientLogger = clientLogger
     }
 
     deinit {
@@ -116,7 +119,9 @@ public final class AWSClient {
             do {
                 try httpClient.syncShutdown()
             } catch {
-                print("Error shutting down HTTP client: \(error)")
+                clientLogger.error("Error shutting down HTTP client", metadata: [
+                    "aws-error": "\(error)"
+                ])
             }
         }
     }
@@ -140,6 +145,9 @@ extension AWSClient {
                 .flatMapErrorThrowing { (error)->Void in
                     // If I get a retry wait time for this error then attempt to retry request
                     if case .retry(let retryTime) = self.retryPolicy.getRetryWaitTime(error: error, attempt: attempt) {
+                        logger.info("Retrying request", metadata: [
+                            "aws-retry-time": "\(retryTime)"
+                        ])
                         // schedule task for retrying AWS request
                         eventloop.scheduleTask(in: retryTime) {
                             execute(attempt: attempt + 1)
@@ -207,7 +215,7 @@ extension AWSClient {
     ) -> EventLoopFuture<Void> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName)
-        let future: EventLoopFuture<Void> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
+        let future: EventLoopFuture<Void> = credentialProvider.getCredential(on: eventLoop, logger: logger).flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
             let awsRequest = try AWSRequest(
                         operation: operationName,
@@ -244,7 +252,7 @@ extension AWSClient {
     ) -> EventLoopFuture<Void> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName)
-        let future: EventLoopFuture<Void> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
+        let future: EventLoopFuture<Void> = credentialProvider.getCredential(on: eventLoop, logger: logger).flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
             let awsRequest = try AWSRequest(
                 operation: operationName,
@@ -281,7 +289,7 @@ extension AWSClient {
     ) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName)
-        let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
+        let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop, logger: logger).flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
             let awsRequest = try AWSRequest(
                 operation: operationName,
@@ -319,7 +327,7 @@ extension AWSClient {
     ) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName)
-        let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
+        let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop, logger: logger).flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
             let awsRequest = try AWSRequest(
                         operation: operationName,
@@ -359,7 +367,7 @@ extension AWSClient {
     ) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName)
-        return credentialProvider.getCredential(on: eventLoop).flatMapThrowing { credential in
+        return credentialProvider.getCredential(on: eventLoop, logger: logger).flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
             let awsRequest = try AWSRequest(
                 operation: operationName,
@@ -385,14 +393,21 @@ extension AWSClient {
     ///     - serviceConfig: additional AWS service configuration used to sign the url
     /// - returns:
     ///     A signed URL
-    public func signURL(url: URL, httpMethod: String, expires: Int = 86400, serviceConfig: AWSServiceConfig) -> EventLoopFuture<URL> {
-        return createSigner(serviceConfig: serviceConfig).map { signer in
+    public func signURL(
+        url: URL,
+        httpMethod: String,
+        expires: Int = 86400,
+        serviceConfig: AWSServiceConfig,
+        logger: Logger = AWSClient.loggingDisabled
+    ) -> EventLoopFuture<URL> {
+        let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: "signURL")
+        return createSigner(serviceConfig: serviceConfig, logger: logger).map { signer in
             signer.signURL(url: url, method: HTTPMethod(rawValue: httpMethod), expires: expires)
         }
     }
 
-    public func createSigner(serviceConfig: AWSServiceConfig) -> EventLoopFuture<AWSSigner> {
-        return credentialProvider.getCredential(on: eventLoopGroup.next()).map { credential in
+    func createSigner(serviceConfig: AWSServiceConfig, logger: Logger) -> EventLoopFuture<AWSSigner> {
+        return credentialProvider.getCredential(on: eventLoopGroup.next(), logger: logger).map { credential in
             return AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
         }
     }

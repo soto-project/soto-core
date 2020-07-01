@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 @testable import AWSSDKSwiftCore
+import Logging
 import NIO
 import NIOConcurrencyHelpers
 import XCTest
@@ -26,7 +27,7 @@ class RotatingCredentialProviderTests: XCTestCase {
             self.callback = callback
         }
         
-        func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
+        func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
             eventLoop.flatSubmit() {
                 self.callback(eventLoop).map { $0 }
             }
@@ -54,7 +55,7 @@ class RotatingCredentialProviderTests: XCTestCase {
         
         // get credentials for first time
         var returned: Credential?
-        XCTAssertNoThrow(returned = try provider.getCredential(on: loop).wait())
+        XCTAssertNoThrow(returned = try provider.getCredential(on: loop, logger: AWSClient.loggingDisabled).wait())
         
         XCTAssertEqual(returned?.accessKeyId, cred.accessKeyId)
         XCTAssertEqual(returned?.secretAccessKey, cred.secretAccessKey)
@@ -62,7 +63,7 @@ class RotatingCredentialProviderTests: XCTestCase {
         XCTAssertEqual((returned as? TestExpiringCredential)?.expiration, cred.expiration)
         
         // get credentials a second time, callback must not be hit
-        XCTAssertNoThrow(returned = try provider.getCredential(on: loop).wait())
+        XCTAssertNoThrow(returned = try provider.getCredential(on: loop, logger: AWSClient.loggingDisabled).wait())
         XCTAssertEqual(returned?.accessKeyId, cred.accessKeyId)
         XCTAssertEqual(returned?.secretAccessKey, cred.secretAccessKey)
         XCTAssertEqual(returned?.sessionToken, cred.sessionToken)
@@ -106,7 +107,7 @@ class RotatingCredentialProviderTests: XCTestCase {
                     setupPromise.succeed(())
                 }
                 
-                return provider.getCredential(on: loop).map { returned in
+                return provider.getCredential(on: loop, logger: AWSClient.loggingDisabled).map { returned in
                     // this should be executed after the promise is fulfilled.
                     XCTAssertEqual(returned.accessKeyId, cred.accessKeyId)
                     XCTAssertEqual(returned.secretAccessKey, cred.secretAccessKey)
@@ -152,7 +153,7 @@ class RotatingCredentialProviderTests: XCTestCase {
         hitCount = 0
         let iterations = 100
         for _ in 0..<100 {
-            XCTAssertNoThrow(_ = try provider.getCredential(on: loop).wait())
+            XCTAssertNoThrow(_ = try provider.getCredential(on: loop, logger: AWSClient.loggingDisabled).wait())
         }
         
         // ensure callback was only hit once

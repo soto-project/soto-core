@@ -90,8 +90,8 @@ public final class NIOTSHTTPClient {
     }
 
     /// send request to HTTP client, return a future holding the Response
-    public func connect(url: URL, _ request: Request, timeout: TimeAmount, on eventLoop: EventLoop?) -> EventLoopFuture<Response> {
-        let eventLoop = eventLoop ?? eventLoopGroup.next()
+    public func connect(url: URL, _ request: Request, timeout: TimeAmount, on eventLoop: EventLoop) -> EventLoopFuture<Response> {
+        //let eventLoop = eventLoop ?? eventLoopGroup.next()
         // extract details from request URL
         //guard let url = URL(string:request.head.uri) else { return eventLoop.makeFailedFuture(HTTPError.malformedURL(url: request.head.uri)) }
         guard let scheme = url.scheme else { return eventLoop.makeFailedFuture(HTTPError.malformedURL(url: request.head.uri)) }
@@ -241,10 +241,7 @@ public final class NIOTSHTTPClient {
 @available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)
 extension NIOTSHTTPClient: AWSHTTPClient {
 
-    public func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop?) -> EventLoopFuture<AWSHTTPResponse> {
-        if let eventLoop = eventLoop {
-            precondition(self.eventLoopGroup.makeIterator().contains { $0 === eventLoop }, "EventLoop provided to AWSClient must be part of the HTTPClient's EventLoopGroup.")
-        }
+    public func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop) -> EventLoopFuture<AWSHTTPResponse> {
         var head = HTTPRequestHead(
           version: HTTPVersion(major: 1, minor: 1),
           method: request.method,
@@ -257,7 +254,7 @@ extension NIOTSHTTPClient: AWSHTTPClient {
         case .byteBuffer(let byteBuffer):
             requestBody = byteBuffer
         case .stream:
-            preconditionFailure("Request streaming isnt supported")
+            preconditionFailure("NIOTSHTTPClient does not support request streaming")
         case .empty:
             requestBody = nil
         }

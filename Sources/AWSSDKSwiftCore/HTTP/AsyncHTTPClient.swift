@@ -25,11 +25,7 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
     ///   - timeout: If execution is idle for longer than timeout then throw error
     ///   - eventLoop: eventLoop to run request on
     /// - Returns: EventLoopFuture that will be fulfilled with request response
-    public func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop?) -> EventLoopFuture<AWSHTTPResponse> {
-        if let eventLoop = eventLoop {
-            precondition(self.eventLoopGroup.makeIterator().contains { $0 === eventLoop }, "EventLoop provided to AWSClient must be part of the HTTPClient's EventLoopGroup.")
-        }        
-        let eventLoop = eventLoop ?? eventLoopGroup.next()
+    public func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop) -> EventLoopFuture<AWSHTTPResponse> {
         let requestBody: AsyncHTTPClient.HTTPClient.Body?
         var requestHeaders = request.headers
         
@@ -55,10 +51,7 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
 
 /// extend to include response streaming support
 extension AsyncHTTPClient.HTTPClient {
-    public func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop?, stream: @escaping ResponseStream) -> EventLoopFuture<AWSHTTPResponse> {
-        if let eventLoop = eventLoop {
-            precondition(self.eventLoopGroup.makeIterator().contains { $0 === eventLoop }, "EventLoop provided to AWSClient must be part of the HTTPClient's EventLoopGroup.")
-        }
+    public func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop, stream: @escaping ResponseStream) -> EventLoopFuture<AWSHTTPResponse> {
         let requestBody: AsyncHTTPClient.HTTPClient.Body?
         if case .byteBuffer(let body) = request.body.payload {
             requestBody = .byteBuffer(body)
@@ -66,7 +59,6 @@ extension AsyncHTTPClient.HTTPClient {
             requestBody = nil
         }
         do {
-            let eventLoop = eventLoop ?? eventLoopGroup.next()
             let asyncRequest = try AsyncHTTPClient.HTTPClient.Request(url: request.url, method: request.method, headers: request.headers, body: requestBody)
             let delegate = AWSHTTPClientResponseDelegate(host: asyncRequest.host, stream: stream)
             return execute(request: asyncRequest, delegate: delegate, eventLoop: .delegate(on: eventLoop), deadline: .now() + timeout)

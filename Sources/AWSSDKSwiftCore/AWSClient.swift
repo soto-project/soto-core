@@ -84,7 +84,7 @@ public final class AWSClient {
         retryPolicy retryPolicyFactory: RetryPolicyFactory = .default,
         middlewares: [AWSServiceMiddleware] = [],
         httpClientProvider: HTTPClientProvider,
-        clientLogger: Logger = AWSClient.loggingDisabled
+        logger clientLogger: Logger = AWSClient.loggingDisabled
     ) {
         // setup httpClient
         self.httpClientProvider = httpClientProvider
@@ -156,6 +156,9 @@ extension AWSClient {
                         // if there was no retry and error was a response status code then attempt to convert to AWS error
                         promise.fail(self.createError(for: response, serviceConfig: serviceConfig, logger: logger))
                     } else {
+                        logger.error("AWSClient Internal error", metadata: [
+                            "aws-error-message": "\(error)"
+                        ])
                         promise.fail(error)
                     }
             }
@@ -214,7 +217,8 @@ extension AWSClient {
         logger: Logger = AWSClient.loggingDisabled
     ) -> EventLoopFuture<Void> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
-        let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName)
+        let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName, service: serviceConfig.service)
+        logger.trace("AWS Request")
         let future: EventLoopFuture<Void> = credentialProvider.getCredential(on: eventLoop, logger: logger).flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
             let awsRequest = try AWSRequest(
@@ -251,8 +255,9 @@ extension AWSClient {
         logger: Logger = AWSClient.loggingDisabled
     ) -> EventLoopFuture<Void> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
-        let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName)
-        let future: EventLoopFuture<Void> = credentialProvider.getCredential(on: eventLoop, logger: logger).flatMapThrowing { credential in
+        let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName, service: serviceConfig.service)
+        logger.trace("AWS Request")
+        let future: EventLoopFuture<Void> = credentialProvider.getCredential(on: eventLoop, logger: logger).flatMapThrowing { credential -> AWSHTTPRequest in
             let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
             let awsRequest = try AWSRequest(
                 operation: operationName,
@@ -263,9 +268,10 @@ extension AWSClient {
                 .applyMiddlewares(serviceConfig.middlewares + self.middlewares)
                 .createHTTPRequest(signer: signer)
 
-        }.flatMap { request in
+        }.flatMap { request -> EventLoopFuture<AWSHTTPResponse> in
             return self.invoke(request, with: serviceConfig, on: eventLoop, logger: logger)
         }.map { _ in
+            logger.trace("AWS Response")
             return
         }
         return recordMetrics(future, service: serviceConfig.service, operation: operationName)
@@ -288,7 +294,8 @@ extension AWSClient {
         logger: Logger = AWSClient.loggingDisabled
     ) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
-        let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName)
+        let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName, service: serviceConfig.service)
+        logger.trace("AWS Request")
         let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop, logger: logger).flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
             let awsRequest = try AWSRequest(
@@ -302,6 +309,7 @@ extension AWSClient {
         }.flatMap { request in
             return self.invoke(request, with: serviceConfig, on: eventLoop, logger: logger)
         }.flatMapThrowing { response in
+            logger.trace("AWS Response")
             return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
         }
         return recordMetrics(future, service: serviceConfig.service, operation: operationName)
@@ -326,7 +334,8 @@ extension AWSClient {
         logger: Logger = AWSClient.loggingDisabled
     ) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
-        let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName)
+        let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName, service: serviceConfig.service)
+        logger.trace("AWS Request")
         let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop, logger: logger).flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
             let awsRequest = try AWSRequest(
@@ -341,6 +350,7 @@ extension AWSClient {
         }.flatMap { request in
             return self.invoke(request, with: serviceConfig, on: eventLoop, logger: logger)
         }.flatMapThrowing { response in
+            logger.trace("AWS Response")
             return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
         }
         return recordMetrics(future, service: serviceConfig.service, operation: operationName)
@@ -366,7 +376,8 @@ extension AWSClient {
         stream: @escaping AWSHTTPClient.ResponseStream
     ) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
-        let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName)
+        let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName, service: serviceConfig.service)
+        logger.trace("AWS Request")
         return credentialProvider.getCredential(on: eventLoop, logger: logger).flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
             let awsRequest = try AWSRequest(
@@ -381,6 +392,7 @@ extension AWSClient {
         }.flatMap { request in
             return self.invoke(request, with: serviceConfig, on: eventLoop, logger: logger, stream: stream)
         }.flatMapThrowing { response in
+            logger.trace("AWS Response")
             return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
         }
     }
@@ -400,7 +412,7 @@ extension AWSClient {
         serviceConfig: AWSServiceConfig,
         logger: Logger = AWSClient.loggingDisabled
     ) -> EventLoopFuture<URL> {
-        let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: "signURL")
+        let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: "signURL", service: serviceConfig.service)
         return createSigner(serviceConfig: serviceConfig, logger: logger).map { signer in
             signer.signURL(url: url, method: HTTPMethod(rawValue: httpMethod), expires: expires)
         }
@@ -440,7 +452,7 @@ extension AWSClient {
             if var body = response.body {
                 rawBodyString = body.readString(length: body.readableBytes)
             }
-            logger.error("AWS error", metadata: ["aws-error-code": "nil", "aws-error-message": "Unhandled Error"])
+            logger.error("AWS error", metadata: ["aws-error-message": "Unhandled Error"])
 
             return AWSError(statusCode: response.status, message: "Unhandled Error", rawBody: rawBodyString)
         }
@@ -485,8 +497,9 @@ extension AWSClient {
 }
 
 extension Logger {
-    func attachingRequestId(_ id: Int, operation: String) -> Logger {
+    func attachingRequestId(_ id: Int, operation: String, service: String) -> Logger {
         var logger = self
+        logger[metadataKey: "aws-service"] = .string(service)
         logger[metadataKey: "aws-operation"] = .string(operation)
         logger[metadataKey: "aws-request-id"] = "\(id)"
         return logger

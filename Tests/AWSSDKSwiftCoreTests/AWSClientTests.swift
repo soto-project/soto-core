@@ -199,7 +199,7 @@ class AWSClientTests: XCTestCase {
             // don't ask for 0 bytes
             XCTAssertNotEqual(size, 0)
             let buffer = byteBuffer.readSlice(length: size)!
-            return eventLoop.makeSucceededFuture(buffer)
+            return eventLoop.makeSucceededFuture(.byteBuffer(buffer))
         }
         let input = Input(payload: payload)
         let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config, input: input)
@@ -273,7 +273,7 @@ class AWSClientTests: XCTestCase {
             let payload = AWSPayload.stream(size: 8) { eventLoop in
                 var buffer = ByteBufferAllocator().buffer(capacity: 0)
                 buffer.writeString("String longer than 8 bytes")
-                return eventLoop.makeSucceededFuture(buffer)
+                return eventLoop.makeSucceededFuture(.byteBuffer(buffer))
             }
             let input = Input(payload: payload)
             let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config, input: input)
@@ -368,9 +368,9 @@ class AWSClientTests: XCTestCase {
             let payload = AWSPayload.stream { eventLoop in
                 let size = min(blockSize, byteBuffer.readableBytes)
                 if size == 0 {
-                    return eventLoop.makeSucceededFuture((byteBuffer))
+                    return eventLoop.makeSucceededFuture(.end)
                 } else {
-                    return eventLoop.makeSucceededFuture(byteBuffer.readSlice(length: size)!)
+                    return eventLoop.makeSucceededFuture(.byteBuffer(byteBuffer.readSlice(length: size)!))
                 }
             }
             let input = Input(payload: payload)

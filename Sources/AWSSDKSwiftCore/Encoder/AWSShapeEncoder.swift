@@ -120,6 +120,9 @@ class AWSShapeEncoder {
                         dictionary["\(fullLabel).\(entryString)\(iterator.offset+1).\(valueString)"] = iterator.element.value
                     }
                 
+                case let v as Data:
+                     dictionary[fullLabel] = v.base64EncodedString()
+
                 default:
                     dictionary[fullLabel] = value
                 }

@@ -54,7 +54,11 @@ extension CredentialProviderFactory {
     
     /// The default CredentialProvider used to access credentials
     public static var `default`: CredentialProviderFactory {
-        return .runtime
+        #if os(Linux)
+        return .selector(.environment, .ecs, .ec2, .configFile())
+        #else
+        return .selector(.environment, .configFile())
+        #endif
     }
     
     /// Use this method to initialize your custom `CredentialProvider`
@@ -100,15 +104,6 @@ extension CredentialProviderFactory {
         }
     }
     
-    /// Use this method to let the runtime determine which `Credentials` to use
-    public static var runtime: CredentialProviderFactory {
-        Self() { context in
-            RuntimeCredentialProvider.createProvider(
-                on: context.eventLoop,
-                httpClient: context.httpClient)
-        }
-    }
-    
     /// Use this method to load credentials from your aws cli credential file, normally located at `~/.aws/credentials`
     public static func configFile(credentialsFilePath: String = "~/.aws/credentials", profile: String? = nil) -> CredentialProviderFactory {
         return Self() { context in
@@ -121,6 +116,17 @@ extension CredentialProviderFactory {
     public static var empty: CredentialProviderFactory {
         Self() { context in
             StaticCredential(accessKeyId: "", secretAccessKey: "")
+        }
+    }
+    
+    /// Use the list of credential providers supplied to get credentials. The first one in the list that manages to supply credentials is the one to use
+    public static func selector(_ providers: CredentialProviderFactory...) -> CredentialProviderFactory {
+        Self() { context in
+            if providers.count == 1 {
+                return providers[0].createProvider(context: context)
+            } else {
+                return RuntimeSelectorCredentialProvider(providers: providers, context: context)
+            }
         }
     }
 }

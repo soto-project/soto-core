@@ -15,6 +15,12 @@
 import NIO
 import NIOHTTP1
 
+/// Streaming result
+public enum StreamReaderResult {
+    case byteBuffer(ByteBuffer)
+    case end
+}
+
 /// Protocol for objects that supply streamed data to HTTPClient.Body.StreamWriter
 protocol StreamReader {
     
@@ -23,7 +29,7 @@ protocol StreamReader {
     /// total size of data to be streamed plus any chunk headers
     var contentSize: Int? { get }
     /// function providing data to be streamed
-    var read: (EventLoop)->EventLoopFuture<ByteBuffer> { get }
+    var read: (EventLoop)->EventLoopFuture<StreamReaderResult> { get }
     /// bytebuffer allocator
     var byteBufferAllocator: ByteBufferAllocator { get }
     
@@ -54,10 +60,11 @@ struct ChunkedStreamReader: StreamReader {
     /// Provide a list of ByteBuffers to write. The `ChunkedStreamReader` just passes the `ByteBuffer` supplied to straight through
     /// - Parameter eventLoop: eventLoop to use when generating the event loop future
     func streamChunks(on eventLoop: EventLoop) -> EventLoopFuture<[ByteBuffer]> {
-        return read(eventLoop).map { (byteBuffer) -> [ByteBuffer] in
-            if byteBuffer.readableBytes > 0 {
+        return read(eventLoop).map { result -> [ByteBuffer] in
+            switch result {
+            case .byteBuffer(let byteBuffer):
                 return [byteBuffer]
-            } else {
+            case .end:
                 return []
             }
         }
@@ -69,7 +76,7 @@ struct ChunkedStreamReader: StreamReader {
     /// size of data to be streamed
     let size: Int?
     /// function providing data to be streamed
-    let read: (EventLoop)->EventLoopFuture<ByteBuffer>
+    let read: (EventLoop)->EventLoopFuture<StreamReaderResult>
     /// bytebuffer allocator
     var byteBufferAllocator: ByteBufferAllocator
 }

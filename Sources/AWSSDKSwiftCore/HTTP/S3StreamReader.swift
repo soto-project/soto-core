@@ -29,7 +29,13 @@ class S3ChunkedStreamReader: StreamReader {
     static let maxHeaderSize: Int = bufferSizeInHex.count + chunkSignatureLength + endOfLineLength
     
     /// Initialise a S3ChunkedStreamReader
-    init(size: Int, seedSigningData: AWSSigner.ChunkedSigningData, signer: AWSSigner, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(), read: @escaping (EventLoop)->EventLoopFuture<ByteBuffer>) {
+    init(
+        size: Int,
+        seedSigningData: AWSSigner.ChunkedSigningData,
+        signer: AWSSigner,
+        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
+        read: @escaping (EventLoop)->EventLoopFuture<StreamReaderResult>
+    ) {
         self.size = size
         self.bytesLeftToRead = size
         self.read = read
@@ -80,13 +86,14 @@ class S3ChunkedStreamReader: StreamReader {
         }
         let promise: EventLoopPromise<ByteBuffer> = eventLoop.makePromise()
         func _fillBuffer() {
-            _ = read(eventLoop).map { (buffer) -> Void in
-                self.bytesLeftToRead -= buffer.readableBytes
-                if buffer.readableBytes == 0 {
-                    // if my bytes supplied then return what we have in the working buffer
+            _ = read(eventLoop).map { (result) -> Void in
+                // check if a byte buffer was returned. If not then it must have been `.end`
+                guard case .byteBuffer(var buffer) = result else {
+                    // if we have `.end` then return what we have in the working buffer
                     promise.succeed(self.workingBuffer)
                     return
                 }
+                self.bytesLeftToRead -= buffer.readableBytes
                 // if working buffer is empty and this buffer is the chunk buffer size or there is no data
                 // left to read then just return this buffer. This allows us to avoid the buffer copy
                 if self.workingBuffer.readableBytes == 0 {
@@ -95,7 +102,6 @@ class S3ChunkedStreamReader: StreamReader {
                         return
                     }
                 }
-                var buffer = buffer
                 let bytesRequired = Self.bufferSize - self.workingBuffer.readableBytes
                 let bytesToRead = min(buffer.readableBytes, bytesRequired)
                 var slice = buffer.readSlice(length: bytesToRead)!
@@ -163,7 +169,7 @@ class S3ChunkedStreamReader: StreamReader {
     /// size of data to be streamed
     let size: Int?
     /// function providing data to be streamed
-    let read: (EventLoop)->EventLoopFuture<ByteBuffer>
+    let read: (EventLoop)->EventLoopFuture<StreamReaderResult>
     /// bytebuffer allocator
     var byteBufferAllocator: ByteBufferAllocator
 

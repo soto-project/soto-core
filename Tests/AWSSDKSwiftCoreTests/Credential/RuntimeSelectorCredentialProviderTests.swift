@@ -112,7 +112,7 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
 
         let customECS: CredentialProviderFactory = .custom { context in 
             if let client = ECSMetaDataClient(httpClient: context.httpClient, host: "\(testServer.host):\(testServer.serverPort)") {
-                return RotatingCredentialProvider(eventLoop: context.eventLoop, client: client)
+                return RotatingCredentialProvider(eventLoop: context.eventLoop, provider: client)
             }
             // fallback
             return NullCredentialProvider()
@@ -152,7 +152,7 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
             XCTAssertEqual(credential.secretAccessKey, secretAccessKey)
             XCTAssertEqual(credential.sessionToken, sessionToken)
             let internalProvider = try XCTUnwrap((client.credentialProvider as? RuntimeSelectorCredentialProvider)?.internalProvider)
-            XCTAssert(internalProvider is RotatingCredentialProvider<ECSMetaDataClient>)
+            XCTAssert(internalProvider is RotatingCredentialProvider)
         }
         XCTAssertNoThrow(try futureResult.wait())
     }
@@ -175,7 +175,7 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
         }
     }
     
-    /*func testConfigFileProvider() {
+    func testConfigFileProvider() {
         let credentials = """
             [default]
             aws_access_key_id = AWSACCESSKEYID
@@ -186,34 +186,27 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
         XCTAssertNoThrow(try Data(credentials.utf8).write(to: filenameURL))
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: filenameURL)) }
 
-        let provider = GroupCredentialProvider([
-            ConfigFileCredentialProvider(credentialsFilePath: filename)
-        ])
-        let client = createAWSClient(credentialProvider: provider)
+        let client = createAWSClient(credentialProvider: .selector(.configFile(credentialsFilePath: filename), .empty))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next()).flatMapThrowing { credential in
             XCTAssertEqual(credential.accessKeyId, "AWSACCESSKEYID")
             XCTAssertEqual(credential.secretAccessKey, "AWSSECRETACCESSKEY")
             XCTAssertEqual(credential.sessionToken, nil)
-            let internalProvider = try XCTUnwrap((client.credentialProvider as? GroupCredentialProvider.Provider)?.internalProvider)
-            XCTAssert(internalProvider is ConfigFileCredentialProviderWorker)
+            let internalProvider = try XCTUnwrap((client.credentialProvider as? RuntimeSelectorCredentialProvider)?.internalProvider)
+            XCTAssert(internalProvider is DeferredCredentialProvider)
         }
         XCTAssertNoThrow(try futureResult.wait())
-    }*/
+    }
     
-    /*func testConfigFileProviderFail() {
-        let provider = GroupCredentialProvider([
-            ConfigFileCredentialProvider(credentialsFilePath: "nonExistentCredentialFile"),
-            EmptyCredentialProvider()
-        ])
-        let client = createAWSClient(credentialProvider: provider)
+    func testConfigFileProviderFail() {
+        let client = createAWSClient(credentialProvider: .selector(.configFile(credentialsFilePath: "nonExistentCredentialFile"), .empty))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next()).flatMapThrowing { credential in
-            let internalProvider = try XCTUnwrap((client.credentialProvider as? GroupCredentialProvider.Provider)?.internalProvider)
+            let internalProvider = try XCTUnwrap((client.credentialProvider as? RuntimeSelectorCredentialProvider)?.internalProvider)
             XCTAssert(internalProvider is StaticCredential)
             XCTAssert((internalProvider as? StaticCredential)?.isEmpty() == true)
         }
         XCTAssertNoThrow(try futureResult.wait())
-    }*/
+    }
     
 }

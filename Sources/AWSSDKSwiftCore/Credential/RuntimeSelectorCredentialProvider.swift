@@ -36,11 +36,13 @@ class RuntimeSelectorCredentialProvider: CredentialProvider {
         let providers = providers ?? [
             .environment,
             .ecs,
-            .ec2
+            .ec2,
+            .configFile()
         ]
         #else
         let providers = providers ?? [
-            .environment
+            .environment,
+            .configFile(),
         ]
         #endif
         self.startupPromise = context.eventLoop.makePromise(of: CredentialProvider.self)

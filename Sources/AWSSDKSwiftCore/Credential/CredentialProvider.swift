@@ -54,7 +54,11 @@ extension CredentialProviderFactory {
     
     /// The default CredentialProvider used to access credentials
     public static var `default`: CredentialProviderFactory {
-        return .runtime
+        #if os(Linux)
+        return .selector(.environment, .ecs, .ec2, .configFile())
+        #else
+        return .selector(.environment, .configFile())
+        #endif
     }
     
     /// Use this method to initialize your custom `CredentialProvider`
@@ -97,15 +101,6 @@ extension CredentialProviderFactory {
         Self() { context in
             let provider = InstanceMetaDataClient(httpClient: context.httpClient)
             return RotatingCredentialProvider(eventLoop: context.eventLoop, provider: provider)
-        }
-    }
-    
-    /// Use this method to let the runtime determine which `Credentials` to use
-    public static var runtime: CredentialProviderFactory {
-        Self() { context in
-            RuntimeCredentialProvider.createProvider(
-                on: context.eventLoop,
-                httpClient: context.httpClient)
         }
     }
     

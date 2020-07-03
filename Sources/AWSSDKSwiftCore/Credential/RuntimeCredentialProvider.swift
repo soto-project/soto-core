@@ -80,7 +80,7 @@ class RuntimeCredentialProvider: CredentialProvider {
             // 3. if we are on linux is an ECSMetaData endpoint in the environment. Do we reach the ECSMetaDataService?
             future = future.flatMapError { (error) -> EventLoopFuture<CredentialProvider> in
                 if let ecsMetaDataClient = ECSMetaDataClient(httpClient: httpClient) {
-                    let credentialProvider = RotatingCredentialProvider(eventLoop: eventLoop, client: ecsMetaDataClient)
+                    let credentialProvider = RotatingCredentialProvider(eventLoop: eventLoop, provider: ecsMetaDataClient)
                     return credentialProvider.getCredential(on: eventLoop).map { _ in
                         // first refresh has been successful. we could access meta data!
                         return credentialProvider
@@ -92,7 +92,7 @@ class RuntimeCredentialProvider: CredentialProvider {
             // 4. if we are on linux can we access the ec2 meta data service?
             .flatMapError { (error) -> EventLoopFuture<CredentialProvider> in
                 let ec2MetaDataClient = InstanceMetaDataClient(httpClient: httpClient)
-                let credentialProvider = RotatingCredentialProvider(eventLoop: eventLoop, client: ec2MetaDataClient)
+                let credentialProvider = RotatingCredentialProvider(eventLoop: eventLoop, provider: ec2MetaDataClient)
                 return credentialProvider.getCredential(on: eventLoop).map { _ in
                     // first refresh has been successful. we could access meta data, let's use this credential provider
                     return credentialProvider
@@ -102,8 +102,11 @@ class RuntimeCredentialProvider: CredentialProvider {
         
         // 5. can we find credentials in the aws cli config file? If yes, let's use those
         future.flatMapError { (error) -> EventLoopFuture<CredentialProvider> in
-                let profile = Environment["AWS_PROFILE"] ?? "default"
-                return StaticCredential.fromSharedCredentials(credentialsFilePath: "~/.aws/credentials", profile: profile, on: eventLoop).map { $0 }
+                let provider = AWSConfigFileCredentialProvider(credentialsFilePath: "~/.aws/credentials")
+                let credentialProvider = DeferredCredentialProvider(eventLoop: eventLoop, provider: provider)
+                return credentialProvider.getCredential(on: eventLoop).map { _ in
+                    return credentialProvider
+                }
             }
             // 6. if we haven't found something yet, we will not be able to sign. Create empty static credentials
             .flatMapErrorThrowing { (_) -> CredentialProvider in

@@ -22,19 +22,32 @@ import Foundation.NSString
 #endif
 
 
-extension StaticCredential {
+struct AWSConfigFileCredentialProvider: CredentialProvider {
     /// Errors occurring when initializing a FileCredential
     ///
     /// - missingProfile: If the profile requested was not found
     /// - missingAccessKeyId: If the access key ID was not found
     /// - missingSecretAccessKey: If the secret access key was not found
-    enum SharedCredentialError: Error, Equatable {
+    enum ConfigFileError: Error, Equatable {
         case invalidCredentialFileSyntax
         case missingProfile(String)
         case missingAccessKeyId
         case missingSecretAccessKey
     }
-    
+
+    let credentialsFilePath: String
+    let profile: String
+
+    init(credentialsFilePath: String, profile: String? = nil) {
+        self.credentialsFilePath = credentialsFilePath
+        self.profile = profile ?? Environment["AWS_PROFILE"] ?? "default"
+    }
+
+    func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
+        return AWSConfigFileCredentialProvider.fromSharedCredentials(credentialsFilePath: credentialsFilePath, profile: profile, on: eventLoop)
+            .map { $0 }
+    }
+
     /// Load static credentials from the aws cli config path `~/.aws/credentials`
     ///
     /// - returns: An `EventLoopFuture` with a `SharedCredentialError` in the error
@@ -80,19 +93,19 @@ extension StaticCredential {
             parser = try INIParser(string)
         }
         catch INIParser.Error.invalidSyntax {
-            throw SharedCredentialError.invalidCredentialFileSyntax
+            throw ConfigFileError.invalidCredentialFileSyntax
         }
         
         guard let config = parser.sections[profile] else {
-            throw SharedCredentialError.missingProfile(profile)
+            throw ConfigFileError.missingProfile(profile)
         }
         
         guard let accessKeyId = config["aws_access_key_id"] else {
-            throw SharedCredentialError.missingAccessKeyId
+            throw ConfigFileError.missingAccessKeyId
         }
         
         guard let secretAccessKey = config["aws_secret_access_key"] else {
-            throw SharedCredentialError.missingSecretAccessKey
+            throw ConfigFileError.missingSecretAccessKey
         }
         
         let sessionToken = config["aws_session_token"]

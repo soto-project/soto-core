@@ -14,6 +14,7 @@
 
 import NIO
 import AWSSignerV4
+import NIOConcurrencyHelpers
 
 /// Protocol providing future holding a credential
 public protocol CredentialProvider {
@@ -82,8 +83,8 @@ extension CredentialProviderFactory {
     /// Use this method to enforce the usage of the Credentials supplied via the ECS Metadata endpoint
     public static var ecs: CredentialProviderFactory {
         Self() { context in
-            if let client = ECSMetaDataClient(httpClient: context.httpClient) {
-                return RotatingCredentialProvider(eventLoop: context.eventLoop, client: client)
+            if let provider = ECSMetaDataClient(httpClient: context.httpClient) {
+                return RotatingCredentialProvider(eventLoop: context.eventLoop, provider: provider)
             }
             
             // fallback
@@ -94,8 +95,8 @@ extension CredentialProviderFactory {
     /// Use this method to enforce the usage of the Credentials supplied via the EC2 Instance Metadata endpoint
     public static var ec2: CredentialProviderFactory {
         Self() { context in
-            let client = InstanceMetaDataClient(httpClient: context.httpClient)
-            return RotatingCredentialProvider(eventLoop: context.eventLoop, client: client)
+            let provider = InstanceMetaDataClient(httpClient: context.httpClient)
+            return RotatingCredentialProvider(eventLoop: context.eventLoop, provider: provider)
         }
     }
     
@@ -108,6 +109,14 @@ extension CredentialProviderFactory {
         }
     }
     
+    /// Use this method to load credentials from your aws cli credential file, normally located at `~/.aws/credentials`
+    public static func configFile(credentialsFilePath: String = "~/.aws/credentials", profile: String? = nil) -> CredentialProviderFactory {
+        return Self() { context in
+            let provider = AWSConfigFileCredentialProvider(credentialsFilePath: credentialsFilePath, profile: profile)
+            return DeferredCredentialProvider(eventLoop: context.eventLoop, provider: provider)
+        }
+    }
+    
     /// Enforce the use of no credentials.
     public static var empty: CredentialProviderFactory {
         Self() { context in
@@ -115,3 +124,4 @@ extension CredentialProviderFactory {
         }
     }
 }
+

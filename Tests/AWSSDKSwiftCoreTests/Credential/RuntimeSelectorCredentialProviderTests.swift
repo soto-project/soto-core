@@ -20,7 +20,7 @@ import NIO
 class RuntimeSelectorCredentialProviderTests: XCTestCase {
     
     func testSetupFail() {
-        let client = createAWSClient(credentialProvider: .selector(.custom({_ in return NullCredentialProvider()})))
+        let client = createAWSClient(credentialProvider: .selector(.custom {_ in return NullCredentialProvider()} ))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next())
         XCTAssertThrowsError(try futureResult.wait()) { error in

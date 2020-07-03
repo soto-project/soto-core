@@ -15,7 +15,9 @@
 import NIO
 import NIOConcurrencyHelpers
 
-/// get credentials from a list of possible credential providers
+/// get credentials from a list of possible credential providers. Goes through list of providers from start to end
+/// attempting to get credentials. Once it finds a `CredentialProvider` that supplies credentials use that
+/// one
 class RuntimeSelectorCredentialProvider: CredentialProvider {
     /// the provider chosen to supply credentials
     var internalProvider: CredentialProvider? {
@@ -31,20 +33,7 @@ class RuntimeSelectorCredentialProvider: CredentialProvider {
     private let lock = Lock()
     private var _internalProvider: CredentialProvider? = nil
 
-    init(providers: [CredentialProviderFactory]? = nil, context: CredentialProviderFactory.Context) {
-        #if os(Linux)
-        let providers = providers ?? [
-            .environment,
-            .ecs,
-            .ec2,
-            .configFile()
-        ]
-        #else
-        let providers = providers ?? [
-            .environment,
-            .configFile(),
-        ]
-        #endif
+    init(providers: [CredentialProviderFactory], context: CredentialProviderFactory.Context) {
         self.startupPromise = context.eventLoop.makePromise(of: CredentialProvider.self)
         setupInternalProvider(providers: providers, context: context)
     }

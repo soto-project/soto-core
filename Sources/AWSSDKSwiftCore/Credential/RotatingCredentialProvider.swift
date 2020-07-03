@@ -23,13 +23,13 @@ import struct Foundation.TimeInterval
 public final class RotatingCredentialProvider: CredentialProvider {
     let remainingTokenLifetimeForUse: TimeInterval
 
-    public  let client          : CredentialProvider
+    public  let provider        : CredentialProvider
     private let lock            = NIOConcurrencyHelpers.Lock()
     private var credential      : Credential? = nil
     private var credentialFuture: EventLoopFuture<Credential>? = nil
 
-    public init(eventLoop: EventLoop, client: CredentialProvider, remainingTokenLifetimeForUse: TimeInterval? = nil) {
-        self.client = client
+    public init(eventLoop: EventLoop, provider: CredentialProvider, remainingTokenLifetimeForUse: TimeInterval? = nil) {
+        self.provider = provider
         self.remainingTokenLifetimeForUse = remainingTokenLifetimeForUse ?? 3 * 60
         _ = refreshCredentials(on: eventLoop)
     }
@@ -77,7 +77,7 @@ public final class RotatingCredentialProvider: CredentialProvider {
             return future
         }
 
-        credentialFuture = self.client.getCredential(on: eventLoop)
+        credentialFuture = self.provider.getCredential(on: eventLoop)
             .map { (credential) -> (Credential) in
                 // update the internal credential locked
                 self.lock.withLock {

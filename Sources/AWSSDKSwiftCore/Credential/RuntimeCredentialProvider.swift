@@ -102,8 +102,8 @@ class RuntimeCredentialProvider: CredentialProvider {
         
         // 5. can we find credentials in the aws cli config file? If yes, let's use those
         future.flatMapError { (error) -> EventLoopFuture<CredentialProvider> in
-                let client = ConfigFileCredentialProvider(credentialsFilePath: "~/.aws/credentials")
-                let credentialProvider = DeferredCredentialProvider(eventLoop: eventLoop, client: client)
+                let provider = AWSConfigFileCredentialProvider(credentialsFilePath: "~/.aws/credentials")
+                let credentialProvider = DeferredCredentialProvider(eventLoop: eventLoop, provider: provider)
                 return credentialProvider.getCredential(on: eventLoop).map { _ in
                     return credentialProvider
                 }

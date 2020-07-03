@@ -83,8 +83,8 @@ extension CredentialProviderFactory {
     /// Use this method to enforce the usage of the Credentials supplied via the ECS Metadata endpoint
     public static var ecs: CredentialProviderFactory {
         Self() { context in
-            if let client = ECSMetaDataClient(httpClient: context.httpClient) {
-                return RotatingCredentialProvider(eventLoop: context.eventLoop, client: client)
+            if let provider = ECSMetaDataClient(httpClient: context.httpClient) {
+                return RotatingCredentialProvider(eventLoop: context.eventLoop, provider: provider)
             }
             
             // fallback
@@ -95,8 +95,8 @@ extension CredentialProviderFactory {
     /// Use this method to enforce the usage of the Credentials supplied via the EC2 Instance Metadata endpoint
     public static var ec2: CredentialProviderFactory {
         Self() { context in
-            let client = InstanceMetaDataClient(httpClient: context.httpClient)
-            return RotatingCredentialProvider(eventLoop: context.eventLoop, client: client)
+            let provider = InstanceMetaDataClient(httpClient: context.httpClient)
+            return RotatingCredentialProvider(eventLoop: context.eventLoop, provider: provider)
         }
     }
     
@@ -112,8 +112,8 @@ extension CredentialProviderFactory {
     /// Use this method to load credentials from your aws cli credential file, normally located at `~/.aws/credentials`
     public static func configFile(credentialsFilePath: String = "~/.aws/credentials", profile: String? = nil) -> CredentialProviderFactory {
         return Self() { context in
-            let client = ConfigFileCredentialProvider(credentialsFilePath: credentialsFilePath, profile: profile)
-            return DeferredCredentialProvider(eventLoop: context.eventLoop, client: client)
+            let provider = AWSConfigFileCredentialProvider(credentialsFilePath: credentialsFilePath, profile: profile)
+            return DeferredCredentialProvider(eventLoop: context.eventLoop, provider: provider)
         }
     }
     
@@ -125,39 +125,3 @@ extension CredentialProviderFactory {
     }
 }
 
-class DeferredCredentialProvider: CredentialProvider {
-    let lock = Lock()
-    var credential: Credential? {
-        get {
-            self.lock.withLock {
-                internalCredential
-            }
-        }
-    }
-
-    private var startupPromise: EventLoopPromise<Credential>
-    private var internalCredential: Credential? = nil
-
-    init(eventLoop: EventLoop, client: CredentialProvider) {
-        self.startupPromise = eventLoop.makePromise(of: Credential.self)
-        client.getCredential(on: eventLoop)
-            .flatMapErrorThrowing { _ in throw CredentialProviderError.noProvider }
-            .map { credential in
-                self.internalCredential = credential
-                return credential
-            }
-            .cascade(to: self.startupPromise)
-    }
-
-    func syncShutdown() throws {
-        _ = try startupPromise.futureResult.wait()
-    }
-
-    func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
-        if let credential = self.credential {
-            return eventLoop.makeSucceededFuture(credential)
-        }
-
-        return self.startupPromise.futureResult.hop(to: eventLoop)
-    }
-}

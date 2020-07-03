@@ -35,7 +35,7 @@ class CredentialProviderTests: XCTestCase {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
         let eventLoop = eventLoopGroup.next()
-        let deferredProvider = DeferredCredentialProvider(eventLoop: eventLoop, client: MyCredentialProvider())
+        let deferredProvider = DeferredCredentialProvider(eventLoop: eventLoop, provider: MyCredentialProvider())
         XCTAssertNoThrow(_ = try deferredProvider.getCredential(on: eventLoop).wait())
         XCTAssertNoThrow(_ = try deferredProvider.getCredential(on: eventLoop).wait())
     }

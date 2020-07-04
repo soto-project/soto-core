@@ -28,6 +28,7 @@ public class DeferredCredentialProvider: CredentialProvider {
         }
     }
 
+    private var provider: CredentialProvider
     private var startupPromise: EventLoopPromise<Credential>
     private var internalCredential: Credential? = nil
 
@@ -37,6 +38,7 @@ public class DeferredCredentialProvider: CredentialProvider {
     ///   - provider: Credential provider to wrap
     public init(eventLoop: EventLoop, provider: CredentialProvider) {
         self.startupPromise = eventLoop.makePromise(of: Credential.self)
+        self.provider = provider
         provider.getCredential(on: eventLoop)
             .flatMapErrorThrowing { _ in throw CredentialProviderError.noProvider }
             .map { credential in
@@ -48,6 +50,7 @@ public class DeferredCredentialProvider: CredentialProvider {
 
     public func syncShutdown() throws {
         _ = try startupPromise.futureResult.wait()
+        try provider.syncShutdown()
     }
 
     /// Return credentials. If still in process of the getting credentials then return future result of `startupPromise`

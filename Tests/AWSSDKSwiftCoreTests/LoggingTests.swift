@@ -26,7 +26,7 @@ class LoggingTests: XCTestCase {
         let server = AWSTestServer(serviceProtocol: .json)
         defer { XCTAssertNoThrow(try server.stop()) }
         let client = AWSClient(
-            credentialProvider: .default,
+            credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
             httpClientProvider: .createNew,
             logger: logger)
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
@@ -64,7 +64,7 @@ class LoggingTests: XCTestCase {
         let server = AWSTestServer(serviceProtocol: .json)
         defer { XCTAssertNoThrow(try server.stop()) }
         let client = AWSClient(
-            credentialProvider: .default,
+            credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
             httpClientProvider: .createNew,
             logger: logger)
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
@@ -90,7 +90,7 @@ class LoggingTests: XCTestCase {
         let server = AWSTestServer(serviceProtocol: .json)
         defer { XCTAssertNoThrow(try server.stop()) }
         let client = AWSClient(
-            credentialProvider: .default,
+            credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
             httpClientProvider: .createNew,
             logger: logger)
         defer { XCTAssertNoThrow(try client.syncShutdown()) }

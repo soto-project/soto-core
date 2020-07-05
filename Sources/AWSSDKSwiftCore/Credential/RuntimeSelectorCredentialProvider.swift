@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import AWSSignerV4
+import Logging
 import NIO
 import NIOConcurrencyHelpers
 
@@ -30,7 +31,7 @@ class RuntimeSelectorCredentialProvider: CredentialProvider {
     }
     /// promise to find a credential provider
     let startupPromise: EventLoopPromise<CredentialProvider>
-    
+
     private let lock = Lock()
     private var _internalProvider: CredentialProvider? = nil
 
@@ -38,21 +39,21 @@ class RuntimeSelectorCredentialProvider: CredentialProvider {
         self.startupPromise = context.eventLoop.makePromise(of: CredentialProvider.self)
         setupInternalProvider(providers: providers, context: context)
     }
-    
+
     func shudown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
         return startupPromise.futureResult.map { _ in }.hop(to: eventLoop)
     }
-    
-    func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
+
+    func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
         if let provider = self.internalProvider {
-            return provider.getCredential(on: eventLoop)
+            return provider.getCredential(on: eventLoop, logger: logger)
         }
-        
+
         return self.startupPromise.futureResult.hop(to: eventLoop).flatMap { provider in
-            return provider.getCredential(on: eventLoop)
+            return provider.getCredential(on: eventLoop, logger: logger)
         }
     }
-    
+
     /// goes through list of providers. If provider is able to provide credentials then use that one, otherwise move onto the next
     /// provider in the list
     private func setupInternalProvider(providers: [CredentialProviderFactory], context: CredentialProviderFactory.Context) {
@@ -63,7 +64,7 @@ class RuntimeSelectorCredentialProvider: CredentialProvider {
             }
             let providerFactory = providers[index]
             let provider = providerFactory.createProvider(context: context)
-            provider.getCredential(on: context.eventLoop).whenComplete { result in
+            provider.getCredential(on: context.eventLoop, logger: context.logger).whenComplete { result in
                 switch result {
                 case .success:
                     self._internalProvider = provider
@@ -73,7 +74,7 @@ class RuntimeSelectorCredentialProvider: CredentialProvider {
                 }
             }
         }
-        
+
         _setupInternalProvider(0)
     }
 }

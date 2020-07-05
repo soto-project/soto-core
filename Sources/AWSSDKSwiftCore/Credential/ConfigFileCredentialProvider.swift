@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Logging
 import NIO
 import INIParser
 import AWSSignerV4
@@ -43,7 +44,7 @@ struct AWSConfigFileCredentialProvider: CredentialProvider {
         self.profile = profile ?? Environment["AWS_PROFILE"] ?? "default"
     }
 
-    func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
+    func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
         return AWSConfigFileCredentialProvider.fromSharedCredentials(credentialsFilePath: credentialsFilePath, profile: profile, on: eventLoop)
             .map { $0 }
     }

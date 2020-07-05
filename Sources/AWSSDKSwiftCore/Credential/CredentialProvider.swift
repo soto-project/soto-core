@@ -38,6 +38,8 @@ public struct CredentialProviderFactory {
         public let httpClient: AWSHTTPClient
         /// The `EventLoop` that the `CredentialProvider` should use for credential refreshs
         public let eventLoop: EventLoop
+        /// The `Logger` attached to the AWSClient
+        public let logger: Logger
     }
 
     private let cb: (Context) -> CredentialProvider
@@ -89,7 +91,7 @@ extension CredentialProviderFactory {
     public static var ecs: CredentialProviderFactory {
         Self() { context in
             if let provider = ECSMetaDataClient(httpClient: context.httpClient) {
-                return RotatingCredentialProvider(eventLoop: context.eventLoop, provider: provider)
+                return RotatingCredentialProvider(context: context, provider: provider)
             }
 
             // fallback
@@ -101,7 +103,7 @@ extension CredentialProviderFactory {
     public static var ec2: CredentialProviderFactory {
         Self() { context in
             let provider = InstanceMetaDataClient(httpClient: context.httpClient)
-            return RotatingCredentialProvider(eventLoop: context.eventLoop, provider: provider)
+            return RotatingCredentialProvider(context: context, provider: provider)
         }
     }
 
@@ -109,7 +111,7 @@ extension CredentialProviderFactory {
     public static func configFile(credentialsFilePath: String = "~/.aws/credentials", profile: String? = nil) -> CredentialProviderFactory {
         return Self() { context in
             let provider = AWSConfigFileCredentialProvider(credentialsFilePath: credentialsFilePath, profile: profile)
-            return DeferredCredentialProvider(eventLoop: context.eventLoop, provider: provider)
+            return DeferredCredentialProvider(context: context, provider: provider)
         }
     }
 

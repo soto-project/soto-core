@@ -30,10 +30,10 @@ public final class RotatingCredentialProvider: CredentialProvider {
     private var credential      : Credential? = nil
     private var credentialFuture: EventLoopFuture<Credential>? = nil
 
-    public init(eventLoop: EventLoop, provider: CredentialProvider, remainingTokenLifetimeForUse: TimeInterval? = nil) {
+    public init(context: CredentialProviderFactory.Context, provider: CredentialProvider, remainingTokenLifetimeForUse: TimeInterval? = nil) {
         self.provider = provider
         self.remainingTokenLifetimeForUse = remainingTokenLifetimeForUse ?? 3 * 60
-        _ = refreshCredentials(on: eventLoop)
+        _ = refreshCredentials(on: context.eventLoop, logger: context.logger)
     }
 
     public func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
@@ -82,7 +82,7 @@ public final class RotatingCredentialProvider: CredentialProvider {
 
         logger.info("Refeshing AWS credentials")
 
-        credentialFuture = self.client.getCredential(on: eventLoop, logger: logger)
+        credentialFuture = self.provider.getCredential(on: eventLoop, logger: logger)
             .map { (credential) -> (Credential) in
                 // update the internal credential locked
                 self.lock.withLock {

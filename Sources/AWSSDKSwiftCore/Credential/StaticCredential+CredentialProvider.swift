@@ -20,7 +20,3 @@ extension StaticCredential: CredentialProvider {
         eventLoop.makeSucceededFuture(self)
     }
 }
-
-extension StaticCredential: CustomStringConvertible {
-    public var description: String { return "\(type(of:self))"}
-}

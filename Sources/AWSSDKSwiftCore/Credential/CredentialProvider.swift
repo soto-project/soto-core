@@ -18,7 +18,7 @@ import NIO
 import NIOConcurrencyHelpers
 
 /// Protocol providing future holding a credential
-public protocol CredentialProvider {
+public protocol CredentialProvider: CustomStringConvertible {
     func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential>
     func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void>
 }
@@ -27,6 +27,8 @@ extension CredentialProvider {
     public func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
         return eventLoop.makeSucceededFuture(())
     }
+
+    public var description: String { return "\(type(of:self))"}
 }
 
 /// A helper struct to defer the creation of a `CredentialProvider` until after the AWSClient has been created.

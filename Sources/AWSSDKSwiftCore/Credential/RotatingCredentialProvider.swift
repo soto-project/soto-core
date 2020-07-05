@@ -99,5 +99,5 @@ public final class RotatingCredentialProvider: CredentialProvider {
 }
 
 extension RotatingCredentialProvider: CustomStringConvertible {
-    public var description: String { return "\(type(of:self))(\(type(of:provider)))"}
+    public var description: String { return "\(type(of:self))(\(provider.description))"}
 }

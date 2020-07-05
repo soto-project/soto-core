@@ -70,5 +70,5 @@ public class DeferredCredentialProvider: CredentialProvider {
 }
 
 extension DeferredCredentialProvider: CustomStringConvertible {
-    public var description: String { return "\(type(of:self))(\(type(of:provider)))"}
+    public var description: String { return "\(type(of:self))(\(provider.description))"}
 }

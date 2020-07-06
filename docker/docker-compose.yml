@@ -10,7 +10,7 @@ services:
 
   test:
     <<: *common
-    command: /bin/bash -xcl "swift test --enable-test-discovery"
+    command: /bin/bash -xcl "swift test --enable-test-discovery -Xswiftc -g"
 
   test-amazon:
     build:
@@ -19,11 +19,11 @@ services:
     volumes:
       - ..:/working
     working_dir: /working
-    command: /bin/bash -xcl "swift test --enable-test-discovery"
+    command: /bin/bash -xcl "swift test --enable-test-discovery -Xswiftc -g"
 
   test-thread:
     <<: *common
-    command: /bin/bash -xcl "swift test --enable-test-discovery --sanitize=thread"
+    command: /bin/bash -xcl "swift test --enable-test-discovery --sanitize=thread -Xswiftc -g"
 
   test-address:
     <<: *common

@@ -36,7 +36,7 @@ class MetaDataCredentialProviderTests: XCTestCase {
         Environment.set(path, for: ECSMetaDataClient.RelativeURIEnvironmentName)
         defer { Environment.unset(name: ECSMetaDataClient.RelativeURIEnvironmentName) }
         
-        let client = ECSMetaDataClient(httpClient: httpClient, host: "\(testServer.host):\(testServer.serverPort)")
+        let client = ECSMetaDataClient(httpClient: httpClient, host: testServer.address)
         let future = client!.getMetaData(on: loop)
         
         XCTAssertNoThrow(try testServer.ecsMetadataServer(path: path))
@@ -52,7 +52,7 @@ class MetaDataCredentialProviderTests: XCTestCase {
     }
     
     func testECSMetaDataClientDefaultHost() {
-        XCTAssertEqual(ECSMetaDataClient.Host, "169.254.170.2")
+        XCTAssertEqual(ECSMetaDataClient.Host, "http://169.254.170.2")
         XCTAssertEqual(ECSMetaDataClient.RelativeURIEnvironmentName, "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI")
     }
     
@@ -66,7 +66,7 @@ class MetaDataCredentialProviderTests: XCTestCase {
 
         Environment.unset(name: ECSMetaDataClient.RelativeURIEnvironmentName)
         
-        XCTAssertNil(ECSMetaDataClient(httpClient: httpClient, host: "localhost"))
+        XCTAssertNil(ECSMetaDataClient(httpClient: httpClient, host: "http://localhost"))
     }
     
     // MARK: - InstanceMetaDataClient -
@@ -85,7 +85,7 @@ class MetaDataCredentialProviderTests: XCTestCase {
         Environment.set(path, for: ECSMetaDataClient.RelativeURIEnvironmentName)
         defer { Environment.unset(name: ECSMetaDataClient.RelativeURIEnvironmentName) }
         
-        let client = InstanceMetaDataClient(httpClient: httpClient, host: "\(testServer.host):\(testServer.serverPort)")
+        let client = InstanceMetaDataClient(httpClient: httpClient, host: testServer.address)
         let future = client.getMetaData(on: loop)
         
         XCTAssertNoThrow(try testServer.ec2MetadataServer(version: .v2))
@@ -112,7 +112,7 @@ class MetaDataCredentialProviderTests: XCTestCase {
         let testServer = AWSTestServer(serviceProtocol: .json)
         defer { XCTAssertNoThrow(try testServer.stop()) }
         
-        let client = InstanceMetaDataClient(httpClient: httpClient, host: "\(testServer.host):\(testServer.serverPort)")
+        let client = InstanceMetaDataClient(httpClient: httpClient, host: testServer.address)
         let future = client.getMetaData(on: loop)
         
         XCTAssertNoThrow(try testServer.ec2MetadataServer(version: .v1))
@@ -130,6 +130,6 @@ class MetaDataCredentialProviderTests: XCTestCase {
     }
     
     func testEC2UInstanceMetaDataClientDefaultHost() {
-        XCTAssertEqual(InstanceMetaDataClient.Host, "169.254.169.254")
+        XCTAssertEqual(InstanceMetaDataClient.Host, "http://169.254.169.254")
     }
 }

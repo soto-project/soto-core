@@ -111,7 +111,7 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
         defer { Environment.unset(name: ECSMetaDataClient.RelativeURIEnvironmentName) }
 
         let customECS: CredentialProviderFactory = .custom { context in 
-            if let client = ECSMetaDataClient(httpClient: context.httpClient, host: "\(testServer.host):\(testServer.serverPort)") {
+            if let client = ECSMetaDataClient(httpClient: context.httpClient, host: testServer.address) {
                 return RotatingCredentialProvider(eventLoop: context.eventLoop, provider: client)
             }
             // fallback
@@ -155,7 +155,7 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
         let testServer = AWSTestServer(serviceProtocol: .json)
         defer { XCTAssertNoThrow(try testServer.stop()) }
         let customEC2: CredentialProviderFactory = .custom { context in
-            let client = InstanceMetaDataClient(httpClient: context.httpClient, host: "\(testServer.host):\(testServer.serverPort)")
+            let client = InstanceMetaDataClient(httpClient: context.httpClient, host: testServer.address)
             return RotatingCredentialProvider(eventLoop: context.eventLoop, provider: client)
         }
         

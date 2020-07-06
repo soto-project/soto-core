@@ -92,14 +92,6 @@ public class AWSTestServer {
         case error(ErrorType, continueProcessing: Bool = false)
     }
     
-    // httpBin function response
-    public struct HTTPBinResponse: AWSDecodableShape & Encodable {
-        public let method: String?
-        public let data: String?
-        public let headers: [String: String]
-        public let url: String
-    }
-
     public var addressURL: URL { return URL(string: self.address)!}
     public var address: String { return "http://\(self.host):\(web.serverPort)"}
     public var host: String { return "localhost" }
@@ -129,6 +121,23 @@ public class AWSTestServer {
         while(try processSingleRawRequest(process)) { }
     }
 
+    public func stop() throws {
+        print("Stop serving on localhost:\(serverPort)")
+        try web.stop()
+        try eventLoopGroup.syncShutdownGracefully()
+    }
+}
+
+// HTTPBin
+extension AWSTestServer {
+    // httpBin function response
+    public struct HTTPBinResponse: AWSDecodableShape & Encodable {
+        public let method: String?
+        public let data: String?
+        public let headers: [String: String]
+        public let url: String
+    }
+
     /// read one request and return details back in body
     public func httpBin() throws {
         let request = try readRequest()
@@ -146,11 +155,144 @@ public class AWSTestServer {
         ]
         try writeResponse(Response(httpStatus: .ok, headers: headers, body: responseBody))
     }
+}
 
-    public func stop() throws {
-        print("Stop serving on localhost:\(serverPort)")
-        try web.stop()
-        try eventLoopGroup.syncShutdownGracefully()
+// ECS and EC2 fake servers
+extension AWSTestServer {
+    public enum IMDSVersion {
+        case v1
+        case v2
+    }
+    
+    public struct EC2InstanceMetaData: Encodable {
+        public let accessKeyId: String
+        public let secretAccessKey: String
+        public let token: String
+        public let expiration: Date
+        public let code: String
+        public let lastUpdated: Date
+        public let type: String
+
+        public static let `default` = EC2InstanceMetaData(
+            accessKeyId: "EC2ACCESSKEYID",
+            secretAccessKey: "EC2SECRETACCESSKEY",
+            token: "EC2SESSIONTOKEN",
+            expiration: Date(timeIntervalSinceNow: 3600),
+            code: "ec2-test-role",
+            lastUpdated: Date(timeIntervalSinceReferenceDate: 0),
+            type: "type"
+        )
+
+        enum CodingKeys: String, CodingKey {
+            case accessKeyId = "AccessKeyId"
+            case secretAccessKey = "SecretAccessKey"
+            case token = "Token"
+            case expiration = "Expiration"
+            case code = "Code"
+            case lastUpdated = "LastUpdated"
+            case type = "Type"
+        }
+    }
+
+    public struct ECSMetaData: Encodable {
+        public let accessKeyId: String
+        public let secretAccessKey: String
+        public let token: String
+        public let expiration: Date
+        public let roleArn: String
+        
+        public static let `default` = ECSMetaData(
+            accessKeyId: "ECSACCESSKEYID",
+            secretAccessKey: "ECSSECRETACCESSKEY",
+            token: "ECSSESSIONTOKEN",
+            expiration: Date(timeIntervalSinceNow: 3600),
+            roleArn: "arn:aws:iam:000000000000:role/ecs-test-role"
+        )
+
+        enum CodingKeys: String, CodingKey {
+            case accessKeyId = "AccessKeyId"
+            case secretAccessKey = "SecretAccessKey"
+            case token = "Token"
+            case expiration = "Expiration"
+            case roleArn = "RoleArn"
+        }
+    }
+    
+    /// fake ec2 metadata server
+    public func ec2MetadataServer(version: IMDSVersion, metaData: EC2InstanceMetaData? = nil) throws {
+        let ec2Role = "ec2-testserver-role"
+        let token = "345-34hj-345jk-4875"
+        let metaData = metaData ?? EC2InstanceMetaData.default
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        
+        try processRaw { request in
+            switch (request.method, request.uri) {
+            case (.PUT, InstanceMetaDataClient.TokenUri):
+                // Token access
+                switch version {
+                case .v1:
+                    return .error(.notImplemented, continueProcessing: true)
+                case .v2:
+                    var responseBody = ByteBufferAllocator().buffer(capacity: token.utf8.count)
+                    responseBody.writeString(token)
+                    let headers = [
+                        "Content-Length":responseBody.readableBytes.description
+                    ]
+                    return .result(.init(httpStatus: .ok, headers: headers, body: responseBody), continueProcessing: true)
+                }
+                
+            case (.GET, InstanceMetaDataClient.CredentialUri):
+                // Role name
+                guard version == .v1 || request.headers[InstanceMetaDataClient.TokenHeaderName] == token else {
+                    return .error(.badRequest, continueProcessing: false)
+                }
+                var responseBody = ByteBufferAllocator().buffer(capacity: ec2Role.utf8.count)
+                responseBody.writeString(ec2Role)
+                let headers = [
+                    "Content-Length":responseBody.readableBytes.description
+                ]
+                return .result(.init(httpStatus: .ok, headers: headers, body: responseBody), continueProcessing: true)
+                
+            case (.GET, InstanceMetaDataClient.CredentialUri+ec2Role):
+                // credentials
+                let encoder = JSONEncoder()
+                encoder.dateEncodingStrategy = .formatted(dateFormatter)
+                let responseBody = try encoder.encodeAsByteBuffer(metaData, allocator: ByteBufferAllocator())
+                let headers = [
+                    "Content-Type":"application/json",
+                    "Content-Length":responseBody.readableBytes.description
+                ]
+                return .result(.init(httpStatus: .ok, headers: headers, body: responseBody), continueProcessing: false)
+            default:
+                return .error(.badRequest, continueProcessing: false)
+            }
+        }
+    }
+    
+    /// fake ecs metadata server
+    public func ecsMetadataServer(path: String, metaData: ECSMetaData? = nil) throws {
+        let metaData = metaData ?? ECSMetaData.default
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        
+        try processRaw { request in
+            if request.method == .GET && request.uri == path {
+                let encoder = JSONEncoder()
+                encoder.dateEncodingStrategy = .formatted(dateFormatter)
+                let responseBody = try encoder.encodeAsByteBuffer(metaData, allocator: ByteBufferAllocator())
+                let headers = [
+                    "Content-Type":"application/json",
+                    "Content-Length":responseBody.readableBytes.description
+                ]
+                return .result(.init(httpStatus: .ok, headers: headers, body: responseBody), continueProcessing: false)
+            }
+            return .error(.badRequest, continueProcessing: false)
+        }
     }
 }
 

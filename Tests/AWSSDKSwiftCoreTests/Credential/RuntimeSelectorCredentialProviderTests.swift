@@ -121,36 +121,12 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
         let client = createAWSClient(credentialProvider: provider)
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
 
-        let accessKeyId = "abc123"
-        let secretAccessKey = "123abc"
-        let sessionToken = "xyz987"
-        let expiration = Date(timeIntervalSinceNow: 5*60*60)
-        
-        let dateFormatter = DateFormatter()
-        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
-        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-        let roleArn = "asd:aws:asd"
-        
-        XCTAssertNoThrow(try testServer.processRaw { request in
-            let json = """
-                {
-                    "AccessKeyId": "\(accessKeyId)",
-                    "SecretAccessKey": "\(secretAccessKey)",
-                    "Token": "\(sessionToken)",
-                    "Expiration": "\(dateFormatter.string(from: expiration))",
-                    "RoleArn": "\(roleArn)"
-                }
-                """
-            var byteButter = ByteBufferAllocator().buffer(capacity: json.utf8.count)
-            byteButter.writeString(json)
-            return .result(.init(httpStatus: .ok, body: byteButter), continueProcessing: false)
-        })
+        XCTAssertNoThrow(try testServer.ecsMetadataServer(path: path))
 
         let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next()).flatMapThrowing { credential in
-            XCTAssertEqual(credential.accessKeyId, accessKeyId)
-            XCTAssertEqual(credential.secretAccessKey, secretAccessKey)
-            XCTAssertEqual(credential.sessionToken, sessionToken)
+            XCTAssertEqual(credential.accessKeyId, AWSTestServer.ECSMetaData.default.accessKeyId)
+            XCTAssertEqual(credential.secretAccessKey, AWSTestServer.ECSMetaData.default.secretAccessKey)
+            XCTAssertEqual(credential.sessionToken, AWSTestServer.ECSMetaData.default.token)
             let internalProvider = try XCTUnwrap((client.credentialProvider as? RuntimeSelectorCredentialProvider)?.internalProvider)
             XCTAssert(internalProvider is RotatingCredentialProvider)
         }
@@ -173,6 +149,29 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
                 XCTFail()
             }
         }
+    }
+    
+    func testEC2Provider() {
+        let testServer = AWSTestServer(serviceProtocol: .json)
+        defer { XCTAssertNoThrow(try testServer.stop()) }
+        let customEC2: CredentialProviderFactory = .custom { context in
+            let client = InstanceMetaDataClient(httpClient: context.httpClient, host: "\(testServer.host):\(testServer.serverPort)")
+            return RotatingCredentialProvider(eventLoop: context.eventLoop, provider: client)
+        }
+        
+        let client = createAWSClient(credentialProvider: .selector(customEC2, .empty))
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
+
+        XCTAssertNoThrow(try testServer.ec2MetadataServer(version: .v2))
+
+        let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next()).flatMapThrowing { credential in
+            XCTAssertEqual(credential.accessKeyId, AWSTestServer.EC2InstanceMetaData.default.accessKeyId)
+            XCTAssertEqual(credential.secretAccessKey, AWSTestServer.EC2InstanceMetaData.default.secretAccessKey)
+            XCTAssertEqual(credential.sessionToken, AWSTestServer.EC2InstanceMetaData.default.token)
+            let internalProvider = try XCTUnwrap((client.credentialProvider as? RuntimeSelectorCredentialProvider)?.internalProvider)
+            XCTAssert(internalProvider is RotatingCredentialProvider)
+        }
+        XCTAssertNoThrow(try futureResult.wait())
     }
     
     func testConfigFileProvider() {

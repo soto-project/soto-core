@@ -39,49 +39,16 @@ class MetaDataCredentialProviderTests: XCTestCase {
         let client = ECSMetaDataClient(httpClient: httpClient, host: "\(testServer.host):\(testServer.serverPort)")
         let future = client!.getMetaData(on: loop)
         
-        let accessKeyId = "abc123"
-        let secretAccessKey = "123abc"
-        let sessionToken = "xyz987"
-        let expiration = Date(timeIntervalSince1970: Date().timeIntervalSince1970.rounded() + 60 * 2)
-        
-        let dateFormatter = DateFormatter()
-        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
-        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-        let roleArn = "asd:aws:asd"
-        
-        XCTAssertNoThrow(try testServer.processRaw {
-            (request: AWSTestServer.Request) -> AWSTestServer.Result<AWSTestServer.Response> in
-            
-            XCTAssertEqual(request.uri, path)
-            XCTAssertEqual(request.method, .GET)
-            
-            let json = """
-                {
-                    "AccessKeyId": "\(accessKeyId)",
-                    "SecretAccessKey": "\(secretAccessKey)",
-                    "Token": "\(sessionToken)",
-                    "Expiration": "\(dateFormatter.string(from: expiration))",
-                    "RoleArn": "\(roleArn)"
-                }
-                """
-            var byteButter = ByteBufferAllocator().buffer(capacity: json.utf8.count)
-            byteButter.writeString(json)
-            return .result(.init(httpStatus: .ok, body: byteButter), continueProcessing: false)
-        })
-        
+        XCTAssertNoThrow(try testServer.ecsMetadataServer(path: path))
+
         var metaData: ECSMetaDataClient.MetaData?
         XCTAssertNoThrow(metaData = try future.wait())
         
-        XCTAssertEqual(metaData?.accessKeyId, accessKeyId)
-        XCTAssertEqual(metaData?.secretAccessKey, secretAccessKey)
-        XCTAssertEqual(metaData?.token, sessionToken)
-        XCTAssertEqual(metaData?.expiration, expiration)
-        XCTAssertEqual(metaData?.roleArn, roleArn)
-        
-        XCTAssertEqual(metaData?.accessKeyId, accessKeyId)
-        XCTAssertEqual(metaData?.secretAccessKey, secretAccessKey)
-        XCTAssertEqual(metaData?.sessionToken, sessionToken)
+        XCTAssertEqual(metaData?.accessKeyId, AWSTestServer.ECSMetaData.default.accessKeyId)
+        XCTAssertEqual(metaData?.secretAccessKey, AWSTestServer.ECSMetaData.default.secretAccessKey)
+        XCTAssertEqual(metaData?.token, AWSTestServer.ECSMetaData.default.token)
+        XCTAssertEqual(metaData?.expiration.description, AWSTestServer.ECSMetaData.default.expiration.description)
+        XCTAssertEqual(metaData?.roleArn, AWSTestServer.ECSMetaData.default.roleArn)
     }
     
     func testECSMetaDataClientDefaultHost() {
@@ -121,76 +88,18 @@ class MetaDataCredentialProviderTests: XCTestCase {
         let client = InstanceMetaDataClient(httpClient: httpClient, host: "\(testServer.host):\(testServer.serverPort)")
         let future = client.getMetaData(on: loop)
         
-        let token = UUID().uuidString
-        XCTAssertNoThrow(try testServer.processRaw { (request) -> AWSTestServer.Result<AWSTestServer.Response> in
-            XCTAssertEqual(request.uri, InstanceMetaDataClient.TokenUri)
-            XCTAssertEqual(request.method, .PUT)
-            XCTAssertEqual(request.headers[InstanceMetaDataClient.TokenTimeToLiveHeader.name], InstanceMetaDataClient.TokenTimeToLiveHeader.value)
-            
-            var byteBuffer = ByteBufferAllocator().buffer(capacity: token.utf8.count)
-            byteBuffer.writeString(token)
-            return .result(.init(httpStatus: .ok, body: byteBuffer), continueProcessing: false)
-        })
-        
-        let roleName = "MySuperDuperAwesomeRoleName"
-        XCTAssertNoThrow(try testServer.processRaw { (request) -> AWSTestServer.Result<AWSTestServer.Response> in
-            XCTAssertEqual(request.uri, InstanceMetaDataClient.CredentialUri)
-            XCTAssertEqual(request.method, .GET)
-            XCTAssertEqual(request.headers[InstanceMetaDataClient.TokenHeaderName], token)
-            
-            var byteBuffer = ByteBufferAllocator().buffer(capacity: roleName.utf8.count)
-            byteBuffer.writeString(roleName)
-            return .result(.init(httpStatus: .ok, body: byteBuffer), continueProcessing: false)
-        })
-        
-        let accessKeyId = "abc123"
-        let secretAccessKey = "123abc"
-        let sessionToken = "xyz987"
-        let code = "Success"
-        let type = "AWS-HMAC"
-        let expiration = Date(timeIntervalSince1970: Date().timeIntervalSince1970.rounded() + 60 * 2)
-        let lastUpdated = Date(timeIntervalSince1970: Date().timeIntervalSince1970.rounded() - 60 * 2)
-        let dateFormatter = DateFormatter()
-        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
-        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-        
-        XCTAssertNoThrow(try testServer.processRaw { (request) -> AWSTestServer.Result<AWSTestServer.Response> in
-            XCTAssertEqual(request.uri, InstanceMetaDataClient.CredentialUri.appending(roleName))
-            XCTAssertEqual(request.method, .GET)
-            XCTAssertEqual(request.headers[InstanceMetaDataClient.TokenHeaderName], token)
-            
-            let json = """
-                {
-                    "AccessKeyId": "\(accessKeyId)",
-                    "SecretAccessKey": "\(secretAccessKey)",
-                    "Token": "\(sessionToken)",
-                    "Expiration": "\(dateFormatter.string(from: expiration))",
-                    "Code": "\(code)",
-                    "LastUpdated": "\(dateFormatter.string(from: lastUpdated))",
-                    "Type": "\(type)"
-                }
-                """
-
-            var byteBuffer = ByteBufferAllocator().buffer(capacity: json.utf8.count)
-            byteBuffer.writeString(json)
-            return .result(.init(httpStatus: .ok, body: byteBuffer), continueProcessing: false)
-        })
+        XCTAssertNoThrow(try testServer.ec2MetadataServer(version: .v2))
         
         var metaData: InstanceMetaDataClient.MetaData?
         XCTAssertNoThrow(metaData = try future.wait())
         
-        XCTAssertEqual(metaData?.accessKeyId, accessKeyId)
-        XCTAssertEqual(metaData?.secretAccessKey, secretAccessKey)
-        XCTAssertEqual(metaData?.token, sessionToken)
-        XCTAssertEqual(metaData?.expiration, expiration)
-        XCTAssertEqual(metaData?.code, code)
-        XCTAssertEqual(metaData?.lastUpdated, lastUpdated)
-        XCTAssertEqual(metaData?.type, type)
-        
-        XCTAssertEqual(metaData?.accessKeyId, accessKeyId)
-        XCTAssertEqual(metaData?.secretAccessKey, secretAccessKey)
-        XCTAssertEqual(metaData?.sessionToken, sessionToken)
+        XCTAssertEqual(metaData?.accessKeyId, AWSTestServer.EC2InstanceMetaData.default.accessKeyId)
+        XCTAssertEqual(metaData?.secretAccessKey, AWSTestServer.EC2InstanceMetaData.default.secretAccessKey)
+        XCTAssertEqual(metaData?.token, AWSTestServer.EC2InstanceMetaData.default.token)
+        XCTAssertEqual(metaData?.expiration.description, AWSTestServer.EC2InstanceMetaData.default.expiration.description)
+        XCTAssertEqual(metaData?.code, AWSTestServer.EC2InstanceMetaData.default.code)
+        XCTAssertEqual(metaData?.lastUpdated, AWSTestServer.EC2InstanceMetaData.default.lastUpdated)
+        XCTAssertEqual(metaData?.type, AWSTestServer.EC2InstanceMetaData.default.type)
     }
     
     func testEC2InstanceMetaDataClientUsingVersion1() {
@@ -203,81 +112,21 @@ class MetaDataCredentialProviderTests: XCTestCase {
         let testServer = AWSTestServer(serviceProtocol: .json)
         defer { XCTAssertNoThrow(try testServer.stop()) }
         
-        let path = "/" + UUID().uuidString
-        Environment.set(path, for: ECSMetaDataClient.RelativeURIEnvironmentName)
-        defer { Environment.unset(name: ECSMetaDataClient.RelativeURIEnvironmentName) }
-        
         let client = InstanceMetaDataClient(httpClient: httpClient, host: "\(testServer.host):\(testServer.serverPort)")
         let future = client.getMetaData(on: loop)
         
-        XCTAssertNoThrow(try testServer.processRaw { (request) -> AWSTestServer.Result<AWSTestServer.Response> in
-            // we try to use version 2, but this endpoint is not available, so we respond with 404
-            XCTAssertEqual(request.uri, InstanceMetaDataClient.TokenUri)
-            XCTAssertEqual(request.method, .PUT)
-            XCTAssertEqual(request.headers[InstanceMetaDataClient.TokenTimeToLiveHeader.name], InstanceMetaDataClient.TokenTimeToLiveHeader.value)
-            
-            return .result(.init(httpStatus: .notFound), continueProcessing: false)
-        })
-        
-        let roleName = "MySuperDuperAwesomeRoleName"
-        XCTAssertNoThrow(try testServer.processRaw { (request) -> AWSTestServer.Result<AWSTestServer.Response> in
-            XCTAssertEqual(request.uri, InstanceMetaDataClient.CredentialUri)
-            XCTAssertEqual(request.method, .GET)
-            XCTAssertNil(request.headers[InstanceMetaDataClient.TokenHeaderName])
-            
-            var byteBuffer = ByteBufferAllocator().buffer(capacity: roleName.utf8.count)
-            byteBuffer.writeString(roleName)
-            return .result(.init(httpStatus: .ok, body: byteBuffer), continueProcessing: false)
-        })
-        
-        let accessKeyId = "abc123"
-        let secretAccessKey = "123abc"
-        let sessionToken = "xyz987"
-        let code = "Success"
-        let type = "AWS-HMAC"
-        let expiration = Date(timeIntervalSince1970: Date().timeIntervalSince1970.rounded() + 60 * 2)
-        let lastUpdated = Date(timeIntervalSince1970: Date().timeIntervalSince1970.rounded() - 60 * 2)
-        let dateFormatter = DateFormatter()
-        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
-        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-        
-        XCTAssertNoThrow(try testServer.processRaw { (request) -> AWSTestServer.Result<AWSTestServer.Response> in
-            XCTAssertEqual(request.uri, InstanceMetaDataClient.CredentialUri.appending(roleName))
-            XCTAssertEqual(request.method, .GET)
-            XCTAssertNil(request.headers[InstanceMetaDataClient.TokenHeaderName])
-            
-            let json = """
-                {
-                    "AccessKeyId": "\(accessKeyId)",
-                    "SecretAccessKey": "\(secretAccessKey)",
-                    "Token": "\(sessionToken)",
-                    "Expiration": "\(dateFormatter.string(from: expiration))",
-                    "Code": "\(code)",
-                    "LastUpdated": "\(dateFormatter.string(from: lastUpdated))",
-                    "Type": "\(type)"
-                }
-                """
-
-            var byteBuffer = ByteBufferAllocator().buffer(capacity: json.utf8.count)
-            byteBuffer.writeString(json)
-            return .result(.init(httpStatus: .ok, body: byteBuffer), continueProcessing: false)
-        })
+        XCTAssertNoThrow(try testServer.ec2MetadataServer(version: .v1))
         
         var metaData: InstanceMetaDataClient.MetaData?
         XCTAssertNoThrow(metaData = try future.wait())
         
-        XCTAssertEqual(metaData?.accessKeyId, accessKeyId)
-        XCTAssertEqual(metaData?.secretAccessKey, secretAccessKey)
-        XCTAssertEqual(metaData?.token, sessionToken)
-        XCTAssertEqual(metaData?.expiration, expiration)
-        XCTAssertEqual(metaData?.code, code)
-        XCTAssertEqual(metaData?.lastUpdated, lastUpdated)
-        XCTAssertEqual(metaData?.type, type)
-        
-        XCTAssertEqual(metaData?.accessKeyId, accessKeyId)
-        XCTAssertEqual(metaData?.secretAccessKey, secretAccessKey)
-        XCTAssertEqual(metaData?.sessionToken, sessionToken)
+        XCTAssertEqual(metaData?.accessKeyId, AWSTestServer.EC2InstanceMetaData.default.accessKeyId)
+        XCTAssertEqual(metaData?.secretAccessKey, AWSTestServer.EC2InstanceMetaData.default.secretAccessKey)
+        XCTAssertEqual(metaData?.token, AWSTestServer.EC2InstanceMetaData.default.token)
+        XCTAssertEqual(metaData?.expiration.description, AWSTestServer.EC2InstanceMetaData.default.expiration.description)
+        XCTAssertEqual(metaData?.code, AWSTestServer.EC2InstanceMetaData.default.code)
+        XCTAssertEqual(metaData?.lastUpdated, AWSTestServer.EC2InstanceMetaData.default.lastUpdated)
+        XCTAssertEqual(metaData?.type, AWSTestServer.EC2InstanceMetaData.default.type)
     }
     
     func testEC2UInstanceMetaDataClientDefaultHost() {

@@ -135,7 +135,7 @@
     },
     {
       "file": "/Users/runner/runners/2.263.0/work/aws-sdk-swift-core/aws-sdk-swift-core/Sources/AWSSDKSwiftCore/Credential/DeferredCredentialProvider.swift",
-      "line": 49,
+      "line": 51,
       "symbol": "DeferredCredentialProvider.syncShutdown()",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"

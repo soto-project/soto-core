@@ -86,7 +86,7 @@ class S3ChunkedStreamReader: StreamReader {
         }
         let promise: EventLoopPromise<ByteBuffer> = eventLoop.makePromise()
         func _fillBuffer() {
-            _ = read(eventLoop).map { (result) -> Void in
+            read(eventLoop).map { (result) -> Void in
                 // check if a byte buffer was returned. If not then it must have been `.end`
                 guard case .byteBuffer(var buffer) = result else {
                     // if we have `.end` then return what we have in the working buffer

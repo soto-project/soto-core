@@ -120,9 +120,6 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
         let provider: CredentialProviderFactory = .selector(.environment, customECS, .empty)
         let client = createAWSClient(credentialProvider: provider)
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
-
-        XCTAssertNoThrow(try testServer.ecsMetadataServer(path: path))
-
         let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next()).flatMapThrowing { credential in
             XCTAssertEqual(credential.accessKeyId, AWSTestServer.ECSMetaData.default.accessKeyId)
             XCTAssertEqual(credential.secretAccessKey, AWSTestServer.ECSMetaData.default.secretAccessKey)
@@ -130,6 +127,9 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
             let internalProvider = try XCTUnwrap((client.credentialProvider as? RuntimeSelectorCredentialProvider)?.internalProvider)
             XCTAssert(internalProvider is RotatingCredentialProvider)
         }
+
+        XCTAssertNoThrow(try testServer.ecsMetadataServer(path: path))
+
         XCTAssertNoThrow(try futureResult.wait())
     }
     
@@ -161,9 +161,6 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
         
         let client = createAWSClient(credentialProvider: .selector(customEC2, .empty))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
-
-        XCTAssertNoThrow(try testServer.ec2MetadataServer(version: .v2))
-
         let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next()).flatMapThrowing { credential in
             XCTAssertEqual(credential.accessKeyId, AWSTestServer.EC2InstanceMetaData.default.accessKeyId)
             XCTAssertEqual(credential.secretAccessKey, AWSTestServer.EC2InstanceMetaData.default.secretAccessKey)
@@ -171,6 +168,9 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
             let internalProvider = try XCTUnwrap((client.credentialProvider as? RuntimeSelectorCredentialProvider)?.internalProvider)
             XCTAssert(internalProvider is RotatingCredentialProvider)
         }
+
+        XCTAssertNoThrow(try testServer.ec2MetadataServer(version: .v2))
+
         XCTAssertNoThrow(try futureResult.wait())
     }
     

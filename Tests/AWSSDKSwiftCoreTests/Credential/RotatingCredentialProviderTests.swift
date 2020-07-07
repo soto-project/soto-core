@@ -148,7 +148,8 @@ class RotatingCredentialProviderTests: XCTestCase {
             return eventLoop.makeSucceededFuture(cred)
         }
         let provider = RotatingCredentialProvider(eventLoop: loop, provider: client)
-        
+        XCTAssertNoThrow(_ = try provider.getCredential(on: loop).wait())
+        hitCount = 0
         let iterations = 100
         for _ in 0..<100 {
             XCTAssertNoThrow(_ = try provider.getCredential(on: loop).wait())

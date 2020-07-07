@@ -69,7 +69,7 @@ extension MetaDataClient {
 struct ECSMetaDataClient: MetaDataClient {
     public typealias MetaData = ECSMetaData
     
-    static let Host = "169.254.170.2"
+    static let Host = "http://169.254.170.2"
     static let RelativeURIEnvironmentName = "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"
     
     struct ECSMetaData: ExpiringCredential, Decodable {
@@ -106,7 +106,7 @@ struct ECSMetaDataClient: MetaDataClient {
         }
         
         self.httpClient     = httpClient
-        self.endpointURL    = "http://\(host)\(relativeURL)"
+        self.endpointURL    = "\(host)\(relativeURL)"
     }
     
     func getMetaData(on eventLoop: EventLoop) -> EventLoopFuture<ECSMetaData> {
@@ -130,7 +130,7 @@ struct ECSMetaDataClient: MetaDataClient {
 struct InstanceMetaDataClient: MetaDataClient {
     typealias MetaData = InstanceMetaData
     
-    static let Host = "169.254.169.254"
+    static let Host = "http://169.254.169.254"
     static let CredentialUri = "/latest/meta-data/iam/security-credentials/"
     static let TokenUri = "/latest/api/token"
     static let TokenTimeToLiveHeader = (name: "X-aws-ec2-metadata-token-ttl-seconds", value: "21600")
@@ -165,10 +165,10 @@ struct InstanceMetaDataClient: MetaDataClient {
     }
   
     private var tokenURL: URL {
-        return URL(string: "http://\(self.host)\(Self.TokenUri)")!
+        return URL(string: "\(self.host)\(Self.TokenUri)")!
     }
     private var credentialURL: URL {
-        return URL(string: "http://\(self.host)\(Self.CredentialUri)")!
+        return URL(string: "\(self.host)\(Self.CredentialUri)")!
     }
     
     let httpClient: AWSHTTPClient

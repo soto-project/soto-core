@@ -48,7 +48,7 @@ public func createAWSClient(
 
 public func createServiceConfig(
     region: Region? = nil,
-    partition: Partition = .aws,
+    partition: AWSPartition = .aws,
     amzTarget: String? = nil,
     service: String = "test",
     signingName: String? = nil,
@@ -56,7 +56,7 @@ public func createServiceConfig(
     apiVersion: String = "01-01-2001",
     endpoint: String? = nil,
     serviceEndpoints: [String: String] = [:],
-    partitionEndpoints: [Partition: (endpoint: String, region: Region)] = [:],
+    partitionEndpoints: [AWSPartition: (endpoint: String, region: Region)] = [:],
     possibleErrorTypes: [AWSErrorType.Type] = [],
     middlewares: [AWSServiceMiddleware] = []) -> AWSServiceConfig
 {

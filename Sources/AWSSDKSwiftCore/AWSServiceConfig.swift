@@ -51,7 +51,7 @@ public class AWSServiceConfig {
     ///   - middlewares: Array of middlewares to apply to requests and responses
     public init(
         region: Region?,
-        partition: Partition,
+        partition: AWSPartition,
         amzTarget: String? = nil,
         service: String,
         signingName: String? = nil,
@@ -59,7 +59,7 @@ public class AWSServiceConfig {
         apiVersion: String,
         endpoint: String? = nil,
         serviceEndpoints: [String: String] = [:],
-        partitionEndpoints: [Partition: (endpoint: String, region: Region)] = [:],
+        partitionEndpoints: [AWSPartition: (endpoint: String, region: Region)] = [:],
         possibleErrorTypes: [AWSErrorType.Type] = [],
         middlewares: [AWSServiceMiddleware] = []
     )

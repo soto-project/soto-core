@@ -79,7 +79,7 @@ public struct Region: RawRepresentable, Equatable {
 
 extension Region {
 
-    public var partition: Partition {
+    public var partition: AWSPartition {
         switch self {
         case .afsouth1: return .aws
         case .apeast1: return .aws
@@ -112,7 +112,7 @@ extension Region {
     }
 }
 
-public struct Partition: RawRepresentable, Equatable, Hashable {
+public struct AWSPartition: RawRepresentable, Equatable, Hashable {
     enum InternalPartition: String {
         case aws
         case awscn
@@ -134,18 +134,18 @@ public struct Partition: RawRepresentable, Equatable, Hashable {
     }
 
     // AWS Standard
-    public static var aws: Partition { .init(partition: .aws) }
+    public static var aws: AWSPartition { .init(partition: .aws) }
     // AWS China
-    public static var awscn: Partition { .init(partition: .awscn) }
+    public static var awscn: AWSPartition { .init(partition: .awscn) }
     // AWS GovCloud (US)
-    public static var awsusgov: Partition { .init(partition: .awsusgov) }
+    public static var awsusgov: AWSPartition { .init(partition: .awsusgov) }
     // AWS ISO (US)
-    public static var awsiso: Partition { .init(partition: .awsiso) }
+    public static var awsiso: AWSPartition { .init(partition: .awsiso) }
     // AWS ISOB (US)
-    public static var awsisob: Partition { .init(partition: .awsisob) }
+    public static var awsisob: AWSPartition { .init(partition: .awsisob) }
 }
 
-extension Partition {
+extension AWSPartition {
     public var dnsSuffix: String {
         switch self.partition {
         case .aws: return "amazonaws.com"

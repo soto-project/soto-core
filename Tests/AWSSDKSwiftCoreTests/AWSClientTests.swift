@@ -182,7 +182,7 @@ class AWSClientTests: XCTestCase {
     func testRequestStreaming(config: AWSServiceConfig, client: AWSClient, server: AWSTestServer, bufferSize: Int, blockSize: Int) throws {
         struct Input : AWSEncodableShape & AWSShapeWithPayload {
             static var _payloadPath: String = "payload"
-            static var _payloadOptions: PayloadOptions = [.allowStreaming, .raw]
+            static var _payloadOptions: AWSShapePayloadOptions = [.allowStreaming, .raw]
             let payload: AWSPayload
             private enum CodingKeys: CodingKey {}
         }
@@ -248,7 +248,7 @@ class AWSClientTests: XCTestCase {
     func testRequestStreamingTooMuchData() {
         struct Input : AWSEncodableShape & AWSShapeWithPayload {
             static var _payloadPath: String = "payload"
-            static var _payloadOptions: PayloadOptions = [.allowStreaming]
+            static var _payloadOptions: AWSShapePayloadOptions = [.allowStreaming]
             let payload: AWSPayload
             private enum CodingKeys: CodingKey {}
         }
@@ -283,7 +283,7 @@ class AWSClientTests: XCTestCase {
     func testRequestStreamingFile() {
         struct Input : AWSEncodableShape & AWSShapeWithPayload {
             static var _payloadPath: String = "payload"
-            static var _payloadOptions: PayloadOptions = [.allowStreaming]
+            static var _payloadOptions: AWSShapePayloadOptions = [.allowStreaming]
             let payload: AWSPayload
             private enum CodingKeys: CodingKey {}
         }
@@ -338,7 +338,7 @@ class AWSClientTests: XCTestCase {
     func testRequestChunkedStreaming() {
         struct Input : AWSEncodableShape & AWSShapeWithPayload {
             static var _payloadPath: String = "payload"
-            static var _payloadOptions: PayloadOptions = [.allowStreaming, .allowChunkedStreaming, .raw]
+            static var _payloadOptions: AWSShapePayloadOptions = [.allowStreaming, .allowChunkedStreaming, .raw]
             let payload: AWSPayload
             private enum CodingKeys: CodingKey {}
         }

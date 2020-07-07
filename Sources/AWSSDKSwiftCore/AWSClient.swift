@@ -74,7 +74,7 @@ public final class AWSClient {
     ///     - httpClientProvider: HTTPClient to use. Use `.createNew` if you want the client to manage its own HTTPClient.
     public init(
         credentialProvider credentialProviderFactory: CredentialProviderFactory = .default,
-        retryPolicy: RetryPolicy = JitterRetry(),
+        retryPolicy retryPolicyFactory: RetryPolicyFactory = .default,
         middlewares: [AWSServiceMiddleware] = [],
         httpClientProvider: HTTPClientProvider
     ) {
@@ -92,7 +92,7 @@ public final class AWSClient {
             eventLoop: httpClient.eventLoopGroup.next()))
 
         self.middlewares = middlewares
-        self.retryPolicy = retryPolicy
+        self.retryPolicy = retryPolicyFactory.retryPolicy
     }
 
     deinit {

@@ -15,6 +15,30 @@
 import NIO
 import NIOHTTP1
 
+/// Creates a RetryPolicy for AWSClient to use
+public struct RetryPolicyFactory {
+    public let retryPolicy: RetryPolicy
+
+    /// The default RetryPolicy returned by RetryPolicyFactory
+    public static var `default`: RetryPolicyFactory { return .jitter() }
+
+    /// Retry controller that never returns a retry wait time
+    public static var noRetry: RetryPolicyFactory { return .init(retryPolicy: NoRetry()) }
+
+    /// Retry with an exponentially increasing wait time between wait times
+    public static func exponential(base: TimeAmount = .seconds(1), maxRetries: Int = 4) -> RetryPolicyFactory {
+        return .init(retryPolicy: ExponentialRetry(base: base, maxRetries: maxRetries))
+    }
+
+    /// Exponential jitter retry. Instead of returning an exponentially increasing retry time it returns a jittered version. In a heavy load situation
+    /// where a large number of clients all hit the servers at the same time, jitter helps to smooth out the server response. See
+    /// https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/ for details.
+    public static func jitter(base: TimeAmount = .seconds(1), maxRetries: Int = 4) -> RetryPolicyFactory {
+        return .init(retryPolicy: JitterRetry(base: base, maxRetries: maxRetries))
+    }
+}
+
+/// Return value for `RetryPolicy.getRetryWaitTime`. Either retry after time amount or don't retry
 public enum RetryStatus {
     case retry(wait: TimeAmount)
     case dontRetry
@@ -30,20 +54,20 @@ public protocol RetryPolicy {
 }
 
 /// Retry controller that never returns a retry wait time
-public struct NoRetry: RetryPolicy {
-    public init() {}
-    public func getRetryWaitTime(error: Error, attempt: Int) -> RetryStatus? {
+fileprivate struct NoRetry: RetryPolicy {
+    init() {}
+    func getRetryWaitTime(error: Error, attempt: Int) -> RetryStatus? {
         return .dontRetry
     }
 }
 
 /// Protocol for standard retry response. Will attempt to retry on 5xx errors, 429 (tooManyRequests).
-public protocol StandardRetryPolicy: RetryPolicy {
+protocol StandardRetryPolicy: RetryPolicy {
     var maxRetries: Int { get }
     func calculateRetryWaitTime(attempt: Int) -> TimeAmount
 }
 
-public extension StandardRetryPolicy {
+extension StandardRetryPolicy {
     /// default version of getRetryWaitTime for StandardRetryController
     func getRetryWaitTime(error: Error, attempt: Int) -> RetryStatus? {
         guard attempt < maxRetries else { return .dontRetry }
@@ -62,16 +86,16 @@ public extension StandardRetryPolicy {
 }
 
 /// Retry with an exponentially increasing wait time between wait times
-public struct ExponentialRetry: StandardRetryPolicy {
-    public let base: TimeAmount
-    public let maxRetries: Int
+struct ExponentialRetry: StandardRetryPolicy {
+    let base: TimeAmount
+    let maxRetries: Int
     
-    public init(base: TimeAmount = .seconds(1), maxRetries: Int = 4) {
+    init(base: TimeAmount = .seconds(1), maxRetries: Int = 4) {
         self.base = base
         self.maxRetries = maxRetries
     }
     
-    public func calculateRetryWaitTime(attempt: Int) -> TimeAmount {
+    func calculateRetryWaitTime(attempt: Int) -> TimeAmount {
         let exp = Int64(exp2(Double(attempt)))
         return .nanoseconds(base.nanoseconds * exp)
     }
@@ -81,16 +105,16 @@ public struct ExponentialRetry: StandardRetryPolicy {
 /// Exponential jitter retry. Instead of returning an exponentially increasing retry time it returns a jittered version. In a heavy load situation
 /// where a large number of clients all hit the servers at the same time, jitter helps to smooth out the server response. See
 /// https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/ for details.
-public struct JitterRetry: StandardRetryPolicy {
-    public let base: TimeAmount
-    public let maxRetries: Int
+struct JitterRetry: StandardRetryPolicy {
+    let base: TimeAmount
+    let maxRetries: Int
     
-    public init(base: TimeAmount = .seconds(1), maxRetries: Int = 4) {
+    init(base: TimeAmount = .seconds(1), maxRetries: Int = 4) {
         self.base = base
         self.maxRetries = maxRetries
     }
     
-    public func calculateRetryWaitTime(attempt: Int) -> TimeAmount {
+    func calculateRetryWaitTime(attempt: Int) -> TimeAmount {
         let exp = Int64(exp2(Double(attempt)))
         return .nanoseconds(Int64.random(in: (base.nanoseconds * exp / 2)..<(base.nanoseconds * exp)))
     }

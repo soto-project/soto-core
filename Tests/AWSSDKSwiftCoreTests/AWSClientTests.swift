@@ -429,7 +429,7 @@ class AWSClientTests: XCTestCase {
             let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew)
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
-            let client = createAWSClient(credentialProvider: .empty, retryPolicy: ExponentialRetry(base: .milliseconds(200)), httpClientProvider: .shared(httpClient))
+            let client = createAWSClient(credentialProvider: .empty, retryPolicy: .exponential(base: .milliseconds(200)), httpClientProvider: .shared(httpClient))
             defer {
                 XCTAssertNoThrow(try awsServer.stop())
                 XCTAssertNoThrow(try client.syncShutdown())
@@ -468,7 +468,7 @@ class AWSClientTests: XCTestCase {
             let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew)
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
-            let client = createAWSClient(credentialProvider: .empty, retryPolicy: JitterRetry(), httpClientProvider: .shared(httpClient))
+            let client = createAWSClient(credentialProvider: .empty, retryPolicy: .jitter(), httpClientProvider: .shared(httpClient))
             defer {
                 XCTAssertNoThrow(try awsServer.stop())
                 XCTAssertNoThrow(try client.syncShutdown())
@@ -505,7 +505,7 @@ class AWSClientTests: XCTestCase {
             let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew)
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
-            let client = createAWSClient(credentialProvider: .empty, retryPolicy: JitterRetry(), httpClientProvider: .shared(httpClient))
+            let client = createAWSClient(credentialProvider: .empty, retryPolicy: .jitter(), httpClientProvider: .shared(httpClient))
             defer {
                 XCTAssertNoThrow(try awsServer.stop())
                 XCTAssertNoThrow(try client.syncShutdown())

@@ -31,7 +31,7 @@ public struct Region: RawRepresentable, Equatable {
 
 extension Region {
 
-    public var partition: Partition {
+    public var partition: AWSPartition {
         switch self {
 {%for region in regions %}
         case .{{region.enum}}: return .{{region.partition}}
@@ -41,7 +41,7 @@ extension Region {
     }
 }
 
-public struct Partition: RawRepresentable, Equatable, Hashable {
+public struct AWSPartition: RawRepresentable, Equatable, Hashable {
     enum InternalPartition: String {
 {%for partition in partitions %}
         case {{partition.name}}
@@ -62,11 +62,11 @@ public struct Partition: RawRepresentable, Equatable, Hashable {
 
 {%for partition in partitions %}
     // {{partition.description}}
-    public static var {{partition.name}}: Partition { .init(partition: .{{partition.name}}) }
+    public static var {{partition.name}}: AWSPartition { .init(partition: .{{partition.name}}) }
 {%endfor %}
 }
 
-extension Partition {
+extension AWSPartition {
     public var dnsSuffix: String {
         switch self.partition {
 {%for partition in partitions %}

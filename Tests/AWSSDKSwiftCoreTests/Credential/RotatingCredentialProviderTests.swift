@@ -159,7 +159,7 @@ class RotatingCredentialProviderTests: XCTestCase {
         }
         let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, logger: AWSClient.loggingDisabled)
         let provider = RotatingCredentialProvider(context: context, provider: client)
-        XCTAssertNoThrow(_ = try provider.getCredential(on: loop).wait())
+        XCTAssertNoThrow(_ = try provider.getCredential(on: loop, logger: AWSClient.loggingDisabled).wait())
         hitCount = 0
         
         let iterations = 100

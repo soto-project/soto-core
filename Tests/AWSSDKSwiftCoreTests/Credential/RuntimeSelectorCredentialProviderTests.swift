@@ -117,7 +117,7 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
 
         let customECS: CredentialProviderFactory = .custom { context in
             if let client = ECSMetaDataClient(httpClient: context.httpClient, host: testServer.address) {
-                return RotatingCredentialProvider(eventLoop: context, provider: client)
+                return RotatingCredentialProvider(context: context, provider: client)
             }
             // fallback
             return NullCredentialProvider()
@@ -161,12 +161,15 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try testServer.stop()) }
         let customEC2: CredentialProviderFactory = .custom { context in
             let client = InstanceMetaDataClient(httpClient: context.httpClient, host: testServer.address)
-            return RotatingCredentialProvider(eventLoop: context.eventLoop, provider: client)
+            return RotatingCredentialProvider(context: context, provider: client)
         }
 
         let client = createAWSClient(credentialProvider: .selector(customEC2, .empty))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
-        let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next()).flatMapThrowing { credential in
+        let futureResult = client.credentialProvider.getCredential(
+            on: client.eventLoopGroup.next(),
+            logger: AWSClient.loggingDisabled
+        ).flatMapThrowing { credential in
             XCTAssertEqual(credential.accessKeyId, AWSTestServer.EC2InstanceMetaData.default.accessKeyId)
             XCTAssertEqual(credential.secretAccessKey, AWSTestServer.EC2InstanceMetaData.default.secretAccessKey)
             XCTAssertEqual(credential.sessionToken, AWSTestServer.EC2InstanceMetaData.default.token)

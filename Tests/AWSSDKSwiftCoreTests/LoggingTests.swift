@@ -160,9 +160,9 @@ struct LoggingCollector: LogHandler {
         self.internalHandler.logLevel = logLevel
     }
 
-    func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, file: String, function: String, line: UInt) {
+    func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, source: String, file: String, function: String, line: UInt) {
         let metadata = self.metadata.merging(metadata ?? [:]) { $1 }
-        internalHandler.log(level: logLevel, message: message, metadata: metadata, file:file, function: function, line: line)
+        internalHandler.log(level: logLevel, message: message, metadata: metadata, source: source, file:file, function: function, line: line)
         self.logs.append(level: level, message: message, metadata: metadata)
     }
 

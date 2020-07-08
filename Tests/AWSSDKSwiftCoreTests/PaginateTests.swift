@@ -34,7 +34,7 @@ class PaginateTests: XCTestCase {
         eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 3)
         httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
         config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
-        client = createAWSClient(credentialProvider: .empty, retryPolicy: NoRetry(), httpClientProvider: .shared(httpClient))
+        client = createAWSClient(credentialProvider: .empty, retryPolicy: .noRetry, httpClientProvider: .shared(httpClient))
     }
 
     override func tearDown() {

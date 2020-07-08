@@ -475,26 +475,25 @@ extension AWSTestServer {
         var headers = response.headers
         headers["Content-Length"] = response.body?.readableBytes.description ?? "0"
 
-        XCTAssertNoThrow(try web.writeOutbound(.head(.init(version: .init(major: 1, minor: 1),
-                                                           status: response.httpStatus,
-                                                           headers: HTTPHeaders(headers.map { ($0,$1) })))))
-        if var body = response.body {
-            while body.readableBytes > 0 {
-                let slice: ByteBuffer?
-                if body.readableBytes > 16384 {
-                    slice = body.readSlice(length: 16384)
-                } else {
-                    slice = body.readSlice(length: body.readableBytes)
-                }
-                XCTAssertNoThrow(try web.writeOutbound(.body(.byteBuffer(slice!))))
-            }
-        }
         do {
+            try web.writeOutbound(.head(.init(version: .init(major: 1, minor: 1),
+                                               status: response.httpStatus,
+                                               headers: HTTPHeaders(headers.map { ($0,$1) }))))
+            if var body = response.body {
+                while body.readableBytes > 0 {
+                    let slice: ByteBuffer?
+                    if body.readableBytes > 16384 {
+                        slice = body.readSlice(length: 16384)
+                    } else {
+                        slice = body.readSlice(length: body.readableBytes)
+                    }
+                    try web.writeOutbound(.body(.byteBuffer(slice!)))
+                }
+            }
             try web.writeOutbound(.end(nil))
         } catch {
-            print("Failed to write \(error)")
+            XCTFail("writeResponse failed \(error)")
         }
-//        XCTAssertNoThrow(try web.writeOutbound(.end(nil)))
     }
 
     /// write error

@@ -104,7 +104,7 @@ public final class AWSClient {
             throw ClientError.alreadyShutdown
         }
         // ignore errors from credential provider. Don't need shutdown erroring because no providers were available
-        try? credentialProvider.syncShutdown()
+        try? credentialProvider.shutdown(on: eventLoopGroup.next()).wait()
         // if httpClient was created by AWSClient then it is required to shutdown the httpClient
         if case .createNew = httpClientProvider {
             do {

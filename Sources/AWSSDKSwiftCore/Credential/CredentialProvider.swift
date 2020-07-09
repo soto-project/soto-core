@@ -19,12 +19,12 @@ import NIOConcurrencyHelpers
 /// Protocol providing future holding a credential
 public protocol CredentialProvider {
     func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential>
-    func syncShutdown() throws
+    func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void>
 }
 
 extension CredentialProvider {
-    public func syncShutdown() throws {
-        return
+    public func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
+        return eventLoop.makeSucceededFuture(())
     }
 }
 

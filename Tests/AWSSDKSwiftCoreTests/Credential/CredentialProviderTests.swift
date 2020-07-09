@@ -16,6 +16,7 @@
 import XCTest
 import NIO
 import AsyncHTTPClient
+import AWSTestUtils
 
 class CredentialProviderTests: XCTestCase {
 
@@ -83,5 +84,10 @@ class CredentialProviderTests: XCTestCase {
             print("\(error)")
             XCTAssertEqual(error as? CredentialProviderError, .noProvider)
         }
+    }
+    
+    func testShutdown() {
+        let client = createAWSClient(credentialProvider: .configFile())
+        XCTAssertNoThrow(try client.syncShutdown())
     }
 }

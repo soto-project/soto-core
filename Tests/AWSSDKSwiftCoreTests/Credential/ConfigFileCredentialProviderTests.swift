@@ -13,12 +13,14 @@
 //===----------------------------------------------------------------------===//
 
 import XCTest
+import AsyncHTTPClient
+import AWSTestUtils
 import NIO
 @testable import AWSSDKSwiftCore
 
-class StaticCredential_SharedTests: XCTestCase {
+class ConfigFileCredentialProviderTests: XCTestCase {
 
-    func testSharedCredentials() {
+    func testConfigFileCredentials() {
         let profile = "profile1"
         let accessKey = "FAKE-ACCESS-KEY123"
         let secretKey = "Asecretreglkjrd"
@@ -40,7 +42,7 @@ class StaticCredential_SharedTests: XCTestCase {
         XCTAssertEqual(cred?.sessionToken, sessionToken)
     }
 
-    func testSharedCredentialsMissingAccessKey() {
+    func testConfigFileCredentialsMissingAccessKey() {
         let profile = "profile1"
         let secretKey = "Asecretreglkjrd"
         let credential = """
@@ -55,7 +57,7 @@ class StaticCredential_SharedTests: XCTestCase {
         }
     }
 
-    func testSharedCredentialsMissingSecretKey() {
+    func testConfigFileCredentialsMissingSecretKey() {
         let profile = "profile1"
         let accessKey = "FAKE-ACCESS-KEY123"
         let credential = """
@@ -70,7 +72,7 @@ class StaticCredential_SharedTests: XCTestCase {
         }
     }
     
-    func testSharedCredentialsMissingSessionToken() {
+    func testConfigFileCredentialsMissingSessionToken() {
         let profile = "profile1"
         let accessKey = "FAKE-ACCESS-KEY123"
         let secretKey = "Asecretreglkjrd"
@@ -90,7 +92,7 @@ class StaticCredential_SharedTests: XCTestCase {
         XCTAssertNil(cred?.sessionToken)
     }
     
-    func testSharedCredentialsMissingProfile() {
+    func testConfigFileCredentialsMissingProfile() {
         let profile = "profile1"
         let accessKey = "FAKE-ACCESS-KEY123"
         let secretKey = "Asecretreglkjrd"
@@ -107,7 +109,7 @@ class StaticCredential_SharedTests: XCTestCase {
         }
     }
     
-    func testSharedCredentialsParseFailure() {
+    func testConfigFileCredentialsParseFailure() {
         let credential = """
         [default]
         aws_access_key_id
@@ -140,7 +142,7 @@ class StaticCredential_SharedTests: XCTestCase {
         XCTAssertEqual(unexpandedNewPath, unexpandableFilePath)
     }
 
-    func testSharedCredentialINIParser() {
+    func testConfigFileCredentialINIParser() {
         // setup
         let credentials = """
             [default]
@@ -162,5 +164,55 @@ class StaticCredential_SharedTests: XCTestCase {
         XCTAssertNoThrow(credential = try future.wait())
         XCTAssertEqual(credential?.accessKeyId, "AWSACCESSKEYID")
         XCTAssertEqual(credential?.secretAccessKey, "AWSSECRETACCESSKEY")
+    }
+    
+    func testConfigFileSuccess() {
+        let credentials = """
+            [default]
+            aws_access_key_id = AWSACCESSKEYID
+            aws_secret_access_key = AWSSECRETACCESSKEY
+            """
+        let filename = "credentials"
+        let filenameURL = URL(fileURLWithPath: filename)
+        XCTAssertNoThrow(try Data(credentials.utf8).write(to: filenameURL))
+        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: filenameURL)) }
+
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        let eventLoop = eventLoopGroup.next()
+        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoop))
+        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
+        let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
+        
+        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop))
+        
+        var credential: Credential?
+        XCTAssertNoThrow(credential = try provider.getCredential(on: eventLoop).wait())
+        XCTAssertEqual(credential?.accessKeyId, "AWSACCESSKEYID")
+        XCTAssertEqual(credential?.secretAccessKey, "AWSSECRETACCESSKEY")
+    }
+    
+    func testConfigFileNotAvailable() {
+        let filename = "credentials_not_existing"
+        let filenameURL = URL(fileURLWithPath: filename)
+
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        let eventLoop = eventLoopGroup.next()
+        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoop))
+        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
+        let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
+        
+        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop))
+        
+        XCTAssertThrowsError(_ = try provider.getCredential(on: eventLoop).wait()) { (error) in
+            print("\(error)")
+            XCTAssertEqual(error as? CredentialProviderError, .noProvider)
+        }
+    }
+    
+    func testConfigFileShutdown() {
+        let client = createAWSClient(credentialProvider: .configFile())
+        XCTAssertNoThrow(try client.syncShutdown())
     }
 }

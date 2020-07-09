@@ -43,7 +43,7 @@ public class AWSTestServer {
         public let uri: String
         public let headers: [String: String]
         public let body: ByteBuffer
-        
+
         public init(method: HTTPMethod, uri: String, headers: [String : String], body: ByteBuffer) {
             self.method = method
             self.uri = uri
@@ -51,7 +51,7 @@ public class AWSTestServer {
             self.body = body
         }
     }
-    
+
     // http outgoing response
     public struct Response {
         public let httpStatus: HTTPResponseStatus
@@ -91,7 +91,7 @@ public class AWSTestServer {
         case result(Output, continueProcessing: Bool = false)
         case error(ErrorType, continueProcessing: Bool = false)
     }
-    
+
     public var addressURL: URL { return URL(string: self.address)!}
     public var address: String { return "http://\(self.host):\(web.serverPort)"}
     public var host: String { return "localhost" }
@@ -150,8 +150,7 @@ extension AWSTestServer {
             url: request.uri)
         let responseBody = try JSONEncoder().encodeAsByteBuffer(httpBinResponse, allocator: ByteBufferAllocator())
         let headers = [
-            "Content-Type":"application/json",
-            "Content-Length":responseBody.readableBytes.description
+            "Content-Type":"application/json"
         ]
         try writeResponse(Response(httpStatus: .ok, headers: headers, body: responseBody))
     }
@@ -163,7 +162,7 @@ extension AWSTestServer {
         case v1
         case v2
     }
-    
+
     public struct EC2InstanceMetaData: Encodable {
         public let accessKeyId: String
         public let secretAccessKey: String
@@ -200,7 +199,7 @@ extension AWSTestServer {
         public let token: String
         public let expiration: Date
         public let roleArn: String
-        
+
         public static let `default` = ECSMetaData(
             accessKeyId: "ECSACCESSKEYID",
             secretAccessKey: "ECSSECRETACCESSKEY",
@@ -217,7 +216,7 @@ extension AWSTestServer {
             case roleArn = "RoleArn"
         }
     }
-    
+
     /// fake ec2 metadata server
     public func ec2MetadataServer(version: IMDSVersion, metaData: EC2InstanceMetaData? = nil) throws {
         let ec2Role = "ec2-testserver-role"
@@ -227,7 +226,7 @@ extension AWSTestServer {
         dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
         dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-        
+
         try processRaw { request in
             switch (request.method, request.uri) {
             case (.PUT, InstanceMetaDataClient.TokenUri):
@@ -238,12 +237,10 @@ extension AWSTestServer {
                 case .v2:
                     var responseBody = ByteBufferAllocator().buffer(capacity: token.utf8.count)
                     responseBody.writeString(token)
-                    let headers = [
-                        "Content-Length":responseBody.readableBytes.description
-                    ]
+                    let headers: [String: String] = [:]
                     return .result(.init(httpStatus: .ok, headers: headers, body: responseBody), continueProcessing: true)
                 }
-                
+
             case (.GET, InstanceMetaDataClient.CredentialUri):
                 // Role name
                 guard version == .v1 || request.headers[InstanceMetaDataClient.TokenHeaderName] == token else {
@@ -251,19 +248,16 @@ extension AWSTestServer {
                 }
                 var responseBody = ByteBufferAllocator().buffer(capacity: ec2Role.utf8.count)
                 responseBody.writeString(ec2Role)
-                let headers = [
-                    "Content-Length":responseBody.readableBytes.description
-                ]
+                let headers: [String: String] = [:]
                 return .result(.init(httpStatus: .ok, headers: headers, body: responseBody), continueProcessing: true)
-                
+
             case (.GET, InstanceMetaDataClient.CredentialUri+ec2Role):
                 // credentials
                 let encoder = JSONEncoder()
                 encoder.dateEncodingStrategy = .formatted(dateFormatter)
                 let responseBody = try encoder.encodeAsByteBuffer(metaData, allocator: ByteBufferAllocator())
                 let headers = [
-                    "Content-Type":"application/json",
-                    "Content-Length":responseBody.readableBytes.description
+                    "Content-Type":"application/json"
                 ]
                 return .result(.init(httpStatus: .ok, headers: headers, body: responseBody), continueProcessing: false)
             default:
@@ -271,7 +265,7 @@ extension AWSTestServer {
             }
         }
     }
-    
+
     /// fake ecs metadata server
     public func ecsMetadataServer(path: String, metaData: ECSMetaData? = nil) throws {
         let metaData = metaData ?? ECSMetaData.default
@@ -279,15 +273,14 @@ extension AWSTestServer {
         dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
         dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-        
+
         try processRaw { request in
             if request.method == .GET && request.uri == path {
                 let encoder = JSONEncoder()
                 encoder.dateEncodingStrategy = .formatted(dateFormatter)
                 let responseBody = try encoder.encodeAsByteBuffer(metaData, allocator: ByteBufferAllocator())
                 let headers = [
-                    "Content-Type":"application/json",
-                    "Content-Length":responseBody.readableBytes.description
+                    "Content-Type":"application/json"
                 ]
                 return .result(.init(httpStatus: .ok, headers: headers, body: responseBody), continueProcessing: false)
             }
@@ -479,26 +472,21 @@ extension AWSTestServer {
 
     /// write outbound response
     func writeResponse(_ response: Response) throws {
-        XCTAssertNoThrow(try web.writeOutbound(.head(.init(version: .init(major: 1, minor: 1),
-                                                           status: response.httpStatus,
-                                                           headers: HTTPHeaders(response.headers.map { ($0,$1) })))))
-        if var body = response.body {
-            while body.readableBytes > 0 {
-                let slice: ByteBuffer?
-                if body.readableBytes > 16384 {
-                    slice = body.readSlice(length: 16384)
-                } else {
-                    slice = body.readSlice(length: body.readableBytes)
-                }
-                XCTAssertNoThrow(try web.writeOutbound(.body(.byteBuffer(slice!))))
-            }
-        }
+        var headers = response.headers
+        // remove Content-Length header
+        headers["Content-Length"] = nil
+
         do {
+            try web.writeOutbound(.head(.init(version: .init(major: 1, minor: 1),
+                                               status: response.httpStatus,
+                                               headers: HTTPHeaders(headers.map { ($0,$1) }))))
+            if let body = response.body {
+                try web.writeOutbound(.body(.byteBuffer(body)))
+            }
             try web.writeOutbound(.end(nil))
         } catch {
-            print("Failed to write \(error)")
+            XCTFail("writeResponse failed \(error)")
         }
-//        XCTAssertNoThrow(try web.writeOutbound(.end(nil)))
     }
 
     /// write error
@@ -515,7 +503,7 @@ extension AWSTestServer {
             errorString = error.xml
         }
 
-        var byteBuffer = byteBufferAllocator.buffer(capacity: 0)
+        var byteBuffer = byteBufferAllocator.buffer(capacity: errorString.utf8.count)
         byteBuffer.writeString(errorString)
 
         try writeResponse(Response(httpStatus: HTTPResponseStatus(statusCode:error.status), headers: headers, body: byteBuffer))

@@ -480,7 +480,7 @@ extension AWSClient.ClientError: CustomStringConvertible {
 
 extension AWSClient {
     func recordMetrics<Output>(_ future: EventLoopFuture<Output>, service: String, operation: String) -> EventLoopFuture<Output> {
-        let dimensions: [(String, String)] = [("service", service), ("operation", operation)]
+        let dimensions: [(String, String)] = [("aws-service", service), ("aws-operation", operation)]
         let startTime = DispatchTime.now().uptimeNanoseconds
 
         Counter(label: "aws_requests_total", dimensions: dimensions).increment()

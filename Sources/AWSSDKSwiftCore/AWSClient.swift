@@ -380,7 +380,7 @@ extension AWSClient {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName, service: serviceConfig.service)
         logger.trace("AWS Request")
-        return credentialProvider.getCredential(on: eventLoop, logger: logger).flatMapThrowing { credential in
+        let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop, logger: logger).flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
             let awsRequest = try AWSRequest(
                 operation: operationName,
@@ -397,6 +397,7 @@ extension AWSClient {
             logger.trace("AWS Response")
             return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
         }
+        return recordMetrics(future, service: serviceConfig.service, operation: operationName)
     }
 
     /// generate a signed URL

@@ -16,7 +16,7 @@ import XCTest
 import Logging
 import NIOConcurrencyHelpers
 import AWSTestUtils
-import AWSSDKSwiftCore
+@testable import AWSSDKSwiftCore
 
 class LoggingTests: XCTestCase {
 
@@ -116,6 +116,23 @@ class LoggingTests: XCTestCase {
         XCTAssertEqual(logCollection.filter(by: "aws-retry-time").first?.message, "Retrying request")
         XCTAssertEqual(logCollection.filter(by: "aws-retry-time").first?.level, .info)
     }
+    
+    func testNoCredentialProvider() {
+        let logCollection = LoggingCollector.Logs()
+        let logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection, logLevel: .trace)})
+        let client = createAWSClient(credentialProvider: .selector(.custom {_ in return NullCredentialProvider()} ))
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
+        let serviceConfig = createServiceConfig()
+        XCTAssertThrowsError(try client.execute(
+            operation: "Test",
+            path: "/",
+            httpMethod: "GET",
+            serviceConfig: serviceConfig,
+            logger: logger
+        ).wait())
+        XCTAssertNotNil(logCollection.filter(by: "aws-error-message", with: "No credential provider found").first)
+
+    }
 }
 
 struct LoggingCollector: LogHandler {
@@ -162,7 +179,7 @@ struct LoggingCollector: LogHandler {
 
     func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, source: String, file: String, function: String, line: UInt) {
         let metadata = self.metadata.merging(metadata ?? [:]) { $1 }
-        internalHandler.log(level: logLevel, message: message, metadata: metadata, source: source, file:file, function: function, line: line)
+        internalHandler.log(level: level, message: message, metadata: metadata, source: source, file:file, function: function, line: line)
         self.logs.append(level: level, message: message, metadata: metadata)
     }
 

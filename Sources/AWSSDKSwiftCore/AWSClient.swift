@@ -158,9 +158,6 @@ extension AWSClient {
                         // if there was no retry and error was a response status code then attempt to convert to AWS error
                         promise.fail(self.createError(for: response, serviceConfig: serviceConfig, logger: logger))
                     } else {
-                        logger.error("AWSClient Internal error", metadata: [
-                            "aws-error-message": "\(error)"
-                        ])
                         promise.fail(error)
                     }
             }
@@ -237,7 +234,7 @@ extension AWSClient {
         }.map { _ in
             return
         }
-        return recordMetrics(future, service: serviceConfig.service, operation: operationName)
+        return recordMetrics(future, service: serviceConfig.service, operation: operationName, logger: logger)
     }
 
     /// execute an empty request and return a future with an empty response
@@ -276,7 +273,7 @@ extension AWSClient {
             logger.trace("AWS Response")
             return
         }
-        return recordMetrics(future, service: serviceConfig.service, operation: operationName)
+        return recordMetrics(future, service: serviceConfig.service, operation: operationName, logger: logger)
     }
 
     /// execute an empty request and return a future with the output object generated from the response
@@ -314,7 +311,7 @@ extension AWSClient {
             logger.trace("AWS Response")
             return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
         }
-        return recordMetrics(future, service: serviceConfig.service, operation: operationName)
+        return recordMetrics(future, service: serviceConfig.service, operation: operationName, logger: logger)
     }
 
     /// execute a request with an input object and return a future with the output object generated from the response
@@ -355,7 +352,7 @@ extension AWSClient {
             logger.trace("AWS Response")
             return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
         }
-        return recordMetrics(future, service: serviceConfig.service, operation: operationName)
+        return recordMetrics(future, service: serviceConfig.service, operation: operationName, logger: logger)
     }
 
     /// execute a request with an input object and return a future with the output object generated from the response
@@ -397,7 +394,7 @@ extension AWSClient {
             logger.trace("AWS Response")
             return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
         }
-        return recordMetrics(future, service: serviceConfig.service, operation: operationName)
+        return recordMetrics(future, service: serviceConfig.service, operation: operationName, logger: logger)
     }
 
     /// generate a signed URL
@@ -455,8 +452,6 @@ extension AWSClient {
             if var body = response.body {
                 rawBodyString = body.readString(length: body.readableBytes)
             }
-            logger.error("AWS error", metadata: ["aws-error-message": "Unhandled Error"])
-
             return AWSError(statusCode: response.status, message: "Unhandled Error", rawBody: rawBodyString)
         }
     }
@@ -479,7 +474,7 @@ extension AWSClient.ClientError: CustomStringConvertible {
 }
 
 extension AWSClient {
-    func recordMetrics<Output>(_ future: EventLoopFuture<Output>, service: String, operation: String) -> EventLoopFuture<Output> {
+    func recordMetrics<Output>(_ future: EventLoopFuture<Output>, service: String, operation: String, logger: Logger) -> EventLoopFuture<Output> {
         let dimensions: [(String, String)] = [("aws-service", service), ("aws-operation", operation)]
         let startTime = DispatchTime.now().uptimeNanoseconds
 
@@ -494,6 +489,13 @@ extension AWSClient {
             return response
         }.flatMapErrorThrowing { error in
             Counter(label: "aws_request_errors", dimensions: dimensions).increment()
+            // AWSErrorTypes have already been logged
+            if error as? AWSErrorType == nil {
+                // log error message
+                logger.error("AWSClient error", metadata: [
+                    "aws-error-message": "\(error)"
+                ])
+            }
             throw error
         }
     }

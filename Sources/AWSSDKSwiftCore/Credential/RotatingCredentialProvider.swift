@@ -80,7 +80,7 @@ public final class RotatingCredentialProvider: CredentialProvider {
             return future
         }
 
-        logger.info("Refeshing AWS credentials")
+        logger.info("Refeshing AWS credentials", metadata: ["aws-credential-provider": .string("\(self)")])
 
         credentialFuture = self.provider.getCredential(on: eventLoop, logger: logger)
             .map { (credential) -> (Credential) in
@@ -88,8 +88,7 @@ public final class RotatingCredentialProvider: CredentialProvider {
                 self.lock.withLock {
                     self.credentialFuture = nil
                     self.credential = credential
-
-                    logger.info("AWS credentials refreshed")
+                    logger.info("AWS credentials ready", metadata: ["aws-credential-provider": .string("\(self)")])
                 }
                 return credential
             }

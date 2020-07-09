@@ -473,22 +473,15 @@ extension AWSTestServer {
     /// write outbound response
     func writeResponse(_ response: Response) throws {
         var headers = response.headers
-        headers["Content-Length"] = response.body?.readableBytes.description ?? "0"
+        // remove Content-Length header
+        headers["Content-Length"] = nil
 
         do {
             try web.writeOutbound(.head(.init(version: .init(major: 1, minor: 1),
                                                status: response.httpStatus,
                                                headers: HTTPHeaders(headers.map { ($0,$1) }))))
-            if var body = response.body {
-                while body.readableBytes > 0 {
-                    let slice: ByteBuffer?
-                    if body.readableBytes > 16384 {
-                        slice = body.readSlice(length: 16384)
-                    } else {
-                        slice = body.readSlice(length: body.readableBytes)
-                    }
-                    try web.writeOutbound(.body(.byteBuffer(slice!)))
-                }
+            if let body = response.body {
+                try web.writeOutbound(.body(.byteBuffer(body)))
             }
             try web.writeOutbound(.end(nil))
         } catch {

@@ -48,9 +48,11 @@ public class DeferredCredentialProvider: CredentialProvider {
             .cascade(to: self.startupPromise)
     }
 
-    public func syncShutdown() throws {
-        _ = try startupPromise.futureResult.wait()
-        try provider.syncShutdown()
+    public func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
+        return startupPromise.futureResult
+            .and(provider.shutdown(on: eventLoop))
+            .map { _ in }
+            .hop(to: eventLoop)
     }
 
     /// Return credentials. If still in process of the getting credentials then return future result of `startupPromise`

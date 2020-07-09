@@ -38,8 +38,8 @@ class RuntimeSelectorCredentialProvider: CredentialProvider {
         setupInternalProvider(providers: providers, context: context)
     }
     
-    func syncShutdown() throws {
-        _ = try startupPromise.futureResult.wait()
+    func shudown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
+        return startupPromise.futureResult.map { _ in }.hop(to: eventLoop)
     }
     
     func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {

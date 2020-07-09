@@ -34,12 +34,13 @@ public final class RotatingCredentialProvider: CredentialProvider {
         _ = refreshCredentials(on: eventLoop)
     }
 
-    public func syncShutdown() throws {
-        let future: EventLoopFuture<Credential>? = self.lock.withLock { credentialFuture }
-        if let future = future {
-            _ = try future.wait()
+    public func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
+        return self.lock.withLock {
+            if let future = credentialFuture {
+                return future.and(provider.shutdown(on: eventLoop)).map { _ in }.hop(to: eventLoop)
+            }
+            return provider.shutdown(on: eventLoop)
         }
-        try provider.syncShutdown()
     }
 
     public func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {

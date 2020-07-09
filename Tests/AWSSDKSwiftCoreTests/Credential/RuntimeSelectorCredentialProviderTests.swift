@@ -34,6 +34,11 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
 
     }
     
+    func testShutdown() {
+        let client = createAWSClient(credentialProvider: .selector(.environment, .configFile()))
+        XCTAssertNoThrow(try client.syncShutdown())
+    }
+    
     func testFoundEnvironmentProvider() throws {
         let accessKeyId = "AWSACCESSKEYID"
         let secretAccessKey = "AWSSECRETACCESSKEY"

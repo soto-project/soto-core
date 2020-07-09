@@ -16,8 +16,21 @@
 import XCTest
 import NIO
 import AsyncHTTPClient
+import AWSTestUtils
 
 class CredentialProviderTests: XCTestCase {
+
+    func testCredentialProvider() {
+        let cred = StaticCredential(accessKeyId: "abc", secretAccessKey: "123", sessionToken: "xyz")
+        
+        let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
+        let loop = group.next()
+        var returned: Credential?
+        XCTAssertNoThrow(returned = try cred.getCredential(on: loop).wait())
+        
+        XCTAssertEqual(returned as? StaticCredential, cred)
+    }
 
     // make sure getCredential in client CredentialProvider doesnt get called more than once
     func testDeferredCredentialProvider() {
@@ -38,50 +51,5 @@ class CredentialProviderTests: XCTestCase {
         let deferredProvider = DeferredCredentialProvider(eventLoop: eventLoop, provider: MyCredentialProvider())
         XCTAssertNoThrow(_ = try deferredProvider.getCredential(on: eventLoop).wait())
         XCTAssertNoThrow(_ = try deferredProvider.getCredential(on: eventLoop).wait())
-    }
-
-    func testConfigFileSuccess() {
-        let credentials = """
-            [default]
-            aws_access_key_id = AWSACCESSKEYID
-            aws_secret_access_key = AWSSECRETACCESSKEY
-            """
-        let filename = "credentials"
-        let filenameURL = URL(fileURLWithPath: filename)
-        XCTAssertNoThrow(try Data(credentials.utf8).write(to: filenameURL))
-        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: filenameURL)) }
-
-        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let eventLoop = eventLoopGroup.next()
-        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
-        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoop))
-        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
-        let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
-        
-        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop))
-        
-        var credential: Credential?
-        XCTAssertNoThrow(credential = try provider.getCredential(on: eventLoop).wait())
-        XCTAssertEqual(credential?.accessKeyId, "AWSACCESSKEYID")
-        XCTAssertEqual(credential?.secretAccessKey, "AWSSECRETACCESSKEY")
-    }
-    
-    func testConfigFileNotAvailable() {
-        let filename = "credentials_not_existing"
-        let filenameURL = URL(fileURLWithPath: filename)
-
-        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let eventLoop = eventLoopGroup.next()
-        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
-        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoop))
-        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
-        let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
-        
-        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop))
-        
-        XCTAssertThrowsError(_ = try provider.getCredential(on: eventLoop).wait()) { (error) in
-            print("\(error)")
-            XCTAssertEqual(error as? CredentialProviderError, .noProvider)
-        }
     }
 }

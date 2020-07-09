@@ -52,7 +52,7 @@ public final class AWSClient {
     }
 
     /// AWS credentials provider
-    let credentialProvider: CredentialProvider
+    public let credentialProvider: CredentialProvider
     /// middleware code to be applied to requests and responses
     public let middlewares: [AWSServiceMiddleware]
     /// HTTP client used by AWSClient

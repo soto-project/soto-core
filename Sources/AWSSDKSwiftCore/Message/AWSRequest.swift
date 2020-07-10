@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import AWSSignerV4
 import NIO
 import NIOHTTP1
 import struct Foundation.URL

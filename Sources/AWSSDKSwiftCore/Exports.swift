@@ -12,7 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-@_exported import AWSSignerV4
+@_exported import protocol AWSSignerV4.Credential
+@_exported import struct AWSSignerV4.StaticCredential
 
 @_exported import struct NIO.ByteBuffer
 @_exported import protocol NIO.EventLoop

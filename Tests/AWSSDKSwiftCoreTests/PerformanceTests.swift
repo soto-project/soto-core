@@ -13,10 +13,11 @@
 //===----------------------------------------------------------------------===//
 
 import XCTest
+import AsyncHTTPClient
+import AWSSignerV4
+import AWSTestUtils
 import NIO
 import NIOHTTP1
-import AsyncHTTPClient
-import AWSTestUtils
 @testable import AWSSDKSwiftCore
 
 struct HeaderRequest: AWSEncodableShape {

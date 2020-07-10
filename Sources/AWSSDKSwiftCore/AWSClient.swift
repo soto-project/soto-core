@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import AWSSignerV4
 import AWSXML
 import AsyncHTTPClient
 import Dispatch

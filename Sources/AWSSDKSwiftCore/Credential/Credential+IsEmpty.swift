@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import AWSSignerV4
 import INIParser
 import struct Foundation.Date
 import class  Foundation.NSString

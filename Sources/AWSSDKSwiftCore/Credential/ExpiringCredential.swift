@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import AWSSignerV4
 import struct Foundation.TimeInterval
 
 public protocol ExpiringCredential: Credential {

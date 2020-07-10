@@ -20,10 +20,10 @@ import struct Foundation.URL
 import class Foundation.DateFormatter
 import class Foundation.JSONDecoder
 
-import NIO
-import NIOHTTP1
-import NIOConcurrencyHelpers
 import AWSSignerV4
+import NIO
+import NIOConcurrencyHelpers
+import NIOHTTP1
 
 /// protocol to get Credentials from the Client. With this the AWSClient requests the credentials for request signing from ecs and ec2.
 public protocol MetaDataClient: CredentialProvider {

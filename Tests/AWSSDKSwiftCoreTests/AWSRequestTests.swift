@@ -12,9 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-import XCTest
-import NIOHTTP1
+import AWSSignerV4
 import AWSTestUtils
+import NIOHTTP1
+import XCTest
 @testable import AWSSDKSwiftCore
 
 class AWSRequestTests: XCTestCase {

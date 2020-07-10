@@ -155,14 +155,14 @@ extension AWSClient {
     /// invoke HTTP request
     fileprivate func invoke(_ httpRequest: AWSHTTPRequest, with serviceConfig: AWSServiceConfig, on eventLoop: EventLoop) -> EventLoopFuture<AWSHTTPResponse> {
         return invoke(with: serviceConfig) {
-            return self.httpClient.execute(request: httpRequest, timeout: .seconds(20), on: eventLoop)
+            return self.httpClient.execute(request: httpRequest, timeout: serviceConfig.timeout, on: eventLoop)
         }
     }
 
     /// invoke HTTP request with response streaming
     fileprivate func invoke(_ httpRequest: AWSHTTPRequest, with serviceConfig: AWSServiceConfig, on eventLoop: EventLoop, stream: @escaping AWSHTTPClient.ResponseStream) -> EventLoopFuture<AWSHTTPResponse> {
         return invoke(with: serviceConfig) {
-            return self.httpClient.execute(request: httpRequest, timeout: .seconds(20), on: eventLoop, stream: stream)
+            return self.httpClient.execute(request: httpRequest, timeout: serviceConfig.timeout, on: eventLoop, stream: stream)
         }
     }
 

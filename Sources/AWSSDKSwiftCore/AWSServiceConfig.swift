@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import NIO
+
 /// Configuration class defining an AWS service
 public class AWSServiceConfig {
 
@@ -33,6 +35,8 @@ public class AWSServiceConfig {
     public let possibleErrorTypes: [AWSErrorType.Type]
     /// Middleware code specific to the service used to edit requests before they sent and responses before they are decoded
     public let middlewares: [AWSServiceMiddleware]
+    /// timeout value for HTTP requests
+    public let timeout: TimeAmount
 
     /// Create a ServiceConfig object
     ///
@@ -49,6 +53,7 @@ public class AWSServiceConfig {
     ///   - partitionEndpoints: Default endpoint to use, if no region endpoint is supplied
     ///   - possibleErrorTypes: Array of possible error types that the client can throw
     ///   - middlewares: Array of middlewares to apply to requests and responses
+    ///   - timeout: Time out value for HTTP requests
     public init(
         region: Region?,
         partition: AWSPartition,
@@ -61,7 +66,8 @@ public class AWSServiceConfig {
         serviceEndpoints: [String: String] = [:],
         partitionEndpoints: [AWSPartition: (endpoint: String, region: Region)] = [:],
         possibleErrorTypes: [AWSErrorType.Type] = [],
-        middlewares: [AWSServiceMiddleware] = []
+        middlewares: [AWSServiceMiddleware] = [],
+        timeout: TimeAmount? = nil
     )
     {
         var partition = partition
@@ -83,6 +89,7 @@ public class AWSServiceConfig {
         self.serviceProtocol = serviceProtocol
         self.possibleErrorTypes = possibleErrorTypes
         self.middlewares = middlewares
+        self.timeout = timeout ?? .seconds(20)
 
         // work out endpoint, if provided use that otherwise
         if let endpoint = endpoint {

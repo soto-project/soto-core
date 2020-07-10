@@ -76,7 +76,7 @@ class AWSClientTests: XCTestCase {
         defer {
             XCTAssertNoThrow(try client.syncShutdown())
         }
-        let response: EventLoopFuture<AWSTestServer.HTTPBinResponse> = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config)
+        let response: EventLoopFuture<AWSTestServer.HTTPBinResponse> = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config)
 
         XCTAssertNoThrow(try awsServer.httpBin())
         var httpBinResponse: AWSTestServer.HTTPBinResponse? = nil
@@ -100,7 +100,7 @@ class AWSClientTests: XCTestCase {
                 XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try awsServer.stop())
             }
-            let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config)
+            let response = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config)
 
             try awsServer.processRaw { request in
                 let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
@@ -132,7 +132,7 @@ class AWSClientTests: XCTestCase {
                 XCTAssertNoThrow(try awsServer.stop())
             }
             let input = Input(e:.second, i: [1,2,4,8])
-            let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config, input: input)
+            let response = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input)
 
             try awsServer.processRaw { request in
                 let receivedInput = try JSONDecoder().decode(Input.self, from: request.body)
@@ -161,7 +161,7 @@ class AWSClientTests: XCTestCase {
                 XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try awsServer.stop())
             }
-            let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config)
+            let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config)
 
             try awsServer.processRaw { request in
                 let output = Output(s: "TestOutputString", i: 547)
@@ -198,7 +198,7 @@ class AWSClientTests: XCTestCase {
             return eventLoop.makeSucceededFuture(.byteBuffer(buffer))
         }
         let input = Input(payload: payload)
-        let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config, input: input)
+        let response = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input)
 
         try server.processRaw { request in
             let bytes = request.body.getBytes(at: 0, length: request.body.readableBytes)
@@ -272,7 +272,7 @@ class AWSClientTests: XCTestCase {
                 return eventLoop.makeSucceededFuture(.byteBuffer(buffer))
             }
             let input = Input(payload: payload)
-            let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config, input: input)
+            let response = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input)
             try response.wait()
         } catch AWSClient.ClientError.tooMuchData {
         } catch {
@@ -317,7 +317,7 @@ class AWSClientTests: XCTestCase {
             }
 
             let input = Input(payload: .fileHandle(fileHandle, size: bufferSize, fileIO: fileIO))
-            let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config, input: input)
+            let response = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input)
 
             try awsServer.processRaw { request in
                 XCTAssertNil(request.headers["transfer-encoding"])
@@ -370,7 +370,7 @@ class AWSClientTests: XCTestCase {
                 }
             }
             let input = Input(payload: payload)
-            let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config, input: input)
+            let response = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input)
 
             try awsServer.processRaw { request in
                 let bytes = request.body.getBytes(at: 0, length: request.body.readableBytes)
@@ -399,7 +399,7 @@ class AWSClientTests: XCTestCase {
                 XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try httpClient.syncShutdown())
             }
-            let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config)
+            let response = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config)
 
             try awsServer.processRaw { request in
                 let response = AWSTestServer.Response(httpStatus: .temporaryRedirect, headers: ["Location":awsServer.address], body: nil)
@@ -435,7 +435,7 @@ class AWSClientTests: XCTestCase {
                 XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try httpClient.syncShutdown())
             }
-            let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config)
+            let response = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config)
 
             var count = 0
             try awsServer.processRaw { request in
@@ -474,7 +474,7 @@ class AWSClientTests: XCTestCase {
                 XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try httpClient.syncShutdown())
             }
-            let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config)
+            let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config)
 
             var count = 0
             try awsServer.processRaw { request in
@@ -511,7 +511,7 @@ class AWSClientTests: XCTestCase {
                 XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try httpClient.syncShutdown())
             }
-            let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config)
+            let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config)
 
             try awsServer.processRaw { request in
                 return .error(.accessDenied, continueProcessing: false)
@@ -541,7 +541,7 @@ class AWSClientTests: XCTestCase {
                 XCTAssertNoThrow(try awsServer.stop())
             }
             let eventLoop = client.eventLoopGroup.next()
-            let response: EventLoopFuture<Void> = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config, on: eventLoop)
+            let response: EventLoopFuture<Void> = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, on: eventLoop)
 
             try awsServer.processRaw { request in
                 return .result(.ok)
@@ -576,7 +576,7 @@ class AWSClientTests: XCTestCase {
                 XCTAssertNoThrow(try awsServer.stop())
             }
             var count = 0
-            let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: "GET", serviceConfig: config, input: Input()) { (payload: ByteBuffer, eventLoop: EventLoop) in
+            let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: .GET, serviceConfig: config, input: Input()) { (payload: ByteBuffer, eventLoop: EventLoop) in
                 let payloadSize = payload.readableBytes
                 let slice = Data(data[count..<(count+payloadSize)])
                 let payloadData = payload.getData(at: 0, length: payload.readableBytes)
@@ -624,7 +624,7 @@ class AWSClientTests: XCTestCase {
         }
         var count = 0
         let lock = Lock()
-        let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: "GET", serviceConfig: config, input: Input()) { (payload: ByteBuffer, eventLoop: EventLoop) in
+        let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: .GET, serviceConfig: config, input: Input()) { (payload: ByteBuffer, eventLoop: EventLoop) in
             lock.withLock { count += 1 }
             return eventLoop.scheduleTask(in: .milliseconds(200)) {
                 lock.withLock { count -= 1 }
@@ -659,7 +659,7 @@ class AWSClientTests: XCTestCase {
             XCTAssertNoThrow(try awsServer.stop())
         }
         
-        let response = client.execute(operation: "test", path: "/", httpMethod: "POST", serviceConfig: config)
+        let response = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config)
 
         XCTAssertNoThrow(try awsServer.processRaw { request in
             XCTAssertEqual(request.uri, "/test")

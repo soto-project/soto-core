@@ -104,7 +104,7 @@ class TimeStampTests: XCTestCase {
         let config = createServiceConfig()
         
         var request: AWSRequest?
-        XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", httpMethod: "GET", input: a, configuration: config))
+        XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", httpMethod: .GET, input: a, configuration: config))
         XCTAssertEqual(request?.body.asString(), "{\"date\":\"Wed, 1 May 2019 00:00:00 GMT\"}")
     }
 

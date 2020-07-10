@@ -65,7 +65,7 @@ class PaginateTests: XCTestCase {
     }
 
     func counter(_ input: CounterInput, on eventLoop: EventLoop?) -> EventLoopFuture<CounterOutput> {
-        return client.execute(operation: "TestOperation", path: "/", httpMethod: "POST", serviceConfig: config, input: input, on: eventLoop)
+        return client.execute(operation: "TestOperation", path: "/", httpMethod: .POST, serviceConfig: config, input: input, on: eventLoop)
     }
 
     func counterPaginator(_ input: CounterInput, onPage: @escaping (CounterOutput, EventLoop)->EventLoopFuture<Bool>) -> EventLoopFuture<Void> {
@@ -129,7 +129,7 @@ class PaginateTests: XCTestCase {
     }
 
     func stringList(_ input: StringListInput, on eventLoop: EventLoop? = nil) -> EventLoopFuture<StringListOutput> {
-        return client.execute(operation: "TestOperation", path: "/", httpMethod: "POST", serviceConfig: config, input: input, on: eventLoop)
+        return client.execute(operation: "TestOperation", path: "/", httpMethod: .POST, serviceConfig: config, input: input, on: eventLoop)
     }
 
     func stringListPaginator(_ input: StringListInput, on eventLoop: EventLoop? = nil, onPage: @escaping (StringListOutput, EventLoop)->EventLoopFuture<Bool>) -> EventLoopFuture<Void> {

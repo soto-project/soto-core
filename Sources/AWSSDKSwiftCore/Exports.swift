@@ -20,3 +20,5 @@
 @_exported import class NIO.EventLoopFuture
 @_exported import protocol NIO.EventLoopGroup
 @_exported import struct NIO.TimeAmount
+
+@_exported import enum NIOHTTP1.HTTPMethod

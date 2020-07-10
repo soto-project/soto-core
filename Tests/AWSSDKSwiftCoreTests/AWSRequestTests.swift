@@ -36,7 +36,7 @@ class AWSRequestTests: XCTestCase {
         XCTAssertEqual(config.region, .euwest1)
         
         var request: AWSRequest?
-        XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", httpMethod: "GET", configuration: config))
+        XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", httpMethod: .GET, configuration: config))
         XCTAssertEqual(request?.url.absoluteString, "https://service.aws.amazon.com/")
     }
 
@@ -50,7 +50,7 @@ class AWSRequestTests: XCTestCase {
         let config = createServiceConfig()
         let request = KeywordRequest(repeat: "Repeat")
         var awsRequest: AWSRequest?
-        XCTAssertNoThrow(awsRequest = try AWSRequest(operation: "Keyword", path: "/", httpMethod: "POST", input: request, configuration: config))
+        XCTAssertNoThrow(awsRequest = try AWSRequest(operation: "Keyword", path: "/", httpMethod: .POST, input: request, configuration: config))
         XCTAssertEqual(awsRequest?.httpHeaders["repeat"].first, "Repeat")
         XCTAssertTrue(try XCTUnwrap(awsRequest).body.asPayload().isEmpty)
     }
@@ -66,7 +66,7 @@ class AWSRequestTests: XCTestCase {
 
         let request = KeywordRequest(self: "KeywordRequest")
         var awsRequest: AWSRequest?
-        XCTAssertNoThrow(awsRequest = try AWSRequest(operation: "Keyword", path: "/", httpMethod: "POST", input: request, configuration: config))
+        XCTAssertNoThrow(awsRequest = try AWSRequest(operation: "Keyword", path: "/", httpMethod: .POST, input: request, configuration: config))
         XCTAssertEqual(awsRequest?.url, URL(string:"https://s3.ca-central-1.amazonaws.com/?self=KeywordRequest")!)
         XCTAssertEqual(try XCTUnwrap(awsRequest).body.asByteBuffer(), nil)
     }
@@ -80,7 +80,7 @@ class AWSRequestTests: XCTestCase {
         XCTAssertNoThrow(awsRequest = try AWSRequest(
             operation: "PutRecord",
             path: "/",
-            httpMethod: "POST",
+            httpMethod: .POST,
             input: input2,
             configuration: config)
         )
@@ -105,7 +105,7 @@ class AWSRequestTests: XCTestCase {
         XCTAssertNoThrow(awsRequest = try AWSRequest(
             operation: "CopyObject",
             path: "/",
-            httpMethod: "PUT",
+            httpMethod: .PUT,
             input: input,
             configuration: config
         ))
@@ -128,7 +128,7 @@ class AWSRequestTests: XCTestCase {
             name: config.service,
             region: config.region.rawValue)
 
-        for httpMethod in ["GET","HEAD","PUT","DELETE","POST","PATCH"] {
+        for httpMethod in [HTTPMethod.GET,.HEAD,.PUT,.DELETE,.POST,.PATCH] {
             var awsRequest: AWSRequest?
 
             XCTAssertNoThrow(awsRequest = try AWSRequest(
@@ -158,30 +158,30 @@ class AWSRequestTests: XCTestCase {
 
         let config = createServiceConfig(serviceProtocol: .json(version: "1.1"))
         var request: AWSRequest?
-        XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", httpMethod: "POST", input: object, configuration: config))
+        XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", httpMethod: .POST, input: object, configuration: config))
         XCTAssertEqual(request?.httpHeaders["content-type"].first, "application/x-amz-json-1.1")
 
         let config2 = createServiceConfig(serviceProtocol: .restjson)
         var request2: AWSRequest?
-        XCTAssertNoThrow(request2 = try AWSRequest(operation: "test", path: "/", httpMethod: "POST", input: object, configuration: config2))
+        XCTAssertNoThrow(request2 = try AWSRequest(operation: "test", path: "/", httpMethod: .POST, input: object, configuration: config2))
         XCTAssertEqual(request2?.httpHeaders["content-type"].first, "application/json")
         var rawRequest2: AWSRequest?
-        XCTAssertNoThrow(rawRequest2 = try AWSRequest(operation: "test", path: "/", httpMethod: "POST", input: object2, configuration: config2))
+        XCTAssertNoThrow(rawRequest2 = try AWSRequest(operation: "test", path: "/", httpMethod: .POST, input: object2, configuration: config2))
         XCTAssertEqual(rawRequest2?.httpHeaders["content-type"].first, "binary/octet-stream")
 
         let config3 = createServiceConfig(serviceProtocol: .query)
         var request3: AWSRequest?
-        XCTAssertNoThrow(request3 = try AWSRequest(operation: "test", path: "/", httpMethod: "POST", input: object, configuration: config3))
+        XCTAssertNoThrow(request3 = try AWSRequest(operation: "test", path: "/", httpMethod: .POST, input: object, configuration: config3))
         XCTAssertEqual(request3?.httpHeaders["content-type"].first, "application/x-www-form-urlencoded; charset=utf-8")
 
         let config4 = createServiceConfig(serviceProtocol: .ec2)
         var request4: AWSRequest?
-        XCTAssertNoThrow(request4 = try AWSRequest(operation: "test", path: "/", httpMethod: "POST", input: object, configuration: config4))
+        XCTAssertNoThrow(request4 = try AWSRequest(operation: "test", path: "/", httpMethod: .POST, input: object, configuration: config4))
         XCTAssertEqual(request4?.httpHeaders["content-type"].first, "application/x-www-form-urlencoded; charset=utf-8")
 
         let config5 = createServiceConfig(serviceProtocol: .restxml)
         var request5: AWSRequest?
-        XCTAssertNoThrow(request5 = try AWSRequest(operation: "test", path: "/", httpMethod: "POST", input: object, configuration: config5))
+        XCTAssertNoThrow(request5 = try AWSRequest(operation: "test", path: "/", httpMethod: .POST, input: object, configuration: config5))
         XCTAssertEqual(request5?.httpHeaders["content-type"].first, "application/octet-stream")
     }
 
@@ -193,7 +193,7 @@ class AWSRequestTests: XCTestCase {
         let input = Input(h: "TestHeader")
         let config = createServiceConfig()
         var request: AWSRequest?
-        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input, configuration: config))
+        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))
         XCTAssertEqual(request?.httpHeaders["header-member"].first, "TestHeader")
     }
 
@@ -205,7 +205,7 @@ class AWSRequestTests: XCTestCase {
         let input = Input(q: "=3+5897^sdfjh&")
         let config = createServiceConfig(region: .useast1)
         var request: AWSRequest?
-        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input, configuration: config))
+        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))
         XCTAssertEqual(request?.url.absoluteString, "https://test.us-east-1.amazonaws.com/?query=%3D3%2B5897%5Esdfjh%26")
     }
 
@@ -218,7 +218,7 @@ class AWSRequestTests: XCTestCase {
         let config = createServiceConfig(region: .useast1)
         
         var request: AWSRequest?
-        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input, configuration: config))
+        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))
         XCTAssertEqual(request?.url.absoluteString, "https://test.us-east-1.amazonaws.com/?query=%3D3%2B5897%5Esdfjh%26&query=test")
     }
 
@@ -230,7 +230,7 @@ class AWSRequestTests: XCTestCase {
         let input = Input(q: ["one": 1, "two": 2])
         let config = createServiceConfig(region: .useast2, service: "myservice")
         var request: AWSRequest?
-        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input, configuration: config))
+        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))
         XCTAssertEqual(request?.url.absoluteString, "https://myservice.us-east-2.amazonaws.com/?one=1&two=2")
     }
 
@@ -242,7 +242,7 @@ class AWSRequestTests: XCTestCase {
         let input = Input(u: "MyKey")
         let config = createServiceConfig(region: .cacentral1, service: "s3")
         var request: AWSRequest?
-        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/{key}", httpMethod: "GET", input: input, configuration: config))
+        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/{key}", httpMethod: .GET, input: input, configuration: config))
         XCTAssertEqual(request?.url.absoluteString, "https://s3.ca-central-1.amazonaws.com/MyKey")
     }
 
@@ -254,7 +254,7 @@ class AWSRequestTests: XCTestCase {
         let input = Input(number: 5)
         let xmlConfig = createServiceConfig(serviceProtocol: .restxml)
         var request: AWSRequest?
-        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input, configuration: xmlConfig))
+        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: xmlConfig))
         guard case .xml(let element) = request?.body else {
             return XCTFail("Shouldn't get here")
         }
@@ -274,7 +274,7 @@ class AWSRequestTests: XCTestCase {
         let input = Input(payload: Payload(number: 5))
         let xmlConfig = createServiceConfig(serviceProtocol: .restxml)
         var request: AWSRequest?
-        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input, configuration: xmlConfig))
+        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: xmlConfig))
         guard case .xml(let element) = request?.body else {
             return XCTFail("Shouldn't get here")
         }
@@ -291,7 +291,7 @@ class AWSRequestTests: XCTestCase {
         }
         let input = J(dataContainer: DataContainer(data: Data("test data".utf8)))
         let jsonConfig = createServiceConfig(serviceProtocol: .json(version: "1.1"))
-        XCTAssertNoThrow(try AWSRequest(operation: "PutRecord",path: "/",httpMethod: "POST", input: input, configuration: jsonConfig))
+        XCTAssertNoThrow(try AWSRequest(operation: "PutRecord",path: "/",httpMethod: .POST, input: input, configuration: jsonConfig))
     }
 
     func testEC2ClientRequest() {
@@ -301,7 +301,7 @@ class AWSRequestTests: XCTestCase {
         let input = Input(array: ["entry1", "entry2"])
         let config = createServiceConfig(serviceProtocol: .ec2, apiVersion: "2013-12-02")
         var request: AWSRequest?
-        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: "GET", input: input, configuration: config))
+        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))
         XCTAssertEqual(request?.body.asString(), "Action=Test&Array.1=entry1&Array.2=entry2&Version=2013-12-02")
     }
     

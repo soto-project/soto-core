@@ -27,7 +27,7 @@ public struct AWSRequest {
     public var url: URL
     public let serviceProtocol: ServiceProtocol
     public let operation: String
-    public let httpMethod: String
+    public let httpMethod: HTTPMethod
     public var httpHeaders: HTTPHeaders
     public var body: Body
 
@@ -44,12 +44,11 @@ public struct AWSRequest {
 
     /// Create HTTP Client request from AWSRequest
     func toHTTPRequest() -> AWSHTTPRequest {
-        return AWSHTTPRequest.init(url: url, method: HTTPMethod(rawValue: httpMethod), headers: httpHeaders, body: body.asPayload())
+        return AWSHTTPRequest.init(url: url, method: httpMethod, headers: httpHeaders, body: body.asPayload())
     }
 
     /// Create HTTP Client request with signed headers from AWSRequest
     func toHTTPRequestWithSignedHeader(signer: AWSSigner) -> AWSHTTPRequest {
-        let method = HTTPMethod(rawValue: httpMethod)
         let payload = self.body.asPayload()
         let bodyDataForSigning: AWSSigner.BodyData?
         switch payload.payload {
@@ -61,7 +60,7 @@ public struct AWSRequest {
                 var headers = httpHeaders
                 // need to add this header here as it needs to be included in the signed headers
                 headers.add(name: "x-amz-decoded-content-length", value: reader.size!.description)
-                let (signedHeaders, seedSigningData) = signer.startSigningChunks(url: url, method: method, headers: headers, date: Date())
+                let (signedHeaders, seedSigningData) = signer.startSigningChunks(url: url, method: httpMethod, headers: headers, date: Date())
                 let s3Reader = S3ChunkedStreamReader(
                     size: reader.size!,
                     seedSigningData: seedSigningData,
@@ -69,15 +68,15 @@ public struct AWSRequest {
                     byteBufferAllocator: reader.byteBufferAllocator,
                     read: reader.read)
                 let payload = AWSPayload.streamReader(s3Reader)
-                return AWSHTTPRequest.init(url: url, method: method, headers: signedHeaders, body: payload)
+                return AWSHTTPRequest.init(url: url, method: httpMethod, headers: signedHeaders, body: payload)
             } else {
                 bodyDataForSigning = .unsignedPayload
             }
         case .empty:
             bodyDataForSigning = nil
         }
-        let signedHeaders = signer.signHeaders(url: url, method: method, headers: httpHeaders, body: bodyDataForSigning, date: Date())
-        return AWSHTTPRequest.init(url: url, method: method, headers: signedHeaders, body: payload)
+        let signedHeaders = signer.signHeaders(url: url, method: httpMethod, headers: httpHeaders, body: bodyDataForSigning, date: Date())
+        return AWSHTTPRequest.init(url: url, method: httpMethod, headers: signedHeaders, body: payload)
     }
 
     // return new request with middleware applied
@@ -93,7 +92,7 @@ public struct AWSRequest {
 
 extension AWSRequest {
     
-    internal init(operation operationName: String, path: String, httpMethod: String, configuration: AWSServiceConfig) throws {
+    internal init(operation operationName: String, path: String, httpMethod: HTTPMethod, configuration: AWSServiceConfig) throws {
         var headers = HTTPHeaders()
 
         guard let url = URL(string: "\(configuration.endpoint)\(path)"), let _ = url.host else {
@@ -119,7 +118,7 @@ extension AWSRequest {
     internal init<Input: AWSEncodableShape>(
         operation operationName: String,
         path: String,
-        httpMethod: String,
+        httpMethod: HTTPMethod,
         input: Input,
         configuration: AWSServiceConfig) throws
     {
@@ -209,7 +208,7 @@ extension AWSRequest {
             dict["Version"] = configuration.apiVersion
 
             switch httpMethod {
-            case "GET":
+            case .GET:
                 queryParams.append(contentsOf: dict.map {(key:$0.key, value:$0)})
             default:
                 if let urlEncodedQueryParams = Self.urlEncodeQueryParams(fromDictionary: dict) {
@@ -292,7 +291,7 @@ extension AWSRequest {
         guard httpHeaders["content-type"].first == nil else {
             return
         }
-        guard httpMethod != "GET", httpMethod != "HEAD" else {
+        guard httpMethod != .GET, httpMethod != .HEAD else {
             return
         }
 

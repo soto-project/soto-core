@@ -194,7 +194,7 @@ extension AWSClient {
     public func execute<Input: AWSEncodableShape>(
         operation operationName: String,
         path: String,
-        httpMethod: String,
+        httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         input: Input,
         on eventLoop: EventLoop? = nil
@@ -230,7 +230,7 @@ extension AWSClient {
     public func execute(
         operation operationName: String,
         path: String,
-        httpMethod: String,
+        httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Void> {
@@ -265,7 +265,7 @@ extension AWSClient {
     public func execute<Output: AWSDecodableShape>(
         operation operationName: String,
         path: String,
-        httpMethod: String,
+        httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Output> {
@@ -300,7 +300,7 @@ extension AWSClient {
     public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(
         operation operationName: String,
         path: String,
-        httpMethod: String,
+        httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         input: Input,
         on eventLoop: EventLoop? = nil
@@ -337,7 +337,7 @@ extension AWSClient {
     public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(
         operation operationName: String,
         path: String,
-        httpMethod: String,
+        httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         input: Input,
         on eventLoop: EventLoop? = nil,

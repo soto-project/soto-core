@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import Logging
 @testable import AWSSDKSwiftCore
 
 @propertyWrapper public struct EnvironmentVariable<Value: LosslessStringConvertible> {
@@ -36,13 +37,15 @@ public func createAWSClient(
     credentialProvider: CredentialProviderFactory = .default,
     retryPolicy: RetryPolicyFactory = .noRetry,
     middlewares: [AWSServiceMiddleware] = [],
-    httpClientProvider: AWSClient.HTTPClientProvider = .createNew
+    httpClientProvider: AWSClient.HTTPClientProvider = .createNew,
+    logger: Logger = AWSClient.loggingDisabled
 ) -> AWSClient {
     return AWSClient(
         credentialProvider: credentialProvider,
         retryPolicy: retryPolicy,
         middlewares: middlewares,
-        httpClientProvider: httpClientProvider
+        httpClientProvider: httpClientProvider,
+        logger: logger
     )
 }
 

@@ -20,3 +20,12 @@ public struct CredentialProviderError: Error, Equatable {
 
     public static var noProvider: CredentialProviderError { return .init(error: .noProvider) }
 }
+
+extension CredentialProviderError: CustomStringConvertible {
+    public var description: String {
+        switch error {
+        case .noProvider:
+            return "No credential provider found"
+        }
+    }
+}

@@ -35,8 +35,8 @@ class LoggingTests: XCTestCase {
             endpoint: server.address
         )
 
-        let response = client.execute(operation: "test1", path: "/", httpMethod: "GET", serviceConfig: config, logger: logger)
-        let response2 = client.execute(operation: "test2", path: "/", httpMethod: "GET", serviceConfig: config, logger: logger)
+        let response = client.execute(operation: "test1", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
+        let response2 = client.execute(operation: "test2", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
 
         var count = 0
         XCTAssertNoThrow(try server.processRaw { request in
@@ -73,7 +73,7 @@ class LoggingTests: XCTestCase {
             endpoint: server.address
         )
 
-        let response = client.execute(operation: "test", path: "/", httpMethod: "GET", serviceConfig: config, logger: logger)
+        let response = client.execute(operation: "test", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
 
         XCTAssertNoThrow(try server.processRaw { request in
             return .error(.accessDenied, continueProcessing: false)
@@ -99,7 +99,7 @@ class LoggingTests: XCTestCase {
             endpoint: server.address
         )
 
-        let response = client.execute(operation: "test1", path: "/", httpMethod: "GET", serviceConfig: config, logger: logger)
+        let response = client.execute(operation: "test1", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
 
         var count = 0
         XCTAssertNoThrow(try server.processRaw { request in
@@ -126,7 +126,7 @@ class LoggingTests: XCTestCase {
         XCTAssertThrowsError(try client.execute(
             operation: "Test",
             path: "/",
-            httpMethod: "GET",
+            httpMethod: .GET,
             serviceConfig: serviceConfig,
             logger: logger
         ).wait())

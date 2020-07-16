@@ -28,7 +28,7 @@ class CredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
         let loop = group.next()
         var returned: Credential?
-        XCTAssertNoThrow(returned = try cred.getCredential(on: loop).wait())
+        XCTAssertNoThrow(returned = try cred.getCredential(on: loop, logger: AWSClient.loggingDisabled).wait())
 
         XCTAssertEqual(returned as? StaticCredential, cred)
     }

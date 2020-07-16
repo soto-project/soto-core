@@ -138,7 +138,7 @@ class MetaDataCredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try testServer.stop()) }
         let customEC2: CredentialProviderFactory = .custom { context in
             let client = InstanceMetaDataClient(httpClient: context.httpClient, host: testServer.address)
-            return RotatingCredentialProvider(eventLoop: context.eventLoop, provider: client)
+            return RotatingCredentialProvider(context: context, provider: client)
         }
         
         let client = createAWSClient(credentialProvider: customEC2)

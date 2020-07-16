@@ -184,10 +184,10 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
         let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
         
-        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop))
+        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, logger: AWSClient.loggingDisabled))
         
         var credential: Credential?
-        XCTAssertNoThrow(credential = try provider.getCredential(on: eventLoop).wait())
+        XCTAssertNoThrow(credential = try provider.getCredential(on: eventLoop, logger: AWSClient.loggingDisabled).wait())
         XCTAssertEqual(credential?.accessKeyId, "AWSACCESSKEYID")
         XCTAssertEqual(credential?.secretAccessKey, "AWSSECRETACCESSKEY")
     }
@@ -203,9 +203,9 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
         let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
         
-        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop))
+        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, logger: AWSClient.loggingDisabled))
         
-        XCTAssertThrowsError(_ = try provider.getCredential(on: eventLoop).wait()) { (error) in
+        XCTAssertThrowsError(_ = try provider.getCredential(on: eventLoop, logger: AWSClient.loggingDisabled).wait()) { (error) in
             print("\(error)")
             XCTAssertEqual(error as? CredentialProviderError, .noProvider)
         }

@@ -53,7 +53,7 @@ public final class AWSClient {
         case createNew
     }
 
-    public static let loggingDisabled = Logger(label: "AWS-do-not-log", factory: { _ in NoOpLogHandler() })
+    public static let loggingDisabled = Logger(label: "AWS-do-not-log", factory: { _ in SwiftLogNoOpLogHandler() })
     static let globalRequestID = NIOAtomic<Int>.makeAtomic(value: 0)
 
     /// AWS credentials provider

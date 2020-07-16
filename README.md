@@ -21,28 +21,6 @@ Versions 4.x of aws-sdk-swift-core are dependent on swift-nio 2, this means cert
 | 3.x     | 4.2 - | ✓     |        | Ubuntu 14.04-18.04 | 3.0    |
 | 4.x     | 5.0 - | ✓     | 12.0 - | Ubuntu 14.04-18.04 | 4.0    |
 
-## Example Package.swift
-
-```swift
-// swift-tools-version:5.0
-import PackageDescription
-
-let package = Package(
-    name: "MyAWSTool",
-    dependencies: [
-        .package(url: "https://github.com/swift-aws/aws-sdk-swift", from: "4.0.0"),
-    ],
-    targets: [
-        .target(
-            name: "MyAWSTool",
-            dependencies: ["CloudFront", "ELB", "IAM",  "S3"]),
-        .testTarget(
-            name: "MyAWSToolTests",
-            dependencies: ["MyAWSTool"]),
-    ]
-)
-```
-
 ## License
 
 `aws-sdk-swift-core` is released under the Apache 2.0 license. See LICENSE for details.

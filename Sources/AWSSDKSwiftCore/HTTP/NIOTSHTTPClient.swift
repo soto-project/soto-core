@@ -20,6 +20,7 @@
 #if canImport(Network)
 
 import Foundation
+import Logging
 import Network
 import NIO
 import NIOConcurrencyHelpers
@@ -241,7 +242,7 @@ public final class NIOTSHTTPClient {
 @available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)
 extension NIOTSHTTPClient: AWSHTTPClient {
 
-    public func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop) -> EventLoopFuture<AWSHTTPResponse> {
+    public func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<AWSHTTPResponse> {
         var head = HTTPRequestHead(
           version: HTTPVersion(major: 1, minor: 1),
           method: request.method,

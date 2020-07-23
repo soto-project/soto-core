@@ -230,7 +230,7 @@ class PerformanceTests: XCTestCase {
             configuration: config
         ).applyMiddlewares(config.middlewares + client.middlewares)
         
-        let signer = try! client.createSigner(serviceConfig: config).wait()
+        let signer = try! client.createSigner(serviceConfig: config, logger: AWSClient.loggingDisabled).wait()
         measure {
             for _ in 0..<1000 {
                 _ = awsRequest.createHTTPRequest(signer: signer)

@@ -215,7 +215,7 @@ class AWSResponseTests: XCTestCase {
         
         var awsResponse: AWSResponse? = nil
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .json(version: "1.1"), raw: false))
-        let error = awsResponse?.generateError(serviceConfig: service)
+        let error = awsResponse?.generateError(serviceConfig: service, logger: AWSClient.loggingDisabled)
         XCTAssertEqual(error as? ServiceErrorType, .resourceNotFoundException(message: "Donald Where's Your Troosers?"))
     }
 
@@ -229,7 +229,7 @@ class AWSResponseTests: XCTestCase {
         
         var awsResponse: AWSResponse? = nil
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml, raw: false))
-        let error = awsResponse?.generateError(serviceConfig: service)
+        let error = awsResponse?.generateError(serviceConfig: service, logger: AWSClient.loggingDisabled)
         XCTAssertEqual(error as? ServiceErrorType, .noSuchKey(message: "It doesn't exist"))
     }
 
@@ -243,7 +243,7 @@ class AWSResponseTests: XCTestCase {
         
         var awsResponse: AWSResponse? = nil
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .query, raw: false))
-        let error = awsResponse?.generateError(serviceConfig: queryService)
+        let error = awsResponse?.generateError(serviceConfig: queryService, logger: AWSClient.loggingDisabled)
         XCTAssertEqual(error as? ServiceErrorType, .messageRejected(message: "Don't like it"))
     }
 
@@ -257,7 +257,7 @@ class AWSResponseTests: XCTestCase {
         
         var awsResponse: AWSResponse? = nil
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .ec2, raw: false))
-        let error = awsResponse?.generateError(serviceConfig: service) as? AWSResponseError
+        let error = awsResponse?.generateError(serviceConfig: service, logger: AWSClient.loggingDisabled) as? AWSResponseError
         XCTAssertEqual(error?.errorCode, "NoSuchKey")
         XCTAssertEqual(error?.message, "It doesn't exist")
     }

@@ -14,6 +14,7 @@
 
 import XCTest
 import AsyncHTTPClient
+import Logging
 import NIO
 import NIOConcurrencyHelpers
 import NIOFoundationCompat
@@ -23,6 +24,7 @@ import AWSXML
 @testable import AWSSDKSwiftCore
 
 class AWSClientTests: XCTestCase {
+    let logger = Logger(label: "AWSClientTests")
 
     func testGetCredential() {
         let client = createAWSClient(credentialProvider: .static(accessKeyId: "key", secretAccessKey: "secret"))
@@ -272,7 +274,7 @@ class AWSClientTests: XCTestCase {
                 return eventLoop.makeSucceededFuture(.byteBuffer(buffer))
             }
             let input = Input(payload: payload)
-            let response = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input)
+            let response = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: logger)
             try response.wait()
         } catch AWSClient.ClientError.tooMuchData {
         } catch {
@@ -474,7 +476,7 @@ class AWSClientTests: XCTestCase {
                 XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try httpClient.syncShutdown())
             }
-            let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config)
+            let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, logger: logger)
 
             var count = 0
             try awsServer.processRaw { request in
@@ -511,7 +513,7 @@ class AWSClientTests: XCTestCase {
                 XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try httpClient.syncShutdown())
             }
-            let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config)
+            let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, logger: logger)
 
             try awsServer.processRaw { request in
                 return .error(.accessDenied, continueProcessing: false)
@@ -658,7 +660,7 @@ class AWSClientTests: XCTestCase {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
         }
-        
+
         let response = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config)
 
         XCTAssertNoThrow(try awsServer.processRaw { request in

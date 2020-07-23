@@ -21,6 +21,7 @@ import class Foundation.DateFormatter
 import class Foundation.JSONDecoder
 
 import AWSSignerV4
+import Logging
 import NIO
 import NIOConcurrencyHelpers
 import NIOHTTP1
@@ -28,13 +29,13 @@ import NIOHTTP1
 /// protocol to get Credentials from the Client. With this the AWSClient requests the credentials for request signing from ecs and ec2.
 public protocol MetaDataClient: CredentialProvider {
     associatedtype MetaData: ExpiringCredential & Decodable
-    
-    func getMetaData(on eventLoop: EventLoop) -> EventLoopFuture<MetaData>
+
+    func getMetaData(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<MetaData>
 }
 
 extension MetaDataClient {
-    public func getCredential(on eventLoop: EventLoop) -> EventLoopFuture<Credential> {
-        self.getMetaData(on: eventLoop).map { (metaData) in
+    public func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
+        self.getMetaData(on: eventLoop, logger: logger).map { (metaData) in
             metaData
         }
     }
@@ -50,7 +51,7 @@ enum MetaDataClientError: Error {
 }
 
 extension MetaDataClient {
-    
+
     static func createJSONDecoder() -> JSONDecoder {
         let decoder = JSONDecoder()
         // set JSON decoding strategy for dates
@@ -59,26 +60,26 @@ extension MetaDataClient {
         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
         dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
         decoder.dateDecodingStrategy = .formatted(dateFormatter)
-        
+
         return decoder
     }
-    
+
 }
 
 
 struct ECSMetaDataClient: MetaDataClient {
     public typealias MetaData = ECSMetaData
-    
+
     static let Host = "http://169.254.170.2"
     static let RelativeURIEnvironmentName = "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"
-    
+
     struct ECSMetaData: ExpiringCredential, Decodable {
         let accessKeyId: String
         let secretAccessKey: String
         let token: String
         let expiration: Date
         let roleArn: String
-        
+
         var sessionToken: String? {
             self.token
         }
@@ -95,22 +96,22 @@ struct ECSMetaDataClient: MetaDataClient {
             case roleArn = "RoleArn"
         }
     }
-    
+
     let httpClient    : AWSHTTPClient
     let endpointURL   : String
     let decoder       = Self.createJSONDecoder()
-    
+
     init?(httpClient: AWSHTTPClient, host: String = ECSMetaDataClient.Host) {
         guard let relativeURL = Environment[Self.RelativeURIEnvironmentName] else {
             return nil
         }
-        
+
         self.httpClient     = httpClient
         self.endpointURL    = "\(host)\(relativeURL)"
     }
-    
-    func getMetaData(on eventLoop: EventLoop) -> EventLoopFuture<ECSMetaData> {
-        return request(url: endpointURL, timeout: 2, on: eventLoop)
+
+    func getMetaData(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<ECSMetaData> {
+        return request(url: endpointURL, timeout: 2, on: eventLoop, logger: logger)
             .flatMapThrowing { response in
                 guard let body = response.body else {
                     throw MetaDataClientError.missingMetaData
@@ -118,10 +119,10 @@ struct ECSMetaDataClient: MetaDataClient {
                 return try self.decoder.decode(MetaData.self, from: body)
             }
     }
-    
-    private func request(url: String, timeout: TimeInterval, on eventLoop: EventLoop) -> EventLoopFuture<AWSHTTPResponse> {
+
+    private func request(url: String, timeout: TimeInterval, on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<AWSHTTPResponse> {
         let request = AWSHTTPRequest(url: URL(string: url)!, method: .GET, headers: [:], body: .empty)
-        return httpClient.execute(request: request, timeout: TimeAmount.seconds(2), on: eventLoop, logger: AWSClient.loggingDisabled)
+        return httpClient.execute(request: request, timeout: TimeAmount.seconds(2), on: eventLoop, logger: logger)
     }
 }
 
@@ -129,13 +130,13 @@ struct ECSMetaDataClient: MetaDataClient {
 /// Provide AWS credentials for instances
 struct InstanceMetaDataClient: MetaDataClient {
     typealias MetaData = InstanceMetaData
-    
+
     static let Host = "http://169.254.169.254"
     static let CredentialUri = "/latest/meta-data/iam/security-credentials/"
     static let TokenUri = "/latest/api/token"
     static let TokenTimeToLiveHeader = (name: "X-aws-ec2-metadata-token-ttl-seconds", value: "21600")
     static let TokenHeaderName = "X-aws-ec2-metadata-token"
-    
+
     struct InstanceMetaData: ExpiringCredential, Decodable {
         let accessKeyId: String
         let secretAccessKey: String
@@ -163,40 +164,45 @@ struct InstanceMetaDataClient: MetaDataClient {
             case type = "Type"
         }
     }
-  
+
     private var tokenURL: URL {
         return URL(string: "\(self.host)\(Self.TokenUri)")!
     }
     private var credentialURL: URL {
         return URL(string: "\(self.host)\(Self.CredentialUri)")!
     }
-    
+
     let httpClient: AWSHTTPClient
     let host      : String
     let decoder   = Self.createJSONDecoder()
-  
+
     init(httpClient: AWSHTTPClient, host: String = InstanceMetaDataClient.Host) {
         self.httpClient = httpClient
         self.host       = host
     }
-    
-    func getMetaData(on eventLoop: EventLoop) -> EventLoopFuture<InstanceMetaData> {
-        return getToken(on: eventLoop)
+
+    func getMetaData(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<InstanceMetaData> {
+        return getToken(on: eventLoop, logger: logger)
             .map() { token in
-                HTTPHeaders([(Self.TokenHeaderName, token)])
+                logger.info("Found IMDSv2 token")
+                return HTTPHeaders([(Self.TokenHeaderName, token)])
             }
             .flatMapErrorThrowing() { error in
                 // If we didn't find a session key then assume we are running IMDSv1.
                 // (we could be running from a Docker container and the hop count for the PUT
                 // request is still set to 1)
-                HTTPHeaders()
+                logger.info("Did not find IMDSv2 token, use IMDSv1")
+                return HTTPHeaders()
             }
             .flatMap { (headers) -> EventLoopFuture<(AWSHTTPResponse, HTTPHeaders)> in
                 // next we need to request the rolename
-                self.request(url: self.credentialURL,
-                             method: .GET,
-                             headers: headers,
-                             on: eventLoop).map() { ($0, headers) }
+                self.request(
+                    url: self.credentialURL,
+                    method: .GET,
+                    headers: headers,
+                    on: eventLoop,
+                    logger: logger
+                ).map() { ($0, headers) }
             }
             .flatMapThrowing { (response, headers) -> (String, HTTPHeaders) in
                 // the rolename is in the body
@@ -213,41 +219,47 @@ struct InstanceMetaDataClient: MetaDataClient {
             .flatMap { (roleName, headers) -> EventLoopFuture<AWSHTTPResponse> in
                 // request credentials with the rolename
                 let url = self.credentialURL.appendingPathComponent(roleName)
-                return self.request(url: url, headers: headers, on: eventLoop)
+                return self.request(url: url, headers: headers, on: eventLoop, logger: logger)
             }
             .flatMapThrowing { (response) in
                 // decode the repsonse payload into the metadata object
                 guard let body = response.body else {
                     throw MetaDataClientError.missingMetaData
                 }
-                
+
                 return try self.decoder.decode(InstanceMetaData.self, from: body)
             }
     }
-        
-    func getToken(on eventLoop: EventLoop) -> EventLoopFuture<String> {
-        return request(url: self.tokenURL, method: .PUT, headers: HTTPHeaders([Self.TokenTimeToLiveHeader]), timeout: .seconds(2), on: eventLoop)
-            .flatMapThrowing { response in
-                guard response.status == .ok else {
-                    throw MetaDataClientError.unexpectedTokenResponseStatus(status: response.status)
-                }
-                
-                guard var body = response.body, let token = body.readString(length: body.readableBytes) else {
-                    throw MetaDataClientError.couldNotReadTokenFromResponse
-                }
-                return token
+
+    func getToken(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<String> {
+        return request(
+            url: self.tokenURL,
+            method: .PUT,
+            headers: HTTPHeaders([Self.TokenTimeToLiveHeader]), timeout: .seconds(2),
+            on: eventLoop,
+            logger: logger
+        ).flatMapThrowing { response in
+            guard response.status == .ok else {
+                throw MetaDataClientError.unexpectedTokenResponseStatus(status: response.status)
             }
+
+            guard var body = response.body, let token = body.readString(length: body.readableBytes) else {
+                throw MetaDataClientError.couldNotReadTokenFromResponse
+            }
+            return token
+        }
     }
-    
+
     private func request(
         url: URL,
         method: HTTPMethod = .GET,
         headers: HTTPHeaders = .init(),
         timeout: TimeAmount = .seconds(2),
-        on eventLoop: EventLoop) -> EventLoopFuture<AWSHTTPResponse>
+        on eventLoop: EventLoop,
+        logger: Logger
+    ) -> EventLoopFuture<AWSHTTPResponse>
     {
         let request = AWSHTTPRequest(url: url, method: method, headers: headers, body: .empty)
-        return httpClient.execute(request: request, timeout: timeout, on: eventLoop, logger: AWSClient.loggingDisabled)
+        return httpClient.execute(request: request, timeout: timeout, on: eventLoop, logger: logger)
     }
 }
-

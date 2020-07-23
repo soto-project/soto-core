@@ -15,6 +15,8 @@
 @_exported import protocol AWSSignerV4.Credential
 @_exported import struct AWSSignerV4.StaticCredential
 
+@_exported import struct Logging.Logger
+
 @_exported import struct NIO.ByteBuffer
 @_exported import protocol NIO.EventLoop
 @_exported import class NIO.EventLoopFuture

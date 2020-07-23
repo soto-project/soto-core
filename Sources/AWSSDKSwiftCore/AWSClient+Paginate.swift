@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Logging
 import NIO
 
 /// protocol for all AWSShapes that can be paginated.
@@ -34,16 +35,17 @@ extension AWSClient {
     ///   - onPage: closure called with each block of entries
     public func paginate<Input: AWSPaginateToken, Output: AWSShape>(
         input: Input,
-        command: @escaping (Input, EventLoop?)->EventLoopFuture<Output>,
+        command: @escaping (Input, EventLoop?, Logger)->EventLoopFuture<Output>,
         tokenKey: KeyPath<Output, Input.Token?>,
         on eventLoop: EventLoop? = nil,
+        logger: Logger = AWSClient.loggingDisabled,
         onPage: @escaping (Output, EventLoop)->EventLoopFuture<Bool>
     ) -> EventLoopFuture<Void> {
         let eventLoop = eventLoop ?? self.eventLoopGroup.next()
         let promise = eventLoop.makePromise(of: Void.self)
 
         func paginatePart(input: Input) {
-            let responseFuture = command(input, eventLoop)
+            let responseFuture = command(input, eventLoop, logger)
                 .flatMap { response in
                     return onPage(response, eventLoop)
                         .map { (rt)->Void in

@@ -64,8 +64,16 @@ class PaginateTests: XCTestCase {
         let outputToken: Int?
     }
 
-    func counter(_ input: CounterInput, on eventLoop: EventLoop?) -> EventLoopFuture<CounterOutput> {
-        return client.execute(operation: "TestOperation", path: "/", httpMethod: .POST, serviceConfig: config, input: input, on: eventLoop)
+    func counter(_ input: CounterInput, on eventLoop: EventLoop?, logger: Logger) -> EventLoopFuture<CounterOutput> {
+        return client.execute(
+            operation: "TestOperation",
+            path: "/",
+            httpMethod: .POST,
+            serviceConfig: config,
+            input: input,
+            on: eventLoop,
+            logger: logger
+        )
     }
 
     func counterPaginator(_ input: CounterInput, onPage: @escaping (CounterOutput, EventLoop)->EventLoopFuture<Bool>) -> EventLoopFuture<Void> {
@@ -128,12 +136,26 @@ class PaginateTests: XCTestCase {
         let outputToken: String?
     }
 
-    func stringList(_ input: StringListInput, on eventLoop: EventLoop? = nil) -> EventLoopFuture<StringListOutput> {
-        return client.execute(operation: "TestOperation", path: "/", httpMethod: .POST, serviceConfig: config, input: input, on: eventLoop)
+    func stringList(_ input: StringListInput, on eventLoop: EventLoop? = nil, logger: Logger) -> EventLoopFuture<StringListOutput> {
+        return client.execute(
+            operation: "TestOperation",
+            path: "/",
+            httpMethod: .POST,
+            serviceConfig: config,
+            input: input,
+            on: eventLoop,
+            logger: logger
+        )
     }
 
     func stringListPaginator(_ input: StringListInput, on eventLoop: EventLoop? = nil, onPage: @escaping (StringListOutput, EventLoop)->EventLoopFuture<Bool>) -> EventLoopFuture<Void> {
-        return client.paginate(input: input, command: stringList, tokenKey: \StringListOutput.outputToken, on: eventLoop, onPage: onPage)
+        return client.paginate(
+            input: input,
+            command: stringList,
+            tokenKey: \StringListOutput.outputToken,
+            on: eventLoop,
+            onPage: onPage
+        )
     }
 
     // create list of unique strings

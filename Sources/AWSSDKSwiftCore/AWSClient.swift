@@ -474,7 +474,7 @@ extension AWSClient {
         logger.info("AWS Request")
 
         return future.map { response in
-            logger.info("AWS Response")
+            logger.trace("AWS Response")
             Metrics.Timer(
                 label: "aws_request_duration",
                 dimensions: dimensions,

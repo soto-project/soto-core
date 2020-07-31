@@ -228,7 +228,7 @@ public struct AWSResponse {
                 code = String(code[code.index(index, offsetBy: 1)...])
             }
 
-            logger.error("AWS error", metadata: [
+            logger.error("AWS Error", metadata: [
                 "aws-error-code": .string(code),
                 "aws-error-message": .string(errorMessage.message)
             ])

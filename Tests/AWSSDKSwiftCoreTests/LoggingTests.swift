@@ -60,7 +60,8 @@ class LoggingTests: XCTestCase {
 
     func testAWSRequestResponse() throws {
         let logCollection = LoggingCollector.Logs()
-        let logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection)})
+        var logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection)})
+        logger.logLevel = .trace
         let server = AWSTestServer(serviceProtocol: .json)
         defer { XCTAssertNoThrow(try server.stop()) }
         let client = AWSClient(
@@ -86,7 +87,7 @@ class LoggingTests: XCTestCase {
         XCTAssertEqual(requestEntry.metadata["aws-operation"], "TestOperation")
         XCTAssertEqual(requestEntry.metadata["aws-service"], "test-service")
         let responseEntry = try XCTUnwrap(logCollection.filter(message: "AWS Response").first)
-        XCTAssertEqual(responseEntry.level, .info)
+        XCTAssertEqual(responseEntry.level, .trace)
         XCTAssertEqual(responseEntry.metadata["aws-operation"], "TestOperation")
         XCTAssertEqual(responseEntry.metadata["aws-service"], "test-service")
     }
@@ -113,7 +114,7 @@ class LoggingTests: XCTestCase {
         })
 
         XCTAssertThrowsError(_ = try response.wait())
-        XCTAssertEqual(logCollection.filter(metadata: "aws-error-code", with: "AccessDenied").first?.message, "AWS error")
+        XCTAssertEqual(logCollection.filter(metadata: "aws-error-code", with: "AccessDenied").first?.message, "AWS Error")
         XCTAssertEqual(logCollection.filter(metadata: "aws-error-code", with: "AccessDenied").first?.level, .error)
     }
 
@@ -195,7 +196,7 @@ struct LoggingCollector: LogHandler {
         }
 
         func filter(message: String) -> [Entry] {
-            return allEntries.filter { $0.message != message }
+            return allEntries.filter { $0.message == message }
         }
         
         func filter(metadata: String) -> [Entry] {

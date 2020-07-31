@@ -217,7 +217,6 @@ extension AWSClient {
     ) -> EventLoopFuture<Void> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName, service: serviceConfig.service)
-        logger.trace("AWS Request")
         let future: EventLoopFuture<Void> = credentialProvider.getCredential(on: eventLoop, logger: logger).flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
             let awsRequest = try AWSRequest(

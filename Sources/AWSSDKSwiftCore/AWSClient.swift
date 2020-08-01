@@ -109,7 +109,12 @@ public final class AWSClient {
     deinit {
         assert(self.isShutdown.load(), "AWSClient not shut down before the deinit. Please call client.syncShutdown() when no longer needed.")
     }
-
+    
+    /// Shutdown client synchronously. Before an AWSClient is deleted you need to call this function or the async version `shutdown`
+    /// to do a clean shutdown of the client. It cleans up CredentialProvider tasks and shuts down the HTTP client if it was created by this
+    /// AWSClient.
+    ///
+    /// - Throws: AWSClient.ClientError.alreadyShutdown: You have already shutdown the client
     public func syncShutdown() throws {
         guard self.isShutdown.compareAndExchange(expected: false, desired: true) else {
             throw ClientError.alreadyShutdown
@@ -124,6 +129,35 @@ public final class AWSClient {
                 clientLogger.error("Error shutting down HTTP client", metadata: [
                     "aws-error": "\(error)"
                 ])
+            }
+        }
+    }
+
+    /// Shutdown AWSClient asynchronously. Before an AWSClient is deleted you need to call this function or the synchronous
+    /// version `syncShutdown` to do a clean shutdown of the client. It cleans up CredentialProvider tasks and shuts down
+    /// the HTTP client if it was created by this AWSClient. Given we could be destroying the EventLoopGroup the client
+    /// uses, we have to use a DispatchQueue to run some of this work on.
+    ///
+    /// - Parameters:
+    ///   - queue: Dispatch Queue to run shutdown on
+    ///   - callback: Callback called when shutdown is complete. If there was an error it will return with Error in callback
+    public func shutdown(queue: DispatchQueue = .global(), _ callback: @escaping (Error?) -> Void) {
+        guard self.isShutdown.compareAndExchange(expected: false, desired: true) else {
+            callback(ClientError.alreadyShutdown)
+            return
+        }
+        let eventLoop = eventLoopGroup.next()
+        // ignore errors from credential provider. Don't need shutdown erroring because no providers were available
+        _ = credentialProvider.shutdown(on: eventLoop).whenComplete { _ in
+            // if httpClient was created by AWSClient then it is required to shutdown the httpClient.
+            //
+            // Temporarily while we are waiting on AsyncHTTPClient 1.2.0 this will error if we need to
+            // shutdown the http client. Once 1.2.0 is released we can call the shutdown function instead
+            // for proper asynchronous shutdown.
+            if case .createNew = self.httpClientProvider {
+                preconditionFailure("Async shutdown of AWSClient initialised with httpClientProvider: .createNew is unavailable at the moment")
+            } else {
+                callback(nil)
             }
         }
     }

@@ -58,6 +58,25 @@ class AWSClientTests: XCTestCase {
         }
     }
 
+    func testShutdown() {
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+        let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+        defer { XCTAssertNoThrow(try httpClient.syncShutdown())}
+        let eventLoop = eventLoopGroup.next()
+        // currently only testing with httpClientProvider: .shared(httpClient)
+        let client = createAWSClient(httpClientProvider: .shared(httpClient))
+        let promise: EventLoopPromise<Void> = eventLoop.makePromise()
+        client.shutdown { error in
+            if let error = error {
+                promise.completeWith(.failure(error))
+            } else {
+                promise.completeWith(.success(()))
+            }
+        }
+        XCTAssertNoThrow(try promise.futureResult.wait())
+    }
+    
     func testHeadersAreWritten() {
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let elg = MultiThreadedEventLoopGroup(numberOfThreads: 1)

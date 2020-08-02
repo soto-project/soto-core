@@ -27,14 +27,14 @@ import NIOConcurrencyHelpers
 import NIOHTTP1
 
 /// protocol to get Credentials from the Client. With this the AWSClient requests the credentials for request signing from ecs and ec2.
-public protocol MetaDataClient: CredentialProvider {
+protocol MetaDataClient: CredentialProvider {
     associatedtype MetaData: ExpiringCredential & Decodable
 
     func getMetaData(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<MetaData>
 }
 
 extension MetaDataClient {
-    public func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
+    func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
         self.getMetaData(on: eventLoop, logger: logger).map { (metaData) in
             metaData
         }
@@ -68,7 +68,7 @@ extension MetaDataClient {
 
 
 struct ECSMetaDataClient: MetaDataClient {
-    public typealias MetaData = ECSMetaData
+    typealias MetaData = ECSMetaData
 
     static let Host = "http://169.254.170.2"
     static let RelativeURIEnvironmentName = "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"

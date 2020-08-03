@@ -37,7 +37,7 @@ class MetaDataCredentialProviderTests: XCTestCase {
         defer { Environment.unset(name: ECSMetaDataClient.RelativeURIEnvironmentName) }
 
         let client = ECSMetaDataClient(httpClient: httpClient, host: testServer.address)
-        let future = client!.getMetaData(on: loop, logger: AWSClient.loggingDisabled)
+        let future = client!.getMetaData(on: loop, logger: TestEnvironment.logger)
 
         XCTAssertNoThrow(try testServer.ecsMetadataServer(path: path))
 
@@ -86,7 +86,7 @@ class MetaDataCredentialProviderTests: XCTestCase {
         defer { Environment.unset(name: ECSMetaDataClient.RelativeURIEnvironmentName) }
 
         let client = InstanceMetaDataClient(httpClient: httpClient, host: testServer.address)
-        let future = client.getMetaData(on: loop, logger: AWSClient.loggingDisabled)
+        let future = client.getMetaData(on: loop, logger: TestEnvironment.logger)
 
         XCTAssertNoThrow(try testServer.ec2MetadataServer(version: .v2))
 
@@ -113,7 +113,7 @@ class MetaDataCredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try testServer.stop()) }
 
         let client = InstanceMetaDataClient(httpClient: httpClient, host: testServer.address)
-        let future = client.getMetaData(on: loop, logger: AWSClient.loggingDisabled)
+        let future = client.getMetaData(on: loop, logger: TestEnvironment.logger)
 
         XCTAssertNoThrow(try testServer.ec2MetadataServer(version: .v1))
 

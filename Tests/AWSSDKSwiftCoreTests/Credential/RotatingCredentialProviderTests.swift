@@ -14,6 +14,7 @@
 
 @testable import AWSSDKSwiftCore
 import AsyncHTTPClient
+import AWSTestUtils
 import Logging
 import NIO
 import NIOConcurrencyHelpers
@@ -54,12 +55,12 @@ class RotatingCredentialProviderTests: XCTestCase {
             hitCount += 1
             return $0.makeSucceededFuture(cred)
         }
-        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, logger: AWSClient.loggingDisabled)
+        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, logger: Logger(label: "aws-sdk-swift"))
         let provider = RotatingCredentialProvider(context: context, provider: client)
 
         // get credentials for first time
         var returned: Credential?
-        XCTAssertNoThrow(returned = try provider.getCredential(on: loop, logger: AWSClient.loggingDisabled).wait())
+        XCTAssertNoThrow(returned = try provider.getCredential(on: loop, logger: Logger(label: "aws-sdk-swift")).wait())
 
         XCTAssertEqual(returned?.accessKeyId, cred.accessKeyId)
         XCTAssertEqual(returned?.secretAccessKey, cred.secretAccessKey)
@@ -67,7 +68,7 @@ class RotatingCredentialProviderTests: XCTestCase {
         XCTAssertEqual((returned as? TestExpiringCredential)?.expiration, cred.expiration)
 
         // get credentials a second time, callback must not be hit
-        XCTAssertNoThrow(returned = try provider.getCredential(on: loop, logger: AWSClient.loggingDisabled).wait())
+        XCTAssertNoThrow(returned = try provider.getCredential(on: loop, logger: TestEnvironment.logger).wait())
         XCTAssertEqual(returned?.accessKeyId, cred.accessKeyId)
         XCTAssertEqual(returned?.secretAccessKey, cred.secretAccessKey)
         XCTAssertEqual(returned?.sessionToken, cred.sessionToken)
@@ -97,7 +98,7 @@ class RotatingCredentialProviderTests: XCTestCase {
             hitCount += 1
             return promise.futureResult
         }
-        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, logger: AWSClient.loggingDisabled)
+        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, logger: TestEnvironment.logger)
         let provider = RotatingCredentialProvider(context: context, provider: client)
 
         var resultFutures = [EventLoopFuture<Void>]()
@@ -114,7 +115,7 @@ class RotatingCredentialProviderTests: XCTestCase {
                     setupPromise.succeed(())
                 }
 
-                return provider.getCredential(on: loop, logger: AWSClient.loggingDisabled).map { returned in
+                return provider.getCredential(on: loop, logger: TestEnvironment.logger).map { returned in
                     // this should be executed after the promise is fulfilled.
                     XCTAssertEqual(returned.accessKeyId, cred.accessKeyId)
                     XCTAssertEqual(returned.secretAccessKey, cred.secretAccessKey)
@@ -157,14 +158,14 @@ class RotatingCredentialProviderTests: XCTestCase {
                 expiration: Date(timeIntervalSinceNow: 60 * 2))
             return eventLoop.makeSucceededFuture(cred)
         }
-        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, logger: AWSClient.loggingDisabled)
+        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, logger: TestEnvironment.logger)
         let provider = RotatingCredentialProvider(context: context, provider: client)
-        XCTAssertNoThrow(_ = try provider.getCredential(on: loop, logger: AWSClient.loggingDisabled).wait())
+        XCTAssertNoThrow(_ = try provider.getCredential(on: loop, logger: TestEnvironment.logger).wait())
         hitCount = 0
         
         let iterations = 100
         for _ in 0..<100 {
-            XCTAssertNoThrow(_ = try provider.getCredential(on: loop, logger: AWSClient.loggingDisabled).wait())
+            XCTAssertNoThrow(_ = try provider.getCredential(on: loop, logger: TestEnvironment.logger).wait())
         }
 
         // ensure callback was only hit once

@@ -36,9 +36,9 @@ import Logging
 public func createAWSClient(
     credentialProvider: CredentialProviderFactory = .default,
     retryPolicy: RetryPolicyFactory = .noRetry,
-    middlewares: [AWSServiceMiddleware] = [],
+    middlewares: [AWSServiceMiddleware] = TestEnvironment.middlewares,
     httpClientProvider: AWSClient.HTTPClientProvider = .createNew,
-    logger: Logger = AWSClient.loggingDisabled
+    logger: Logger = TestEnvironment.logger
 ) -> AWSClient {
     return AWSClient(
         credentialProvider: credentialProvider,
@@ -99,4 +99,24 @@ public func createRandomBuffer(_ w: UInt, _ z: UInt, size: Int) -> [UInt8] {
         data[i] = getUInt8()
     }
     return data
+}
+
+
+/// Provide various test environment variables
+public struct TestEnvironment {
+    /// current list of middleware
+    public static var middlewares: [AWSServiceMiddleware] {
+        return (Environment["AWS_ENABLE_LOGGING"] == "true") ? [AWSLoggingMiddleware()] : []
+    }
+
+    public static var logger: Logger = {
+        if let loggingLevel = Environment["AWS_LOG_LEVEL"] {
+            if let logLevel = Logger.Level(rawValue: loggingLevel.lowercased()) {
+                var logger = Logger(label: "aws-sdk-swift")
+                logger.logLevel = logLevel
+                return logger
+            }
+        }
+        return AWSClient.loggingDisabled
+    }()
 }

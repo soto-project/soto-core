@@ -35,7 +35,14 @@ class PayloadTests: XCTestCase {
                 XCTAssertNoThrow(try client.syncShutdown())
             }
             let input = DataPayload(data: payload)
-            let response = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input)
+            let response = client.execute(
+                operation: "test",
+                path: "/",
+                httpMethod: .POST,
+                serviceConfig: config,
+                input: input,
+                logger: TestEnvironment.logger
+            )
 
             try awsServer.processRaw { request in
                 XCTAssertEqual(request.body.getString(at: 0, length: request.body.readableBytes), expectedResult)
@@ -76,7 +83,13 @@ class PayloadTests: XCTestCase {
             defer {
                 XCTAssertNoThrow(try client.syncShutdown())
             }
-            let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config)
+            let response: EventLoopFuture<Output> = client.execute(
+                operation: "test",
+                path: "/",
+                httpMethod: .POST,
+                serviceConfig: config,
+                logger: TestEnvironment.logger
+            )
 
             try awsServer.processRaw { request in
                 var byteBuffer = ByteBufferAllocator().buffer(capacity: 0)

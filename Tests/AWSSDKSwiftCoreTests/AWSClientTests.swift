@@ -74,7 +74,7 @@ class AWSClientTests: XCTestCase {
         }
         XCTAssertNoThrow(try promise.futureResult.wait())
     }
-    
+
     func testHeadersAreWritten() {
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let elg = MultiThreadedEventLoopGroup(numberOfThreads: 1)
@@ -335,7 +335,7 @@ class AWSClientTests: XCTestCase {
                 XCTAssertNoThrow(try threadPool.syncShutdownGracefully())
             }
 
-            let input = Input(payload: .fileHandle(fileHandle, size: bufferSize, fileIO: fileIO))
+            let input = Input(payload: .fileHandle(fileHandle, size: bufferSize, fileIO: fileIO) { size in print(size) })
             let response = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: TestEnvironment.logger)
 
             try awsServer.processRaw { request in

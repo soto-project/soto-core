@@ -34,9 +34,13 @@ import struct Foundation.URLQueryItem
 /// which is then decoded to generate a `AWSShape` Output object. If it is not successful then `AWSClient` will throw an `AWSErrorType`.
 public final class AWSClient {
 
+    /// Errors returned by AWSClient code
     public enum ClientError: Swift.Error {
+        /// client has already been shutdown
         case alreadyShutdown
+        /// URL provided to client is invalid
         case invalidURL(String)
+        /// Too much data has been supplied for the Request
         case tooMuchData
     }
 
@@ -46,14 +50,16 @@ public final class AWSClient {
 
     /// Specifies how `HTTPClient` will be created and establishes lifecycle ownership.
     public enum HTTPClientProvider {
-        /// `HTTPClient` will be provided by the user. Owner of this group is responsible for its lifecycle. Any HTTPClient that conforms to
+        /// HTTP Client will be provided by the user. Owner of this group is responsible for its lifecycle. Any HTTPClient that conforms to
         /// `AWSHTTPClient` can be specified here including AsyncHTTPClient
         case shared(AWSHTTPClient)
-        /// `HTTPClient` will be created by the client. When `deinit` is called, created `HTTPClient` will be shut down as well.
+        /// HTTP Client will be created by the client. When `shutdown` is called, created `HTTPClient` will be shut down as well.
         case createNew
     }
 
+    /// default logger that logs nothing
     public static let loggingDisabled = Logger(label: "AWS-do-not-log", factory: { _ in SwiftLogNoOpLogHandler() })
+
     static let globalRequestID = NIOAtomic<Int>.makeAtomic(value: 0)
 
     /// AWS credentials provider
@@ -66,7 +72,7 @@ public final class AWSClient {
     let httpClientProvider: HTTPClientProvider
     /// EventLoopGroup used by AWSClient
     public var eventLoopGroup: EventLoopGroup { return httpClient.eventLoopGroup }
-    /// Retry Controller specifying what to do when a request fails
+    /// Retry policy specifying what to do when a request fails
     public let retryPolicy: RetryPolicy
     /// Logger used for non-request based output
     let clientLogger: Logger
@@ -79,6 +85,7 @@ public final class AWSClient {
     ///     - retryPolicy: Object returning whether retries should be attempted. Possible options are NoRetry(), ExponentialRetry() or JitterRetry()
     ///     - middlewares: Array of middlewares to apply to requests and responses
     ///     - httpClientProvider: HTTPClient to use. Use `.createNew` if you want the client to manage its own HTTPClient.
+    ///     - logger: Logger used to log background AWSClient events
     public init(
         credentialProvider credentialProviderFactory: CredentialProviderFactory = .default,
         retryPolicy retryPolicyFactory: RetryPolicyFactory = .default,
@@ -483,6 +490,7 @@ extension AWSClient {
 }
 
 extension AWSClient.ClientError: CustomStringConvertible {
+    /// return human readable description of error
     public var description: String {
         switch self {
         case .alreadyShutdown:

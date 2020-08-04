@@ -68,11 +68,13 @@ public struct AWSPayload {
         _ fileHandle: NIOFileHandle,
         size: Int? = nil,
         fileIO: NonBlockingFileIO,
-        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
+        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
+        callback: @escaping (Int) throws -> () = { _ in }
     ) -> Self {
         // use chunked reader buffer size to avoid allocating additional buffers when streaming data
         let blockSize = S3ChunkedStreamReader.bufferSize
         var leftToRead = size
+        var readSoFar = 0
         func stream(_ eventLoop: EventLoop) -> EventLoopFuture<StreamReaderResult> {
             // calculate how much data is left to read, if a file size was indicated
             var downloadSize = blockSize
@@ -80,10 +82,15 @@ public struct AWSPayload {
                 downloadSize = min(downloadSize, leftToRead2)
                 leftToRead = leftToRead2 - downloadSize
             }
+            do {
+                try callback(readSoFar)
+            } catch {
+                return eventLoop.makeFailedFuture(error)
+            }
             guard downloadSize > 0 else {
                 return eventLoop.makeSucceededFuture(.end)
             }
-
+            readSoFar += downloadSize
             let futureByteBuffer = fileIO.read(fileHandle: fileHandle, byteCount: downloadSize, allocator: byteBufferAllocator, eventLoop: eventLoop)
             return futureByteBuffer.map { byteBuffer in
                 precondition(leftToRead == nil || byteBuffer.readableBytes == downloadSize, "File did not have enough data")

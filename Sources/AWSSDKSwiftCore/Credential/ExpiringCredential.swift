@@ -24,4 +24,3 @@ public extension ExpiringCredential {
         isExpiring(within: 0)
     }
 }
-

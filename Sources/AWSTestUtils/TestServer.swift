@@ -22,7 +22,6 @@ import AWSXML
 
 /// Test server for AWSClient. Input and Output shapes are defined by process function
 public class AWSTestServer {
-
     public enum Error: Swift.Error {
         case notHead
         case notBody
@@ -31,12 +30,14 @@ public class AWSTestServer {
         case noXMLBody
         case corruptChunkedData
     }
+
     // what are we returning
     public enum ServiceProtocol {
         case restjson
         case json
         case xml
     }
+
     // http incoming request
     public struct Request {
         public let method: HTTPMethod
@@ -44,7 +45,7 @@ public class AWSTestServer {
         public let headers: [String: String]
         public let body: ByteBuffer
 
-        public init(method: HTTPMethod, uri: String, headers: [String : String], body: ByteBuffer) {
+        public init(method: HTTPMethod, uri: String, headers: [String: String], body: ByteBuffer) {
             self.method = method
             self.uri = uri
             self.headers = headers
@@ -73,8 +74,8 @@ public class AWSTestServer {
         public let errorCode: String
         public let message: String
 
-        public var json: String { return "{\"__type\":\"\(errorCode)\", \"message\": \"\(message)\"}"}
-        public var xml: String { return "<Error><Code>\(errorCode)</Code><Message>\(message)</Message></Error>"}
+        public var json: String { return "{\"__type\":\"\(errorCode)\", \"message\": \"\(message)\"}" }
+        public var xml: String { return "<Error><Code>\(errorCode)</Code><Message>\(message)</Message></Error>" }
 
         public static let badRequest = ErrorType(status: 400, errorCode: "BadRequest", message: "AWSTestServer_ErrorType_BadRequest")
         public static let accessDenied = ErrorType(status: 401, errorCode: "AccessDenied", message: "AWSTestServer_ErrorType_AccessDenied")
@@ -92,8 +93,8 @@ public class AWSTestServer {
         case error(ErrorType, continueProcessing: Bool = false)
     }
 
-    public var addressURL: URL { return URL(string: self.address)!}
-    public var address: String { return "http://\(self.host):\(web.serverPort)"}
+    public var addressURL: URL { return URL(string: self.address)! }
+    public var address: String { return "http://\(self.host):\(web.serverPort)" }
     public var host: String { return "localhost" }
     public var serverPort: Int { return web.serverPort }
     public let serviceProtocol: ServiceProtocol
@@ -101,7 +102,6 @@ public class AWSTestServer {
     let eventLoopGroup: EventLoopGroup
     let web: NIOHTTP1TestServer
     let byteBufferAllocator: ByteBufferAllocator
-
 
     public init(serviceProtocol: ServiceProtocol) {
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
@@ -113,12 +113,12 @@ public class AWSTestServer {
 
     /// run server reading request, convert from to an input shape processing them and converting the result back to a response.
     public func process<Input: Decodable, Output: Encodable>(_ process: (Input) throws -> Result<Output>) throws {
-        while(try processSingleRequest(process)) { }
+        while (try processSingleRequest(process)) {}
     }
 
     /// run server reading requests, processing them and returning responses
     public func processRaw(_ process: (Request) throws -> Result<Response>) throws {
-        while(try processSingleRawRequest(process)) { }
+        while (try processSingleRawRequest(process)) {}
     }
 
     public func stop() throws {
@@ -150,7 +150,7 @@ extension AWSTestServer {
             url: request.uri)
         let responseBody = try JSONEncoder().encodeAsByteBuffer(httpBinResponse, allocator: ByteBufferAllocator())
         let headers = [
-            "Content-Type":"application/json"
+            "Content-Type": "application/json"
         ]
         try writeResponse(Response(httpStatus: .ok, headers: headers, body: responseBody))
     }
@@ -251,13 +251,13 @@ extension AWSTestServer {
                 let headers: [String: String] = [:]
                 return .result(.init(httpStatus: .ok, headers: headers, body: responseBody), continueProcessing: true)
 
-            case (.GET, InstanceMetaDataClient.CredentialUri+ec2Role):
+            case (.GET, InstanceMetaDataClient.CredentialUri + ec2Role):
                 // credentials
                 let encoder = JSONEncoder()
                 encoder.dateEncodingStrategy = .formatted(dateFormatter)
                 let responseBody = try encoder.encodeAsByteBuffer(metaData, allocator: ByteBufferAllocator())
                 let headers = [
-                    "Content-Type":"application/json"
+                    "Content-Type": "application/json"
                 ]
                 return .result(.init(httpStatus: .ok, headers: headers, body: responseBody), continueProcessing: false)
             default:
@@ -280,7 +280,7 @@ extension AWSTestServer {
                 encoder.dateEncodingStrategy = .formatted(dateFormatter)
                 let responseBody = try encoder.encodeAsByteBuffer(metaData, allocator: ByteBufferAllocator())
                 let headers = [
-                    "Content-Type":"application/json"
+                    "Content-Type": "application/json"
                 ]
                 return .result(.init(httpStatus: .ok, headers: headers, body: responseBody), continueProcessing: false)
             }
@@ -309,13 +309,13 @@ extension AWSTestServer {
         let request = try readRequest()
 
         // Convert to Input AWSShape
-        guard let inputData = request.body.getData(at: 0, length: request.body.readableBytes) else {throw Error.emptyBody}
+        guard let inputData = request.body.getData(at: 0, length: request.body.readableBytes) else { throw Error.emptyBody }
         let input: Input
         switch serviceProtocol {
         case .json, .restjson:
             input = try JSONDecoder().decode(Input.self, from: inputData)
         case .xml:
-            guard let xmlNode = try XML.Document(data: inputData).rootElement() else {throw Error.noXMLBody}
+            guard let xmlNode = try XML.Document(data: inputData).rootElement() else { throw Error.noXMLBody }
             input = try XMLDecoder().decode(Input.self, from: xmlNode)
         }
 
@@ -359,7 +359,7 @@ extension AWSTestServer {
 
         func _readChunkSize(chunkSize: String, input: inout ByteBuffer) throws -> ReadChunkStatus {
             var chunkSize = chunkSize
-            while(input.readableBytes > 0) {
+            while (input.readableBytes > 0) {
                 guard let char = input.readString(length: 1) else { throw Error.corruptChunkedData }
                 chunkSize += char
                 if chunkSize.hasSuffix(";") {
@@ -373,7 +373,7 @@ extension AWSTestServer {
 
         func _readChunkEnd(chunkEnd: String, input: inout ByteBuffer) throws -> ReadChunkStatus {
             var chunkEnd = chunkEnd
-            while(input.readableBytes > 0) {
+            while (input.readableBytes > 0) {
                 guard let char = input.readString(length: 1) else { throw Error.corruptChunkedData }
                 chunkEnd += char
                 if chunkEnd == "\r\n" {
@@ -385,7 +385,7 @@ extension AWSTestServer {
             return .readingEnd(chunkEnd)
         }
 
-        while(input.readableBytes > 0) {
+        while (input.readableBytes > 0) {
             switch status {
             case .none:
                 status = try _readChunkSize(chunkSize: "", input: &input)
@@ -436,19 +436,19 @@ extension AWSTestServer {
         var byteBuffer = byteBufferAllocator.buffer(capacity: 0)
 
         // read inbound
-        guard case .head(let head) = try web.readInbound() else {throw Error.notHead}
+        guard case .head(let head) = try web.readInbound() else { throw Error.notHead }
         // is content-encoding: aws-chunked header set
         let isChunked = head.headers["Content-Encoding"].filter { $0 == "aws-chunked" }.count > 0
         var chunkStatus: ReadChunkStatus = .none
         // read body
-        while(true) {
+        while (true) {
             let inbound = try web.readInbound()
             if case .body(var buffer) = inbound {
                 if isChunked == true {
-                     chunkStatus = try readChunkedData(status: chunkStatus, input: &buffer, output: &byteBuffer)
-                 } else {
-                     byteBuffer.writeBuffer(&buffer)
-                 }
+                    chunkStatus = try readChunkedData(status: chunkStatus, input: &buffer, output: &byteBuffer)
+                } else {
+                    byteBuffer.writeBuffer(&buffer)
+                }
             } else if case .end(_) = inbound {
                 if isChunked == true {
                     switch chunkStatus {
@@ -478,8 +478,8 @@ extension AWSTestServer {
 
         do {
             try web.writeOutbound(.head(.init(version: .init(major: 1, minor: 1),
-                                               status: response.httpStatus,
-                                               headers: HTTPHeaders(headers.map { ($0,$1) }))))
+                                              status: response.httpStatus,
+                                              headers: HTTPHeaders(headers.map { ($0, $1) }))))
             if let body = response.body {
                 try web.writeOutbound(.body(.byteBuffer(body)))
             }
@@ -506,6 +506,6 @@ extension AWSTestServer {
         var byteBuffer = byteBufferAllocator.buffer(capacity: errorString.utf8.count)
         byteBuffer.writeString(errorString)
 
-        try writeResponse(Response(httpStatus: HTTPResponseStatus(statusCode:error.status), headers: headers, body: byteBuffer))
+        try writeResponse(Response(httpStatus: HTTPResponseStatus(statusCode: error.status), headers: headers, body: byteBuffer))
     }
 }

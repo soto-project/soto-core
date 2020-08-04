@@ -18,7 +18,6 @@ import AWSTestUtils
 @testable import AWSSDKSwiftCore
 
 class PayloadTests: XCTestCase {
-
     func testRequestPayload(_ payload: AWSPayload, expectedResult: String) {
         struct DataPayload: AWSEncodableShape & AWSShapeWithPayload {
             static var _payloadPath: String = "data"
@@ -71,7 +70,7 @@ class PayloadTests: XCTestCase {
     }
 
     func testResponsePayload() {
-        struct Output : AWSDecodableShape, AWSShapeWithPayload {
+        struct Output: AWSDecodableShape, AWSShapeWithPayload {
             static let _payloadPath: String = "payload"
             static let _payloadOptions: AWSShapePayloadOptions = .raw
             let payload: AWSPayload
@@ -101,7 +100,7 @@ class PayloadTests: XCTestCase {
             let output = try response.wait()
 
             XCTAssertEqual(output.payload.asString(), "testResponsePayload")
-            //XCTAssertEqual(output.i, 547)
+            // XCTAssertEqual(output.i, 547)
             try awsServer.stop()
         } catch {
             XCTFail("Unexpected error: \(error)")

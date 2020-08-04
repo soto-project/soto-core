@@ -51,7 +51,6 @@ enum MetaDataClientError: Error {
 }
 
 extension MetaDataClient {
-
     static func createJSONDecoder() -> JSONDecoder {
         let decoder = JSONDecoder()
         // set JSON decoding strategy for dates
@@ -63,9 +62,7 @@ extension MetaDataClient {
 
         return decoder
     }
-
 }
-
 
 struct ECSMetaDataClient: MetaDataClient {
     typealias MetaData = ECSMetaData
@@ -97,17 +94,17 @@ struct ECSMetaDataClient: MetaDataClient {
         }
     }
 
-    let httpClient    : AWSHTTPClient
-    let endpointURL   : String
-    let decoder       = Self.createJSONDecoder()
+    let httpClient: AWSHTTPClient
+    let endpointURL: String
+    let decoder = Self.createJSONDecoder()
 
     init?(httpClient: AWSHTTPClient, host: String = ECSMetaDataClient.Host) {
         guard let relativeURL = Environment[Self.RelativeURIEnvironmentName] else {
             return nil
         }
 
-        self.httpClient     = httpClient
-        self.endpointURL    = "\(host)\(relativeURL)"
+        self.httpClient = httpClient
+        self.endpointURL = "\(host)\(relativeURL)"
     }
 
     func getMetaData(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<ECSMetaData> {
@@ -126,7 +123,8 @@ struct ECSMetaDataClient: MetaDataClient {
     }
 }
 
-//MARK: InstanceMetaDataServiceProvider
+// MARK: InstanceMetaDataServiceProvider
+
 /// Provide AWS credentials for instances
 struct InstanceMetaDataClient: MetaDataClient {
     typealias MetaData = InstanceMetaData
@@ -168,17 +166,18 @@ struct InstanceMetaDataClient: MetaDataClient {
     private var tokenURL: URL {
         return URL(string: "\(self.host)\(Self.TokenUri)")!
     }
+
     private var credentialURL: URL {
         return URL(string: "\(self.host)\(Self.CredentialUri)")!
     }
 
     let httpClient: AWSHTTPClient
-    let host      : String
-    let decoder   = Self.createJSONDecoder()
+    let host: String
+    let decoder = Self.createJSONDecoder()
 
     init(httpClient: AWSHTTPClient, host: String = InstanceMetaDataClient.Host) {
         self.httpClient = httpClient
-        self.host       = host
+        self.host = host
     }
 
     func getMetaData(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<InstanceMetaData> {
@@ -257,8 +256,7 @@ struct InstanceMetaDataClient: MetaDataClient {
         timeout: TimeAmount = .seconds(2),
         on eventLoop: EventLoop,
         logger: Logger
-    ) -> EventLoopFuture<AWSHTTPResponse>
-    {
+    ) -> EventLoopFuture<AWSHTTPResponse> {
         let request = AWSHTTPRequest(url: url, method: method, headers: headers, body: .empty)
         return httpClient.execute(request: request, timeout: timeout, on: eventLoop, logger: logger)
     }

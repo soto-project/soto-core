@@ -59,7 +59,7 @@ public struct AWSSigner {
         var headers = headers
         // add date, host, sha256 and if available security token headers
         headers.add(name: "X-Amz-Date", value: dateString)
-        headers.add(name: "host", value: "\(url.host ?? "")\(url.port.map {":\($0)"} ?? "")")
+        headers.add(name: "host", value: "\(url.host ?? "")\(url.port.map { ":\($0)" } ?? "")")
         headers.add(name: "x-amz-content-sha256", value: bodyHash)
         if let sessionToken = credentials.sessionToken {
             headers.add(name: "x-amz-security-token", value: sessionToken)
@@ -72,7 +72,7 @@ public struct AWSSigner {
         let authorization = "AWS4-HMAC-SHA256 " +
             "Credential=\(credentials.accessKeyId)/\(signingData.date)/\(region)/\(name)/aws4_request, " +
             "SignedHeaders=\(signingData.signedHeaders), " +
-        "Signature=\(signature(signingData: signingData))"
+            "Signature=\(signature(signingData: signingData))"
 
         // add Authorization header
         headers.add(name: "Authorization", value: authorization)
@@ -105,11 +105,11 @@ public struct AWSSigner {
             .queryEncode()
 
         // update unsignedURL in the signingData so when the canonical request is constructed it includes all the signing query items
-        signingData.unsignedURL = URL(string: url.absoluteString.split(separator: "?")[0]+"?"+query)! // NEED TO DEAL WITH SITUATION WHERE THIS FAILS
+        signingData.unsignedURL = URL(string: url.absoluteString.split(separator: "?")[0] + "?" + query)! // NEED TO DEAL WITH SITUATION WHERE THIS FAILS
         query += "&X-Amz-Signature=\(signature(signingData: signingData))"
 
         // Add signature to query items and build a new Request
-        let signedURL = URL(string: url.absoluteString.split(separator: "?")[0]+"?"+query)!
+        let signedURL = URL(string: url.absoluteString.split(separator: "?")[0] + "?" + query)!
 
         return signedURL
     }
@@ -119,7 +119,7 @@ public struct AWSSigner {
         let datetime: String
         let signingKey: SymmetricKey
     }
-    
+
     /// Start the process of signing a s3 chunked upload. Update headers and generate first signature. See https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-streaming.html
     ///  for more details
     /// - Parameters:
@@ -150,14 +150,14 @@ public struct AWSSigner {
         let authorization = "AWS4-HMAC-SHA256 " +
             "Credential=\(credentials.accessKeyId)/\(signingData.date)/\(region)/\(name)/aws4_request, " +
             "SignedHeaders=\(signingData.signedHeaders), " +
-        "Signature=\(signature)"
+            "Signature=\(signature)"
 
         // add Authorization header
         headers.add(name: "Authorization", value: authorization)
 
         return (headers: headers, signingData: chunkedSigningData)
     }
-    
+
     /// Generate the signature for a chunk in a s3 chunked upload
     /// - Parameters:
     ///   - body: Body of chunk
@@ -168,18 +168,18 @@ public struct AWSSigner {
         let signature = HMAC<SHA256>.authenticationCode(for: [UInt8](stringToSign.utf8), using: signingData.signingKey).hexDigest()
         return ChunkedSigningData(signature: signature, datetime: signingData.datetime, signingKey: signingData.signingKey)
     }
-    
+
     /// structure used to store data used throughout the signing process
     struct SigningData {
-        let url : URL
-        let method : HTTPMethod
-        let hashedPayload : String
-        let datetime : String
+        let url: URL
+        let method: HTTPMethod
+        let hashedPayload: String
+        let datetime: String
         let headersToSign: [String: String]
-        let signedHeaders : String
-        var unsignedURL : URL
+        let signedHeaders: String
+        var unsignedURL: URL
 
-        var date : String { return String(datetime.prefix(8))}
+        var date: String { return String(datetime.prefix(8)) }
 
         init(url: URL, method: HTTPMethod = .GET, headers: HTTPHeaders = HTTPHeaders(), body: BodyData? = nil, bodyHash: String? = nil, date: String, signer: AWSSigner) {
             self.url = url
@@ -235,7 +235,7 @@ public struct AWSSigner {
             .joined(separator: "\n")
         let canonicalRequest = "\(signingData.method.rawValue)\n" +
             "\(signingData.unsignedURL.path.uriEncodeWithSlash())\n" +
-            "\(signingData.unsignedURL.query ?? "")\n" +        // should really uriEncode all the query string values
+            "\(signingData.unsignedURL.query ?? "")\n" + // should really uriEncode all the query string values
             "\(canonicalHeaders)\n\n" +
             "\(signingData.signedHeaders)\n" +
             signingData.hashedPayload
@@ -250,7 +250,7 @@ public struct AWSSigner {
         let kSigning = HMAC<SHA256>.authenticationCode(for: [UInt8]("aws4_request".utf8), using: SymmetricKey(data: kService))
         return SymmetricKey(data: kSigning)
     }
-    
+
     /// chunked upload string to sign
     func chunkStringToSign(body: BodyData, previousSignature: String, datetime: String) -> String {
         let date = String(datetime.prefix(8))
@@ -262,11 +262,11 @@ public struct AWSSigner {
             Self.hashedPayload(body)
         return stringToSign
     }
-    
+
     /// Create a SHA256 hash of the Requests body
     static func hashedPayload(_ payload: BodyData?) -> String {
         guard let payload = payload else { return hashedEmptyBody }
-        let hash : String?
+        let hash: String?
         switch payload {
         case .string(let string):
             hash = SHA256.hash(data: [UInt8](string.utf8)).hexDigest()
@@ -317,14 +317,14 @@ extension String {
         return addingPercentEncoding(withAllowedCharacters: String.uriAllowedWithSlashCharacters) ?? self
     }
 
-    static let uriAllowedWithSlashCharacters = CharacterSet(charactersIn:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~/")
-    static let uriAllowedCharacters = CharacterSet(charactersIn:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
-    static let queryAllowedCharacters = CharacterSet(charactersIn:"/;+").inverted
+    static let uriAllowedWithSlashCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~/")
+    static let uriAllowedCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
+    static let queryAllowedCharacters = CharacterSet(charactersIn: "/;+").inverted
 }
 
 public extension Sequence where Element == UInt8 {
     /// return a hexEncoded string buffer from an array of bytes
     func hexDigest() -> String {
-        return self.map{String(format: "%02x", $0)}.joined(separator: "")
+        return self.map { String(format: "%02x", $0) }.joined(separator: "")
     }
 }

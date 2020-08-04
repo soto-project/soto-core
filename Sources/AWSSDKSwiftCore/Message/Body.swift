@@ -16,7 +16,7 @@ import NIO
 import NIOFoundationCompat
 import enum AWSXML.XML
 import struct Foundation.Data
-import class  Foundation.InputStream
+import class Foundation.InputStream
 
 /// Enumaration used to store request/response body in various forms
 public enum Body {
@@ -89,7 +89,7 @@ extension Body {
             return .empty
         }
     }
-    
+
     // return as ByteBuffer
     public func asByteBuffer() -> ByteBuffer? {
         return asPayload().asByteBuffer()

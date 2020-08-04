@@ -63,8 +63,7 @@ public func createServiceConfig(
     possibleErrorTypes: [AWSErrorType.Type] = [],
     middlewares: [AWSServiceMiddleware] = [],
     timeout: TimeAmount? = nil
-) -> AWSServiceConfig
-{
+) -> AWSServiceConfig {
     AWSServiceConfig(
         region: region,
         partition: partition,
@@ -82,14 +81,12 @@ public func createServiceConfig(
     )
 }
 
-
 // create a buffer of random values. Will always create the same given you supply the same z and w values
 // Random number generator from https://www.codeproject.com/Articles/25172/Simple-Random-Number-Generation
 public func createRandomBuffer(_ w: UInt, _ z: UInt, size: Int) -> [UInt8] {
     var z = z
     var w = w
-    func getUInt8() -> UInt8
-    {
+    func getUInt8() -> UInt8 {
         z = 36969 * (z & 65535) + (z >> 16);
         w = 18000 * (w & 65535) + (w >> 16);
         return UInt8(((z << 16) + w) & 0xff);
@@ -100,7 +97,6 @@ public func createRandomBuffer(_ w: UInt, _ z: UInt, size: Int) -> [UInt8] {
     }
     return data
 }
-
 
 /// Provide various test environment variables
 public struct TestEnvironment {

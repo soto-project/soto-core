@@ -20,7 +20,6 @@ import XCTest
 @testable import AWSSDKSwiftCore
 
 class CredentialProviderTests: XCTestCase {
-
     func testCredentialProvider() {
         let cred = StaticCredential(accessKeyId: "abc", secretAccessKey: "123", sessionToken: "xyz")
 
@@ -59,10 +58,10 @@ class CredentialProviderTests: XCTestCase {
 
     func testConfigFileSuccess() {
         let credentials = """
-            [default]
-            aws_access_key_id = AWSACCESSKEYID
-            aws_secret_access_key = AWSSECRETACCESSKEY
-            """
+        [default]
+        aws_access_key_id = AWSACCESSKEYID
+        aws_secret_access_key = AWSSECRETACCESSKEY
+        """
         let filename = "credentials"
         let filenameURL = URL(fileURLWithPath: filename)
         XCTAssertNoThrow(try Data(credentials.utf8).write(to: filenameURL))

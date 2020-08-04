@@ -12,33 +12,32 @@
 //
 //===----------------------------------------------------------------------===//
 
-import class  Foundation.DateFormatter
+import class Foundation.DateFormatter
 import struct Foundation.Locale
 import struct Foundation.Date
 import struct Foundation.TimeZone
 
 /// Time stamp object that can encoded to ISO8601 format and decoded from ISO8601, HTTP date format and UNIX epoch seconds
 public struct TimeStamp {
-    
     public var stringValue: String {
-        return TimeStamp.string(from:dateValue)
+        return TimeStamp.string(from: dateValue)
     }
-    
+
     public let dateValue: Date
 
     public init(_ date: Date) {
         dateValue = date
     }
-    
+
     public init?(_ string: String) {
         guard let date = TimeStamp.date(from: string) else { return nil }
         self.dateValue = date
     }
-    
+
     public init(_ double: Double) {
         self.dateValue = Date(timeIntervalSince1970: double)
     }
-    
+
     static func string(from date: Date) -> String {
         return defaultDateFormatter.string(from: date)
     }
@@ -51,9 +50,9 @@ public struct TimeStamp {
         }
         return nil
     }
-    
+
     /// date formatter for outputting dates
-    private static let defaultDateFormatter : DateFormatter = createDefaultDateFormatter()
+    private static let defaultDateFormatter: DateFormatter = createDefaultDateFormatter()
 
     static func createDefaultDateFormatter() -> DateFormatter {
         let dateFormatter = DateFormatter()
@@ -65,8 +64,8 @@ public struct TimeStamp {
 
     /// date formatters for parsing date strings. Currently know of three different formats returned by AWS: iso, shorter iso and http
     static func createDateFormatters() -> [DateFormatter] {
-        var dateFormatters : [DateFormatter] = [defaultDateFormatter]
-        
+        var dateFormatters: [DateFormatter] = [defaultDateFormatter]
+
         let shorterDateFormatter = DateFormatter()
         shorterDateFormatter.locale = Locale(identifier: "en_US_POSIX")
         shorterDateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
@@ -81,13 +80,11 @@ public struct TimeStamp {
 
         return dateFormatters
     }
-    
-    static var dateFormatters : [DateFormatter] = TimeStamp.createDateFormatters()
+
+    static var dateFormatters: [DateFormatter] = TimeStamp.createDateFormatters()
 }
 
-
 extension TimeStamp: Codable {
-    
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         if let value = try? container.decode(Double.self) {
@@ -100,10 +97,9 @@ extension TimeStamp: Codable {
             throw DecodingError.dataCorruptedError(in: container, debugDescription: "Expected string when decoding a Date")
         }
     }
-    
+
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(stringValue)
     }
 }
-

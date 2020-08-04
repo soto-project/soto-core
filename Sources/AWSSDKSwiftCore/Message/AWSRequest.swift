@@ -38,7 +38,7 @@ public struct AWSRequest {
         if signer.credentials.isEmpty() {
             return self.toHTTPRequest()
         }
-        
+
         return self.toHTTPRequestWithSignedHeader(signer: signer)
     }
 
@@ -91,7 +91,6 @@ public struct AWSRequest {
 }
 
 extension AWSRequest {
-    
     internal init(operation operationName: String, path: String, httpMethod: HTTPMethod, configuration: AWSServiceConfig) throws {
         var headers = HTTPHeaders()
 
@@ -103,7 +102,7 @@ extension AWSRequest {
         if let target = configuration.amzTarget {
             headers.replaceOrAdd(name: "x-amz-target", value: "\(target).\(operationName)")
         }
-        
+
         self.region = configuration.region
         self.url = url
         self.serviceProtocol = configuration.serviceProtocol
@@ -111,21 +110,20 @@ extension AWSRequest {
         self.httpMethod = httpMethod
         self.httpHeaders = headers
         self.body = .empty
-        
+
         addStandardHeaders()
     }
-    
+
     internal init<Input: AWSEncodableShape>(
         operation operationName: String,
         path: String,
         httpMethod: HTTPMethod,
         input: Input,
-        configuration: AWSServiceConfig) throws
-    {
+        configuration: AWSServiceConfig) throws {
         var headers = HTTPHeaders()
         var path = path
         var body: Body = .empty
-        var queryParams: [(key:String, value:Any)] = []
+        var queryParams: [(key: String, value: Any)] = []
 
         // validate input parameters
         try input.validate()
@@ -158,11 +156,11 @@ extension AWSRequest {
                 case .querystring(let location):
                     switch value {
                     case let array as AWSRequestEncodableArray:
-                        array.encoded.forEach { queryParams.append((key:location, value:$0)) }
+                        array.encoded.forEach { queryParams.append((key: location, value: $0)) }
                     case let dictionary as AWSRequestEncodableDictionary:
                         dictionary.encoded.forEach { queryParams.append($0) }
                     default:
-                        queryParams.append((key:location, value:"\(value)"))
+                        queryParams.append((key: location, value: "\(value)"))
                     }
 
                 case .uri(let location):
@@ -209,7 +207,7 @@ extension AWSRequest {
 
             switch httpMethod {
             case .GET:
-                queryParams.append(contentsOf: dict.map {(key:$0.key, value:$0)})
+                queryParams.append(contentsOf: dict.map { (key: $0.key, value: $0) })
             default:
                 if let urlEncodedQueryParams = Self.urlEncodeQueryParams(fromDictionary: dict) {
                     body = .text(urlEncodedQueryParams)
@@ -260,7 +258,7 @@ extension AWSRequest {
         // add queries from the parsed path to the query params list
         if let pathQueryItems = parsedPath.queryItems {
             for item in pathQueryItems {
-                queryParams.append((key:item.name, value: item.value ?? ""))
+                queryParams.append((key: item.name, value: item.value ?? ""))
             }
         }
 
@@ -268,13 +266,13 @@ extension AWSRequest {
         var urlString = "\(baseURL.absoluteString)\(parsedPath.path)"
         if queryParams.count > 0 {
             urlString.append("?")
-            urlString.append(queryParams.sorted{$0.key < $1.key}.map{"\($0.key)=\(Self.urlEncodeQueryParam("\($0.value)"))"}.joined(separator:"&"))
+            urlString.append(queryParams.sorted { $0.key < $1.key }.map { "\($0.key)=\(Self.urlEncodeQueryParam("\($0.value)"))" }.joined(separator: "&"))
         }
 
         guard let url = URL(string: urlString) else {
             throw AWSClient.ClientError.invalidURL("\(urlString)")
         }
-        
+
         self.region = configuration.region
         self.url = url
         self.serviceProtocol = configuration.serviceProtocol
@@ -282,7 +280,7 @@ extension AWSRequest {
         self.httpMethod = httpMethod
         self.httpHeaders = headers
         self.body = body
-        
+
         addStandardHeaders()
     }
 
@@ -303,14 +301,14 @@ extension AWSRequest {
     }
 
     // this list of query allowed characters comes from https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html
-    static let queryAllowedCharacters = CharacterSet(charactersIn:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
+    static let queryAllowedCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
 
     private static func urlEncodeQueryParam(_ value: String) -> String {
         return value.addingPercentEncoding(withAllowedCharacters: AWSRequest.queryAllowedCharacters) ?? value
     }
 
-    private static func urlEncodeQueryParams(fromDictionary dict: [String:Any]) -> String? {
-        guard dict.count > 0 else {return nil}
+    private static func urlEncodeQueryParams(fromDictionary dict: [String: Any]) -> String? {
+        guard dict.count > 0 else { return nil }
         var query = ""
         let keys = Array(dict.keys).sorted()
 
@@ -323,30 +321,28 @@ extension AWSRequest {
         }
         return query
     }
-    
-    
+
     internal static func verifyStream(operation: String, payload: AWSPayload, input: AWSShapeWithPayload.Type) {
         guard case .stream(let reader) = payload.payload else { return }
         precondition(input._payloadOptions.contains(.allowStreaming), "\(operation) does not allow streaming of data")
         precondition(reader.size != nil || input._payloadOptions.contains(.allowChunkedStreaming), "\(operation) does not allow chunked streaming of data. Please supply a data size.")
     }
-    
 }
 
 fileprivate protocol AWSRequestEncodableArray {
     var encoded: [String] { get }
 }
 
-extension Array : AWSRequestEncodableArray {
-    var encoded: [String] { return self.map{ "\($0)" }}
+extension Array: AWSRequestEncodableArray {
+    var encoded: [String] { return self.map { "\($0)" }}
 }
 
 fileprivate protocol AWSRequestEncodableDictionary {
-    var encoded: [(key:String, value: String)] { get }
+    var encoded: [(key: String, value: String)] { get }
 }
 
-extension Dictionary : AWSRequestEncodableDictionary {
-    var encoded: [(key:String, value: String)] {
-        return self.map { (key:"\($0.key)", value:"\($0.value)") }
+extension Dictionary: AWSRequestEncodableDictionary {
+    var encoded: [(key: String, value: String)] {
+        return self.map { (key: "\($0.key)", value: "\($0.value)") }
     }
 }

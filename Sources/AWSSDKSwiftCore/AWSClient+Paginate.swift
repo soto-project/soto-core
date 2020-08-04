@@ -23,7 +23,6 @@ public protocol AWSPaginateToken: AWSShape {
 }
 
 extension AWSClient {
-    
     /// If an AWS command is returning an arbituary sized array sometimes it adds support for paginating this array
     /// ie it will return the array in blocks of a defined size, each block also includes a token which can be used to access
     /// the next block. This function loads each block and calls a closure with each block as parameter.
@@ -35,11 +34,11 @@ extension AWSClient {
     ///   - onPage: closure called with each block of entries
     public func paginate<Input: AWSPaginateToken, Output: AWSShape>(
         input: Input,
-        command: @escaping (Input, EventLoop?, Logger)->EventLoopFuture<Output>,
+        command: @escaping (Input, EventLoop?, Logger) -> EventLoopFuture<Output>,
         tokenKey: KeyPath<Output, Input.Token?>,
         on eventLoop: EventLoop? = nil,
         logger: Logger = AWSClient.loggingDisabled,
-        onPage: @escaping (Output, EventLoop)->EventLoopFuture<Bool>
+        onPage: @escaping (Output, EventLoop) -> EventLoopFuture<Bool>
     ) -> EventLoopFuture<Void> {
         let eventLoop = eventLoop ?? self.eventLoopGroup.next()
         let promise = eventLoop.makePromise(of: Void.self)
@@ -48,22 +47,22 @@ extension AWSClient {
             let responseFuture = command(input, eventLoop, logger)
                 .flatMap { response in
                     return onPage(response, eventLoop)
-                        .map { (rt)->Void in
+                        .map { (rt) -> Void in
                             guard rt == true else { return promise.succeed(Void()) }
                             // get next block token and construct a new input with this token
                             guard let token = response[keyPath: tokenKey] else { return promise.succeed(Void()) }
 
                             let input = input.usingPaginationToken(token)
                             paginatePart(input: input)
-                    }
-            }
+                        }
+                }
             responseFuture.whenFailure { error in
                 promise.fail(error)
             }
         }
 
         paginatePart(input: input)
-        
+
         return promise.futureResult
     }
 }

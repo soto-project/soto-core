@@ -14,19 +14,19 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
-import Stencil                  // swift-aws/Stencil
+import Stencil // swift-aws/Stencil
 
 extension String {
     public func lowerFirst() -> String {
         return String(self[startIndex]).lowercased() + self[index(after: startIndex)...]
     }
 }
-    
+
 struct Error {
     let name: String
     let description: String
     let `enum`: String
-    
+
     init(name: String, description: String) {
         self.name = name
         self.description = description
@@ -57,7 +57,7 @@ let serverErrors: [Error] = [
     .init(name: "InternalFailure", description: "The request processing has failed because of an unknown error, exception or failure."),
     .init(name: "ServiceUnavailable", description: "The request has failed due to a temporary failure of the server."),
 ]
-    
+
 print("Loading templates")
 let fsLoader = FileSystemLoader(paths: ["./scripts/templates/generate-errors"])
 let environment = Environment(loader: fsLoader)
@@ -71,4 +71,3 @@ print("Creating ServerErrors.swift")
 
 let serverErrorFile = try environment.renderTemplate(name: "generate-errors.stencil", context: ["name": "AWSServerError", "errors": serverErrors.sorted { $0.name < $1.name }])
 try Data(serverErrorFile.utf8).write(to: URL(fileURLWithPath: "Sources/AWSSDKSwiftCore/Errors/ServerErrors.swift"))
-

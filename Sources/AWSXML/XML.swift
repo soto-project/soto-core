@@ -12,17 +12,14 @@
 //
 //===----------------------------------------------------------------------===//
 
-
-import struct   Foundation.Data
-import class    Foundation.NSObject
+import struct Foundation.Data
+import class Foundation.NSObject
 #if canImport(FoundationXML)
 import FoundationXML
 #else
-import class    Foundation.XMLParser
+import class Foundation.XMLParser
 import protocol Foundation.XMLParserDelegate
 #endif
-
-
 
 /// Implemented to replace the XML Foundation classes. This was initially required as there is no implementation of the Foundation XMLNode classes in iOS. This is also here because the implementation of XMLNode in Linux Swift 4.2 was causing crashes. Whenever an XMLDocument was deleted all the underlying CoreFoundation objects were deleted. This meant if you still had a reference to a XMLElement from that document, while it was still valid the underlying CoreFoundation object had been deleted.
 ///
@@ -30,7 +27,6 @@ import protocol Foundation.XMLParserDelegate
 public enum XML {
     /// base class for all types of XML.Node
     public class Node {
-
         /// XML node type
         public enum Kind {
             case document
@@ -42,11 +38,11 @@ public enum XML {
         }
 
         /// defines the type of xml node
-        public let kind : Kind
-        public var name : String?
-        public var stringValue : String?
-        public fileprivate(set) var children : [XML.Node]?
-        public weak var parent : XML.Node?
+        public let kind: Kind
+        public var name: String?
+        public var stringValue: String?
+        public fileprivate(set) var children: [XML.Node]?
+        public weak var parent: XML.Node?
 
         fileprivate init(_ kind: Kind, name: String? = nil, stringValue: String? = nil) {
             self.kind = kind
@@ -92,17 +88,17 @@ public enum XML {
         }
 
         /// return number of children
-        public var childCount : Int { get {return children?.count ?? 0}}
+        public var childCount: Int { get { return children?.count ?? 0 }}
 
         /// detach XML node from its parent
         public func detach() {
-            parent?.detach(child:self)
+            parent?.detach(child: self)
             parent = nil
         }
 
         /// detach child XML Node
         fileprivate func detach(child: XML.Node) {
-            children?.removeAll(where: {$0 === child})
+            children?.removeAll(where: { $0 === child })
         }
 
         /// return children of a specific kind
@@ -110,7 +106,7 @@ public enum XML {
             return children?.compactMap { $0.kind == kind ? $0 : nil }
         }
 
-        private static let xmlEncodedCharacters : [String.Element: String] = [
+        private static let xmlEncodedCharacters: [String.Element: String] = [
             "&": "&amp;",
             "<": "&lt;",
             ">": "&gt;",
@@ -120,7 +116,7 @@ public enum XML {
             var newString = ""
             for c in string {
                 if let replacement = XML.Node.xmlEncodedCharacters[c] {
-                    newString.append(contentsOf:replacement)
+                    newString.append(contentsOf: replacement)
                 } else {
                     newString.append(c)
                 }
@@ -129,7 +125,7 @@ public enum XML {
         }
 
         /// output formatted XML
-        public var xmlString : String {
+        public var xmlString: String {
             switch kind {
             case .text:
                 if let stringValue = stringValue {
@@ -159,13 +155,12 @@ public enum XML {
                 return ""
             }
         }
-
     }
 
     /// XML Document class
-    public class Document : XML.Node {
-        public var version : String?
-        public var characterEncoding : String?
+    public class Document: XML.Node {
+        public var version: String?
+        public var characterEncoding: String?
 
         public init() {
             super.init(.document)
@@ -182,8 +177,7 @@ public enum XML {
             do {
                 let element = try XML.Element(xmlData: data)
                 setRootElement(element)
-            } catch ParsingError.emptyFile {
-            }
+            } catch ParsingError.emptyFile {}
         }
 
         /// set the root element of the document
@@ -196,7 +190,7 @@ public enum XML {
 
         /// return the root element
         public func rootElement() -> XML.Element? {
-            return children?.first {return ($0 as? XML.Element) != nil} as? XML.Element
+            return children?.first { return ($0 as? XML.Element) != nil } as? XML.Element
         }
 
         /// output formatted XML
@@ -209,17 +203,15 @@ public enum XML {
         }
 
         /// output formatted XML as Data
-        public var xmlData : Data { return xmlString.data(using: .utf8) ?? Data()}
-
+        public var xmlData: Data { return xmlString.data(using: .utf8) ?? Data() }
     }
 
     /// XML Element class
-    public class Element : XML.Node {
-
+    public class Element: XML.Node {
         /// array of attributes attached to XML ELement
-        public fileprivate(set) var attributes : [XML.Node]?
+        public fileprivate(set) var attributes: [XML.Node]?
         /// array of namespaces attached to XML ELement
-        public fileprivate(set) var namespaces : [XML.Node]?
+        public fileprivate(set) var namespaces: [XML.Node]?
 
         public init(name: String, stringValue: String? = nil) {
             super.init(.element, name: name)
@@ -261,18 +253,18 @@ public enum XML {
                     return element
                 }
                 return nil
-                } ?? []
+            } ?? []
         }
 
         /// return child text nodes all concatenated together
-        public override var stringValue : String? {
+        public override var stringValue: String? {
             get {
-                let textNodes = children(of:.text)
-                let text = textNodes?.reduce("", { return $0 + ($1.stringValue ?? "")}) ?? ""
+                let textNodes = children(of: .text)
+                let text = textNodes?.reduce("", { return $0 + ($1.stringValue ?? "") }) ?? ""
                 return text
             }
             set(value) {
-                children?.removeAll {$0.kind == .text}
+                children?.removeAll { $0.kind == .text }
                 if let value = value {
                     addChild(XML.Node(.text, stringValue: value))
                 }
@@ -321,7 +313,7 @@ public enum XML {
         }
 
         /// add an attribute to an element. If one with this name already exists it is replaced
-        public func addAttribute(_ node : XML.Node) {
+        public func addAttribute(_ node: XML.Node) {
             assert(node.kind == .attribute)
             if let name = node.name, let attributeNode = attribute(forName: name) {
                 attributeNode.detach()
@@ -357,7 +349,7 @@ public enum XML {
         }
 
         /// add a namespace to an element. If one with this name already exists it is replaced
-        public func addNamespace(_ node : XML.Node) {
+        public func addNamespace(_ node: XML.Node) {
             assert(node.kind == .namespace)
             if let attributeNode = namespace(forName: node.name) {
                 attributeNode.detach()
@@ -386,20 +378,20 @@ public enum XML {
         fileprivate override func detach(child: XML.Node) {
             switch child.kind {
             case .attribute:
-                attributes?.removeAll(where: {$0 === child})
+                attributes?.removeAll(where: { $0 === child })
             case .namespace:
-                namespaces?.removeAll(where: {$0 === child})
+                namespaces?.removeAll(where: { $0 === child })
             default:
                 super.detach(child: child)
             }
         }
 
         /// return formatted XML
-        override public var xmlString : String {
+        override public var xmlString: String {
             var string = ""
             string += "<\(name!)"
-            string += namespaces?.map({" "+$0.xmlString}).joined(separator:"") ?? ""
-            string += attributes?.map({" "+$0.xmlString}).joined(separator:"") ?? ""
+            string += namespaces?.map({ " " + $0.xmlString }).joined(separator: "") ?? ""
+            string += attributes?.map({ " " + $0.xmlString }).joined(separator: "") ?? ""
             string += ">"
             for node in children ?? [] {
                 string += node.xmlString
@@ -410,7 +402,7 @@ public enum XML {
     }
 
     /// XML parsing errors
-    enum ParsingError : Error {
+    enum ParsingError: Error {
         case emptyFile
         case noXMLFound
 
@@ -425,11 +417,10 @@ public enum XML {
     }
 
     /// parser delegate used in XML parsing
-    fileprivate class ParserDelegate : NSObject, XMLParserDelegate {
-
-        var rootElement : XML.Element?
-        var currentElement : XML.Element?
-        var error : Error?
+    fileprivate class ParserDelegate: NSObject, XMLParserDelegate {
+        var rootElement: XML.Element?
+        var currentElement: XML.Element?
+        var error: Error?
 
         override init() {
             self.currentElement = nil
@@ -437,12 +428,12 @@ public enum XML {
             super.init()
         }
 
-        func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String] = [:]) {
+        func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String: String] = [:]) {
             let element = XML.Element(name: elementName)
             for attribute in attributeDict {
                 element.addAttribute(XML.Node(.attribute, name: attribute.key, stringValue: attribute.value))
             }
-            if rootElement ==  nil {
+            if rootElement == nil {
                 rootElement = element
             }
             currentElement?.addChild(element)
@@ -476,14 +467,13 @@ public enum XML {
             error = validationError
         }
     }
-
 }
 
-extension XML.Node : CustomStringConvertible, CustomDebugStringConvertible {
+extension XML.Node: CustomStringConvertible, CustomDebugStringConvertible {
     /// CustomStringConvertible protocol
-    public var description: String {return xmlString}
+    public var description: String { return xmlString }
     /// CustomDebugStringConvertible protocol
-    public var debugDescription: String {return xmlString}
+    public var debugDescription: String { return xmlString }
 }
 
 extension Character {

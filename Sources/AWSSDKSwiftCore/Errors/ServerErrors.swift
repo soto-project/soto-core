@@ -19,6 +19,7 @@ public struct AWSServerError: AWSErrorType {
         case internalFailure = "InternalFailure"
         case serviceUnavailable = "ServiceUnavailable"
     }
+
     private var error: Code
     public var message: String?
 
@@ -32,16 +33,16 @@ public struct AWSServerError: AWSErrorType {
         self.error = error
         self.message = message
     }
-    
+
     internal init(_ error: Code, message: String? = nil) {
         self.error = error
         self.message = message
     }
 
     // The request processing has failed because of an unknown error, exception or failure.
-    public static var internalFailure:AWSServerError { .init(.internalFailure) }
+    public static var internalFailure: AWSServerError { .init(.internalFailure) }
     // The request has failed due to a temporary failure of the server.
-    public static var serviceUnavailable:AWSServerError { .init(.serviceUnavailable) }
+    public static var serviceUnavailable: AWSServerError { .init(.serviceUnavailable) }
 }
 
 extension AWSServerError: Equatable {
@@ -50,7 +51,7 @@ extension AWSServerError: Equatable {
     }
 }
 
-extension AWSServerError : CustomStringConvertible {
+extension AWSServerError: CustomStringConvertible {
     public var description: String {
         return "\(error.rawValue): \(message ?? "")"
     }

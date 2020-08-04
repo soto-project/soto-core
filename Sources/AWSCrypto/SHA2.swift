@@ -18,7 +18,7 @@
 
 import CommonCrypto
 
-public struct SHA256Digest : ByteDigest {
+public struct SHA256Digest: ByteDigest {
     public static var byteCount: Int { return Int(CC_SHA256_DIGEST_LENGTH) }
     public var bytes: [UInt8]
 }
@@ -38,11 +38,11 @@ public struct SHA256: CCHashFunction {
         context = CC_SHA256_CTX()
         CC_SHA256_Init(&context)
     }
-    
+
     public mutating func update(bufferPointer: UnsafeRawBufferPointer) {
         CC_SHA256_Update(&context, bufferPointer.baseAddress, CC_LONG(bufferPointer.count))
     }
-    
+
     public mutating func finalize() -> Self.Digest {
         var digest: [UInt8] = .init(repeating: 0, count: Digest.byteCount)
         CC_SHA256_Final(&digest, &context)
@@ -50,7 +50,7 @@ public struct SHA256: CCHashFunction {
     }
 }
 
-public struct SHA384Digest : ByteDigest {
+public struct SHA384Digest: ByteDigest {
     public static var byteCount: Int { return Int(CC_SHA384_DIGEST_LENGTH) }
     public var bytes: [UInt8]
 }
@@ -70,11 +70,11 @@ public struct SHA384: CCHashFunction {
         context = CC_SHA512_CTX()
         CC_SHA384_Init(&context)
     }
-    
+
     public mutating func update(bufferPointer: UnsafeRawBufferPointer) {
         CC_SHA384_Update(&context, bufferPointer.baseAddress, CC_LONG(bufferPointer.count))
     }
-    
+
     public mutating func finalize() -> Self.Digest {
         var digest: [UInt8] = .init(repeating: 0, count: Digest.byteCount)
         CC_SHA384_Final(&digest, &context)
@@ -82,7 +82,7 @@ public struct SHA384: CCHashFunction {
     }
 }
 
-public struct SHA512Digest : ByteDigest {
+public struct SHA512Digest: ByteDigest {
     public static var byteCount: Int { return Int(CC_SHA512_DIGEST_LENGTH) }
     public var bytes: [UInt8]
 }
@@ -102,11 +102,11 @@ public struct SHA512: CCHashFunction {
         context = CC_SHA512_CTX()
         CC_SHA512_Init(&context)
     }
-    
+
     public mutating func update(bufferPointer: UnsafeRawBufferPointer) {
         CC_SHA512_Update(&context, bufferPointer.baseAddress, CC_LONG(bufferPointer.count))
     }
-    
+
     public mutating func finalize() -> Self.Digest {
         var digest: [UInt8] = .init(repeating: 0, count: Digest.byteCount)
         CC_SHA512_Final(&digest, &context)

@@ -16,10 +16,9 @@ import NIOHTTP1
 
 /// Middleware protocol. Gives ability to process requests before they are sent to AWS and process responses before they are converted into output shapes
 public protocol AWSServiceMiddleware {
-    
     /// Process AWSRequest before it is converted to a HTTPClient Request to be sent to AWS
     func chain(request: AWSRequest) throws -> AWSRequest
-    
+
     /// Process response before it is converted to an output AWSShape
     func chain(response: AWSResponse) throws -> AWSResponse
 }
@@ -29,21 +28,21 @@ public extension AWSServiceMiddleware {
     func chain(request: AWSRequest) throws -> AWSRequest {
         return request
     }
+
     func chain(response: AWSResponse) throws -> AWSResponse {
         return response
     }
 }
 
 /// Middleware struct that outputs the contents of requests being sent to AWS and the bodies of the responses received
-public struct AWSLoggingMiddleware : AWSServiceMiddleware {
-    
+public struct AWSLoggingMiddleware: AWSServiceMiddleware {
     /// initialize AWSLoggingMiddleware class
     /// - parameters:
     ///     - log: Function to call with logging output
-    public init(log : @escaping (String)->() = { print($0) }) {
+    public init(log: @escaping (String) -> () = { print($0) }) {
         self.log = log
     }
-    
+
     func getBodyOutput(_ body: Body) -> String {
         var output = ""
         switch body {
@@ -73,7 +72,7 @@ public struct AWSLoggingMiddleware : AWSServiceMiddleware {
         }
         return output + "\n  ]"
     }
-    
+
     /// output request
     public func chain(request: AWSRequest) throws -> AWSRequest {
         log("Request:")
@@ -83,15 +82,15 @@ public struct AWSLoggingMiddleware : AWSServiceMiddleware {
         log("  Body: " + getBodyOutput(request.body))
         return request
     }
-    
+
     /// output response
     public func chain(response: AWSResponse) throws -> AWSResponse {
         log("Response:")
         log("  Status : \(response.status.code)")
-        log("  Headers: " + getHeadersOutput(HTTPHeaders(response.headers.map { ($0,"\($1)") })))
+        log("  Headers: " + getHeadersOutput(HTTPHeaders(response.headers.map { ($0, "\($1)") })))
         log("  Body: " + getBodyOutput(response.body))
         return response
     }
-    
-    let log : (String)->()
+
+    let log: (String) -> ()
 }

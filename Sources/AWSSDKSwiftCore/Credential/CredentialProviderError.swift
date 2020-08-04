@@ -16,6 +16,7 @@ public struct CredentialProviderError: Error, Equatable {
     enum _CredentialProviderError {
         case noProvider
     }
+
     let error: _CredentialProviderError
 
     public static var noProvider: CredentialProviderError { return .init(error: .noProvider) }

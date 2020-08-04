@@ -13,11 +13,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-import AsyncHTTPClient          // swift-server/async-http-client
+import AsyncHTTPClient // swift-server/async-http-client
 import Foundation
-import NIO                      // apple/swift-nio
+import NIO // apple/swift-nio
 import NIOFoundationCompat
-import Stencil                  // swift-aws/Stencil
+import Stencil // swift-aws/Stencil
 
 struct Endpoints: Decodable {
     struct CredentialScope: Decodable {

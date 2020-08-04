@@ -21,7 +21,6 @@ import NIOConcurrencyHelpers
 import XCTest
 
 class RotatingCredentialProviderTests: XCTestCase {
-
     class MetaDataTestClient: CredentialProvider {
         let callback: (EventLoop) -> EventLoopFuture<ExpiringCredential>
 
@@ -34,7 +33,6 @@ class RotatingCredentialProviderTests: XCTestCase {
                 self.callback(eventLoop).map { $0 }
             }
         }
-
     }
 
     func testGetCredentialAndReuseIfStillValid() {
@@ -162,7 +160,7 @@ class RotatingCredentialProviderTests: XCTestCase {
         let provider = RotatingCredentialProvider(context: context, provider: client)
         XCTAssertNoThrow(_ = try provider.getCredential(on: loop, logger: TestEnvironment.logger).wait())
         hitCount = 0
-        
+
         let iterations = 100
         for _ in 0..<100 {
             XCTAssertNoThrow(_ = try provider.getCredential(on: loop, logger: TestEnvironment.logger).wait())

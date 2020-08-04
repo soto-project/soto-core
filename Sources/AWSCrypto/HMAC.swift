@@ -26,17 +26,16 @@ public struct HashAuthenticationCode: ByteArray {
 
 /// Object generating HMAC for data block given a symmetric key
 public struct HMAC<H: CCHashFunction> {
-    
     let key: SymmetricKey
     var context: CCHmacContext
-    
+
     /// return authentication code for data block given a symmetric key
-    public static func authenticationCode<D : DataProtocol>(for data: D, using key: SymmetricKey) -> HashAuthenticationCode {
+    public static func authenticationCode<D: DataProtocol>(for data: D, using key: SymmetricKey) -> HashAuthenticationCode {
         var hmac = HMAC(key: key)
         hmac.update(data: data)
         return hmac.finalize()
     }
-    
+
     /// update HMAC calculation with a block of data
     public mutating func update<D: DataProtocol>(data: D) {
         if let digest = data.withContiguousStorageIfAvailable({ bytes in
@@ -59,17 +58,17 @@ extension HMAC {
         self.context = CCHmacContext()
         self.initialize()
     }
-    
+
     /// initialize HMAC calculation
     mutating func initialize() {
         CCHmacInit(&context, H.algorithm, key.bytes, key.bytes.count)
     }
-    
+
     /// update HMAC calculation with a buffer
     public mutating func update(bufferPointer: UnsafeRawBufferPointer) {
         CCHmacUpdate(&context, bufferPointer.baseAddress, bufferPointer.count)
     }
-    
+
     /// finalize HMAC calculation and return authentication code
     public mutating func finalize() -> HashAuthenticationCode {
         var authenticationCode: [UInt8] = .init(repeating: 0, count: H.Digest.byteCount)

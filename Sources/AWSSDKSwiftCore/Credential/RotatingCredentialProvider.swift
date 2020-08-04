@@ -25,9 +25,9 @@ import NIOConcurrencyHelpers
 public final class RotatingCredentialProvider: CredentialProvider {
     let remainingTokenLifetimeForUse: TimeInterval
 
-    public  let provider        : CredentialProvider
-    private let lock            = NIOConcurrencyHelpers.Lock()
-    private var credential      : Credential? = nil
+    public let provider: CredentialProvider
+    private let lock = NIOConcurrencyHelpers.Lock()
+    private var credential: Credential? = nil
     private var credentialFuture: EventLoopFuture<Credential>? = nil
 
     public init(context: CredentialProviderFactory.Context, provider: CredentialProvider, remainingTokenLifetimeForUse: TimeInterval? = nil) {
@@ -98,5 +98,5 @@ public final class RotatingCredentialProvider: CredentialProvider {
 }
 
 extension RotatingCredentialProvider: CustomStringConvertible {
-    public var description: String { return "\(type(of:self))(\(provider.description))"}
+    public var description: String { return "\(type(of: self))(\(provider.description))" }
 }

@@ -21,7 +21,6 @@ import AWSXML
 
 /// Structure encapsulating a processed HTTP Response
 public struct AWSResponse {
-
     /// response status
     public let status: HTTPResponseStatus
     /// response headers
@@ -82,7 +81,7 @@ public struct AWSResponse {
         }
         self.body = responseBody
     }
-    
+
     /// return new response with middleware applied
     func applyMiddlewares(_ middlewares: [AWSServiceMiddleware]) throws -> AWSResponse {
         var awsResponse = self
@@ -92,7 +91,7 @@ public struct AWSResponse {
         }
         return awsResponse
     }
-    
+
     /// Generate AWSShape from AWSResponse
     func generateOutputShape<Output: AWSDecodableShape>(operation: String) throws -> Output {
         var payloadKey: String? = (Output.self as? AWSShapeWithPayload.Type)?._payloadPath
@@ -108,14 +107,14 @@ public struct AWSResponse {
 
         // if required apply hypertext application language transform to body
         let body = try getHypertextApplicationLanguageBody()
-        
+
         var outputDict: [String: Any] = [:]
         switch body {
         case .json(let data):
             outputDict = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] ?? [:]
             // if payload path is set then the decode will expect the payload to decode to the relevant member variable
             if let payloadKey = payloadKey {
-                outputDict = [payloadKey : outputDict]
+                outputDict = [payloadKey: outputDict]
             }
 
         case .xml(let node):
@@ -128,7 +127,7 @@ public struct AWSResponse {
                 let parentNode = XML.Element(name: "Container")
                 parentNode.addChild(outputNode)
                 outputNode = parentNode
-            } else if let child = node.children(of:.element)?.first as? XML.Element, (node.name == operation + "Response" && child.name == operation + "Result") {
+            } else if let child = node.children(of: .element)?.first as? XML.Element, (node.name == operation + "Response" && child.name == operation + "Result") {
                 outputNode = child
             }
 
@@ -182,7 +181,7 @@ public struct AWSResponse {
 
         return try decoder.decode(Output.self, from: outputDict)
     }
-    
+
     /// extract error code and message from AWSResponse
     func generateError(serviceConfig: AWSServiceConfig, logger: Logger) -> Error? {
         var apiError: APIError? = nil
@@ -248,7 +247,7 @@ public struct AWSResponse {
 
             return AWSResponseError(errorCode: code, message: errorMessage.message)
         }
-        
+
         return nil
     }
 
@@ -261,6 +260,7 @@ public struct AWSResponse {
             case message = "Message"
         }
     }
+
     private struct JSONError: Codable, APIError {
         var code: String?
         var message: String
@@ -270,6 +270,7 @@ public struct AWSResponse {
             case message = "message"
         }
     }
+
     private struct RESTJSONError: Codable, APIError {
         var code: String?
         var message: String
@@ -282,7 +283,6 @@ public struct AWSResponse {
 }
 
 fileprivate protocol APIError {
-    var code: String? {get set}
-    var message: String {get set}
+    var code: String? { get set }
+    var message: String { get set }
 }
-

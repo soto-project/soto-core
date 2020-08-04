@@ -15,13 +15,12 @@
 import struct Foundation.Data
 import struct Foundation.Date
 import struct Foundation.URL
-import class  Foundation.DateFormatter
-import class  Foundation.NSNull
-import class  Foundation.NSNumber
+import class Foundation.DateFormatter
+import class Foundation.NSNull
+import class Foundation.NSNumber
 
 /// The wrapper class for decoding Codable classes from XMLNodes
 public class XMLDecoder {
-
     /// The strategy to use for decoding `Data` values.
     public enum DataDecodingStrategy {
         /// Decode the `Data` from a Base64-encoded string.
@@ -47,13 +46,13 @@ public class XMLDecoder {
     open var nonConformingFloatDecodingStrategy: NonConformingFloatDecodingStrategy = .throw
 
     /// Contextual user-provided information for use during decoding.
-    open var userInfo: [CodingUserInfoKey : Any] = [:]
+    open var userInfo: [CodingUserInfoKey: Any] = [:]
 
     /// Options set on the top-level encoder to pass down the decoding hierarchy.
     fileprivate struct _Options {
         let dataDecodingStrategy: DataDecodingStrategy
         let nonConformingFloatDecodingStrategy: NonConformingFloatDecodingStrategy
-        let userInfo: [CodingUserInfoKey : Any]
+        let userInfo: [CodingUserInfoKey: Any]
     }
 
     /// The options set on the top-level decoder.
@@ -63,11 +62,10 @@ public class XMLDecoder {
                         userInfo: userInfo)
     }
 
-
     public init() {}
 
     /// decode a Codable class from XML
-    public func decode<T : Decodable>(_ type: T.Type, from xml: XML.Node) throws -> T {
+    public func decode<T: Decodable>(_ type: T.Type, from xml: XML.Node) throws -> T {
         let decoder = _XMLDecoder(xml, options: self.options)
         let value = try T(from: decoder)
         return value
@@ -76,7 +74,7 @@ public class XMLDecoder {
 
 extension XML.Node {
     func child(for string: String) -> XML.Node? {
-        return (children ?? []).first(where: {$0.name == string})
+        return (children ?? []).first(where: { $0.name == string })
     }
 
     func child(for key: CodingKey) -> XML.Node? {
@@ -93,13 +91,13 @@ extension XML.Element {
 /// Storage for the XMLDecoder. Stores a stack of XMLNodes
 struct _XMLDecoderStorage {
     /// the container stack
-    private var containers : [XML.Node?] = []
+    private var containers: [XML.Node?] = []
 
     /// initializes self with no containers
     init() {}
 
     /// return the container at the top of the storage
-    var topContainer : XML.Node? { return containers.last! }
+    var topContainer: XML.Node? { return containers.last! }
 
     /// push a new container onto the storage
     mutating func push(container: XML.Node?) { containers.append(container) }
@@ -109,10 +107,9 @@ struct _XMLDecoderStorage {
 }
 
 /// Internal XMLDecoder class. Does all the heavy lifting
-fileprivate class _XMLDecoder : Decoder {
-
+fileprivate class _XMLDecoder: Decoder {
     /// The decoder's storage.
-    var storage : _XMLDecoderStorage
+    var storage: _XMLDecoderStorage
 
     /// Options set on the top-level decoder.
     let options: XMLDecoder._Options
@@ -121,34 +118,34 @@ fileprivate class _XMLDecoder : Decoder {
     var codingPath: [CodingKey]
 
     /// Contextual user-provided information for use during encoding.
-    public var userInfo: [CodingUserInfoKey : Any] { return self.options.userInfo }
+    public var userInfo: [CodingUserInfoKey: Any] { return self.options.userInfo }
 
-    public init(_ element : XML.Node, at codingPath: [CodingKey] = [], options: XMLDecoder._Options) {
+    public init(_ element: XML.Node, at codingPath: [CodingKey] = [], options: XMLDecoder._Options) {
         self.storage = _XMLDecoderStorage()
         self.storage.push(container: element)
         self.codingPath = codingPath
         self.options = options
     }
 
-    public func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
+    public func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key: CodingKey {
         guard let element = storage.topContainer else {
             throw DecodingError.keyNotFound(codingPath.last!, DecodingError.Context(codingPath: codingPath, debugDescription: "Key not found"))
         }
         return KeyedDecodingContainer(KDC(element, decoder: self))
     }
 
-    struct KDC<Key: CodingKey> : KeyedDecodingContainerProtocol {
+    struct KDC<Key: CodingKey>: KeyedDecodingContainerProtocol {
         var codingPath: [CodingKey] { return decoder.codingPath }
         var allKeys: [Key] = []
-        let element : XML.Node
-        let decoder : _XMLDecoder
+        let element: XML.Node
+        let decoder: _XMLDecoder
 
-        public init(_ element : XML.Node, decoder: _XMLDecoder) {
+        public init(_ element: XML.Node, decoder: _XMLDecoder) {
             self.element = element
             self.decoder = decoder
 
             // all elements directly under the container xml element are considered. THe key is the name of the element and the value is the text attached to the element
-            allKeys = element.children?.compactMap { (element: XML.Node)->Key? in
+            allKeys = element.children?.compactMap { (element: XML.Node) -> Key? in
                 if let name = element.name {
                     return Key(stringValue: name)
                 }
@@ -182,95 +179,95 @@ fileprivate class _XMLDecoder : Decoder {
         }
 
         func decodeNil(forKey key: Key) throws -> Bool {
-            //let child = try self.child(for: key)
+            // let child = try self.child(for: key)
             return false
         }
 
         func decode(_ type: Bool.Type, forKey key: Key) throws -> Bool {
             let child = try self.child(for: key)
-            return try decoder.unbox(child, as:Bool.self)
+            return try decoder.unbox(child, as: Bool.self)
         }
 
         func decode(_ type: String.Type, forKey key: Key) throws -> String {
             let child = try self.child(for: key)
-            return try decoder.unbox(child, as:String.self)
+            return try decoder.unbox(child, as: String.self)
         }
 
         func decode(_ type: Double.Type, forKey key: Key) throws -> Double {
             let child = try self.child(for: key)
-            return try decoder.unbox(child, as:Double.self)
+            return try decoder.unbox(child, as: Double.self)
         }
 
         func decode(_ type: Float.Type, forKey key: Key) throws -> Float {
             let child = try self.child(for: key)
-            return try decoder.unbox(child, as:Float.self)
+            return try decoder.unbox(child, as: Float.self)
         }
 
         func decode(_ type: Int.Type, forKey key: Key) throws -> Int {
             let child = try self.child(for: key)
-            return try decoder.unbox(child, as:Int.self)
+            return try decoder.unbox(child, as: Int.self)
         }
 
         func decode(_ type: Int8.Type, forKey key: Key) throws -> Int8 {
             let child = try self.child(for: key)
-            return try decoder.unbox(child, as:Int8.self)
+            return try decoder.unbox(child, as: Int8.self)
         }
 
         func decode(_ type: Int16.Type, forKey key: Key) throws -> Int16 {
             let child = try self.child(for: key)
-            return try decoder.unbox(child, as:Int16.self)
+            return try decoder.unbox(child, as: Int16.self)
         }
 
         func decode(_ type: Int32.Type, forKey key: Key) throws -> Int32 {
             let child = try self.child(for: key)
-            return try decoder.unbox(child, as:Int32.self)
+            return try decoder.unbox(child, as: Int32.self)
         }
 
         func decode(_ type: Int64.Type, forKey key: Key) throws -> Int64 {
             let child = try self.child(for: key)
-            return try decoder.unbox(child, as:Int64.self)
+            return try decoder.unbox(child, as: Int64.self)
         }
 
         func decode(_ type: UInt.Type, forKey key: Key) throws -> UInt {
             let child = try self.child(for: key)
-            return try decoder.unbox(child, as:UInt.self)
+            return try decoder.unbox(child, as: UInt.self)
         }
 
         func decode(_ type: UInt8.Type, forKey key: Key) throws -> UInt8 {
             let child = try self.child(for: key)
-            return try decoder.unbox(child, as:UInt8.self)
+            return try decoder.unbox(child, as: UInt8.self)
         }
 
         func decode(_ type: UInt16.Type, forKey key: Key) throws -> UInt16 {
             let child = try self.child(for: key)
-            return try decoder.unbox(child, as:UInt16.self)
+            return try decoder.unbox(child, as: UInt16.self)
         }
 
         func decode(_ type: UInt32.Type, forKey key: Key) throws -> UInt32 {
             let child = try self.child(for: key)
-            return try decoder.unbox(child, as:UInt32.self)
+            return try decoder.unbox(child, as: UInt32.self)
         }
 
         func decode(_ type: UInt64.Type, forKey key: Key) throws -> UInt64 {
             let child = try self.child(for: key)
-            return try decoder.unbox(child, as:UInt64.self)
+            return try decoder.unbox(child, as: UInt64.self)
         }
 
-        func decode<T>(_ type: T.Type, forKey key: Key) throws -> T where T : Decodable {
+        func decode<T>(_ type: T.Type, forKey key: Key) throws -> T where T: Decodable {
             self.decoder.codingPath.append(key)
             defer { self.decoder.codingPath.removeLast() }
 
-            let element = self.optionalChild(for:key)
-            return try decoder.unbox(element, as:T.self)
+            let element = self.optionalChild(for: key)
+            return try decoder.unbox(element, as: T.self)
         }
 
-        func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
+        func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> where NestedKey: CodingKey {
             self.decoder.codingPath.append(key)
             defer { self.decoder.codingPath.removeLast() }
 
             let child = try self.child(for: key)
 
-            let container = KDC<NestedKey>(child, decoder:self.decoder)
+            let container = KDC<NestedKey>(child, decoder: self.decoder)
             return KeyedDecodingContainer(container)
         }
 
@@ -289,14 +286,13 @@ fileprivate class _XMLDecoder : Decoder {
             return _XMLDecoder(child, at: self.decoder.codingPath, options: self.decoder.options)
         }
 
-       func superDecoder() throws -> Decoder {
-        return try _superDecoder(forKey: _XMLKey.super)
+        func superDecoder() throws -> Decoder {
+            return try _superDecoder(forKey: _XMLKey.super)
         }
 
         func superDecoder(forKey key: Key) throws -> Decoder {
             return try _superDecoder(forKey: key)
         }
-
     }
 
     public func unkeyedContainer() throws -> UnkeyedDecodingContainer {
@@ -310,11 +306,11 @@ fileprivate class _XMLDecoder : Decoder {
         return UKDC(element, decoder: self)
     }
 
-    struct UKDC : UnkeyedDecodingContainer {
+    struct UKDC: UnkeyedDecodingContainer {
         var codingPath: [CodingKey] { return decoder.codingPath }
         var currentIndex: Int = 0
-        let elements : [XML.Node]
-        let decoder : _XMLDecoder
+        let elements: [XML.Node]
+        let decoder: _XMLDecoder
 
         init(_ element: XML.Node, decoder: _XMLDecoder) {
             self.elements = (element as? XML.Element)?.elements(forName: decoder.codingPath.last!.stringValue) ?? []
@@ -325,7 +321,7 @@ fileprivate class _XMLDecoder : Decoder {
             return elements.count
         }
 
-        var isAtEnd : Bool {
+        var isAtEnd: Bool {
             return currentIndex >= count!
         }
 
@@ -417,20 +413,20 @@ fileprivate class _XMLDecoder : Decoder {
             return value
         }
 
-        mutating func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
-            let value = try decoder.unbox(elements[currentIndex], as:T.self)
+        mutating func decode<T>(_ type: T.Type) throws -> T where T: Decodable {
+            let value = try decoder.unbox(elements[currentIndex], as: T.self)
             currentIndex += 1
             return value
         }
 
-        mutating func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
+        mutating func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey> where NestedKey: CodingKey {
             self.decoder.codingPath.append(_XMLKey(index: currentIndex))
             defer { self.decoder.codingPath.removeLast() }
 
             let child = elements[currentIndex]
             currentIndex += 1
 
-            let container = KDC<NestedKey>(child, decoder:self.decoder)
+            let container = KDC<NestedKey>(child, decoder: self.decoder)
             return KeyedDecodingContainer(container)
         }
 
@@ -458,15 +454,15 @@ fileprivate class _XMLDecoder : Decoder {
         guard let element = storage.topContainer else {
             throw DecodingError.keyNotFound(codingPath.last!, DecodingError.Context(codingPath: codingPath, debugDescription: "Key not found"))
         }
-        return SVDC(element, decoder:self)
+        return SVDC(element, decoder: self)
     }
 
-    struct SVDC : SingleValueDecodingContainer {
+    struct SVDC: SingleValueDecodingContainer {
         var codingPath: [CodingKey] { return decoder.codingPath }
-        let element : XML.Node
-        let decoder : _XMLDecoder
+        let element: XML.Node
+        let decoder: _XMLDecoder
 
-        init(_ element : XML.Node, decoder: _XMLDecoder) {
+        init(_ element: XML.Node, decoder: _XMLDecoder) {
             self.element = element
             self.decoder = decoder
         }
@@ -531,84 +527,83 @@ fileprivate class _XMLDecoder : Decoder {
             return try decoder.unbox(element, as: UInt64.self)
         }
 
-        func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
+        func decode<T>(_ type: T.Type) throws -> T where T: Decodable {
             return try decoder.unbox(element, as: T.self)
         }
-
     }
 
-    func unbox(_ element : XML.Node, as type: Bool.Type) throws -> Bool {
+    func unbox(_ element: XML.Node, as type: Bool.Type) throws -> Bool {
         guard let value = element.stringValue, let unboxValue = Bool(value) else { throw DecodingError._typeMismatch(at: codingPath, expectation: Bool.self, reality: element.stringValue ?? "nil") }
         return unboxValue
     }
 
-    func unbox(_ element : XML.Node, as type: String.Type) throws -> String {
+    func unbox(_ element: XML.Node, as type: String.Type) throws -> String {
         guard let unboxValue = element.stringValue else { throw DecodingError._typeMismatch(at: codingPath, expectation: String.self, reality: element.stringValue ?? "nil") }
         return unboxValue
     }
 
-    func unbox(_ element : XML.Node, as type: Int.Type) throws -> Int {
+    func unbox(_ element: XML.Node, as type: Int.Type) throws -> Int {
         guard let value = element.stringValue, let unboxValue = Int(value) else { throw DecodingError._typeMismatch(at: codingPath, expectation: Int.self, reality: element.stringValue ?? "nil") }
         return unboxValue
     }
 
-    func unbox(_ element : XML.Node, as type: Int8.Type) throws -> Int8 {
+    func unbox(_ element: XML.Node, as type: Int8.Type) throws -> Int8 {
         guard let value = element.stringValue, let unboxValue = Int8(value) else { throw DecodingError._typeMismatch(at: codingPath, expectation: Int8.self, reality: element.stringValue ?? "nil") }
         return unboxValue
     }
 
-    func unbox(_ element : XML.Node, as type: Int16.Type) throws -> Int16 {
+    func unbox(_ element: XML.Node, as type: Int16.Type) throws -> Int16 {
         guard let value = element.stringValue, let unboxValue = Int16(value) else { throw DecodingError._typeMismatch(at: codingPath, expectation: Int16.self, reality: element.stringValue ?? "nil") }
         return unboxValue
     }
 
-    func unbox(_ element : XML.Node, as type: Int32.Type) throws -> Int32 {
+    func unbox(_ element: XML.Node, as type: Int32.Type) throws -> Int32 {
         guard let value = element.stringValue, let unboxValue = Int32(value) else { throw DecodingError._typeMismatch(at: codingPath, expectation: Int32.self, reality: element.stringValue ?? "nil") }
         return unboxValue
     }
 
-    func unbox(_ element : XML.Node, as type: Int64.Type) throws -> Int64 {
+    func unbox(_ element: XML.Node, as type: Int64.Type) throws -> Int64 {
         guard let value = element.stringValue, let unboxValue = Int64(value) else { throw DecodingError._typeMismatch(at: codingPath, expectation: Int64.self, reality: element.stringValue ?? "nil") }
         return unboxValue
     }
 
-    func unbox(_ element : XML.Node, as type: UInt.Type) throws -> UInt {
+    func unbox(_ element: XML.Node, as type: UInt.Type) throws -> UInt {
         guard let value = element.stringValue, let unboxValue = UInt(value) else { throw DecodingError._typeMismatch(at: codingPath, expectation: UInt.self, reality: element.stringValue ?? "nil") }
         return unboxValue
     }
 
-    func unbox(_ element : XML.Node, as type: UInt8.Type) throws -> UInt8 {
+    func unbox(_ element: XML.Node, as type: UInt8.Type) throws -> UInt8 {
         guard let value = element.stringValue, let unboxValue = UInt8(value) else { throw DecodingError._typeMismatch(at: codingPath, expectation: UInt8.self, reality: element.stringValue ?? "nil") }
         return unboxValue
     }
 
-    func unbox(_ element : XML.Node, as type: UInt16.Type) throws -> UInt16 {
+    func unbox(_ element: XML.Node, as type: UInt16.Type) throws -> UInt16 {
         guard let value = element.stringValue, let unboxValue = UInt16(value) else { throw DecodingError._typeMismatch(at: codingPath, expectation: UInt16.self, reality: element.stringValue ?? "nil") }
         return unboxValue
     }
 
-    func unbox(_ element : XML.Node, as type: UInt32.Type) throws -> UInt32 {
+    func unbox(_ element: XML.Node, as type: UInt32.Type) throws -> UInt32 {
         guard let value = element.stringValue, let unboxValue = UInt32(value) else { throw DecodingError._typeMismatch(at: codingPath, expectation: UInt32.self, reality: element.stringValue ?? "nil") }
         return unboxValue
     }
 
-    func unbox(_ element : XML.Node, as type: UInt64.Type) throws -> UInt64 {
+    func unbox(_ element: XML.Node, as type: UInt64.Type) throws -> UInt64 {
         guard let value = element.stringValue, let unboxValue = UInt64(value) else { throw DecodingError._typeMismatch(at: codingPath, expectation: UInt64.self, reality: element.stringValue ?? "nil") }
         return unboxValue
     }
 
-    func unbox(_ element : XML.Node, as type: Double.Type) throws -> Double {
+    func unbox(_ element: XML.Node, as type: Double.Type) throws -> Double {
         guard let value = element.stringValue, let unboxValue = Double(value) else { throw DecodingError._typeMismatch(at: codingPath, expectation: Double.self, reality: element.stringValue ?? "nil") }
         return unboxValue
     }
 
-    func unbox(_ element : XML.Node, as type: Float.Type) throws -> Float {
+    func unbox(_ element: XML.Node, as type: Float.Type) throws -> Float {
         guard let value = element.stringValue, let unboxValue = Float(value) else { throw DecodingError._typeMismatch(at: codingPath, expectation: Float.self, reality: element.stringValue ?? "nil") }
         return unboxValue
     }
 
     /// get Data from XML.Node
-    fileprivate func unbox(_ element : XML.Node?, as type: Data.Type) throws -> Data {
+    fileprivate func unbox(_ element: XML.Node?, as type: Data.Type) throws -> Data {
         guard let element = element else {
             throw DecodingError.keyNotFound(codingPath.last!, DecodingError.Context(codingPath: codingPath, debugDescription: "Key not found"))
         }
@@ -631,27 +626,26 @@ fileprivate class _XMLDecoder : Decoder {
         }
     }
 
-    func unbox<T>(_ element : XML.Node?, as type: T.Type) throws -> T where T : Decodable {
+    func unbox<T>(_ element: XML.Node?, as type: T.Type) throws -> T where T: Decodable {
         return try unbox_(element, as: T.self) as! T
     }
 
-    func unbox_(_ element : XML.Node?, as type: Decodable.Type) throws -> Any {
+    func unbox_(_ element: XML.Node?, as type: Decodable.Type) throws -> Any {
         if type == Data.self {
             return try self.unbox(element, as: Data.self)
         } else {
-            self.storage.push(container:element)
+            self.storage.push(container: element)
             defer { self.storage.popContainer() }
             return try type.init(from: self)
         }
     }
 }
 
-
 //===----------------------------------------------------------------------===//
 // Shared Key Types
 //===----------------------------------------------------------------------===//
 
-fileprivate struct _XMLKey : CodingKey {
+fileprivate struct _XMLKey: CodingKey {
     public var stringValue: String
     public var intValue: Int?
 
@@ -689,7 +683,7 @@ extension EncodingError {
     /// - parameter value: The value that was invalid to encode.
     /// - parameter path: The path of `CodingKey`s taken to encode this value.
     /// - returns: An `EncodingError` with the appropriate path and debug description.
-    fileprivate static func _invalidFloatingPointValue<T : FloatingPoint>(_ value: T, at codingPath: [CodingKey]) -> EncodingError {
+    fileprivate static func _invalidFloatingPointValue<T: FloatingPoint>(_ value: T, at codingPath: [CodingKey]) -> EncodingError {
         let valueDescription: String
         if value == T.infinity {
             valueDescription = "\(T.self).infinity"
@@ -730,11 +724,10 @@ internal extension DecodingError {
             return "a string/data"
         } else if value is [Any] {
             return "an array"
-        } else if value is [String : Any] {
+        } else if value is [String: Any] {
             return "a dictionary"
         } else {
             return "\(type(of: value))"
         }
     }
 }
-

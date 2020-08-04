@@ -19,8 +19,7 @@
 import CommonCrypto
 
 public extension Insecure {
-    
-    struct MD5Digest : ByteDigest {
+    struct MD5Digest: ByteDigest {
         public static var byteCount: Int { return Int(CC_MD5_DIGEST_LENGTH) }
         public var bytes: [UInt8]
     }
@@ -40,11 +39,11 @@ public extension Insecure {
             context = CC_MD5_CTX()
             CC_MD5_Init(&context)
         }
-        
+
         public mutating func update(bufferPointer: UnsafeRawBufferPointer) {
             CC_MD5_Update(&context, bufferPointer.baseAddress, CC_LONG(bufferPointer.count))
         }
-        
+
         public mutating func finalize() -> Self.Digest {
             var digest: [UInt8] = .init(repeating: 0, count: Digest.byteCount)
             CC_MD5_Final(&digest, &context)

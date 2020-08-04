@@ -20,7 +20,7 @@ import NIOHTTP1
 /// HTTP client delegate capturing the body parts received from AsyncHTTPClient.
 class AWSHTTPClientResponseDelegate: HTTPClientResponseDelegate {
     typealias Response = AWSHTTPResponse
-    
+
     enum State {
         case idle
         case head(HTTPResponseHead)
@@ -29,13 +29,13 @@ class AWSHTTPClientResponseDelegate: HTTPClientResponseDelegate {
     }
 
     let host: String
-    let stream: (ByteBuffer, EventLoop)->EventLoopFuture<Void>
+    let stream: (ByteBuffer, EventLoop) -> EventLoopFuture<Void>
     var state: State
     // temporary stored future while AHC still doesn't sync to futures returned from `didReceiveBodyPart`
     // See https://github.com/swift-server/async-http-client/issues/274
     var bodyPartFuture: EventLoopFuture<Void>? = nil
 
-    init(host: String, stream: @escaping (ByteBuffer, EventLoop)->EventLoopFuture<Void>) {
+    init(host: String, stream: @escaping (ByteBuffer, EventLoop) -> EventLoopFuture<Void>) {
         self.host = host
         self.stream = stream
         self.state = .idle
@@ -54,7 +54,7 @@ class AWSHTTPClientResponseDelegate: HTTPClientResponseDelegate {
         }
         return task.eventLoop.makeSucceededFuture(())
     }
-    
+
     func didReceiveBodyPart(task: HTTPClient.Task<Response>, _ part: ByteBuffer) -> EventLoopFuture<Void> {
         switch self.state {
         case .idle:

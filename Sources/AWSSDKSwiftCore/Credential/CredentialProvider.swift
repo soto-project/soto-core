@@ -28,12 +28,11 @@ extension CredentialProvider {
         return eventLoop.makeSucceededFuture(())
     }
 
-    public var description: String { return "\(type(of:self))"}
+    public var description: String { return "\(type(of: self))" }
 }
 
 /// A helper struct to defer the creation of a `CredentialProvider` until after the AWSClient has been created.
 public struct CredentialProviderFactory {
-
     /// The initialization context for a `ContextProvider`
     public struct Context {
         /// The `AWSClient`s internal `HTTPClient`
@@ -56,7 +55,6 @@ public struct CredentialProviderFactory {
 }
 
 extension CredentialProviderFactory {
-
     /// The default CredentialProvider used to access credentials
     public static var `default`: CredentialProviderFactory {
         #if os(Linux)

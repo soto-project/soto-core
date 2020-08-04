@@ -31,7 +31,6 @@ import NIOTransportServices
 /// HTTP Client class providing API for sending HTTP requests
 @available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)
 public final class NIOTSHTTPClient {
-
     /// Specifies how `EventLoopGroup` will be created and establishes lifecycle ownership.
     public enum EventLoopGroupProvider {
         /// `EventLoopGroup` will be provided by the user. Owner of this group is responsible for its lifecycle.
@@ -92,14 +91,14 @@ public final class NIOTSHTTPClient {
 
     /// send request to HTTP client, return a future holding the Response
     public func connect(url: URL, _ request: Request, timeout: TimeAmount, on eventLoop: EventLoop) -> EventLoopFuture<Response> {
-        //let eventLoop = eventLoop ?? eventLoopGroup.next()
+        // let eventLoop = eventLoop ?? eventLoopGroup.next()
         // extract details from request URL
-        //guard let url = URL(string:request.head.uri) else { return eventLoop.makeFailedFuture(HTTPError.malformedURL(url: request.head.uri)) }
+        // guard let url = URL(string:request.head.uri) else { return eventLoop.makeFailedFuture(HTTPError.malformedURL(url: request.head.uri)) }
         guard let scheme = url.scheme else { return eventLoop.makeFailedFuture(HTTPError.malformedURL(url: request.head.uri)) }
         guard let hostname = url.host else { return eventLoop.makeFailedFuture(HTTPError.malformedURL(url: request.head.uri)) }
 
-        let port : Int
-        let headerHostname : String
+        let port: Int
+        let headerHostname: String
         if url.port != nil {
             port = url.port!
             headerHostname = "\(hostname):\(port)"
@@ -108,7 +107,6 @@ public final class NIOTSHTTPClient {
             port = isSecure ? 443 : 80
             headerHostname = hostname
         }
-
 
         let response: EventLoopPromise<Response> = eventLoop.makePromise()
 
@@ -123,12 +121,12 @@ public final class NIOTSHTTPClient {
         bootstrap.channelInitializer { channel in
             return channel.pipeline.addHTTPClientHandlers()
                 .flatMap {
-                    let handlers : [ChannelHandler] = [
+                    let handlers: [ChannelHandler] = [
                         HTTPClientRequestSerializer(hostname: headerHostname),
                         HTTPClientResponseHandler(promise: response)
                     ]
                     return channel.pipeline.addHandlers(handlers)
-            }
+                }
         }
         .connect(host: hostname, port: port)
         .flatMap { channel -> EventLoopFuture<Void> in
@@ -142,7 +140,7 @@ public final class NIOTSHTTPClient {
     }
 
     /// Channel Handler for serializing request header and data
-    private class HTTPClientRequestSerializer : ChannelOutboundHandler {
+    private class HTTPClientRequestSerializer: ChannelOutboundHandler {
         typealias OutboundIn = Request
         typealias OutboundOut = HTTPClientRequestPart
 
@@ -159,7 +157,6 @@ public final class NIOTSHTTPClient {
             head.headers.replaceOrAdd(name: "Host", value: hostname)
             head.headers.replaceOrAdd(name: "Content-Length", value: request.body?.readableBytes.description ?? "0")
             head.headers.replaceOrAdd(name: "Connection", value: "Close")
-
 
             context.write(wrapOutboundOut(.head(head)), promise: nil)
             if let body = request.body, body.readableBytes > 0 {
@@ -184,7 +181,7 @@ public final class NIOTSHTTPClient {
         }
 
         private var state: ResponseState = .ready
-        private let promise : EventLoopPromise<Response>
+        private let promise: EventLoopPromise<Response>
 
         init(promise: EventLoopPromise<Response>) {
             self.promise = promise
@@ -241,12 +238,11 @@ public final class NIOTSHTTPClient {
 /// comply with AWSHTTPClient protocol
 @available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)
 extension NIOTSHTTPClient: AWSHTTPClient {
-
     public func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<AWSHTTPResponse> {
         var head = HTTPRequestHead(
-          version: HTTPVersion(major: 1, minor: 1),
-          method: request.method,
-          uri: request.url.uri
+            version: HTTPVersion(major: 1, minor: 1),
+            method: request.method,
+            uri: request.url.uri
         )
         head.headers = request.headers
 
@@ -305,7 +301,7 @@ extension URL {
         if self.pathHasTrailingSlash, uri != "/" {
             uri += "/"
         }
-        
+
         if let query = self.query {
             uri += "?" + query
         }

@@ -1,17 +1,15 @@
-# swift version
---swiftversion 5.1
-
 # file options
 
 --exclude .build
 
 # rules
---disable redundantReturn, preferKeyPath
+--disable redundantReturn, preferKeyPath, void
+--rules indent, braces, consecutiveBlankLines, consecutiveSpaces, blankLinesAroundMark, blankLinesAtEndOfScope, blankLinesAtStartOfScope, blankLinesBetweenScopes, spaceAroundBraces, spaceAroundBrackets, spaceAroundComments, spaceAroundGenerics, spaceAroundOperators, spaceAroundParens, spaceInsideBraces, spaceInsideBrackets, spaceInsideComments, spaceInsideGenerics, spaceInsideParens, trailingSpace, emptyBraces
 
 # format options
 
 --ifdef no-indent
---nospaceoperators
+--nospaceoperators ...,..<
 --patternlet inline
 --self init-only
 --stripunusedargs unnamed-only

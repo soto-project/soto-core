@@ -60,7 +60,7 @@ class AWSClientTests: XCTestCase {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
-        defer { XCTAssertNoThrow(try httpClient.syncShutdown())}
+        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
         let eventLoop = eventLoopGroup.next()
         // currently only testing with httpClientProvider: .shared(httpClient)
         let client = createAWSClient(httpClientProvider: .shared(httpClient))
@@ -137,7 +137,7 @@ class AWSClientTests: XCTestCase {
             case first
             case second
         }
-        struct Input : AWSEncodableShape & Decodable {
+        struct Input: AWSEncodableShape & Decodable {
             let e: InputEnum
             let i: [Int64]
         }
@@ -150,13 +150,13 @@ class AWSClientTests: XCTestCase {
                 XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try awsServer.stop())
             }
-            let input = Input(e:.second, i: [1,2,4,8])
+            let input = Input(e: .second, i: [1, 2, 4, 8])
             let response = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: TestEnvironment.logger)
 
             try awsServer.processRaw { request in
                 let receivedInput = try JSONDecoder().decode(Input.self, from: request.body)
                 XCTAssertEqual(receivedInput.e, .second)
-                XCTAssertEqual(receivedInput.i, [1,2,4,8])
+                XCTAssertEqual(receivedInput.i, [1, 2, 4, 8])
                 let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
                 return .result(response)
             }
@@ -168,7 +168,7 @@ class AWSClientTests: XCTestCase {
     }
 
     func testClientNoInputWithOutput() {
-        struct Output : AWSDecodableShape & Encodable {
+        struct Output: AWSDecodableShape & Encodable {
             let s: String
             let i: Int64
         }
@@ -199,13 +199,13 @@ class AWSClientTests: XCTestCase {
     }
 
     func testRequestStreaming(config: AWSServiceConfig, client: AWSClient, server: AWSTestServer, bufferSize: Int, blockSize: Int) throws {
-        struct Input : AWSEncodableShape & AWSShapeWithPayload {
+        struct Input: AWSEncodableShape & AWSShapeWithPayload {
             static var _payloadPath: String = "payload"
             static var _payloadOptions: AWSShapePayloadOptions = [.allowStreaming, .raw]
             let payload: AWSPayload
             private enum CodingKeys: CodingKey {}
         }
-        let data = createRandomBuffer(45,9182, size: bufferSize)
+        let data = createRandomBuffer(45, 9182, size: bufferSize)
         var byteBuffer = ByteBufferAllocator().buffer(capacity: data.count)
         byteBuffer.writeBytes(data)
 
@@ -240,9 +240,9 @@ class AWSClientTests: XCTestCase {
             XCTAssertNoThrow(try httpClient.syncShutdown())
         }
 
-        XCTAssertNoThrow(try testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128*1024, blockSize: 16*1024))
-        XCTAssertNoThrow(try testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128*1024, blockSize: 17*1024))
-        XCTAssertNoThrow(try testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 18*1024, blockSize: 47*1024))
+        XCTAssertNoThrow(try testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128 * 1024, blockSize: 16 * 1024))
+        XCTAssertNoThrow(try testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128 * 1024, blockSize: 17 * 1024))
+        XCTAssertNoThrow(try testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 18 * 1024, blockSize: 47 * 1024))
     }
 
     func testRequestS3Streaming() {
@@ -256,16 +256,16 @@ class AWSClientTests: XCTestCase {
             XCTAssertNoThrow(try httpClient.syncShutdown())
         }
 
-        XCTAssertNoThrow(try testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128*1024, blockSize: 16*1024))
-        XCTAssertNoThrow(try testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 81*1024, blockSize: 16*1024))
-        XCTAssertNoThrow(try testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128*1024, blockSize: S3ChunkedStreamReader.bufferSize))
-        XCTAssertNoThrow(try testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 130*1024, blockSize: S3ChunkedStreamReader.bufferSize))
-        XCTAssertNoThrow(try testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128*1024, blockSize: 17*1024))
-        XCTAssertNoThrow(try testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 18*1024, blockSize: 47*1024))
+        XCTAssertNoThrow(try testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128 * 1024, blockSize: 16 * 1024))
+        XCTAssertNoThrow(try testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 81 * 1024, blockSize: 16 * 1024))
+        XCTAssertNoThrow(try testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128 * 1024, blockSize: S3ChunkedStreamReader.bufferSize))
+        XCTAssertNoThrow(try testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 130 * 1024, blockSize: S3ChunkedStreamReader.bufferSize))
+        XCTAssertNoThrow(try testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128 * 1024, blockSize: 17 * 1024))
+        XCTAssertNoThrow(try testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 18 * 1024, blockSize: 47 * 1024))
     }
 
     func testRequestStreamingTooMuchData() {
-        struct Input : AWSEncodableShape & AWSShapeWithPayload {
+        struct Input: AWSEncodableShape & AWSShapeWithPayload {
             static var _payloadPath: String = "payload"
             static var _payloadOptions: AWSShapePayloadOptions = [.allowStreaming]
             let payload: AWSPayload
@@ -283,7 +283,6 @@ class AWSClientTests: XCTestCase {
             XCTAssertNoThrow(try httpClient.syncShutdown())
         }
         do {
-
             // set up stream of 8 bytes but supply more than that
             let payload = AWSPayload.stream(size: 8) { eventLoop in
                 var buffer = ByteBufferAllocator().buffer(capacity: 0)
@@ -300,7 +299,7 @@ class AWSClientTests: XCTestCase {
     }
 
     func testRequestStreamingFile() {
-        struct Input : AWSEncodableShape & AWSShapeWithPayload {
+        struct Input: AWSEncodableShape & AWSShapeWithPayload {
             static var _payloadPath: String = "payload"
             static var _payloadOptions: AWSShapePayloadOptions = [.allowStreaming]
             let payload: AWSPayload
@@ -317,8 +316,8 @@ class AWSClientTests: XCTestCase {
             XCTAssertNoThrow(try httpClient.syncShutdown())
         }
         do {
-            let bufferSize = 208*1024
-            let data = Data(createRandomBuffer(45,9182, size: bufferSize))
+            let bufferSize = 208 * 1024
+            let data = Data(createRandomBuffer(45, 9182, size: bufferSize))
             let filename = "testRequestStreamingFile"
             let fileURL = URL(fileURLWithPath: filename)
             try data.write(to: fileURL)
@@ -355,7 +354,7 @@ class AWSClientTests: XCTestCase {
     }
 
     func testRequestChunkedStreaming() {
-        struct Input : AWSEncodableShape & AWSShapeWithPayload {
+        struct Input: AWSEncodableShape & AWSShapeWithPayload {
             static var _payloadPath: String = "payload"
             static var _payloadOptions: AWSShapePayloadOptions = [.allowStreaming, .allowChunkedStreaming, .raw]
             let payload: AWSPayload
@@ -372,11 +371,10 @@ class AWSClientTests: XCTestCase {
             XCTAssertNoThrow(try httpClient.syncShutdown())
         }
         do {
-
             // supply buffer in 16k blocks
-            let bufferSize = 145*1024
-            let blockSize = 16*1024
-            let data = createRandomBuffer(45,9182, size: bufferSize)
+            let bufferSize = 145 * 1024
+            let blockSize = 16 * 1024
+            let data = createRandomBuffer(45, 9182, size: bufferSize)
             var byteBuffer = ByteBufferAllocator().buffer(capacity: bufferSize)
             byteBuffer.writeBytes(data)
 
@@ -421,7 +419,7 @@ class AWSClientTests: XCTestCase {
             let response = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, logger: TestEnvironment.logger)
 
             try awsServer.processRaw { request in
-                let response = AWSTestServer.Response(httpStatus: .temporaryRedirect, headers: ["Location":awsServer.address], body: nil)
+                let response = AWSTestServer.Response(httpStatus: .temporaryRedirect, headers: ["Location": awsServer.address], body: nil)
                 return .result(response)
             }
 
@@ -480,7 +478,7 @@ class AWSClientTests: XCTestCase {
     }
 
     func testClientRetry() {
-        struct Output : AWSDecodableShape, Encodable {
+        struct Output: AWSDecodableShape, Encodable {
             let s: String
         }
         do {
@@ -523,7 +521,7 @@ class AWSClientTests: XCTestCase {
     }
 
     func testClientRetryFail() {
-        struct Output : AWSDecodableShape, Encodable {
+        struct Output: AWSDecodableShape, Encodable {
             let s: String
         }
         do {
@@ -551,7 +549,7 @@ class AWSClientTests: XCTestCase {
             let output = try response.wait()
 
             XCTAssertEqual(output.s, "TestOutputString")
-        } catch  let error as AWSClientError where error == AWSClientError.accessDenied {
+        } catch let error as AWSClientError where error == AWSClientError.accessDenied {
             XCTAssertEqual(error.message, AWSTestServer.ErrorType.accessDenied.message)
         } catch {
             XCTFail("Unexpected error: \(error)")
@@ -593,13 +591,12 @@ class AWSClientTests: XCTestCase {
     }
 
     func testStreamingResponse() {
-        struct Input : AWSEncodableShape {
-        }
-        struct Output : AWSDecodableShape & Encodable {
+        struct Input: AWSEncodableShape {}
+        struct Output: AWSDecodableShape & Encodable {
             static let _encoding = [AWSMemberEncoding(label: "test", location: .header(locationName: "test"))]
             let test: String
         }
-        let data = createRandomBuffer(45, 109, size: 128*1024)
+        let data = createRandomBuffer(45, 109, size: 128 * 1024)
 
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)
@@ -623,7 +620,7 @@ class AWSClientTests: XCTestCase {
                 logger: TestEnvironment.logger
             ) { (payload: ByteBuffer, eventLoop: EventLoop) in
                 let payloadSize = payload.readableBytes
-                let slice = Data(data[count..<(count+payloadSize)])
+                let slice = Data(data[count..<(count + payloadSize)])
                 let payloadData = payload.getData(at: 0, length: payload.readableBytes)
                 XCTAssertEqual(slice, payloadData)
                 count += payloadSize
@@ -631,29 +628,27 @@ class AWSClientTests: XCTestCase {
             }
 
             try awsServer.processRaw { request in
-                var byteBuffer = ByteBufferAllocator().buffer(capacity: 128*1024)
+                var byteBuffer = ByteBufferAllocator().buffer(capacity: 128 * 1024)
                 byteBuffer.writeBytes(data)
-                let response = AWSTestServer.Response(httpStatus: .ok, headers: ["test":"TestHeader"], body: byteBuffer)
+                let response = AWSTestServer.Response(httpStatus: .ok, headers: ["test": "TestHeader"], body: byteBuffer)
                 return .result(response)
             }
 
             let result = try response.wait()
             XCTAssertEqual(result.test, "TestHeader")
-            XCTAssertEqual(count, 128*1024)
+            XCTAssertEqual(count, 128 * 1024)
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
-
     }
 
     func testStreamingDelegateFinished() {
-        struct Input : AWSEncodableShape {
-        }
-        struct Output : AWSDecodableShape & Encodable {
+        struct Input: AWSEncodableShape {}
+        struct Output: AWSDecodableShape & Encodable {
             static let _encoding = [AWSMemberEncoding(label: "test", location: .header(locationName: "test"))]
             let test: String
         }
-        let bufferSize = 200*1024
+        let bufferSize = 200 * 1024
         let data = createRandomBuffer(45, 109, size: bufferSize)
 
         let awsServer = AWSTestServer(serviceProtocol: .json)
@@ -686,7 +681,7 @@ class AWSClientTests: XCTestCase {
         XCTAssertNoThrow(try awsServer.processRaw { request in
             var byteBuffer = ByteBufferAllocator().buffer(capacity: bufferSize)
             byteBuffer.writeBytes(data)
-            let response = AWSTestServer.Response(httpStatus: .ok, headers: ["test":"TestHeader"], body: byteBuffer)
+            let response = AWSTestServer.Response(httpStatus: .ok, headers: ["test": "TestHeader"], body: byteBuffer)
             return .result(response)
         })
 
@@ -696,12 +691,12 @@ class AWSClientTests: XCTestCase {
 
     func testMiddlewareAppliedOnce() {
         struct URLAppendMiddleware: AWSServiceMiddleware {
-             func chain(request: AWSRequest) throws -> AWSRequest {
-                 var request = request
-                 request.url.appendPathComponent("test")
-                 return request
-             }
-         }
+            func chain(request: AWSRequest) throws -> AWSRequest {
+                var request = request
+                request.url.appendPathComponent("test")
+                return request
+            }
+        }
 
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let config = createServiceConfig(endpoint: awsServer.address)
@@ -720,5 +715,4 @@ class AWSClientTests: XCTestCase {
 
         XCTAssertNoThrow(try response.wait())
     }
-
 }

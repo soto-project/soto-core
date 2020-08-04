@@ -71,7 +71,7 @@ extension StandardRetryPolicy {
     /// default version of getRetryWaitTime for StandardRetryController
     func getRetryWaitTime(error: Error, attempt: Int) -> RetryStatus? {
         guard attempt < maxRetries else { return .dontRetry }
-        
+
         switch error {
         // server error or too many requests
         case AWSClient.InternalError.httpResponseError(let response):
@@ -89,17 +89,16 @@ extension StandardRetryPolicy {
 struct ExponentialRetry: StandardRetryPolicy {
     let base: TimeAmount
     let maxRetries: Int
-    
+
     init(base: TimeAmount = .seconds(1), maxRetries: Int = 4) {
         self.base = base
         self.maxRetries = maxRetries
     }
-    
+
     func calculateRetryWaitTime(attempt: Int) -> TimeAmount {
         let exp = Int64(exp2(Double(attempt)))
         return .nanoseconds(base.nanoseconds * exp)
     }
-    
 }
 
 /// Exponential jitter retry. Instead of returning an exponentially increasing retry time it returns a jittered version. In a heavy load situation
@@ -108,15 +107,14 @@ struct ExponentialRetry: StandardRetryPolicy {
 struct JitterRetry: StandardRetryPolicy {
     let base: TimeAmount
     let maxRetries: Int
-    
+
     init(base: TimeAmount = .seconds(1), maxRetries: Int = 4) {
         self.base = base
         self.maxRetries = maxRetries
     }
-    
+
     func calculateRetryWaitTime(attempt: Int) -> TimeAmount {
         let exp = Int64(exp2(Double(attempt)))
         return .nanoseconds(Int64.random(in: (base.nanoseconds * exp / 2)..<(base.nanoseconds * exp)))
     }
 }
-

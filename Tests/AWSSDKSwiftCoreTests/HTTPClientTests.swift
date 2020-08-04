@@ -25,7 +25,6 @@ import AWSTestUtils
 
 @available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)
 class NIOTSHTTPClientTests: XCTestCase {
-
     var awsServer: AWSTestServer!
     var client: NIOTSHTTPClient!
 
@@ -40,16 +39,16 @@ class NIOTSHTTPClientTests: XCTestCase {
     }
 
     func testInitWithInvalidURL() {
-      do {
-        let request = AWSHTTPRequest(url: URL(string:"no_protocol.com")!, method: .GET, headers: HTTPHeaders())
-        _ = try client.execute(request: request, timeout: .seconds(5), on: client.eventLoopGroup.next(), logger: TestEnvironment.logger).wait()
-        XCTFail("Should throw malformedURL error")
-      } catch {
-        if case NIOTSHTTPClient.HTTPError.malformedURL = error {}
-        else {
+        do {
+            let request = AWSHTTPRequest(url: URL(string: "no_protocol.com")!, method: .GET, headers: HTTPHeaders())
+            _ = try client.execute(request: request, timeout: .seconds(5), on: client.eventLoopGroup.next(), logger: TestEnvironment.logger).wait()
             XCTFail("Should throw malformedURL error")
+        } catch {
+            if case NIOTSHTTPClient.HTTPError.malformedURL = error {}
+            else {
+                XCTFail("Should throw malformedURL error")
+            }
         }
-      }
     }
 
     func testConnectGet() {
@@ -87,11 +86,10 @@ class NIOTSHTTPClientTests: XCTestCase {
     }
 }
 
-#endif //canImport(Network)
+#endif // canImport(Network)
 
 /// HTTP Client tests, to be used with any HTTP client that conforms to AWSHTTPClient
 class HTTPClientTests {
-
     let client: AWSHTTPClient
 
     init(_ client: AWSHTTPClient) {
@@ -103,7 +101,7 @@ class HTTPClientTests {
             .flatMapThrowing { response in
                 guard let body = response.body else { throw AWSTestServer.Error.emptyBody }
                 return try JSONDecoder().decode(AWSTestServer.HTTPBinResponse.self, from: body)
-        }
+            }
     }
 
     func testGet() {

@@ -18,9 +18,8 @@ import NIO
 @testable import AWSSDKSwiftCore
 
 class RuntimeSelectorCredentialProviderTests: XCTestCase {
-
     func testSetupFail() {
-        let client = createAWSClient(credentialProvider: .selector(.custom {_ in return NullCredentialProvider()} ))
+        let client = createAWSClient(credentialProvider: .selector(.custom { _ in return NullCredentialProvider() }))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next(), logger: TestEnvironment.logger)
         XCTAssertThrowsError(try futureResult.wait()) { error in
@@ -31,7 +30,6 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
                 XCTFail()
             }
         }
-
     }
 
     func testShutdown() {
@@ -184,10 +182,10 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
 
     func testConfigFileProvider() {
         let credentials = """
-            [default]
-            aws_access_key_id = AWSACCESSKEYID
-            aws_secret_access_key = AWSSECRETACCESSKEY
-            """
+        [default]
+        aws_access_key_id = AWSACCESSKEYID
+        aws_secret_access_key = AWSSECRETACCESSKEY
+        """
         let filename = "credentials"
         let filenameURL = URL(fileURLWithPath: filename)
         XCTAssertNoThrow(try Data(credentials.utf8).write(to: filenameURL))
@@ -215,5 +213,4 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
         }
         XCTAssertNoThrow(try futureResult.wait())
     }
-
 }

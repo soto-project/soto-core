@@ -17,16 +17,15 @@ import class Foundation.NSData
 
 /// The wrapper class for encoding Codable classes to Query dictionary
 class QueryEncoder {
-
     /// Contextual user-provided information for use during encoding.
-    open var userInfo: [CodingUserInfoKey : Any] = [:]
+    open var userInfo: [CodingUserInfoKey: Any] = [:]
 
     /// Are we encoding for EC2
     open var ec2: Bool = false
 
     /// Options set on the top-level encoder to pass down the encoding hierarchy.
     fileprivate struct _Options {
-        let userInfo: [CodingUserInfoKey : Any]
+        let userInfo: [CodingUserInfoKey: Any]
         let ec2: Bool
     }
 
@@ -37,7 +36,7 @@ class QueryEncoder {
 
     public init() {}
 
-    open func encode<T : Encodable>(_ value: T, name: String? = nil) throws -> [String: Any] {
+    open func encode<T: Encodable>(_ value: T, name: String? = nil) throws -> [String: Any] {
         let encoder = _QueryEncoder(options: options)
         try value.encode(to: encoder)
 
@@ -66,11 +65,11 @@ class QueryEncoder {
             for iterator in array.enumerated() {
                 switch iterator.element {
                 case let keyed as _QueryEncoderKeyedContainer:
-                    flatten(dictionary: keyed.values, path: "\(path)\(iterator.offset+1).")
+                    flatten(dictionary: keyed.values, path: "\(path)\(iterator.offset + 1).")
                 case let unkeyed as _QueryEncoderUnkeyedContainer:
-                    flatten(array: unkeyed.values, path: "\(path)\(iterator.offset+1)")
+                    flatten(array: unkeyed.values, path: "\(path)\(iterator.offset + 1)")
                 default:
-                    result["\(path)\(iterator.offset+1)"] = iterator.element
+                    result["\(path)\(iterator.offset + 1)"] = iterator.element
                 }
             }
         }
@@ -104,7 +103,7 @@ fileprivate class _QueryEncoderUnkeyedContainer {
 /// storage for Query Encoder. Stores a stack of QueryEncoder containers, plus leaf objects
 fileprivate struct _QueryEncoderStorage {
     /// the container stack
-    private var containers : [Any] = []
+    private var containers: [Any] = []
 
     /// initializes self with no containers
     init() {}
@@ -134,11 +133,11 @@ fileprivate struct _QueryEncoderStorage {
 }
 
 /// Internal QueryEncoder class. Does all the heavy lifting
-fileprivate class _QueryEncoder : Encoder {
+fileprivate class _QueryEncoder: Encoder {
     var codingPath: [CodingKey]
 
     /// the encoder's storage
-    var storage : _QueryEncoderStorage
+    var storage: _QueryEncoderStorage
 
     /// options
     var options: QueryEncoder._Options
@@ -147,7 +146,7 @@ fileprivate class _QueryEncoder : Encoder {
     var result: _QueryEncoderKeyedContainer?
 
     /// Contextual user-provided information for use during encoding.
-    public var userInfo: [CodingUserInfoKey : Any] {
+    public var userInfo: [CodingUserInfoKey: Any] {
         return self.options.userInfo
     }
 
@@ -162,15 +161,15 @@ fileprivate class _QueryEncoder : Encoder {
         self.result = nil
     }
 
-    func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {
+    func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key: CodingKey {
         let newContainer = storage.pushKeyedContainer()
         if self.result == nil {
             self.result = newContainer
         }
-        return KeyedEncodingContainer(KEC(referencing:self, container: newContainer))
+        return KeyedEncodingContainer(KEC(referencing: self, container: newContainer))
     }
 
-    struct KEC<Key: CodingKey> : KeyedEncodingContainerProtocol {
+    struct KEC<Key: CodingKey>: KeyedEncodingContainerProtocol {
         var codingPath: [CodingKey] { return encoder.codingPath }
         let container: _QueryEncoderKeyedContainer
         let encoder: _QueryEncoder
@@ -210,7 +209,7 @@ fileprivate class _QueryEncoder : Encoder {
             container.addChild(path: ec2Encode(key.stringValue), child: childContainer)
         }
 
-        mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
+        mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey: CodingKey {
             self.encoder.codingPath.append(key)
             defer { self.encoder.codingPath.removeLast() }
 
@@ -238,7 +237,7 @@ fileprivate class _QueryEncoder : Encoder {
         mutating func superEncoder(forKey key: Key) -> Encoder {
             return encoder
         }
-        
+
         func ec2Encode(_ string: String) -> String {
             if encoder.options.ec2 {
                 return string.uppercaseFirst()
@@ -252,7 +251,7 @@ fileprivate class _QueryEncoder : Encoder {
         return UKEC(referencing: self, container: container)
     }
 
-    struct UKEC : UnkeyedEncodingContainer {
+    struct UKEC: UnkeyedEncodingContainer {
         var codingPath: [CodingKey] { return encoder.codingPath }
         let container: _QueryEncoderUnkeyedContainer
         let encoder: _QueryEncoder
@@ -285,7 +284,7 @@ fileprivate class _QueryEncoder : Encoder {
         mutating func encode(_ value: UInt32) throws { encodeResult(value) }
         mutating func encode(_ value: UInt64) throws { encodeResult(value) }
 
-        mutating func encode<T: Encodable>(_ value: T) throws  {
+        mutating func encode<T: Encodable>(_ value: T) throws {
             count += 1
 
             self.encoder.codingPath.append(_QueryKey(index: count))
@@ -295,7 +294,7 @@ fileprivate class _QueryEncoder : Encoder {
             container.addChild(childContainer)
         }
 
-        mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
+        mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> where NestedKey: CodingKey {
             count += 1
 
             self.encoder.codingPath.append(_QueryKey(index: count))
@@ -323,7 +322,7 @@ fileprivate class _QueryEncoder : Encoder {
     }
 }
 
-extension _QueryEncoder : SingleValueEncodingContainer {
+extension _QueryEncoder: SingleValueEncodingContainer {
     func encodeResult(_ value: Any) {
         storage.push(container: value)
     }
@@ -332,20 +331,20 @@ extension _QueryEncoder : SingleValueEncodingContainer {
         encodeResult("")
     }
 
-    func encode(_ value: Bool) throws { encodeResult(value)}
-    func encode(_ value: String) throws { encodeResult(value)}
-    func encode(_ value: Double) throws { encodeResult(value)}
-    func encode(_ value: Float) throws { encodeResult(value)}
-    func encode(_ value: Int) throws { encodeResult(value)}
-    func encode(_ value: Int8) throws { encodeResult(value)}
-    func encode(_ value: Int16) throws { encodeResult(value)}
-    func encode(_ value: Int32) throws { encodeResult(value)}
-    func encode(_ value: Int64) throws { encodeResult(value)}
-    func encode(_ value: UInt) throws { encodeResult(value)}
-    func encode(_ value: UInt8) throws { encodeResult(value)}
-    func encode(_ value: UInt16) throws { encodeResult(value)}
-    func encode(_ value: UInt32) throws { encodeResult(value)}
-    func encode(_ value: UInt64) throws { encodeResult(value)}
+    func encode(_ value: Bool) throws { encodeResult(value) }
+    func encode(_ value: String) throws { encodeResult(value) }
+    func encode(_ value: Double) throws { encodeResult(value) }
+    func encode(_ value: Float) throws { encodeResult(value) }
+    func encode(_ value: Int) throws { encodeResult(value) }
+    func encode(_ value: Int8) throws { encodeResult(value) }
+    func encode(_ value: Int16) throws { encodeResult(value) }
+    func encode(_ value: Int32) throws { encodeResult(value) }
+    func encode(_ value: Int64) throws { encodeResult(value) }
+    func encode(_ value: UInt) throws { encodeResult(value) }
+    func encode(_ value: UInt8) throws { encodeResult(value) }
+    func encode(_ value: UInt16) throws { encodeResult(value) }
+    func encode(_ value: UInt32) throws { encodeResult(value) }
+    func encode(_ value: UInt64) throws { encodeResult(value) }
 
     func encode<T: Encodable>(_ value: T) throws {
         try value.encode(to: self)
@@ -377,7 +376,7 @@ extension _QueryEncoder {
 // Shared Key Types
 //===----------------------------------------------------------------------===//
 
-fileprivate struct _QueryKey : CodingKey {
+fileprivate struct _QueryKey: CodingKey {
     public var stringValue: String
     public var intValue: Int?
 

@@ -29,6 +29,7 @@ class RuntimeSelectorCredentialProvider: CredentialProvider {
             }
         }
     }
+
     /// promise to find a credential provider
     let startupPromise: EventLoopPromise<CredentialProvider>
 

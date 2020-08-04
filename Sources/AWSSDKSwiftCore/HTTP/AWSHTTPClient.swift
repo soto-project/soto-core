@@ -41,7 +41,7 @@ public protocol AWSHTTPResponse {
 
 /// Protocol defining requirements for a HTTPClient
 public protocol AWSHTTPClient {
-    typealias ResponseStream = (ByteBuffer, EventLoop)->EventLoopFuture<Void>
+    typealias ResponseStream = (ByteBuffer, EventLoop) -> EventLoopFuture<Void>
 
     /// Execute HTTP request and return a future holding a HTTP Response
     func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<AWSHTTPResponse>
@@ -61,5 +61,4 @@ extension AWSHTTPClient {
     public func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop, logger: Logger, stream: @escaping ResponseStream) -> EventLoopFuture<AWSHTTPResponse> {
         preconditionFailure("\(type(of: self)) does not support response streaming")
     }
-
 }

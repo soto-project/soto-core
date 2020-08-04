@@ -84,7 +84,6 @@ extension OptionalCoding: Encodable where Coder: CustomEncoder {
     }
 }
 
-
 /// Protocol for a PropertyWrapper to properly handle Coding when the wrappedValue is Optional
 public protocol OptionalCodingWrapper {
     associatedtype WrappedType
@@ -95,7 +94,7 @@ public protocol OptionalCodingWrapper {
 /// extending `KeyedDecodingContainer` so it will only decode an optional value if it is present
 extension KeyedDecodingContainer {
     // This is used to override the default decoding behavior for OptionalCodingWrapper to allow a value to avoid a missing key Error
-    public func decode<T>(_ type: T.Type, forKey key: KeyedDecodingContainer<K>.Key) throws -> T where T : Decodable, T: OptionalCodingWrapper {
+    public func decode<T>(_ type: T.Type, forKey key: KeyedDecodingContainer<K>.Key) throws -> T where T: Decodable, T: OptionalCodingWrapper {
         return try decodeIfPresent(T.self, forKey: key) ?? T(wrappedValue: nil)
     }
 }
@@ -104,7 +103,7 @@ extension KeyedDecodingContainer {
 extension KeyedEncodingContainer {
     // Used to make make sure OptionalCodingWrappers encode no value when it's wrappedValue is nil.
     public mutating func encode<T>(_ value: T, forKey key: KeyedEncodingContainer<K>.Key) throws where T: Encodable, T: OptionalCodingWrapper {
-        guard value.wrappedValue != nil else {return}
+        guard value.wrappedValue != nil else { return }
         try encodeIfPresent(value, forKey: key)
     }
 }
@@ -113,23 +112,22 @@ extension KeyedEncodingContainer {
 extension OptionalCoding: OptionalCodingWrapper {}
 
 /// CodingKey used by Encoder property wrappers
-internal struct EncodingWrapperKey : CodingKey {
+internal struct EncodingWrapperKey: CodingKey {
     public var stringValue: String
     public var intValue: Int?
-    
+
     public init?(stringValue: String) {
         self.stringValue = stringValue
         self.intValue = nil
     }
-    
+
     public init?(intValue: Int) {
         self.stringValue = "\(intValue)"
         self.intValue = intValue
     }
-    
+
     public init(stringValue: String, intValue: Int?) {
         self.stringValue = stringValue
         self.intValue = intValue
     }
 }
-

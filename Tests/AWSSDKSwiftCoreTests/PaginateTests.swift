@@ -77,7 +77,13 @@ class PaginateTests: XCTestCase {
     }
 
     func counterPaginator(_ input: CounterInput, onPage: @escaping (CounterOutput, EventLoop)->EventLoopFuture<Bool>) -> EventLoopFuture<Void> {
-        return client.paginate(input: input, command: counter, tokenKey: \CounterOutput.outputToken, onPage: onPage)
+        return client.paginate(
+            input: input,
+            command: counter,
+            tokenKey: \CounterOutput.outputToken,
+            logger: TestEnvironment.logger,
+            onPage: onPage
+        )
     }
 
     func testIntegerTokenPaginate() throws {
@@ -154,6 +160,7 @@ class PaginateTests: XCTestCase {
             command: stringList,
             tokenKey: \StringListOutput.outputToken,
             on: eventLoop,
+            logger: TestEnvironment.logger,
             onPage: onPage
         )
     }

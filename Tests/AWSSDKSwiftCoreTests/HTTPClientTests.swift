@@ -42,7 +42,7 @@ class NIOTSHTTPClientTests: XCTestCase {
     func testInitWithInvalidURL() {
       do {
         let request = AWSHTTPRequest(url: URL(string:"no_protocol.com")!, method: .GET, headers: HTTPHeaders())
-        _ = try client.execute(request: request, timeout: .seconds(5), on: client.eventLoopGroup.next(), logger: AWSClient.loggingDisabled).wait()
+        _ = try client.execute(request: request, timeout: .seconds(5), on: client.eventLoopGroup.next(), logger: TestEnvironment.logger).wait()
         XCTFail("Should throw malformedURL error")
       } catch {
         if case NIOTSHTTPClient.HTTPError.malformedURL = error {}
@@ -55,7 +55,7 @@ class NIOTSHTTPClientTests: XCTestCase {
     func testConnectGet() {
         do {
             let request = AWSHTTPRequest(url: awsServer.addressURL, method: .GET, headers: HTTPHeaders())
-            let future = client.execute(request: request, timeout: .seconds(5), on: client.eventLoopGroup.next(), logger: AWSClient.loggingDisabled)
+            let future = client.execute(request: request, timeout: .seconds(5), on: client.eventLoopGroup.next(), logger: TestEnvironment.logger)
             try awsServer.httpBin()
             _ = try future.wait()
         } catch {
@@ -66,7 +66,7 @@ class NIOTSHTTPClientTests: XCTestCase {
     func testConnectPost() {
         do {
             let request = AWSHTTPRequest(url: awsServer.addressURL, method: .POST, headers: HTTPHeaders())
-            let future = client.execute(request: request, timeout: .seconds(5), on: client.eventLoopGroup.next(), logger: AWSClient.loggingDisabled)
+            let future = client.execute(request: request, timeout: .seconds(5), on: client.eventLoopGroup.next(), logger: TestEnvironment.logger)
             try awsServer.httpBin()
             _ = try future.wait()
         } catch {
@@ -99,7 +99,7 @@ class HTTPClientTests {
     }
 
     func execute(_ request: AWSHTTPRequest) -> EventLoopFuture<AWSTestServer.HTTPBinResponse> {
-        return client.execute(request: request, timeout: .seconds(5), on: client.eventLoopGroup.next(), logger: AWSClient.loggingDisabled)
+        return client.execute(request: request, timeout: .seconds(5), on: client.eventLoopGroup.next(), logger: TestEnvironment.logger)
             .flatMapThrowing { response in
                 guard let body = response.body else { throw AWSTestServer.Error.emptyBody }
                 return try JSONDecoder().decode(AWSTestServer.HTTPBinResponse.self, from: body)

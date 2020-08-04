@@ -10,6 +10,7 @@ on:
 
 env:
   ENABLE_TIMING_TESTS: "false"
+  AWS_LOG_LEVEL: "info"
 
 jobs:
   macos:

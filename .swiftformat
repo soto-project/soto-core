@@ -1,12 +1,22 @@
+# swift version
+--swiftversion 5.1
+
 # file options
 
 --exclude .build
 
+# rules
+--disable redundantReturn, preferKeyPath
+
 # format options
 
---self insert
---patternlet inline
---stripunusedargs unnamed-only
+--ifdef no-indent
 --nospaceoperators
+--patternlet inline
+--self init-only
+--stripunusedargs unnamed-only
 
-# rules
+#--maxwidth 150
+#--wraparguments before-first
+#--wrapparameters before-first
+#--wrapcollections before-first

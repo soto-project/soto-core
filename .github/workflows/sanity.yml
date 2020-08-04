@@ -7,12 +7,15 @@ on:
 
 jobs:
   sanity-check:
-    runs-on: ubuntu-latest
+    runs-on: macOS-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v1
       with:
         fetch-depth: 1
+    - name: Install Dependencies
+      run: |
+        brew install swiftformat
     - name: run script
       run: ./scripts/sanity.sh
 

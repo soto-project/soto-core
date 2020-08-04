@@ -76,13 +76,13 @@ public final class NIOTSHTTPClient {
 
     /// Shuts down the client and `EventLoopGroup` if it was created by the client.
     public func syncShutdown() throws {
-        switch self.eventLoopGroupProvider {
+        switch eventLoopGroupProvider {
         case .shared:
-            self.isShutdown.store(true)
+            isShutdown.store(true)
             return
         case .createNew:
-            if self.isShutdown.compareAndExchange(expected: false, desired: true) {
-                try self.eventLoopGroup.syncShutdownGracefully()
+            if isShutdown.compareAndExchange(expected: false, desired: true) {
+                try eventLoopGroup.syncShutdownGracefully()
             } else {
                 throw HTTPError.alreadyShutdown
             }
@@ -123,7 +123,7 @@ public final class NIOTSHTTPClient {
                 .flatMap {
                     let handlers: [ChannelHandler] = [
                         HTTPClientRequestSerializer(hostname: headerHostname),
-                        HTTPClientResponseHandler(promise: response)
+                        HTTPClientResponseHandler(promise: response),
                     ]
                     return channel.pipeline.addHandlers(handlers)
                 }
@@ -160,9 +160,9 @@ public final class NIOTSHTTPClient {
 
             context.write(wrapOutboundOut(.head(head)), promise: nil)
             if let body = request.body, body.readableBytes > 0 {
-                context.write(self.wrapOutboundOut(.body(.byteBuffer(body))), promise: nil)
+                context.write(wrapOutboundOut(.body(.byteBuffer(body))), promise: nil)
             }
-            context.write(self.wrapOutboundOut(.end(nil)), promise: promise)
+            context.write(wrapOutboundOut(.end(nil)), promise: promise)
         }
     }
 
@@ -271,10 +271,10 @@ extension NIOTSHTTPClient.Response: AWSHTTPResponse {
 // copied from AsyncHTTPClient
 extension URL {
     var percentEncodedPath: String {
-        if self.path.isEmpty {
+        if path.isEmpty {
             return "/"
         }
-        return self.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? self.path
+        return path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? path
     }
 
     var pathHasTrailingSlash: Bool {
@@ -283,7 +283,7 @@ extension URL {
         } else {
             // Most platforms should use `self.hasDirectoryPath`, but on older darwin platforms
             // we have this approximation instead.
-            let url = self.absoluteString
+            let url = absoluteString
 
             var pathEndIndex = url.index(before: url.endIndex)
             if let queryIndex = url.firstIndex(of: "?") {
@@ -297,8 +297,8 @@ extension URL {
     }
 
     var uri: String {
-        var uri = self.percentEncodedPath
-        if self.pathHasTrailingSlash, uri != "/" {
+        var uri = percentEncodedPath
+        if pathHasTrailingSlash, uri != "/" {
             uri += "/"
         }
 

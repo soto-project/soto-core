@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import XCTest
 @testable import AWSSDKSwiftCore
+import XCTest
 
 class JSONCoderTests: XCTestCase {
     struct Numbers: AWSDecodableShape & AWSEncodableShape {
@@ -51,19 +51,19 @@ class JSONCoderTests: XCTestCase {
             case float = "s"
             case double = "d"
             case intEnum = "enum"
-            case int8 = "int8"
-            case uint16 = "uint16"
-            case int32 = "int32"
-            case uint64 = "uint64"
+            case int8
+            case uint16
+            case int32
+            case uint64
         }
     }
 
     struct StringShape: AWSDecodableShape & AWSEncodableShape {
         enum StringEnum: String, Codable {
-            case first = "first"
-            case second = "second"
-            case third = "third"
-            case fourth = "fourth"
+            case first
+            case second
+            case third
+            case fourth
         }
 
         let string: String

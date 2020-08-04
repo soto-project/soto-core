@@ -23,10 +23,8 @@ import NIOConcurrencyHelpers
 class RuntimeSelectorCredentialProvider: CredentialProvider {
     /// the provider chosen to supply credentials
     var internalProvider: CredentialProvider? {
-        get {
-            self.lock.withLock {
-                _internalProvider
-            }
+        lock.withLock {
+            _internalProvider
         }
     }
 
@@ -34,7 +32,7 @@ class RuntimeSelectorCredentialProvider: CredentialProvider {
     let startupPromise: EventLoopPromise<CredentialProvider>
 
     private let lock = Lock()
-    private var _internalProvider: CredentialProvider? = nil
+    private var _internalProvider: CredentialProvider?
 
     init(providers: [CredentialProviderFactory], context: CredentialProviderFactory.Context) {
         self.startupPromise = context.eventLoop.makePromise(of: CredentialProvider.self)
@@ -46,11 +44,11 @@ class RuntimeSelectorCredentialProvider: CredentialProvider {
     }
 
     func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
-        if let provider = self.internalProvider {
+        if let provider = internalProvider {
             return provider.getCredential(on: eventLoop, logger: logger)
         }
 
-        return self.startupPromise.futureResult.hop(to: eventLoop).flatMap { provider in
+        return startupPromise.futureResult.hop(to: eventLoop).flatMap { provider in
             return provider.getCredential(on: eventLoop, logger: logger)
         }
     }

@@ -12,9 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
+import AWSXML
 import struct Foundation.Data
 import class Foundation.JSONEncoder
-import AWSXML
 
 internal extension AWSEncodableShape {
     /// Encode AWSShape as JSON

@@ -88,7 +88,7 @@ public enum XML {
         }
 
         /// return number of children
-        public var childCount: Int { get { return children?.count ?? 0 }}
+        public var childCount: Int { return children?.count ?? 0 }
 
         /// detach XML node from its parent
         public func detach() {
@@ -241,7 +241,7 @@ public enum XML {
         }
 
         /// initialise XML.Element from xml string
-        convenience public init(xmlString: String) throws {
+        public convenience init(xmlString: String) throws {
             let data = xmlString.data(using: .utf8)!
             try self.init(xmlData: data)
         }
@@ -257,10 +257,10 @@ public enum XML {
         }
 
         /// return child text nodes all concatenated together
-        public override var stringValue: String? {
+        override public var stringValue: String? {
             get {
                 let textNodes = children(of: .text)
-                let text = textNodes?.reduce("", { return $0 + ($1.stringValue ?? "") }) ?? ""
+                let text = textNodes?.reduce("") { return $0 + ($1.stringValue ?? "") } ?? ""
                 return text
             }
             set(value) {
@@ -375,7 +375,7 @@ public enum XML {
         }
 
         /// detach child XML Node
-        fileprivate override func detach(child: XML.Node) {
+        override fileprivate func detach(child: XML.Node) {
             switch child.kind {
             case .attribute:
                 attributes?.removeAll(where: { $0 === child })
@@ -390,8 +390,8 @@ public enum XML {
         override public var xmlString: String {
             var string = ""
             string += "<\(name!)"
-            string += namespaces?.map({ " " + $0.xmlString }).joined(separator: "") ?? ""
-            string += attributes?.map({ " " + $0.xmlString }).joined(separator: "") ?? ""
+            string += namespaces?.map { " " + $0.xmlString }.joined(separator: "") ?? ""
+            string += attributes?.map { " " + $0.xmlString }.joined(separator: "") ?? ""
             string += ">"
             for node in children ?? [] {
                 string += node.xmlString

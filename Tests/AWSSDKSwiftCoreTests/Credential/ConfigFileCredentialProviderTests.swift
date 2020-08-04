@@ -12,11 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-import XCTest
 import AsyncHTTPClient
+@testable import AWSSDKSwiftCore
 import AWSTestUtils
 import NIO
-@testable import AWSSDKSwiftCore
+import XCTest
 
 class ConfigFileCredentialProviderTests: XCTestCase {
     func testConfigFileCredentials() {
@@ -204,7 +204,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
 
         let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger))
 
-        XCTAssertThrowsError(_ = try provider.getCredential(on: eventLoop, logger: TestEnvironment.logger).wait()) { (error) in
+        XCTAssertThrowsError(_ = try provider.getCredential(on: eventLoop, logger: TestEnvironment.logger).wait()) { error in
             print("\(error)")
             XCTAssertEqual(error as? CredentialProviderError, .noProvider)
         }

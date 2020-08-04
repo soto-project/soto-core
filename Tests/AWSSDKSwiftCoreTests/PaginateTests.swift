@@ -13,10 +13,10 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+@testable import AWSSDKSwiftCore
+import AWSTestUtils
 import NIO
 import XCTest
-import AWSTestUtils
-@testable import AWSSDKSwiftCore
 
 class PaginateTests: XCTestCase {
     enum Error: Swift.Error {
@@ -39,10 +39,10 @@ class PaginateTests: XCTestCase {
     }
 
     override func tearDown() {
-        XCTAssertNoThrow(try self.awsServer.stop())
-        XCTAssertNoThrow(try self.client.syncShutdown())
-        XCTAssertNoThrow(try self.httpClient.syncShutdown())
-        XCTAssertNoThrow(try self.eventLoopGroup.syncShutdownGracefully())
+        XCTAssertNoThrow(try awsServer.stop())
+        XCTAssertNoThrow(try client.syncShutdown())
+        XCTAssertNoThrow(try httpClient.syncShutdown())
+        XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
     }
 
     // test structures/functions
@@ -56,7 +56,7 @@ class PaginateTests: XCTestCase {
         }
 
         func usingPaginationToken(_ token: Int) -> CounterInput {
-            return .init(inputToken: token, pageSize: self.pageSize)
+            return .init(inputToken: token, pageSize: pageSize)
         }
     }
 
@@ -134,7 +134,7 @@ class PaginateTests: XCTestCase {
         }
 
         func usingPaginationToken(_ token: String) -> StringListInput {
-            return .init(inputToken: token, pageSize: self.pageSize)
+            return .init(inputToken: token, pageSize: pageSize)
         }
     }
 
@@ -182,7 +182,7 @@ class PaginateTests: XCTestCase {
         for i in startIndex..<endIndex {
             array.append(stringList[i])
         }
-        var outputToken: String? = nil
+        var outputToken: String?
         var continueProcessing = false
         if endIndex < stringList.count {
             outputToken = stringList[endIndex]
@@ -227,7 +227,7 @@ class PaginateTests: XCTestCase {
         }
 
         // aws server process
-        XCTAssertNoThrow(try awsServer.process { (request: StringListInput) -> AWSTestServer.Result<StringListOutput> in
+        XCTAssertNoThrow(try awsServer.process { (_: StringListInput) -> AWSTestServer.Result<StringListOutput> in
             return .error(.badRequest)
         })
 

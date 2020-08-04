@@ -12,21 +12,21 @@
 //
 //===----------------------------------------------------------------------===//
 
+import AsyncHTTPClient
 import AWSSignerV4
 import AWSXML
-import AsyncHTTPClient
 import Dispatch
+import struct Foundation.Data
+import class Foundation.JSONDecoder
+import class Foundation.JSONSerialization
+import struct Foundation.URL
+import struct Foundation.URLQueryItem
 import Logging
 import Metrics
 import NIO
 import NIOConcurrencyHelpers
 import NIOHTTP1
 import NIOTransportServices
-import class Foundation.JSONSerialization
-import class Foundation.JSONDecoder
-import struct Foundation.Data
-import struct Foundation.URL
-import struct Foundation.URLQueryItem
 
 /// This is the workhorse of aws-sdk-swift-core. You provide it with a `AWSShape` Input object, it converts it to `AWSRequest` which is then converted
 /// to a raw `HTTPClient` Request. This is then sent to AWS. When the response from AWS is received if it is successful it is converted to a `AWSResponse`
@@ -132,7 +132,7 @@ public final class AWSClient {
                 try httpClient.syncShutdown()
             } catch {
                 clientLogger.error("Error shutting down HTTP client", metadata: [
-                    "aws-error": "\(error)"
+                    "aws-error": "\(error)",
                 ])
             }
         }
@@ -186,7 +186,7 @@ extension AWSClient {
                     // If I get a retry wait time for this error then attempt to retry request
                     if case .retry(let retryTime) = self.retryPolicy.getRetryWaitTime(error: error, attempt: attempt) {
                         logger.info("Retrying request", metadata: [
-                            "aws-retry-time": "\(retryTime)"
+                            "aws-retry-time": "\(retryTime)",
                         ])
                         // schedule task for retrying AWS request
                         eventloop.scheduleTask(in: retryTime) {
@@ -260,7 +260,8 @@ extension AWSClient {
                 path: path,
                 httpMethod: httpMethod,
                 input: input,
-                configuration: serviceConfig)
+                configuration: serviceConfig
+            )
             return try awsRequest
                 .applyMiddlewares(serviceConfig.middlewares + self.middlewares)
                 .createHTTPRequest(signer: signer)
@@ -296,7 +297,8 @@ extension AWSClient {
                 operation: operationName,
                 path: path,
                 httpMethod: httpMethod,
-                configuration: serviceConfig)
+                configuration: serviceConfig
+            )
             return try awsRequest
                 .applyMiddlewares(serviceConfig.middlewares + self.middlewares)
                 .createHTTPRequest(signer: signer)
@@ -333,7 +335,8 @@ extension AWSClient {
                 operation: operationName,
                 path: path,
                 httpMethod: httpMethod,
-                configuration: serviceConfig)
+                configuration: serviceConfig
+            )
             return try awsRequest
                 .applyMiddlewares(serviceConfig.middlewares + self.middlewares)
                 .createHTTPRequest(signer: signer)
@@ -372,7 +375,8 @@ extension AWSClient {
                 path: path,
                 httpMethod: httpMethod,
                 input: input,
-                configuration: serviceConfig)
+                configuration: serviceConfig
+            )
             return try awsRequest
                 .applyMiddlewares(serviceConfig.middlewares + self.middlewares)
                 .createHTTPRequest(signer: signer)
@@ -412,7 +416,8 @@ extension AWSClient {
                 path: path,
                 httpMethod: httpMethod,
                 input: input,
-                configuration: serviceConfig)
+                configuration: serviceConfig
+            )
             return try awsRequest
                 .applyMiddlewares(serviceConfig.middlewares + self.middlewares)
                 .createHTTPRequest(signer: signer)
@@ -470,11 +475,12 @@ extension AWSClient {
         // if we can create an AWSResponse and create an error from it return that
         if let awsResponse = try? AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol)
             .applyMiddlewares(serviceConfig.middlewares + middlewares),
-            let error = awsResponse.generateError(serviceConfig: serviceConfig, logger: logger) {
+            let error = awsResponse.generateError(serviceConfig: serviceConfig, logger: logger)
+        {
             return error
         } else {
             // else return "Unhandled error message" with rawBody attached
-            var rawBodyString: String? = nil
+            var rawBodyString: String?
             if var body = response.body {
                 rawBodyString = body.readString(length: body.readableBytes)
             }
@@ -523,7 +529,7 @@ extension AWSClient {
             if error as? AWSErrorType == nil {
                 // log error message
                 logger.error("AWSClient error", metadata: [
-                    "aws-error-message": "\(error)"
+                    "aws-error-message": "\(error)",
                 ])
             }
             throw error

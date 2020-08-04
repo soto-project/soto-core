@@ -18,7 +18,7 @@ import PackageDescription
 let package = Package(
     name: "aws-sdk-swift-core",
     products: [
-        .library(name: "AWSSDKSwiftCore", targets: ["AWSSDKSwiftCore"])
+        .library(name: "AWSSDKSwiftCore", targets: ["AWSSDKSwiftCore"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-log.git", from: "1.4.0"),
@@ -26,7 +26,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio.git", .upToNextMajor(from: "2.16.1")),
         .package(url: "https://github.com/apple/swift-nio-ssl.git", .upToNextMajor(from: "2.7.2")),
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", .upToNextMajor(from: "1.0.0")),
-        .package(url: "https://github.com/swift-server/async-http-client.git", .upToNextMajor(from: "1.0.0"))
+        .package(url: "https://github.com/swift-server/async-http-client.git", .upToNextMajor(from: "1.0.0")),
     ],
     targets: [
         .target(name: "AWSSDKSwiftCore", dependencies: [
@@ -72,7 +72,7 @@ let package = Package(
             .byName(name: "AWSSDKSwiftCore"),
         ]),
         .testTarget(name: "INIParserTests", dependencies: [
-            .byName(name: "INIParser")
+            .byName(name: "INIParser"),
         ]),
     ]
 )

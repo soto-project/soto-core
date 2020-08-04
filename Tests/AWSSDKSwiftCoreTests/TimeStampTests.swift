@@ -12,10 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-import XCTest
+@testable import AWSSDKSwiftCore
 import AWSTestUtils
 import AWSXML
-@testable import AWSSDKSwiftCore
+import XCTest
 
 class TimeStampTests: XCTestCase {
     struct A: Codable {
@@ -111,7 +111,7 @@ class TimeStampTests: XCTestCase {
             struct A: Codable {
                 @Coding<UnixEpochTimeStampCoder> var date: TimeStamp
             }
-            let a = A(date: TimeStamp(23983978378))
+            let a = A(date: TimeStamp(23_983_978_378))
             let data = try JSONEncoder().encode(a)
             let jsonString = String(data: data, encoding: .utf8)
             XCTAssertEqual(jsonString, "{\"date\":23983978378}")

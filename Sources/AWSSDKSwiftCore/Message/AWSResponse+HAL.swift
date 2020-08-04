@@ -20,7 +20,8 @@ extension AWSResponse {
     func getHypertextApplicationLanguageBody() throws -> Body {
         guard case .json(let data) = self.body,
             let contentType = self.headers["content-type"] as? String,
-            contentType.contains("hal+json") else {
+            contentType.contains("hal+json")
+        else {
             return self.body
         }
 
@@ -28,7 +29,8 @@ extension AWSResponse {
         let json = try JSONSerialization.jsonObject(with: data, options: [])
         guard var dictionary = json as? [String: Any],
             let embedded = dictionary["_embedded"],
-            let embeddedDictionary = embedded as? [String: Any] else {
+            let embeddedDictionary = embedded as? [String: Any]
+        else {
             return self.body
         }
 

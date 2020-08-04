@@ -12,9 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
+@testable import AWSSDKSwiftCore
 import Foundation
 import Logging
-@testable import AWSSDKSwiftCore
 
 @propertyWrapper public struct EnvironmentVariable<Value: LosslessStringConvertible> {
     var defaultValue: Value
@@ -26,10 +26,8 @@ import Logging
     }
 
     public var wrappedValue: Value {
-        get {
-            guard let value = Environment[variableName] else { return defaultValue }
-            return Value(value) ?? defaultValue
-        }
+        guard let value = Environment[variableName] else { return defaultValue }
+        return Value(value) ?? defaultValue
     }
 }
 
@@ -87,11 +85,11 @@ public func createRandomBuffer(_ w: UInt, _ z: UInt, size: Int) -> [UInt8] {
     var z = z
     var w = w
     func getUInt8() -> UInt8 {
-        z = 36969 * (z & 65535) + (z >> 16);
-        w = 18000 * (w & 65535) + (w >> 16);
-        return UInt8(((z << 16) + w) & 0xff);
+        z = 36969 * (z & 65535) + (z >> 16)
+        w = 18000 * (w & 65535) + (w >> 16)
+        return UInt8(((z << 16) + w) & 0xFF)
     }
-    var data = Array<UInt8>(repeating: 0, count: size)
+    var data = [UInt8](repeating: 0, count: size)
     for i in 0..<size {
         data[i] = getUInt8()
     }

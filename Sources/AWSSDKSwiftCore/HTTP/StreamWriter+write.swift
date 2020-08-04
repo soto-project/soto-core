@@ -30,7 +30,7 @@ extension AsyncHTTPClient.HTTPClient.Body.StreamWriter {
                 .map { (byteBuffers) -> () in
                     // if no amount was set and no byte buffers are supppied then this is assumed to mean
                     // there will be no more data
-                    if amountLeft == nil && byteBuffers.count == 0 {
+                    if amountLeft == nil, byteBuffers.count == 0 {
                         promise.succeed(())
                         return
                     }

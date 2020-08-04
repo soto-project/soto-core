@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import XCTest
 @testable import AWSSDKSwiftCore
+import XCTest
 
 class ValidationTests: XCTestCase {
     /// test validation

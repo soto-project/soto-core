@@ -12,12 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-import XCTest
 import AsyncHTTPClient
+import AWSTestUtils
 import NIO
 import NIOHTTP1
 import NIOTransportServices
-import AWSTestUtils
+import XCTest
 
 @testable import AWSSDKSwiftCore
 
@@ -29,13 +29,13 @@ class NIOTSHTTPClientTests: XCTestCase {
     var client: NIOTSHTTPClient!
 
     override func setUp() {
-        self.awsServer = AWSTestServer(serviceProtocol: .json)
-        self.client = NIOTSHTTPClient(eventLoopGroupProvider: .shared(NIOTSEventLoopGroup()))
+        awsServer = AWSTestServer(serviceProtocol: .json)
+        client = NIOTSHTTPClient(eventLoopGroupProvider: .shared(NIOTSEventLoopGroup()))
     }
 
     override func tearDown() {
-        XCTAssertNoThrow(try self.awsServer.stop())
-        XCTAssertNoThrow(try self.client.syncShutdown())
+        XCTAssertNoThrow(try awsServer.stop())
+        XCTAssertNoThrow(try client.syncShutdown())
     }
 
     func testInitWithInvalidURL() {
@@ -132,7 +132,7 @@ class HTTPClientTests {
                 XCTAssertNoThrow(try awsServer.stop())
             }
             let headers: HTTPHeaders = [
-                "Test-Header": "testValue"
+                "Test-Header": "testValue",
             ]
             let request = AWSHTTPRequest(url: awsServer.addressURL, method: .POST, headers: headers, body: .empty)
             let responseFuture = execute(request)
@@ -157,7 +157,7 @@ class HTTPClientTests {
                 XCTAssertNoThrow(try awsServer.stop())
             }
             let headers: HTTPHeaders = [
-                "Content-Type": "text/plain"
+                "Content-Type": "text/plain",
             ]
             let text = "thisisatest"
             var body = ByteBufferAllocator().buffer(capacity: text.utf8.count)

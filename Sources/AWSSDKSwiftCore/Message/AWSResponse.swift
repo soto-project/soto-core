@@ -12,12 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-import class Foundation.JSONSerialization
+import AWSXML
 import class Foundation.JSONDecoder
+import class Foundation.JSONSerialization
 import Logging
 import NIO
 import NIOHTTP1
-import AWSXML
 
 /// Structure encapsulating a processed HTTP Response
 public struct AWSResponse {
@@ -46,7 +46,8 @@ public struct AWSResponse {
 
         // body
         guard let body = response.body,
-            body.readableBytes > 0 else {
+            body.readableBytes > 0
+        else {
             self.body = .empty
             return
         }
@@ -127,7 +128,7 @@ public struct AWSResponse {
                 let parentNode = XML.Element(name: "Container")
                 parentNode.addChild(outputNode)
                 outputNode = parentNode
-            } else if let child = node.children(of: .element)?.first as? XML.Element, (node.name == operation + "Response" && child.name == operation + "Result") {
+            } else if let child = node.children(of: .element)?.first as? XML.Element, node.name == operation + "Response", child.name == operation + "Result" {
                 outputNode = child
             }
 
@@ -184,7 +185,7 @@ public struct AWSResponse {
 
     /// extract error code and message from AWSResponse
     func generateError(serviceConfig: AWSServiceConfig, logger: Logger) -> Error? {
-        var apiError: APIError? = nil
+        var apiError: APIError?
         switch serviceConfig.serviceProtocol {
         case .query:
             guard case .xml(var element) = self.body else { break }
@@ -229,7 +230,7 @@ public struct AWSResponse {
 
             logger.error("AWS Error", metadata: [
                 "aws-error-code": .string(code),
-                "aws-error-message": .string(errorMessage.message)
+                "aws-error-message": .string(errorMessage.message),
             ])
 
             for errorType in serviceConfig.possibleErrorTypes {
@@ -267,7 +268,7 @@ public struct AWSResponse {
 
         private enum CodingKeys: String, CodingKey {
             case code = "__type"
-            case message = "message"
+            case message
         }
     }
 
@@ -276,13 +277,13 @@ public struct AWSResponse {
         var message: String
 
         private enum CodingKeys: String, CodingKey {
-            case code = "code"
-            case message = "message"
+            case code
+            case message
         }
     }
 }
 
-fileprivate protocol APIError {
+private protocol APIError {
     var code: String? { get set }
     var message: String { get set }
 }

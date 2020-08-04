@@ -12,13 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
+@testable import AWSSDKSwiftCore
+import AWSXML
 import NIO
 import NIOFoundationCompat
 import NIOHTTP1
 import NIOTestUtils
 import XCTest
-import AWSXML
-@testable import AWSSDKSwiftCore
 
 /// Test server for AWSClient. Input and Output shapes are defined by process function
 public class AWSTestServer {
@@ -93,8 +93,8 @@ public class AWSTestServer {
         case error(ErrorType, continueProcessing: Bool = false)
     }
 
-    public var addressURL: URL { return URL(string: self.address)! }
-    public var address: String { return "http://\(self.host):\(web.serverPort)" }
+    public var addressURL: URL { return URL(string: address)! }
+    public var address: String { return "http://\(host):\(web.serverPort)" }
     public var host: String { return "localhost" }
     public var serverPort: Int { return web.serverPort }
     public let serviceProtocol: ServiceProtocol
@@ -105,7 +105,7 @@ public class AWSTestServer {
 
     public init(serviceProtocol: ServiceProtocol) {
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        self.web = NIOHTTP1TestServer(group: self.eventLoopGroup)
+        self.web = NIOHTTP1TestServer(group: eventLoopGroup)
         self.serviceProtocol = serviceProtocol
         self.byteBufferAllocator = ByteBufferAllocator()
         print("Starting serving on localhost:\(serverPort)")
@@ -113,12 +113,12 @@ public class AWSTestServer {
 
     /// run server reading request, convert from to an input shape processing them and converting the result back to a response.
     public func process<Input: Decodable, Output: Encodable>(_ process: (Input) throws -> Result<Output>) throws {
-        while (try processSingleRequest(process)) {}
+        while try processSingleRequest(process) {}
     }
 
     /// run server reading requests, processing them and returning responses
     public func processRaw(_ process: (Request) throws -> Result<Response>) throws {
-        while (try processSingleRawRequest(process)) {}
+        while try processSingleRawRequest(process) {}
     }
 
     public func stop() throws {
@@ -147,10 +147,11 @@ extension AWSTestServer {
             method: request.method.rawValue,
             data: data,
             headers: request.headers,
-            url: request.uri)
+            url: request.uri
+        )
         let responseBody = try JSONEncoder().encodeAsByteBuffer(httpBinResponse, allocator: ByteBufferAllocator())
         let headers = [
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         ]
         try writeResponse(Response(httpStatus: .ok, headers: headers, body: responseBody))
     }
@@ -257,7 +258,7 @@ extension AWSTestServer {
                 encoder.dateEncodingStrategy = .formatted(dateFormatter)
                 let responseBody = try encoder.encodeAsByteBuffer(metaData, allocator: ByteBufferAllocator())
                 let headers = [
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
                 ]
                 return .result(.init(httpStatus: .ok, headers: headers, body: responseBody), continueProcessing: false)
             default:
@@ -275,12 +276,12 @@ extension AWSTestServer {
         dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
 
         try processRaw { request in
-            if request.method == .GET && request.uri == path {
+            if request.method == .GET, request.uri == path {
                 let encoder = JSONEncoder()
                 encoder.dateEncodingStrategy = .formatted(dateFormatter)
                 let responseBody = try encoder.encodeAsByteBuffer(metaData, allocator: ByteBufferAllocator())
                 let headers = [
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
                 ]
                 return .result(.init(httpStatus: .ok, headers: headers, body: responseBody), continueProcessing: false)
             }
@@ -359,7 +360,7 @@ extension AWSTestServer {
 
         func _readChunkSize(chunkSize: String, input: inout ByteBuffer) throws -> ReadChunkStatus {
             var chunkSize = chunkSize
-            while (input.readableBytes > 0) {
+            while input.readableBytes > 0 {
                 guard let char = input.readString(length: 1) else { throw Error.corruptChunkedData }
                 chunkSize += char
                 if chunkSize.hasSuffix(";") {
@@ -373,7 +374,7 @@ extension AWSTestServer {
 
         func _readChunkEnd(chunkEnd: String, input: inout ByteBuffer) throws -> ReadChunkStatus {
             var chunkEnd = chunkEnd
-            while (input.readableBytes > 0) {
+            while input.readableBytes > 0 {
                 guard let char = input.readString(length: 1) else { throw Error.corruptChunkedData }
                 chunkEnd += char
                 if chunkEnd == "\r\n" {
@@ -385,7 +386,7 @@ extension AWSTestServer {
             return .readingEnd(chunkEnd)
         }
 
-        while (input.readableBytes > 0) {
+        while input.readableBytes > 0 {
             switch status {
             case .none:
                 status = try _readChunkSize(chunkSize: "", input: &input)
@@ -441,7 +442,7 @@ extension AWSTestServer {
         let isChunked = head.headers["Content-Encoding"].filter { $0 == "aws-chunked" }.count > 0
         var chunkStatus: ReadChunkStatus = .none
         // read body
-        while (true) {
+        while true {
             let inbound = try web.readInbound()
             if case .body(var buffer) = inbound {
                 if isChunked == true {
@@ -449,7 +450,7 @@ extension AWSTestServer {
                 } else {
                     byteBuffer.writeBuffer(&buffer)
                 }
-            } else if case .end(_) = inbound {
+            } else if case .end = inbound {
                 if isChunked == true {
                     switch chunkStatus {
                     case .finished:

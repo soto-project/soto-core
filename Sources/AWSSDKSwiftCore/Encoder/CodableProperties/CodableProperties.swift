@@ -36,8 +36,8 @@ public protocol CustomDecoder: CustomCoder {
     }
 
     public var wrappedValue: Coder.CodableValue {
-        get { return self.value }
-        set { self.value = newValue }
+        get { return value }
+        set { value = newValue }
     }
 }
 
@@ -64,8 +64,8 @@ extension Coding: Encodable where Coder: CustomEncoder {
     }
 
     public var wrappedValue: Coder.CodableValue? {
-        get { return self.value }
-        set { self.value = newValue }
+        get { return value }
+        set { value = newValue }
     }
 }
 

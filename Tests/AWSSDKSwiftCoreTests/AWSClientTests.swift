@@ -12,16 +12,16 @@
 //
 //===----------------------------------------------------------------------===//
 
-import XCTest
 import AsyncHTTPClient
+@testable import AWSSDKSwiftCore
+import AWSTestUtils
+import AWSXML
 import Logging
 import NIO
 import NIOConcurrencyHelpers
 import NIOFoundationCompat
 import NIOHTTP1
-import AWSTestUtils
-import AWSXML
-@testable import AWSSDKSwiftCore
+import XCTest
 
 class AWSClientTests: XCTestCase {
     func testGetCredential() {
@@ -98,7 +98,7 @@ class AWSClientTests: XCTestCase {
         let response: EventLoopFuture<AWSTestServer.HTTPBinResponse> = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, logger: TestEnvironment.logger)
 
         XCTAssertNoThrow(try awsServer.httpBin())
-        var httpBinResponse: AWSTestServer.HTTPBinResponse? = nil
+        var httpBinResponse: AWSTestServer.HTTPBinResponse?
         XCTAssertNoThrow(httpBinResponse = try response.wait())
         let httpHeaders = httpBinResponse.map { HTTPHeaders($0.headers.map { ($0, $1) }) }
 
@@ -121,7 +121,7 @@ class AWSClientTests: XCTestCase {
             }
             let response = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, logger: TestEnvironment.logger)
 
-            try awsServer.processRaw { request in
+            try awsServer.processRaw { _ in
                 let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
                 return .result(response)
             }
@@ -182,7 +182,7 @@ class AWSClientTests: XCTestCase {
             }
             let response: EventLoopFuture<Output> = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, logger: TestEnvironment.logger)
 
-            try awsServer.processRaw { request in
+            try awsServer.processRaw { _ in
                 let output = Output(s: "TestOutputString", i: 547)
                 let byteBuffer = try JSONEncoder().encodeAsByteBuffer(output, allocator: ByteBufferAllocator())
                 let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
@@ -418,7 +418,7 @@ class AWSClientTests: XCTestCase {
             }
             let response = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, logger: TestEnvironment.logger)
 
-            try awsServer.processRaw { request in
+            try awsServer.processRaw { _ in
                 let response = AWSTestServer.Response(httpStatus: .temporaryRedirect, headers: ["Location": awsServer.address], body: nil)
                 return .result(response)
             }
@@ -455,7 +455,7 @@ class AWSClientTests: XCTestCase {
             let response = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, logger: TestEnvironment.logger)
 
             var count = 0
-            try awsServer.processRaw { request in
+            try awsServer.processRaw { _ in
                 count += 1
                 if count < 5 {
                     return .error(.internal, continueProcessing: true)
@@ -500,7 +500,7 @@ class AWSClientTests: XCTestCase {
             )
 
             var count = 0
-            try awsServer.processRaw { request in
+            try awsServer.processRaw { _ in
                 count += 1
                 if count < 3 {
                     return .error(.notImplemented, continueProcessing: true)
@@ -542,7 +542,7 @@ class AWSClientTests: XCTestCase {
                 logger: TestEnvironment.logger
             )
 
-            try awsServer.processRaw { request in
+            try awsServer.processRaw { _ in
                 return .error(.accessDenied, continueProcessing: false)
             }
 
@@ -579,7 +579,7 @@ class AWSClientTests: XCTestCase {
                 logger: TestEnvironment.logger
             )
 
-            try awsServer.processRaw { request in
+            try awsServer.processRaw { _ in
                 return .result(.ok)
             }
             XCTAssertTrue(eventLoop === response.eventLoop)
@@ -627,7 +627,7 @@ class AWSClientTests: XCTestCase {
                 return eventLoop.makeSucceededFuture(())
             }
 
-            try awsServer.processRaw { request in
+            try awsServer.processRaw { _ in
                 var byteBuffer = ByteBufferAllocator().buffer(capacity: 128 * 1024)
                 byteBuffer.writeBytes(data)
                 let response = AWSTestServer.Response(httpStatus: .ok, headers: ["test": "TestHeader"], body: byteBuffer)
@@ -671,14 +671,14 @@ class AWSClientTests: XCTestCase {
             serviceConfig: config,
             input: Input(),
             logger: TestEnvironment.logger
-        ) { (payload: ByteBuffer, eventLoop: EventLoop) in
+        ) { (_: ByteBuffer, eventLoop: EventLoop) in
             lock.withLock { count += 1 }
             return eventLoop.scheduleTask(in: .milliseconds(200)) {
                 lock.withLock { count -= 1 }
             }.futureResult
         }
 
-        XCTAssertNoThrow(try awsServer.processRaw { request in
+        XCTAssertNoThrow(try awsServer.processRaw { _ in
             var byteBuffer = ByteBufferAllocator().buffer(capacity: bufferSize)
             byteBuffer.writeBytes(data)
             let response = AWSTestServer.Response(httpStatus: .ok, headers: ["test": "TestHeader"], body: byteBuffer)

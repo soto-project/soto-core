@@ -147,7 +147,7 @@ public struct AWSPartition: RawRepresentable, Equatable, Hashable {
 
 extension AWSPartition {
     public var dnsSuffix: String {
-        switch self.partition {
+        switch partition {
         case .aws: return "amazonaws.com"
         case .awscn: return "amazonaws.com.cn"
         case .awsusgov: return "amazonaws.com"

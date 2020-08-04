@@ -66,13 +66,13 @@ class S3ChunkedStreamReader: StreamReader {
     func fillWorkingBuffer(on eventLoop: EventLoop) -> EventLoopFuture<ByteBuffer> {
         workingBuffer.clear()
         // if there is still data available from the previously read buffer then use that
-        if var readBuffer = self.previouslyReadBuffer, readBuffer.readableBytes > 0 {
+        if var readBuffer = previouslyReadBuffer, readBuffer.readableBytes > 0 {
             let bytesToRead = min(Self.bufferSize, readBuffer.readableBytes)
             var slice = readBuffer.readSlice(length: bytesToRead)!
             if readBuffer.readableBytes == 0 {
-                self.previouslyReadBuffer = nil
+                previouslyReadBuffer = nil
             } else {
-                self.previouslyReadBuffer = readBuffer
+                previouslyReadBuffer = readBuffer
             }
             workingBuffer.writeBuffer(&slice)
             // if working buffer is full return the buffer
@@ -81,7 +81,7 @@ class S3ChunkedStreamReader: StreamReader {
             }
         }
         // if there are no bytes left to read then return with what is in the working buffer
-        if self.bytesLeftToRead == 0 {
+        if bytesLeftToRead == 0 {
             return eventLoop.makeSucceededFuture(workingBuffer)
         }
         let promise: EventLoopPromise<ByteBuffer> = eventLoop.makePromise()

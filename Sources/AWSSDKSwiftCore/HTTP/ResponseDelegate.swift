@@ -33,7 +33,7 @@ class AWSHTTPClientResponseDelegate: HTTPClientResponseDelegate {
     var state: State
     // temporary stored future while AHC still doesn't sync to futures returned from `didReceiveBodyPart`
     // See https://github.com/swift-server/async-http-client/issues/274
-    var bodyPartFuture: EventLoopFuture<Void>? = nil
+    var bodyPartFuture: EventLoopFuture<Void>?
 
     init(host: String, stream: @escaping (ByteBuffer, EventLoop) -> EventLoopFuture<Void>) {
         self.host = host
@@ -42,9 +42,9 @@ class AWSHTTPClientResponseDelegate: HTTPClientResponseDelegate {
     }
 
     func didReceiveHead(task: HTTPClient.Task<Response>, _ head: HTTPResponseHead) -> EventLoopFuture<Void> {
-        switch self.state {
+        switch state {
         case .idle:
-            self.state = .head(head)
+            state = .head(head)
         case .head:
             preconditionFailure("head already set")
         case .end:
@@ -56,16 +56,16 @@ class AWSHTTPClientResponseDelegate: HTTPClientResponseDelegate {
     }
 
     func didReceiveBodyPart(task: HTTPClient.Task<Response>, _ part: ByteBuffer) -> EventLoopFuture<Void> {
-        switch self.state {
+        switch state {
         case .idle:
             preconditionFailure("no head received before body")
         case .head(let head):
             if (200..<300).contains(head.status.code) {
                 let futureResult = stream(part, task.eventLoop)
-                self.bodyPartFuture = futureResult
+                bodyPartFuture = futureResult
                 return futureResult
             }
-            self.state = .head(head)
+            state = .head(head)
         case .end:
             preconditionFailure("request already processed")
         case .error:
@@ -75,11 +75,11 @@ class AWSHTTPClientResponseDelegate: HTTPClientResponseDelegate {
     }
 
     func didReceiveError(task: HTTPClient.Task<Response>, _ error: Error) {
-        self.state = .error(error)
+        state = .error(error)
     }
 
     func didFinishRequest(task: HTTPClient.Task<Response>) throws -> AWSHTTPResponse {
-        switch self.state {
+        switch state {
         case .idle:
             preconditionFailure("no head received before end")
         case .head(let head):

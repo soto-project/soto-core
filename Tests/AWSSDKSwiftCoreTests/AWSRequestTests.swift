@@ -12,25 +12,26 @@
 //
 //===----------------------------------------------------------------------===//
 
+@testable import AWSSDKSwiftCore
 import AWSSignerV4
 import AWSTestUtils
 import NIOHTTP1
 import XCTest
-@testable import AWSSDKSwiftCore
 
 class AWSRequestTests: XCTestCase {
     struct E: AWSEncodableShape & Decodable {
         let Member = ["memberKey": "memberValue", "memberKey2": "memberValue2"]
 
         private enum CodingKeys: String, CodingKey {
-            case Member = "Member"
+            case Member
         }
     }
 
     func testPartitionEndpoints() {
         let config = createServiceConfig(
             serviceEndpoints: ["aws-global": "service.aws.amazon.com"],
-            partitionEndpoints: [.aws: (endpoint: "aws-global", region: .euwest1)])
+            partitionEndpoints: [.aws: (endpoint: "aws-global", region: .euwest1)]
+        )
 
         XCTAssertEqual(config.region, .euwest1)
 
@@ -81,13 +82,15 @@ class AWSRequestTests: XCTestCase {
             path: "/",
             httpMethod: .POST,
             input: input2,
-            configuration: config)
+            configuration: config
+        )
         )
 
         let signer = AWSSigner(
             credentials: StaticCredential(accessKeyId: "foo", secretAccessKey: "bar"),
             name: config.service,
-            region: config.region.rawValue)
+            region: config.region.rawValue
+        )
 
         let signedRequest = awsRequest?.createHTTPRequest(signer: signer)
         XCTAssertNotNil(signedRequest)
@@ -112,7 +115,8 @@ class AWSRequestTests: XCTestCase {
         let signer = AWSSigner(
             credentials: StaticCredential(accessKeyId: "", secretAccessKey: ""),
             name: config.service,
-            region: config.region.rawValue)
+            region: config.region.rawValue
+        )
 
         let request = awsRequest?.createHTTPRequest(signer: signer)
         XCTAssertNil(request?.headers["Authorization"].first)
@@ -125,7 +129,8 @@ class AWSRequestTests: XCTestCase {
         let signer = AWSSigner(
             credentials: StaticCredential(accessKeyId: "foo", secretAccessKey: "bar"),
             name: config.service,
-            region: config.region.rawValue)
+            region: config.region.rawValue
+        )
 
         for httpMethod in [HTTPMethod.GET, .HEAD, .PUT, .DELETE, .POST, .PATCH] {
             var awsRequest: AWSRequest?

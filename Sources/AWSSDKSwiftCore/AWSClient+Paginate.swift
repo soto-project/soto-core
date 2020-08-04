@@ -40,7 +40,7 @@ extension AWSClient {
         logger: Logger = AWSClient.loggingDisabled,
         onPage: @escaping (Output, EventLoop) -> EventLoopFuture<Bool>
     ) -> EventLoopFuture<Void> {
-        let eventLoop = eventLoop ?? self.eventLoopGroup.next()
+        let eventLoop = eventLoop ?? eventLoopGroup.next()
         let promise = eventLoop.makePromise(of: Void.self)
 
         func paginatePart(input: Input) {

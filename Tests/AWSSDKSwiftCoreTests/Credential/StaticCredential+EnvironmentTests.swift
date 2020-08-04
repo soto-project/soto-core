@@ -22,7 +22,7 @@ import Darwin
 
 extension Environment {
     static func set(_ value: String, for name: String) {
-        guard 0 == setenv(name, value, 1) else {
+        guard setenv(name, value, 1) == 0 else {
             XCTFail()
             return
         }

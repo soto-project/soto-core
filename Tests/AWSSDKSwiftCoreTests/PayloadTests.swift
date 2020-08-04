@@ -12,10 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
+@testable import AWSSDKSwiftCore
+import AWSTestUtils
 import NIO
 import XCTest
-import AWSTestUtils
-@testable import AWSSDKSwiftCore
 
 class PayloadTests: XCTestCase {
     func testRequestPayload(_ payload: AWSPayload, expectedResult: String) {
@@ -90,7 +90,7 @@ class PayloadTests: XCTestCase {
                 logger: TestEnvironment.logger
             )
 
-            try awsServer.processRaw { request in
+            try awsServer.processRaw { _ in
                 var byteBuffer = ByteBufferAllocator().buffer(capacity: 0)
                 byteBuffer.writeString("testResponsePayload")
                 let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)

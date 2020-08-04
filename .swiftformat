@@ -4,7 +4,6 @@
 
 # rules
 --disable redundantReturn, preferKeyPath, void
---rules indent, braces, consecutiveBlankLines, consecutiveSpaces, blankLinesAroundMark, blankLinesAtEndOfScope, blankLinesAtStartOfScope, blankLinesBetweenScopes, spaceAroundBraces, spaceAroundBrackets, spaceAroundComments, spaceAroundGenerics, spaceAroundOperators, spaceAroundParens, spaceInsideBraces, spaceInsideBrackets, spaceInsideComments, spaceInsideGenerics, spaceInsideParens, trailingSpace, emptyBraces
 
 # format options
 

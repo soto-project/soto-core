@@ -12,11 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import AWSSDKSwiftCore
-import XCTest
-import NIO
 import AsyncHTTPClient
+@testable import AWSSDKSwiftCore
 import AWSTestUtils
+import NIO
+import XCTest
 
 class MetaDataCredentialProviderTests: XCTestCase {
     // MARK: - ECSMetaDataClient -

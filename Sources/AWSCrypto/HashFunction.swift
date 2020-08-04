@@ -54,7 +54,7 @@ extension HashFunction {
             var buffer = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: data.count)
             data.copyBytes(to: buffer)
             defer { buffer.deallocate() }
-            return self.hash(bufferPointer: .init(buffer))
+            return hash(bufferPointer: .init(buffer))
         }
     }
 
@@ -68,7 +68,7 @@ extension HashFunction {
             var buffer = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: data.count)
             data.copyBytes(to: buffer)
             defer { buffer.deallocate() }
-            self.update(bufferPointer: .init(buffer))
+            update(bufferPointer: .init(buffer))
         }
     }
 }

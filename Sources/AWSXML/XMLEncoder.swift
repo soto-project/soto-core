@@ -14,8 +14,8 @@
 
 import struct Foundation.Data
 import struct Foundation.Date
-import struct Foundation.URL
 import class Foundation.DateFormatter
+import struct Foundation.URL
 
 /// The wrapper class for encoding Codable classes to XMLElements
 public class XMLEncoder {
@@ -478,10 +478,11 @@ extension _XMLEncoder {
     fileprivate func box(_ value: String) -> String { return value }
 
     fileprivate func box(_ float: Float) throws -> String {
-        guard !float.isInfinite && !float.isNaN else {
-            guard case let .convertToString(positiveInfinity: posInfString,
-                                            negativeInfinity: negInfString,
-                                            nan: nanString) = self.options.nonConformingFloatEncodingStrategy else {
+        guard !float.isInfinite, !float.isNaN else {
+            guard case .convertToString(positiveInfinity: let posInfString,
+                                        negativeInfinity: let negInfString,
+                                        nan: let nanString) = self.options.nonConformingFloatEncodingStrategy
+            else {
                 throw EncodingError._invalidFloatingPointValue(float, at: codingPath)
             }
 
@@ -498,10 +499,11 @@ extension _XMLEncoder {
     }
 
     fileprivate func box(_ double: Double) throws -> String {
-        guard !double.isInfinite && !double.isNaN else {
-            guard case let .convertToString(positiveInfinity: posInfString,
-                                            negativeInfinity: negInfString,
-                                            nan: nanString) = self.options.nonConformingFloatEncodingStrategy else {
+        guard !double.isInfinite, !double.isNaN else {
+            guard case .convertToString(positiveInfinity: let posInfString,
+                                        negativeInfinity: let negInfString,
+                                        nan: let nanString) = self.options.nonConformingFloatEncodingStrategy
+            else {
                 throw EncodingError._invalidFloatingPointValue(double, at: codingPath)
             }
 
@@ -531,7 +533,7 @@ extension _XMLEncoder {
         let type = Swift.type(of: value)
 
         if type == Data.self {
-            return try self.box((value as! Data))
+            return try self.box(value as! Data)
         } else {
             try value.encode(to: self)
             return storage.popContainer()
@@ -543,7 +545,7 @@ extension _XMLEncoder {
 
 /// _XMLReferencingEncoder is a special subclass of _XMLEncoder which has its own storage, but references the contents of a different encoder.
 /// It's used in superEncoder(), which returns a new encoder for encoding a superclass -- the lifetime of the encoder should not escape the scope it's created in, but it doesn't necessarily know when it's done being used (to write to the original container).
-fileprivate class _XMLReferencingEncoder: _XMLEncoder {
+private class _XMLReferencingEncoder: _XMLEncoder {
     // MARK: - Properties
 
     /// The encoder we're referencing.
@@ -579,7 +581,7 @@ fileprivate class _XMLReferencingEncoder: _XMLEncoder {
 // Shared Key Types
 //===----------------------------------------------------------------------===//
 
-fileprivate struct _XMLKey: CodingKey {
+private struct _XMLKey: CodingKey {
     public var stringValue: String
     public var intValue: Int?
 

@@ -16,10 +16,10 @@
 // https://github.com/apple/swift/blob/2771eb520c4e3058058baf6bb3f6dba6184a17d3/stdlib/public/Darwin/Foundation/JSONEncoder.swift
 
 import CoreFoundation
+import struct Foundation.CharacterSet
+import struct Foundation.Data
 import struct Foundation.Date
 import class Foundation.DateFormatter
-import struct Foundation.Data
-import struct Foundation.CharacterSet
 import struct Foundation.URL
 
 import class Foundation.NSNull
@@ -103,7 +103,7 @@ class DictionaryDecoder {
 // NOTE: older overlays called this class _DictionaryDecoder. The two must
 // coexist without a conflicting ObjC class name, so it was renamed.
 // The old name must not be used in the new runtime.
-fileprivate class __DictionaryDecoder: Decoder {
+private class __DictionaryDecoder: Decoder {
     // MARK: Properties
 
     /// The decoder's storage.
@@ -113,7 +113,7 @@ fileprivate class __DictionaryDecoder: Decoder {
     fileprivate let options: DictionaryDecoder._Options
 
     /// The path to the current point in encoding.
-    fileprivate(set) public var codingPath: [CodingKey]
+    public fileprivate(set) var codingPath: [CodingKey]
 
     /// Contextual user-provided information for use during encoding.
     public var userInfo: [CodingUserInfoKey: Any] {
@@ -168,12 +168,12 @@ fileprivate class __DictionaryDecoder: Decoder {
 
 // MARK: - Decoding Storage
 
-fileprivate struct _DictionaryDecodingStorage {
+private struct _DictionaryDecodingStorage {
     // MARK: Properties
 
     /// The container stack.
     /// Elements may be any one of the JSON types (NSNull, NSNumber, String, Array, [String : Any]).
-    private(set) fileprivate var containers: [Any] = []
+    fileprivate private(set) var containers: [Any] = []
 
     // MARK: - Initialization
 
@@ -203,7 +203,7 @@ fileprivate struct _DictionaryDecodingStorage {
 
 // MARK: Decoding Containers
 
-fileprivate struct _DictionaryKeyedDecodingContainer<K: CodingKey>: KeyedDecodingContainerProtocol {
+private struct _DictionaryKeyedDecodingContainer<K: CodingKey>: KeyedDecodingContainerProtocol {
     typealias Key = K
 
     // MARK: Properties
@@ -215,7 +215,7 @@ fileprivate struct _DictionaryKeyedDecodingContainer<K: CodingKey>: KeyedDecodin
     private let container: [String: Any]
 
     /// The path of coding keys taken to get to this point in decoding.
-    private(set) public var codingPath: [CodingKey]
+    public private(set) var codingPath: [CodingKey]
 
     // MARK: - Initialization
 
@@ -525,7 +525,7 @@ fileprivate struct _DictionaryKeyedDecodingContainer<K: CodingKey>: KeyedDecodin
     }
 }
 
-fileprivate struct _DictionaryUnkeyedDecodingContainer: UnkeyedDecodingContainer {
+private struct _DictionaryUnkeyedDecodingContainer: UnkeyedDecodingContainer {
     // MARK: Properties
 
     /// A reference to the decoder we're reading from.
@@ -535,10 +535,10 @@ fileprivate struct _DictionaryUnkeyedDecodingContainer: UnkeyedDecodingContainer
     private let container: [Any]
 
     /// The path of coding keys taken to get to this point in decoding.
-    private(set) public var codingPath: [CodingKey]
+    public private(set) var codingPath: [CodingKey]
 
     /// The index of the element we're about to decode.
-    private(set) public var currentIndex: Int
+    public private(set) var currentIndex: Int
 
     // MARK: - Initialization
 
@@ -893,72 +893,72 @@ extension __DictionaryDecoder: SingleValueDecodingContainer {
         return self.storage.topContainer is NSNull
     }
 
-    func decode(_ type: Bool.Type) throws -> Bool {
+    func decode(_: Bool.Type) throws -> Bool {
         try expectNonNull(Bool.self)
         return try self.unbox(self.storage.topContainer, as: Bool.self)!
     }
 
-    func decode(_ type: Int.Type) throws -> Int {
+    func decode(_: Int.Type) throws -> Int {
         try expectNonNull(Int.self)
         return try self.unbox(self.storage.topContainer, as: Int.self)!
     }
 
-    func decode(_ type: Int8.Type) throws -> Int8 {
+    func decode(_: Int8.Type) throws -> Int8 {
         try expectNonNull(Int8.self)
         return try self.unbox(self.storage.topContainer, as: Int8.self)!
     }
 
-    func decode(_ type: Int16.Type) throws -> Int16 {
+    func decode(_: Int16.Type) throws -> Int16 {
         try expectNonNull(Int16.self)
         return try self.unbox(self.storage.topContainer, as: Int16.self)!
     }
 
-    func decode(_ type: Int32.Type) throws -> Int32 {
+    func decode(_: Int32.Type) throws -> Int32 {
         try expectNonNull(Int32.self)
         return try self.unbox(self.storage.topContainer, as: Int32.self)!
     }
 
-    func decode(_ type: Int64.Type) throws -> Int64 {
+    func decode(_: Int64.Type) throws -> Int64 {
         try expectNonNull(Int64.self)
         return try self.unbox(self.storage.topContainer, as: Int64.self)!
     }
 
-    func decode(_ type: UInt.Type) throws -> UInt {
+    func decode(_: UInt.Type) throws -> UInt {
         try expectNonNull(UInt.self)
         return try self.unbox(self.storage.topContainer, as: UInt.self)!
     }
 
-    func decode(_ type: UInt8.Type) throws -> UInt8 {
+    func decode(_: UInt8.Type) throws -> UInt8 {
         try expectNonNull(UInt8.self)
         return try self.unbox(self.storage.topContainer, as: UInt8.self)!
     }
 
-    func decode(_ type: UInt16.Type) throws -> UInt16 {
+    func decode(_: UInt16.Type) throws -> UInt16 {
         try expectNonNull(UInt16.self)
         return try self.unbox(self.storage.topContainer, as: UInt16.self)!
     }
 
-    func decode(_ type: UInt32.Type) throws -> UInt32 {
+    func decode(_: UInt32.Type) throws -> UInt32 {
         try expectNonNull(UInt32.self)
         return try self.unbox(self.storage.topContainer, as: UInt32.self)!
     }
 
-    func decode(_ type: UInt64.Type) throws -> UInt64 {
+    func decode(_: UInt64.Type) throws -> UInt64 {
         try expectNonNull(UInt64.self)
         return try self.unbox(self.storage.topContainer, as: UInt64.self)!
     }
 
-    func decode(_ type: Float.Type) throws -> Float {
+    func decode(_: Float.Type) throws -> Float {
         try expectNonNull(Float.self)
         return try self.unbox(self.storage.topContainer, as: Float.self)!
     }
 
-    func decode(_ type: Double.Type) throws -> Double {
+    func decode(_: Double.Type) throws -> Double {
         try expectNonNull(Double.self)
         return try self.unbox(self.storage.topContainer, as: Double.self)!
     }
 
-    func decode(_ type: String.Type) throws -> String {
+    func decode(_: String.Type) throws -> String {
         try expectNonNull(String.self)
         return try self.unbox(self.storage.topContainer, as: String.self)!
     }
@@ -1166,7 +1166,8 @@ extension __DictionaryDecoder {
              */
 
         } else if let string = value as? String,
-            case .convertFromString(let posInfString, let negInfString, let nanString) = self.options.nonConformingFloatDecodingStrategy {
+            case .convertFromString(let posInfString, let negInfString, let nanString) = self.options.nonConformingFloatDecodingStrategy
+        {
             if string == posInfString {
                 return Float.infinity
             } else if string == negInfString {
@@ -1201,7 +1202,8 @@ extension __DictionaryDecoder {
              */
 
         } else if let string = value as? String,
-            case .convertFromString(let posInfString, let negInfString, let nanString) = self.options.nonConformingFloatDecodingStrategy {
+            case .convertFromString(let posInfString, let negInfString, let nanString) = self.options.nonConformingFloatDecodingStrategy
+        {
             if string == posInfString {
                 return Double.infinity
             } else if string == negInfString {
@@ -1269,7 +1271,7 @@ extension __DictionaryDecoder {
 // Shared Key Types
 //===----------------------------------------------------------------------===//
 
-fileprivate struct _DictionaryKey: CodingKey {
+private struct _DictionaryKey: CodingKey {
     public var stringValue: String
     public var intValue: Int?
 

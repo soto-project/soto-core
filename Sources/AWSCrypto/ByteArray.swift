@@ -25,7 +25,7 @@ protocol ByteArray: Sequence, ContiguousBytes, Hashable where Element == UInt8 {
 
 extension ByteArray {
     public func makeIterator() -> Array<UInt8>.Iterator {
-        return self.bytes.makeIterator()
+        return bytes.makeIterator()
     }
 
     public init?(bufferPointer: UnsafeRawBufferPointer) {

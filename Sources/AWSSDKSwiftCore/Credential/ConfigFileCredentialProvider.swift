@@ -12,10 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
+import AWSSignerV4
+import INIParser
 import Logging
 import NIO
-import INIParser
-import AWSSignerV4
 #if os(Linux)
 import Glibc
 #else
@@ -55,15 +55,16 @@ struct AWSConfigFileCredentialProvider: CredentialProvider {
     static func fromSharedCredentials(
         credentialsFilePath: String,
         profile: String = Environment["AWS_PROFILE"] ?? "default",
-        on eventLoop: EventLoop) -> EventLoopFuture<StaticCredential> {
+        on eventLoop: EventLoop
+    ) -> EventLoopFuture<StaticCredential> {
         let threadPool = NIOThreadPool(numberOfThreads: 1)
         threadPool.start()
         let fileIO = NonBlockingFileIO(threadPool: threadPool)
 
         return Self.getSharedCredentialsFromDisk(credentialsFilePath: credentialsFilePath, profile: profile, on: eventLoop, using: fileIO)
-            .always { (_) in
+            .always { _ in
                 // shutdown the threadpool async
-                threadPool.shutdownGracefully { (_) in }
+                threadPool.shutdownGracefully { _ in }
             }
     }
 
@@ -71,14 +72,15 @@ struct AWSConfigFileCredentialProvider: CredentialProvider {
         credentialsFilePath: String,
         profile: String,
         on eventLoop: EventLoop,
-        using fileIO: NonBlockingFileIO) -> EventLoopFuture<StaticCredential> {
+        using fileIO: NonBlockingFileIO
+    ) -> EventLoopFuture<StaticCredential> {
         let filePath = Self.expandTildeInFilePath(credentialsFilePath)
 
         return fileIO.openFile(path: filePath, eventLoop: eventLoop)
-            .flatMap { (handle, region) in
+            .flatMap { handle, region in
                 fileIO.read(fileRegion: region, allocator: ByteBufferAllocator(), eventLoop: eventLoop).map { ($0, handle) }
             }
-            .flatMapThrowing { (byteBuffer, handle) in
+            .flatMapThrowing { byteBuffer, handle in
                 try handle.close()
                 return try Self.sharedCredentials(from: byteBuffer, for: profile)
             }
@@ -89,8 +91,7 @@ struct AWSConfigFileCredentialProvider: CredentialProvider {
         var parser: INIParser
         do {
             parser = try INIParser(string)
-        }
-        catch INIParser.Error.invalidSyntax {
+        } catch INIParser.Error.invalidSyntax {
             throw ConfigFileError.invalidCredentialFileSyntax
         }
 
@@ -119,7 +120,7 @@ struct AWSConfigFileCredentialProvider: CredentialProvider {
         // with NSString on Darwin.
         return filePath.withCString { (ptr) -> String in
             var wexp = wordexp_t()
-            guard 0 == wordexp(ptr, &wexp, 0), let we_wordv = wexp.we_wordv else {
+            guard wordexp(ptr, &wexp, 0) == 0, let we_wordv = wexp.we_wordv else {
                 return filePath
             }
             defer {

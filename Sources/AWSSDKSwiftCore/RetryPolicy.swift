@@ -54,7 +54,7 @@ public protocol RetryPolicy {
 }
 
 /// Retry controller that never returns a retry wait time
-fileprivate struct NoRetry: RetryPolicy {
+private struct NoRetry: RetryPolicy {
     init() {}
     func getRetryWaitTime(error: Error, attempt: Int) -> RetryStatus? {
         return .dontRetry

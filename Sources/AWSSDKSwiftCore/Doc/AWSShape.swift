@@ -12,10 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct Foundation.UUID
-import class Foundation.NSRegularExpression
-import var Foundation.NSNotFound
 import func Foundation.NSMakeRange
+import var Foundation.NSNotFound
+import class Foundation.NSRegularExpression
+import struct Foundation.UUID
 
 /// Protocol for the input and output objects for all AWS service commands. They need to be Codable so they can be serialized. They also need to provide details on how their container classes are coded when serializing XML.
 public protocol AWSShape {
@@ -129,7 +129,7 @@ public extension AWSEncodableShape {
     func validate(_ value: String, name: String, parent: String, pattern: String) throws {
         let regularExpression = try NSRegularExpression(pattern: pattern, options: [])
         let firstMatch = regularExpression.rangeOfFirstMatch(in: value, options: .anchored, range: NSMakeRange(0, value.count))
-        guard firstMatch.location != NSNotFound && firstMatch.length > 0 else { throw AWSClientError(.validationError, message: "\(parent).\(name) (\(value)) does not match pattern \(pattern).") }
+        guard firstMatch.location != NSNotFound, firstMatch.length > 0 else { throw AWSClientError(.validationError, message: "\(parent).\(name) (\(value)) does not match pattern \(pattern).") }
     }
 
     // validate optional values

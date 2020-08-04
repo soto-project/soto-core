@@ -46,7 +46,7 @@ class QueryEncoder {
 
     /// Flatten dictionary and array tree into one dictionary
     /// - Parameter container: The root container
-    fileprivate func flatten(_ container: _QueryEncoderKeyedContainer?) -> [String: Any] {
+    private func flatten(_ container: _QueryEncoderKeyedContainer?) -> [String: Any] {
         var result: [String: Any] = [:]
 
         func flatten(dictionary: [String: Any], path: String) {
@@ -82,7 +82,7 @@ class QueryEncoder {
 
 /// class for holding a keyed container (dictionary). Need to encapsulate dictionary in class so we can be sure we are
 /// editing the dictionary we push onto the stack
-fileprivate class _QueryEncoderKeyedContainer {
+private class _QueryEncoderKeyedContainer {
     private(set) var values: [String: Any] = [:]
 
     func addChild(path: String, child: Any) {
@@ -92,7 +92,7 @@ fileprivate class _QueryEncoderKeyedContainer {
 
 /// class for holding unkeyed container (array). Need to encapsulate array in class so we can be sure we are
 /// editing the array we push onto the stack
-fileprivate class _QueryEncoderUnkeyedContainer {
+private class _QueryEncoderUnkeyedContainer {
     private(set) var values: [Any] = []
 
     func addChild(_ child: Any) {
@@ -101,7 +101,7 @@ fileprivate class _QueryEncoderUnkeyedContainer {
 }
 
 /// storage for Query Encoder. Stores a stack of QueryEncoder containers, plus leaf objects
-fileprivate struct _QueryEncoderStorage {
+private struct _QueryEncoderStorage {
     /// the container stack
     private var containers: [Any] = []
 
@@ -133,7 +133,7 @@ fileprivate struct _QueryEncoderStorage {
 }
 
 /// Internal QueryEncoder class. Does all the heavy lifting
-fileprivate class _QueryEncoder: Encoder {
+private class _QueryEncoder: Encoder {
     var codingPath: [CodingKey]
 
     /// the encoder's storage
@@ -364,7 +364,7 @@ extension _QueryEncoder {
     func box(_ value: Encodable) throws -> Any {
         let type = Swift.type(of: value)
         if type == Data.self || type == NSData.self {
-            return try self.box((value as! Data))
+            return try self.box(value as! Data)
         } else {
             try value.encode(to: self)
             return storage.popContainer()
@@ -376,7 +376,7 @@ extension _QueryEncoder {
 // Shared Key Types
 //===----------------------------------------------------------------------===//
 
-fileprivate struct _QueryKey: CodingKey {
+private struct _QueryKey: CodingKey {
     public var stringValue: String
     public var intValue: Int?
 

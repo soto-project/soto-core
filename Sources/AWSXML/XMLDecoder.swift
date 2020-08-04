@@ -14,10 +14,10 @@
 
 import struct Foundation.Data
 import struct Foundation.Date
-import struct Foundation.URL
 import class Foundation.DateFormatter
 import class Foundation.NSNull
 import class Foundation.NSNumber
+import struct Foundation.URL
 
 /// The wrapper class for decoding Codable classes from XMLNodes
 public class XMLDecoder {
@@ -107,7 +107,7 @@ struct _XMLDecoderStorage {
 }
 
 /// Internal XMLDecoder class. Does all the heavy lifting
-fileprivate class _XMLDecoder: Decoder {
+private class _XMLDecoder: Decoder {
     /// The decoder's storage.
     var storage: _XMLDecoderStorage
 
@@ -329,91 +329,91 @@ fileprivate class _XMLDecoder: Decoder {
             fatalError()
         }
 
-        mutating func decode(_ type: Bool.Type) throws -> Bool {
+        mutating func decode(_: Bool.Type) throws -> Bool {
             let value = try decoder.unbox(elements[currentIndex], as: Bool.self)
             currentIndex += 1
             return value
         }
 
-        mutating func decode(_ type: String.Type) throws -> String {
+        mutating func decode(_: String.Type) throws -> String {
             let value = try decoder.unbox(elements[currentIndex], as: String.self)
             currentIndex += 1
             return value
         }
 
-        mutating func decode(_ type: Double.Type) throws -> Double {
+        mutating func decode(_: Double.Type) throws -> Double {
             let value = try decoder.unbox(elements[currentIndex], as: Double.self)
             currentIndex += 1
             return value
         }
 
-        mutating func decode(_ type: Float.Type) throws -> Float {
+        mutating func decode(_: Float.Type) throws -> Float {
             let value = try decoder.unbox(elements[currentIndex], as: Float.self)
             currentIndex += 1
             return value
         }
 
-        mutating func decode(_ type: Int.Type) throws -> Int {
+        mutating func decode(_: Int.Type) throws -> Int {
             let value = try decoder.unbox(elements[currentIndex], as: Int.self)
             currentIndex += 1
             return value
         }
 
-        mutating func decode(_ type: Int8.Type) throws -> Int8 {
+        mutating func decode(_: Int8.Type) throws -> Int8 {
             let value = try decoder.unbox(elements[currentIndex], as: Int8.self)
             currentIndex += 1
             return value
         }
 
-        mutating func decode(_ type: Int16.Type) throws -> Int16 {
+        mutating func decode(_: Int16.Type) throws -> Int16 {
             let value = try decoder.unbox(elements[currentIndex], as: Int16.self)
             currentIndex += 1
             return value
         }
 
-        mutating func decode(_ type: Int32.Type) throws -> Int32 {
+        mutating func decode(_: Int32.Type) throws -> Int32 {
             let value = try decoder.unbox(elements[currentIndex], as: Int32.self)
             currentIndex += 1
             return value
         }
 
-        mutating func decode(_ type: Int64.Type) throws -> Int64 {
+        mutating func decode(_: Int64.Type) throws -> Int64 {
             let value = try decoder.unbox(elements[currentIndex], as: Int64.self)
             currentIndex += 1
             return value
         }
 
-        mutating func decode(_ type: UInt.Type) throws -> UInt {
+        mutating func decode(_: UInt.Type) throws -> UInt {
             let value = try decoder.unbox(elements[currentIndex], as: UInt.self)
             currentIndex += 1
             return value
         }
 
-        mutating func decode(_ type: UInt8.Type) throws -> UInt8 {
+        mutating func decode(_: UInt8.Type) throws -> UInt8 {
             let value = try decoder.unbox(elements[currentIndex], as: UInt8.self)
             currentIndex += 1
             return value
         }
 
-        mutating func decode(_ type: UInt16.Type) throws -> UInt16 {
+        mutating func decode(_: UInt16.Type) throws -> UInt16 {
             let value = try decoder.unbox(elements[currentIndex], as: UInt16.self)
             currentIndex += 1
             return value
         }
 
-        mutating func decode(_ type: UInt32.Type) throws -> UInt32 {
+        mutating func decode(_: UInt32.Type) throws -> UInt32 {
             let value = try decoder.unbox(elements[currentIndex], as: UInt32.self)
             currentIndex += 1
             return value
         }
 
-        mutating func decode(_ type: UInt64.Type) throws -> UInt64 {
+        mutating func decode(_: UInt64.Type) throws -> UInt64 {
             let value = try decoder.unbox(elements[currentIndex], as: UInt64.self)
             currentIndex += 1
             return value
         }
 
-        mutating func decode<T>(_ type: T.Type) throws -> T where T: Decodable {
+        mutating func decode<T>(_: T.Type) throws -> T where T: Decodable {
             let value = try decoder.unbox(elements[currentIndex], as: T.self)
             currentIndex += 1
             return value
@@ -471,63 +471,63 @@ fileprivate class _XMLDecoder: Decoder {
             fatalError()
         }
 
-        func decode(_ type: Bool.Type) throws -> Bool {
+        func decode(_: Bool.Type) throws -> Bool {
             return try decoder.unbox(element, as: Bool.self)
         }
 
-        func decode(_ type: String.Type) throws -> String {
+        func decode(_: String.Type) throws -> String {
             return try decoder.unbox(element, as: String.self)
         }
 
-        func decode(_ type: Double.Type) throws -> Double {
+        func decode(_: Double.Type) throws -> Double {
             return try decoder.unbox(element, as: Double.self)
         }
 
-        func decode(_ type: Float.Type) throws -> Float {
+        func decode(_: Float.Type) throws -> Float {
             return try decoder.unbox(element, as: Float.self)
         }
 
-        func decode(_ type: Int.Type) throws -> Int {
+        func decode(_: Int.Type) throws -> Int {
             return try decoder.unbox(element, as: Int.self)
         }
 
-        func decode(_ type: Int8.Type) throws -> Int8 {
+        func decode(_: Int8.Type) throws -> Int8 {
             return try decoder.unbox(element, as: Int8.self)
         }
 
-        func decode(_ type: Int16.Type) throws -> Int16 {
+        func decode(_: Int16.Type) throws -> Int16 {
             return try decoder.unbox(element, as: Int16.self)
         }
 
-        func decode(_ type: Int32.Type) throws -> Int32 {
+        func decode(_: Int32.Type) throws -> Int32 {
             return try decoder.unbox(element, as: Int32.self)
         }
 
-        func decode(_ type: Int64.Type) throws -> Int64 {
+        func decode(_: Int64.Type) throws -> Int64 {
             return try decoder.unbox(element, as: Int64.self)
         }
 
-        func decode(_ type: UInt.Type) throws -> UInt {
+        func decode(_: UInt.Type) throws -> UInt {
             return try decoder.unbox(element, as: UInt.self)
         }
 
-        func decode(_ type: UInt8.Type) throws -> UInt8 {
+        func decode(_: UInt8.Type) throws -> UInt8 {
             return try decoder.unbox(element, as: UInt8.self)
         }
 
-        func decode(_ type: UInt16.Type) throws -> UInt16 {
+        func decode(_: UInt16.Type) throws -> UInt16 {
             return try decoder.unbox(element, as: UInt16.self)
         }
 
-        func decode(_ type: UInt32.Type) throws -> UInt32 {
+        func decode(_: UInt32.Type) throws -> UInt32 {
             return try decoder.unbox(element, as: UInt32.self)
         }
 
-        func decode(_ type: UInt64.Type) throws -> UInt64 {
+        func decode(_: UInt64.Type) throws -> UInt64 {
             return try decoder.unbox(element, as: UInt64.self)
         }
 
-        func decode<T>(_ type: T.Type) throws -> T where T: Decodable {
+        func decode<T>(_: T.Type) throws -> T where T: Decodable {
             return try decoder.unbox(element, as: T.self)
         }
     }
@@ -645,7 +645,7 @@ fileprivate class _XMLDecoder: Decoder {
 // Shared Key Types
 //===----------------------------------------------------------------------===//
 
-fileprivate struct _XMLKey: CodingKey {
+private struct _XMLKey: CodingKey {
     public var stringValue: String
     public var intValue: Int?
 

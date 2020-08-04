@@ -13,11 +13,11 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+@testable import AWSSDKSwiftCore
 import AWSTestUtils
 import Logging
 import NIO
 import XCTest
-@testable import AWSSDKSwiftCore
 
 class CredentialProviderTests: XCTestCase {
     func testCredentialProvider() {
@@ -38,7 +38,7 @@ class CredentialProviderTests: XCTestCase {
             var alreadyCalled = false
             func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
                 if alreadyCalled == false {
-                    self.alreadyCalled = true
+                    alreadyCalled = true
                     return eventLoop.makeSucceededFuture(StaticCredential(accessKeyId: "ACCESSKEYID", secretAccessKey: "SECRETACCESSKET"))
                 } else {
                     return eventLoop.makeFailedFuture(CredentialProviderError.noProvider)
@@ -95,7 +95,7 @@ class CredentialProviderTests: XCTestCase {
 
         let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger))
 
-        XCTAssertThrowsError(_ = try provider.getCredential(on: eventLoop, logger: TestEnvironment.logger).wait()) { (error) in
+        XCTAssertThrowsError(_ = try provider.getCredential(on: eventLoop, logger: TestEnvironment.logger).wait()) { error in
             print("\(error)")
             XCTAssertEqual(error as? CredentialProviderError, .noProvider)
         }

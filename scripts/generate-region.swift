@@ -106,7 +106,7 @@ print("Creating Region.swift")
 
 let context: [String: Any] = [
     "regions": regionDescs.sorted { $0.name < $1.name },
-    "partitions": partitions
+    "partitions": partitions,
 ]
 
 let regionsFile = try environment.renderTemplate(name: "Region.stencil", context: context)

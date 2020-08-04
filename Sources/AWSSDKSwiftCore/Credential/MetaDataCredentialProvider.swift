@@ -13,12 +13,12 @@
 //===----------------------------------------------------------------------===//
 
 import struct Foundation.Date
-import struct Foundation.TimeZone
-import struct Foundation.Locale
-import struct Foundation.TimeInterval
-import struct Foundation.URL
 import class Foundation.DateFormatter
 import class Foundation.JSONDecoder
+import struct Foundation.Locale
+import struct Foundation.TimeInterval
+import struct Foundation.TimeZone
+import struct Foundation.URL
 
 import AWSSignerV4
 import Logging
@@ -35,7 +35,7 @@ protocol MetaDataClient: CredentialProvider {
 
 extension MetaDataClient {
     func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
-        self.getMetaData(on: eventLoop, logger: logger).map { (metaData) in
+        self.getMetaData(on: eventLoop, logger: logger).map { metaData in
             metaData
         }
     }
@@ -182,11 +182,11 @@ struct InstanceMetaDataClient: MetaDataClient {
 
     func getMetaData(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<InstanceMetaData> {
         return getToken(on: eventLoop, logger: logger)
-            .map() { token in
+            .map { token in
                 logger.info("Found IMDSv2 token")
                 return HTTPHeaders([(Self.TokenHeaderName, token)])
             }
-            .flatMapErrorThrowing() { error in
+            .flatMapErrorThrowing { _ in
                 // If we didn't find a session key then assume we are running IMDSv1.
                 // (we could be running from a Docker container and the hop count for the PUT
                 // request is still set to 1)
@@ -201,7 +201,7 @@ struct InstanceMetaDataClient: MetaDataClient {
                     headers: headers,
                     on: eventLoop,
                     logger: logger
-                ).map() { ($0, headers) }
+                ).map { ($0, headers) }
             }
             .flatMapThrowing { (response, headers) -> (String, HTTPHeaders) in
                 // the rolename is in the body
@@ -220,7 +220,7 @@ struct InstanceMetaDataClient: MetaDataClient {
                 let url = self.credentialURL.appendingPathComponent(roleName)
                 return self.request(url: url, headers: headers, on: eventLoop, logger: logger)
             }
-            .flatMapThrowing { (response) in
+            .flatMapThrowing { response in
                 // decode the repsonse payload into the metadata object
                 guard let body = response.body else {
                     throw MetaDataClientError.missingMetaData

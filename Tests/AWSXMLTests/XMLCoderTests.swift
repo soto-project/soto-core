@@ -12,9 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-import XCTest
 @testable import AWSSDKSwiftCore
 @testable import AWSXML
+import XCTest
 
 class XMLCoderTests: XCTestCase {
     struct Numbers: AWSDecodableShape & AWSEncodableShape {
@@ -52,19 +52,19 @@ class XMLCoderTests: XCTestCase {
             case float = "s"
             case double = "d"
             case intEnum = "enum"
-            case int8 = "int8"
-            case uint16 = "uint16"
-            case int32 = "int32"
-            case uint64 = "uint64"
+            case int8
+            case uint16
+            case int32
+            case uint64
         }
     }
 
     struct StringShape: AWSDecodableShape & AWSEncodableShape {
         enum StringEnum: String, Codable {
-            case first = "first"
-            case second = "second"
-            case third = "third"
-            case fourth = "fourth"
+            case first
+            case second
+            case third
+            case fourth
         }
 
         let string: String
@@ -373,7 +373,7 @@ class XMLCoderTests: XCTestCase {
     }
 
     func testDictionaryEncodingDecodeEncode() {
-        struct DictionaryItemKeyValue: DictionaryCoderProperties { static let entry: String? = "item"; static let key = "key"; static let value = "value"; }
+        struct DictionaryItemKeyValue: DictionaryCoderProperties { static let entry: String? = "item"; static let key = "key"; static let value = "value" }
         struct Shape: AWSDecodableShape & AWSEncodableShape {
             @Coding<DictionaryCoder<DictionaryItemKeyValue, String, Int>> var d: [String: Int]
         }
@@ -382,7 +382,7 @@ class XMLCoderTests: XCTestCase {
     }
 
     func testDictionaryOfStructuresEncodingDecodeEncode() {
-        struct DictionaryItemKeyValue: DictionaryCoderProperties { static let entry: String? = "item"; static let key = "key"; static let value = "value"; }
+        struct DictionaryItemKeyValue: DictionaryCoderProperties { static let entry: String? = "item"; static let key = "key"; static let value = "value" }
         struct Shape2: AWSDecodableShape & AWSEncodableShape {
             let float: Float
         }
@@ -394,7 +394,7 @@ class XMLCoderTests: XCTestCase {
     }
 
     func testFlatDictionaryEncodingDecodeEncode() {
-        struct DictionaryKeyValue: DictionaryCoderProperties { static let entry: String? = nil; static let key = "key"; static let value = "value"; }
+        struct DictionaryKeyValue: DictionaryCoderProperties { static let entry: String? = nil; static let key = "key"; static let value = "value" }
         struct Shape: AWSDecodableShape & AWSEncodableShape {
             @Coding<DictionaryCoder<DictionaryKeyValue, String, Int>> var d: [String: Int]
         }
@@ -403,10 +403,10 @@ class XMLCoderTests: XCTestCase {
     }
 
     func testEnumDictionaryEncodingDecodeEncode() {
-        struct DictionaryItemKeyValue: DictionaryCoderProperties { static let entry: String? = "item"; static let key = "key"; static let value = "value"; }
+        struct DictionaryItemKeyValue: DictionaryCoderProperties { static let entry: String? = "item"; static let key = "key"; static let value = "value" }
         enum KeyEnum: String, Codable {
-            case member = "member"
-            case member2 = "member2"
+            case member
+            case member2
         }
         struct Shape: AWSDecodableShape & AWSEncodableShape {
             @Coding<DictionaryCoder<DictionaryItemKeyValue, KeyEnum, Int>> var d: [KeyEnum: Int]
@@ -416,10 +416,10 @@ class XMLCoderTests: XCTestCase {
     }
 
     func testEnumShapeDictionaryEncodingDecodeEncode() {
-        struct DictionaryItemKV: DictionaryCoderProperties { static let entry: String? = "item"; static let key = "k"; static let value = "v"; }
+        struct DictionaryItemKV: DictionaryCoderProperties { static let entry: String? = "item"; static let key = "k"; static let value = "v" }
         enum KeyEnum: String, Codable {
-            case member = "member"
-            case member2 = "member2"
+            case member
+            case member2
         }
         struct Shape2: AWSDecodableShape & AWSEncodableShape {
             let a: String
@@ -432,10 +432,10 @@ class XMLCoderTests: XCTestCase {
     }
 
     func testEnumFlatDictionaryEncodingDecodeEncode() {
-        struct DictionaryKeyValue: DictionaryCoderProperties { static let entry: String? = nil; static let key = "key"; static let value = "value"; }
+        struct DictionaryKeyValue: DictionaryCoderProperties { static let entry: String? = nil; static let key = "key"; static let value = "value" }
         enum KeyEnum: String, Codable {
-            case member = "member"
-            case member2 = "member2"
+            case member
+            case member2
         }
         struct Shape2: AWSDecodableShape & AWSEncodableShape {
             let a: String

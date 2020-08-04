@@ -50,7 +50,7 @@ public struct CredentialProviderFactory {
     }
 
     internal func createProvider(context: Context) -> CredentialProvider {
-        self.cb(context)
+        cb(context)
     }
 }
 
@@ -71,14 +71,14 @@ extension CredentialProviderFactory {
 
     /// Use this method to enforce the use of a `CredentialProvider` that uses the environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` to create the credentials.
     public static var environment: CredentialProviderFactory {
-        Self() { _ -> CredentialProvider in
+        Self { _ -> CredentialProvider in
             return StaticCredential.fromEnvironment() ?? NullCredentialProvider()
         }
     }
 
     /// Use this method to enforce the use of a `CredentialProvider` that uses static credentials.
     public static func `static`(accessKeyId: String, secretAccessKey: String, sessionToken: String? = nil) -> CredentialProviderFactory {
-        Self() { _ in
+        Self { _ in
             StaticCredential(
                 accessKeyId: accessKeyId,
                 secretAccessKey: secretAccessKey,
@@ -89,7 +89,7 @@ extension CredentialProviderFactory {
 
     /// Use this method to enforce the usage of the Credentials supplied via the ECS Metadata endpoint
     public static var ecs: CredentialProviderFactory {
-        Self() { context in
+        Self { context in
             if let provider = ECSMetaDataClient(httpClient: context.httpClient) {
                 return RotatingCredentialProvider(context: context, provider: provider)
             }
@@ -101,7 +101,7 @@ extension CredentialProviderFactory {
 
     /// Use this method to enforce the usage of the Credentials supplied via the EC2 Instance Metadata endpoint
     public static var ec2: CredentialProviderFactory {
-        Self() { context in
+        Self { context in
             let provider = InstanceMetaDataClient(httpClient: context.httpClient)
             return RotatingCredentialProvider(context: context, provider: provider)
         }
@@ -109,7 +109,7 @@ extension CredentialProviderFactory {
 
     /// Use this method to load credentials from your aws cli credential file, normally located at `~/.aws/credentials`
     public static func configFile(credentialsFilePath: String = "~/.aws/credentials", profile: String? = nil) -> CredentialProviderFactory {
-        return Self() { context in
+        return Self { context in
             let provider = AWSConfigFileCredentialProvider(credentialsFilePath: credentialsFilePath, profile: profile)
             return DeferredCredentialProvider(context: context, provider: provider)
         }
@@ -117,14 +117,14 @@ extension CredentialProviderFactory {
 
     /// Enforce the use of no credentials.
     public static var empty: CredentialProviderFactory {
-        Self() { context in
+        Self { _ in
             StaticCredential(accessKeyId: "", secretAccessKey: "")
         }
     }
 
     /// Use the list of credential providers supplied to get credentials. The first one in the list that manages to supply credentials is the one to use
     public static func selector(_ providers: CredentialProviderFactory...) -> CredentialProviderFactory {
-        Self() { context in
+        Self { context in
             if providers.count == 1 {
                 return providers[0].createProvider(context: context)
             } else {

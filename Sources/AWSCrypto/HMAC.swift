@@ -46,7 +46,7 @@ public struct HMAC<H: CCHashFunction> {
             var buffer = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: data.count)
             data.copyBytes(to: buffer)
             defer { buffer.deallocate() }
-            self.update(bufferPointer: .init(buffer))
+            update(bufferPointer: .init(buffer))
         }
     }
 }
@@ -56,7 +56,7 @@ extension HMAC {
     public init(key: SymmetricKey) {
         self.key = key
         self.context = CCHmacContext()
-        self.initialize()
+        initialize()
     }
 
     /// initialize HMAC calculation

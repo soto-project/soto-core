@@ -97,7 +97,8 @@ public class AWSServiceConfig {
             if let serviceEndpoint = serviceEndpoints[self.region.rawValue] {
                 serviceHost = serviceEndpoint
             } else if let partitionEndpoint = partitionEndpoints[partition],
-                let globalEndpoint = serviceEndpoints[partitionEndpoint.endpoint] {
+                let globalEndpoint = serviceEndpoints[partitionEndpoint.endpoint]
+            {
                 serviceHost = globalEndpoint
             } else {
                 serviceHost = "\(service).\(self.region.rawValue).\(partition.dnsSuffix)"

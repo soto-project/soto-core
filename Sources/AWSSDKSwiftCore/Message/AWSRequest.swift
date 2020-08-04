@@ -13,13 +13,13 @@
 //===----------------------------------------------------------------------===//
 
 import AWSSignerV4
+import struct Foundation.CharacterSet
+import struct Foundation.Data
+import struct Foundation.Date
+import struct Foundation.URL
+import struct Foundation.URLComponents
 import NIO
 import NIOHTTP1
-import struct Foundation.URL
-import struct Foundation.Date
-import struct Foundation.Data
-import struct Foundation.CharacterSet
-import struct Foundation.URLComponents
 
 /// Object encapsulating all the information needed to generate a raw HTTP request to AWS
 public struct AWSRequest {
@@ -44,7 +44,7 @@ public struct AWSRequest {
 
     /// Create HTTP Client request from AWSRequest
     func toHTTPRequest() -> AWSHTTPRequest {
-        return AWSHTTPRequest.init(url: url, method: httpMethod, headers: httpHeaders, body: body.asPayload())
+        return AWSHTTPRequest(url: url, method: httpMethod, headers: httpHeaders, body: body.asPayload())
     }
 
     /// Create HTTP Client request with signed headers from AWSRequest
@@ -66,9 +66,10 @@ public struct AWSRequest {
                     seedSigningData: seedSigningData,
                     signer: signer,
                     byteBufferAllocator: reader.byteBufferAllocator,
-                    read: reader.read)
+                    read: reader.read
+                )
                 let payload = AWSPayload.streamReader(s3Reader)
-                return AWSHTTPRequest.init(url: url, method: httpMethod, headers: signedHeaders, body: payload)
+                return AWSHTTPRequest(url: url, method: httpMethod, headers: signedHeaders, body: payload)
             } else {
                 bodyDataForSigning = .unsignedPayload
             }
@@ -76,7 +77,7 @@ public struct AWSRequest {
             bodyDataForSigning = nil
         }
         let signedHeaders = signer.signHeaders(url: url, method: httpMethod, headers: httpHeaders, body: bodyDataForSigning, date: Date())
-        return AWSHTTPRequest.init(url: url, method: httpMethod, headers: signedHeaders, body: payload)
+        return AWSHTTPRequest(url: url, method: httpMethod, headers: signedHeaders, body: payload)
     }
 
     // return new request with middleware applied
@@ -119,7 +120,8 @@ extension AWSRequest {
         path: String,
         httpMethod: HTTPMethod,
         input: Input,
-        configuration: AWSServiceConfig) throws {
+        configuration: AWSServiceConfig
+    ) throws {
         var headers = HTTPHeaders()
         var path = path
         var body: Body = .empty
@@ -137,7 +139,7 @@ extension AWSRequest {
             headers.replaceOrAdd(name: "x-amz-target", value: "\(target).\(operationName)")
         }
 
-        // TODO should replace with Encodable
+        // TODO: should replace with Encodable
         let mirror = Mirror(reflecting: input)
         var memberVariablesCount = mirror.children.count - Input._encoding.count
 
@@ -223,7 +225,7 @@ extension AWSRequest {
                         Self.verifyStream(operation: operationName, payload: awsPayload, input: shapeWithPayload)
                         body = .raw(awsPayload)
                     case let shape as AWSEncodableShape:
-                        var rootName: String? = nil
+                        var rootName: String?
                         // extract custom payload name
                         if let encoding = Input.getEncoding(for: payload), case .body(let locationName) = encoding.location {
                             rootName = locationName
@@ -293,7 +295,7 @@ extension AWSRequest {
             return
         }
 
-        if case .restjson = serviceProtocol, case .raw(_) = body {
+        if case .restjson = serviceProtocol, case .raw = body {
             httpHeaders.replaceOrAdd(name: "content-type", value: "binary/octet-stream")
         } else {
             httpHeaders.replaceOrAdd(name: "content-type", value: serviceProtocol.contentType)
@@ -314,7 +316,7 @@ extension AWSRequest {
 
         for iterator in keys.enumerated() {
             let value = dict[iterator.element]
-            query += iterator.element + "=" + (urlEncodeQueryParam(String(describing: value ?? "")))
+            query += iterator.element + "=" + urlEncodeQueryParam(String(describing: value ?? ""))
             if iterator.offset < dict.count - 1 {
                 query += "&"
             }
@@ -329,7 +331,7 @@ extension AWSRequest {
     }
 }
 
-fileprivate protocol AWSRequestEncodableArray {
+private protocol AWSRequestEncodableArray {
     var encoded: [String] { get }
 }
 
@@ -337,7 +339,7 @@ extension Array: AWSRequestEncodableArray {
     var encoded: [String] { return self.map { "\($0)" }}
 }
 
-fileprivate protocol AWSRequestEncodableDictionary {
+private protocol AWSRequestEncodableDictionary {
     var encoded: [(key: String, value: String)] { get }
 }
 

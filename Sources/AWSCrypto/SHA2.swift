@@ -35,7 +35,7 @@ public struct SHA256: CCHashFunction {
     }
 
     public init() {
-        context = CC_SHA256_CTX()
+        self.context = CC_SHA256_CTX()
         CC_SHA256_Init(&context)
     }
 
@@ -67,7 +67,7 @@ public struct SHA384: CCHashFunction {
     }
 
     public init() {
-        context = CC_SHA512_CTX()
+        self.context = CC_SHA512_CTX()
         CC_SHA384_Init(&context)
     }
 
@@ -99,7 +99,7 @@ public struct SHA512: CCHashFunction {
     }
 
     public init() {
-        context = CC_SHA512_CTX()
+        self.context = CC_SHA512_CTX()
         CC_SHA512_Init(&context)
     }
 

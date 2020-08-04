@@ -12,9 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
+import struct Foundation.Date
 import class Foundation.DateFormatter
 import struct Foundation.Locale
-import struct Foundation.Date
 import struct Foundation.TimeZone
 
 /// Time stamp object that can encoded to ISO8601 format and decoded from ISO8601, HTTP date format and UNIX epoch seconds

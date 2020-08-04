@@ -12,9 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
+import AWSSignerV4
 import Logging
 import NIO
-import AWSSignerV4
 
 /// Credential provider that always fails
 public struct NullCredentialProvider: CredentialProvider {

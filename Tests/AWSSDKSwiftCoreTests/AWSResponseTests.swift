@@ -12,12 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-import XCTest
-import NIO
-import NIOHTTP1
+@testable import AWSSDKSwiftCore
 import AWSTestUtils
 import AWSXML
-@testable import AWSSDKSwiftCore
+import NIO
+import NIOHTTP1
+import XCTest
 
 class AWSResponseTests: XCTestCase {
     func testHeaderResponseDecoding() {
@@ -35,15 +35,15 @@ class AWSResponseTests: XCTestCase {
         )
 
         // XML
-        var awsXMLResponse: AWSResponse? = nil
-        var xmlResult: Output? = nil
+        var awsXMLResponse: AWSResponse?
+        var xmlResult: Output?
         XCTAssertNoThrow(awsXMLResponse = try AWSResponse(from: response, serviceProtocol: .query, raw: false))
         XCTAssertNoThrow(xmlResult = try awsXMLResponse?.generateOutputShape(operation: "Test"))
         XCTAssertEqual(xmlResult?.h, "test-header")
 
         // JSON
-        var awsJSONResponse: AWSResponse? = nil
-        var jsonResult: Output? = nil
+        var awsJSONResponse: AWSResponse?
+        var jsonResult: Output?
         XCTAssertNoThrow(awsJSONResponse = try AWSResponse(from: response, serviceProtocol: .restjson, raw: false))
         XCTAssertNoThrow(jsonResult = try awsJSONResponse?.generateOutputShape(operation: "Test"))
         XCTAssertEqual(jsonResult?.h, "test-header")
@@ -61,15 +61,15 @@ class AWSResponseTests: XCTestCase {
         )
 
         // XML
-        var awsXMLResponse: AWSResponse? = nil
-        var xmlResult: Output? = nil
+        var awsXMLResponse: AWSResponse?
+        var xmlResult: Output?
         XCTAssertNoThrow(awsXMLResponse = try AWSResponse(from: response, serviceProtocol: .query, raw: false))
         XCTAssertNoThrow(xmlResult = try awsXMLResponse?.generateOutputShape(operation: "Test"))
         XCTAssertEqual(xmlResult?.status, 200)
 
         // JSON
-        var awsJSONResponse: AWSResponse? = nil
-        var jsonResult: Output? = nil
+        var awsJSONResponse: AWSResponse?
+        var jsonResult: Output?
         XCTAssertNoThrow(awsJSONResponse = try AWSResponse(from: response, serviceProtocol: .restjson, raw: false))
         XCTAssertNoThrow(jsonResult = try awsJSONResponse?.generateOutputShape(operation: "Test"))
         XCTAssertEqual(jsonResult?.status, 200)
@@ -88,8 +88,8 @@ class AWSResponseTests: XCTestCase {
             bodyData: Data(responseBody.utf8)
         )
 
-        var awsResponse: AWSResponse? = nil
-        var output: Output? = nil
+        var awsResponse: AWSResponse?
+        var output: Output?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml, raw: false))
         XCTAssertNoThrow(output = try awsResponse?.generateOutputShape(operation: "Test"))
         XCTAssertEqual(output?.name, "hello")
@@ -103,7 +103,7 @@ class AWSResponseTests: XCTestCase {
             let contentType: String
 
             private enum CodingKeys: String, CodingKey {
-                case name = "name"
+                case name
                 case contentType = "content-type"
             }
         }
@@ -113,8 +113,8 @@ class AWSResponseTests: XCTestCase {
             bodyData: "<name>hello</name>".data(using: .utf8)!
         )
 
-        var awsResponse: AWSResponse? = nil
-        var output: Output? = nil
+        var awsResponse: AWSResponse?
+        var output: Output?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml, raw: false))
         XCTAssertNoThrow(output = try awsResponse?.generateOutputShape(operation: "Test"))
         XCTAssertEqual(output?.name, "hello")
@@ -133,8 +133,8 @@ class AWSResponseTests: XCTestCase {
             bodyData: Data("{\"name\":\"hello\"}".utf8)
         )
 
-        var awsResponse: AWSResponse? = nil
-        var output: Output? = nil
+        var awsResponse: AWSResponse?
+        var output: Output?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml, raw: true))
         XCTAssertNoThrow(output = try awsResponse?.generateOutputShape(operation: "Test"))
         XCTAssertEqual(output?.body.asData(), Data("{\"name\":\"hello\"}".utf8))
@@ -152,8 +152,8 @@ class AWSResponseTests: XCTestCase {
             bodyData: Data("{\"name\":\"hello\"}".utf8)
         )
 
-        var awsResponse: AWSResponse? = nil
-        var output: Output? = nil
+        var awsResponse: AWSResponse?
+        var output: Output?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .json(version: "1.1"), raw: false))
         XCTAssertNoThrow(output = try awsResponse?.generateOutputShape(operation: "Test"))
         XCTAssertEqual(output?.name, "hello")
@@ -173,8 +173,8 @@ class AWSResponseTests: XCTestCase {
             bodyData: Data("{\"name\":\"hello\"}".utf8)
         )
 
-        var awsResponse: AWSResponse? = nil
-        var output: Output? = nil
+        var awsResponse: AWSResponse?
+        var output: Output?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .json(version: "1.1"), raw: false))
         XCTAssertNoThrow(output = try awsResponse?.generateOutputShape(operation: "Test"))
         XCTAssertEqual(output?.output2.name, "hello")
@@ -195,8 +195,8 @@ class AWSResponseTests: XCTestCase {
             bodyData: Data("{\"name\":\"hello\"}".utf8)
         )
 
-        var awsResponse: AWSResponse? = nil
-        var output: Output? = nil
+        var awsResponse: AWSResponse?
+        var output: Output?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .json(version: "1.1"), raw: true))
         XCTAssertNoThrow(output = try awsResponse?.generateOutputShape(operation: "Test"))
         XCTAssertEqual(output?.body.asString(), "{\"name\":\"hello\"}")
@@ -212,7 +212,7 @@ class AWSResponseTests: XCTestCase {
         )
         let service = createServiceConfig(serviceProtocol: .json(version: "1.1"), possibleErrorTypes: [ServiceErrorType.self])
 
-        var awsResponse: AWSResponse? = nil
+        var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .json(version: "1.1"), raw: false))
         let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger)
         XCTAssertEqual(error as? ServiceErrorType, .resourceNotFoundException(message: "Donald Where's Your Troosers?"))
@@ -226,7 +226,7 @@ class AWSResponseTests: XCTestCase {
         )
         let service = createServiceConfig(serviceProtocol: .restxml, possibleErrorTypes: [ServiceErrorType.self])
 
-        var awsResponse: AWSResponse? = nil
+        var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml, raw: false))
         let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger)
         XCTAssertEqual(error as? ServiceErrorType, .noSuchKey(message: "It doesn't exist"))
@@ -240,7 +240,7 @@ class AWSResponseTests: XCTestCase {
         )
         let queryService = createServiceConfig(serviceProtocol: .query, possibleErrorTypes: [ServiceErrorType.self])
 
-        var awsResponse: AWSResponse? = nil
+        var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .query, raw: false))
         let error = awsResponse?.generateError(serviceConfig: queryService, logger: TestEnvironment.logger)
         XCTAssertEqual(error as? ServiceErrorType, .messageRejected(message: "Don't like it"))
@@ -254,7 +254,7 @@ class AWSResponseTests: XCTestCase {
         )
         let service = createServiceConfig(serviceProtocol: .ec2)
 
-        var awsResponse: AWSResponse? = nil
+        var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .ec2, raw: false))
         let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? AWSResponseError
         XCTAssertEqual(error?.errorCode, "NoSuchKey")
@@ -279,8 +279,8 @@ class AWSResponseTests: XCTestCase {
             bodyData: Data(#"{"_embedded": {"a": [{"s":"Hello", "i":1234}, {"s":"Hello2", "i":12345}]}, "d":3.14, "b":true}"# .utf8)
         )
 
-        var awsResponse: AWSResponse? = nil
-        var output: Output2? = nil
+        var awsResponse: AWSResponse?
+        var output: Output2?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .json(version: "1.1"), raw: false))
         XCTAssertNoThrow(output = try awsResponse?.generateOutputShape(operation: "Test"))
         XCTAssertEqual(output?.a.count, 2)
@@ -302,7 +302,7 @@ class AWSResponseTests: XCTestCase {
         }
 
         init(status: HTTPResponseStatus, headers: HTTPHeaders, bodyData: Data?) {
-            var body: ByteBuffer? = nil
+            var body: ByteBuffer?
             if let bodyData = bodyData {
                 body = ByteBufferAllocator().buffer(capacity: bodyData.count)
                 body?.writeBytes(bodyData)

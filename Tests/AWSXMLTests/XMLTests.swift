@@ -12,13 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-import XCTest
 @testable import AWSXML
+import XCTest
 
 class XMLTests: XCTestCase {
     /// helper test function to use throughout all the decode/encode tests
     func testDecodeEncode(xml: String) throws {
-        var xmlDocument: XML.Document? = nil
+        var xmlDocument: XML.Document?
         XCTAssertNoThrow(xmlDocument = try XML.Document(data: Data(xml.utf8)))
         let xml2 = xmlDocument?.xmlString
         XCTAssertEqual(xml, xml2)
@@ -101,7 +101,7 @@ class XMLTests: XCTestCase {
 
     func testCDATADecodeEncode() {
         let xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test><![CDATA[CDATA test]]></test>"
-        var xmlDocument: XML.Document? = nil
+        var xmlDocument: XML.Document?
         XCTAssertNoThrow(xmlDocument = try XML.Document(data: Data(xml.utf8)))
         let xml2 = xmlDocument?.xmlString
         XCTAssertEqual(xml2, "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test>CDATA test</test>")
@@ -109,7 +109,7 @@ class XMLTests: XCTestCase {
 
     func testWhitespaceDecodeEncode() {
         let xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test> <a> before</a><b></b> <c>after </c></test>"
-        var xmlDocument: XML.Document? = nil
+        var xmlDocument: XML.Document?
         XCTAssertNoThrow(xmlDocument = try XML.Document(data: Data(xml.utf8)))
         let xml2 = xmlDocument?.xmlString
         XCTAssertEqual(xml2, "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test><a> before</a><b></b><c>after </c></test>")

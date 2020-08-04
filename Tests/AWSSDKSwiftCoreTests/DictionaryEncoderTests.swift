@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import XCTest
 @testable import AWSSDKSwiftCore
+import XCTest
 
 class DictionaryEncoderTests: XCTestCase {
     func assertEqual(_ e1: Any, _ e2: Any) {
@@ -57,7 +57,8 @@ class DictionaryEncoderTests: XCTestCase {
         type: T.Type,
         dictionary: [String: Any],
         decoder: DictionaryDecoder = DictionaryDecoder(),
-        test: (T) -> ()) {
+        test: (T) -> ()
+    ) {
         do {
             let instance = try decoder.decode(T.self, from: dictionary)
             test(instance)
@@ -257,13 +258,13 @@ class DictionaryEncoderTests: XCTestCase {
             }
 
             private enum CodingKeys: String, CodingKey {
-                case name = "name"
-                case age = "age"
+                case name
+                case age
             }
 
             private enum AdditionalKeys: String, CodingKey {
-                case firstname = "firstname"
-                case surname = "surname"
+                case firstname
+                case surname
             }
         }
 
@@ -332,10 +333,10 @@ class DictionaryEncoderTests: XCTestCase {
             let dictionary: [String: Any] = [
                 "b": [
                     "int": Int.max,
-                    "int8": -(Int8.max),
-                    "int16": -(Int16.max),
-                    "int32": -(Int32.max),
-                    "int64": -(Int64.max),
+                    "int8": -Int8.max,
+                    "int16": -Int16.max,
+                    "int32": -Int32.max,
+                    "int64": -Int64.max,
                     "uint": UInt.max,
                     "uint8": UInt8.max,
                     "uint16": UInt16.max,
@@ -346,26 +347,26 @@ class DictionaryEncoderTests: XCTestCase {
                     "string": "hello",
                     "data": "hello".data(using: .utf8)!.base64EncodedString(),
                     "bool": true,
-                    "optional": "hello"
+                    "optional": "hello",
                 ],
                 "dictionary": ["foo": "bar"],
-                "array": ["a", "b", "c"]
+                "array": ["a", "b", "c"],
             ]
 
             let a = try DictionaryDecoder().decode(A.self, from: dictionary)
 
-            XCTAssertEqual(a.b.int, 9223372036854775807)
+            XCTAssertEqual(a.b.int, 9_223_372_036_854_775_807)
             XCTAssertEqual(a.b.int8, -127)
             XCTAssertEqual(a.b.int16, -32767)
-            XCTAssertEqual(a.b.int32, -2147483647)
-            XCTAssertEqual(a.b.int64, -9223372036854775807)
-            XCTAssertEqual(a.b.uint, 18446744073709551615)
+            XCTAssertEqual(a.b.int32, -2_147_483_647)
+            XCTAssertEqual(a.b.int64, -9_223_372_036_854_775_807)
+            XCTAssertEqual(a.b.uint, 18_446_744_073_709_551_615)
             XCTAssertEqual(a.b.uint8, 255)
             XCTAssertEqual(a.b.uint16, 65535)
-            XCTAssertEqual(a.b.uint32, 4294967295)
-            XCTAssertEqual(a.b.uint64, 18446744073709551615)
-            XCTAssertEqual(a.b.double, 1.7976931348623157E+308)
-            XCTAssertEqual(a.b.float, 3.40282347E+38)
+            XCTAssertEqual(a.b.uint32, 4_294_967_295)
+            XCTAssertEqual(a.b.uint64, 18_446_744_073_709_551_615)
+            XCTAssertEqual(a.b.double, 1.7976931348623157e+308)
+            XCTAssertEqual(a.b.float, 3.40282347e+38)
             XCTAssertEqual(a.b.string, "hello")
             XCTAssertEqual(a.b.data, "hello".data(using: .utf8))
             XCTAssertEqual(a.b.bool, true)
@@ -388,13 +389,13 @@ class DictionaryEncoderTests: XCTestCase {
                     "string": "hello",
                     "data": "hello".data(using: .utf8)!,
                     "bool": true,
-                    "optional": "hello"
+                    "optional": "hello",
                 ],
                 "dictionary": ["foo": "bar"],
-                "array": ["a", "b", "c"]
+                "array": ["a", "b", "c"],
             ]
 
-            let _ = try DictionaryDecoder().decode(A.self, from: dictionary)
+            _ = try DictionaryDecoder().decode(A.self, from: dictionary)
             XCTFail("Never reached here")
 
         } catch DecodingError.keyNotFound(let key, _) {

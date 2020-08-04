@@ -36,7 +36,7 @@ public extension Insecure {
         }
 
         public init() {
-            context = CC_MD5_CTX()
+            self.context = CC_MD5_CTX()
             CC_MD5_Init(&context)
         }
 

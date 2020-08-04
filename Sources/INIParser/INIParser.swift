@@ -123,9 +123,9 @@ public class INIParser {
         for line in lines {
             if let content = try parse(line: line) {
                 switch content {
-                case let .Section(newTitle):
+                case .Section(let newTitle):
                     title = newTitle
-                case let .Assignment(variable, value):
+                case .Assignment(let variable, let value):
                     if let currentTitle = title {
                         if var sec = _sections[currentTitle] {
                             sec[variable] = value

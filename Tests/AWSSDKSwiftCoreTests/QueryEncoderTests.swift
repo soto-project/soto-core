@@ -12,16 +12,16 @@
 //
 //===----------------------------------------------------------------------===//
 
-import XCTest
-import AWSTestUtils
 @testable import AWSSDKSwiftCore
+import AWSTestUtils
+import XCTest
 
 class QueryEncoderTests: XCTestCase {
     @EnvironmentVariable("ENABLE_TIMING_TESTS", default: true) static var enableTimingTests: Bool
 
     func queryString(dictionary: [String: Any]) -> String? {
         var components = URLComponents()
-        components.queryItems = dictionary.map({ URLQueryItem(name: $0.key, value: String(describing: $0.value)) }).sorted(by: { $0.name < $1.name })
+        components.queryItems = dictionary.map { URLQueryItem(name: $0.key, value: String(describing: $0.value)) }.sorted(by: { $0.name < $1.name })
         if components.queryItems != nil, let url = components.url {
             return url.query
         }
@@ -76,8 +76,8 @@ class QueryEncoderTests: XCTestCase {
     func testEnumEncode() {
         struct Test: AWSEncodableShape {
             enum TestEnum: String, Codable {
-                case first = "first"
-                case second = "second"
+                case first
+                case second
             }
 
             let a: TestEnum
@@ -145,8 +145,8 @@ class QueryEncoderTests: XCTestCase {
         }
         struct Test: AWSEncodableShape {
             enum TestEnum: String, Codable {
-                case first = "first"
-                case second = "second"
+                case first
+                case second
             }
 
             @Coding<DefaultDictionaryCoder> var a: [TestEnum: Test2]

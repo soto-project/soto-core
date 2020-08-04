@@ -12,10 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-import XCTest
+@testable import AWSSDKSwiftCore
 import AWSTestUtils
 import NIO
-@testable import AWSSDKSwiftCore
+import XCTest
 
 class RuntimeSelectorCredentialProviderTests: XCTestCase {
     func testSetupFail() {
@@ -206,7 +206,7 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
     func testConfigFileProviderFail() {
         let client = createAWSClient(credentialProvider: .selector(.configFile(credentialsFilePath: "nonExistentCredentialFile"), .empty))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
-        let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next(), logger: TestEnvironment.logger).flatMapThrowing { credential in
+        let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next(), logger: TestEnvironment.logger).flatMapThrowing { _ in
             let internalProvider = try XCTUnwrap((client.credentialProvider as? RuntimeSelectorCredentialProvider)?.internalProvider)
             XCTAssert(internalProvider is StaticCredential)
             XCTAssert((internalProvider as? StaticCredential)?.isEmpty() == true)

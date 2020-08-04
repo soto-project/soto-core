@@ -12,11 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIO
-import NIOFoundationCompat
 import enum AWSXML.XML
 import struct Foundation.Data
 import class Foundation.InputStream
+import NIO
+import NIOFoundationCompat
 
 /// Enumaration used to store request/response body in various forms
 public enum Body {

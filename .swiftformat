@@ -3,7 +3,7 @@
 --exclude .build
 
 # rules
---disable redundantReturn, preferKeyPath, void
+--disable redundantReturn, void
 
 # format options
 

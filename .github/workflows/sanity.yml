@@ -15,7 +15,8 @@ jobs:
         fetch-depth: 1
     - name: Install Dependencies
       run: |
-        brew install swiftformat
+        brew install mint
+        mint install nicklockwood/swiftformat
     - name: run script
       run: ./scripts/sanity.sh
 

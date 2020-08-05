@@ -1,12 +1,13 @@
-# file options
+# Minimum version
+--minversion 0.45.3
 
+# file options
 --exclude .build
 
 # rules
 --disable redundantReturn, void
 
 # format options
-
 --ifdef no-indent
 --nospaceoperators ...,..<
 --patternlet inline

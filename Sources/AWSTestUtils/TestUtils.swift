@@ -26,8 +26,8 @@ import Logging
     }
 
     public var wrappedValue: Value {
-        guard let value = Environment[variableName] else { return defaultValue }
-        return Value(value) ?? defaultValue
+        guard let value = Environment[variableName] else { return self.defaultValue }
+        return Value(value) ?? self.defaultValue
     }
 }
 

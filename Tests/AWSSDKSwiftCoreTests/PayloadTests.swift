@@ -56,17 +56,17 @@ class PayloadTests: XCTestCase {
     }
 
     func testDataRequestPayload() {
-        testRequestPayload(.data(Data("testDataPayload".utf8)), expectedResult: "testDataPayload")
+        self.testRequestPayload(.data(Data("testDataPayload".utf8)), expectedResult: "testDataPayload")
     }
 
     func testStringRequestPayload() {
-        testRequestPayload(.string("testStringPayload"), expectedResult: "testStringPayload")
+        self.testRequestPayload(.string("testStringPayload"), expectedResult: "testStringPayload")
     }
 
     func testByteBufferRequestPayload() {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: 32)
         byteBuffer.writeString("testByteBufferPayload")
-        testRequestPayload(.byteBuffer(byteBuffer), expectedResult: "testByteBufferPayload")
+        self.testRequestPayload(.byteBuffer(byteBuffer), expectedResult: "testByteBufferPayload")
     }
 
     func testResponsePayload() {

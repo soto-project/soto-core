@@ -26,9 +26,9 @@ class DictionaryEncoderTests: XCTestCase {
         } else if let date1 = e1 as? NSDate, let date2 = e2 as? NSDate {
             XCTAssertEqual(date1, date2)
         } else if let d1 = e1 as? [String: Any], let d2 = e2 as? [String: Any] {
-            assertDictionaryEqual(d1, d2)
+            self.assertDictionaryEqual(d1, d2)
         } else if let a1 = e1 as? [Any], let a2 = e2 as? [Any] {
-            assertArrayEqual(a1, a2)
+            self.assertArrayEqual(a1, a2)
         } else if let desc1 = e1 as? CustomStringConvertible, let desc2 = e2 as? CustomStringConvertible {
             XCTAssertEqual(desc1.description, desc2.description)
         }
@@ -37,7 +37,7 @@ class DictionaryEncoderTests: XCTestCase {
     func assertArrayEqual(_ a1: [Any], _ a2: [Any]) {
         XCTAssertEqual(a1.count, a2.count)
         for i in 0..<a1.count {
-            assertEqual(a1[i], a2[i])
+            self.assertEqual(a1[i], a2[i])
         }
     }
 
@@ -46,7 +46,7 @@ class DictionaryEncoderTests: XCTestCase {
 
         for e1 in d1 {
             if let e2 = d2[e1.key] {
-                assertEqual(e1.value, e2)
+                self.assertEqual(e1.value, e2)
             } else {
                 XCTFail("Missing key \(e1.key)")
             }
@@ -57,7 +57,7 @@ class DictionaryEncoderTests: XCTestCase {
         type: T.Type,
         dictionary: [String: Any],
         decoder: DictionaryDecoder = DictionaryDecoder(),
-        test: (T) -> ()
+        test: (T) -> Void
     ) {
         do {
             let instance = try decoder.decode(T.self, from: dictionary)
@@ -198,7 +198,7 @@ class DictionaryEncoderTests: XCTestCase {
             let data: Data
         }
         let dictionary: [String: Any] = ["data": "Hello, world".data(using: .utf8)!.base64EncodedString()]
-        testDecode(type: Test.self, dictionary: dictionary) {
+        self.testDecode(type: Test.self, dictionary: dictionary) {
             XCTAssertEqual($0.data, "Hello, world".data(using: .utf8)!)
         }
 
@@ -206,7 +206,7 @@ class DictionaryEncoderTests: XCTestCase {
         decoder.dataDecodingStrategy = .raw
 
         let dictionary2: [String: Any] = ["data": "Hello, world".data(using: .utf8)!]
-        testDecode(type: Test.self, dictionary: dictionary2, decoder: decoder) {
+        self.testDecode(type: Test.self, dictionary: dictionary2, decoder: decoder) {
             XCTAssertEqual($0.data, "Hello, world".data(using: .utf8)!)
         }
     }
@@ -223,7 +223,7 @@ class DictionaryEncoderTests: XCTestCase {
             let float: Float
         }
         let dictionary: [String: Any] = ["float": Double.infinity]
-        testDecodeErrors(type: Test.self, dictionary: dictionary)
+        self.testDecodeErrors(type: Test.self, dictionary: dictionary)
     }
 
     func testMissingKeyDecodeErrors() {
@@ -251,10 +251,10 @@ class DictionaryEncoderTests: XCTestCase {
 
             init(from decoder: Decoder) throws {
                 let container = try decoder.container(keyedBy: CodingKeys.self)
-                age = try container.decode(Int.self, forKey: .age)
+                self.age = try container.decode(Int.self, forKey: .age)
                 let fullname = try container.nestedContainer(keyedBy: AdditionalKeys.self, forKey: .name)
-                firstname = try fullname.decode(String.self, forKey: .firstname)
-                surname = try fullname.decode(String.self, forKey: .surname)
+                self.firstname = try fullname.decode(String.self, forKey: .firstname)
+                self.surname = try fullname.decode(String.self, forKey: .surname)
             }
 
             private enum CodingKeys: String, CodingKey {
@@ -283,7 +283,7 @@ class DictionaryEncoderTests: XCTestCase {
         class Test: Base {
             required init(from decoder: Decoder) throws {
                 let container = try decoder.container(keyedBy: CodingKeys.self)
-                b = try container.decode(String.self, forKey: .b)
+                self.b = try container.decode(String.self, forKey: .b)
                 let superDecoder = try container.superDecoder(forKey: .super)
                 try super.init(from: superDecoder)
             }

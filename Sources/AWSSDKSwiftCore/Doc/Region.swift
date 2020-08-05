@@ -122,7 +122,7 @@ public struct AWSPartition: RawRepresentable, Equatable, Hashable {
 
     private var partition: InternalPartition
 
-    public var rawValue: String { return partition.rawValue }
+    public var rawValue: String { return self.partition.rawValue }
 
     public init?(rawValue: String) {
         guard let partition = InternalPartition(rawValue: rawValue) else { return nil }
@@ -147,7 +147,7 @@ public struct AWSPartition: RawRepresentable, Equatable, Hashable {
 
 extension AWSPartition {
     public var dnsSuffix: String {
-        switch partition {
+        switch self.partition {
         case .aws: return "amazonaws.com"
         case .awscn: return "amazonaws.com.cn"
         case .awsusgov: return "amazonaws.com"

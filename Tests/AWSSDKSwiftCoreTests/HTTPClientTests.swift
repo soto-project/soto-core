@@ -29,19 +29,19 @@ class NIOTSHTTPClientTests: XCTestCase {
     var client: NIOTSHTTPClient!
 
     override func setUp() {
-        awsServer = AWSTestServer(serviceProtocol: .json)
-        client = NIOTSHTTPClient(eventLoopGroupProvider: .shared(NIOTSEventLoopGroup()))
+        self.awsServer = AWSTestServer(serviceProtocol: .json)
+        self.client = NIOTSHTTPClient(eventLoopGroupProvider: .shared(NIOTSEventLoopGroup()))
     }
 
     override func tearDown() {
-        XCTAssertNoThrow(try awsServer.stop())
-        XCTAssertNoThrow(try client.syncShutdown())
+        XCTAssertNoThrow(try self.awsServer.stop())
+        XCTAssertNoThrow(try self.client.syncShutdown())
     }
 
     func testInitWithInvalidURL() {
         do {
             let request = AWSHTTPRequest(url: URL(string: "no_protocol.com")!, method: .GET, headers: HTTPHeaders())
-            _ = try client.execute(request: request, timeout: .seconds(5), on: client.eventLoopGroup.next(), logger: TestEnvironment.logger).wait()
+            _ = try client.execute(request: request, timeout: .seconds(5), on: self.client.eventLoopGroup.next(), logger: TestEnvironment.logger).wait()
             XCTFail("Should throw malformedURL error")
         } catch {
             if case NIOTSHTTPClient.HTTPError.malformedURL = error {}
@@ -54,8 +54,8 @@ class NIOTSHTTPClientTests: XCTestCase {
     func testConnectGet() {
         do {
             let request = AWSHTTPRequest(url: awsServer.addressURL, method: .GET, headers: HTTPHeaders())
-            let future = client.execute(request: request, timeout: .seconds(5), on: client.eventLoopGroup.next(), logger: TestEnvironment.logger)
-            try awsServer.httpBin()
+            let future = self.client.execute(request: request, timeout: .seconds(5), on: self.client.eventLoopGroup.next(), logger: TestEnvironment.logger)
+            try self.awsServer.httpBin()
             _ = try future.wait()
         } catch {
             XCTFail(error.localizedDescription)
@@ -65,8 +65,8 @@ class NIOTSHTTPClientTests: XCTestCase {
     func testConnectPost() {
         do {
             let request = AWSHTTPRequest(url: awsServer.addressURL, method: .POST, headers: HTTPHeaders())
-            let future = client.execute(request: request, timeout: .seconds(5), on: client.eventLoopGroup.next(), logger: TestEnvironment.logger)
-            try awsServer.httpBin()
+            let future = self.client.execute(request: request, timeout: .seconds(5), on: self.client.eventLoopGroup.next(), logger: TestEnvironment.logger)
+            try self.awsServer.httpBin()
             _ = try future.wait()
         } catch {
             XCTFail(error.localizedDescription)
@@ -74,15 +74,15 @@ class NIOTSHTTPClientTests: XCTestCase {
     }
 
     func testGet() {
-        HTTPClientTests(client).testGet()
+        HTTPClientTests(self.client).testGet()
     }
 
     func testHeaders() {
-        HTTPClientTests(client).testHeaders()
+        HTTPClientTests(self.client).testHeaders()
     }
 
     func testBody() {
-        HTTPClientTests(client).testBody()
+        HTTPClientTests(self.client).testBody()
     }
 }
 
@@ -97,7 +97,7 @@ class HTTPClientTests {
     }
 
     func execute(_ request: AWSHTTPRequest) -> EventLoopFuture<AWSTestServer.HTTPBinResponse> {
-        return client.execute(request: request, timeout: .seconds(5), on: client.eventLoopGroup.next(), logger: TestEnvironment.logger)
+        return self.client.execute(request: request, timeout: .seconds(5), on: self.client.eventLoopGroup.next(), logger: TestEnvironment.logger)
             .flatMapThrowing { response in
                 guard let body = response.body else { throw AWSTestServer.Error.emptyBody }
                 return try JSONDecoder().decode(AWSTestServer.HTTPBinResponse.self, from: body)
@@ -112,7 +112,7 @@ class HTTPClientTests {
             }
             let headers: HTTPHeaders = [:]
             let request = AWSHTTPRequest(url: URL(string: "\(awsServer.address)/get?test=2")!, method: .GET, headers: headers, body: .empty)
-            let responseFuture = execute(request)
+            let responseFuture = self.execute(request)
 
             try awsServer.httpBin()
 
@@ -135,7 +135,7 @@ class HTTPClientTests {
                 "Test-Header": "testValue",
             ]
             let request = AWSHTTPRequest(url: awsServer.addressURL, method: .POST, headers: headers, body: .empty)
-            let responseFuture = execute(request)
+            let responseFuture = self.execute(request)
 
             try awsServer.httpBin()
 
@@ -163,7 +163,7 @@ class HTTPClientTests {
             var body = ByteBufferAllocator().buffer(capacity: text.utf8.count)
             body.writeString(text)
             let request = AWSHTTPRequest(url: awsServer.addressURL, method: .POST, headers: headers, body: .byteBuffer(body))
-            let responseFuture = execute(request)
+            let responseFuture = self.execute(request)
 
             try awsServer.httpBin()
 

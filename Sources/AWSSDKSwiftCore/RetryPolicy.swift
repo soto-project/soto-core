@@ -97,7 +97,7 @@ struct ExponentialRetry: StandardRetryPolicy {
 
     func calculateRetryWaitTime(attempt: Int) -> TimeAmount {
         let exp = Int64(exp2(Double(attempt)))
-        return .nanoseconds(base.nanoseconds * exp)
+        return .nanoseconds(self.base.nanoseconds * exp)
     }
 }
 
@@ -115,6 +115,6 @@ struct JitterRetry: StandardRetryPolicy {
 
     func calculateRetryWaitTime(attempt: Int) -> TimeAmount {
         let exp = Int64(exp2(Double(attempt)))
-        return .nanoseconds(Int64.random(in: (base.nanoseconds * exp / 2)..<(base.nanoseconds * exp)))
+        return .nanoseconds(Int64.random(in: (self.base.nanoseconds * exp / 2)..<(self.base.nanoseconds * exp)))
     }
 }

@@ -36,8 +36,8 @@ public protocol CustomDecoder: CustomCoder {
     }
 
     public var wrappedValue: Coder.CodableValue {
-        get { return value }
-        set { value = newValue }
+        get { return self.value }
+        set { self.value = newValue }
     }
 }
 
@@ -51,7 +51,7 @@ extension Coding: Decodable where Coder: CustomDecoder {
 /// add encoder functionality if propertyWrapper conforms to `Encodable` and Coder conforms to `CustomEncoder`
 extension Coding: Encodable where Coder: CustomEncoder {
     public func encode(to encoder: Encoder) throws {
-        try Coder.encode(value: value, to: encoder)
+        try Coder.encode(value: self.value, to: encoder)
     }
 }
 
@@ -64,8 +64,8 @@ extension Coding: Encodable where Coder: CustomEncoder {
     }
 
     public var wrappedValue: Coder.CodableValue? {
-        get { return value }
-        set { value = newValue }
+        get { return self.value }
+        set { self.value = newValue }
     }
 }
 

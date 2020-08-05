@@ -68,7 +68,7 @@ public struct AWSPayload {
         size: Int? = nil,
         fileIO: NonBlockingFileIO,
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
-        callback: @escaping (Int) throws -> () = { _ in }
+        callback: @escaping (Int) throws -> Void = { _ in }
     ) -> Self {
         // use chunked reader buffer size to avoid allocating additional buffers when streaming data
         let blockSize = S3ChunkedStreamReader.bufferSize

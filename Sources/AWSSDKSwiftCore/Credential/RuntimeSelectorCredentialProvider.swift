@@ -23,7 +23,7 @@ import NIOConcurrencyHelpers
 class RuntimeSelectorCredentialProvider: CredentialProvider {
     /// the provider chosen to supply credentials
     var internalProvider: CredentialProvider? {
-        lock.withLock {
+        self.lock.withLock {
             _internalProvider
         }
     }
@@ -36,11 +36,11 @@ class RuntimeSelectorCredentialProvider: CredentialProvider {
 
     init(providers: [CredentialProviderFactory], context: CredentialProviderFactory.Context) {
         self.startupPromise = context.eventLoop.makePromise(of: CredentialProvider.self)
-        setupInternalProvider(providers: providers, context: context)
+        self.setupInternalProvider(providers: providers, context: context)
     }
 
     func shudown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
-        return startupPromise.futureResult.map { _ in }.hop(to: eventLoop)
+        return self.startupPromise.futureResult.map { _ in }.hop(to: eventLoop)
     }
 
     func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
@@ -48,7 +48,7 @@ class RuntimeSelectorCredentialProvider: CredentialProvider {
             return provider.getCredential(on: eventLoop, logger: logger)
         }
 
-        return startupPromise.futureResult.hop(to: eventLoop).flatMap { provider in
+        return self.startupPromise.futureResult.hop(to: eventLoop).flatMap { provider in
             return provider.getCredential(on: eventLoop, logger: logger)
         }
     }
@@ -58,7 +58,7 @@ class RuntimeSelectorCredentialProvider: CredentialProvider {
     private func setupInternalProvider(providers: [CredentialProviderFactory], context: CredentialProviderFactory.Context) {
         func _setupInternalProvider(_ index: Int) {
             guard index < providers.count else {
-                startupPromise.fail(CredentialProviderError.noProvider)
+                self.startupPromise.fail(CredentialProviderError.noProvider)
                 return
             }
             let providerFactory = providers[index]

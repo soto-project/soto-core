@@ -48,9 +48,9 @@ extension AWSClient {
                 .flatMap { response in
                     return onPage(response, eventLoop)
                         .map { (rt) -> Void in
-                            guard rt == true else { return promise.succeed(Void()) }
+                            guard rt == true else { return promise.succeed(()) }
                             // get next block token and construct a new input with this token
-                            guard let token = response[keyPath: tokenKey] else { return promise.succeed(Void()) }
+                            guard let token = response[keyPath: tokenKey] else { return promise.succeed(()) }
 
                             let input = input.usingPaginationToken(token)
                             paginatePart(input: input)

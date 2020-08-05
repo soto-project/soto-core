@@ -42,7 +42,7 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
         }
         do {
             let asyncRequest = try AsyncHTTPClient.HTTPClient.Request(url: request.url, method: request.method, headers: requestHeaders, body: requestBody)
-            return execute(request: asyncRequest, eventLoop: .delegate(on: eventLoop), deadline: .now() + timeout).map { $0 }
+            return self.execute(request: asyncRequest, eventLoop: .delegate(on: eventLoop), deadline: .now() + timeout).map { $0 }
         } catch {
             return eventLoopGroup.next().makeFailedFuture(error)
         }
@@ -61,7 +61,7 @@ extension AsyncHTTPClient.HTTPClient {
         do {
             let asyncRequest = try AsyncHTTPClient.HTTPClient.Request(url: request.url, method: request.method, headers: request.headers, body: requestBody)
             let delegate = AWSHTTPClientResponseDelegate(host: asyncRequest.host, stream: stream)
-            return execute(request: asyncRequest, delegate: delegate, eventLoop: .delegate(on: eventLoop), deadline: .now() + timeout)
+            return self.execute(request: asyncRequest, delegate: delegate, eventLoop: .delegate(on: eventLoop), deadline: .now() + timeout)
                 .futureResult
                 // temporarily wait on delegate response finishing while AHC does not do this for us. See https://github.com/swift-server/async-http-client/issues/274
                 .flatMap { response in

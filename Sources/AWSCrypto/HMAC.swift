@@ -46,7 +46,7 @@ public struct HMAC<H: CCHashFunction> {
             var buffer = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: data.count)
             data.copyBytes(to: buffer)
             defer { buffer.deallocate() }
-            update(bufferPointer: .init(buffer))
+            self.update(bufferPointer: .init(buffer))
         }
     }
 }
@@ -56,23 +56,23 @@ extension HMAC {
     public init(key: SymmetricKey) {
         self.key = key
         self.context = CCHmacContext()
-        initialize()
+        self.initialize()
     }
 
     /// initialize HMAC calculation
     mutating func initialize() {
-        CCHmacInit(&context, H.algorithm, key.bytes, key.bytes.count)
+        CCHmacInit(&self.context, H.algorithm, self.key.bytes, self.key.bytes.count)
     }
 
     /// update HMAC calculation with a buffer
     public mutating func update(bufferPointer: UnsafeRawBufferPointer) {
-        CCHmacUpdate(&context, bufferPointer.baseAddress, bufferPointer.count)
+        CCHmacUpdate(&self.context, bufferPointer.baseAddress, bufferPointer.count)
     }
 
     /// finalize HMAC calculation and return authentication code
     public mutating func finalize() -> HashAuthenticationCode {
         var authenticationCode: [UInt8] = .init(repeating: 0, count: H.Digest.byteCount)
-        CCHmacFinal(&context, &authenticationCode)
+        CCHmacFinal(&self.context, &authenticationCode)
         return .init(bytes: authenticationCode)
     }
 }

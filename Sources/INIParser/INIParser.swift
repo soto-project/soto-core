@@ -22,8 +22,8 @@ public class INIParser {
     internal var _sections: [String: [String: String]] = [:]
     internal var _anonymousSection: [String: String] = [:]
 
-    public var sections: [String: [String: String]] { return _sections }
-    public var anonymousSection: [String: String] { return _anonymousSection }
+    public var sections: [String: [String: String]] { return self._sections }
+    public var anonymousSection: [String: String] { return self._anonymousSection }
 
     public enum Error: Swift.Error {
         case invalidSyntax
@@ -129,14 +129,14 @@ public class INIParser {
                     if let currentTitle = title {
                         if var sec = _sections[currentTitle] {
                             sec[variable] = value
-                            _sections[currentTitle] = sec
+                            self._sections[currentTitle] = sec
                         } else {
                             var sec: [String: String] = [:]
                             sec[variable] = value
-                            _sections[currentTitle] = sec
+                            self._sections[currentTitle] = sec
                         }
                     } else {
-                        _anonymousSection[variable] = value
+                        self._anonymousSection[variable] = value
                     }
                 }
             }

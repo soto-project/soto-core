@@ -39,7 +39,7 @@ public struct AWSLoggingMiddleware: AWSServiceMiddleware {
     /// initialize AWSLoggingMiddleware class
     /// - parameters:
     ///     - log: Function to call with logging output
-    public init(log: @escaping (String) -> () = { print($0) }) {
+    public init(log: @escaping (String) -> Void = { print($0) }) {
         self.log = log
     }
 
@@ -75,22 +75,22 @@ public struct AWSLoggingMiddleware: AWSServiceMiddleware {
 
     /// output request
     public func chain(request: AWSRequest) throws -> AWSRequest {
-        log("Request:")
-        log("  \(request.operation)")
-        log("  \(request.httpMethod) \(request.url)")
-        log("  Headers: " + getHeadersOutput(request.httpHeaders))
-        log("  Body: " + getBodyOutput(request.body))
+        self.log("Request:")
+        self.log("  \(request.operation)")
+        self.log("  \(request.httpMethod) \(request.url)")
+        self.log("  Headers: " + self.getHeadersOutput(request.httpHeaders))
+        self.log("  Body: " + self.getBodyOutput(request.body))
         return request
     }
 
     /// output response
     public func chain(response: AWSResponse) throws -> AWSResponse {
-        log("Response:")
-        log("  Status : \(response.status.code)")
-        log("  Headers: " + getHeadersOutput(HTTPHeaders(response.headers.map { ($0, "\($1)") })))
-        log("  Body: " + getBodyOutput(response.body))
+        self.log("Response:")
+        self.log("  Status : \(response.status.code)")
+        self.log("  Headers: " + self.getHeadersOutput(HTTPHeaders(response.headers.map { ($0, "\($1)") })))
+        self.log("  Body: " + self.getBodyOutput(response.body))
         return response
     }
 
-    let log: (String) -> ()
+    let log: (String) -> Void
 }

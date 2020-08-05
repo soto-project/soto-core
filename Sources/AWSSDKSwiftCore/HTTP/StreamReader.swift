@@ -49,7 +49,7 @@ struct ChunkedStreamReader: StreamReader {
     func updateHeaders(headers: HTTPHeaders) -> HTTPHeaders {
         var headers = headers
         // add "Transfer-Encoding" header if streaming with unknown size
-        if size == nil {
+        if self.size == nil {
             headers.add(name: "Transfer-Encoding", value: "chunked")
         }
         return headers
@@ -58,7 +58,7 @@ struct ChunkedStreamReader: StreamReader {
     /// Provide a list of ByteBuffers to write. The `ChunkedStreamReader` just passes the `ByteBuffer` supplied to straight through
     /// - Parameter eventLoop: eventLoop to use when generating the event loop future
     func streamChunks(on eventLoop: EventLoop) -> EventLoopFuture<[ByteBuffer]> {
-        return read(eventLoop).map { result -> [ByteBuffer] in
+        return self.read(eventLoop).map { result -> [ByteBuffer] in
             switch result {
             case .byteBuffer(let byteBuffer):
                 return [byteBuffer]
@@ -69,7 +69,7 @@ struct ChunkedStreamReader: StreamReader {
     }
 
     /// Content size is the same as the size as we aren't adding any chunk headers here
-    var contentSize: Int? { return size }
+    var contentSize: Int? { return self.size }
 
     /// size of data to be streamed
     let size: Int?

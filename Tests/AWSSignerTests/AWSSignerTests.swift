@@ -26,8 +26,8 @@ import XCTest
     }
 
     public var wrappedValue: Value {
-        guard let value = ProcessInfo.processInfo.environment[variableName] else { return defaultValue }
-        return Value(value) ?? defaultValue
+        guard let value = ProcessInfo.processInfo.environment[variableName] else { return self.defaultValue }
+        return Value(value) ?? self.defaultValue
     }
 }
 

@@ -117,7 +117,7 @@ class JSONCoderTests: XCTestCase {
     }
 
     var testShapeWithDictionaries: ShapeWithDictionaries {
-        return ShapeWithDictionaries(shape: testShape, dictionaries: Dictionaries(
+        return ShapeWithDictionaries(shape: self.testShape, dictionaries: Dictionaries(
             dictionaryOfNatives: ["first": 1, "second": 2, "third": 3],
             dictionaryOfShapes: [
                 "strings": StringShape(string: "one", optionalString: "two", stringEnum: .third),
@@ -127,7 +127,7 @@ class JSONCoderTests: XCTestCase {
     }
 
     func testSerializeToDictionaryAndJSON() {
-        let json = try! testShapeWithDictionaries.encodeAsJSON()
+        let json = try! self.testShapeWithDictionaries.encodeAsJSON()
         let dict = try! JSONSerialization.jsonObject(with: json, options: []) as? [String: Any] ?? [:]
 
         let dict2 = dict["s"] as? [String: Any]

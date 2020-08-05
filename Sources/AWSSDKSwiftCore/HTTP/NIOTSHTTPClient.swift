@@ -76,13 +76,13 @@ public final class NIOTSHTTPClient {
 
     /// Shuts down the client and `EventLoopGroup` if it was created by the client.
     public func syncShutdown() throws {
-        switch eventLoopGroupProvider {
+        switch self.eventLoopGroupProvider {
         case .shared:
-            isShutdown.store(true)
+            self.isShutdown.store(true)
             return
         case .createNew:
-            if isShutdown.compareAndExchange(expected: false, desired: true) {
-                try eventLoopGroup.syncShutdownGracefully()
+            if self.isShutdown.compareAndExchange(expected: false, desired: true) {
+                try self.eventLoopGroup.syncShutdownGracefully()
             } else {
                 throw HTTPError.alreadyShutdown
             }
@@ -154,7 +154,7 @@ public final class NIOTSHTTPClient {
             let request = unwrapOutboundIn(data)
             var head = request.head
 
-            head.headers.replaceOrAdd(name: "Host", value: hostname)
+            head.headers.replaceOrAdd(name: "Host", value: self.hostname)
             head.headers.replaceOrAdd(name: "Content-Length", value: request.body?.readableBytes.description ?? "0")
             head.headers.replaceOrAdd(name: "Connection", value: "Close")
 
@@ -194,37 +194,37 @@ public final class NIOTSHTTPClient {
         func channelRead(context: ChannelHandlerContext, data: NIOAny) {
             switch unwrapInboundIn(data) {
             case .head(let head):
-                switch state {
-                case .ready: state = .head(head)
-                case .head, .body: promise.fail(HTTPError.malformedHead)
+                switch self.state {
+                case .ready: self.state = .head(head)
+                case .head, .body: self.promise.fail(HTTPError.malformedHead)
                 }
             case .body(let part):
-                switch state {
-                case .ready: promise.fail(HTTPError.malformedBody)
+                switch self.state {
+                case .ready: self.promise.fail(HTTPError.malformedBody)
                 case .head(let head):
-                    state = .body(head, part)
+                    self.state = .body(head, part)
                 case .body(let head, var body):
                     var part = part
                     body.writeBuffer(&part)
-                    state = .body(head, body)
+                    self.state = .body(head, body)
                 }
             case .end:
-                switch state {
-                case .ready: promise.fail(HTTPError.malformedHead)
+                switch self.state {
+                case .ready: self.promise.fail(HTTPError.malformedHead)
                 case .head(let head):
                     let res = Response(head: head, body: nil)
                     if context.channel.isActive {
                         context.fireChannelRead(wrapOutboundOut(res))
                     }
-                    promise.succeed(res)
-                    state = .ready
+                    self.promise.succeed(res)
+                    self.state = .ready
                 case .body(let head, let body):
                     let res = Response(head: head, body: body)
                     if context.channel.isActive {
                         context.fireChannelRead(wrapOutboundOut(res))
                     }
-                    promise.succeed(res)
-                    state = .ready
+                    self.promise.succeed(res)
+                    self.state = .ready
                 }
             }
         }
@@ -258,7 +258,7 @@ extension NIOTSHTTPClient: AWSHTTPClient {
         let url = request.url
         let request = Request(head: head, body: requestBody)
 
-        return connect(url: url, request, timeout: timeout, on: eventLoop).map { return $0 }
+        return self.connect(url: url, request, timeout: timeout, on: eventLoop).map { return $0 }
     }
 }
 
@@ -297,8 +297,8 @@ extension URL {
     }
 
     var uri: String {
-        var uri = percentEncodedPath
-        if pathHasTrailingSlash, uri != "/" {
+        var uri = self.percentEncodedPath
+        if self.pathHasTrailingSlash, uri != "/" {
             uri += "/"
         }
 

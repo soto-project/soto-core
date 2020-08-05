@@ -187,10 +187,10 @@ struct LoggingCollector: LogHandler {
         private var lock = Lock()
         private var logs: [Entry] = []
 
-        var allEntries: [Entry] { return lock.withLock { logs } }
+        var allEntries: [Entry] { return self.lock.withLock { logs } }
 
         func append(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?) {
-            lock.withLock {
+            self.lock.withLock {
                 self.logs.append(Entry(
                     level: level,
                     message: message.description,
@@ -200,15 +200,15 @@ struct LoggingCollector: LogHandler {
         }
 
         func filter(message: String) -> [Entry] {
-            return allEntries.filter { $0.message == message }
+            return self.allEntries.filter { $0.message == message }
         }
 
         func filter(metadata: String) -> [Entry] {
-            return allEntries.filter { $0.metadata[metadata] != nil }
+            return self.allEntries.filter { $0.metadata[metadata] != nil }
         }
 
         func filter(metadata: String, with value: String) -> [Entry] {
-            return allEntries.filter { $0.metadata[metadata] == value }
+            return self.allEntries.filter { $0.metadata[metadata] == value }
         }
     }
 
@@ -216,21 +216,21 @@ struct LoggingCollector: LogHandler {
         self.logLevel = logLevel
         self.logs = logCollection
         self.internalHandler = StreamLogHandler.standardOutput(label: "_internal_")
-        internalHandler.logLevel = logLevel
+        self.internalHandler.logLevel = logLevel
     }
 
     func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, source: String, file: String, function: String, line: UInt) {
         let metadata = self.metadata.merging(metadata ?? [:]) { $1 }
-        internalHandler.log(level: level, message: message, metadata: metadata, source: source, file: file, function: function, line: line)
-        logs.append(level: level, message: message, metadata: metadata)
+        self.internalHandler.log(level: level, message: message, metadata: metadata, source: source, file: file, function: function, line: line)
+        self.logs.append(level: level, message: message, metadata: metadata)
     }
 
     subscript(metadataKey key: String) -> Logger.Metadata.Value? {
         get {
-            return metadata[key]
+            return self.metadata[key]
         }
         set {
-            metadata[key] = newValue
+            self.metadata[key] = newValue
         }
     }
 }

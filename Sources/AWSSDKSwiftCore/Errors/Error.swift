@@ -36,7 +36,7 @@ public struct AWSResponseError: AWSErrorType {
     }
 
     public var description: String {
-        return "\(errorCode): \(message ?? "")"
+        return "\(self.errorCode): \(self.message ?? "")"
     }
 }
 
@@ -53,6 +53,6 @@ public struct AWSError: Error, CustomStringConvertible {
     }
 
     public var description: String {
-        return "\(message), code: \(statusCode.code)\(rawBody.map { ", body: \($0)" } ?? "")"
+        return "\(self.message), code: \(self.statusCode.code)\(self.rawBody.map { ", body: \($0)" } ?? "")"
     }
 }

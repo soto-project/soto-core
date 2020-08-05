@@ -118,7 +118,7 @@ class XMLCoderTests: XCTestCase {
     }
 
     var testShapeWithDictionaries: ShapeWithDictionaries {
-        return ShapeWithDictionaries(shape: testShape, dictionaries: Dictionaries(
+        return ShapeWithDictionaries(shape: self.testShape, dictionaries: Dictionaries(
             dictionaryOfNatives: ["first": 1, "second": 2, "third": 3],
             dictionaryOfShapes: [
                 "strings": StringShape(string: "one", optionalString: "two", stringEnum: .third),
@@ -169,7 +169,7 @@ class XMLCoderTests: XCTestCase {
             XCTFail("\(error)")
         }
         let xml = "<Test><a><member2>one</member2><member2>two</member2><member2>three</member2></a></Test>"
-        testDecodeEncode(type: Test.self, xml: xml)
+        self.testDecodeEncode(type: Test.self, xml: xml)
     }
 
     func testOptionalDictionary() {
@@ -177,9 +177,9 @@ class XMLCoderTests: XCTestCase {
             @OptionalCoding<DefaultDictionaryCoder> var a: [String: Int]?
         }
         let xml = "<Test><a><entry><key>one</key><value>1</value></entry></a></Test>"
-        testDecodeEncode(type: Test.self, xml: xml)
+        self.testDecodeEncode(type: Test.self, xml: xml)
         let xml2 = "<Test></Test>"
-        testDecodeEncode(type: Test.self, xml: xml2)
+        self.testDecodeEncode(type: Test.self, xml: xml2)
     }
 
     func testNoUserProperty() {
@@ -187,7 +187,7 @@ class XMLCoderTests: XCTestCase {
             var a: [String]
         }
         let xml = "<Test><a>one</a><a>two</a><a>three</a></Test>"
-        testDecodeEncode(type: Test.self, xml: xml)
+        self.testDecodeEncode(type: Test.self, xml: xml)
     }
 
     func testSimpleStructureDecodeEncode() {
@@ -196,7 +196,7 @@ class XMLCoderTests: XCTestCase {
             let b: String
         }
         let xml = "<Test><a>5</a><b>Hello</b></Test>"
-        testDecodeEncode(type: Test.self, xml: xml)
+        self.testDecodeEncode(type: Test.self, xml: xml)
     }
 
     func testContainingStructureDecodeEncode() {
@@ -208,7 +208,7 @@ class XMLCoderTests: XCTestCase {
             let t: Test
         }
         let xml = "<Test2><t><a>5</a><b>Hello</b></t></Test2>"
-        testDecodeEncode(type: Test2.self, xml: xml)
+        self.testDecodeEncode(type: Test2.self, xml: xml)
     }
 
     func testEnumDecodeEncode() {
@@ -221,7 +221,7 @@ class XMLCoderTests: XCTestCase {
             let a: TestEnum
         }
         let xml = "<Test><a>Second</a></Test>"
-        testDecodeEncode(type: Test.self, xml: xml)
+        self.testDecodeEncode(type: Test.self, xml: xml)
     }
 
     func testArrayDecodeEncode() {
@@ -229,7 +229,7 @@ class XMLCoderTests: XCTestCase {
             let a: [Int]
         }
         let xml = "<Test><a>5</a><a>7</a></Test>"
-        testDecodeEncode(type: Test.self, xml: xml)
+        self.testDecodeEncode(type: Test.self, xml: xml)
     }
 
     func testEmptyArrayDecodeEncode() {
@@ -237,7 +237,7 @@ class XMLCoderTests: XCTestCase {
             let a: [Int]
         }
         let xml = "<Test></Test>"
-        testDecodeEncode(type: Test.self, xml: xml)
+        self.testDecodeEncode(type: Test.self, xml: xml)
     }
 
     func testArrayOfStructuresDecodeEncode() {
@@ -248,7 +248,7 @@ class XMLCoderTests: XCTestCase {
             let a: [Test2]
         }
         let xml = "<Test><a><b>Hello</b></a><a><b>Goodbye</b></a></Test>"
-        testDecodeEncode(type: Test.self, xml: xml)
+        self.testDecodeEncode(type: Test.self, xml: xml)
     }
 
     func testDictionaryDecodeEncode() {
@@ -256,7 +256,7 @@ class XMLCoderTests: XCTestCase {
             let a: [String: Int]
         }
         let xml = "<Test><a><first>1</first></a></Test>"
-        testDecodeEncode(type: Test.self, xml: xml)
+        self.testDecodeEncode(type: Test.self, xml: xml)
     }
 
     func testDataDecodeEncode() {
@@ -265,7 +265,7 @@ class XMLCoderTests: XCTestCase {
         }
         let base64 = "Hello, world".data(using: .utf8)!.base64EncodedString()
         let xml = "<Test><data>\(base64)</data></Test>"
-        testDecodeEncode(type: Test.self, xml: xml)
+        self.testDecodeEncode(type: Test.self, xml: xml)
     }
 
     func testAttributeDecode() {
@@ -273,7 +273,7 @@ class XMLCoderTests: XCTestCase {
             let type: String
         }
         let xml = "<Test type=\"Hello\" />"
-        let value = testDecode(type: Test.self, xml: xml)
+        let value = self.testDecode(type: Test.self, xml: xml)
         XCTAssertEqual(value?.type, "Hello")
     }
 
@@ -287,12 +287,12 @@ class XMLCoderTests: XCTestCase {
             let type: Answer
         }
         let xml = "<Test type=\"yes\" />"
-        let value = testDecode(type: Test.self, xml: xml)
+        let value = self.testDecode(type: Test.self, xml: xml)
         XCTAssertEqual(value?.type, .yes)
     }
 
     func testSerializeToXML() {
-        let shape = testShape
+        let shape = self.testShape
         let node = try! XMLEncoder().encode(shape)
 
         let xml = node.xmlString
@@ -364,7 +364,7 @@ class XMLCoderTests: XCTestCase {
             @Coding<DefaultArrayCoder> var array: [Int]
         }
         let xmldata = "<Shape><array><member>3</member><member>2</member><member>1</member></array></Shape>"
-        testDecodeEncode(type: Shape.self, xml: xmldata)
+        self.testDecodeEncode(type: Shape.self, xml: xmldata)
     }
 
     func testArrayOfStructuresEncodingDecodeEncode() {
@@ -375,7 +375,7 @@ class XMLCoderTests: XCTestCase {
             @Coding<DefaultArrayCoder> var array: [Shape2]
         }
         let xmldata = "<Shape><array><member><value>test</value></member><member><value>test2</value></member><member><value>test3</value></member></array></Shape>"
-        testDecodeEncode(type: Shape.self, xml: xmldata)
+        self.testDecodeEncode(type: Shape.self, xml: xmldata)
     }
 
     func testDictionaryEncodingDecodeEncode() {
@@ -384,7 +384,7 @@ class XMLCoderTests: XCTestCase {
             @Coding<DictionaryCoder<DictionaryItemKeyValue, String, Int>> var d: [String: Int]
         }
         let xmldata = "<Shape><d><item><key>member</key><value>4</value></item></d></Shape>"
-        testDecodeEncode(type: Shape.self, xml: xmldata)
+        self.testDecodeEncode(type: Shape.self, xml: xmldata)
     }
 
     func testDictionaryOfStructuresEncodingDecodeEncode() {
@@ -396,7 +396,7 @@ class XMLCoderTests: XCTestCase {
             @Coding<DictionaryCoder<DictionaryItemKeyValue, String, Shape2>> var d: [String: Shape2]
         }
         let xmldata = "<Shape><d><item><key>member</key><value><float>1.5</float></value></item></d></Shape>"
-        testDecodeEncode(type: Shape.self, xml: xmldata)
+        self.testDecodeEncode(type: Shape.self, xml: xmldata)
     }
 
     func testFlatDictionaryEncodingDecodeEncode() {
@@ -405,7 +405,7 @@ class XMLCoderTests: XCTestCase {
             @Coding<DictionaryCoder<DictionaryKeyValue, String, Int>> var d: [String: Int]
         }
         let xmldata = "<Shape><d><key>member</key><value>4</value></d></Shape>"
-        testDecodeEncode(type: Shape.self, xml: xmldata)
+        self.testDecodeEncode(type: Shape.self, xml: xmldata)
     }
 
     func testEnumDictionaryEncodingDecodeEncode() {
@@ -418,7 +418,7 @@ class XMLCoderTests: XCTestCase {
             @Coding<DictionaryCoder<DictionaryItemKeyValue, KeyEnum, Int>> var d: [KeyEnum: Int]
         }
         let xmldata = "<Shape><d><item><key>member</key><value>4</value></item></d></Shape>"
-        testDecodeEncode(type: Shape.self, xml: xmldata)
+        self.testDecodeEncode(type: Shape.self, xml: xmldata)
     }
 
     func testEnumShapeDictionaryEncodingDecodeEncode() {
@@ -434,7 +434,7 @@ class XMLCoderTests: XCTestCase {
             @Coding<DictionaryCoder<DictionaryItemKV, KeyEnum, Shape2>> var d: [KeyEnum: Shape2]
         }
         let xmldata = "<Shape><d><item><k>member</k><v><a>thisisastring</a></v></item></d></Shape>"
-        testDecodeEncode(type: Shape.self, xml: xmldata)
+        self.testDecodeEncode(type: Shape.self, xml: xmldata)
     }
 
     func testEnumFlatDictionaryEncodingDecodeEncode() {
@@ -450,12 +450,12 @@ class XMLCoderTests: XCTestCase {
             @Coding<DictionaryCoder<DictionaryKeyValue, KeyEnum, Shape2>> var d: [KeyEnum: Shape2]
         }
         let xmldata = "<Shape><d><key>member</key><value><a>hello</a></value></d></Shape>"
-        testDecodeEncode(type: Shape.self, xml: xmldata)
+        self.testDecodeEncode(type: Shape.self, xml: xmldata)
     }
 
     func testEncodeDecodeXML() {
         do {
-            let xml = try XMLEncoder().encode(testShape)
+            let xml = try XMLEncoder().encode(self.testShape)
             let testShape2 = try XMLDecoder().decode(Shape.self, from: xml)
             let xml2 = try XMLEncoder().encode(testShape2)
 
@@ -467,7 +467,7 @@ class XMLCoderTests: XCTestCase {
 
     func testEncodeDecodeDictionariesXML() {
         do {
-            let xml = try XMLEncoder().encode(testShapeWithDictionaries)
+            let xml = try XMLEncoder().encode(self.testShapeWithDictionaries)
             let testShape2 = try XMLDecoder().decode(ShapeWithDictionaries.self, from: xml)
 
             XCTAssertEqual(testShape2.dictionaries.dictionaryOfNatives["second"], 2)

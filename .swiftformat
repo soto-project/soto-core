@@ -1,17 +1,20 @@
-# Minimum version
+# Minimum swiftformat version
 --minversion 0.45.3
+
+# Swift version
+--swiftversion 5.1
 
 # file options
 --exclude .build
 
 # rules
---disable redundantReturn, void
+--disable redundantReturn
 
 # format options
 --ifdef no-indent
 --nospaceoperators ...,..<
 --patternlet inline
---self init-only
+--self insert
 --stripunusedargs unnamed-only
 
 #--maxwidth 150

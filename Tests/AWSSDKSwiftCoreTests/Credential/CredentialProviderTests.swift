@@ -37,8 +37,8 @@ class CredentialProviderTests: XCTestCase {
         class MyCredentialProvider: CredentialProvider {
             var alreadyCalled = false
             func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
-                if alreadyCalled == false {
-                    alreadyCalled = true
+                if self.alreadyCalled == false {
+                    self.alreadyCalled = true
                     return eventLoop.makeSucceededFuture(StaticCredential(accessKeyId: "ACCESSKEYID", secretAccessKey: "SECRETACCESSKET"))
                 } else {
                     return eventLoop.makeFailedFuture(CredentialProviderError.noProvider)

@@ -42,9 +42,9 @@ class AWSHTTPClientResponseDelegate: HTTPClientResponseDelegate {
     }
 
     func didReceiveHead(task: HTTPClient.Task<Response>, _ head: HTTPResponseHead) -> EventLoopFuture<Void> {
-        switch state {
+        switch self.state {
         case .idle:
-            state = .head(head)
+            self.state = .head(head)
         case .head:
             preconditionFailure("head already set")
         case .end:
@@ -56,16 +56,16 @@ class AWSHTTPClientResponseDelegate: HTTPClientResponseDelegate {
     }
 
     func didReceiveBodyPart(task: HTTPClient.Task<Response>, _ part: ByteBuffer) -> EventLoopFuture<Void> {
-        switch state {
+        switch self.state {
         case .idle:
             preconditionFailure("no head received before body")
         case .head(let head):
             if (200..<300).contains(head.status.code) {
-                let futureResult = stream(part, task.eventLoop)
-                bodyPartFuture = futureResult
+                let futureResult = self.stream(part, task.eventLoop)
+                self.bodyPartFuture = futureResult
                 return futureResult
             }
-            state = .head(head)
+            self.state = .head(head)
         case .end:
             preconditionFailure("request already processed")
         case .error:
@@ -75,15 +75,15 @@ class AWSHTTPClientResponseDelegate: HTTPClientResponseDelegate {
     }
 
     func didReceiveError(task: HTTPClient.Task<Response>, _ error: Error) {
-        state = .error(error)
+        self.state = .error(error)
     }
 
     func didFinishRequest(task: HTTPClient.Task<Response>) throws -> AWSHTTPResponse {
-        switch state {
+        switch self.state {
         case .idle:
             preconditionFailure("no head received before end")
         case .head(let head):
-            return AsyncHTTPClient.HTTPClient.Response(host: host, status: head.status, headers: head.headers, body: nil)
+            return AsyncHTTPClient.HTTPClient.Response(host: self.host, status: head.status, headers: head.headers, body: nil)
         case .end:
             preconditionFailure("request already processed")
         case .error(let error):

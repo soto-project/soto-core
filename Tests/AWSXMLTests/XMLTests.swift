@@ -81,22 +81,22 @@ class XMLTests: XCTestCase {
 
     func testAttributesDecodeEncode() {
         let xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test name=\"test\">testing</test>"
-        XCTAssertNoThrow(try testDecodeEncode(xml: xml))
+        XCTAssertNoThrow(try self.testDecodeEncode(xml: xml))
     }
 
     func testNamespacesDecodeEncode() {
         let xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test xmlns:h=\"http://www.w3.org/TR/html4/\">testing</test>"
-        XCTAssertNoThrow(try testDecodeEncode(xml: xml))
+        XCTAssertNoThrow(try self.testDecodeEncode(xml: xml))
     }
 
     func testArrayDecodeEncode() {
         let xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><array><test>testing1</test><test>testing2</test><test>testing3</test></array>"
-        XCTAssertNoThrow(try testDecodeEncode(xml: xml))
+        XCTAssertNoThrow(try self.testDecodeEncode(xml: xml))
     }
 
     func testCommentDecodeEncode() {
         let xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test>testing<!--Test Comment--></test>"
-        XCTAssertNoThrow(try testDecodeEncode(xml: xml))
+        XCTAssertNoThrow(try self.testDecodeEncode(xml: xml))
     }
 
     func testCDATADecodeEncode() {

@@ -31,7 +31,7 @@ class QueryEncoderTests: XCTestCase {
     func testQuery<Input: Encodable>(_ value: Input, query: String) {
         do {
             let queryDict = try QueryEncoder().encode(value)
-            let query2 = queryString(dictionary: queryDict)
+            let query2 = self.queryString(dictionary: queryDict)
             XCTAssertEqual(query2, query)
         } catch {
             XCTFail("\(error)")
@@ -224,8 +224,8 @@ class QueryEncoderTests: XCTestCase {
         }
         let data = Data("Testing".utf8)
         let test = Test(a: data)
-        let result = queryString(dictionary: ["a": data.base64EncodedString()])!
-        testQuery(test, query: result)
+        let result = self.queryString(dictionary: ["a": data.base64EncodedString()])!
+        self.testQuery(test, query: result)
     }
 
     func testEC2Encode() {
@@ -240,7 +240,7 @@ class QueryEncoderTests: XCTestCase {
             let queryEncoder = QueryEncoder()
             queryEncoder.ec2 = true
             let queryDict = try queryEncoder.encode(value)
-            let queryAsString = queryString(dictionary: queryDict)
+            let queryAsString = self.queryString(dictionary: queryDict)
 
             XCTAssertEqual(queryAsString, "Object.Data=Hello")
         } catch {

@@ -41,8 +41,8 @@ class ValidationTests: XCTestCase {
             let size: Int?
 
             public func validate(name: String) throws {
-                try validate(size, name: "size", parent: name, max: 100)
-                try validate(size, name: "size", parent: name, min: 1)
+                try self.validate(self.size, name: "size", parent: name, max: 100)
+                try self.validate(self.size, name: "size", parent: name, min: 1)
             }
         }
         let a1 = A(size: 23)
@@ -58,8 +58,8 @@ class ValidationTests: XCTestCase {
             let size: Float?
 
             public func validate(name: String) throws {
-                try validate(size, name: "size", parent: name, max: 50.0)
-                try validate(size, name: "size", parent: name, min: 1.0)
+                try self.validate(self.size, name: "size", parent: name, max: 50.0)
+                try self.validate(self.size, name: "size", parent: name, min: 1.0)
             }
         }
         let a1 = A(size: 23)
@@ -75,8 +75,8 @@ class ValidationTests: XCTestCase {
             let string: String?
 
             public func validate(name: String) throws {
-                try validate(string, name: "string", parent: name, max: 24)
-                try validate(string, name: "string", parent: name, min: 2)
+                try self.validate(self.string, name: "string", parent: name, max: 24)
+                try self.validate(self.string, name: "string", parent: name, min: 2)
             }
         }
         let a1 = A(string: "hello")
@@ -92,8 +92,8 @@ class ValidationTests: XCTestCase {
             let numbers: [Int]?
 
             public func validate(name: String) throws {
-                try validate(numbers, name: "numbers", parent: name, max: 4)
-                try validate(numbers, name: "numbers", parent: name, min: 2)
+                try self.validate(self.numbers, name: "numbers", parent: name, max: 4)
+                try self.validate(self.numbers, name: "numbers", parent: name, min: 2)
             }
         }
         let a1 = A(numbers: [1, 2])
@@ -109,7 +109,7 @@ class ValidationTests: XCTestCase {
             let string: String?
 
             public func validate(name: String) throws {
-                try validate(string, name: "string", parent: name, pattern: "^[A-Za-z]{3}$")
+                try self.validate(self.string, name: "string", parent: name, pattern: "^[A-Za-z]{3}$")
             }
         }
         let a1 = A(string: "abc")
@@ -125,7 +125,7 @@ class ValidationTests: XCTestCase {
             let path: String
 
             public func validate(name: String) throws {
-                try validate(path, name: "path", parent: name, pattern: "((/[A-Za-z0-9\\.,\\+@=_-]+)*)/")
+                try self.validate(self.path, name: "path", parent: name, pattern: "((/[A-Za-z0-9\\.,\\+@=_-]+)*)/")
             }
         }
         let a1 = A(path: "/hello/test/")

@@ -22,7 +22,7 @@ import NIOConcurrencyHelpers
 public class DeferredCredentialProvider: CredentialProvider {
     let lock = Lock()
     var credential: Credential? {
-        lock.withLock {
+        self.lock.withLock {
             internalCredential
         }
     }
@@ -45,12 +45,12 @@ public class DeferredCredentialProvider: CredentialProvider {
                 context.logger.info("AWS credentials ready", metadata: ["aws-credential-provider": .string("\(self)")])
                 return credential
             }
-            .cascade(to: startupPromise)
+            .cascade(to: self.startupPromise)
     }
 
     public func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
-        return startupPromise.futureResult
-            .and(provider.shutdown(on: eventLoop))
+        return self.startupPromise.futureResult
+            .and(self.provider.shutdown(on: eventLoop))
             .map { _ in }
             .hop(to: eventLoop)
     }
@@ -64,10 +64,10 @@ public class DeferredCredentialProvider: CredentialProvider {
             return eventLoop.makeSucceededFuture(credential)
         }
 
-        return startupPromise.futureResult.hop(to: eventLoop)
+        return self.startupPromise.futureResult.hop(to: eventLoop)
     }
 }
 
 extension DeferredCredentialProvider: CustomStringConvertible {
-    public var description: String { return "\(type(of: self))(\(provider.description))" }
+    public var description: String { return "\(type(of: self))(\(self.provider.description))" }
 }

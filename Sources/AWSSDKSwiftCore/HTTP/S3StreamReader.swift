@@ -46,7 +46,7 @@ class S3ChunkedStreamReader: StreamReader {
         self.headerBuffer = byteBufferAllocator.buffer(capacity: Self.maxHeaderSize)
         self.workingBuffer = byteBufferAllocator.buffer(capacity: Self.bufferSize)
         self.tailBuffer = byteBufferAllocator.buffer(capacity: Self.endOfLineLength)
-        tailBuffer.writeString("\r\n")
+        self.tailBuffer.writeString("\r\n")
         self.previouslyReadBuffer = nil
     }
 
@@ -64,29 +64,29 @@ class S3ChunkedStreamReader: StreamReader {
     /// - Parameter eventLoop: EventLoop to work off
     /// - Returns: Full working buffer
     func fillWorkingBuffer(on eventLoop: EventLoop) -> EventLoopFuture<ByteBuffer> {
-        workingBuffer.clear()
+        self.workingBuffer.clear()
         // if there is still data available from the previously read buffer then use that
         if var readBuffer = previouslyReadBuffer, readBuffer.readableBytes > 0 {
             let bytesToRead = min(Self.bufferSize, readBuffer.readableBytes)
             var slice = readBuffer.readSlice(length: bytesToRead)!
             if readBuffer.readableBytes == 0 {
-                previouslyReadBuffer = nil
+                self.previouslyReadBuffer = nil
             } else {
-                previouslyReadBuffer = readBuffer
+                self.previouslyReadBuffer = readBuffer
             }
-            workingBuffer.writeBuffer(&slice)
+            self.workingBuffer.writeBuffer(&slice)
             // if working buffer is full return the buffer
-            if workingBuffer.readableBytes == Self.bufferSize {
-                return eventLoop.makeSucceededFuture(workingBuffer)
+            if self.workingBuffer.readableBytes == Self.bufferSize {
+                return eventLoop.makeSucceededFuture(self.workingBuffer)
             }
         }
         // if there are no bytes left to read then return with what is in the working buffer
-        if bytesLeftToRead == 0 {
-            return eventLoop.makeSucceededFuture(workingBuffer)
+        if self.bytesLeftToRead == 0 {
+            return eventLoop.makeSucceededFuture(self.workingBuffer)
         }
         let promise: EventLoopPromise<ByteBuffer> = eventLoop.makePromise()
         func _fillBuffer() {
-            read(eventLoop).map { (result) -> Void in
+            self.read(eventLoop).map { (result) -> Void in
                 // check if a byte buffer was returned. If not then it must have been `.end`
                 guard case .byteBuffer(var buffer) = result else {
                     // if we have `.end` then return what we have in the working buffer
@@ -139,7 +139,7 @@ class S3ChunkedStreamReader: StreamReader {
     ///
     /// - Parameter eventLoop: EventLoop to run everythin off
     func streamChunks(on eventLoop: EventLoop) -> EventLoopFuture<[ByteBuffer]> {
-        return fillWorkingBuffer(on: eventLoop).map { buffer in
+        return self.fillWorkingBuffer(on: eventLoop).map { buffer in
             // sign header etc
             self.signingData = self.signer.signChunk(body: .byteBuffer(buffer), signingData: self.signingData)
             let header = "\(String(buffer.readableBytes, radix: 16));chunk-signature=\(self.signingData.signature)\r\n"

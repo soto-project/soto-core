@@ -50,7 +50,7 @@ public struct CredentialProviderFactory {
     }
 
     internal func createProvider(context: Context) -> CredentialProvider {
-        cb(context)
+        self.cb(context)
     }
 }
 

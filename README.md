@@ -1,4 +1,4 @@
-# aws-sdk-swift-core
+# AWS SDK Swift Core
 
 [<img src="http://img.shields.io/badge/swift-5.1-brightgreen.svg" alt="Swift 5.1" />](https://swift.org)
 [<img src="https://github.com/swift-aws/aws-sdk-swift-core/workflows/CI/badge.svg" />](https://github.com/swift-aws/aws-sdk-swift-core/actions)
@@ -21,6 +21,10 @@ Versions 4.x of aws-sdk-swift-core are dependent on swift-nio 2, this means cert
 | 3.x     | 4.2 - | ✓     |        | Ubuntu 14.04-18.04 | 3.0    |
 | 4.x     | 5.0 - | ✓     | 12.0 - | Ubuntu 14.04-18.04 | 4.0    |
 
+## Contributing
+
+We welcome and encourage contributions from all developers. Please read [CONTRIBUTING.md](CONTRIBUTING.md) for our contributing guidelines.
+
 ## License
 
-`aws-sdk-swift-core` is released under the Apache 2.0 license. See LICENSE for details.
+`aws-sdk-swift-core` is released under the Apache 2.0 license. See [LICENSE](LICENSE) for details.

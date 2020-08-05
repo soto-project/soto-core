@@ -16,7 +16,6 @@ import NIO
 
 /// Configuration class defining an AWS service
 public class AWSServiceConfig {
-
     /// Region where service is running
     public let region: Region
     /// The destination service of the request. Added as a header value, along with the operation name
@@ -68,8 +67,7 @@ public class AWSServiceConfig {
         possibleErrorTypes: [AWSErrorType.Type] = [],
         middlewares: [AWSServiceMiddleware] = [],
         timeout: TimeAmount? = nil
-    )
-    {
+    ) {
         var partition = partition
         if let region = region {
             self.region = region
@@ -99,7 +97,8 @@ public class AWSServiceConfig {
             if let serviceEndpoint = serviceEndpoints[self.region.rawValue] {
                 serviceHost = serviceEndpoint
             } else if let partitionEndpoint = partitionEndpoints[partition],
-                let globalEndpoint = serviceEndpoints[partitionEndpoint.endpoint] {
+                let globalEndpoint = serviceEndpoints[partitionEndpoint.endpoint]
+            {
                 serviceHost = globalEndpoint
             } else {
                 serviceHost = "\(service).\(self.region.rawValue).\(partition.dnsSuffix)"

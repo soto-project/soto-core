@@ -12,29 +12,29 @@
 //
 //===----------------------------------------------------------------------===//
 
+@testable import AWSSDKSwiftCore
 import AWSSignerV4
 import AWSTestUtils
 import NIOHTTP1
 import XCTest
-@testable import AWSSDKSwiftCore
 
 class AWSRequestTests: XCTestCase {
-    
     struct E: AWSEncodableShape & Decodable {
-        let Member = ["memberKey": "memberValue", "memberKey2" : "memberValue2"]
+        let Member = ["memberKey": "memberValue", "memberKey2": "memberValue2"]
 
         private enum CodingKeys: String, CodingKey {
-            case Member = "Member"
+            case Member
         }
     }
-    
+
     func testPartitionEndpoints() {
         let config = createServiceConfig(
-            serviceEndpoints: ["aws-global":"service.aws.amazon.com"],
-            partitionEndpoints: [.aws: (endpoint: "aws-global", region: .euwest1)])
-        
+            serviceEndpoints: ["aws-global": "service.aws.amazon.com"],
+            partitionEndpoints: [.aws: (endpoint: "aws-global", region: .euwest1)]
+        )
+
         XCTAssertEqual(config.region, .euwest1)
-        
+
         var request: AWSRequest?
         XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", httpMethod: .GET, configuration: config))
         XCTAssertEqual(request?.url.absoluteString, "https://service.aws.amazon.com/")
@@ -67,7 +67,7 @@ class AWSRequestTests: XCTestCase {
         let request = KeywordRequest(self: "KeywordRequest")
         var awsRequest: AWSRequest?
         XCTAssertNoThrow(awsRequest = try AWSRequest(operation: "Keyword", path: "/", httpMethod: .POST, input: request, configuration: config))
-        XCTAssertEqual(awsRequest?.url, URL(string:"https://s3.ca-central-1.amazonaws.com/?self=KeywordRequest")!)
+        XCTAssertEqual(awsRequest?.url, URL(string: "https://s3.ca-central-1.amazonaws.com/?self=KeywordRequest")!)
         XCTAssertEqual(try XCTUnwrap(awsRequest).body.asByteBuffer(), nil)
     }
 
@@ -75,20 +75,22 @@ class AWSRequestTests: XCTestCase {
         let input2 = E()
 
         let config = createServiceConfig(region: .useast1, service: "kinesis", serviceProtocol: .json(version: "1.1"))
-        
+
         var awsRequest: AWSRequest?
         XCTAssertNoThrow(awsRequest = try AWSRequest(
             operation: "PutRecord",
             path: "/",
             httpMethod: .POST,
             input: input2,
-            configuration: config)
+            configuration: config
         )
-        
+        )
+
         let signer = AWSSigner(
             credentials: StaticCredential(accessKeyId: "foo", secretAccessKey: "bar"),
             name: config.service,
-            region: config.region.rawValue)
+            region: config.region.rawValue
+        )
 
         let signedRequest = awsRequest?.createHTTPRequest(signer: signer)
         XCTAssertNotNil(signedRequest)
@@ -100,7 +102,7 @@ class AWSRequestTests: XCTestCase {
     func testUnsignedClient() {
         let input = E()
         let config = createServiceConfig()
-        
+
         var awsRequest: AWSRequest?
         XCTAssertNoThrow(awsRequest = try AWSRequest(
             operation: "CopyObject",
@@ -109,11 +111,12 @@ class AWSRequestTests: XCTestCase {
             input: input,
             configuration: config
         ))
-        
+
         let signer = AWSSigner(
             credentials: StaticCredential(accessKeyId: "", secretAccessKey: ""),
             name: config.service,
-            region: config.region.rawValue)
+            region: config.region.rawValue
+        )
 
         let request = awsRequest?.createHTTPRequest(signer: signer)
         XCTAssertNil(request?.headers["Authorization"].first)
@@ -122,13 +125,14 @@ class AWSRequestTests: XCTestCase {
     func testSignedClient() {
         let input = E()
         let config = createServiceConfig()
-        
+
         let signer = AWSSigner(
             credentials: StaticCredential(accessKeyId: "foo", secretAccessKey: "bar"),
             name: config.service,
-            region: config.region.rawValue)
+            region: config.region.rawValue
+        )
 
-        for httpMethod in [HTTPMethod.GET,.HEAD,.PUT,.DELETE,.POST,.PATCH] {
+        for httpMethod in [HTTPMethod.GET, .HEAD, .PUT, .DELETE, .POST, .PATCH] {
             var awsRequest: AWSRequest?
 
             XCTAssertNoThrow(awsRequest = try AWSRequest(
@@ -216,7 +220,7 @@ class AWSRequestTests: XCTestCase {
         }
         let input = Input(q: ["=3+5897^sdfjh&", "test"])
         let config = createServiceConfig(region: .useast1)
-        
+
         var request: AWSRequest?
         XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))
         XCTAssertEqual(request?.url.absoluteString, "https://test.us-east-1.amazonaws.com/?query=%3D3%2B5897%5Esdfjh%26&query=test")
@@ -261,7 +265,6 @@ class AWSRequestTests: XCTestCase {
         XCTAssertEqual(element.xmlString, "<Input xmlns=\"https://test.amazonaws.com/doc/2020-03-11/\"><number>5</number></Input>")
     }
 
-
     func testCreateWithPayloadAndXMLNamespace() {
         struct Payload: AWSEncodableShape {
             public static let _xmlNamespace: String? = "https://test.amazonaws.com/doc/2020-03-11/"
@@ -291,7 +294,7 @@ class AWSRequestTests: XCTestCase {
         }
         let input = J(dataContainer: DataContainer(data: Data("test data".utf8)))
         let jsonConfig = createServiceConfig(serviceProtocol: .json(version: "1.1"))
-        XCTAssertNoThrow(try AWSRequest(operation: "PutRecord",path: "/",httpMethod: .POST, input: input, configuration: jsonConfig))
+        XCTAssertNoThrow(try AWSRequest(operation: "PutRecord", path: "/", httpMethod: .POST, input: input, configuration: jsonConfig))
     }
 
     func testEC2ClientRequest() {
@@ -304,5 +307,4 @@ class AWSRequestTests: XCTestCase {
         XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))
         XCTAssertEqual(request?.body.asString(), "Action=Test&Array.1=entry1&Array.2=entry2&Version=2013-12-02")
     }
-    
 }

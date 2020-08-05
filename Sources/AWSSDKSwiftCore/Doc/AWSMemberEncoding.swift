@@ -14,7 +14,6 @@
 
 /// Structure defining where to serialize member of AWSShape.
 public struct AWSMemberEncoding {
-    
     /// Location of AWSMemberEncoding.
     public enum Location {
         case uri(locationName: String)
@@ -23,7 +22,7 @@ public struct AWSMemberEncoding {
         case statusCode
         case body(locationName: String)
     }
-    
+
     /// name of member
     public let label: String
     /// where to find or place member

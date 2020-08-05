@@ -12,23 +12,23 @@
 //
 //===----------------------------------------------------------------------===//
 
-import XCTest
+@testable import AWSSDKSwiftCore
+import AWSTestUtils
 import Logging
 import NIOConcurrencyHelpers
-import AWSTestUtils
-@testable import AWSSDKSwiftCore
+import XCTest
 
 class LoggingTests: XCTestCase {
-
     func testRequestIdIncrements() {
         let logCollection = LoggingCollector.Logs()
-        let logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection, logLevel: .trace)})
+        let logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection, logLevel: .trace) })
         let server = AWSTestServer(serviceProtocol: .json)
         defer { XCTAssertNoThrow(try server.stop()) }
         let client = AWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
             httpClientProvider: .createNew,
-            logger: logger)
+            logger: logger
+        )
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let config = createServiceConfig(
             serviceProtocol: .json(version: "1.1"),
@@ -39,10 +39,10 @@ class LoggingTests: XCTestCase {
         let response2 = client.execute(operation: "test2", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
 
         var count = 0
-        XCTAssertNoThrow(try server.processRaw { request in
+        XCTAssertNoThrow(try server.processRaw { _ in
             let results: [AWSTestServer.Result<AWSTestServer.Response>] = [
                 .result(.ok, continueProcessing: true),
-                .result(.ok, continueProcessing: false)
+                .result(.ok, continueProcessing: false),
             ]
             let result = results[count]
             count += 1
@@ -60,14 +60,15 @@ class LoggingTests: XCTestCase {
 
     func testAWSRequestResponse() throws {
         let logCollection = LoggingCollector.Logs()
-        var logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection)})
+        var logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection) })
         logger.logLevel = .trace
         let server = AWSTestServer(serviceProtocol: .json)
         defer { XCTAssertNoThrow(try server.stop()) }
         let client = AWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
             httpClientProvider: .createNew,
-            logger: logger)
+            logger: logger
+        )
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let config = createServiceConfig(
             service: "test-service",
@@ -77,7 +78,7 @@ class LoggingTests: XCTestCase {
 
         let response = client.execute(operation: "TestOperation", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
 
-        XCTAssertNoThrow(try server.processRaw { request in
+        XCTAssertNoThrow(try server.processRaw { _ in
             return .result(.ok, continueProcessing: false)
         })
 
@@ -94,13 +95,14 @@ class LoggingTests: XCTestCase {
 
     func testAWSError() {
         let logCollection = LoggingCollector.Logs()
-        let logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection)})
+        let logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection) })
         let server = AWSTestServer(serviceProtocol: .json)
         defer { XCTAssertNoThrow(try server.stop()) }
         let client = AWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
             httpClientProvider: .createNew,
-            logger: logger)
+            logger: logger
+        )
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let config = createServiceConfig(
             serviceProtocol: .json(version: "1.1"),
@@ -109,7 +111,7 @@ class LoggingTests: XCTestCase {
 
         let response = client.execute(operation: "test", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
 
-        XCTAssertNoThrow(try server.processRaw { request in
+        XCTAssertNoThrow(try server.processRaw { _ in
             return .error(.accessDenied, continueProcessing: false)
         })
 
@@ -120,13 +122,14 @@ class LoggingTests: XCTestCase {
 
     func testRetryRequest() {
         let logCollection = LoggingCollector.Logs()
-        let logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection, logLevel: .trace)})
+        let logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection, logLevel: .trace) })
         let server = AWSTestServer(serviceProtocol: .json)
         defer { XCTAssertNoThrow(try server.stop()) }
         let client = AWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
             httpClientProvider: .createNew,
-            logger: logger)
+            logger: logger
+        )
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let config = createServiceConfig(
             serviceProtocol: .json(version: "1.1"),
@@ -136,10 +139,10 @@ class LoggingTests: XCTestCase {
         let response = client.execute(operation: "test1", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
 
         var count = 0
-        XCTAssertNoThrow(try server.processRaw { request in
+        XCTAssertNoThrow(try server.processRaw { _ in
             let results: [AWSTestServer.Result<AWSTestServer.Response>] = [
                 .error(.internal, continueProcessing: true),
-                .result(.ok, continueProcessing: false)
+                .result(.ok, continueProcessing: false),
             ]
             let result = results[count]
             count += 1
@@ -150,11 +153,11 @@ class LoggingTests: XCTestCase {
         XCTAssertEqual(logCollection.filter(metadata: "aws-retry-time").first?.message, "Retrying request")
         XCTAssertEqual(logCollection.filter(metadata: "aws-retry-time").first?.level, .info)
     }
-    
+
     func testNoCredentialProvider() {
         let logCollection = LoggingCollector.Logs()
-        let logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection, logLevel: .trace)})
-        let client = createAWSClient(credentialProvider: .selector(.custom {_ in return NullCredentialProvider()} ))
+        let logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection, logLevel: .trace) })
+        let client = createAWSClient(credentialProvider: .selector(.custom { _ in return NullCredentialProvider() }))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let serviceConfig = createServiceConfig()
         XCTAssertThrowsError(try client.execute(
@@ -165,7 +168,6 @@ class LoggingTests: XCTestCase {
             logger: logger
         ).wait())
         XCTAssertNotNil(logCollection.filter(metadata: "aws-error-message", with: "No credential provider found").first)
-
     }
 }
 
@@ -189,35 +191,37 @@ struct LoggingCollector: LogHandler {
 
         func append(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?) {
             self.lock.withLock {
-                self.logs.append(Entry(level: level,
-                                       message: message.description,
-                                       metadata: metadata?.mapValues { $0.description } ?? [:]))
+                self.logs.append(Entry(
+                    level: level,
+                    message: message.description,
+                    metadata: metadata?.mapValues { $0.description } ?? [:]
+                ))
             }
         }
 
         func filter(message: String) -> [Entry] {
-            return allEntries.filter { $0.message == message }
+            return self.allEntries.filter { $0.message == message }
         }
-        
+
         func filter(metadata: String) -> [Entry] {
-            return allEntries.filter { $0.metadata[metadata] != nil }
+            return self.allEntries.filter { $0.metadata[metadata] != nil }
         }
 
         func filter(metadata: String, with value: String) -> [Entry] {
-            return allEntries.filter { $0.metadata[metadata] == value }
+            return self.allEntries.filter { $0.metadata[metadata] == value }
         }
     }
 
     init(_ logCollection: LoggingCollector.Logs, logLevel: Logger.Level = .info) {
         self.logLevel = logLevel
         self.logs = logCollection
-        self.internalHandler = StreamLogHandler.standardOutput(label: "_internal_" )
+        self.internalHandler = StreamLogHandler.standardOutput(label: "_internal_")
         self.internalHandler.logLevel = logLevel
     }
 
     func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, source: String, file: String, function: String, line: UInt) {
         let metadata = self.metadata.merging(metadata ?? [:]) { $1 }
-        internalHandler.log(level: level, message: message, metadata: metadata, source: source, file:file, function: function, line: line)
+        self.internalHandler.log(level: level, message: message, metadata: metadata, source: source, file: file, function: function, line: line)
         self.logs.append(level: level, message: message, metadata: metadata)
     }
 
@@ -230,4 +234,3 @@ struct LoggingCollector: LogHandler {
         }
     }
 }
-

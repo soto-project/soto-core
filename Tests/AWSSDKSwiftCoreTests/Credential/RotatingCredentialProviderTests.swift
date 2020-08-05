@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import AWSSDKSwiftCore
 import AsyncHTTPClient
+@testable import AWSSDKSwiftCore
 import AWSTestUtils
 import Logging
 import NIO
@@ -21,7 +21,6 @@ import NIOConcurrencyHelpers
 import XCTest
 
 class RotatingCredentialProviderTests: XCTestCase {
-
     class MetaDataTestClient: CredentialProvider {
         let callback: (EventLoop) -> EventLoopFuture<ExpiringCredential>
 
@@ -30,11 +29,10 @@ class RotatingCredentialProviderTests: XCTestCase {
         }
 
         func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
-            eventLoop.flatSubmit() {
+            eventLoop.flatSubmit {
                 self.callback(eventLoop).map { $0 }
             }
         }
-
     }
 
     func testGetCredentialAndReuseIfStillValid() {
@@ -48,7 +46,8 @@ class RotatingCredentialProviderTests: XCTestCase {
             accessKeyId: "abc123",
             secretAccessKey: "abc123",
             sessionToken: "abc123",
-            expiration: Date(timeIntervalSinceNow: 60 * 5))
+            expiration: Date(timeIntervalSinceNow: 60 * 5)
+        )
 
         var hitCount = 0
         let client = MetaDataTestClient {
@@ -89,7 +88,8 @@ class RotatingCredentialProviderTests: XCTestCase {
             accessKeyId: "abc123",
             secretAccessKey: "abc123",
             sessionToken: "abc123",
-            expiration: Date(timeIntervalSinceNow: 60 * 5))
+            expiration: Date(timeIntervalSinceNow: 60 * 5)
+        )
 
         let promise = loop.makePromise(of: ExpiringCredential.self)
 
@@ -149,20 +149,21 @@ class RotatingCredentialProviderTests: XCTestCase {
         let loop = group.next()
 
         var hitCount = 0
-        let client = MetaDataTestClient { (eventLoop) in
+        let client = MetaDataTestClient { eventLoop in
             hitCount += 1
             let cred = TestExpiringCredential(
                 accessKeyId: "abc123",
                 secretAccessKey: "abc123",
                 sessionToken: "abc123",
-                expiration: Date(timeIntervalSinceNow: 60 * 2))
+                expiration: Date(timeIntervalSinceNow: 60 * 2)
+            )
             return eventLoop.makeSucceededFuture(cred)
         }
         let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, logger: TestEnvironment.logger)
         let provider = RotatingCredentialProvider(context: context, provider: client)
         XCTAssertNoThrow(_ = try provider.getCredential(on: loop, logger: TestEnvironment.logger).wait())
         hitCount = 0
-        
+
         let iterations = 100
         for _ in 0..<100 {
             XCTAssertNoThrow(_ = try provider.getCredential(on: loop, logger: TestEnvironment.logger).wait())

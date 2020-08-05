@@ -12,11 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+import AWSSignerV4
 import Logging
 import NIO
-import AWSSignerV4
 
- /// Credential provider that always fails
+/// Credential provider that always fails
 public struct NullCredentialProvider: CredentialProvider {
     public func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
         return eventLoop.makeFailedFuture(CredentialProviderError.noProvider)

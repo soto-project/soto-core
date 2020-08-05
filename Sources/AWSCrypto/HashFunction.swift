@@ -29,7 +29,7 @@ public protocol HashFunction {
 
     /// initialization
     init()
-    
+
     /// update hash function with data
     mutating func update(bufferPointer: UnsafeRawBufferPointer)
     /// finalize hash function and return digest
@@ -37,14 +37,13 @@ public protocol HashFunction {
 }
 
 extension HashFunction {
-    
     /// default version of hash which call init, update and finalize
     public static func hash(bufferPointer: UnsafeRawBufferPointer) -> Self.Digest {
         var function = Self()
         function.update(bufferPointer: bufferPointer)
         return function.finalize()
     }
-    
+
     /// version of hash that takes data in any form that complies with DataProtocol
     public static func hash<D: DataProtocol>(data: D) -> Self.Digest {
         if let digest = data.withContiguousStorageIfAvailable({ bytes in
@@ -58,7 +57,7 @@ extension HashFunction {
             return self.hash(bufferPointer: .init(buffer))
         }
     }
-    
+
     /// version of update that takes data in any form that complies with DataProtocol
     public mutating func update<D: DataProtocol>(data: D) {
         if let digest = data.withContiguousStorageIfAvailable({ bytes in
@@ -78,6 +77,5 @@ extension HashFunction {
 public protocol CCHashFunction: HashFunction {
     static var algorithm: CCHmacAlgorithm { get }
 }
-
 
 #endif

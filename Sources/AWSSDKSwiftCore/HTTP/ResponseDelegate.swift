@@ -20,7 +20,7 @@ import NIOHTTP1
 /// HTTP client delegate capturing the body parts received from AsyncHTTPClient.
 class AWSHTTPClientResponseDelegate: HTTPClientResponseDelegate {
     typealias Response = AWSHTTPResponse
-    
+
     enum State {
         case idle
         case head(HTTPResponseHead)
@@ -29,13 +29,13 @@ class AWSHTTPClientResponseDelegate: HTTPClientResponseDelegate {
     }
 
     let host: String
-    let stream: (ByteBuffer, EventLoop)->EventLoopFuture<Void>
+    let stream: (ByteBuffer, EventLoop) -> EventLoopFuture<Void>
     var state: State
     // temporary stored future while AHC still doesn't sync to futures returned from `didReceiveBodyPart`
     // See https://github.com/swift-server/async-http-client/issues/274
-    var bodyPartFuture: EventLoopFuture<Void>? = nil
+    var bodyPartFuture: EventLoopFuture<Void>?
 
-    init(host: String, stream: @escaping (ByteBuffer, EventLoop)->EventLoopFuture<Void>) {
+    init(host: String, stream: @escaping (ByteBuffer, EventLoop) -> EventLoopFuture<Void>) {
         self.host = host
         self.stream = stream
         self.state = .idle
@@ -54,14 +54,14 @@ class AWSHTTPClientResponseDelegate: HTTPClientResponseDelegate {
         }
         return task.eventLoop.makeSucceededFuture(())
     }
-    
+
     func didReceiveBodyPart(task: HTTPClient.Task<Response>, _ part: ByteBuffer) -> EventLoopFuture<Void> {
         switch self.state {
         case .idle:
             preconditionFailure("no head received before body")
         case .head(let head):
             if (200..<300).contains(head.status.code) {
-                let futureResult = stream(part, task.eventLoop)
+                let futureResult = self.stream(part, task.eventLoop)
                 self.bodyPartFuture = futureResult
                 return futureResult
             }
@@ -83,7 +83,7 @@ class AWSHTTPClientResponseDelegate: HTTPClientResponseDelegate {
         case .idle:
             preconditionFailure("no head received before end")
         case .head(let head):
-            return AsyncHTTPClient.HTTPClient.Response(host: host, status: head.status, headers: head.headers, body: nil)
+            return AsyncHTTPClient.HTTPClient.Response(host: self.host, status: head.status, headers: head.headers, body: nil)
         case .end:
             preconditionFailure("request already processed")
         case .error(let error):

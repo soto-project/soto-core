@@ -12,16 +12,15 @@
 //
 //===----------------------------------------------------------------------===//
 
-import class Foundation.JSONSerialization
+import AWSXML
 import class Foundation.JSONDecoder
+import class Foundation.JSONSerialization
 import Logging
 import NIO
 import NIOHTTP1
-import AWSXML
 
 /// Structure encapsulating a processed HTTP Response
 public struct AWSResponse {
-
     /// response status
     public let status: HTTPResponseStatus
     /// response headers
@@ -47,7 +46,8 @@ public struct AWSResponse {
 
         // body
         guard let body = response.body,
-            body.readableBytes > 0 else {
+            body.readableBytes > 0
+        else {
             self.body = .empty
             return
         }
@@ -82,7 +82,7 @@ public struct AWSResponse {
         }
         self.body = responseBody
     }
-    
+
     /// return new response with middleware applied
     func applyMiddlewares(_ middlewares: [AWSServiceMiddleware]) throws -> AWSResponse {
         var awsResponse = self
@@ -92,7 +92,7 @@ public struct AWSResponse {
         }
         return awsResponse
     }
-    
+
     /// Generate AWSShape from AWSResponse
     func generateOutputShape<Output: AWSDecodableShape>(operation: String) throws -> Output {
         var payloadKey: String? = (Output.self as? AWSShapeWithPayload.Type)?._payloadPath
@@ -108,14 +108,14 @@ public struct AWSResponse {
 
         // if required apply hypertext application language transform to body
         let body = try getHypertextApplicationLanguageBody()
-        
+
         var outputDict: [String: Any] = [:]
         switch body {
         case .json(let data):
             outputDict = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] ?? [:]
             // if payload path is set then the decode will expect the payload to decode to the relevant member variable
             if let payloadKey = payloadKey {
-                outputDict = [payloadKey : outputDict]
+                outputDict = [payloadKey: outputDict]
             }
 
         case .xml(let node):
@@ -128,7 +128,7 @@ public struct AWSResponse {
                 let parentNode = XML.Element(name: "Container")
                 parentNode.addChild(outputNode)
                 outputNode = parentNode
-            } else if let child = node.children(of:.element)?.first as? XML.Element, (node.name == operation + "Response" && child.name == operation + "Result") {
+            } else if let child = node.children(of: .element)?.first as? XML.Element, node.name == operation + "Response", child.name == operation + "Result" {
                 outputNode = child
             }
 
@@ -182,10 +182,10 @@ public struct AWSResponse {
 
         return try decoder.decode(Output.self, from: outputDict)
     }
-    
+
     /// extract error code and message from AWSResponse
     func generateError(serviceConfig: AWSServiceConfig, logger: Logger) -> Error? {
-        var apiError: APIError? = nil
+        var apiError: APIError?
         switch serviceConfig.serviceProtocol {
         case .query:
             guard case .xml(var element) = self.body else { break }
@@ -230,7 +230,7 @@ public struct AWSResponse {
 
             logger.error("AWS Error", metadata: [
                 "aws-error-code": .string(code),
-                "aws-error-message": .string(errorMessage.message)
+                "aws-error-message": .string(errorMessage.message),
             ])
 
             for errorType in serviceConfig.possibleErrorTypes {
@@ -248,7 +248,7 @@ public struct AWSResponse {
 
             return AWSResponseError(errorCode: code, message: errorMessage.message)
         }
-        
+
         return nil
     }
 
@@ -261,28 +261,29 @@ public struct AWSResponse {
             case message = "Message"
         }
     }
+
     private struct JSONError: Codable, APIError {
         var code: String?
         var message: String
 
         private enum CodingKeys: String, CodingKey {
             case code = "__type"
-            case message = "message"
+            case message
         }
     }
+
     private struct RESTJSONError: Codable, APIError {
         var code: String?
         var message: String
 
         private enum CodingKeys: String, CodingKey {
-            case code = "code"
-            case message = "message"
+            case code
+            case message
         }
     }
 }
 
-fileprivate protocol APIError {
-    var code: String? {get set}
-    var message: String {get set}
+private protocol APIError {
+    var code: String? { get set }
+    var message: String { get set }
 }
-

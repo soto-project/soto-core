@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-//MARK: Collection Coders
+// MARK: Collection Coders
 
 // ArrayCoder
 
@@ -33,7 +33,7 @@ extension ArrayCoder: CustomDecoder where Element: Decodable {
         var values: [Element] = []
         let memberKey = EncodingWrapperKey(stringValue: Properties.member, intValue: nil)
         guard topLevelContainer.contains(memberKey) else { return values }
-        
+
         var container = try topLevelContainer.nestedUnkeyedContainer(forKey: memberKey)
         while !container.isAtEnd {
             values.append(try container.decode(Element.self))
@@ -75,7 +75,7 @@ extension DictionaryCoder: CustomDecoder where Key: Decodable, Value: Decodable 
             let topLevelContainer = try decoder.container(keyedBy: EncodingWrapperKey.self)
             let entryKey = EncodingWrapperKey(stringValue: entry, intValue: nil)
             guard topLevelContainer.contains(entryKey) else { return values }
-            
+
             var container = try topLevelContainer.nestedUnkeyedContainer(forKey: entryKey)
             while !container.isAtEnd {
                 let container2 = try container.nestedContainer(keyedBy: EncodingWrapperKey.self)

@@ -12,14 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import AWSSDKSwiftCore
-import XCTest
-import NIO
 import AsyncHTTPClient
+@testable import AWSSDKSwiftCore
 import AWSTestUtils
+import NIO
+import XCTest
 
 class MetaDataCredentialProviderTests: XCTestCase {
-
     // MARK: - ECSMetaDataClient -
 
     func testECSMetaDataClient() {
@@ -28,7 +27,7 @@ class MetaDataCredentialProviderTests: XCTestCase {
 
         let loop = group.next()
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(loop))
-        defer { XCTAssertNoThrow( try httpClient.syncShutdown()) }
+        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
         let testServer = AWSTestServer(serviceProtocol: .json)
         defer { XCTAssertNoThrow(try testServer.stop()) }
 
@@ -62,7 +61,7 @@ class MetaDataCredentialProviderTests: XCTestCase {
 
         let loop = group.next()
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(loop))
-        defer { XCTAssertNoThrow( try httpClient.syncShutdown()) }
+        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
 
         Environment.unset(name: ECSMetaDataClient.RelativeURIEnvironmentName)
 
@@ -77,7 +76,7 @@ class MetaDataCredentialProviderTests: XCTestCase {
 
         let loop = group.next()
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(loop))
-        defer { XCTAssertNoThrow( try httpClient.syncShutdown()) }
+        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
         let testServer = AWSTestServer(serviceProtocol: .json)
         defer { XCTAssertNoThrow(try testServer.stop()) }
 
@@ -108,7 +107,7 @@ class MetaDataCredentialProviderTests: XCTestCase {
 
         let loop = group.next()
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(loop))
-        defer { XCTAssertNoThrow( try httpClient.syncShutdown()) }
+        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
         let testServer = AWSTestServer(serviceProtocol: .json)
         defer { XCTAssertNoThrow(try testServer.stop()) }
 
@@ -140,7 +139,7 @@ class MetaDataCredentialProviderTests: XCTestCase {
             let client = InstanceMetaDataClient(httpClient: context.httpClient, host: testServer.address)
             return RotatingCredentialProvider(context: context, provider: client)
         }
-        
+
         let client = createAWSClient(credentialProvider: customEC2)
         XCTAssertNoThrow(try testServer.ec2MetadataServer(version: .v2))
         XCTAssertNoThrow(try client.syncShutdown())

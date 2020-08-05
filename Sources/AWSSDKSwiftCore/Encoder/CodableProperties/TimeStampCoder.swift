@@ -17,7 +17,7 @@ import class Foundation.DateFormatter
 import struct Foundation.Locale
 import struct Foundation.TimeZone
 
-//MARK: TimeStamp Coders
+// MARK: TimeStamp Coders
 
 /// Protocol for time stamp coders that use a DateFormatter. Use this to enforce the timestamp format we require, or to set the timestamp format output
 public protocol TimeStampFormatterCoder: CustomDecoder, CustomEncoder where CodableValue == TimeStamp {
@@ -37,7 +37,7 @@ extension TimeStampFormatterCoder {
         }
         return TimeStamp(date)
     }
-    
+
     /// encode Date using DateFormatter
     public static func encode(value: CodableValue, to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
@@ -75,10 +75,9 @@ public struct UnixEpochTimeStampCoder: CustomDecoder, CustomEncoder {
         let value = try container.decode(Double.self)
         return TimeStamp(value)
     }
-    
+
     public static func encode(value: CodableValue, to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(value.dateValue.timeIntervalSince1970)
     }
 }
-

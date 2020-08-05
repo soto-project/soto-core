@@ -13,11 +13,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-import AsyncHTTPClient          // swift-server/async-http-client
+import AsyncHTTPClient // swift-server/async-http-client
 import Foundation
-import NIO                      // apple/swift-nio
+import NIO // apple/swift-nio
 import NIOFoundationCompat
-import Stencil                  // swift-aws/Stencil
+import Stencil // swift-aws/Stencil
 
 struct Endpoints: Decodable {
     struct CredentialScope: Decodable {
@@ -106,7 +106,7 @@ print("Creating Region.swift")
 
 let context: [String: Any] = [
     "regions": regionDescs.sorted { $0.name < $1.name },
-    "partitions": partitions
+    "partitions": partitions,
 ]
 
 let regionsFile = try environment.renderTemplate(name: "Region.stencil", context: context)

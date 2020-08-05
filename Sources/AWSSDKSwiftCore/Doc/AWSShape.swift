@@ -12,10 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
+import func Foundation.NSMakeRange
+import var Foundation.NSNotFound
+import class Foundation.NSRegularExpression
 import struct Foundation.UUID
-import class  Foundation.NSRegularExpression
-import var    Foundation.NSNotFound
-import func   Foundation.NSMakeRange
 
 /// Protocol for the input and output objects for all AWS service commands. They need to be Codable so they can be serialized. They also need to provide details on how their container classes are coded when serializing XML.
 public protocol AWSShape {
@@ -30,7 +30,7 @@ extension AWSShape {
 
     /// return member with provided name
     public static func getEncoding(for: String) -> AWSMemberEncoding? {
-        return _encoding.first {$0.label == `for`}
+        return _encoding.first { $0.label == `for` }
     }
 
     /// return list of member variables serialized in the headers
@@ -80,31 +80,36 @@ public extension AWSEncodableShape {
 /// Validation code to add to AWSEncodableShape
 public extension AWSEncodableShape {
     func validate() throws {
-        try validate(name: "\(type(of:self))")
+        try validate(name: "\(type(of: self))")
     }
 
     /// stub validate function for all shapes
-    func validate(name: String) throws {
+    func validate(name: String) throws {}
+
+    func validate<T: BinaryInteger>(_ value: T, name: String, parent: String, min: T) throws {
+        guard value >= min else { throw AWSClientError(.validationError, message: "\(parent).\(name) (\(value)) is less than minimum allowed value \(min).") }
     }
 
-    func validate<T : BinaryInteger>(_ value: T, name: String, parent: String, min: T) throws {
-        guard value >= min else { throw AWSClientError(.validationError, message: "\(parent).\(name) (\(value)) is less than minimum allowed value \(min).") }
-    }
-    func validate<T : BinaryInteger>(_ value: T, name: String, parent: String, max: T) throws {
+    func validate<T: BinaryInteger>(_ value: T, name: String, parent: String, max: T) throws {
         guard value <= max else { throw AWSClientError(.validationError, message: "\(parent).\(name) (\(value)) is greater than the maximum allowed value \(max).") }
     }
-    func validate<T : FloatingPoint>(_ value: T, name: String, parent: String, min: T) throws {
+
+    func validate<T: FloatingPoint>(_ value: T, name: String, parent: String, min: T) throws {
         guard value >= min else { throw AWSClientError(.validationError, message: "\(parent).\(name) (\(value)) is less than minimum allowed value \(min).") }
     }
-    func validate<T : FloatingPoint>(_ value: T, name: String, parent: String, max: T) throws {
+
+    func validate<T: FloatingPoint>(_ value: T, name: String, parent: String, max: T) throws {
         guard value <= max else { throw AWSClientError(.validationError, message: "\(parent).\(name) (\(value)) is greater than the maximum allowed value \(max).") }
     }
-    func validate<T : Collection>(_ value: T, name: String, parent: String, min: Int) throws {
+
+    func validate<T: Collection>(_ value: T, name: String, parent: String, min: Int) throws {
         guard value.count >= min else { throw AWSClientError(.validationError, message: "Length of \(parent).\(name) (\(value.count)) is less than minimum allowed value \(min).") }
     }
-    func validate<T : Collection>(_ value: T, name: String, parent: String, max: Int) throws {
+
+    func validate<T: Collection>(_ value: T, name: String, parent: String, max: Int) throws {
         guard value.count <= max else { throw AWSClientError(.validationError, message: "Length of \(parent).\(name) (\(value.count)) is greater than the maximum allowed value \(max).") }
     }
+
     func validate(_ value: AWSPayload, name: String, parent: String, min: Int) throws {
         if let size = value.size {
             guard size >= min else {
@@ -112,6 +117,7 @@ public extension AWSEncodableShape {
             }
         }
     }
+
     func validate(_ value: AWSPayload, name: String, parent: String, max: Int) throws {
         if let size = value.size {
             guard size <= max else {
@@ -119,46 +125,56 @@ public extension AWSEncodableShape {
             }
         }
     }
+
     func validate(_ value: String, name: String, parent: String, pattern: String) throws {
         let regularExpression = try NSRegularExpression(pattern: pattern, options: [])
         let firstMatch = regularExpression.rangeOfFirstMatch(in: value, options: .anchored, range: NSMakeRange(0, value.count))
-        guard firstMatch.location != NSNotFound && firstMatch.length > 0 else { throw AWSClientError(.validationError, message: "\(parent).\(name) (\(value)) does not match pattern \(pattern).") }
+        guard firstMatch.location != NSNotFound, firstMatch.length > 0 else { throw AWSClientError(.validationError, message: "\(parent).\(name) (\(value)) does not match pattern \(pattern).") }
     }
+
     // validate optional values
-    func validate<T : BinaryInteger>(_ value: T?, name: String, parent: String, min: T) throws {
-        guard let value = value else {return}
+    func validate<T: BinaryInteger>(_ value: T?, name: String, parent: String, min: T) throws {
+        guard let value = value else { return }
         try validate(value, name: name, parent: parent, min: min)
     }
-    func validate<T : BinaryInteger>(_ value: T?, name: String, parent: String, max: T) throws {
-        guard let value = value else {return}
+
+    func validate<T: BinaryInteger>(_ value: T?, name: String, parent: String, max: T) throws {
+        guard let value = value else { return }
         try validate(value, name: name, parent: parent, max: max)
     }
-    func validate<T : FloatingPoint>(_ value: T?, name: String, parent: String, min: T) throws {
-        guard let value = value else {return}
+
+    func validate<T: FloatingPoint>(_ value: T?, name: String, parent: String, min: T) throws {
+        guard let value = value else { return }
         try validate(value, name: name, parent: parent, min: min)
     }
-    func validate<T : FloatingPoint>(_ value: T?, name: String, parent: String, max: T) throws {
-        guard let value = value else {return}
+
+    func validate<T: FloatingPoint>(_ value: T?, name: String, parent: String, max: T) throws {
+        guard let value = value else { return }
         try validate(value, name: name, parent: parent, max: max)
     }
-    func validate<T : Collection>(_ value: T?, name: String, parent: String, min: Int) throws {
-        guard let value = value else {return}
+
+    func validate<T: Collection>(_ value: T?, name: String, parent: String, min: Int) throws {
+        guard let value = value else { return }
         try validate(value, name: name, parent: parent, min: min)
     }
-    func validate<T : Collection>(_ value: T?, name: String, parent: String, max: Int) throws {
-        guard let value = value else {return}
+
+    func validate<T: Collection>(_ value: T?, name: String, parent: String, max: Int) throws {
+        guard let value = value else { return }
         try validate(value, name: name, parent: parent, max: max)
     }
+
     func validate(_ value: AWSPayload?, name: String, parent: String, min: Int) throws {
-        guard let value = value else {return}
+        guard let value = value else { return }
         try validate(value, name: name, parent: parent, min: min)
     }
+
     func validate(_ value: AWSPayload?, name: String, parent: String, max: Int) throws {
-        guard let value = value else {return}
+        guard let value = value else { return }
         try validate(value, name: name, parent: parent, max: max)
     }
+
     func validate(_ value: String?, name: String, parent: String, pattern: String) throws {
-        guard let value = value else {return}
+        guard let value = value else { return }
         try validate(value, name: name, parent: parent, pattern: pattern)
     }
 }
@@ -169,14 +185,14 @@ public protocol AWSDecodableShape: AWSShape & Decodable {}
 /// AWSShapeWithPayload options.
 public struct AWSShapePayloadOptions: OptionSet {
     public var rawValue: Int
-    
+
     public init(rawValue: Int) {
         self.rawValue = rawValue
     }
-    
-    public static let allowStreaming = AWSShapePayloadOptions(rawValue: 1<<0)
-    public static let allowChunkedStreaming = AWSShapePayloadOptions(rawValue: 1<<1)
-    public static let raw = AWSShapePayloadOptions(rawValue: 1<<2)
+
+    public static let allowStreaming = AWSShapePayloadOptions(rawValue: 1 << 0)
+    public static let allowChunkedStreaming = AWSShapePayloadOptions(rawValue: 1 << 1)
+    public static let raw = AWSShapePayloadOptions(rawValue: 1 << 2)
 }
 
 /// Root AWSShape which include a payload

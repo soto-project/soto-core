@@ -16,7 +16,6 @@ import AWSSignerV4
 
 /// environment variable version of credential that uses system environment variables to get credential details
 public extension StaticCredential {
-    
     static func fromEnvironment() -> StaticCredential? {
         guard let accessKeyId = Environment["AWS_ACCESS_KEY_ID"] else {
             return nil
@@ -25,9 +24,10 @@ public extension StaticCredential {
             return nil
         }
 
-        return .init(accessKeyId: accessKeyId,
-                     secretAccessKey: secretAccessKey,
-                     sessionToken: Environment["AWS_SESSION_TOKEN"])
+        return .init(
+            accessKeyId: accessKeyId,
+            secretAccessKey: secretAccessKey,
+            sessionToken: Environment["AWS_SESSION_TOKEN"]
+        )
     }
-
 }

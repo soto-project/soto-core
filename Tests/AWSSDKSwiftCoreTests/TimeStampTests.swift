@@ -12,13 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-import XCTest
+@testable import AWSSDKSwiftCore
 import AWSTestUtils
 import AWSXML
-@testable import AWSSDKSwiftCore
+import XCTest
 
 class TimeStampTests: XCTestCase {
-
     struct A: Codable {
         let date: TimeStamp
     }
@@ -39,7 +38,7 @@ class TimeStampTests: XCTestCase {
             XCTFail("\(error)")
         }
     }
-    
+
     func testDecodeISOFromXML() {
         do {
             struct A: Codable {
@@ -53,7 +52,7 @@ class TimeStampTests: XCTestCase {
             XCTFail("\(error)")
         }
     }
-    
+
     func testDecodeHttpFormattedTimestamp() {
         do {
             struct A: Codable {
@@ -66,9 +65,8 @@ class TimeStampTests: XCTestCase {
         } catch {
             XCTFail("\(error)")
         }
-
     }
-    
+
     func testDecodeUnixEpochTimestamp() {
         do {
             struct A: Codable {
@@ -82,7 +80,7 @@ class TimeStampTests: XCTestCase {
             XCTFail("\(error)")
         }
     }
-    
+
     func testEncodeISO8601ToXML() {
         do {
             struct A: Codable {
@@ -102,7 +100,7 @@ class TimeStampTests: XCTestCase {
         }
         let a = A(date: TimeStamp("2019-05-01T00:00:00.001Z")!)
         let config = createServiceConfig()
-        
+
         var request: AWSRequest?
         XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", httpMethod: .GET, input: a, configuration: config))
         XCTAssertEqual(request?.body.asString(), "{\"date\":\"Wed, 1 May 2019 00:00:00 GMT\"}")
@@ -113,7 +111,7 @@ class TimeStampTests: XCTestCase {
             struct A: Codable {
                 @Coding<UnixEpochTimeStampCoder> var date: TimeStamp
             }
-            let a = A(date: TimeStamp(23983978378))
+            let a = A(date: TimeStamp(23_983_978_378))
             let data = try JSONEncoder().encode(a)
             let jsonString = String(data: data, encoding: .utf8)
             XCTAssertEqual(jsonString, "{\"date\":23983978378}")

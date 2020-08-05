@@ -27,10 +27,10 @@ extension AsyncHTTPClient.HTTPClient.Body.StreamWriter {
             // get byte buffer from closure, write to StreamWriter, if there are still bytes to write then call
             // _writeToStreamWriter again.
             reader.streamChunks(on: eventLoop)
-                .map { (byteBuffers)->() in
+                .map { (byteBuffers) -> Void in
                     // if no amount was set and no byte buffers are supppied then this is assumed to mean
                     // there will be no more data
-                    if amountLeft == nil && byteBuffers.count == 0 {
+                    if amountLeft == nil, byteBuffers.count == 0 {
                         promise.succeed(())
                         return
                     }
@@ -50,7 +50,7 @@ extension AsyncHTTPClient.HTTPClient.Body.StreamWriter {
                     if let lastBuffer = byteBuffers.last {
                         // store EventLoopFuture of last byteBuffer
                         let writeFuture: EventLoopFuture<Void> = self.write(.byteBuffer(lastBuffer))
-                        writeFuture.flatMap { ()->EventLoopFuture<Void> in
+                        writeFuture.flatMap { () -> EventLoopFuture<Void> in
                             if let newAmountLeft = newAmountLeft {
                                 if newAmountLeft == 0 {
                                     promise.succeed(())
@@ -67,12 +67,10 @@ extension AsyncHTTPClient.HTTPClient.Body.StreamWriter {
                     } else {
                         _write(newAmountLeft)
                     }
-            }.cascadeFailure(to: promise)
+                }.cascadeFailure(to: promise)
         }
         _write(reader.contentSize)
-        
+
         return promise.futureResult
     }
-
 }
-

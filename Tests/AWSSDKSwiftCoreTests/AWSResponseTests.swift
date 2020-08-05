@@ -12,15 +12,14 @@
 //
 //===----------------------------------------------------------------------===//
 
-import XCTest
-import NIO
-import NIOHTTP1
+@testable import AWSSDKSwiftCore
 import AWSTestUtils
 import AWSXML
-@testable import AWSSDKSwiftCore
+import NIO
+import NIOHTTP1
+import XCTest
 
 class AWSResponseTests: XCTestCase {
-
     func testHeaderResponseDecoding() {
         struct Output: AWSDecodableShape {
             static let _encoding = [AWSMemberEncoding(label: "h", location: .header(locationName: "header-member"))]
@@ -36,15 +35,15 @@ class AWSResponseTests: XCTestCase {
         )
 
         // XML
-        var awsXMLResponse: AWSResponse? = nil
-        var xmlResult: Output? = nil
+        var awsXMLResponse: AWSResponse?
+        var xmlResult: Output?
         XCTAssertNoThrow(awsXMLResponse = try AWSResponse(from: response, serviceProtocol: .query, raw: false))
         XCTAssertNoThrow(xmlResult = try awsXMLResponse?.generateOutputShape(operation: "Test"))
         XCTAssertEqual(xmlResult?.h, "test-header")
 
         // JSON
-        var awsJSONResponse: AWSResponse? = nil
-        var jsonResult: Output? = nil
+        var awsJSONResponse: AWSResponse?
+        var jsonResult: Output?
         XCTAssertNoThrow(awsJSONResponse = try AWSResponse(from: response, serviceProtocol: .restjson, raw: false))
         XCTAssertNoThrow(jsonResult = try awsJSONResponse?.generateOutputShape(operation: "Test"))
         XCTAssertEqual(jsonResult?.h, "test-header")
@@ -62,25 +61,25 @@ class AWSResponseTests: XCTestCase {
         )
 
         // XML
-        var awsXMLResponse: AWSResponse? = nil
-        var xmlResult: Output? = nil
+        var awsXMLResponse: AWSResponse?
+        var xmlResult: Output?
         XCTAssertNoThrow(awsXMLResponse = try AWSResponse(from: response, serviceProtocol: .query, raw: false))
         XCTAssertNoThrow(xmlResult = try awsXMLResponse?.generateOutputShape(operation: "Test"))
         XCTAssertEqual(xmlResult?.status, 200)
 
         // JSON
-        var awsJSONResponse: AWSResponse? = nil
-        var jsonResult: Output? = nil
+        var awsJSONResponse: AWSResponse?
+        var jsonResult: Output?
         XCTAssertNoThrow(awsJSONResponse = try AWSResponse(from: response, serviceProtocol: .restjson, raw: false))
         XCTAssertNoThrow(jsonResult = try awsJSONResponse?.generateOutputShape(operation: "Test"))
         XCTAssertEqual(jsonResult?.status, 200)
     }
 
-    //MARK: XML tests
-    
+    // MARK: XML tests
+
     func testValidateXMLResponse() {
-        class Output : AWSDecodableShape {
-            let name : String
+        class Output: AWSDecodableShape {
+            let name: String
         }
         let responseBody = "<Output><name>hello</name></Output>"
         let response = AWSHTTPResponseImpl(
@@ -88,34 +87,34 @@ class AWSResponseTests: XCTestCase {
             headers: HTTPHeaders(),
             bodyData: Data(responseBody.utf8)
         )
-        
-        var awsResponse: AWSResponse? = nil
-        var output: Output? = nil
+
+        var awsResponse: AWSResponse?
+        var output: Output?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml, raw: false))
         XCTAssertNoThrow(output = try awsResponse?.generateOutputShape(operation: "Test"))
         XCTAssertEqual(output?.name, "hello")
     }
 
     func testValidateXMLCodablePayloadResponse() {
-        class Output : AWSDecodableShape & AWSShapeWithPayload {
+        class Output: AWSDecodableShape & AWSShapeWithPayload {
             static let _encoding = [AWSMemberEncoding(label: "contentType", location: .header(locationName: "content-type"))]
             static let _payloadPath: String = "name"
-            let name : String
+            let name: String
             let contentType: String
 
             private enum CodingKeys: String, CodingKey {
-                case name = "name"
+                case name
                 case contentType = "content-type"
             }
         }
         let response = AWSHTTPResponseImpl(
             status: .ok,
-            headers: ["Content-Type":"application/xml"],
+            headers: ["Content-Type": "application/xml"],
             bodyData: "<name>hello</name>".data(using: .utf8)!
         )
 
-        var awsResponse: AWSResponse? = nil
-        var output: Output? = nil
+        var awsResponse: AWSResponse?
+        var output: Output?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml, raw: false))
         XCTAssertNoThrow(output = try awsResponse?.generateOutputShape(operation: "Test"))
         XCTAssertEqual(output?.name, "hello")
@@ -123,88 +122,88 @@ class AWSResponseTests: XCTestCase {
     }
 
     func testValidateXMLRawPayloadResponse() {
-        class Output : AWSDecodableShape, AWSShapeWithPayload {
+        class Output: AWSDecodableShape, AWSShapeWithPayload {
             static let _payloadPath: String = "body"
             static let _payloadOptions: AWSShapePayloadOptions = .raw
-            let body : AWSPayload
+            let body: AWSPayload
         }
         let response = AWSHTTPResponseImpl(
             status: .ok,
             headers: HTTPHeaders(),
             bodyData: Data("{\"name\":\"hello\"}".utf8)
         )
-        
-        var awsResponse: AWSResponse? = nil
-        var output: Output? = nil
+
+        var awsResponse: AWSResponse?
+        var output: Output?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml, raw: true))
         XCTAssertNoThrow(output = try awsResponse?.generateOutputShape(operation: "Test"))
         XCTAssertEqual(output?.body.asData(), Data("{\"name\":\"hello\"}".utf8))
     }
 
-    //MARK: JSON tests
-    
+    // MARK: JSON tests
+
     func testValidateJSONResponse() {
-        class Output : AWSDecodableShape {
-            let name : String
+        class Output: AWSDecodableShape {
+            let name: String
         }
         let response = AWSHTTPResponseImpl(
             status: .ok,
             headers: HTTPHeaders(),
             bodyData: Data("{\"name\":\"hello\"}".utf8)
         )
-        
-        var awsResponse: AWSResponse? = nil
-        var output: Output? = nil
+
+        var awsResponse: AWSResponse?
+        var output: Output?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .json(version: "1.1"), raw: false))
         XCTAssertNoThrow(output = try awsResponse?.generateOutputShape(operation: "Test"))
         XCTAssertEqual(output?.name, "hello")
     }
 
     func testValidateJSONCodablePayloadResponse() {
-        class Output2 : AWSDecodableShape {
-            let name : String
+        class Output2: AWSDecodableShape {
+            let name: String
         }
-        struct Output : AWSDecodableShape & AWSShapeWithPayload {
+        struct Output: AWSDecodableShape & AWSShapeWithPayload {
             static let _payloadPath: String = "output2"
-            let output2 : Output2
+            let output2: Output2
         }
         let response = AWSHTTPResponseImpl(
             status: .ok,
             headers: HTTPHeaders(),
             bodyData: Data("{\"name\":\"hello\"}".utf8)
         )
-        
-        var awsResponse: AWSResponse? = nil
-        var output: Output? = nil
+
+        var awsResponse: AWSResponse?
+        var output: Output?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .json(version: "1.1"), raw: false))
         XCTAssertNoThrow(output = try awsResponse?.generateOutputShape(operation: "Test"))
         XCTAssertEqual(output?.output2.name, "hello")
     }
 
     func testValidateJSONRawPayloadResponse() {
-        struct Output : AWSDecodableShape, AWSShapeWithPayload {
+        struct Output: AWSDecodableShape, AWSShapeWithPayload {
             static let _payloadPath: String = "body"
             static let _payloadOptions: AWSShapePayloadOptions = .raw
             public static var _encoding = [
                 AWSMemberEncoding(label: "contentType", location: .header(locationName: "content-type")),
             ]
-            let body : AWSPayload
+            let body: AWSPayload
         }
         let response = AWSHTTPResponseImpl(
             status: .ok,
-            headers: ["Content-Type":"application/json"],
+            headers: ["Content-Type": "application/json"],
             bodyData: Data("{\"name\":\"hello\"}".utf8)
         )
-        
-        var awsResponse: AWSResponse? = nil
-        var output: Output? = nil
+
+        var awsResponse: AWSResponse?
+        var output: Output?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .json(version: "1.1"), raw: true))
         XCTAssertNoThrow(output = try awsResponse?.generateOutputShape(operation: "Test"))
         XCTAssertEqual(output?.body.asString(), "{\"name\":\"hello\"}")
     }
 
-    //MARK: Error tests
-    
+    // MARK: Error tests
+
     func testJSONError() {
         let response = AWSHTTPResponseImpl(
             status: .notFound,
@@ -212,8 +211,8 @@ class AWSResponseTests: XCTestCase {
             bodyData: "{\"__type\":\"ResourceNotFoundException\", \"message\": \"Donald Where's Your Troosers?\"}".data(using: .utf8)!
         )
         let service = createServiceConfig(serviceProtocol: .json(version: "1.1"), possibleErrorTypes: [ServiceErrorType.self])
-        
-        var awsResponse: AWSResponse? = nil
+
+        var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .json(version: "1.1"), raw: false))
         let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger)
         XCTAssertEqual(error as? ServiceErrorType, .resourceNotFoundException(message: "Donald Where's Your Troosers?"))
@@ -226,8 +225,8 @@ class AWSResponseTests: XCTestCase {
             bodyData: "<Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message></Error>".data(using: .utf8)!
         )
         let service = createServiceConfig(serviceProtocol: .restxml, possibleErrorTypes: [ServiceErrorType.self])
-        
-        var awsResponse: AWSResponse? = nil
+
+        var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml, raw: false))
         let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger)
         XCTAssertEqual(error as? ServiceErrorType, .noSuchKey(message: "It doesn't exist"))
@@ -240,8 +239,8 @@ class AWSResponseTests: XCTestCase {
             bodyData: "<ErrorResponse><Error><Code>MessageRejected</Code><Message>Don't like it</Message></Error></ErrorResponse>".data(using: .utf8)!
         )
         let queryService = createServiceConfig(serviceProtocol: .query, possibleErrorTypes: [ServiceErrorType.self])
-        
-        var awsResponse: AWSResponse? = nil
+
+        var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .query, raw: false))
         let error = awsResponse?.generateError(serviceConfig: queryService, logger: TestEnvironment.logger)
         XCTAssertEqual(error as? ServiceErrorType, .messageRejected(message: "Don't like it"))
@@ -254,34 +253,34 @@ class AWSResponseTests: XCTestCase {
             bodyData: "<Errors><Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message></Error></Errors>".data(using: .utf8)!
         )
         let service = createServiceConfig(serviceProtocol: .ec2)
-        
-        var awsResponse: AWSResponse? = nil
+
+        var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .ec2, raw: false))
         let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? AWSResponseError
         XCTAssertEqual(error?.errorCode, "NoSuchKey")
         XCTAssertEqual(error?.message, "It doesn't exist")
     }
 
-    //MARK: Miscellaneous tests
-    
+    // MARK: Miscellaneous tests
+
     func testProcessHAL() {
-        struct Output : AWSDecodableShape {
+        struct Output: AWSDecodableShape {
             let s: String
             let i: Int
         }
-        struct Output2 : AWSDecodableShape {
+        struct Output2: AWSDecodableShape {
             let a: [Output]
             let d: Double
             let b: Bool
         }
         let response = AWSHTTPResponseImpl(
             status: .ok,
-            headers: ["Content-Type":"application/hal+json"],
-            bodyData: Data(#"{"_embedded": {"a": [{"s":"Hello", "i":1234}, {"s":"Hello2", "i":12345}]}, "d":3.14, "b":true}"#.utf8)
+            headers: ["Content-Type": "application/hal+json"],
+            bodyData: Data(#"{"_embedded": {"a": [{"s":"Hello", "i":1234}, {"s":"Hello2", "i":12345}]}, "d":3.14, "b":true}"# .utf8)
         )
-        
-        var awsResponse: AWSResponse? = nil
-        var output: Output2? = nil
+
+        var awsResponse: AWSResponse?
+        var output: Output2?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .json(version: "1.1"), raw: false))
         XCTAssertNoThrow(output = try awsResponse?.generateOutputShape(operation: "Test"))
         XCTAssertEqual(output?.a.count, 2)
@@ -289,8 +288,8 @@ class AWSResponseTests: XCTestCase {
         XCTAssertEqual(output?.a[1].s, "Hello2")
     }
 
-    //MARK: Types used in tests
-    
+    // MARK: Types used in tests
+
     struct AWSHTTPResponseImpl: AWSHTTPResponse {
         let status: HTTPResponseStatus
         let headers: HTTPHeaders
@@ -303,7 +302,7 @@ class AWSResponseTests: XCTestCase {
         }
 
         init(status: HTTPResponseStatus, headers: HTTPHeaders, bodyData: Data?) {
-            var body: ByteBuffer? = nil
+            var body: ByteBuffer?
             if let bodyData = bodyData {
                 body = ByteBufferAllocator().buffer(capacity: bodyData.count)
                 body?.writeBytes(bodyData)
@@ -317,7 +316,7 @@ class AWSResponseTests: XCTestCase {
         case noSuchKey(message: String?)
         case messageRejected(message: String?)
 
-        init?(errorCode: String, message: String?){
+        init?(errorCode: String, message: String?) {
             switch errorCode {
             case "ResourceNotFoundException":
                 self = .resourceNotFoundException(message: message)
@@ -330,7 +329,7 @@ class AWSResponseTests: XCTestCase {
             }
         }
 
-        var description : String {
+        var description: String {
             switch self {
             case .resourceNotFoundException(let message):
                 return "ResourceNotFoundException :\(message ?? "")"
@@ -342,4 +341,3 @@ class AWSResponseTests: XCTestCase {
         }
     }
 }
-

@@ -13,14 +13,13 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+@testable import AWSSDKSwiftCore
 import AWSTestUtils
 import Logging
 import NIO
 import XCTest
-@testable import AWSSDKSwiftCore
 
 class CredentialProviderTests: XCTestCase {
-
     func testCredentialProvider() {
         let cred = StaticCredential(accessKeyId: "abc", secretAccessKey: "123", sessionToken: "xyz")
 
@@ -38,7 +37,7 @@ class CredentialProviderTests: XCTestCase {
         class MyCredentialProvider: CredentialProvider {
             var alreadyCalled = false
             func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
-                if alreadyCalled == false {
+                if self.alreadyCalled == false {
                     self.alreadyCalled = true
                     return eventLoop.makeSucceededFuture(StaticCredential(accessKeyId: "ACCESSKEYID", secretAccessKey: "SECRETACCESSKET"))
                 } else {
@@ -59,10 +58,10 @@ class CredentialProviderTests: XCTestCase {
 
     func testConfigFileSuccess() {
         let credentials = """
-            [default]
-            aws_access_key_id = AWSACCESSKEYID
-            aws_secret_access_key = AWSSECRETACCESSKEY
-            """
+        [default]
+        aws_access_key_id = AWSACCESSKEYID
+        aws_secret_access_key = AWSSECRETACCESSKEY
+        """
         let filename = "credentials"
         let filenameURL = URL(fileURLWithPath: filename)
         XCTAssertNoThrow(try Data(credentials.utf8).write(to: filenameURL))
@@ -96,7 +95,7 @@ class CredentialProviderTests: XCTestCase {
 
         let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger))
 
-        XCTAssertThrowsError(_ = try provider.getCredential(on: eventLoop, logger: TestEnvironment.logger).wait()) { (error) in
+        XCTAssertThrowsError(_ = try provider.getCredential(on: eventLoop, logger: TestEnvironment.logger).wait()) { error in
             print("\(error)")
             XCTAssertEqual(error as? CredentialProviderError, .noProvider)
         }

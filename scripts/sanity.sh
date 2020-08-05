@@ -13,6 +13,8 @@
 ##
 ##===----------------------------------------------------------------------===##
 
+SWIFT_VERSION=5.1
+
 set -eu
 here="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -20,6 +22,18 @@ function replace_acceptable_years() {
     # this needs to replace all acceptable forms with 'YEARS'
     sed -e 's/20[12][78901]-20[12][8901]/YEARS/' -e 's/20[12][8901]/YEARS/' -e '/^#!/ d'
 }
+
+printf "=> Checking format... "
+FIRST_OUT="$(git status --porcelain)"
+swiftformat . > /dev/null 2>&1
+SECOND_OUT="$(git status --porcelain)"
+if [[ "$FIRST_OUT" != "$SECOND_OUT" ]]; then
+  printf "\033[0;31mformatting issues!\033[0m\n"
+  git --no-pager diff
+  exit 1
+else
+  printf "\033[0;32mokay.\033[0m\n"
+fi
 
 printf "=> Checking license headers... "
 tmp=$(mktemp /tmp/.aws-sdk-swift-core-sanity_XXXXXX)

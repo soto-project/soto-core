@@ -20,10 +20,10 @@ import protocol Foundation.ContiguousBytes
 
 /// Protocol for Digest object returned from HashFunction
 public protocol Digest: Sequence, ContiguousBytes, Hashable where Element == UInt8 {
-    static var byteCount: Int {get}
+    static var byteCount: Int { get }
 }
 
 /// Protocol for Digest object consisting of a byte array
-protocol ByteDigest: Digest, ByteArray { }
+protocol ByteDigest: Digest, ByteArray {}
 
 #endif

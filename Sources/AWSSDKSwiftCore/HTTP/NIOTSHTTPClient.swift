@@ -31,7 +31,6 @@ import NIOTransportServices
 /// HTTP Client class providing API for sending HTTP requests
 @available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)
 public final class NIOTSHTTPClient {
-
     /// Specifies how `EventLoopGroup` will be created and establishes lifecycle ownership.
     public enum EventLoopGroupProvider {
         /// `EventLoopGroup` will be provided by the user. Owner of this group is responsible for its lifecycle.
@@ -92,14 +91,14 @@ public final class NIOTSHTTPClient {
 
     /// send request to HTTP client, return a future holding the Response
     public func connect(url: URL, _ request: Request, timeout: TimeAmount, on eventLoop: EventLoop) -> EventLoopFuture<Response> {
-        //let eventLoop = eventLoop ?? eventLoopGroup.next()
+        // let eventLoop = eventLoop ?? eventLoopGroup.next()
         // extract details from request URL
-        //guard let url = URL(string:request.head.uri) else { return eventLoop.makeFailedFuture(HTTPError.malformedURL(url: request.head.uri)) }
+        // guard let url = URL(string:request.head.uri) else { return eventLoop.makeFailedFuture(HTTPError.malformedURL(url: request.head.uri)) }
         guard let scheme = url.scheme else { return eventLoop.makeFailedFuture(HTTPError.malformedURL(url: request.head.uri)) }
         guard let hostname = url.host else { return eventLoop.makeFailedFuture(HTTPError.malformedURL(url: request.head.uri)) }
 
-        let port : Int
-        let headerHostname : String
+        let port: Int
+        let headerHostname: String
         if url.port != nil {
             port = url.port!
             headerHostname = "\(hostname):\(port)"
@@ -108,7 +107,6 @@ public final class NIOTSHTTPClient {
             port = isSecure ? 443 : 80
             headerHostname = hostname
         }
-
 
         let response: EventLoopPromise<Response> = eventLoop.makePromise()
 
@@ -123,12 +121,12 @@ public final class NIOTSHTTPClient {
         bootstrap.channelInitializer { channel in
             return channel.pipeline.addHTTPClientHandlers()
                 .flatMap {
-                    let handlers : [ChannelHandler] = [
+                    let handlers: [ChannelHandler] = [
                         HTTPClientRequestSerializer(hostname: headerHostname),
-                        HTTPClientResponseHandler(promise: response)
+                        HTTPClientResponseHandler(promise: response),
                     ]
                     return channel.pipeline.addHandlers(handlers)
-            }
+                }
         }
         .connect(host: hostname, port: port)
         .flatMap { channel -> EventLoopFuture<Void> in
@@ -142,7 +140,7 @@ public final class NIOTSHTTPClient {
     }
 
     /// Channel Handler for serializing request header and data
-    private class HTTPClientRequestSerializer : ChannelOutboundHandler {
+    private class HTTPClientRequestSerializer: ChannelOutboundHandler {
         typealias OutboundIn = Request
         typealias OutboundOut = HTTPClientRequestPart
 
@@ -156,16 +154,15 @@ public final class NIOTSHTTPClient {
             let request = unwrapOutboundIn(data)
             var head = request.head
 
-            head.headers.replaceOrAdd(name: "Host", value: hostname)
+            head.headers.replaceOrAdd(name: "Host", value: self.hostname)
             head.headers.replaceOrAdd(name: "Content-Length", value: request.body?.readableBytes.description ?? "0")
             head.headers.replaceOrAdd(name: "Connection", value: "Close")
 
-
             context.write(wrapOutboundOut(.head(head)), promise: nil)
             if let body = request.body, body.readableBytes > 0 {
-                context.write(self.wrapOutboundOut(.body(.byteBuffer(body))), promise: nil)
+                context.write(wrapOutboundOut(.body(.byteBuffer(body))), promise: nil)
             }
-            context.write(self.wrapOutboundOut(.end(nil)), promise: promise)
+            context.write(wrapOutboundOut(.end(nil)), promise: promise)
         }
     }
 
@@ -184,7 +181,7 @@ public final class NIOTSHTTPClient {
         }
 
         private var state: ResponseState = .ready
-        private let promise : EventLoopPromise<Response>
+        private let promise: EventLoopPromise<Response>
 
         init(promise: EventLoopPromise<Response>) {
             self.promise = promise
@@ -197,37 +194,37 @@ public final class NIOTSHTTPClient {
         func channelRead(context: ChannelHandlerContext, data: NIOAny) {
             switch unwrapInboundIn(data) {
             case .head(let head):
-                switch state {
-                case .ready: state = .head(head)
-                case .head, .body: promise.fail(HTTPError.malformedHead)
+                switch self.state {
+                case .ready: self.state = .head(head)
+                case .head, .body: self.promise.fail(HTTPError.malformedHead)
                 }
             case .body(let part):
-                switch state {
-                case .ready: promise.fail(HTTPError.malformedBody)
+                switch self.state {
+                case .ready: self.promise.fail(HTTPError.malformedBody)
                 case .head(let head):
-                    state = .body(head, part)
+                    self.state = .body(head, part)
                 case .body(let head, var body):
                     var part = part
                     body.writeBuffer(&part)
-                    state = .body(head, body)
+                    self.state = .body(head, body)
                 }
             case .end:
-                switch state {
-                case .ready: promise.fail(HTTPError.malformedHead)
+                switch self.state {
+                case .ready: self.promise.fail(HTTPError.malformedHead)
                 case .head(let head):
                     let res = Response(head: head, body: nil)
                     if context.channel.isActive {
                         context.fireChannelRead(wrapOutboundOut(res))
                     }
-                    promise.succeed(res)
-                    state = .ready
+                    self.promise.succeed(res)
+                    self.state = .ready
                 case .body(let head, let body):
                     let res = Response(head: head, body: body)
                     if context.channel.isActive {
                         context.fireChannelRead(wrapOutboundOut(res))
                     }
-                    promise.succeed(res)
-                    state = .ready
+                    self.promise.succeed(res)
+                    self.state = .ready
                 }
             }
         }
@@ -241,12 +238,11 @@ public final class NIOTSHTTPClient {
 /// comply with AWSHTTPClient protocol
 @available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *)
 extension NIOTSHTTPClient: AWSHTTPClient {
-
     public func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<AWSHTTPResponse> {
         var head = HTTPRequestHead(
-          version: HTTPVersion(major: 1, minor: 1),
-          method: request.method,
-          uri: request.url.uri
+            version: HTTPVersion(major: 1, minor: 1),
+            method: request.method,
+            uri: request.url.uri
         )
         head.headers = request.headers
 
@@ -262,7 +258,7 @@ extension NIOTSHTTPClient: AWSHTTPClient {
         let url = request.url
         let request = Request(head: head, body: requestBody)
 
-        return connect(url: url, request, timeout: timeout, on: eventLoop).map { return $0 }
+        return self.connect(url: url, request, timeout: timeout, on: eventLoop).map { return $0 }
     }
 }
 
@@ -275,10 +271,10 @@ extension NIOTSHTTPClient.Response: AWSHTTPResponse {
 // copied from AsyncHTTPClient
 extension URL {
     var percentEncodedPath: String {
-        if self.path.isEmpty {
+        if path.isEmpty {
             return "/"
         }
-        return self.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? self.path
+        return path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? path
     }
 
     var pathHasTrailingSlash: Bool {
@@ -287,7 +283,7 @@ extension URL {
         } else {
             // Most platforms should use `self.hasDirectoryPath`, but on older darwin platforms
             // we have this approximation instead.
-            let url = self.absoluteString
+            let url = absoluteString
 
             var pathEndIndex = url.index(before: url.endIndex)
             if let queryIndex = url.firstIndex(of: "?") {
@@ -305,7 +301,7 @@ extension URL {
         if self.pathHasTrailingSlash, uri != "/" {
             uri += "/"
         }
-        
+
         if let query = self.query {
             uri += "?" + query
         }

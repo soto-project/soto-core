@@ -12,9 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
+@testable import AWSSDKSwiftCore
 import Foundation
 import Logging
-@testable import AWSSDKSwiftCore
 
 @propertyWrapper public struct EnvironmentVariable<Value: LosslessStringConvertible> {
     var defaultValue: Value
@@ -26,10 +26,8 @@ import Logging
     }
 
     public var wrappedValue: Value {
-        get {
-            guard let value = Environment[variableName] else { return defaultValue }
-            return Value(value) ?? defaultValue
-        }
+        guard let value = Environment[variableName] else { return self.defaultValue }
+        return Value(value) ?? self.defaultValue
     }
 }
 
@@ -63,8 +61,7 @@ public func createServiceConfig(
     possibleErrorTypes: [AWSErrorType.Type] = [],
     middlewares: [AWSServiceMiddleware] = [],
     timeout: TimeAmount? = nil
-) -> AWSServiceConfig
-{
+) -> AWSServiceConfig {
     AWSServiceConfig(
         region: region,
         partition: partition,
@@ -82,25 +79,22 @@ public func createServiceConfig(
     )
 }
 
-
 // create a buffer of random values. Will always create the same given you supply the same z and w values
 // Random number generator from https://www.codeproject.com/Articles/25172/Simple-Random-Number-Generation
 public func createRandomBuffer(_ w: UInt, _ z: UInt, size: Int) -> [UInt8] {
     var z = z
     var w = w
-    func getUInt8() -> UInt8
-    {
-        z = 36969 * (z & 65535) + (z >> 16);
-        w = 18000 * (w & 65535) + (w >> 16);
-        return UInt8(((z << 16) + w) & 0xff);
+    func getUInt8() -> UInt8 {
+        z = 36969 * (z & 65535) + (z >> 16)
+        w = 18000 * (w & 65535) + (w >> 16)
+        return UInt8(((z << 16) + w) & 0xFF)
     }
-    var data = Array<UInt8>(repeating: 0, count: size)
+    var data = [UInt8](repeating: 0, count: size)
     for i in 0..<size {
         data[i] = getUInt8()
     }
     return data
 }
-
 
 /// Provide various test environment variables
 public struct TestEnvironment {

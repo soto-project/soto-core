@@ -20,23 +20,25 @@ extension AWSResponse {
     func getHypertextApplicationLanguageBody() throws -> Body {
         guard case .json(let data) = self.body,
             let contentType = self.headers["content-type"] as? String,
-            contentType.contains("hal+json") else {
-                return self.body
+            contentType.contains("hal+json")
+        else {
+            return self.body
         }
-        
+
         // extract embedded resources from HAL
         let json = try JSONSerialization.jsonObject(with: data, options: [])
         guard var dictionary = json as? [String: Any],
             let embedded = dictionary["_embedded"],
-            let embeddedDictionary = embedded as? [String: Any] else {
-                return self.body
+            let embeddedDictionary = embedded as? [String: Any]
+        else {
+            return self.body
         }
 
         // remove _links and _embedded elements of dictionary to reduce the size of the new dictionary
         dictionary["_links"] = nil
         dictionary["_embedded"] = nil
         // merge embedded resources into original dictionary
-        dictionary.merge(embeddedDictionary) { first,_ in return first }
+        dictionary.merge(embeddedDictionary) { first, _ in return first }
         return .json(try JSONSerialization.data(withJSONObject: dictionary, options: []))
     }
 }

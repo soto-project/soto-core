@@ -12,13 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
+@testable import AWSSDKSwiftCore
+import AWSTestUtils
 import NIO
 import XCTest
-import AWSTestUtils
-@testable import AWSSDKSwiftCore
 
 class PayloadTests: XCTestCase {
-
     func testRequestPayload(_ payload: AWSPayload, expectedResult: String) {
         struct DataPayload: AWSEncodableShape & AWSShapeWithPayload {
             static var _payloadPath: String = "data"
@@ -57,21 +56,21 @@ class PayloadTests: XCTestCase {
     }
 
     func testDataRequestPayload() {
-        testRequestPayload(.data(Data("testDataPayload".utf8)), expectedResult: "testDataPayload")
+        self.testRequestPayload(.data(Data("testDataPayload".utf8)), expectedResult: "testDataPayload")
     }
 
     func testStringRequestPayload() {
-        testRequestPayload(.string("testStringPayload"), expectedResult: "testStringPayload")
+        self.testRequestPayload(.string("testStringPayload"), expectedResult: "testStringPayload")
     }
 
     func testByteBufferRequestPayload() {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: 32)
         byteBuffer.writeString("testByteBufferPayload")
-        testRequestPayload(.byteBuffer(byteBuffer), expectedResult: "testByteBufferPayload")
+        self.testRequestPayload(.byteBuffer(byteBuffer), expectedResult: "testByteBufferPayload")
     }
 
     func testResponsePayload() {
-        struct Output : AWSDecodableShape, AWSShapeWithPayload {
+        struct Output: AWSDecodableShape, AWSShapeWithPayload {
             static let _payloadPath: String = "payload"
             static let _payloadOptions: AWSShapePayloadOptions = .raw
             let payload: AWSPayload
@@ -91,7 +90,7 @@ class PayloadTests: XCTestCase {
                 logger: TestEnvironment.logger
             )
 
-            try awsServer.processRaw { request in
+            try awsServer.processRaw { _ in
                 var byteBuffer = ByteBufferAllocator().buffer(capacity: 0)
                 byteBuffer.writeString("testResponsePayload")
                 let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
@@ -101,7 +100,7 @@ class PayloadTests: XCTestCase {
             let output = try response.wait()
 
             XCTAssertEqual(output.payload.asString(), "testResponsePayload")
-            //XCTAssertEqual(output.i, 547)
+            // XCTAssertEqual(output.i, 547)
             try awsServer.stop()
         } catch {
             XCTFail("Unexpected error: \(error)")

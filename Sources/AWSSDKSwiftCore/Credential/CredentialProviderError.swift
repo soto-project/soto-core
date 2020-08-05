@@ -16,6 +16,7 @@ public struct CredentialProviderError: Error, Equatable {
     enum _CredentialProviderError {
         case noProvider
     }
+
     let error: _CredentialProviderError
 
     public static var noProvider: CredentialProviderError { return .init(error: .noProvider) }
@@ -23,7 +24,7 @@ public struct CredentialProviderError: Error, Equatable {
 
 extension CredentialProviderError: CustomStringConvertible {
     public var description: String {
-        switch error {
+        switch self.error {
         case .noProvider:
             return "No credential provider found"
         }

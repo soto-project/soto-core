@@ -12,15 +12,14 @@
 //
 //===----------------------------------------------------------------------===//
 
-import XCTest
+@testable import AWSSDKSwiftCore
 import AWSTestUtils
 import NIO
-@testable import AWSSDKSwiftCore
+import XCTest
 
 class RuntimeSelectorCredentialProviderTests: XCTestCase {
-
     func testSetupFail() {
-        let client = createAWSClient(credentialProvider: .selector(.custom {_ in return NullCredentialProvider()} ))
+        let client = createAWSClient(credentialProvider: .selector(.custom { _ in return NullCredentialProvider() }))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next(), logger: TestEnvironment.logger)
         XCTAssertThrowsError(try futureResult.wait()) { error in
@@ -31,7 +30,6 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
                 XCTFail()
             }
         }
-
     }
 
     func testShutdown() {
@@ -184,10 +182,10 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
 
     func testConfigFileProvider() {
         let credentials = """
-            [default]
-            aws_access_key_id = AWSACCESSKEYID
-            aws_secret_access_key = AWSSECRETACCESSKEY
-            """
+        [default]
+        aws_access_key_id = AWSACCESSKEYID
+        aws_secret_access_key = AWSSECRETACCESSKEY
+        """
         let filename = "credentials"
         let filenameURL = URL(fileURLWithPath: filename)
         XCTAssertNoThrow(try Data(credentials.utf8).write(to: filenameURL))
@@ -208,12 +206,11 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
     func testConfigFileProviderFail() {
         let client = createAWSClient(credentialProvider: .selector(.configFile(credentialsFilePath: "nonExistentCredentialFile"), .empty))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
-        let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next(), logger: TestEnvironment.logger).flatMapThrowing { credential in
+        let futureResult = client.credentialProvider.getCredential(on: client.eventLoopGroup.next(), logger: TestEnvironment.logger).flatMapThrowing { _ in
             let internalProvider = try XCTUnwrap((client.credentialProvider as? RuntimeSelectorCredentialProvider)?.internalProvider)
             XCTAssert(internalProvider is StaticCredential)
             XCTAssert((internalProvider as? StaticCredential)?.isEmpty() == true)
         }
         XCTAssertNoThrow(try futureResult.wait())
     }
-
 }

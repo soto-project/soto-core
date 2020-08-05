@@ -29,14 +29,14 @@ extension AWSErrorType {
 public struct AWSResponseError: AWSErrorType {
     public let errorCode: String
     public let message: String?
-    
-    public init(errorCode: String, message: String?){
+
+    public init(errorCode: String, message: String?) {
         self.errorCode = errorCode
         self.message = message
     }
-    
+
     public var description: String {
-        return "\(errorCode): \(message ?? "")"
+        return "\(self.errorCode): \(self.message ?? "")"
     }
 }
 
@@ -46,13 +46,13 @@ public struct AWSError: Error, CustomStringConvertible {
     public let rawBody: String?
     public let statusCode: HTTPResponseStatus
 
-    init(statusCode: HTTPResponseStatus, message: String, rawBody: String?){
+    init(statusCode: HTTPResponseStatus, message: String, rawBody: String?) {
         self.statusCode = statusCode
         self.message = message
         self.rawBody = rawBody
     }
 
     public var description: String {
-        return "\(message), code: \(statusCode.code)\(rawBody.map {", body: \($0)"} ?? "")"
+        return "\(self.message), code: \(self.statusCode.code)\(self.rawBody.map { ", body: \($0)" } ?? "")"
     }
 }

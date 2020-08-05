@@ -12,20 +12,20 @@
 //
 //===----------------------------------------------------------------------===//
 
-import XCTest
 import AsyncHTTPClient
+@testable import AWSSDKSwiftCore
 import AWSSignerV4
 import AWSTestUtils
 import NIO
 import NIOHTTP1
-@testable import AWSSDKSwiftCore
+import XCTest
 
 struct HeaderRequest: AWSEncodableShape {
     static var _encoding: [AWSMemberEncoding] = [
         AWSMemberEncoding(label: "Header1", location: .header(locationName: "Header1")),
         AWSMemberEncoding(label: "Header2", location: .header(locationName: "Header2")),
         AWSMemberEncoding(label: "Header3", location: .header(locationName: "Header3")),
-        AWSMemberEncoding(label: "Header4", location: .header(locationName: "Header4"))
+        AWSMemberEncoding(label: "Header4", location: .header(locationName: "Header4")),
     ]
 
     let header1: String
@@ -67,17 +67,17 @@ struct StandardResponse: AWSDecodableShape {
     let item5: [Int]
 }
 
-
 class PerformanceTests: XCTestCase {
     @EnvironmentVariable("ENABLE_TIMING_TESTS", default: true) static var enableTimingTests: Bool
-    
+
     func testHeaderRequest() {
         guard Self.enableTimingTests == true else { return }
         let config = createServiceConfig(
             region: .useast1,
-            service:"Test",
+            service: "Test",
             serviceProtocol: .restxml,
-            apiVersion: "1.0")
+            apiVersion: "1.0"
+        )
         let date = Date()
         let request = HeaderRequest(header1: "Header1", header2: "Header2", header3: "Header3", header4: TimeStamp(date))
         measure {
@@ -95,11 +95,12 @@ class PerformanceTests: XCTestCase {
         guard Self.enableTimingTests == true else { return }
         let config = createServiceConfig(
             region: .useast1,
-            service:"Test",
+            service: "Test",
             serviceProtocol: .restxml,
-            apiVersion: "1.0")
+            apiVersion: "1.0"
+        )
         let date = Date()
-        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1,2,3,4,5])
+        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1, 2, 3, 4, 5])
         measure {
             do {
                 for _ in 0..<1000 {
@@ -115,11 +116,12 @@ class PerformanceTests: XCTestCase {
         guard Self.enableTimingTests == true else { return }
         let config = createServiceConfig(
             region: .useast1,
-            service:"Test",
+            service: "Test",
             serviceProtocol: .restxml,
-            apiVersion: "1.0")
+            apiVersion: "1.0"
+        )
         let date = Date()
-        let request = PayloadRequest(payload: StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1,2,3,4,5]))
+        let request = PayloadRequest(payload: StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1, 2, 3, 4, 5]))
         measure {
             do {
                 for _ in 0..<1000 {
@@ -135,11 +137,12 @@ class PerformanceTests: XCTestCase {
         guard Self.enableTimingTests == true else { return }
         let config = createServiceConfig(
             region: .useast1,
-            service:"Test",
+            service: "Test",
             serviceProtocol: .restjson,
-            apiVersion: "1.0")
+            apiVersion: "1.0"
+        )
         let date = Date()
-        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1,2,3,4,5])
+        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1, 2, 3, 4, 5])
         measure {
             do {
                 for _ in 0..<1000 {
@@ -155,11 +158,12 @@ class PerformanceTests: XCTestCase {
         guard Self.enableTimingTests == true else { return }
         let config = createServiceConfig(
             region: .useast1,
-            service:"Test",
+            service: "Test",
             serviceProtocol: .restjson,
-            apiVersion: "1.0")
+            apiVersion: "1.0"
+        )
         let date = Date()
-        let request = PayloadRequest(payload: StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1,2,3,4,5]))
+        let request = PayloadRequest(payload: StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1, 2, 3, 4, 5]))
         measure {
             do {
                 for _ in 0..<1000 {
@@ -175,11 +179,12 @@ class PerformanceTests: XCTestCase {
         guard Self.enableTimingTests == true else { return }
         let config = createServiceConfig(
             region: .useast1,
-            service:"Test",
+            service: "Test",
             serviceProtocol: .query,
-            apiVersion: "1.0")
+            apiVersion: "1.0"
+        )
         let date = Date()
-        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1,2,3,4,5])
+        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1, 2, 3, 4, 5])
         measure {
             do {
                 for _ in 0..<1000 {
@@ -195,20 +200,23 @@ class PerformanceTests: XCTestCase {
         guard Self.enableTimingTests == true else { return }
         let config = createServiceConfig(
             region: .useast1,
-            service:"Test",
+            service: "Test",
             serviceProtocol: .json(version: "1.1"),
-            apiVersion: "1.0")
-        
+            apiVersion: "1.0"
+        )
+
         let request = try! AWSRequest(
             operation: "Test",
             path: "/",
             httpMethod: .GET,
-            configuration: config)
-        
+            configuration: config
+        )
+
         let signer = AWSSigner(
             credentials: StaticCredential(accessKeyId: "", secretAccessKey: ""),
             name: config.service,
-            region: config.region.rawValue)
+            region: config.region.rawValue
+        )
         measure {
             for _ in 0..<1000 {
                 _ = request.createHTTPRequest(signer: signer)
@@ -229,7 +237,7 @@ class PerformanceTests: XCTestCase {
             httpMethod: .GET,
             configuration: config
         ).applyMiddlewares(config.middlewares + client.middlewares)
-        
+
         let signer = try! client.createSigner(serviceConfig: config, logger: AWSClient.loggingDisabled).wait()
         measure {
             for _ in 0..<1000 {
@@ -242,16 +250,18 @@ class PerformanceTests: XCTestCase {
         guard Self.enableTimingTests == true else { return }
         let config = createServiceConfig(
             region: .useast1,
-            service:"Test",
+            service: "Test",
             serviceProtocol: .json(version: "1.1"),
-            apiVersion: "1.0")
+            apiVersion: "1.0"
+        )
         let date = Date()
-        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1,2,3,4,5])
+        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1, 2, 3, 4, 5])
         let awsRequest = try! AWSRequest(operation: "Test", path: "/", httpMethod: .POST, input: request, configuration: config)
         let signer = AWSSigner(
             credentials: StaticCredential(accessKeyId: "", secretAccessKey: ""),
             name: config.service,
-            region: config.region.rawValue)
+            region: config.region.rawValue
+        )
         measure {
             for _ in 0..<1000 {
                 _ = awsRequest.createHTTPRequest(signer: signer)

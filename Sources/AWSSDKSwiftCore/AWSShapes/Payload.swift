@@ -19,7 +19,6 @@ import NIOFoundationCompat
 /// Holds a request or response payload. A request payload can be in the form of either a ByteBuffer or a stream function that will supply ByteBuffers to the HTTP client.
 /// A response payload only comes in the form of a ByteBuffer
 public struct AWSPayload {
-    
     /// Internal enum
     enum Payload {
         case byteBuffer(ByteBuffer)
@@ -28,27 +27,27 @@ public struct AWSPayload {
     }
 
     internal let payload: Payload
-    
+
     /// construct a payload from a ByteBuffer
     public static func byteBuffer(_ buffer: ByteBuffer) -> Self {
         return AWSPayload(payload: .byteBuffer(buffer))
     }
-    
+
     /// construct a payload from a stream function. If you supply a size the stream function will be called repeated until you supply the number of bytes specified. If you
     /// don't supply a size the stream function will be called repeatedly until you supply an empty `ByteBuffer`
     public static func stream(
         size: Int? = nil,
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
-        stream: @escaping (EventLoop)->EventLoopFuture<StreamReaderResult>
+        stream: @escaping (EventLoop) -> EventLoopFuture<StreamReaderResult>
     ) -> Self {
         return AWSPayload(payload: .stream(ChunkedStreamReader(size: size, read: stream, byteBufferAllocator: byteBufferAllocator)))
     }
-    
+
     /// construct an empty payload
     public static var empty: Self {
         return AWSPayload(payload: .empty)
     }
-    
+
     /// Construct a payload from `Data`
     public static func data(_ data: Data, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) -> Self {
         var byteBuffer = byteBufferAllocator.buffer(capacity: data.count)
@@ -69,7 +68,7 @@ public struct AWSPayload {
         size: Int? = nil,
         fileIO: NonBlockingFileIO,
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
-        callback: @escaping (Int) throws -> () = { _ in }
+        callback: @escaping (Int) throws -> Void = { _ in }
     ) -> Self {
         // use chunked reader buffer size to avoid allocating additional buffers when streaming data
         let blockSize = S3ChunkedStreamReader.bufferSize
@@ -101,15 +100,15 @@ public struct AWSPayload {
                 }
             }
         }
-        
+
         return AWSPayload(payload: .stream(ChunkedStreamReader(size: size, read: stream, byteBufferAllocator: byteBufferAllocator)))
     }
-    
+
     /// construct a payload from a stream reader object.
     internal static func streamReader(_ reader: StreamReader) -> Self {
         return AWSPayload(payload: .stream(reader))
     }
-    
+
     /// Return the size of the payload. If the payload is a stream it is always possible to return a size
     var size: Int? {
         switch payload {
@@ -151,7 +150,7 @@ public struct AWSPayload {
             return nil
         }
     }
-    
+
     /// does payload consist of zero bytes
     public var isEmpty: Bool {
         switch payload {
@@ -166,7 +165,6 @@ public struct AWSPayload {
 }
 
 extension AWSPayload: Decodable {
-
     // AWSPayload has to comform to Decodable so I can add it to AWSShape objects (which conform to Decodable). But we don't want the
     // Encoder/Decoder ever to process a AWSPayload
     public init(from decoder: Decoder) throws {

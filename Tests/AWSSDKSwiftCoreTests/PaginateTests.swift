@@ -13,15 +13,16 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+@testable import AWSSDKSwiftCore
+import AWSTestUtils
 import NIO
 import XCTest
-import AWSTestUtils
-@testable import AWSSDKSwiftCore
 
 class PaginateTests: XCTestCase {
     enum Error: Swift.Error {
         case didntFindToken
     }
+
     var awsServer: AWSTestServer!
     var eventLoopGroup: EventLoopGroup!
     var httpClient: AWSHTTPClient!
@@ -30,11 +31,11 @@ class PaginateTests: XCTestCase {
 
     override func setUp() {
         // create server and client
-        awsServer = AWSTestServer(serviceProtocol: .json)
-        eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 3)
-        httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
-        config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
-        client = createAWSClient(credentialProvider: .empty, retryPolicy: .noRetry, httpClientProvider: .shared(httpClient))
+        self.awsServer = AWSTestServer(serviceProtocol: .json)
+        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 3)
+        self.httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(self.eventLoopGroup))
+        self.config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: self.awsServer.address)
+        self.client = createAWSClient(credentialProvider: .empty, retryPolicy: .noRetry, httpClientProvider: .shared(self.httpClient))
     }
 
     override func tearDown() {
@@ -58,6 +59,7 @@ class PaginateTests: XCTestCase {
             return .init(inputToken: token, pageSize: self.pageSize)
         }
     }
+
     // conform to Encodable so server can encode these
     struct CounterOutput: AWSDecodableShape, Encodable {
         let array: [Int]
@@ -65,21 +67,21 @@ class PaginateTests: XCTestCase {
     }
 
     func counter(_ input: CounterInput, on eventLoop: EventLoop?, logger: Logger) -> EventLoopFuture<CounterOutput> {
-        return client.execute(
+        return self.client.execute(
             operation: "TestOperation",
             path: "/",
             httpMethod: .POST,
-            serviceConfig: config,
+            serviceConfig: self.config,
             input: input,
             on: eventLoop,
             logger: logger
         )
     }
 
-    func counterPaginator(_ input: CounterInput, onPage: @escaping (CounterOutput, EventLoop)->EventLoopFuture<Bool>) -> EventLoopFuture<Void> {
-        return client.paginate(
+    func counterPaginator(_ input: CounterInput, onPage: @escaping (CounterOutput, EventLoop) -> EventLoopFuture<Bool>) -> EventLoopFuture<Void> {
+        return self.client.paginate(
             input: input,
-            command: counter,
+            command: self.counter,
             tokenKey: \CounterOutput.outputToken,
             logger: TestEnvironment.logger,
             onPage: onPage
@@ -87,11 +89,10 @@ class PaginateTests: XCTestCase {
     }
 
     func testIntegerTokenPaginate() throws {
-
         // paginate input
         var finalArray: [Int] = []
         let input = CounterInput(inputToken: nil, pageSize: 4)
-        let future = counterPaginator(input) { result, eventloop in
+        let future = self.counterPaginator(input) { result, eventloop in
             // collate results into array
             finalArray.append(contentsOf: result.array)
             return eventloop.makeSucceededFuture(true)
@@ -99,10 +100,10 @@ class PaginateTests: XCTestCase {
 
         let arraySize = 23
         // aws server process
-        XCTAssertNoThrow(try awsServer.process { (input: CounterInput) throws -> AWSTestServer.Result<CounterOutput> in
+        XCTAssertNoThrow(try self.awsServer.process { (input: CounterInput) throws -> AWSTestServer.Result<CounterOutput> in
             // send part of array of numbers based on input startIndex and pageSize
             let startIndex = input.inputToken ?? 0
-            let endIndex = min(startIndex+input.pageSize, arraySize)
+            let endIndex = min(startIndex + input.pageSize, arraySize)
             var array: [Int] = []
             for i in startIndex..<endIndex {
                 array.append(i)
@@ -136,6 +137,7 @@ class PaginateTests: XCTestCase {
             return .init(inputToken: token, pageSize: self.pageSize)
         }
     }
+
     // conform to Encodable so server can encode these
     struct StringListOutput: AWSDecodableShape, Encodable {
         let array: [String]
@@ -143,21 +145,21 @@ class PaginateTests: XCTestCase {
     }
 
     func stringList(_ input: StringListInput, on eventLoop: EventLoop? = nil, logger: Logger) -> EventLoopFuture<StringListOutput> {
-        return client.execute(
+        return self.client.execute(
             operation: "TestOperation",
             path: "/",
             httpMethod: .POST,
-            serviceConfig: config,
+            serviceConfig: self.config,
             input: input,
             on: eventLoop,
             logger: logger
         )
     }
 
-    func stringListPaginator(_ input: StringListInput, on eventLoop: EventLoop? = nil, onPage: @escaping (StringListOutput, EventLoop)->EventLoopFuture<Bool>) -> EventLoopFuture<Void> {
-        return client.paginate(
+    func stringListPaginator(_ input: StringListInput, on eventLoop: EventLoop? = nil, onPage: @escaping (StringListOutput, EventLoop) -> EventLoopFuture<Bool>) -> EventLoopFuture<Void> {
+        return self.client.paginate(
             input: input,
-            command: stringList,
+            command: self.stringList,
             tokenKey: \StringListOutput.outputToken,
             on: eventLoop,
             logger: TestEnvironment.logger,
@@ -166,24 +168,24 @@ class PaginateTests: XCTestCase {
     }
 
     // create list of unique strings
-    let stringList = Set("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.".split(separator: " ").map {String($0)}).map {$0}
+    let stringList = Set("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.".split(separator: " ").map { String($0) }).map { $0 }
 
     func stringListServerProcess(_ input: StringListInput) throws -> AWSTestServer.Result<StringListOutput> {
         // send part of array of numbers based on input startIndex and pageSize
         var startIndex = 0
         if let inputToken = input.inputToken {
-            guard let stringIndex = stringList.firstIndex(of:inputToken) else { throw Error.didntFindToken }
+            guard let stringIndex = stringList.firstIndex(of: inputToken) else { throw Error.didntFindToken }
             startIndex = stringIndex
         }
-        let endIndex = min(startIndex+input.pageSize, stringList.count)
+        let endIndex = min(startIndex + input.pageSize, self.stringList.count)
         var array: [String] = []
         for i in startIndex..<endIndex {
-            array.append(stringList[i])
+            array.append(self.stringList[i])
         }
-        var outputToken: String? = nil
+        var outputToken: String?
         var continueProcessing = false
-        if endIndex < stringList.count {
-            outputToken = stringList[endIndex]
+        if endIndex < self.stringList.count {
+            outputToken = self.stringList[endIndex]
             continueProcessing = true
         }
         let output = StringListOutput(array: array, outputToken: outputToken)
@@ -191,26 +193,25 @@ class PaginateTests: XCTestCase {
     }
 
     func testStringTokenPaginate() throws {
-
         // paginate input
         var finalArray: [String] = []
         let input = StringListInput(inputToken: nil, pageSize: 5)
-        let future = stringListPaginator(input) { result, eventloop in
+        let future = self.stringListPaginator(input) { result, eventloop in
             // collate results into array
             finalArray.append(contentsOf: result.array)
             return eventloop.makeSucceededFuture(true)
         }
 
         // aws server process
-        XCTAssertNoThrow(try awsServer.process(stringListServerProcess))
+        XCTAssertNoThrow(try self.awsServer.process(self.stringListServerProcess))
 
         // wait for response
         XCTAssertNoThrow(try future.wait())
 
         // verify contents of array
-        XCTAssertEqual(finalArray.count, stringList.count)
+        XCTAssertEqual(finalArray.count, self.stringList.count)
         for i in 0..<finalArray.count {
-            XCTAssertEqual(finalArray[i], stringList[i])
+            XCTAssertEqual(finalArray[i], self.stringList[i])
         }
     }
 
@@ -219,15 +220,14 @@ class PaginateTests: XCTestCase {
     }
 
     func testPaginateError() throws {
-
         // paginate input
         let input = StringListInput(inputToken: nil, pageSize: 5)
-        let future = stringListPaginator(input) { _,eventloop in
+        let future = self.stringListPaginator(input) { _, eventloop in
             return eventloop.makeSucceededFuture(true)
         }
 
         // aws server process
-        XCTAssertNoThrow(try awsServer.process { (request: StringListInput) -> AWSTestServer.Result<StringListOutput> in
+        XCTAssertNoThrow(try self.awsServer.process { (_: StringListInput) -> AWSTestServer.Result<StringListOutput> in
             return .error(.badRequest)
         })
 
@@ -238,16 +238,15 @@ class PaginateTests: XCTestCase {
     }
 
     func testPaginateErrorAfterFirstRequest() throws {
-
         // paginate input
         let input = StringListInput(inputToken: nil, pageSize: 5)
-        let future = stringListPaginator(input) { _,eventloop in
+        let future = self.stringListPaginator(input) { _, eventloop in
             return eventloop.makeSucceededFuture(true)
         }
 
         // aws server process
         var count = 0
-        XCTAssertNoThrow(try awsServer.process {(request: StringListInput) -> AWSTestServer.Result<StringListOutput> in
+        XCTAssertNoThrow(try self.awsServer.process { (request: StringListInput) -> AWSTestServer.Result<StringListOutput> in
             if count > 0 {
                 return .error(.badRequest, continueProcessing: false)
             } else {
@@ -264,16 +263,16 @@ class PaginateTests: XCTestCase {
 
     func testPaginateEventLoop() throws {
         // paginate input
-        let clientEventLoop = client.eventLoopGroup.next()
+        let clientEventLoop = self.client.eventLoopGroup.next()
         let input = StringListInput(inputToken: nil, pageSize: 5)
-        let future = stringListPaginator(input, on: clientEventLoop) { _,eventloop in
+        let future = self.stringListPaginator(input, on: clientEventLoop) { _, eventloop in
             XCTAssertTrue(clientEventLoop.inEventLoop)
             XCTAssertTrue(clientEventLoop === eventloop)
             return eventloop.makeSucceededFuture(true)
         }
 
         // aws server process
-        XCTAssertNoThrow(try awsServer.process(stringListServerProcess))
+        XCTAssertNoThrow(try self.awsServer.process(self.stringListServerProcess))
         // wait for response
         XCTAssertNoThrow(try future.wait())
     }

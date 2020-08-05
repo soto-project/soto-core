@@ -37,7 +37,7 @@ class INIParserTests: XCTestCase {
           [ 乱死了 ]
         """
 
-        var ini: INIParser? = nil
+        var ini: INIParser?
         XCTAssertNoThrow(ini = try INIParser(raw))
 
         XCTAssertEqual(ini?.anonymousSection["freeVar1"] ?? "", "1")

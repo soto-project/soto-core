@@ -23,29 +23,28 @@ import NIOConcurrencyHelpers
 class RuntimeSelectorCredentialProvider: CredentialProvider {
     /// the provider chosen to supply credentials
     var internalProvider: CredentialProvider? {
-        get {
-            self.lock.withLock {
-                _internalProvider
-            }
+        self.lock.withLock {
+            _internalProvider
         }
     }
+
     /// promise to find a credential provider
     let startupPromise: EventLoopPromise<CredentialProvider>
 
     private let lock = Lock()
-    private var _internalProvider: CredentialProvider? = nil
+    private var _internalProvider: CredentialProvider?
 
     init(providers: [CredentialProviderFactory], context: CredentialProviderFactory.Context) {
         self.startupPromise = context.eventLoop.makePromise(of: CredentialProvider.self)
-        setupInternalProvider(providers: providers, context: context)
+        self.setupInternalProvider(providers: providers, context: context)
     }
 
     func shudown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
-        return startupPromise.futureResult.map { _ in }.hop(to: eventLoop)
+        return self.startupPromise.futureResult.map { _ in }.hop(to: eventLoop)
     }
 
     func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
-        if let provider = self.internalProvider {
+        if let provider = internalProvider {
             return provider.getCredential(on: eventLoop, logger: logger)
         }
 
@@ -59,7 +58,7 @@ class RuntimeSelectorCredentialProvider: CredentialProvider {
     private func setupInternalProvider(providers: [CredentialProviderFactory], context: CredentialProviderFactory.Context) {
         func _setupInternalProvider(_ index: Int) {
             guard index < providers.count else {
-                startupPromise.fail(CredentialProviderError.noProvider)
+                self.startupPromise.fail(CredentialProviderError.noProvider)
                 return
             }
             let providerFactory = providers[index]

@@ -12,11 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-import XCTest
 @testable import AWSSDKSwiftCore
+import XCTest
 
 class ValidationTests: XCTestCase {
-
     /// test validation
     func testValidationFail(_ shape: AWSEncodableShape) {
         do {
@@ -42,11 +41,11 @@ class ValidationTests: XCTestCase {
             let size: Int?
 
             public func validate(name: String) throws {
-                try validate(size, name:"size", parent: name, max: 100)
-                try validate(size, name:"size", parent: name, min: 1)
+                try self.validate(self.size, name: "size", parent: name, max: 100)
+                try self.validate(self.size, name: "size", parent: name, min: 1)
             }
         }
-        let a1 = A(size:23)
+        let a1 = A(size: 23)
         testValidationSuccess(a1)
         let a2 = A(size: 0)
         testValidationFail(a2)
@@ -59,11 +58,11 @@ class ValidationTests: XCTestCase {
             let size: Float?
 
             public func validate(name: String) throws {
-                try validate(size, name:"size", parent: name, max: 50.0)
-                try validate(size, name:"size", parent: name, min: 1.0)
+                try self.validate(self.size, name: "size", parent: name, max: 50.0)
+                try self.validate(self.size, name: "size", parent: name, min: 1.0)
             }
         }
-        let a1 = A(size:23)
+        let a1 = A(size: 23)
         testValidationSuccess(a1)
         let a2 = A(size: 0)
         testValidationFail(a2)
@@ -76,11 +75,11 @@ class ValidationTests: XCTestCase {
             let string: String?
 
             public func validate(name: String) throws {
-                try validate(string, name:"string", parent: name, max: 24)
-                try validate(string, name:"string", parent: name, min: 2)
+                try self.validate(self.string, name: "string", parent: name, max: 24)
+                try self.validate(self.string, name: "string", parent: name, min: 2)
             }
         }
-        let a1 = A(string:"hello")
+        let a1 = A(string: "hello")
         testValidationSuccess(a1)
         let a2 = A(string: "This string is so long it will fail")
         testValidationFail(a2)
@@ -93,13 +92,13 @@ class ValidationTests: XCTestCase {
             let numbers: [Int]?
 
             public func validate(name: String) throws {
-                try validate(numbers, name:"numbers", parent: name, max: 4)
-                try validate(numbers, name:"numbers", parent: name, min: 2)
+                try self.validate(self.numbers, name: "numbers", parent: name, max: 4)
+                try self.validate(self.numbers, name: "numbers", parent: name, min: 2)
             }
         }
-        let a1 = A(numbers:[1,2])
+        let a1 = A(numbers: [1, 2])
         testValidationSuccess(a1)
-        let a2 = A(numbers: [1,2,3,4,5])
+        let a2 = A(numbers: [1, 2, 3, 4, 5])
         testValidationFail(a2)
         let a3 = A(numbers: [1])
         testValidationFail(a3)
@@ -110,10 +109,10 @@ class ValidationTests: XCTestCase {
             let string: String?
 
             public func validate(name: String) throws {
-                try validate(string, name:"string", parent: name, pattern: "^[A-Za-z]{3}$")
+                try self.validate(self.string, name: "string", parent: name, pattern: "^[A-Za-z]{3}$")
             }
         }
-        let a1 = A(string:"abc")
+        let a1 = A(string: "abc")
         testValidationSuccess(a1)
         let a2 = A(string: "abcd")
         testValidationFail(a2)
@@ -126,17 +125,17 @@ class ValidationTests: XCTestCase {
             let path: String
 
             public func validate(name: String) throws {
-                try validate(path, name:"path", parent: name, pattern: "((/[A-Za-z0-9\\.,\\+@=_-]+)*)/")
+                try self.validate(self.path, name: "path", parent: name, pattern: "((/[A-Za-z0-9\\.,\\+@=_-]+)*)/")
             }
         }
-        let a1 = A(path:"/hello/test/")
+        let a1 = A(path: "/hello/test/")
         testValidationSuccess(a1)
         let a2 = A(path: "hello/test")
         testValidationFail(a2)
         let a3 = A(path: "hello\\test")
         testValidationFail(a3)
         // this shouldn't really work but I had to limit it to finding a match, not the whole string matching. MediaConvert seems to assume that is it finding a match
-        let a4 = A(path:"/%hello/test/")
+        let a4 = A(path: "/%hello/test/")
         testValidationSuccess(a4)
     }
 }

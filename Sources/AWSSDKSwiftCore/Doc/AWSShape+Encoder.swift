@@ -12,12 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct Foundation.Data
-import class  Foundation.JSONEncoder
 import AWSXML
+import struct Foundation.Data
+import class Foundation.JSONEncoder
 
 internal extension AWSEncodableShape {
-
     /// Encode AWSShape as JSON
     func encodeAsJSON() throws -> Data {
         return try JSONEncoder().encode(self)
@@ -31,17 +30,17 @@ internal extension AWSEncodableShape {
         }
         return xml
     }
-    
+
     /// Encode AWSShape as a query array
     /// - Parameter flattenArrays: should all arrays be flattened
-    func encodeAsQuery() throws -> [String : Any] {
+    func encodeAsQuery() throws -> [String: Any] {
         let encoder = QueryEncoder()
         return try encoder.encode(self)
     }
-    
+
     /// Encode AWSShape as a query array
     /// - Parameter flattenArrays: should all arrays be flattened
-    func encodeAsQueryForEC2() throws -> [String : Any] {
+    func encodeAsQueryForEC2() throws -> [String: Any] {
         let encoder = QueryEncoder()
         encoder.ec2 = true
         return try encoder.encode(self)

@@ -22,16 +22,14 @@ import NIOConcurrencyHelpers
 public class DeferredCredentialProvider: CredentialProvider {
     let lock = Lock()
     var credential: Credential? {
-        get {
-            self.lock.withLock {
-                internalCredential
-            }
+        self.lock.withLock {
+            internalCredential
         }
     }
 
     private var provider: CredentialProvider
     private var startupPromise: EventLoopPromise<Credential>
-    private var internalCredential: Credential? = nil
+    private var internalCredential: Credential?
 
     /// Create `DeferredCredentialProvider`.
     /// - Parameters:
@@ -51,8 +49,8 @@ public class DeferredCredentialProvider: CredentialProvider {
     }
 
     public func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
-        return startupPromise.futureResult
-            .and(provider.shutdown(on: eventLoop))
+        return self.startupPromise.futureResult
+            .and(self.provider.shutdown(on: eventLoop))
             .map { _ in }
             .hop(to: eventLoop)
     }
@@ -71,5 +69,5 @@ public class DeferredCredentialProvider: CredentialProvider {
 }
 
 extension DeferredCredentialProvider: CustomStringConvertible {
-    public var description: String { return "\(type(of:self))(\(provider.description))"}
+    public var description: String { return "\(type(of: self))(\(self.provider.description))" }
 }

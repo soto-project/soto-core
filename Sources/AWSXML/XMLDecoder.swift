@@ -57,9 +57,11 @@ public class XMLDecoder {
 
     /// The options set on the top-level decoder.
     fileprivate var options: _Options {
-        return _Options(dataDecodingStrategy: dataDecodingStrategy,
-                        nonConformingFloatDecodingStrategy: nonConformingFloatDecodingStrategy,
-                        userInfo: userInfo)
+        return _Options(
+            dataDecodingStrategy: dataDecodingStrategy,
+            nonConformingFloatDecodingStrategy: nonConformingFloatDecodingStrategy,
+            userInfo: userInfo
+        )
     }
 
     public init() {}

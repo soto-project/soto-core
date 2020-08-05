@@ -24,8 +24,10 @@ public extension StaticCredential {
             return nil
         }
 
-        return .init(accessKeyId: accessKeyId,
-                     secretAccessKey: secretAccessKey,
-                     sessionToken: Environment["AWS_SESSION_TOKEN"])
+        return .init(
+            accessKeyId: accessKeyId,
+            secretAccessKey: secretAccessKey,
+            sessionToken: Environment["AWS_SESSION_TOKEN"]
+        )
     }
 }

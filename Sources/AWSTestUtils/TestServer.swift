@@ -478,9 +478,11 @@ extension AWSTestServer {
         headers["Content-Length"] = nil
 
         do {
-            try web.writeOutbound(.head(.init(version: .init(major: 1, minor: 1),
-                                              status: response.httpStatus,
-                                              headers: HTTPHeaders(headers.map { ($0, $1) }))))
+            try web.writeOutbound(.head(.init(
+                version: .init(major: 1, minor: 1),
+                status: response.httpStatus,
+                headers: HTTPHeaders(headers.map { ($0, $1) })
+            )))
             if let body = response.body {
                 try web.writeOutbound(.body(.byteBuffer(body)))
             }

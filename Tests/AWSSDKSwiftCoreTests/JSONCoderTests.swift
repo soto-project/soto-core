@@ -109,15 +109,21 @@ class JSONCoderTests: XCTestCase {
     }
 
     var testShape: Shape {
-        return Shape(numbers: Numbers(bool: true, integer: 45, float: 3.4, double: 7.89234, intEnum: .second),
-                     stringShape: StringShape(string: "String1", optionalString: "String2", stringEnum: .third),
-                     arrays: Arrays(arrayOfNatives: [34, 1, 4098], arrayOfShapes: [Numbers(bool: false, integer: 1, float: 1.2, double: 1.4, intEnum: .first), Numbers(bool: true, integer: 3, float: 2.01, double: 1.01, intEnum: .third)]))
+        return Shape(
+            numbers: Numbers(bool: true, integer: 45, float: 3.4, double: 7.89234, intEnum: .second),
+            stringShape: StringShape(string: "String1", optionalString: "String2", stringEnum: .third),
+            arrays: Arrays(arrayOfNatives: [34, 1, 4098], arrayOfShapes: [Numbers(bool: false, integer: 1, float: 1.2, double: 1.4, intEnum: .first), Numbers(bool: true, integer: 3, float: 2.01, double: 1.01, intEnum: .third)])
+        )
     }
 
     var testShapeWithDictionaries: ShapeWithDictionaries {
-        return ShapeWithDictionaries(shape: testShape, dictionaries: Dictionaries(dictionaryOfNatives: ["first": 1, "second": 2, "third": 3],
-                                                                                  dictionaryOfShapes: ["strings": StringShape(string: "one", optionalString: "two", stringEnum: .third),
-                                                                                                       "strings2": StringShape(string: "cat", optionalString: nil, stringEnum: .fourth)]))
+        return ShapeWithDictionaries(shape: testShape, dictionaries: Dictionaries(
+            dictionaryOfNatives: ["first": 1, "second": 2, "third": 3],
+            dictionaryOfShapes: [
+                "strings": StringShape(string: "one", optionalString: "two", stringEnum: .third),
+                "strings2": StringShape(string: "cat", optionalString: nil, stringEnum: .fourth),
+            ]
+        ))
     }
 
     func testSerializeToDictionaryAndJSON() {

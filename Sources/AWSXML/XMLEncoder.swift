@@ -57,9 +57,11 @@ public class XMLEncoder {
 
     /// The options set on the top-level encoder.
     fileprivate var options: _Options {
-        return _Options(dataEncodingStrategy: dataEncodingStrategy,
-                        nonConformingFloatEncodingStrategy: nonConformingFloatEncodingStrategy,
-                        userInfo: userInfo)
+        return _Options(
+            dataEncodingStrategy: dataEncodingStrategy,
+            nonConformingFloatEncodingStrategy: nonConformingFloatEncodingStrategy,
+            userInfo: userInfo
+        )
     }
 
     public init() {}
@@ -479,9 +481,11 @@ extension _XMLEncoder {
 
     fileprivate func box(_ float: Float) throws -> String {
         guard !float.isInfinite, !float.isNaN else {
-            guard case .convertToString(positiveInfinity: let posInfString,
-                                        negativeInfinity: let negInfString,
-                                        nan: let nanString) = self.options.nonConformingFloatEncodingStrategy
+            guard case .convertToString(
+                positiveInfinity: let posInfString,
+                negativeInfinity: let negInfString,
+                nan: let nanString
+            ) = self.options.nonConformingFloatEncodingStrategy
             else {
                 throw EncodingError._invalidFloatingPointValue(float, at: codingPath)
             }
@@ -500,9 +504,11 @@ extension _XMLEncoder {
 
     fileprivate func box(_ double: Double) throws -> String {
         guard !double.isInfinite, !double.isNaN else {
-            guard case .convertToString(positiveInfinity: let posInfString,
-                                        negativeInfinity: let negInfString,
-                                        nan: let nanString) = self.options.nonConformingFloatEncodingStrategy
+            guard case .convertToString(
+                positiveInfinity: let posInfString,
+                negativeInfinity: let negInfString,
+                nan: let nanString
+            ) = self.options.nonConformingFloatEncodingStrategy
             else {
                 throw EncodingError._invalidFloatingPointValue(double, at: codingPath)
             }

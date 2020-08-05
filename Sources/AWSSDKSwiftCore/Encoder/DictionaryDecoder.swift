@@ -69,9 +69,11 @@ class DictionaryDecoder {
 
     /// The options set on the top-level decoder.
     fileprivate var options: _Options {
-        return _Options(dataDecodingStrategy: dataDecodingStrategy,
-                        nonConformingFloatDecodingStrategy: nonConformingFloatDecodingStrategy,
-                        userInfo: userInfo)
+        return _Options(
+            dataDecodingStrategy: dataDecodingStrategy,
+            nonConformingFloatDecodingStrategy: nonConformingFloatDecodingStrategy,
+            userInfo: userInfo
+        )
     }
 
     // MARK: - Constructing a Dictionary Decoder
@@ -134,9 +136,13 @@ private class __DictionaryDecoder: Decoder {
 
     public func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> {
         guard !(self.storage.topContainer is NSNull) else {
-            throw DecodingError.valueNotFound(KeyedDecodingContainer<Key>.self,
-                                              DecodingError.Context(codingPath: self.codingPath,
-                                                                    debugDescription: "Cannot get keyed decoding container -- found null value instead."))
+            throw DecodingError.valueNotFound(
+                KeyedDecodingContainer<Key>.self,
+                DecodingError.Context(
+                    codingPath: self.codingPath,
+                    debugDescription: "Cannot get keyed decoding container -- found null value instead."
+                )
+            )
         }
 
         guard let topContainer = self.storage.topContainer as? [String: Any] else {
@@ -149,9 +155,13 @@ private class __DictionaryDecoder: Decoder {
 
     public func unkeyedContainer() throws -> UnkeyedDecodingContainer {
         guard !(self.storage.topContainer is NSNull) else {
-            throw DecodingError.valueNotFound(UnkeyedDecodingContainer.self,
-                                              DecodingError.Context(codingPath: self.codingPath,
-                                                                    debugDescription: "Cannot get unkeyed decoding container -- found null value instead."))
+            throw DecodingError.valueNotFound(
+                UnkeyedDecodingContainer.self,
+                DecodingError.Context(
+                    codingPath: self.codingPath,
+                    debugDescription: "Cannot get unkeyed decoding container -- found null value instead."
+                )
+            )
         }
 
         if let topContainer = self.storage.topContainer as? [Any] {
@@ -478,9 +488,13 @@ private struct _DictionaryKeyedDecodingContainer<K: CodingKey>: KeyedDecodingCon
         defer { self.decoder.codingPath.removeLast() }
 
         guard let value = self.container[key.stringValue] else {
-            throw DecodingError.keyNotFound(key,
-                                            DecodingError.Context(codingPath: self.codingPath,
-                                                                  debugDescription: "Cannot get \(KeyedDecodingContainer<NestedKey>.self) -- no value found for key \(_errorDescription(of: key))"))
+            throw DecodingError.keyNotFound(
+                key,
+                DecodingError.Context(
+                    codingPath: self.codingPath,
+                    debugDescription: "Cannot get \(KeyedDecodingContainer<NestedKey>.self) -- no value found for key \(_errorDescription(of: key))"
+                )
+            )
         }
 
         guard let dictionary = value as? [String: Any] else {
@@ -496,9 +510,13 @@ private struct _DictionaryKeyedDecodingContainer<K: CodingKey>: KeyedDecodingCon
         defer { self.decoder.codingPath.removeLast() }
 
         guard let value = self.container[key.stringValue] else {
-            throw DecodingError.keyNotFound(key,
-                                            DecodingError.Context(codingPath: self.codingPath,
-                                                                  debugDescription: "Cannot get UnkeyedDecodingContainer -- no value found for key \(_errorDescription(of: key))"))
+            throw DecodingError.keyNotFound(
+                key,
+                DecodingError.Context(
+                    codingPath: self.codingPath,
+                    debugDescription: "Cannot get UnkeyedDecodingContainer -- no value found for key \(_errorDescription(of: key))"
+                )
+            )
         }
 
         if let array = value as? [Any] {
@@ -818,16 +836,24 @@ private struct _DictionaryUnkeyedDecodingContainer: UnkeyedDecodingContainer {
         defer { self.decoder.codingPath.removeLast() }
 
         guard !self.isAtEnd else {
-            throw DecodingError.valueNotFound(KeyedDecodingContainer<NestedKey>.self,
-                                              DecodingError.Context(codingPath: self.codingPath,
-                                                                    debugDescription: "Cannot get nested keyed container -- unkeyed container is at end."))
+            throw DecodingError.valueNotFound(
+                KeyedDecodingContainer<NestedKey>.self,
+                DecodingError.Context(
+                    codingPath: self.codingPath,
+                    debugDescription: "Cannot get nested keyed container -- unkeyed container is at end."
+                )
+            )
         }
 
         let value = self.container[self.currentIndex]
         guard !(value is NSNull) else {
-            throw DecodingError.valueNotFound(KeyedDecodingContainer<NestedKey>.self,
-                                              DecodingError.Context(codingPath: self.codingPath,
-                                                                    debugDescription: "Cannot get keyed decoding container -- found null value instead."))
+            throw DecodingError.valueNotFound(
+                KeyedDecodingContainer<NestedKey>.self,
+                DecodingError.Context(
+                    codingPath: self.codingPath,
+                    debugDescription: "Cannot get keyed decoding container -- found null value instead."
+                )
+            )
         }
 
         guard let dictionary = value as? [String: Any] else {
@@ -844,16 +870,24 @@ private struct _DictionaryUnkeyedDecodingContainer: UnkeyedDecodingContainer {
         defer { self.decoder.codingPath.removeLast() }
 
         guard !self.isAtEnd else {
-            throw DecodingError.valueNotFound(UnkeyedDecodingContainer.self,
-                                              DecodingError.Context(codingPath: self.codingPath,
-                                                                    debugDescription: "Cannot get nested keyed container -- unkeyed container is at end."))
+            throw DecodingError.valueNotFound(
+                UnkeyedDecodingContainer.self,
+                DecodingError.Context(
+                    codingPath: self.codingPath,
+                    debugDescription: "Cannot get nested keyed container -- unkeyed container is at end."
+                )
+            )
         }
 
         let value = self.container[self.currentIndex]
         guard !(value is NSNull) else {
-            throw DecodingError.valueNotFound(UnkeyedDecodingContainer.self,
-                                              DecodingError.Context(codingPath: self.codingPath,
-                                                                    debugDescription: "Cannot get keyed decoding container -- found null value instead."))
+            throw DecodingError.valueNotFound(
+                UnkeyedDecodingContainer.self,
+                DecodingError.Context(
+                    codingPath: self.codingPath,
+                    debugDescription: "Cannot get keyed decoding container -- found null value instead."
+                )
+            )
         }
 
         self.currentIndex += 1
@@ -869,9 +903,13 @@ private struct _DictionaryUnkeyedDecodingContainer: UnkeyedDecodingContainer {
         defer { self.decoder.codingPath.removeLast() }
 
         guard !self.isAtEnd else {
-            throw DecodingError.valueNotFound(Decoder.self,
-                                              DecodingError.Context(codingPath: self.codingPath,
-                                                                    debugDescription: "Cannot get superDecoder() -- unkeyed container is at end."))
+            throw DecodingError.valueNotFound(
+                Decoder.self,
+                DecodingError.Context(
+                    codingPath: self.codingPath,
+                    debugDescription: "Cannot get superDecoder() -- unkeyed container is at end."
+                )
+            )
         }
 
         let value = self.container[self.currentIndex]

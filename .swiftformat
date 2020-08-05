@@ -14,6 +14,6 @@
 --stripunusedargs unnamed-only
 
 #--maxwidth 150
-#--wraparguments before-first
-#--wrapparameters before-first
-#--wrapcollections before-first
+--wraparguments before-first
+--wrapparameters before-first
+--wrapcollections before-first

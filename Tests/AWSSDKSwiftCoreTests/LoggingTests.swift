@@ -191,9 +191,11 @@ struct LoggingCollector: LogHandler {
 
         func append(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?) {
             lock.withLock {
-                self.logs.append(Entry(level: level,
-                                       message: message.description,
-                                       metadata: metadata?.mapValues { $0.description } ?? [:]))
+                self.logs.append(Entry(
+                    level: level,
+                    message: message.description,
+                    metadata: metadata?.mapValues { $0.description } ?? [:]
+                ))
             }
         }
 

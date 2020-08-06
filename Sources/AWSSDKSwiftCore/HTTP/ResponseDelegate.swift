@@ -83,7 +83,13 @@ class AWSHTTPClientResponseDelegate: HTTPClientResponseDelegate {
         case .idle:
             preconditionFailure("no head received before end")
         case .head(let head):
-            return AsyncHTTPClient.HTTPClient.Response(host: self.host, status: head.status, headers: head.headers, body: nil)
+            return AsyncHTTPClient.HTTPClient.Response(
+                host: self.host,
+                status: head.status,
+                version: .init(major: 1, minor: 1),
+                headers: head.headers,
+                body: nil
+            )
         case .end:
             preconditionFailure("request already processed")
         case .error(let error):

@@ -230,11 +230,6 @@ extension AWSClient {
 
     /// create HTTPClient
     fileprivate static func createHTTPClient() -> AWSHTTPClient {
-        #if canImport(Network)
-        if #available(OSX 10.14, iOS 12.0, tvOS 12.0, watchOS 6.0, *) {
-            return NIOTSHTTPClient(eventLoopGroupProvider: .createNew)
-        }
-        #endif
         return AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew)
     }
 }

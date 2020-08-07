@@ -30,7 +30,6 @@ public struct Region: RawRepresentable, Equatable {
 }
 
 extension Region {
-
     public var partition: AWSPartition {
         switch self {
 {%for region in regions %}
@@ -47,9 +46,10 @@ public struct AWSPartition: RawRepresentable, Equatable, Hashable {
         case {{partition.name}}
 {%endfor %}
     }
+
     private var partition: InternalPartition
-    
-    public var rawValue: String { return partition.rawValue }
+
+    public var rawValue: String { return self.partition.rawValue }
 
     public init?(rawValue: String) {
         guard let partition = InternalPartition(rawValue: rawValue) else { return nil }

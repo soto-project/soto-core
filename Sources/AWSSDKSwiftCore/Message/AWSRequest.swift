@@ -96,7 +96,7 @@ extension AWSRequest {
         var headers = HTTPHeaders()
 
         guard let url = URL(string: "\(configuration.endpoint)\(path)"), let _ = url.host else {
-            throw AWSClient.ClientError.invalidURL("\(configuration.endpoint)\(path) must specify url host and scheme")
+            throw AWSClient.ClientError.invalidURL
         }
 
         // set x-amz-target header
@@ -131,7 +131,7 @@ extension AWSRequest {
         try input.validate()
 
         guard let baseURL = URL(string: "\(configuration.endpoint)"), let _ = baseURL.host else {
-            throw AWSClient.ClientError.invalidURL("\(configuration.endpoint) must specify url host and scheme")
+            throw AWSClient.ClientError.invalidURL
         }
 
         // set x-amz-target header
@@ -254,7 +254,7 @@ extension AWSRequest {
         }
 
         guard let parsedPath = URLComponents(string: path) else {
-            throw AWSClient.ClientError.invalidURL("\(configuration.endpoint)\(path)")
+            throw AWSClient.ClientError.invalidURL
         }
 
         // add queries from the parsed path to the query params list
@@ -272,7 +272,7 @@ extension AWSRequest {
         }
 
         guard let url = URL(string: urlString) else {
-            throw AWSClient.ClientError.invalidURL("\(urlString)")
+            throw AWSClient.ClientError.invalidURL
         }
 
         self.region = configuration.region

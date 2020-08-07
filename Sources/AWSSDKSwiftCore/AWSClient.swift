@@ -33,13 +33,21 @@ import NIOTransportServices
 /// which is then decoded to generate a `AWSShape` Output object. If it is not successful then `AWSClient` will throw an `AWSErrorType`.
 public final class AWSClient {
     /// Errors returned by AWSClient code
-    public enum ClientError: Swift.Error {
+    public struct ClientError: Swift.Error, Equatable {
+        enum Error {
+            case alreadyShutdown
+            case invalidURL
+            case tooMuchData
+        }
+
+        let error: Error
+
         /// client has already been shutdown
-        case alreadyShutdown
+        public static var alreadyShutdown: ClientError { .init(error: .alreadyShutdown) }
         /// URL provided to client is invalid
-        case invalidURL(String)
+        public static var invalidURL: ClientError { .init(error: .invalidURL) }
         /// Too much data has been supplied for the Request
-        case tooMuchData
+        public static var tooMuchData: ClientError { .init(error: .tooMuchData) }
     }
 
     enum InternalError: Swift.Error {
@@ -492,12 +500,12 @@ extension AWSClient {
 extension AWSClient.ClientError: CustomStringConvertible {
     /// return human readable description of error
     public var description: String {
-        switch self {
+        switch error {
         case .alreadyShutdown:
             return "The AWSClient is already shutdown"
-        case .invalidURL(let urlString):
+        case .invalidURL:
             return """
-            The request url \(urlString) is invalid format.
+            The request url is invalid format.
             This error is internal. So please make a issue on https://github.com/swift-aws/aws-sdk-swift/issues to solve it.
             """
         case .tooMuchData:

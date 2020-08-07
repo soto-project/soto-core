@@ -39,8 +39,9 @@ public final class AWSClient {
             case invalidURL
             case tooMuchData
         }
+
         let error: Error
-        
+
         /// client has already been shutdown
         public static var alreadyShutdown: ClientError { .init(error: .alreadyShutdown) }
         /// URL provided to client is invalid

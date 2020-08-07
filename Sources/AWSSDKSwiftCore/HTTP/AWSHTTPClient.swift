@@ -50,7 +50,7 @@ public protocol AWSHTTPClient {
     func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop, logger: Logger, stream: @escaping ResponseStream) -> EventLoopFuture<AWSHTTPResponse>
 
     /// This should be called before an HTTP Client can be de-initialised
-    func syncShutdown() throws
+    func shutdown(queue: DispatchQueue, _ callback: @escaping (Error?) -> Void)
 
     /// Event loop group used by client
     var eventLoopGroup: EventLoopGroup { get }

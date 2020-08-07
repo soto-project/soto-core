@@ -129,19 +129,21 @@ public final class AWSClient {
     ///
     /// - Throws: AWSClient.ClientError.alreadyShutdown: You have already shutdown the client
     public func syncShutdown() throws {
-        guard self.isShutdown.compareAndExchange(expected: false, desired: true) else {
-            throw ClientError.alreadyShutdown
+        let errorStorageLock = Lock()
+        var errorStorage: Error?
+        let continuation = DispatchWorkItem {}
+        self.shutdown(queue: DispatchQueue(label: "aws-client.shutdown")) { error in
+            if let error = error {
+                errorStorageLock.withLock {
+                    errorStorage = error
+                }
+            }
+            continuation.perform()
         }
-        // ignore errors from credential provider. Don't need shutdown erroring because no providers were available
-        try? credentialProvider.shutdown(on: eventLoopGroup.next()).wait()
-        // if httpClient was created by AWSClient then it is required to shutdown the httpClient
-        if case .createNew = httpClientProvider {
-            do {
-                try httpClient.syncShutdown()
-            } catch {
-                clientLogger.error("Error shutting down HTTP client", metadata: [
-                    "aws-error": "\(error)",
-                ])
+        continuation.wait()
+        try errorStorageLock.withLock {
+            if let error = errorStorage {
+                throw error
             }
         }
     }
@@ -163,13 +165,18 @@ public final class AWSClient {
         // ignore errors from credential provider. Don't need shutdown erroring because no providers were available
         _ = credentialProvider.shutdown(on: eventLoop).whenComplete { _ in
             // if httpClient was created by AWSClient then it is required to shutdown the httpClient.
-            //
-            // Temporarily while we are waiting on AsyncHTTPClient 1.2.0 this will error if we need to
-            // shutdown the http client. Once 1.2.0 is released we can call the shutdown function instead
-            // for proper asynchronous shutdown.
-            if case .createNew = self.httpClientProvider {
-                preconditionFailure("Async shutdown of AWSClient initialised with httpClientProvider: .createNew is unavailable at the moment")
-            } else {
+            switch self.httpClientProvider {
+            case .createNew:
+                self.httpClient.shutdown(queue: queue) { error in
+                    if let error = error {
+                        self.clientLogger.error("Error shutting down HTTP client", metadata: [
+                            "aws-error": "\(error)",
+                        ])
+                    }
+                    callback(error)
+                }
+
+            case .shared:
                 callback(nil)
             }
         }

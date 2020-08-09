@@ -25,7 +25,7 @@ class PaginateTests: XCTestCase {
 
     var awsServer: AWSTestServer!
     var eventLoopGroup: EventLoopGroup!
-    var httpClient: AWSHTTPClient!
+    var httpClient: HTTPClient!
     var client: AWSClient!
     var config: AWSServiceConfig!
 

@@ -292,7 +292,7 @@ class AWSClientTests: XCTestCase {
             let input = Input(payload: payload)
             let response = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: TestEnvironment.logger)
             try response.wait()
-        } catch let error as AWSClient.ClientError where error == .tooMuchData {
+        } catch let error as HTTPClientError where error == .bodyLengthMismatch {
         } catch {
             XCTFail("Unexpected error: \(error)")
         }

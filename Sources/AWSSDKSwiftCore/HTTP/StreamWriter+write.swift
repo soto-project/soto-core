@@ -55,6 +55,7 @@ extension AsyncHTTPClient.HTTPClient.Body.StreamWriter {
                                 if newAmountLeft == 0 {
                                     promise.succeed(())
                                 } else if newAmountLeft < 0 {
+                                    // should never reach here as HTTPClient throws HTTPClientError.bodyLengthMismatch
                                     promise.fail(AWSClient.ClientError.tooMuchData)
                                 } else {
                                     _write(newAmountLeft)

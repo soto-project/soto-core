@@ -41,16 +41,23 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
             requestBody = nil
         }
         do {
-            let asyncRequest = try AsyncHTTPClient.HTTPClient.Request(url: request.url, method: request.method, headers: requestHeaders, body: requestBody)
-            return self.execute(request: asyncRequest, eventLoop: .delegate(on: eventLoop), deadline: .now() + timeout).map { $0 }
+            let asyncRequest = try AsyncHTTPClient.HTTPClient.Request(
+                url: request.url,
+                method: request.method,
+                headers: requestHeaders,
+                body: requestBody
+            )
+            return self.execute(
+                request: asyncRequest,
+                eventLoop: .delegate(on: eventLoop),
+                deadline: .now() + timeout,
+                logger: logger
+            ).map { $0 }
         } catch {
             return eventLoopGroup.next().makeFailedFuture(error)
         }
     }
-}
 
-/// extend to include response streaming support
-extension AsyncHTTPClient.HTTPClient {
     public func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop, logger: Logger, stream: @escaping ResponseStream) -> EventLoopFuture<AWSHTTPResponse> {
         let requestBody: AsyncHTTPClient.HTTPClient.Body?
         if case .byteBuffer(let body) = request.body.payload {
@@ -59,10 +66,20 @@ extension AsyncHTTPClient.HTTPClient {
             requestBody = nil
         }
         do {
-            let asyncRequest = try AsyncHTTPClient.HTTPClient.Request(url: request.url, method: request.method, headers: request.headers, body: requestBody)
+            let asyncRequest = try AsyncHTTPClient.HTTPClient.Request(
+                url: request.url,
+                method: request.method,
+                headers: request.headers,
+                body: requestBody
+            )
             let delegate = AWSHTTPClientResponseDelegate(host: asyncRequest.host, stream: stream)
-            return self.execute(request: asyncRequest, delegate: delegate, eventLoop: .delegate(on: eventLoop), deadline: .now() + timeout)
-                .futureResult
+            return self.execute(
+                request: asyncRequest,
+                delegate: delegate,
+                eventLoop: .delegate(on: eventLoop),
+                deadline: .now() + timeout,
+                logger: logger
+            ).futureResult
                 // temporarily wait on delegate response finishing while AHC does not do this for us. See https://github.com/swift-server/async-http-client/issues/274
                 .flatMap { response in
                     // if delegate future

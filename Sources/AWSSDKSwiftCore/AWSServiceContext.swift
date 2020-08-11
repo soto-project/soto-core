@@ -13,9 +13,15 @@
 //===----------------------------------------------------------------------===//
 
 public struct AWSServiceContext {
-    public var eventLoop: EventLoop? = nil
-    public var logger: Logger = AWSClient.loggingDisabled
-    public var timeout: TimeAmount = .seconds(20)
+    public var eventLoop: EventLoop?
+    public var logger: Logger
+    public var timeout: TimeAmount
+    
+    public init(eventLoop: EventLoop? = nil, logger: Logger = AWSClient.loggingDisabled, timeout: TimeAmount = .seconds(20)) {
+        self.eventLoop = eventLoop
+        self.logger = logger
+        self.timeout = timeout
+    }
     
     public func delegating(to eventLoop: EventLoop) -> AWSServiceContext {
         var context = self

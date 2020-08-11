@@ -18,7 +18,7 @@ import NIO
 /// Configuration class defining an AWS service
 public struct AWSServiceContext {
     /// Sections of service config that are not editable
-    private final class AWSServiceConfig {
+    private final class Configuration {
         /// Region where service is running
         public let region: Region
         /// The destination service of the request. Added as a header value, along with the operation name
@@ -106,7 +106,7 @@ public struct AWSServiceContext {
         }
     }
 
-    private let serviceConfig: AWSServiceConfig
+    private let serviceConfig: Configuration
 
     /// Region where service is running
     var region: Region { return self.serviceConfig.region }
@@ -164,7 +164,7 @@ public struct AWSServiceContext {
         timeout: TimeAmount? = nil,
         logger: Logger = AWSClient.loggingDisabled
     ) {
-        self.serviceConfig = AWSServiceConfig(
+        self.serviceConfig = Configuration(
             region: region,
             partition: partition,
             amzTarget: amzTarget,
@@ -186,7 +186,7 @@ public struct AWSServiceContext {
 
 extension AWSServiceContext {
     /// return new AWSServiceConfig with new timeout value
-    public func with(timeout: TimeAmount) -> AWSServiceContext {
+    public func timingOut(after timeout: TimeAmount) -> AWSServiceContext {
         var config = self
         config.timeout = timeout
         return config

@@ -35,8 +35,8 @@ class LoggingTests: XCTestCase {
             endpoint: server.address
         )
 
-        let response = client.execute(operation: "test1", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
-        let response2 = client.execute(operation: "test2", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
+        let response = client.execute(operation: "test1", path: "/", httpMethod: .GET, config: config, context: .init(logger: logger))
+        let response2 = client.execute(operation: "test2", path: "/", httpMethod: .GET, config: config, context: .init(logger: logger))
 
         var count = 0
         XCTAssertNoThrow(try server.processRaw { _ in
@@ -76,7 +76,7 @@ class LoggingTests: XCTestCase {
             endpoint: server.address
         )
 
-        let response = client.execute(operation: "TestOperation", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
+        let response = client.execute(operation: "TestOperation", path: "/", httpMethod: .GET, config: config, context: .init(logger: logger))
 
         XCTAssertNoThrow(try server.processRaw { _ in
             return .result(.ok, continueProcessing: false)
@@ -109,7 +109,7 @@ class LoggingTests: XCTestCase {
             endpoint: server.address
         )
 
-        let response = client.execute(operation: "test", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
+        let response = client.execute(operation: "test", path: "/", httpMethod: .GET, config: config, context: .init(logger: logger))
 
         XCTAssertNoThrow(try server.processRaw { _ in
             return .error(.accessDenied, continueProcessing: false)
@@ -136,7 +136,7 @@ class LoggingTests: XCTestCase {
             endpoint: server.address
         )
 
-        let response = client.execute(operation: "test1", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
+        let response = client.execute(operation: "test1", path: "/", httpMethod: .GET, config: config, context: .init(logger: logger))
 
         var count = 0
         XCTAssertNoThrow(try server.processRaw { _ in
@@ -164,8 +164,8 @@ class LoggingTests: XCTestCase {
             operation: "Test",
             path: "/",
             httpMethod: .GET,
-            serviceConfig: serviceConfig,
-            logger: logger
+            config: serviceConfig,
+            context: .init(logger: logger)
         ).wait())
         XCTAssertNotNil(logCollection.filter(metadata: "aws-error-message", with: "No credential provider found").first)
     }

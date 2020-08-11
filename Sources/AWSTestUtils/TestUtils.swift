@@ -103,6 +103,8 @@ public struct TestEnvironment {
         return (Environment["AWS_ENABLE_LOGGING"] == "true") ? [AWSLoggingMiddleware()] : []
     }
 
+    public static var context: AWSServiceContext { .init(logger: logger) }
+    
     public static var logger: Logger = {
         if let loggingLevel = Environment["AWS_LOG_LEVEL"] {
             if let logLevel = Logger.Level(rawValue: loggingLevel.lowercased()) {

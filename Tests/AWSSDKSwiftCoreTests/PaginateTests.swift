@@ -27,14 +27,14 @@ class PaginateTests: XCTestCase {
     var eventLoopGroup: EventLoopGroup!
     var httpClient: HTTPClient!
     var client: AWSClient!
-    var config: AWSServiceConfig!
+    var context: AWSServiceContext!
 
     override func setUp() {
         // create server and client
         self.awsServer = AWSTestServer(serviceProtocol: .json)
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 3)
         self.httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(self.eventLoopGroup))
-        self.config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: self.awsServer.address)
+        self.context = createServiceContext(serviceProtocol: .json(version: "1.1"), endpoint: self.awsServer.address)
         self.client = createAWSClient(credentialProvider: .empty, retryPolicy: .noRetry, httpClientProvider: .shared(self.httpClient))
     }
 
@@ -71,7 +71,7 @@ class PaginateTests: XCTestCase {
             operation: "TestOperation",
             path: "/",
             httpMethod: .POST,
-            serviceConfig: self.config,
+            serviceContext: self.context,
             input: input,
             on: eventLoop
         )
@@ -147,7 +147,7 @@ class PaginateTests: XCTestCase {
             operation: "TestOperation",
             path: "/",
             httpMethod: .POST,
-            serviceConfig: self.config,
+            serviceContext: self.context,
             input: input,
             on: eventLoop
         )

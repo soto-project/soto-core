@@ -28,7 +28,7 @@ class PayloadTests: XCTestCase {
 
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)
-            let config = createServiceConfig(endpoint: awsServer.address, logger: TestEnvironment.logger)
+            let config = createServiceContext(endpoint: awsServer.address, logger: TestEnvironment.logger)
             let client = createAWSClient(credentialProvider: .empty)
             defer {
                 XCTAssertNoThrow(try client.syncShutdown())
@@ -38,7 +38,7 @@ class PayloadTests: XCTestCase {
                 operation: "test",
                 path: "/",
                 httpMethod: .POST,
-                serviceConfig: config,
+                serviceContext: config,
                 input: input
             )
 
@@ -76,7 +76,7 @@ class PayloadTests: XCTestCase {
         }
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)
-            let config = createServiceConfig(endpoint: awsServer.address, logger: TestEnvironment.logger)
+            let config = createServiceContext(endpoint: awsServer.address, logger: TestEnvironment.logger)
             let client = createAWSClient(credentialProvider: .empty)
             defer {
                 XCTAssertNoThrow(try client.syncShutdown())
@@ -85,7 +85,7 @@ class PayloadTests: XCTestCase {
                 operation: "test",
                 path: "/",
                 httpMethod: .POST,
-                serviceConfig: config
+                serviceContext: config
             )
 
             try awsServer.processRaw { _ in

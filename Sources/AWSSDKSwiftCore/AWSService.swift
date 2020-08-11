@@ -15,7 +15,7 @@
 public protocol AWSService {
     var client: AWSClient { get }
     var context: AWSServiceContext { get }
-    func transform(_ :(AWSServiceContext) -> AWSServiceContext) -> Self
+    func transform(_: (AWSServiceContext) -> AWSServiceContext) -> Self
 }
 
 public extension AWSService {

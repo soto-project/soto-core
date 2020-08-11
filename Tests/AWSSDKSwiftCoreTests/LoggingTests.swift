@@ -30,14 +30,14 @@ class LoggingTests: XCTestCase {
             logger: logger
         )
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
-        let config = createServiceConfig(
+        let context = createServiceContext(
             serviceProtocol: .json(version: "1.1"),
             endpoint: server.address,
             logger: logger
         )
 
-        let response = client.execute(operation: "test1", path: "/", httpMethod: .GET, serviceConfig: config)
-        let response2 = client.execute(operation: "test2", path: "/", httpMethod: .GET, serviceConfig: config)
+        let response = client.execute(operation: "test1", path: "/", httpMethod: .GET, serviceContext: context)
+        let response2 = client.execute(operation: "test2", path: "/", httpMethod: .GET, serviceContext: context)
 
         var count = 0
         XCTAssertNoThrow(try server.processRaw { _ in
@@ -71,14 +71,14 @@ class LoggingTests: XCTestCase {
             logger: logger
         )
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
-        let config = createServiceConfig(
+        let context = createServiceContext(
             service: "test-service",
             serviceProtocol: .json(version: "1.1"),
             endpoint: server.address,
             logger: logger
         )
 
-        let response = client.execute(operation: "TestOperation", path: "/", httpMethod: .GET, serviceConfig: config)
+        let response = client.execute(operation: "TestOperation", path: "/", httpMethod: .GET, serviceContext: context)
 
         XCTAssertNoThrow(try server.processRaw { _ in
             return .result(.ok, continueProcessing: false)
@@ -106,13 +106,13 @@ class LoggingTests: XCTestCase {
             logger: logger
         )
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
-        let config = createServiceConfig(
+        let context = createServiceContext(
             serviceProtocol: .json(version: "1.1"),
             endpoint: server.address,
             logger: logger
         )
 
-        let response = client.execute(operation: "test", path: "/", httpMethod: .GET, serviceConfig: config)
+        let response = client.execute(operation: "test", path: "/", httpMethod: .GET, serviceContext: context)
 
         XCTAssertNoThrow(try server.processRaw { _ in
             return .error(.accessDenied, continueProcessing: false)
@@ -134,13 +134,13 @@ class LoggingTests: XCTestCase {
             logger: logger
         )
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
-        let config = createServiceConfig(
+        let context = createServiceContext(
             serviceProtocol: .json(version: "1.1"),
             endpoint: server.address,
             logger: logger
         )
 
-        let response = client.execute(operation: "test1", path: "/", httpMethod: .GET, serviceConfig: config)
+        let response = client.execute(operation: "test1", path: "/", httpMethod: .GET, serviceContext: context)
 
         var count = 0
         XCTAssertNoThrow(try server.processRaw { _ in
@@ -163,12 +163,12 @@ class LoggingTests: XCTestCase {
         let logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection, logLevel: .trace) })
         let client = createAWSClient(credentialProvider: .selector(.custom { _ in return NullCredentialProvider() }))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
-        let serviceConfig = createServiceConfig(logger: logger)
+        let serviceConfig = createServiceContext(logger: logger)
         XCTAssertThrowsError(try client.execute(
             operation: "Test",
             path: "/",
             httpMethod: .GET,
-            serviceConfig: serviceConfig
+            serviceContext: serviceConfig
         ).wait())
         XCTAssertNotNil(logCollection.filter(metadata: "aws-error-message", with: "No credential provider found").first)
     }

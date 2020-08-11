@@ -107,25 +107,25 @@ public struct AWSServiceContext {
     }
 
     private let serviceConfig: AWSServiceConfig
-    
+
     /// Region where service is running
-    var region: Region { return serviceConfig.region }
+    var region: Region { return self.serviceConfig.region }
     /// The destination service of the request. Added as a header value, along with the operation name
-    var amzTarget: String? { return serviceConfig.amzTarget }
+    var amzTarget: String? { return self.serviceConfig.amzTarget }
     /// Name of service
-    var service: String { return serviceConfig.service }
+    var service: String { return self.serviceConfig.service }
     /// Name used to sign requests
-    var signingName: String { return serviceConfig.signingName }
+    var signingName: String { return self.serviceConfig.signingName }
     /// Protocol used by service json/xml/query
-    var serviceProtocol: ServiceProtocol { return serviceConfig.serviceProtocol }
+    var serviceProtocol: ServiceProtocol { return self.serviceConfig.serviceProtocol }
     /// Version of the Service API, added as a header in query protocol based services
-    var apiVersion: String { return serviceConfig.apiVersion }
+    var apiVersion: String { return self.serviceConfig.apiVersion }
     /// The url to use in requests
-    var endpoint: String { return serviceConfig.endpoint }
+    var endpoint: String { return self.serviceConfig.endpoint }
     /// Error type returned by the service
-    var errorType: AWSErrorType.Type? { return serviceConfig.errorType }
+    var errorType: AWSErrorType.Type? { return self.serviceConfig.errorType }
     /// Middleware code specific to the service used to edit requests before they sent and responses before they are decoded
-    var middlewares: [AWSServiceMiddleware] { return serviceConfig.middlewares }
+    var middlewares: [AWSServiceMiddleware] { return self.serviceConfig.middlewares }
 
     /// logger used by service
     public var logger: Logger
@@ -191,11 +191,11 @@ extension AWSServiceContext {
         config.timeout = timeout
         return config
     }
-    
+
     func logging(to logger: Logger) -> AWSServiceContext {
         var config = self
         config.logger = logger
-        config.logger[metadataKey: "aws-service"] = .string(service)
+        config.logger[metadataKey: "aws-service"] = .string(self.service)
         return config
     }
 }

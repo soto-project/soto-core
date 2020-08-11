@@ -47,7 +47,7 @@ public func createAWSClient(
     )
 }
 
-public func createServiceConfig(
+public func createServiceContext(
     region: Region? = nil,
     partition: AWSPartition = .aws,
     amzTarget: String? = nil,
@@ -62,8 +62,8 @@ public func createServiceConfig(
     middlewares: [AWSServiceMiddleware] = [],
     timeout: TimeAmount? = nil,
     logger: Logger = TestEnvironment.logger
-) -> AWSServiceConfig {
-    AWSServiceConfig(
+) -> AWSServiceContext {
+    AWSServiceContext(
         region: region,
         partition: partition,
         amzTarget: amzTarget,

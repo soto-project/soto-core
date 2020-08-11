@@ -72,7 +72,7 @@ class PerformanceTests: XCTestCase {
 
     func testHeaderRequest() {
         guard Self.enableTimingTests == true else { return }
-        let config = createServiceConfig(
+        let context = createServiceContext(
             region: .useast1,
             service: "Test",
             serviceProtocol: .restxml,
@@ -83,7 +83,7 @@ class PerformanceTests: XCTestCase {
         measure {
             do {
                 for _ in 0..<1000 {
-                    _ = try AWSRequest(operation: "Test", path: "/", httpMethod: .POST, input: request, configuration: config)
+                    _ = try AWSRequest(operation: "Test", path: "/", httpMethod: .POST, input: request, configuration: context)
                 }
             } catch {
                 XCTFail("Unexpected Error: \(error.localizedDescription)")
@@ -93,7 +93,7 @@ class PerformanceTests: XCTestCase {
 
     func testXMLRequest() {
         guard Self.enableTimingTests == true else { return }
-        let config = createServiceConfig(
+        let context = createServiceContext(
             region: .useast1,
             service: "Test",
             serviceProtocol: .restxml,
@@ -104,7 +104,7 @@ class PerformanceTests: XCTestCase {
         measure {
             do {
                 for _ in 0..<1000 {
-                    _ = try AWSRequest(operation: "Test", path: "/", httpMethod: .POST, input: request, configuration: config)
+                    _ = try AWSRequest(operation: "Test", path: "/", httpMethod: .POST, input: request, configuration: context)
                 }
             } catch {
                 XCTFail("Unexpected Error: \(error.localizedDescription)")
@@ -114,7 +114,7 @@ class PerformanceTests: XCTestCase {
 
     func testXMLPayloadRequest() {
         guard Self.enableTimingTests == true else { return }
-        let config = createServiceConfig(
+        let context = createServiceContext(
             region: .useast1,
             service: "Test",
             serviceProtocol: .restxml,
@@ -125,7 +125,7 @@ class PerformanceTests: XCTestCase {
         measure {
             do {
                 for _ in 0..<1000 {
-                    _ = try AWSRequest(operation: "Test", path: "/", httpMethod: .POST, input: request, configuration: config)
+                    _ = try AWSRequest(operation: "Test", path: "/", httpMethod: .POST, input: request, configuration: context)
                 }
             } catch {
                 XCTFail("\(error)")
@@ -135,7 +135,7 @@ class PerformanceTests: XCTestCase {
 
     func testJSONRequest() {
         guard Self.enableTimingTests == true else { return }
-        let config = createServiceConfig(
+        let context = createServiceContext(
             region: .useast1,
             service: "Test",
             serviceProtocol: .restjson,
@@ -146,7 +146,7 @@ class PerformanceTests: XCTestCase {
         measure {
             do {
                 for _ in 0..<1000 {
-                    _ = try AWSRequest(operation: "Test", path: "/", httpMethod: .POST, input: request, configuration: config)
+                    _ = try AWSRequest(operation: "Test", path: "/", httpMethod: .POST, input: request, configuration: context)
                 }
             } catch {
                 XCTFail("\(error)")
@@ -156,7 +156,7 @@ class PerformanceTests: XCTestCase {
 
     func testJSONPayloadRequest() {
         guard Self.enableTimingTests == true else { return }
-        let config = createServiceConfig(
+        let context = createServiceContext(
             region: .useast1,
             service: "Test",
             serviceProtocol: .restjson,
@@ -167,7 +167,7 @@ class PerformanceTests: XCTestCase {
         measure {
             do {
                 for _ in 0..<1000 {
-                    _ = try AWSRequest(operation: "Test", path: "/", httpMethod: .POST, input: request, configuration: config)
+                    _ = try AWSRequest(operation: "Test", path: "/", httpMethod: .POST, input: request, configuration: context)
                 }
             } catch {
                 XCTFail("\(error)")
@@ -177,7 +177,7 @@ class PerformanceTests: XCTestCase {
 
     func testQueryRequest() {
         guard Self.enableTimingTests == true else { return }
-        let config = createServiceConfig(
+        let context = createServiceContext(
             region: .useast1,
             service: "Test",
             serviceProtocol: .query,
@@ -188,7 +188,7 @@ class PerformanceTests: XCTestCase {
         measure {
             do {
                 for _ in 0..<1000 {
-                    _ = try AWSRequest(operation: "Test", path: "/", httpMethod: .POST, input: request, configuration: config)
+                    _ = try AWSRequest(operation: "Test", path: "/", httpMethod: .POST, input: request, configuration: context)
                 }
             } catch {
                 XCTFail("\(error)")
@@ -198,7 +198,7 @@ class PerformanceTests: XCTestCase {
 
     func testUnsignedRequest() {
         guard Self.enableTimingTests == true else { return }
-        let config = createServiceConfig(
+        let context = createServiceContext(
             region: .useast1,
             service: "Test",
             serviceProtocol: .json(version: "1.1"),
@@ -209,13 +209,13 @@ class PerformanceTests: XCTestCase {
             operation: "Test",
             path: "/",
             httpMethod: .GET,
-            configuration: config
+            configuration: context
         )
 
         let signer = AWSSigner(
             credentials: StaticCredential(accessKeyId: "", secretAccessKey: ""),
-            name: config.service,
-            region: config.region.rawValue
+            name: context.service,
+            region: context.region.rawValue
         )
         measure {
             for _ in 0..<1000 {
@@ -226,7 +226,7 @@ class PerformanceTests: XCTestCase {
 
     func testSignedURLRequest() {
         guard Self.enableTimingTests == true else { return }
-        let config = createServiceConfig()
+        let context = createServiceContext()
         let client = createAWSClient(credentialProvider: .static(accessKeyId: "MyAccessKeyId", secretAccessKey: "MySecretAccessKey"))
         defer {
             XCTAssertNoThrow(try client.syncShutdown())
@@ -235,10 +235,10 @@ class PerformanceTests: XCTestCase {
             operation: "Test",
             path: "/",
             httpMethod: .GET,
-            configuration: config
-        ).applyMiddlewares(config.middlewares + client.middlewares)
+            configuration: context
+        ).applyMiddlewares(context.middlewares + client.middlewares)
 
-        let signer = try! client.createSigner(serviceConfig: config).wait()
+        let signer = try! client.createSigner(serviceContext: context).wait()
         measure {
             for _ in 0..<1000 {
                 _ = awsRequest.createHTTPRequest(signer: signer)
@@ -248,7 +248,7 @@ class PerformanceTests: XCTestCase {
 
     func testSignedHeadersRequest() {
         guard Self.enableTimingTests == true else { return }
-        let config = createServiceConfig(
+        let context = createServiceContext(
             region: .useast1,
             service: "Test",
             serviceProtocol: .json(version: "1.1"),
@@ -256,11 +256,11 @@ class PerformanceTests: XCTestCase {
         )
         let date = Date()
         let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1, 2, 3, 4, 5])
-        let awsRequest = try! AWSRequest(operation: "Test", path: "/", httpMethod: .POST, input: request, configuration: config)
+        let awsRequest = try! AWSRequest(operation: "Test", path: "/", httpMethod: .POST, input: request, configuration: context)
         let signer = AWSSigner(
             credentials: StaticCredential(accessKeyId: "", secretAccessKey: ""),
-            name: config.service,
-            region: config.region.rawValue
+            name: context.service,
+            region: context.region.rawValue
         )
         measure {
             for _ in 0..<1000 {

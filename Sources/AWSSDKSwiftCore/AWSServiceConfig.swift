@@ -186,13 +186,13 @@ public struct AWSServiceContext {
 
 extension AWSServiceContext {
     /// return new AWSServiceConfig with new timeout value
-    func with(timeout: TimeAmount) -> AWSServiceContext {
+    public func with(timeout: TimeAmount) -> AWSServiceContext {
         var config = self
         config.timeout = timeout
         return config
     }
 
-    func logging(to logger: Logger) -> AWSServiceContext {
+    public func logging(to logger: Logger) -> AWSServiceContext {
         var config = self
         config.logger = logger
         config.logger[metadataKey: "aws-service"] = .string(self.service)

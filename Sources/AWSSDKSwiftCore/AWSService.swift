@@ -12,20 +12,15 @@
 //
 //===----------------------------------------------------------------------===//
 
+/// Protocol for AWS Services
 public protocol AWSService {
+    /// client used to communicate with AWS
     var client: AWSClient { get }
+    /// service details plus contextual info
     var context: AWSServiceContext { get }
-    func transform(_: (AWSServiceContext) -> AWSServiceContext) -> Self
 }
 
 public extension AWSService {
-    /// return new AWSServiceConfig with new timeout value
-    func with(timeout: TimeAmount) -> Self {
-        return transform { $0.with(timeout: timeout) }
-    }
-
-    /// return new AWSServiceConfig logging to specified Logger
-    func logging(to logger: Logger) -> Self {
-        return transform { $0.logging(to: logger) }
-    }
+    /// Region where service is running
+    var region: Region { context.region }
 }

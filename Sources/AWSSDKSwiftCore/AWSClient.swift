@@ -222,16 +222,16 @@ extension AWSClient {
     }
 
     /// invoke HTTP request
-    fileprivate func invoke(_ httpRequest: AWSHTTPRequest, with serviceConfig: AWSServiceConfig, on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<AWSHTTPResponse> {
+    fileprivate func invoke(_ httpRequest: AWSHTTPRequest, with serviceConfig: AWSServiceConfig, timeout: TimeAmount, on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<AWSHTTPResponse> {
         return invoke(with: serviceConfig, logger: logger) {
-            return self.httpClient.execute(request: httpRequest, timeout: serviceConfig.timeout, on: eventLoop, logger: logger)
+            return self.httpClient.execute(request: httpRequest, timeout: timeout, on: eventLoop, logger: logger)
         }
     }
 
     /// invoke HTTP request with response streaming
-    fileprivate func invoke(_ httpRequest: AWSHTTPRequest, with serviceConfig: AWSServiceConfig, on eventLoop: EventLoop, logger: Logger, stream: @escaping AWSHTTPClient.ResponseStream) -> EventLoopFuture<AWSHTTPResponse> {
+    fileprivate func invoke(_ httpRequest: AWSHTTPRequest, with serviceConfig: AWSServiceConfig, timeout: TimeAmount, on eventLoop: EventLoop, logger: Logger, stream: @escaping AWSHTTPClient.ResponseStream) -> EventLoopFuture<AWSHTTPResponse> {
         return invoke(with: serviceConfig, logger: logger) {
-            return self.httpClient.execute(request: httpRequest, timeout: serviceConfig.timeout, on: eventLoop, logger: logger, stream: stream)
+            return self.httpClient.execute(request: httpRequest, timeout: timeout, on: eventLoop, logger: logger, stream: stream)
         }
     }
 
@@ -276,7 +276,7 @@ extension AWSClient {
                 .applyMiddlewares(config.middlewares + self.middlewares)
                 .createHTTPRequest(signer: signer)
         }.flatMap { request in
-            return self.invoke(request, with: config, on: eventLoop, logger: logger)
+            return self.invoke(request, with: config, timeout: context.timeout, on: eventLoop, logger: logger)
         }.map { _ in
             return
         }
@@ -314,7 +314,7 @@ extension AWSClient {
                 .createHTTPRequest(signer: signer)
 
         }.flatMap { request -> EventLoopFuture<AWSHTTPResponse> in
-            return self.invoke(request, with: config, on: eventLoop, logger: logger)
+            return self.invoke(request, with: config, timeout: context.timeout, on: eventLoop, logger: logger)
         }.map { _ in
             return
         }
@@ -351,7 +351,7 @@ extension AWSClient {
                 .applyMiddlewares(config.middlewares + self.middlewares)
                 .createHTTPRequest(signer: signer)
         }.flatMap { request in
-            return self.invoke(request, with: config, on: eventLoop, logger: logger)
+            return self.invoke(request, with: config, timeout: context.timeout, on: eventLoop, logger: logger)
         }.flatMapThrowing { response in
             return try self.validate(operation: operationName, response: response, config: config)
         }
@@ -391,7 +391,7 @@ extension AWSClient {
                 .applyMiddlewares(config.middlewares + self.middlewares)
                 .createHTTPRequest(signer: signer)
         }.flatMap { request in
-            return self.invoke(request, with: config, on: eventLoop, logger: logger)
+            return self.invoke(request, with: config, timeout: context.timeout, on: eventLoop, logger: logger)
         }.flatMapThrowing { response in
             return try self.validate(operation: operationName, response: response, config: config)
         }
@@ -432,7 +432,7 @@ extension AWSClient {
                 .applyMiddlewares(config.middlewares + self.middlewares)
                 .createHTTPRequest(signer: signer)
         }.flatMap { request in
-            return self.invoke(request, with: config, on: eventLoop, logger: logger, stream: stream)
+            return self.invoke(request, with: config, timeout: context.timeout, on: eventLoop, logger: logger, stream: stream)
         }.flatMapThrowing { response in
             return try self.validate(operation: operationName, response: response, config: config)
         }

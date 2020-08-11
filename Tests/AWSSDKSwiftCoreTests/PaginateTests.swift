@@ -201,7 +201,7 @@ struct PaginateTestService: AWSService {
     func withNewContext(_ process: (AWSServiceContext) -> AWSServiceContext) -> PaginateTestService {
         return PaginateTestService(client: self.client, config: self.config, context: process(self.context))
     }
-    
+
     public let client: AWSClient
     public let config: AWSServiceConfig
     public let context: AWSServiceContext
@@ -211,7 +211,7 @@ struct PaginateTestService: AWSService {
         self.config = config
         self.context = context
     }
-    
+
     func counter(_ input: CounterInput) -> EventLoopFuture<CounterOutput> {
         return self.client.execute(
             operation: "TestOperation",
@@ -219,7 +219,7 @@ struct PaginateTestService: AWSService {
             httpMethod: .POST,
             input: input,
             config: self.config,
-            context: context
+            context: self.context
         )
     }
 
@@ -240,7 +240,7 @@ struct PaginateTestService: AWSService {
             httpMethod: .POST,
             input: input,
             config: self.config,
-            context: context
+            context: self.context
         )
     }
 
@@ -249,7 +249,7 @@ struct PaginateTestService: AWSService {
             input: input,
             command: self.stringList,
             tokenKey: \StringListOutput.outputToken,
-            context: context,
+            context: self.context,
             onPage: onPage
         )
     }

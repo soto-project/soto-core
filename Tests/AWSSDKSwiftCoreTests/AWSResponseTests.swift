@@ -210,11 +210,11 @@ class AWSResponseTests: XCTestCase {
             headers: HTTPHeaders(),
             bodyData: "{\"__type\":\"ResourceNotFoundException\", \"message\": \"Donald Where's Your Troosers?\"}".data(using: .utf8)!
         )
-        let service = createServiceConfig(serviceProtocol: .json(version: "1.1"), possibleErrorTypes: [ServiceErrorType.self])
+        let service = createServiceConfig(serviceProtocol: .json(version: "1.1"), errorType: ServiceErrorType.self)
 
         var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .json(version: "1.1"), raw: false))
-        let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger)
+        let error = awsResponse?.generateError(serviceConfig: service)
         XCTAssertEqual(error as? ServiceErrorType, .resourceNotFoundException(message: "Donald Where's Your Troosers?"))
     }
 
@@ -224,11 +224,11 @@ class AWSResponseTests: XCTestCase {
             headers: HTTPHeaders(),
             bodyData: "<Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message></Error>".data(using: .utf8)!
         )
-        let service = createServiceConfig(serviceProtocol: .restxml, possibleErrorTypes: [ServiceErrorType.self])
+        let service = createServiceConfig(serviceProtocol: .restxml, errorType: ServiceErrorType.self, logger: TestEnvironment.logger)
 
         var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml, raw: false))
-        let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger)
+        let error = awsResponse?.generateError(serviceConfig: service)
         XCTAssertEqual(error as? ServiceErrorType, .noSuchKey(message: "It doesn't exist"))
     }
 
@@ -238,11 +238,11 @@ class AWSResponseTests: XCTestCase {
             headers: HTTPHeaders(),
             bodyData: "<ErrorResponse><Error><Code>MessageRejected</Code><Message>Don't like it</Message></Error></ErrorResponse>".data(using: .utf8)!
         )
-        let queryService = createServiceConfig(serviceProtocol: .query, possibleErrorTypes: [ServiceErrorType.self])
+        let queryService = createServiceConfig(serviceProtocol: .query, errorType: ServiceErrorType.self, logger: TestEnvironment.logger)
 
         var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .query, raw: false))
-        let error = awsResponse?.generateError(serviceConfig: queryService, logger: TestEnvironment.logger)
+        let error = awsResponse?.generateError(serviceConfig: queryService)
         XCTAssertEqual(error as? ServiceErrorType, .messageRejected(message: "Don't like it"))
     }
 
@@ -256,7 +256,7 @@ class AWSResponseTests: XCTestCase {
 
         var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .ec2, raw: false))
-        let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? AWSResponseError
+        let error = awsResponse?.generateError(serviceConfig: service) as? AWSResponseError
         XCTAssertEqual(error?.errorCode, "NoSuchKey")
         XCTAssertEqual(error?.message, "It doesn't exist")
     }

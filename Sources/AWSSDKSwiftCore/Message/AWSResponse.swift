@@ -184,9 +184,9 @@ public struct AWSResponse {
     }
 
     /// extract error code and message from AWSResponse
-    func generateError(serviceConfig: AWSServiceConfig, logger: Logger) -> Error? {
+    func generateError(serviceContext: AWSServiceContext) -> Error? {
         var apiError: APIError?
-        switch serviceConfig.serviceProtocol {
+        switch serviceContext.serviceProtocol {
         case .query:
             guard case .xml(var element) = self.body else { break }
             if let errors = element.elements(forName: "Errors").first {
@@ -228,12 +228,12 @@ public struct AWSResponse {
                 code = String(code[code.index(index, offsetBy: 1)...])
             }
 
-            logger.error("AWS Error", metadata: [
+            serviceContext.logger.error("AWS Error", metadata: [
                 "aws-error-code": .string(code),
                 "aws-error-message": .string(errorMessage.message),
             ])
 
-            for errorType in serviceConfig.possibleErrorTypes {
+            if let errorType = serviceContext.errorType {
                 if let error = errorType.init(errorCode: code, message: errorMessage.message) {
                     return error
                 }

@@ -92,7 +92,7 @@ public struct AWSRequest {
 }
 
 extension AWSRequest {
-    internal init(operation operationName: String, path: String, httpMethod: HTTPMethod, configuration: AWSServiceConfig) throws {
+    internal init(operation operationName: String, path: String, httpMethod: HTTPMethod, configuration: AWSServiceContext) throws {
         var headers = HTTPHeaders()
 
         guard let url = URL(string: "\(configuration.endpoint)\(path)"), let _ = url.host else {
@@ -120,7 +120,7 @@ extension AWSRequest {
         path: String,
         httpMethod: HTTPMethod,
         input: Input,
-        configuration: AWSServiceConfig
+        configuration: AWSServiceContext
     ) throws {
         var headers = HTTPHeaders()
         var path = path

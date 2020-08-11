@@ -102,7 +102,7 @@ public struct TestEnvironment {
     }
 
     public static var context: AWSServiceContext { .init(logger: logger) }
-    
+
     public static var logger: Logger = {
         if let loggingLevel = Environment["AWS_LOG_LEVEL"] {
             if let logLevel = Logger.Level(rawValue: loggingLevel.lowercased()) {

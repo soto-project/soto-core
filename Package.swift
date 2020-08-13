@@ -27,6 +27,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio-ssl.git", .upToNextMajor(from: "2.7.2")),
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/swift-server/async-http-client.git", .upToNextMajor(from: "1.2.0")),
+        // .package(path: "../../SwiftyExpat")
     ],
     targets: [
         .target(name: "AWSSDKSwiftCore", dependencies: [
@@ -54,7 +55,10 @@ let package = Package(
             .product(name: "NIOFoundationCompat", package: "swift-nio"),
             .product(name: "NIOTestUtils", package: "swift-nio"),
         ]),
-        .target(name: "AWSXML", dependencies: []),
+        .target(name: "AWSXML", dependencies: [
+            .byName(name: "Expat"),
+        ]),
+        .target(name: "Expat", dependencies: [], cSettings: [.define("HAVE_EXPAT_CONFIG_H")]),
         .target(name: "INIParser", dependencies: []),
 
         .testTarget(name: "AWSCryptoTests", dependencies: [

@@ -94,10 +94,10 @@ class XMLTests: XCTestCase {
         XCTAssertNoThrow(try self.testDecodeEncode(xml: xml))
     }
 
-    func testCommentDecodeEncode() {
-        let xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test>testing<!--Test Comment--></test>"
-        XCTAssertNoThrow(try self.testDecodeEncode(xml: xml))
-    }
+     func testCommentDecodeEncode() {
+         let xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test>testing<!--Test Comment--></test>"
+         XCTAssertNoThrow(try self.testDecodeEncode(xml: xml))
+     }
 
     func testCDATADecodeEncode() {
         let xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test><![CDATA[CDATA test]]></test>"

@@ -98,6 +98,9 @@ for partition in endpoints.partitions {
     regionDescs += partitionRegionDescs
 }
 
+// Add ap-northeast-3 as it isn't in the endpoints.json. It is intentionally excluded from endpoints as it requires access request.
+regionDescs.append(.init(enum: "apnortheast3", name: "ap-northeast-3", description: "Asia Pacific (Osaka Local)", partition: "aws"))
+
 print("Loading templates")
 let fsLoader = FileSystemLoader(paths: ["./scripts/templates/generate-region"])
 let environment = Environment(loader: fsLoader)

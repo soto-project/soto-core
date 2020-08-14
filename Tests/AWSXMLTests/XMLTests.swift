@@ -85,7 +85,7 @@ class XMLTests: XCTestCase {
     }
 
     func testNamespacesDecodeEncode() {
-        let xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test xmlns:h=\"http://www.w3.org/TR/html4/\">testing</test>"
+        let xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test xmlns:h=\"http://www.w3.org/TR/html4/\">testing<a>child</a></test>"
         XCTAssertNoThrow(try self.testDecodeEncode(xml: xml))
     }
 

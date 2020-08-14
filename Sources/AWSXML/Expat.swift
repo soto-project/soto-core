@@ -35,20 +35,12 @@ import Expat
 ///  p.write("<hello>world</hello>")
 ///  p.close()
 public final class Expat {
-    public let nsSeparator: Character
-
     var parser: XML_Parser
-    var isClosed = false
 
-    public init(encoding: String = "UTF-8", nsSeparator: Character = "<") throws {
-        self.nsSeparator = nsSeparator
-        let sepUTF8 = ("" + String(self.nsSeparator)).utf8
-        let separator = sepUTF8[sepUTF8.startIndex]
+    public init(encoding: String = "UTF-8") throws {
 
         guard let parser = encoding.withCString( { cs in
-            // if I use parser, swiftc crashes (if Expat is a class)
-            // FIXME: use String for separator, and codepoints to get the Int?
-            XML_ParserCreateNS(cs, XML_Char(separator))
+            XML_ParserCreate(cs)
         }) else {
             throw XML_ERROR_NO_MEMORY
         }

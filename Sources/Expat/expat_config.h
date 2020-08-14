@@ -112,7 +112,7 @@
 /*#define XML_DTD 1*/
 
 /* Define to make XML Namespaces functionality available. */
-#define XML_NS 1
+/*#define XML_NS 1*/
 
 /* Define to empty if `const' does not conform to ANSI C. */
 /* #undef const */

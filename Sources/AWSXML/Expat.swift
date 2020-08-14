@@ -17,7 +17,8 @@
 
 //
 //  Created by Helge Heß on 7/15/14.
-//  Copyright (c) 2014-2018 Always Right Institute. All rights reserved.
+//  Copyright (c) 2014-2020 Always Right Institute.
+//  Licensed under Apache License v2.0 http://www.apache.org/licenses/LICENSE-2.0.html
 //
 
 @_implementationOnly import CAWSExpat

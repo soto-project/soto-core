@@ -67,21 +67,18 @@ public final class Expat {
 
     /// feed the parser
     public func feedRaw(_ cs: UnsafePointer<CChar>, final: Bool = false) throws -> ExpatResult {
-        // v4: for some reason this accepts a 'String', but for such it doesn't
-        //     actually work
         let cslen = strlen(cs) // cs? checks for a NULL C string
         let isFinal: Int32 = final ? 1 : 0
 
-        // dumpCharBuf(cs, Int(cslen))
         let status: XML_Status = XML_Parse(parser, cs, Int32(cslen), isFinal)
 
         switch status { // the Expat enum's don't work?
-        case XML_STATUS_OK: return ExpatResult.OK
-        case XML_STATUS_SUSPENDED: return ExpatResult.Suspended
+        case XML_STATUS_OK: return .ok
+        case XML_STATUS_SUSPENDED: return .suspended
         default:
             let error = XML_GetErrorCode(parser)
-            if let cb = cbError {
-                cb(error)
+            if let callback = cbError {
+                callback(error)
             }
             throw error
         }
@@ -100,34 +97,34 @@ public final class Expat {
     func registerCallbacks() {
         XML_SetStartElementHandler(self.parser) { ud, name, attrs in
             let me = unsafeBitCast(ud, to: Expat.self)
-            guard let cb = me.cbStartElement else { return }
+            guard let callback = me.cbStartElement else { return }
             let sName = name != nil ? String(cString: name!) : ""
 
             // FIXME: we should not copy stuff, but have a wrapper which works on the
             //        attrs structure 'on demand'
-            let sAttrs = makeAttributesDictionary(attrs)
-            cb(sName, sAttrs)
+            let sAttrs = Expat.makeAttributesDictionary(attrs)
+            callback(sName, sAttrs)
         }
 
         XML_SetEndElementHandler(self.parser) { ud, name in
             let me = unsafeBitCast(ud, to: Expat.self)
-            guard let cb = me.cbEndElement else { return }
+            guard let callback = me.cbEndElement else { return }
             let sName = String(cString: name!) // force unwrap, must be set
-            cb(sName)
+            callback(sName)
         }
 
         XML_SetStartNamespaceDeclHandler(self.parser) { ud, prefix, uri in
             let me = unsafeBitCast(ud, to: Expat.self)
-            guard let cb = me.cbStartNS else { return }
+            guard let callback = me.cbStartNS else { return }
             let sPrefix = prefix != nil ? String(cString: prefix!) : nil
             let sURI = String(cString: uri!)
-            cb(sPrefix, sURI)
+            callback(sPrefix, sURI)
         }
         XML_SetEndNamespaceDeclHandler(self.parser) { ud, prefix in
             let me = unsafeBitCast(ud, to: Expat.self)
-            guard let cb = me.cbEndNS else { return }
+            guard let callback = me.cbEndNS else { return }
             let sPrefix = prefix != nil ? String(cString: prefix!) : nil
-            cb(sPrefix)
+            callback(sPrefix)
         }
 
         XML_SetCharacterDataHandler(self.parser) { ud, cs, cslen in
@@ -136,30 +133,31 @@ public final class Expat {
             guard cslen > 0 else { return }
 
             let me = unsafeBitCast(ud, to: Expat.self)
-            guard let cb = me.cbCharacterData else { return }
+            guard let callback = me.cbCharacterData else { return }
 
             let cs2 = UnsafeRawPointer(cs!).assumingMemoryBound(to: UInt8.self)
             let bp = UnsafeBufferPointer(start: cs2, count: Int(cslen))
             let s = String(decoding: bp, as: UTF8.self)
-            cb(s)
+            callback(s)
         }
 
         XML_SetCommentHandler(self.parser) { ud, comment in
             let me = unsafeBitCast(ud, to: Expat.self)
-            guard let cb = me.cbComment else { return }
+            guard let callback = me.cbComment else { return }
             guard let comment = comment else { return }
-            cb(String(cString: comment))
+            callback(String(cString: comment))
         }
     }
 
     /* callbacks */
 
-    public typealias AttrDict = [String: String]
-    public typealias StartElementHandler = (String, AttrDict) -> Void
+    public typealias AttributeDictionary = [String: String]
+    public typealias StartElementHandler = (String, AttributeDictionary) -> Void
     public typealias EndElementHandler = (String) -> Void
     public typealias StartNamespaceHandler = (String?, String) -> Void
     public typealias EndNamespaceHandler = (String?) -> Void
     public typealias CDataHandler = (String) -> Void
+    public typealias CommentHandler = (String) -> Void
     public typealias ErrorHandler = (XML_Error) -> Void
 
     var cbStartElement: StartElementHandler?
@@ -167,73 +165,60 @@ public final class Expat {
     var cbStartNS: StartNamespaceHandler?
     var cbEndNS: EndNamespaceHandler?
     var cbCharacterData: CDataHandler?
-    var cbComment: CDataHandler?
+    var cbComment: CommentHandler?
     var cbError: ErrorHandler?
 
-    public func onStartElement(cb: @escaping StartElementHandler) -> Self {
-        self.cbStartElement = cb
+    public func onStartElement(_ callback: @escaping StartElementHandler) -> Self {
+        self.cbStartElement = callback
         return self
     }
 
-    public func onEndElement(cb: @escaping EndElementHandler) -> Self {
-        self.cbEndElement = cb
+    public func onEndElement(_ callback: @escaping EndElementHandler) -> Self {
+        self.cbEndElement = callback
         return self
     }
 
-    public func onStartNamespace(cb: @escaping StartNamespaceHandler) -> Self {
-        self.cbStartNS = cb
+    public func onStartNamespace(_ callback: @escaping StartNamespaceHandler) -> Self {
+        self.cbStartNS = callback
         return self
     }
 
-    public func onEndNamespace(cb: @escaping EndNamespaceHandler) -> Self {
-        self.cbEndNS = cb
+    public func onEndNamespace(_ callback: @escaping EndNamespaceHandler) -> Self {
+        self.cbEndNS = callback
         return self
     }
 
-    public func onCharacterData(cb: @escaping CDataHandler) -> Self {
-        self.cbCharacterData = cb
+    public func onCharacterData(_ callback: @escaping CDataHandler) -> Self {
+        self.cbCharacterData = callback
         return self
     }
 
-    public func onComment(cb: @escaping CDataHandler) -> Self {
-        self.cbComment = cb
+    public func onComment(_ callback: @escaping CommentHandler) -> Self {
+        self.cbComment = callback
         return self
     }
 
-    public func onError(cb: @escaping ErrorHandler) -> Self {
-        self.cbError = cb
+    public func onError(_ callback: @escaping ErrorHandler) -> Self {
+        self.cbError = callback
         return self
     }
-}
 
-public extension Expat { // Namespaces
-    typealias StartElementNSHandler =
-        (String, String, [String: String]) -> Void
-    typealias EndElementNSHandler = (String, String) -> Void
-
-    func onStartElementNS(cb: @escaping StartElementNSHandler) -> Self {
-        let sep = self.nsSeparator // so that we don't capture 'self' (necessary?)
-        return self.onStartElement {
-            // split(separator:maxSplits:omittingEmptySubsequences:)
-            let comps = $0.split(
-                separator: sep,
-                maxSplits: 1,
-                omittingEmptySubsequences: true
-            )
-            cb(String(comps[0]), String(comps[1]), $1)
+    /// Make a dictionary from the attribute list returned by Expat
+    /// List is array of char pointers arranaged as follows: name, value, name, value...
+    /// - Parameter attrs: array of string pointers
+    /// - Returns: attributes in dictionary form
+    static func makeAttributesDictionary(_ attrs: UnsafeMutablePointer<UnsafePointer<XML_Char>?>?) -> [String: String]
+    {
+        var sAttrs = [String: String]()
+        guard let attrs = attrs else { return sAttrs }
+        var i = 0
+        while attrs[i] != nil {
+            let name = String(cString: attrs[i]!)
+            let value = attrs[i + 1] != nil ? String(cString: attrs[i + 1]!) : ""
+            sAttrs[name] = value
+            i += 2
         }
-    }
-
-    func onEndElementNS(cb: @escaping EndElementNSHandler) -> Self {
-        let sep = self.nsSeparator // so that we don't capture 'self' (necessary?)
-        return self.onEndElement {
-            let comps = $0.split(
-                separator: sep,
-                maxSplits: 1,
-                omittingEmptySubsequences: true
-            )
-            cb(String(comps[0]), String(comps[1]))
-        }
+        return sAttrs
     }
 }
 
@@ -260,36 +245,20 @@ extension XML_Error: CustomStringConvertible {
 }
 
 public enum ExpatResult: CustomStringConvertible {
-    case OK
-    case Suspended
+    case ok
+    case suspended
 
     public var description: String {
         switch self {
-        case .OK: return "OK"
-        case .Suspended: return "Suspended"
+        case .ok: return "OK"
+        case .suspended: return "Suspended"
         }
     }
 
     public var boolValue: Bool {
         switch self {
-        case .OK: return true
+        case .ok: return true
         default: return false
         }
     }
-}
-
-func makeAttributesDictionary
-(_ attrs: UnsafeMutablePointer<UnsafePointer<XML_Char>?>?)
-    -> [String: String]
-{
-    var sAttrs = [String: String]()
-    guard let attrs = attrs else { return sAttrs }
-    var i = 0
-    while attrs[i] != nil {
-        let name = String(cString: attrs[i]!)
-        let value = attrs[i + 1] != nil ? String(cString: attrs[i + 1]!) : ""
-        sAttrs[name] = value
-        i += 2
-    }
-    return sAttrs
 }

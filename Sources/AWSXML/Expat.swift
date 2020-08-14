@@ -14,7 +14,7 @@
 
 //
 //  Created by Helge Heß on 7/15/14.
-//  Copyright (c) 2014-2020 Always Right Institute.
+//  Copyright (c) 2014-2020 Helge Heß.
 //  Licensed under Apache License v2.0 http://www.apache.org/licenses/LICENSE-2.0.html
 //
 

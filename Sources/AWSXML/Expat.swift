@@ -1,6 +1,3 @@
-//
-//  Expat.swift
-//  SwiftyExpat
 //===----------------------------------------------------------------------===//
 //
 // This source file is part of the AWSSDKSwift open source project
@@ -36,11 +33,15 @@
 ///  p.write("<hello>world</hello>")
 ///  p.close()
 class Expat {
+    enum Result {
+        case ok
+        case suspended
+    }
+
     var parser: XML_Parser
 
     init(encoding: String = "UTF-8") throws {
-
-        guard let parser = encoding.withCString( { cs in
+        guard let parser = encoding.withCString({ cs in
             AWS_XML_ParserCreate(cs)
         }) else {
             throw XML_ERROR_NO_MEMORY
@@ -59,7 +60,7 @@ class Expat {
     }
 
     /// feed the parser
-    func feedRaw(_ cs: UnsafePointer<CChar>, final: Bool = false) throws -> ExpatResult {
+    func feedRaw(_ cs: UnsafePointer<CChar>, final: Bool = false) throws -> Result {
         let cslen = strlen(cs) // cs? checks for a NULL C string
         let isFinal: Int32 = final ? 1 : 0
 
@@ -77,13 +78,13 @@ class Expat {
         }
     }
 
-    func feed(_ s: String, final: Bool = false) throws -> ExpatResult {
-        return try s.withCString { cs -> ExpatResult in
+    func feed(_ s: String, final: Bool = false) throws -> Result {
+        return try s.withCString { cs -> Result in
             return try self.feedRaw(cs, final: final)
         }
     }
 
-    func close() throws -> ExpatResult {
+    func close() throws -> Result {
         return try self.feed("", final: true)
     }
 
@@ -200,8 +201,7 @@ class Expat {
     /// List is array of char pointers arranaged as follows: name, value, name, value...
     /// - Parameter attrs: array of string pointers
     /// - Returns: attributes in dictionary form
-    static func makeAttributesDictionary(_ attrs: UnsafeMutablePointer<UnsafePointer<XML_Char>?>?) -> [String: String]
-    {
+    static func makeAttributesDictionary(_ attrs: UnsafeMutablePointer<UnsafePointer<XML_Char>?>?) -> [String: String] {
         var sAttrs = [String: String]()
         guard let attrs = attrs else { return sAttrs }
         var i = 0
@@ -216,42 +216,3 @@ class Expat {
 }
 
 extension XML_Error: Error {}
-
-/*extension XML_Error: CustomStringConvertible {
-    public var description: String {
-        switch self {
-        // doesn't work?: case .XML_ERROR_NONE: return "OK"
-        case XML_ERROR_NONE: return "OK"
-        case XML_ERROR_NO_MEMORY: return "XMLError::NoMemory"
-        case XML_ERROR_SYNTAX: return "XMLError::Syntax"
-        case XML_ERROR_NO_ELEMENTS: return "XMLError::NoElements"
-        case XML_ERROR_INVALID_TOKEN: return "XMLError::InvalidToken"
-        case XML_ERROR_UNCLOSED_TOKEN: return "XMLError::UnclosedToken"
-        case XML_ERROR_PARTIAL_CHAR: return "XMLError::PartialChar"
-        case XML_ERROR_TAG_MISMATCH: return "XMLError::TagMismatch"
-        case XML_ERROR_DUPLICATE_ATTRIBUTE: return "XMLError::DupeAttr"
-        // FIXME: complete me
-        default:
-            return "XMLError(\(self))"
-        }
-    }
-}*/
-
-enum ExpatResult: CustomStringConvertible {
-    case ok
-    case suspended
-
-    var description: String {
-        switch self {
-        case .ok: return "OK"
-        case .suspended: return "Suspended"
-        }
-    }
-
-    var boolValue: Bool {
-        switch self {
-        case .ok: return true
-        default: return false
-        }
-    }
-}

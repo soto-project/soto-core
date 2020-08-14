@@ -20,7 +20,7 @@
 //  Copyright (c) 2014-2018 Always Right Institute. All rights reserved.
 //
 
-import Expat
+@_implementationOnly import CAWSExpat
 
 /// Simple wrapper for the Expat parser. Though the block based Expat is
 /// reasonably easy to use as-is.
@@ -34,13 +34,13 @@ import Expat
 ///    .onError          { error       in println("ERROR: \(error)")         }
 ///  p.write("<hello>world</hello>")
 ///  p.close()
-public final class Expat {
+class Expat {
     var parser: XML_Parser
 
-    public init(encoding: String = "UTF-8") throws {
+    init(encoding: String = "UTF-8") throws {
 
         guard let parser = encoding.withCString( { cs in
-            XML_ParserCreate(cs)
+            AWS_XML_ParserCreate(cs)
         }) else {
             throw XML_ERROR_NO_MEMORY
         }
@@ -48,27 +48,27 @@ public final class Expat {
 
         // TBD: what is the better way to do this?
         let ud = unsafeBitCast(self, to: UnsafeMutableRawPointer.self)
-        XML_SetUserData(parser, ud)
+        AWS_XML_SetUserData(parser, ud)
 
         registerCallbacks()
     }
 
     deinit {
-        XML_ParserFree(parser)
+        AWS_XML_ParserFree(parser)
     }
 
     /// feed the parser
-    public func feedRaw(_ cs: UnsafePointer<CChar>, final: Bool = false) throws -> ExpatResult {
+    func feedRaw(_ cs: UnsafePointer<CChar>, final: Bool = false) throws -> ExpatResult {
         let cslen = strlen(cs) // cs? checks for a NULL C string
         let isFinal: Int32 = final ? 1 : 0
 
-        let status: XML_Status = XML_Parse(parser, cs, Int32(cslen), isFinal)
+        let status: XML_Status = AWS_XML_Parse(parser, cs, Int32(cslen), isFinal)
 
         switch status { // the Expat enum's don't work?
         case XML_STATUS_OK: return .ok
         case XML_STATUS_SUSPENDED: return .suspended
         default:
-            let error = XML_GetErrorCode(parser)
+            let error = AWS_XML_GetErrorCode(parser)
             if let callback = cbError {
                 callback(error)
             }
@@ -76,18 +76,18 @@ public final class Expat {
         }
     }
 
-    public func feed(_ s: String, final: Bool = false) throws -> ExpatResult {
+    func feed(_ s: String, final: Bool = false) throws -> ExpatResult {
         return try s.withCString { cs -> ExpatResult in
             return try self.feedRaw(cs, final: final)
         }
     }
 
-    public func close() throws -> ExpatResult {
+    func close() throws -> ExpatResult {
         return try self.feed("", final: true)
     }
 
     func registerCallbacks() {
-        XML_SetStartElementHandler(self.parser) { ud, name, attrs in
+        AWS_XML_SetStartElementHandler(self.parser) { ud, name, attrs in
             let me = unsafeBitCast(ud, to: Expat.self)
             guard let callback = me.cbStartElement else { return }
             let sName = name != nil ? String(cString: name!) : ""
@@ -98,28 +98,28 @@ public final class Expat {
             callback(sName, sAttrs)
         }
 
-        XML_SetEndElementHandler(self.parser) { ud, name in
+        AWS_XML_SetEndElementHandler(self.parser) { ud, name in
             let me = unsafeBitCast(ud, to: Expat.self)
             guard let callback = me.cbEndElement else { return }
             let sName = String(cString: name!) // force unwrap, must be set
             callback(sName)
         }
 
-        XML_SetStartNamespaceDeclHandler(self.parser) { ud, prefix, uri in
+        AWS_XML_SetStartNamespaceDeclHandler(self.parser) { ud, prefix, uri in
             let me = unsafeBitCast(ud, to: Expat.self)
             guard let callback = me.cbStartNS else { return }
             let sPrefix = prefix != nil ? String(cString: prefix!) : nil
             let sURI = String(cString: uri!)
             callback(sPrefix, sURI)
         }
-        XML_SetEndNamespaceDeclHandler(self.parser) { ud, prefix in
+        AWS_XML_SetEndNamespaceDeclHandler(self.parser) { ud, prefix in
             let me = unsafeBitCast(ud, to: Expat.self)
             guard let callback = me.cbEndNS else { return }
             let sPrefix = prefix != nil ? String(cString: prefix!) : nil
             callback(sPrefix)
         }
 
-        XML_SetCharacterDataHandler(self.parser) { ud, cs, cslen in
+        AWS_XML_SetCharacterDataHandler(self.parser) { ud, cs, cslen in
             assert(cslen > 0)
             assert(cs != nil)
             guard cslen > 0 else { return }
@@ -133,7 +133,7 @@ public final class Expat {
             callback(s)
         }
 
-        XML_SetCommentHandler(self.parser) { ud, comment in
+        AWS_XML_SetCommentHandler(self.parser) { ud, comment in
             let me = unsafeBitCast(ud, to: Expat.self)
             guard let callback = me.cbComment else { return }
             guard let comment = comment else { return }
@@ -143,14 +143,14 @@ public final class Expat {
 
     /* callbacks */
 
-    public typealias AttributeDictionary = [String: String]
-    public typealias StartElementHandler = (String, AttributeDictionary) -> Void
-    public typealias EndElementHandler = (String) -> Void
-    public typealias StartNamespaceHandler = (String?, String) -> Void
-    public typealias EndNamespaceHandler = (String?) -> Void
-    public typealias CDataHandler = (String) -> Void
-    public typealias CommentHandler = (String) -> Void
-    public typealias ErrorHandler = (XML_Error) -> Void
+    typealias AttributeDictionary = [String: String]
+    typealias StartElementHandler = (String, AttributeDictionary) -> Void
+    typealias EndElementHandler = (String) -> Void
+    typealias StartNamespaceHandler = (String?, String) -> Void
+    typealias EndNamespaceHandler = (String?) -> Void
+    typealias CDataHandler = (String) -> Void
+    typealias CommentHandler = (String) -> Void
+    typealias ErrorHandler = (XML_Error) -> Void
 
     var cbStartElement: StartElementHandler?
     var cbEndElement: EndElementHandler?
@@ -160,37 +160,37 @@ public final class Expat {
     var cbComment: CommentHandler?
     var cbError: ErrorHandler?
 
-    public func onStartElement(_ callback: @escaping StartElementHandler) -> Self {
+    func onStartElement(_ callback: @escaping StartElementHandler) -> Self {
         self.cbStartElement = callback
         return self
     }
 
-    public func onEndElement(_ callback: @escaping EndElementHandler) -> Self {
+    func onEndElement(_ callback: @escaping EndElementHandler) -> Self {
         self.cbEndElement = callback
         return self
     }
 
-    public func onStartNamespace(_ callback: @escaping StartNamespaceHandler) -> Self {
+    func onStartNamespace(_ callback: @escaping StartNamespaceHandler) -> Self {
         self.cbStartNS = callback
         return self
     }
 
-    public func onEndNamespace(_ callback: @escaping EndNamespaceHandler) -> Self {
+    func onEndNamespace(_ callback: @escaping EndNamespaceHandler) -> Self {
         self.cbEndNS = callback
         return self
     }
 
-    public func onCharacterData(_ callback: @escaping CDataHandler) -> Self {
+    func onCharacterData(_ callback: @escaping CDataHandler) -> Self {
         self.cbCharacterData = callback
         return self
     }
 
-    public func onComment(_ callback: @escaping CommentHandler) -> Self {
+    func onComment(_ callback: @escaping CommentHandler) -> Self {
         self.cbComment = callback
         return self
     }
 
-    public func onError(_ callback: @escaping ErrorHandler) -> Self {
+    func onError(_ callback: @escaping ErrorHandler) -> Self {
         self.cbError = callback
         return self
     }
@@ -216,7 +216,7 @@ public final class Expat {
 
 extension XML_Error: Error {}
 
-extension XML_Error: CustomStringConvertible {
+/*extension XML_Error: CustomStringConvertible {
     public var description: String {
         switch self {
         // doesn't work?: case .XML_ERROR_NONE: return "OK"
@@ -234,20 +234,20 @@ extension XML_Error: CustomStringConvertible {
             return "XMLError(\(self))"
         }
     }
-}
+}*/
 
-public enum ExpatResult: CustomStringConvertible {
+enum ExpatResult: CustomStringConvertible {
     case ok
     case suspended
 
-    public var description: String {
+    var description: String {
         switch self {
         case .ok: return "OK"
         case .suspended: return "Suspended"
         }
     }
 
-    public var boolValue: Bool {
+    var boolValue: Bool {
         switch self {
         case .ok: return true
         default: return false

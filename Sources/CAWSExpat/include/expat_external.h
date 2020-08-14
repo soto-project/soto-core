@@ -33,6 +33,8 @@
 #ifndef Expat_External_INCLUDED
 #define Expat_External_INCLUDED 1
 
+#include "expat_prefix_symbols.h"
+
 /* External API definitions */
 
 /* Expat tries very hard to make the API boundary very specifically

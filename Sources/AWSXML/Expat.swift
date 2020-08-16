@@ -107,20 +107,6 @@ class Expat {
             callback(sName)
         }
 
-        AWS_XML_SetStartNamespaceDeclHandler(self.parser) { ud, prefix, uri in
-            let me = unsafeBitCast(ud, to: Expat.self)
-            guard let callback = me.cbStartNS else { return }
-            let sPrefix = prefix != nil ? String(cString: prefix!) : nil
-            let sURI = String(cString: uri!)
-            callback(sPrefix, sURI)
-        }
-        AWS_XML_SetEndNamespaceDeclHandler(self.parser) { ud, prefix in
-            let me = unsafeBitCast(ud, to: Expat.self)
-            guard let callback = me.cbEndNS else { return }
-            let sPrefix = prefix != nil ? String(cString: prefix!) : nil
-            callback(sPrefix)
-        }
-
         AWS_XML_SetCharacterDataHandler(self.parser) { ud, cs, cslen in
             assert(cslen > 0)
             assert(cs != nil)
@@ -148,16 +134,12 @@ class Expat {
     typealias AttributeDictionary = [String: String]
     typealias StartElementHandler = (String, AttributeDictionary) -> Void
     typealias EndElementHandler = (String) -> Void
-    typealias StartNamespaceHandler = (String?, String) -> Void
-    typealias EndNamespaceHandler = (String?) -> Void
     typealias CDataHandler = (String) -> Void
     typealias CommentHandler = (String) -> Void
     typealias ErrorHandler = (XML_Error) -> Void
 
     var cbStartElement: StartElementHandler?
     var cbEndElement: EndElementHandler?
-    var cbStartNS: StartNamespaceHandler?
-    var cbEndNS: EndNamespaceHandler?
     var cbCharacterData: CDataHandler?
     var cbComment: CommentHandler?
     var cbError: ErrorHandler?
@@ -169,16 +151,6 @@ class Expat {
 
     func onEndElement(_ callback: @escaping EndElementHandler) -> Self {
         self.cbEndElement = callback
-        return self
-    }
-
-    func onStartNamespace(_ callback: @escaping StartNamespaceHandler) -> Self {
-        self.cbStartNS = callback
-        return self
-    }
-
-    func onEndNamespace(_ callback: @escaping EndNamespaceHandler) -> Self {
-        self.cbEndNS = callback
         return self
     }
 

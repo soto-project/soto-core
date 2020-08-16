@@ -254,7 +254,8 @@ public enum XML {
                         currentNamespace = nil
                     }
                 }
-                .onEndElement { _ in
+                .onEndElement { name in
+                    assert(currentElement?.name == name)
                     currentElement = currentElement?.parent as? XML.Element
                 }
                 .onCharacterData { characters in
@@ -262,9 +263,6 @@ public enum XML {
                     if characters.split(omittingEmptySubsequences: true, whereSeparator: { $0.isWhitespaceOrNewline }).joined().count > 0 {
                         currentElement?.addChild(XML.Node.text(stringValue: characters))
                     }
-                }
-                .onStartNamespace { prefix, uri in
-                    currentNamespace = .namespace(withName: prefix, stringValue: uri)
                 }
                 .onComment { comment in
                     currentElement?.addChild(.comment(stringValue: comment))

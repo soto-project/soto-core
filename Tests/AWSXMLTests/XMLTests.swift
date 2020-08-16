@@ -85,8 +85,10 @@ class XMLTests: XCTestCase {
     }
 
     func testNamespacesDecodeEncode() {
-        let xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test xmlns:h=\"http://www.w3.org/TR/html4/\">testing<a>child</a></test>"
+        let xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test xmlns=\"http://www.w3.org/TR/html4/\">testing<a>child</a></test>"
         XCTAssertNoThrow(try self.testDecodeEncode(xml: xml))
+        let xml2 = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test xmlns:h=\"http://www.w3.org/TR/html4/\">testing<a>child</a></test>"
+        XCTAssertNoThrow(try self.testDecodeEncode(xml: xml2))
     }
 
     func testArrayDecodeEncode() {

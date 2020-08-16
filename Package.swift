@@ -54,7 +54,10 @@ let package = Package(
             .product(name: "NIOFoundationCompat", package: "swift-nio"),
             .product(name: "NIOTestUtils", package: "swift-nio"),
         ]),
-        .target(name: "AWSXML", dependencies: []),
+        .target(name: "AWSXML", dependencies: [
+            .byName(name: "CAWSExpat"),
+        ]),
+        .target(name: "CAWSExpat", dependencies: []),
         .target(name: "INIParser", dependencies: []),
 
         .testTarget(name: "AWSCryptoTests", dependencies: [

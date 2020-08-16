@@ -25,3 +25,11 @@ This product contains code based on JSONDecoder from Apple
   * https://swift.org/LICENSE.txt
 * HOMEPAGE:
   * https://swift.org
+
+This product contains a copy of libexpat
+
+  * LICENSE (MIT):
+    * https://github.com/libexpat/libexpat/blob/master/expat/COPYING
+  * HOMEPAGE:
+    * https://libexpat.github.io/
+

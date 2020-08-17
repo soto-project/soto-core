@@ -18,7 +18,7 @@ import class Foundation.DateFormatter
 import struct Foundation.URL
 
 /// The wrapper class for encoding Codable classes to XMLElements
-public class XMLEncoder {
+public final class XMLEncoder {
     /// The strategy to use for encoding `Data` values.
     public enum DataEncodingStrategy {
         /// Encoded the `Data` as a Base64-encoded string. This is the default strategy.
@@ -40,13 +40,13 @@ public class XMLEncoder {
     }
 
     /// The strategy to use in encoding binary data. Defaults to `.base64`.
-    open var dataEncodingStrategy: DataEncodingStrategy = .base64
+    public var dataEncodingStrategy: DataEncodingStrategy = .base64
 
     /// The strategy to use in encoding non-conforming numbers. Defaults to `.throw`.
-    open var nonConformingFloatEncodingStrategy: NonConformingFloatEncodingStrategy = .throw
+    public var nonConformingFloatEncodingStrategy: NonConformingFloatEncodingStrategy = .throw
 
     /// Contextual user-provided information for use during encoding.
-    open var userInfo: [CodingUserInfoKey: Any] = [:]
+    public var userInfo: [CodingUserInfoKey: Any] = [:]
 
     /// Options set on the top-level encoder to pass down the encoding hierarchy.
     fileprivate struct _Options {
@@ -66,7 +66,7 @@ public class XMLEncoder {
 
     public init() {}
 
-    open func encode<T: Encodable>(_ value: T, name: String? = nil) throws -> XML.Element {
+    public func encode<T: Encodable>(_ value: T, name: String? = nil) throws -> XML.Element {
         let rootName = name ?? "\(type(of: value))"
         let encoder = _XMLEncoder(options: options, codingPath: [_XMLKey(stringValue: rootName, intValue: nil)])
         try value.encode(to: encoder)

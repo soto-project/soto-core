@@ -20,7 +20,7 @@ import class Foundation.NSNumber
 import struct Foundation.URL
 
 /// The wrapper class for decoding Codable classes from XMLNodes
-public class XMLDecoder {
+public final class XMLDecoder {
     /// The strategy to use for decoding `Data` values.
     public enum DataDecodingStrategy {
         /// Decode the `Data` from a Base64-encoded string.
@@ -40,13 +40,13 @@ public class XMLDecoder {
     }
 
     /// The strategy to use in decoding binary data. Defaults to `.raw`.
-    open var dataDecodingStrategy: DataDecodingStrategy = .base64
+    public var dataDecodingStrategy: DataDecodingStrategy = .base64
 
     /// The strategy to use in decoding non-conforming numbers. Defaults to `.throw`.
-    open var nonConformingFloatDecodingStrategy: NonConformingFloatDecodingStrategy = .throw
+    public var nonConformingFloatDecodingStrategy: NonConformingFloatDecodingStrategy = .throw
 
     /// Contextual user-provided information for use during decoding.
-    open var userInfo: [CodingUserInfoKey: Any] = [:]
+    public var userInfo: [CodingUserInfoKey: Any] = [:]
 
     /// Options set on the top-level encoder to pass down the decoding hierarchy.
     fileprivate struct _Options {

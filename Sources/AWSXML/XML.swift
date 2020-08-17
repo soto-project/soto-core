@@ -151,7 +151,7 @@ public enum XML {
     }
 
     /// XML Document class
-    public class Document: XML.Node {
+    public final class Document: XML.Node {
         public var version: String?
         public var characterEncoding: String?
 
@@ -200,7 +200,7 @@ public enum XML {
     }
 
     /// XML Element class
-    public class Element: XML.Node {
+    public final class Element: XML.Node {
         /// array of attributes attached to XML ELement
         public fileprivate(set) var attributes: [XML.Node]?
         /// array of namespaces attached to XML ELement

@@ -18,7 +18,7 @@
 //
 
 /// INI Configuration File Reader
-public class INIParser {
+public final class INIParser {
     internal var _sections: [String: [String: String]] = [:]
     internal var _anonymousSection: [String: String] = [:]
 

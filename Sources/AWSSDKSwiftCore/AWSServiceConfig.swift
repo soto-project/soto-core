@@ -15,7 +15,7 @@
 import NIO
 
 /// Configuration class defining an AWS service
-public class AWSServiceConfig {
+public final class AWSServiceConfig {
     /// Region where service is running
     public let region: Region
     /// The destination service of the request. Added as a header value, along with the operation name

@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>AWSEncodableShape Protocol Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+    <script src="../js/lunr.min.js" defer></script>
+    <script src="../js/typeahead.jquery.js" defer></script>
+    <script src="../js/jazzy.search.js" defer></script>
+  </head>
+  <body>
+    <a name="//apple_ref/swift/Protocol/AWSEncodableShape" class="dashAnchor"></a>
+    <a title="AWSEncodableShape Protocol Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="../index.html"> Docs</a> (53% documented)</p>
+        <p class="header-right"><a href="https://github.com/swift-aws/aws-sdk-swift-core"><img src="../img/gh.png"/>View on GitHub</a></p>
+        <p class="header-right">
+          <form role="search" action="../search.json">
+            <input type="text" placeholder="Search documentation" data-typeahead>
+          </form>
+        </p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="../index.html"> Reference</a>
+        <img id="carat" src="../img/carat.png" />
+        AWSEncodableShape Protocol Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="../Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/AWSClient.html">AWSClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AWSClient/ClientError.html">– ClientError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AWSClient/HTTPClientProvider.html">– HTTPClientProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AWSServiceConfig.html">AWSServiceConfig</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/DeferredCredentialProvider.html">DeferredCredentialProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/RotatingCredentialProvider.html">RotatingCredentialProvider</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Enums.html">Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/Body.html">Body</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/RetryStatus.html">RetryStatus</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ServiceProtocol.html">ServiceProtocol</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/StreamReaderResult.html">StreamReaderResult</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Extensions/AsyncHTTPClient.html">AsyncHTTPClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/AsyncHTTPClient/HTTPClient.html">– HTTPClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/AsyncHTTPClient/HTTPClient.html">– HTTPClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/KeyedDecodingContainer.html">KeyedDecodingContainer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/KeyedEncodingContainer.html">KeyedEncodingContainer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/StaticCredential.html">StaticCredential</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Protocols.html#/s:15AWSSDKSwiftCore17AWSDecodableShapeP">AWSDecodableShape</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSEncodableShape.html">AWSEncodableShape</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSErrorType.html">AWSErrorType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSHTTPClient.html">AWSHTTPClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSHTTPResponse.html">AWSHTTPResponse</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSPaginateToken.html">AWSPaginateToken</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSServiceMiddleware.html">AWSServiceMiddleware</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSShape.html">AWSShape</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSShapeWithPayload.html">AWSShapeWithPayload</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/ArrayCoderProperties.html">ArrayCoderProperties</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/CredentialProvider.html">CredentialProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/CustomCoder.html">CustomCoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/CustomDecoder.html">CustomDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/CustomEncoder.html">CustomEncoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/DictionaryCoderProperties.html">DictionaryCoderProperties</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/ExpiringCredential.html">ExpiringCredential</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/OptionalCodingWrapper.html">OptionalCodingWrapper</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/RetryPolicy.html">RetryPolicy</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/TimeStampFormatterCoder.html">TimeStampFormatterCoder</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Structs.html">Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Structs/AWSClientError.html">AWSClientError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSError.html">AWSError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSHTTPRequest.html">AWSHTTPRequest</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSLoggingMiddleware.html">AWSLoggingMiddleware</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSMemberEncoding.html">AWSMemberEncoding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSMemberEncoding/Location.html">– Location</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSPartition.html">AWSPartition</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSPayload.html">AWSPayload</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSRequest.html">AWSRequest</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSResponse.html">AWSResponse</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSResponseError.html">AWSResponseError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSServerError.html">AWSServerError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSShapePayloadOptions.html">AWSShapePayloadOptions</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/ArrayCoder.html">ArrayCoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/Coding.html">Coding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/CredentialProviderError.html">CredentialProviderError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/CredentialProviderFactory.html">CredentialProviderFactory</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/CredentialProviderFactory/Context.html">– Context</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/DefaultArrayCoderProperties.html">DefaultArrayCoderProperties</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/DefaultDictionaryCoderProperties.html">DefaultDictionaryCoderProperties</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/DictionaryCoder.html">DictionaryCoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HTTPHeaderTimeStampCoder.html">HTTPHeaderTimeStampCoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/ISO8601TimeStampCoder.html">ISO8601TimeStampCoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/NullCredentialProvider.html">NullCredentialProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/OptionalCoding.html">OptionalCoding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/Region.html">Region</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/RetryPolicyFactory.html">RetryPolicyFactory</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/TimeStamp.html">TimeStamp</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/UnixEpochTimeStampCoder.html">UnixEpochTimeStampCoder</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Typealiases.html">Type Aliases</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:15AWSSDKSwiftCore17DefaultArrayCodera">DefaultArrayCoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:15AWSSDKSwiftCore22DefaultDictionaryCodera">DefaultDictionaryCoder</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>AWSEncodableShape</h1>
+              <div class="declaration">
+                <div class="language">
+                  
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">protocol</span> <span class="kt">AWSEncodableShape</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/AWSShape.html">AWSShape</a></span><span class="p">,</span> <span class="kt">Encodable</span></code></pre>
+
+                </div>
+              </div>
+            <p>AWSShape that can be encoded</p>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore17AWSEncodableShapeP13_xmlNamespaceSSSgvpZ"></a>
+                    <a name="//apple_ref/swift/Variable/_xmlNamespace" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore17AWSEncodableShapeP13_xmlNamespaceSSSgvpZ">_xmlNamespace</a>
+                    </code>
+                      <span class="declaration-note">
+                        Default implementation
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The XML namespace for the object</p>
+
+                      </div>
+                      <h4>Default Implementation</h4>
+                      <div class="default_impl abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="k">var</span> <span class="nv">_xmlNamespace</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore17AWSEncodableShapeP8validate4nameySS_tKF"></a>
+                    <a name="//apple_ref/swift/Method/validate(name:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore17AWSEncodableShapeP8validate4nameySS_tKF">validate(name:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Default implementation
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>returns if a shape is valid. The checks for validity are defined by the AWS model files we get from <a href="http://github.com/aws/aws-sdk-go">http://github.com/aws/aws-sdk-go</a></p>
+
+                      </div>
+                      <h4>Default Implementation</h4>
+                      <div class="default_impl abstract">
+                        <p>stub validate function for all shapes</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">validate</span><span class="p">(</span><span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validateyyKF"></a>
+                    <a name="//apple_ref/swift/Method/validate()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validateyyKF">validate()</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">validate</span><span class="p">()</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3minyqd___S2Sqd__tKSzRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/validate(_:name:parent:min:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3minyqd___S2Sqd__tKSzRd__lF">validate(_:<wbr>name:<wbr>parent:<wbr>min:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="n">validate</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">T</span><span class="p">,</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">parent</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">min</span><span class="p">:</span> <span class="kt">T</span><span class="p">)</span> <span class="k">throws</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt">BinaryInteger</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3maxyqd___S2Sqd__tKSzRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/validate(_:name:parent:max:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3maxyqd___S2Sqd__tKSzRd__lF">validate(_:<wbr>name:<wbr>parent:<wbr>max:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="n">validate</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">T</span><span class="p">,</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">parent</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">max</span><span class="p">:</span> <span class="kt">T</span><span class="p">)</span> <span class="k">throws</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt">BinaryInteger</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3minyqd___S2Sqd__tKSFRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/validate(_:name:parent:min:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3minyqd___S2Sqd__tKSFRd__lF">validate(_:<wbr>name:<wbr>parent:<wbr>min:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="n">validate</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">T</span><span class="p">,</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">parent</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">min</span><span class="p">:</span> <span class="kt">T</span><span class="p">)</span> <span class="k">throws</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt">FloatingPoint</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3maxyqd___S2Sqd__tKSFRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/validate(_:name:parent:max:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3maxyqd___S2Sqd__tKSFRd__lF">validate(_:<wbr>name:<wbr>parent:<wbr>max:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="n">validate</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">T</span><span class="p">,</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">parent</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">max</span><span class="p">:</span> <span class="kt">T</span><span class="p">)</span> <span class="k">throws</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt">FloatingPoint</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3minyqd___S2SSitKSlRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/validate(_:name:parent:min:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3minyqd___S2SSitKSlRd__lF">validate(_:<wbr>name:<wbr>parent:<wbr>min:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="n">validate</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">T</span><span class="p">,</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">parent</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">min</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="k">throws</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt">Collection</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3maxyqd___S2SSitKSlRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/validate(_:name:parent:max:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3maxyqd___S2SSitKSlRd__lF">validate(_:<wbr>name:<wbr>parent:<wbr>max:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="n">validate</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">T</span><span class="p">,</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">parent</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">max</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="k">throws</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt">Collection</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3minyAA10AWSPayloadV_S2SSitKF"></a>
+                    <a name="//apple_ref/swift/Method/validate(_:name:parent:min:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3minyAA10AWSPayloadV_S2SSitKF">validate(_:<wbr>name:<wbr>parent:<wbr>min:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">validate</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt"><a href="../Structs/AWSPayload.html">AWSPayload</a></span><span class="p">,</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">parent</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">min</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3maxyAA10AWSPayloadV_S2SSitKF"></a>
+                    <a name="//apple_ref/swift/Method/validate(_:name:parent:max:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3maxyAA10AWSPayloadV_S2SSitKF">validate(_:<wbr>name:<wbr>parent:<wbr>max:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">validate</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt"><a href="../Structs/AWSPayload.html">AWSPayload</a></span><span class="p">,</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">parent</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">max</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent7patternySS_S3StKF"></a>
+                    <a name="//apple_ref/swift/Method/validate(_:name:parent:pattern:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent7patternySS_S3StKF">validate(_:<wbr>name:<wbr>parent:<wbr>pattern:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">validate</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">parent</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">pattern</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3minyqd__Sg_S2Sqd__tKSzRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/validate(_:name:parent:min:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3minyqd__Sg_S2Sqd__tKSzRd__lF">validate(_:<wbr>name:<wbr>parent:<wbr>min:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="n">validate</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">T</span><span class="p">?,</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">parent</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">min</span><span class="p">:</span> <span class="kt">T</span><span class="p">)</span> <span class="k">throws</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt">BinaryInteger</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3maxyqd__Sg_S2Sqd__tKSzRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/validate(_:name:parent:max:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3maxyqd__Sg_S2Sqd__tKSzRd__lF">validate(_:<wbr>name:<wbr>parent:<wbr>max:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="n">validate</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">T</span><span class="p">?,</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">parent</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">max</span><span class="p">:</span> <span class="kt">T</span><span class="p">)</span> <span class="k">throws</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt">BinaryInteger</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3minyqd__Sg_S2Sqd__tKSFRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/validate(_:name:parent:min:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3minyqd__Sg_S2Sqd__tKSFRd__lF">validate(_:<wbr>name:<wbr>parent:<wbr>min:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="n">validate</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">T</span><span class="p">?,</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">parent</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">min</span><span class="p">:</span> <span class="kt">T</span><span class="p">)</span> <span class="k">throws</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt">FloatingPoint</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3maxyqd__Sg_S2Sqd__tKSFRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/validate(_:name:parent:max:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3maxyqd__Sg_S2Sqd__tKSFRd__lF">validate(_:<wbr>name:<wbr>parent:<wbr>max:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="n">validate</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">T</span><span class="p">?,</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">parent</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">max</span><span class="p">:</span> <span class="kt">T</span><span class="p">)</span> <span class="k">throws</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt">FloatingPoint</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3minyqd__Sg_S2SSitKSlRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/validate(_:name:parent:min:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3minyqd__Sg_S2SSitKSlRd__lF">validate(_:<wbr>name:<wbr>parent:<wbr>min:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="n">validate</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">T</span><span class="p">?,</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">parent</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">min</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="k">throws</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt">Collection</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3maxyqd__Sg_S2SSitKSlRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/validate(_:name:parent:max:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3maxyqd__Sg_S2SSitKSlRd__lF">validate(_:<wbr>name:<wbr>parent:<wbr>max:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="n">validate</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">T</span><span class="p">?,</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">parent</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">max</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="k">throws</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt">Collection</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3minyAA10AWSPayloadVSg_S2SSitKF"></a>
+                    <a name="//apple_ref/swift/Method/validate(_:name:parent:min:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3minyAA10AWSPayloadVSg_S2SSitKF">validate(_:<wbr>name:<wbr>parent:<wbr>min:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">validate</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt"><a href="../Structs/AWSPayload.html">AWSPayload</a></span><span class="p">?,</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">parent</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">min</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3maxyAA10AWSPayloadVSg_S2SSitKF"></a>
+                    <a name="//apple_ref/swift/Method/validate(_:name:parent:max:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent3maxyAA10AWSPayloadVSg_S2SSitKF">validate(_:<wbr>name:<wbr>parent:<wbr>max:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">validate</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt"><a href="../Structs/AWSPayload.html">AWSPayload</a></span><span class="p">?,</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">parent</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">max</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent7patternySSSg_S3StKF"></a>
+                    <a name="//apple_ref/swift/Method/validate(_:name:parent:pattern:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AWSSDKSwiftCore17AWSEncodableShapePAAE8validate_4name6parent7patternySSSg_S3StKF">validate(_:<wbr>name:<wbr>parent:<wbr>pattern:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">validate</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">String</span><span class="p">?,</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">parent</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">pattern</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>© Copyright (c) 2019 Yuki Takei(noppoMan), Joe Smith(Yasumoto), Jonathan McAllister(jonnymacs), Adam Fowler (adam-fowler), Fabian Fett (fabianfett)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>

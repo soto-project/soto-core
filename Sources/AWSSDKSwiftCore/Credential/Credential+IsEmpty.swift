@@ -13,9 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 import AWSSignerV4
-import struct Foundation.Date
-import class Foundation.NSString
-import INIParser
 
 extension Credential {
     func isEmpty() -> Bool {

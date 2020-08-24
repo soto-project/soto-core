@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+// This code takes inspiration from https://github.com/GottaGetSwifty/CodableWrappers
+
 /// base protocol for encoder/decoder objects
 public protocol CustomCoder {
     associatedtype CodableValue

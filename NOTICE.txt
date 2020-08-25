@@ -32,4 +32,3 @@ This product contains a copy of libexpat
     * https://github.com/libexpat/libexpat/blob/master/expat/COPYING
   * HOMEPAGE:
     * https://libexpat.github.io/
-

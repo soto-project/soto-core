@@ -74,11 +74,13 @@ extension StandardRetryPolicy {
 
         switch error {
         // server error or too many requests
-        case AWSClient.InternalError.httpResponseError(let response):
-            if (500...).contains(response.status.code) || response.status.code == 429 {
+        case let responseError as AWSClient.HTTPResponseError:
+            if (500...).contains(responseError.response.status.code) || responseError.response.status.code == 429 {
                 return .retry(wait: calculateRetryWaitTime(attempt: attempt))
             }
             return .dontRetry
+        case is NIOConnectionError:
+            return .retry(wait: calculateRetryWaitTime(attempt: attempt))
         default:
             return .dontRetry
         }

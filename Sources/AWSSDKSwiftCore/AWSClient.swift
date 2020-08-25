@@ -50,8 +50,8 @@ public final class AWSClient {
         public static var tooMuchData: ClientError { .init(error: .tooMuchData) }
     }
 
-    enum InternalError: Swift.Error {
-        case httpResponseError(AWSHTTPResponse)
+    public struct HTTPResponseError: Swift.Error {
+        public let response: AWSHTTPResponse
     }
 
     /// Specifies how `HTTPClient` will be created and establishes lifecycle ownership.
@@ -194,22 +194,22 @@ extension AWSClient {
             _ = request()
                 .flatMapThrowing { (response) throws -> Void in
                     // if it returns an HTTP status code outside 2xx then throw an error
-                    guard (200..<300).contains(response.status.code) else { throw AWSClient.InternalError.httpResponseError(response) }
+                    guard (200..<300).contains(response.status.code) else { throw HTTPResponseError(response: response) }
                     promise.succeed(response)
                 }
                 .flatMapErrorThrowing { (error) -> Void in
                     // If I get a retry wait time for this error then attempt to retry request
                     if case .retry(let retryTime) = self.retryPolicy.getRetryWaitTime(error: error, attempt: attempt) {
                         logger.info("Retrying request", metadata: [
-                            "aws-retry-time": "\(retryTime)",
+                            "aws-retry-time": "\(Double(retryTime.nanoseconds) / 1_000_000_000)",
                         ])
                         // schedule task for retrying AWS request
                         eventloop.scheduleTask(in: retryTime) {
                             execute(attempt: attempt + 1)
                         }
-                    } else if case AWSClient.InternalError.httpResponseError(let response) = error {
+                    } else if let responseError = error as? HTTPResponseError {
                         // if there was no retry and error was a response status code then attempt to convert to AWS error
-                        promise.fail(self.createError(for: response, serviceConfig: serviceConfig, logger: logger))
+                        promise.fail(self.createError(for: responseError.response, serviceConfig: serviceConfig, logger: logger))
                     } else {
                         promise.fail(error)
                     }

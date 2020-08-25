@@ -520,6 +520,49 @@ class AWSClientTests: XCTestCase {
         }
     }
 
+    func testCustomRetryPolicy() {
+        class TestRetryPolicy: RetryPolicy {
+            static let maxRetries: Int = 3
+            var attempt: Int
+
+            init() {
+                self.attempt = 0
+            }
+
+            func getRetryWaitTime(error: Error, attempt: Int) -> RetryStatus? {
+                self.attempt = attempt
+                if attempt < Self.maxRetries { return .retry(wait: .milliseconds(100)) }
+                return .dontRetry
+            }
+        }
+        let retryPolicy = TestRetryPolicy()
+        do {
+            let awsServer = AWSTestServer(serviceProtocol: .json)
+            let serverAddress = awsServer.address
+            XCTAssertNoThrow(try awsServer.stop())
+            let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+            defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+            let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
+            defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
+            let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: serverAddress)
+            let client = createAWSClient(credentialProvider: .empty, retryPolicy: .init(retryPolicy: retryPolicy), httpClientProvider: .shared(httpClient))
+            defer { XCTAssertNoThrow(try client.syncShutdown()) }
+            let response: EventLoopFuture<Void> = client.execute(
+                operation: "test",
+                path: "/",
+                httpMethod: .POST,
+                serviceConfig: config,
+                logger: TestEnvironment.logger
+            )
+
+            try response.wait()
+        } catch is NIOConnectionError {
+            XCTAssertEqual(retryPolicy.attempt, TestRetryPolicy.maxRetries)
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
     func testClientRetryFail() {
         struct Output: AWSDecodableShape, Encodable {
             let s: String

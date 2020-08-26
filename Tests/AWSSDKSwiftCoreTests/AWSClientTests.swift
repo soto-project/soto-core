@@ -551,8 +551,8 @@ class AWSClientTests: XCTestCase {
                 operation: "test",
                 path: "/",
                 httpMethod: .POST,
-                serviceConfig: config,
-                logger: TestEnvironment.logger
+                config: config,
+                context: TestEnvironment.context
             )
 
             try response.wait()

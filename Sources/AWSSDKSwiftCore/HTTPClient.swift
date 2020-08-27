@@ -96,7 +96,7 @@ public final class HTTPClient {
 
     /// setup client bootstrap for HTTP request
     func clientBootstrap(hostname: String, port: Int, headerHostname: String, request: Request, response: EventLoopPromise<Response>) {
-        _ = ClientBootstrap(group: self.eventLoopGroup)
+        ClientBootstrap(group: self.eventLoopGroup)
             .connectTimeout(TimeAmount.seconds(5))
             .channelOption(ChannelOptions.socket(SocketOptionLevel(IPPROTO_TCP), TCP_NODELAY), value: 1)
             .channelInitializer { channel in

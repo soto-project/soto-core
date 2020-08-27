@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 @testable import AWSSDKSwiftCore
+import Baggage
 import Foundation
 import Logging
 
@@ -98,11 +99,17 @@ public func createRandomBuffer(_ w: UInt, _ z: UInt, size: Int) -> [UInt8] {
 
 /// Provide various test environment variables
 public struct TestEnvironment {
+    private struct TestContext: AWSClient.Context {
+        var baggage: BaggageContext
+        var logger = Logger(label: "test") // TODO: store logged messages for further inspection
+    }
+
     /// current list of middleware
     public static var middlewares: [AWSServiceMiddleware] {
         return (Environment["AWS_ENABLE_LOGGING"] == "true") ? [AWSLoggingMiddleware()] : []
     }
 
+    // TODO: make private and get via context?
     public static var logger: Logger = {
         if let loggingLevel = Environment["AWS_LOG_LEVEL"] {
             if let logLevel = Logger.Level(rawValue: loggingLevel.lowercased()) {
@@ -113,4 +120,18 @@ public struct TestEnvironment {
         }
         return AWSClient.loggingDisabled
     }()
+
+    public static var context: AWSClient.Context = {
+        let traceContext = TestTracer.Context()
+        var baggage = BaggageContext()
+        baggage.test = traceContext
+        return TestContext(baggage: baggage, logger: Self.logger)
+    }()
+
+    public static func contextWith(logger: Logging.Logger) -> AWSClient.Context {
+        let traceContext = TestTracer.Context()
+        var baggage = BaggageContext()
+        baggage.test = traceContext
+        return TestContext(baggage: baggage, logger: logger)
+    }
 }

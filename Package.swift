@@ -26,7 +26,8 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio.git", .upToNextMajor(from: "2.16.1")),
         .package(url: "https://github.com/apple/swift-nio-ssl.git", .upToNextMajor(from: "2.7.2")),
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", .upToNextMajor(from: "1.0.0")),
-        .package(url: "https://github.com/swift-server/async-http-client.git", .upToNextMajor(from: "1.2.0")),
+        // .package(url: "https://github.com/swift-server/async-http-client.git", .upToNextMajor(from: "1.2.0")),
+        .package(url: "https://github.com/pokryfka/async-http-client.git", .branch("feature/instrumentation")),
         .package(url: "https://github.com/slashmo/gsoc-swift-baggage-context.git", .upToNextMinor(from: "0.3.0")),
         // TODO: use version when released
         .package(url: "https://github.com/slashmo/gsoc-swift-tracing.git", .revision("fe80d764ad225b1dfd06dcb57d08b5e3485662f9")),
@@ -45,6 +46,7 @@ let package = Package(
             .product(name: "NIOTransportServices", package: "swift-nio-transport-services"),
             .product(name: "NIOFoundationCompat", package: "swift-nio"),
             .product(name: "Baggage", package: "swift-baggage-context"),
+            .product(name: "BaggageLogging", package: "swift-baggage-context"),
             .product(name: "TracingInstrumentation", package: "gsoc-swift-tracing"),
         ]),
         .target(name: "AWSCrypto", dependencies: []),
@@ -59,6 +61,7 @@ let package = Package(
             .product(name: "NIOFoundationCompat", package: "swift-nio"),
             .product(name: "NIOTestUtils", package: "swift-nio"),
             .product(name: "Baggage", package: "swift-baggage-context"),
+            .product(name: "BaggageLogging", package: "swift-baggage-context"),
             .product(name: "TracingInstrumentation", package: "gsoc-swift-tracing"),
         ]),
         .target(name: "AWSXML", dependencies: [

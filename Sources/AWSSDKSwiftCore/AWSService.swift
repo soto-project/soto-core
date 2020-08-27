@@ -36,7 +36,7 @@ extension AWSService {
     ///     - expires: How long before the signed URL expires
     /// - returns:
     ///     A signed URL
-    public func signURL(url: URL, httpMethod: String, expires: Int = 86400, logger: Logger = AWSClient.loggingDisabled) -> EventLoopFuture<URL> {
-        return self.client.signURL(url: url, httpMethod: httpMethod, expires: expires, serviceConfig: self.config, logger: logger)
+    public func signURL(url: URL, httpMethod: String, expires: Int = 86400, context: AWSClient.Context) -> EventLoopFuture<URL> {
+        return self.client.signURL(url: url, httpMethod: httpMethod, expires: expires, serviceConfig: self.config, context: context)
     }
 }

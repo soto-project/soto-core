@@ -43,7 +43,7 @@ struct AWSConfigFileCredentialProvider: CredentialProvider {
         self.profile = profile ?? Environment["AWS_PROFILE"] ?? "default"
     }
 
-    func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
+    func getCredential(on eventLoop: EventLoop, context: CredentialProvider.Context) -> EventLoopFuture<Credential> {
         return AWSConfigFileCredentialProvider.fromSharedCredentials(credentialsFilePath: self.credentialsFilePath, profile: self.profile, on: eventLoop)
             .map { $0 }
     }

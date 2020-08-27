@@ -28,7 +28,7 @@ class RotatingCredentialProviderTests: XCTestCase {
             self.callback = callback
         }
 
-        func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
+        func getCredential(on eventLoop: EventLoop, context: CredentialProvider.Context) -> EventLoopFuture<Credential> {
             eventLoop.flatSubmit {
                 self.callback(eventLoop).map { $0 }
             }
@@ -54,12 +54,12 @@ class RotatingCredentialProviderTests: XCTestCase {
             hitCount += 1
             return $0.makeSucceededFuture(cred)
         }
-        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, logger: Logger(label: "aws-sdk-swift"))
+        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, logger: Logger(label: "aws-sdk-swift"), baggage: .init())
         let provider = RotatingCredentialProvider(context: context, provider: client)
 
         // get credentials for first time
         var returned: Credential?
-        XCTAssertNoThrow(returned = try provider.getCredential(on: loop, logger: Logger(label: "aws-sdk-swift")).wait())
+        XCTAssertNoThrow(returned = try provider.getCredential(on: loop, context: context).wait())
 
         XCTAssertEqual(returned?.accessKeyId, cred.accessKeyId)
         XCTAssertEqual(returned?.secretAccessKey, cred.secretAccessKey)
@@ -67,7 +67,7 @@ class RotatingCredentialProviderTests: XCTestCase {
         XCTAssertEqual((returned as? TestExpiringCredential)?.expiration, cred.expiration)
 
         // get credentials a second time, callback must not be hit
-        XCTAssertNoThrow(returned = try provider.getCredential(on: loop, logger: TestEnvironment.logger).wait())
+        XCTAssertNoThrow(returned = try provider.getCredential(on: loop, context: context).wait())
         XCTAssertEqual(returned?.accessKeyId, cred.accessKeyId)
         XCTAssertEqual(returned?.secretAccessKey, cred.secretAccessKey)
         XCTAssertEqual(returned?.sessionToken, cred.sessionToken)
@@ -98,7 +98,7 @@ class RotatingCredentialProviderTests: XCTestCase {
             hitCount += 1
             return promise.futureResult
         }
-        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, logger: TestEnvironment.logger)
+        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, logger: TestEnvironment.logger, baggage: .init())
         let provider = RotatingCredentialProvider(context: context, provider: client)
 
         var resultFutures = [EventLoopFuture<Void>]()
@@ -115,7 +115,7 @@ class RotatingCredentialProviderTests: XCTestCase {
                     setupPromise.succeed(())
                 }
 
-                return provider.getCredential(on: loop, logger: TestEnvironment.logger).map { returned in
+                return provider.getCredential(on: loop, context: TestEnvironment.context).map { returned in
                     // this should be executed after the promise is fulfilled.
                     XCTAssertEqual(returned.accessKeyId, cred.accessKeyId)
                     XCTAssertEqual(returned.secretAccessKey, cred.secretAccessKey)
@@ -159,14 +159,14 @@ class RotatingCredentialProviderTests: XCTestCase {
             )
             return eventLoop.makeSucceededFuture(cred)
         }
-        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, logger: TestEnvironment.logger)
+        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, logger: TestEnvironment.logger, baggage: .init())
         let provider = RotatingCredentialProvider(context: context, provider: client)
-        XCTAssertNoThrow(_ = try provider.getCredential(on: loop, logger: TestEnvironment.logger).wait())
+        XCTAssertNoThrow(_ = try provider.getCredential(on: loop, context: TestEnvironment.context).wait())
         hitCount = 0
 
         let iterations = 100
         for _ in 0..<100 {
-            XCTAssertNoThrow(_ = try provider.getCredential(on: loop, logger: TestEnvironment.logger).wait())
+            XCTAssertNoThrow(_ = try provider.getCredential(on: loop, context: TestEnvironment.context).wait())
         }
 
         // ensure callback was only hit once

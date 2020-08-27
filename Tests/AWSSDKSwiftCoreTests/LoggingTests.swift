@@ -22,6 +22,7 @@ class LoggingTests: XCTestCase {
     func testRequestIdIncrements() {
         let logCollection = LoggingCollector.Logs()
         let logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection, logLevel: .trace) })
+        let context = TestEnvironment.contextWith(logger: logger)
         let server = AWSTestServer(serviceProtocol: .json)
         defer { XCTAssertNoThrow(try server.stop()) }
         let client = AWSClient(
@@ -35,8 +36,8 @@ class LoggingTests: XCTestCase {
             endpoint: server.address
         )
 
-        let response = client.execute(operation: "test1", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
-        let response2 = client.execute(operation: "test2", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
+        let response = client.execute(operation: "test1", path: "/", httpMethod: .GET, serviceConfig: config, context: context)
+        let response2 = client.execute(operation: "test2", path: "/", httpMethod: .GET, serviceConfig: config, context: context)
 
         var count = 0
         XCTAssertNoThrow(try server.processRaw { _ in
@@ -62,6 +63,7 @@ class LoggingTests: XCTestCase {
         let logCollection = LoggingCollector.Logs()
         var logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection) })
         logger.logLevel = .trace
+        let context = TestEnvironment.contextWith(logger: logger)
         let server = AWSTestServer(serviceProtocol: .json)
         defer { XCTAssertNoThrow(try server.stop()) }
         let client = AWSClient(
@@ -76,7 +78,7 @@ class LoggingTests: XCTestCase {
             endpoint: server.address
         )
 
-        let response = client.execute(operation: "TestOperation", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
+        let response = client.execute(operation: "TestOperation", path: "/", httpMethod: .GET, serviceConfig: config, context: context)
 
         XCTAssertNoThrow(try server.processRaw { _ in
             return .result(.ok, continueProcessing: false)
@@ -96,6 +98,7 @@ class LoggingTests: XCTestCase {
     func testAWSError() {
         let logCollection = LoggingCollector.Logs()
         let logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection) })
+        let context = TestEnvironment.contextWith(logger: logger)
         let server = AWSTestServer(serviceProtocol: .json)
         defer { XCTAssertNoThrow(try server.stop()) }
         let client = AWSClient(
@@ -109,7 +112,7 @@ class LoggingTests: XCTestCase {
             endpoint: server.address
         )
 
-        let response = client.execute(operation: "test", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
+        let response = client.execute(operation: "test", path: "/", httpMethod: .GET, serviceConfig: config, context: context)
 
         XCTAssertNoThrow(try server.processRaw { _ in
             return .error(.accessDenied, continueProcessing: false)
@@ -123,6 +126,7 @@ class LoggingTests: XCTestCase {
     func testRetryRequest() {
         let logCollection = LoggingCollector.Logs()
         let logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection, logLevel: .trace) })
+        let context = TestEnvironment.contextWith(logger: logger)
         let server = AWSTestServer(serviceProtocol: .json)
         defer { XCTAssertNoThrow(try server.stop()) }
         let client = AWSClient(
@@ -136,7 +140,7 @@ class LoggingTests: XCTestCase {
             endpoint: server.address
         )
 
-        let response = client.execute(operation: "test1", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
+        let response = client.execute(operation: "test1", path: "/", httpMethod: .GET, serviceConfig: config, context: context)
 
         var count = 0
         XCTAssertNoThrow(try server.processRaw { _ in
@@ -157,6 +161,7 @@ class LoggingTests: XCTestCase {
     func testNoCredentialProvider() {
         let logCollection = LoggingCollector.Logs()
         let logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection, logLevel: .trace) })
+        let context = TestEnvironment.contextWith(logger: logger)
         let client = createAWSClient(credentialProvider: .selector(.custom { _ in return NullCredentialProvider() }))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let serviceConfig = createServiceConfig()
@@ -165,7 +170,7 @@ class LoggingTests: XCTestCase {
             path: "/",
             httpMethod: .GET,
             serviceConfig: serviceConfig,
-            logger: logger
+            context: context
         ).wait())
         XCTAssertNotNil(logCollection.filter(metadata: "aws-error-message", with: "No credential provider found").first)
     }

@@ -38,7 +38,7 @@ public class DeferredCredentialProvider: CredentialProvider {
     public init(context: CredentialProviderFactory.Context, provider: CredentialProvider) {
         self.startupPromise = context.eventLoop.makePromise(of: Credential.self)
         self.provider = provider
-        provider.getCredential(on: context.eventLoop, logger: context.logger)
+        provider.getCredential(on: context.eventLoop, context: context)
             .flatMapErrorThrowing { _ in throw CredentialProviderError.noProvider }
             .map { credential in
                 self.internalCredential = credential
@@ -59,7 +59,7 @@ public class DeferredCredentialProvider: CredentialProvider {
     /// otherwise return credentials store in class
     /// - Parameter eventLoop: EventLoop to run off
     /// - Returns: EventLoopFuture that will hold credentials
-    public func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
+    public func getCredential(on eventLoop: EventLoop, context: CredentialProvider.Context) -> EventLoopFuture<Credential> {
         if let credential = self.credential {
             return eventLoop.makeSucceededFuture(credential)
         }

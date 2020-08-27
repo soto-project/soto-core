@@ -27,7 +27,7 @@ class CredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
         let loop = group.next()
         var returned: Credential?
-        XCTAssertNoThrow(returned = try cred.getCredential(on: loop, logger: TestEnvironment.logger).wait())
+        XCTAssertNoThrow(returned = try cred.getCredential(on: loop, context: TestEnvironment.context).wait())
 
         XCTAssertEqual(returned as? StaticCredential, cred)
     }
@@ -36,7 +36,7 @@ class CredentialProviderTests: XCTestCase {
     func testDeferredCredentialProvider() {
         class MyCredentialProvider: CredentialProvider {
             var alreadyCalled = false
-            func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
+            func getCredential(on eventLoop: EventLoop, context: CredentialProvider.Context) -> EventLoopFuture<Credential> {
                 if self.alreadyCalled == false {
                     self.alreadyCalled = true
                     return eventLoop.makeSucceededFuture(StaticCredential(accessKeyId: "ACCESSKEYID", secretAccessKey: "SECRETACCESSKET"))
@@ -50,10 +50,10 @@ class CredentialProviderTests: XCTestCase {
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
         let eventLoop = eventLoopGroup.next()
-        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger)
+        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger, baggage: .init())
         let deferredProvider = DeferredCredentialProvider(context: context, provider: MyCredentialProvider())
-        XCTAssertNoThrow(_ = try deferredProvider.getCredential(on: eventLoop, logger: TestEnvironment.logger).wait())
-        XCTAssertNoThrow(_ = try deferredProvider.getCredential(on: eventLoop, logger: TestEnvironment.logger).wait())
+        XCTAssertNoThrow(_ = try deferredProvider.getCredential(on: eventLoop, context: context).wait())
+        XCTAssertNoThrow(_ = try deferredProvider.getCredential(on: eventLoop, context: context).wait())
     }
 
     func testConfigFileSuccess() {
@@ -74,10 +74,15 @@ class CredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
         let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
 
-        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger))
+        let provider = factory.createProvider(context: .init(
+            httpClient: httpClient,
+            eventLoop: eventLoop,
+            logger: TestEnvironment.logger,
+            baggage: .init()
+        ))
 
         var credential: Credential?
-        XCTAssertNoThrow(credential = try provider.getCredential(on: eventLoop, logger: TestEnvironment.logger).wait())
+        XCTAssertNoThrow(credential = try provider.getCredential(on: eventLoop, context: TestEnvironment.context).wait())
         XCTAssertEqual(credential?.accessKeyId, "AWSACCESSKEYID")
         XCTAssertEqual(credential?.secretAccessKey, "AWSSECRETACCESSKEY")
     }
@@ -93,9 +98,9 @@ class CredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
         let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
 
-        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger))
+        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger, baggage: .init()))
 
-        XCTAssertThrowsError(_ = try provider.getCredential(on: eventLoop, logger: TestEnvironment.logger).wait()) { error in
+        XCTAssertThrowsError(_ = try provider.getCredential(on: eventLoop, context: TestEnvironment.context).wait()) { error in
             print("\(error)")
             XCTAssertEqual(error as? CredentialProviderError, .noProvider)
         }

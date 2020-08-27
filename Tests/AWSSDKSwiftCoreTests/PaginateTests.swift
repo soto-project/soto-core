@@ -66,15 +66,15 @@ class PaginateTests: XCTestCase {
         let outputToken: Int?
     }
 
-    func counter(_ input: CounterInput, on eventLoop: EventLoop?, logger: Logger) -> EventLoopFuture<CounterOutput> {
+    func counter(_ input: CounterInput, on eventLoop: EventLoop?, context: AWSClient.Context) -> EventLoopFuture<CounterOutput> {
         return self.client.execute(
             operation: "TestOperation",
             path: "/",
             httpMethod: .POST,
             serviceConfig: self.config,
             input: input,
-            on: eventLoop,
-            logger: logger
+            context: TestEnvironment.context,
+            on: eventLoop
         )
     }
 
@@ -83,7 +83,7 @@ class PaginateTests: XCTestCase {
             input: input,
             command: self.counter,
             tokenKey: \CounterOutput.outputToken,
-            logger: TestEnvironment.logger,
+            context: TestEnvironment.context,
             onPage: onPage
         )
     }
@@ -144,15 +144,15 @@ class PaginateTests: XCTestCase {
         let outputToken: String?
     }
 
-    func stringList(_ input: StringListInput, on eventLoop: EventLoop? = nil, logger: Logger) -> EventLoopFuture<StringListOutput> {
+    func stringList(_ input: StringListInput, on eventLoop: EventLoop? = nil, context: AWSClient.Context) -> EventLoopFuture<StringListOutput> {
         return self.client.execute(
             operation: "TestOperation",
             path: "/",
             httpMethod: .POST,
             serviceConfig: self.config,
             input: input,
-            on: eventLoop,
-            logger: logger
+            context: context,
+            on: eventLoop
         )
     }
 
@@ -161,8 +161,8 @@ class PaginateTests: XCTestCase {
             input: input,
             command: self.stringList,
             tokenKey: \StringListOutput.outputToken,
+            context: TestEnvironment.context,
             on: eventLoop,
-            logger: TestEnvironment.logger,
             onPage: onPage
         )
     }

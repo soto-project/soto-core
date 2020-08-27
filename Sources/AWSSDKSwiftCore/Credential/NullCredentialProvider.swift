@@ -18,7 +18,7 @@ import NIO
 
 /// Credential provider that always fails
 public struct NullCredentialProvider: CredentialProvider {
-    public func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
+    public func getCredential(on eventLoop: EventLoop, context: CredentialProvider.Context) -> EventLoopFuture<Credential> {
         return eventLoop.makeFailedFuture(CredentialProviderError.noProvider)
     }
 }

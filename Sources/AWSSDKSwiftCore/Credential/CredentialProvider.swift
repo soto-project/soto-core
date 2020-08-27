@@ -13,13 +13,16 @@
 //===----------------------------------------------------------------------===//
 
 import AWSSignerV4
-import Logging
+import Baggage
+import BaggageLogging
 import NIO
 import NIOConcurrencyHelpers
 
 /// Protocol providing future holding a credential
 public protocol CredentialProvider: CustomStringConvertible {
-    func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential>
+    typealias Context = BaggageLogging.LoggingBaggageContextCarrier
+
+    func getCredential(on eventLoop: EventLoop, context: CredentialProvider.Context) -> EventLoopFuture<Credential>
     func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void>
 }
 
@@ -34,13 +37,15 @@ extension CredentialProvider {
 /// A helper struct to defer the creation of a `CredentialProvider` until after the AWSClient has been created.
 public struct CredentialProviderFactory {
     /// The initialization context for a `ContextProvider`
-    public struct Context {
+    public struct Context: BaggageLogging.LoggingBaggageContextCarrier {
         /// The `AWSClient`s internal `HTTPClient`
         public let httpClient: AWSHTTPClient
         /// The `EventLoop` that the `CredentialProvider` should use for credential refreshs
         public let eventLoop: EventLoop
         /// The `Logger` attached to the AWSClient
-        public let logger: Logger
+        public var logger: Logger // TODO: should not need to be mutable
+        /// The context baggage.
+        public var baggage: BaggageContext
     }
 
     private let cb: (Context) -> CredentialProvider

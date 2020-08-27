@@ -43,13 +43,13 @@ class RuntimeSelectorCredentialProvider: CredentialProvider {
         return self.startupPromise.futureResult.map { _ in }.hop(to: eventLoop)
     }
 
-    func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
+    func getCredential(on eventLoop: EventLoop, context: CredentialProvider.Context) -> EventLoopFuture<Credential> {
         if let provider = internalProvider {
-            return provider.getCredential(on: eventLoop, logger: logger)
+            return provider.getCredential(on: eventLoop, context: context)
         }
 
         return self.startupPromise.futureResult.hop(to: eventLoop).flatMap { provider in
-            return provider.getCredential(on: eventLoop, logger: logger)
+            return provider.getCredential(on: eventLoop, context: context)
         }
     }
 
@@ -63,7 +63,7 @@ class RuntimeSelectorCredentialProvider: CredentialProvider {
             }
             let providerFactory = providers[index]
             let provider = providerFactory.createProvider(context: context)
-            provider.getCredential(on: context.eventLoop, logger: context.logger).whenComplete { result in
+            provider.getCredential(on: context.eventLoop, context: context).whenComplete { result in
                 switch result {
                 case .success:
                     context.logger.info("Select credential provider", metadata: ["aws-credential-provider": .string("\(provider)")])

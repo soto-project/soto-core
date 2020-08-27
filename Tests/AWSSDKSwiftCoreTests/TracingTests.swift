@@ -16,29 +16,16 @@
 import AWSTestUtils
 import Baggage
 import Instrumentation
+import Logging
 import NIO
 import NIOHTTP1
 import XCTest
 
 class TracingTests: XCTestCase {
-    private struct TestContext: AWSClient.Context {
-        public var baggage: BaggageContext
-
-        init(traceContext: TestTracer.Context) {
-            var baggage = BaggageContext()
-            baggage.test = traceContext
-            self.baggage = baggage
-        }
-    }
-
     func testTracingDownstreamCall() {
         // bootstrap tracer
         let tracer = TestTracer()
         InstrumentationSystem.bootstrap(tracer)
-
-        // create new trace
-        // TODO: not possible using TracingInstrument API, see https://github.com/slashmo/gsoc-swift-tracing/issues/137
-        let context = TestContext(traceContext: .init())
 
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let elg = MultiThreadedEventLoopGroup(numberOfThreads: 1)
@@ -64,8 +51,7 @@ class TracingTests: XCTestCase {
             path: "/",
             httpMethod: .POST,
             serviceConfig: config,
-            context: context,
-            logger: TestEnvironment.logger
+            context: TestEnvironment.context
         )
         XCTAssertNoThrow(try awsServer.httpBin())
         XCTAssertNoThrow(try response.wait())

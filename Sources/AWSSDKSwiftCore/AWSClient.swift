@@ -163,7 +163,7 @@ public final class AWSClient {
         }
         let eventLoop = eventLoopGroup.next()
         // ignore errors from credential provider. Don't need shutdown erroring because no providers were available
-        _ = credentialProvider.shutdown(on: eventLoop).whenComplete { _ in
+        credentialProvider.shutdown(on: eventLoop).whenComplete { _ in
             // if httpClient was created by AWSClient then it is required to shutdown the httpClient.
             switch self.httpClientProvider {
             case .createNew:

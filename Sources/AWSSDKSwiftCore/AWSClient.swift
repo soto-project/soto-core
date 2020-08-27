@@ -15,23 +15,42 @@
 import AsyncHTTPClient
 import AWSSignerV4
 import AWSXML
+import Baggage
 import Dispatch
 import struct Foundation.Data
 import class Foundation.JSONDecoder
 import class Foundation.JSONSerialization
 import struct Foundation.URL
 import struct Foundation.URLQueryItem
+import Instrumentation
 import Logging
 import Metrics
 import NIO
 import NIOConcurrencyHelpers
 import NIOHTTP1
 import NIOTransportServices
+import TracingInstrumentation
+
+// TODO: instrument initialization
+// TODO: create internal spans for signing, parsing?
+
+// TODO: remove and use optional parameter or dont provide default value
+public struct AWSClientContext: AWSClient.Context {
+    public static var empty: AWSClientContext = .init(baggage: .init())
+
+    public var baggage: BaggageContext
+}
 
 /// This is the workhorse of aws-sdk-swift-core. You provide it with a `AWSShape` Input object, it converts it to `AWSRequest` which is then converted
 /// to a raw `HTTPClient` Request. This is then sent to AWS. When the response from AWS is received if it is successful it is converted to a `AWSResponse`
 /// which is then decoded to generate a `AWSShape` Output object. If it is not successful then `AWSClient` will throw an `AWSErrorType`.
 public final class AWSClient {
+    /// AWS operation context including trace context
+    public typealias Context = Baggage.BaggageContextCarrier
+    // TODO: import BaggageLogging and add confirmance to LoggingBaggageContextCarrier
+    // when naming and conventions are confirmed https://github.com/slashmo/gsoc-swift-baggage-context/issues/23
+    // remove logger parameter (it will be provided in the context)
+
     /// Errors returned by AWSClient code
     public struct ClientError: Swift.Error, Equatable {
         enum Error {
@@ -185,7 +204,12 @@ public final class AWSClient {
 
 // invoker
 extension AWSClient {
-    fileprivate func invoke(with serviceConfig: AWSServiceConfig, logger: Logger, _ request: @escaping () -> EventLoopFuture<AWSHTTPResponse>) -> EventLoopFuture<AWSHTTPResponse> {
+    fileprivate func invoke(
+        with serviceConfig: AWSServiceConfig,
+        logger: Logger,
+        context: Context,
+        _ request: @escaping () -> EventLoopFuture<AWSHTTPResponse>
+    ) -> EventLoopFuture<AWSHTTPResponse> {
         let eventloop = self.eventLoopGroup.next()
         let promise = eventloop.makePromise(of: AWSHTTPResponse.self)
 
@@ -222,15 +246,28 @@ extension AWSClient {
     }
 
     /// invoke HTTP request
-    fileprivate func invoke(_ httpRequest: AWSHTTPRequest, with serviceConfig: AWSServiceConfig, on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<AWSHTTPResponse> {
-        return invoke(with: serviceConfig, logger: logger) {
+    fileprivate func invoke(_ httpRequest: AWSHTTPRequest, with serviceConfig: AWSServiceConfig, on eventLoop: EventLoop, logger: Logger, context: Context) -> EventLoopFuture<AWSHTTPResponse> {
+        // TODO: what should be the operation name?
+        let operationName: String = httpRequest.url.path
+        var span = InstrumentationSystem.tracingInstrument.startSpan(named: operationName, context: context, ofKind: .client, at: .now())
+        return invoke(with: serviceConfig, logger: logger, context: context) {
+            // TODO: record retries and set HTTP attributes using instrumented HTTP client
+//            let httpClientContext = span.context
             return self.httpClient.execute(request: httpRequest, timeout: serviceConfig.timeout, on: eventLoop, logger: logger)
+        }
+        // TODO: use NIO helpers, see https://github.com/slashmo/gsoc-swift-tracing/issues/125
+        .always { result in
+            if case Result<AWSHTTPResponse, Error>.failure(let error) = result {
+                span.recordError(error)
+            }
+            span.end()
         }
     }
 
     /// invoke HTTP request with response streaming
-    fileprivate func invoke(_ httpRequest: AWSHTTPRequest, with serviceConfig: AWSServiceConfig, on eventLoop: EventLoop, logger: Logger, stream: @escaping AWSHTTPClient.ResponseStream) -> EventLoopFuture<AWSHTTPResponse> {
-        return invoke(with: serviceConfig, logger: logger) {
+    fileprivate func invoke(_ httpRequest: AWSHTTPRequest, with serviceConfig: AWSServiceConfig, on eventLoop: EventLoop, logger: Logger, context: Context, stream: @escaping AWSHTTPClient.ResponseStream) -> EventLoopFuture<AWSHTTPResponse> {
+        // TODO: instrument
+        return invoke(with: serviceConfig, logger: logger, context: context) {
             return self.httpClient.execute(request: httpRequest, timeout: serviceConfig.timeout, on: eventLoop, logger: logger, stream: stream)
         }
     }
@@ -258,6 +295,7 @@ extension AWSClient {
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         input: Input,
+        context: Context = AWSClientContext.empty,
         on eventLoop: EventLoop? = nil,
         logger: Logger = AWSClient.loggingDisabled
     ) -> EventLoopFuture<Void> {
@@ -276,7 +314,7 @@ extension AWSClient {
                 .applyMiddlewares(serviceConfig.middlewares + self.middlewares)
                 .createHTTPRequest(signer: signer)
         }.flatMap { request in
-            return self.invoke(request, with: serviceConfig, on: eventLoop, logger: logger)
+            return self.invoke(request, with: serviceConfig, on: eventLoop, logger: logger, context: context)
         }.map { _ in
             return
         }
@@ -296,6 +334,7 @@ extension AWSClient {
         path: String,
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
+        context: Context = AWSClientContext.empty,
         on eventLoop: EventLoop? = nil,
         logger: Logger = AWSClient.loggingDisabled
     ) -> EventLoopFuture<Void> {
@@ -314,7 +353,7 @@ extension AWSClient {
                 .createHTTPRequest(signer: signer)
 
         }.flatMap { request -> EventLoopFuture<AWSHTTPResponse> in
-            return self.invoke(request, with: serviceConfig, on: eventLoop, logger: logger)
+            return self.invoke(request, with: serviceConfig, on: eventLoop, logger: logger, context: context)
         }.map { _ in
             return
         }
@@ -334,6 +373,7 @@ extension AWSClient {
         path: String,
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
+        context: Context = AWSClientContext.empty,
         on eventLoop: EventLoop? = nil,
         logger: Logger = AWSClient.loggingDisabled
     ) -> EventLoopFuture<Output> {
@@ -351,7 +391,7 @@ extension AWSClient {
                 .applyMiddlewares(serviceConfig.middlewares + self.middlewares)
                 .createHTTPRequest(signer: signer)
         }.flatMap { request in
-            return self.invoke(request, with: serviceConfig, on: eventLoop, logger: logger)
+            return self.invoke(request, with: serviceConfig, on: eventLoop, logger: logger, context: context)
         }.flatMapThrowing { response in
             return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
         }
@@ -373,6 +413,7 @@ extension AWSClient {
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         input: Input,
+        context: Context = AWSClientContext.empty,
         on eventLoop: EventLoop? = nil,
         logger: Logger = AWSClient.loggingDisabled
     ) -> EventLoopFuture<Output> {
@@ -391,7 +432,7 @@ extension AWSClient {
                 .applyMiddlewares(serviceConfig.middlewares + self.middlewares)
                 .createHTTPRequest(signer: signer)
         }.flatMap { request in
-            return self.invoke(request, with: serviceConfig, on: eventLoop, logger: logger)
+            return self.invoke(request, with: serviceConfig, on: eventLoop, logger: logger, context: context)
         }.flatMapThrowing { response in
             return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
         }
@@ -413,6 +454,7 @@ extension AWSClient {
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         input: Input,
+        context: Context = AWSClientContext.empty,
         on eventLoop: EventLoop? = nil,
         logger: Logger = AWSClient.loggingDisabled,
         stream: @escaping AWSHTTPClient.ResponseStream
@@ -432,7 +474,14 @@ extension AWSClient {
                 .applyMiddlewares(serviceConfig.middlewares + self.middlewares)
                 .createHTTPRequest(signer: signer)
         }.flatMap { request in
-            return self.invoke(request, with: serviceConfig, on: eventLoop, logger: logger, stream: stream)
+            return self.invoke(
+                request,
+                with: serviceConfig,
+                on: eventLoop,
+                logger: logger,
+                context: context,
+                stream: stream
+            )
         }.flatMapThrowing { response in
             return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
         }

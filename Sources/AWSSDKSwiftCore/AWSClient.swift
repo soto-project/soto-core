@@ -239,7 +239,7 @@ extension AWSClient {
 
     /// invoke HTTP request
     fileprivate func invoke(_ httpRequest: AWSHTTPRequest, with serviceConfig: AWSServiceConfig, on eventLoop: EventLoop, context: Context) -> EventLoopFuture<AWSHTTPResponse> {
-        var span = InstrumentationSystem.tracingInstrument.startSpan(named: "invoke", context: context, ofKind: .client, at: .now())
+        let span = InstrumentationSystem.tracingInstrument.startSpan(named: "invoke", context: context, ofKind: .client, at: .now())
         return invoke(with: serviceConfig, context: context) {
             return self.httpClient.execute(
                 request: httpRequest,
@@ -248,28 +248,16 @@ extension AWSClient {
                 context: context.with(baggage: span.context)
             )
         }
-        // TODO: use NIO helpers, see https://github.com/slashmo/gsoc-swift-tracing/issues/125
-        .always { result in
-            if case Result<AWSHTTPResponse, Error>.failure(let error) = result {
-                span.recordError(error)
-            }
-            span.end()
-        }
+        .endSpan(span)
     }
 
     /// invoke HTTP request with response streaming
     fileprivate func invoke(_ httpRequest: AWSHTTPRequest, with serviceConfig: AWSServiceConfig, on eventLoop: EventLoop, stream: @escaping AWSHTTPClient.ResponseStream, context: Context) -> EventLoopFuture<AWSHTTPResponse> {
-        var span = InstrumentationSystem.tracingInstrument.startSpan(named: "invoke", context: context, ofKind: .client, at: .now())
+        let span = InstrumentationSystem.tracingInstrument.startSpan(named: "invoke", context: context, ofKind: .client, at: .now())
         return invoke(with: serviceConfig, context: context) {
             return self.httpClient.execute(request: httpRequest, timeout: serviceConfig.timeout, on: eventLoop, context: context.with(baggage: span.context), stream: stream)
         }
-        // TODO: use NIO helpers, see https://github.com/slashmo/gsoc-swift-tracing/issues/125
-        .always { result in
-            if case Result<AWSHTTPResponse, Error>.failure(let error) = result {
-                span.recordError(error)
-            }
-            span.end()
-        }
+        .endSpan(span)
     }
 
     /// create HTTPClient
@@ -644,5 +632,20 @@ extension AWSClient.Context {
         var copy = self
         copy.baggage = baggage
         return copy
+    }
+}
+
+// TODO: temporary?, see https://github.com/slashmo/gsoc-swift-tracing/issues/125
+
+private extension EventLoopFuture {
+    func endSpan(_ span: TracingInstrumentation.Span) -> EventLoopFuture<Value> {
+        var span = span // TODO: see https://github.com/slashmo/gsoc-swift-tracing/issues/119
+        whenComplete { result in
+            if case Result<Value, Error>.failure(let error) = result {
+                span.recordError(error)
+            }
+            span.end()
+        }
+        return self
     }
 }

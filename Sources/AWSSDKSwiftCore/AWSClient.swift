@@ -250,7 +250,7 @@ extension AWSClient {
     ) -> EventLoopFuture<Void> {
         return execute(
             operation: operationName,
-            createRequest: { signer in
+            createRequest: {
                 try AWSRequest(
                     operation: operationName,
                     path: path,
@@ -262,7 +262,7 @@ extension AWSClient {
             execute: { request, eventLoop, logger in
                 return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger)
             },
-            processResponse: { response in
+            processResponse: { _ in
                 return
             },
             config: serviceConfig,
@@ -290,7 +290,7 @@ extension AWSClient {
     ) -> EventLoopFuture<Void> {
         return execute(
             operation: operationName,
-            createRequest: { signer in
+            createRequest: {
                 try AWSRequest(
                     operation: operationName,
                     path: path,
@@ -301,7 +301,7 @@ extension AWSClient {
             execute: { request, eventLoop, logger in
                 return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger)
             },
-            processResponse: { response in
+            processResponse: { _ in
                 return
             },
             config: serviceConfig,
@@ -329,7 +329,7 @@ extension AWSClient {
     ) -> EventLoopFuture<Output> {
         return execute(
             operation: operationName,
-            createRequest: { signer in
+            createRequest: {
                 try AWSRequest(
                     operation: operationName,
                     path: path,
@@ -370,7 +370,7 @@ extension AWSClient {
     ) -> EventLoopFuture<Output> {
         return execute(
             operation: operationName,
-            createRequest: { signer in
+            createRequest: {
                 try AWSRequest(
                     operation: operationName,
                     path: path,
@@ -413,7 +413,7 @@ extension AWSClient {
     ) -> EventLoopFuture<Output> {
         return execute(
             operation: operationName,
-            createRequest: { signer in
+            createRequest: {
                 try AWSRequest(
                     operation: operationName,
                     path: path,
@@ -437,7 +437,7 @@ extension AWSClient {
     /// internal version of execute
     internal func execute<Output>(
         operation operationName: String,
-        createRequest: @escaping (AWSSigner) throws -> AWSRequest,
+        createRequest: @escaping () throws -> AWSRequest,
         execute: @escaping (AWSHTTPRequest, EventLoop, Logger) -> EventLoopFuture<AWSHTTPResponse>,
         processResponse: @escaping (AWSHTTPResponse) throws -> Output,
         config: AWSServiceConfig,
@@ -450,7 +450,7 @@ extension AWSClient {
         let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop, logger: logger)
             .flatMapThrowing { credential in
                 let signer = AWSSigner(credentials: credential, name: config.signingName, region: config.region.rawValue)
-                let awsRequest = try createRequest(signer)
+                let awsRequest = try createRequest()
                 return try awsRequest
                     .applyMiddlewares(config.middlewares + self.middlewares)
                     .createHTTPRequest(signer: signer)

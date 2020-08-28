@@ -14,11 +14,20 @@
 
 @testable import AWSSDKSwiftCore
 import AWSTestUtils
+import Instrumentation
 import Logging
 import NIOConcurrencyHelpers
 import XCTest
 
 class LoggingTests: XCTestCase {
+    override func setUp() {
+        super.setUp()
+
+        // NoOpTracingInstrument does not propagate baggage
+        // TODO: discuss, see https://github.com/slashmo/gsoc-swift-tracing/issues/126#issuecomment-674631978
+        InstrumentationSystem.bootstrap(TestTracer())
+    }
+
     func testRequestIdIncrements() {
         let logCollection = LoggingCollector.Logs()
         let logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection, logLevel: .trace) })
@@ -28,7 +37,7 @@ class LoggingTests: XCTestCase {
         let client = AWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
             httpClientProvider: .createNew,
-            logger: logger
+            context: context
         )
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let config = createServiceConfig(
@@ -52,6 +61,7 @@ class LoggingTests: XCTestCase {
 
         XCTAssertNoThrow(_ = try response.wait())
         XCTAssertNoThrow(_ = try response2.wait())
+        // TODO: metadata is concattenated, example: "aws-request-id=1,aws-service=test,aws-operation=test1"
         let requestId1 = logCollection.filter(metadata: "aws-operation", with: "test1").first?.metadata["aws-request-id"]
         let requestId2 = logCollection.filter(metadata: "aws-operation", with: "test2").first?.metadata["aws-request-id"]
         XCTAssertNotNil(requestId1)
@@ -61,15 +71,14 @@ class LoggingTests: XCTestCase {
 
     func testAWSRequestResponse() throws {
         let logCollection = LoggingCollector.Logs()
-        var logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection) })
-        logger.logLevel = .trace
+        let logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection) })
         let context = TestEnvironment.contextWith(logger: logger)
         let server = AWSTestServer(serviceProtocol: .json)
         defer { XCTAssertNoThrow(try server.stop()) }
         let client = AWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
             httpClientProvider: .createNew,
-            logger: logger
+            context: context
         )
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let config = createServiceConfig(
@@ -87,6 +96,7 @@ class LoggingTests: XCTestCase {
         XCTAssertNoThrow(_ = try response.wait())
         let requestEntry = try XCTUnwrap(logCollection.filter(message: "AWS Request").first)
         XCTAssertEqual(requestEntry.level, .info)
+        // TODO: metadata is concattenated
         XCTAssertEqual(requestEntry.metadata["aws-operation"], "TestOperation")
         XCTAssertEqual(requestEntry.metadata["aws-service"], "test-service")
         let responseEntry = try XCTUnwrap(logCollection.filter(message: "AWS Response").first)
@@ -104,7 +114,7 @@ class LoggingTests: XCTestCase {
         let client = AWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
             httpClientProvider: .createNew,
-            logger: logger
+            context: context
         )
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let config = createServiceConfig(
@@ -132,7 +142,7 @@ class LoggingTests: XCTestCase {
         let client = AWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
             httpClientProvider: .createNew,
-            logger: logger
+            context: context
         )
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let config = createServiceConfig(

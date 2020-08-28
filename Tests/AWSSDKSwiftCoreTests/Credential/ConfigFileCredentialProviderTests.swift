@@ -183,7 +183,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
         let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
 
-        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger, baggage: .init()))
+        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, context: TestEnvironment.context))
 
         var credential: Credential?
         XCTAssertNoThrow(credential = try provider.getCredential(on: eventLoop, context: TestEnvironment.context).wait())
@@ -202,7 +202,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
         let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
 
-        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger, baggage: .init()))
+        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, context: TestEnvironment.context))
 
         XCTAssertThrowsError(_ = try provider.getCredential(on: eventLoop, context: TestEnvironment.context).wait()) { error in
             print("\(error)")

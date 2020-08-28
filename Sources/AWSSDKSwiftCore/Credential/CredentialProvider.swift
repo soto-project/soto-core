@@ -46,6 +46,13 @@ public struct CredentialProviderFactory {
         public var logger: Logger // TODO: should not need to be mutable
         /// The context baggage.
         public var baggage: BaggageContext
+
+        public init(httpClient: AWSHTTPClient, eventLoop: EventLoop, context: BaggageLogging.LoggingBaggageContextCarrier) {
+            self.httpClient = httpClient
+            self.eventLoop = eventLoop
+            self.logger = context.logger
+            self.baggage = context.baggage
+        }
     }
 
     private let cb: (Context) -> CredentialProvider

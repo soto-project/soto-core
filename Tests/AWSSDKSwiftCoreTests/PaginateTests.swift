@@ -66,7 +66,7 @@ class PaginateTests: XCTestCase {
         let outputToken: Int?
     }
 
-    func counter(_ input: CounterInput, on eventLoop: EventLoop?, context: AWSClient.Context) -> EventLoopFuture<CounterOutput> {
+    func counter(_ input: CounterInput, context: AWSClient.Context, on eventLoop: EventLoop?) -> EventLoopFuture<CounterOutput> {
         return self.client.execute(
             operation: "TestOperation",
             path: "/",
@@ -144,7 +144,7 @@ class PaginateTests: XCTestCase {
         let outputToken: String?
     }
 
-    func stringList(_ input: StringListInput, on eventLoop: EventLoop? = nil, context: AWSClient.Context) -> EventLoopFuture<StringListOutput> {
+    func stringList(_ input: StringListInput, context: AWSClient.Context, on eventLoop: EventLoop? = nil) -> EventLoopFuture<StringListOutput> {
         return self.client.execute(
             operation: "TestOperation",
             path: "/",

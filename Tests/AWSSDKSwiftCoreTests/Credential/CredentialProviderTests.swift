@@ -50,7 +50,7 @@ class CredentialProviderTests: XCTestCase {
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
         let eventLoop = eventLoopGroup.next()
-        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger, baggage: .init())
+        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: eventLoop, context: TestEnvironment.context)
         let deferredProvider = DeferredCredentialProvider(context: context, provider: MyCredentialProvider())
         XCTAssertNoThrow(_ = try deferredProvider.getCredential(on: eventLoop, context: context).wait())
         XCTAssertNoThrow(_ = try deferredProvider.getCredential(on: eventLoop, context: context).wait())
@@ -77,8 +77,7 @@ class CredentialProviderTests: XCTestCase {
         let provider = factory.createProvider(context: .init(
             httpClient: httpClient,
             eventLoop: eventLoop,
-            logger: TestEnvironment.logger,
-            baggage: .init()
+            context: TestEnvironment.context
         ))
 
         var credential: Credential?
@@ -98,7 +97,7 @@ class CredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
         let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
 
-        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger, baggage: .init()))
+        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, context: TestEnvironment.context))
 
         XCTAssertThrowsError(_ = try provider.getCredential(on: eventLoop, context: TestEnvironment.context).wait()) { error in
             print("\(error)")

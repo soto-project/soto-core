@@ -28,10 +28,10 @@ class TracingTests: XCTestCase {
         InstrumentationSystem.bootstrap(tracer)
 
         let awsServer = AWSTestServer(serviceProtocol: .json)
-        let elg = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         defer {
             XCTAssertNoThrow(try awsServer.stop())
-            XCTAssertNoThrow(try elg.syncShutdownGracefully())
+            XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
         }
         let config = createServiceConfig(
             serviceProtocol: .json(version: "1.1"),
@@ -58,8 +58,10 @@ class TracingTests: XCTestCase {
 
         // flush the tracer and check what have been recorded
         tracer.forceFlush()
-        XCTAssertGreaterThan(tracer._test_recordedSpans.count, 0)
-        let span = tracer._test_recordedSpans.first
+        let spans = tracer._test_recordedSpans
+        XCTAssertGreaterThan(spans.count, 0)
+        // TODO: extend
+        let span = spans.first { $0._test_operationName == "invoke" }
         XCTAssertNotNil(span)
         XCTAssertNotNil(span?._test_endTimestamp)
         XCTAssertEqual(span?._test_errors.count, 0)

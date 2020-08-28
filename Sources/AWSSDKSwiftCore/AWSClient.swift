@@ -120,8 +120,7 @@ public final class AWSClient {
         self.credentialProvider = credentialProviderFactory.createProvider(context: .init(
             httpClient: httpClient,
             eventLoop: httpClient.eventLoopGroup.next(),
-            logger: context.logger,
-            baggage: context.baggage
+            context: context
         ))
 
         self.middlewares = middlewares
@@ -461,7 +460,8 @@ extension AWSClient {
     ) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         // TODO: discuss hot to update the context (and its baggage)
-        var context = context.withRequest(.create(operation: operationName, serviceConfig: config))
+        var context = context
+        context.setRequest(.init(operation: operationName, serviceConfig: config))
         let span = InstrumentationSystem.tracingInstrument.startSpan(
             named: "\(config.service):\(operationName)", // TODO: or just "execute"?
             context: context
@@ -488,8 +488,7 @@ extension AWSClient {
             }
         }
         .endSpan(span)
-        // TODO: recordRequest duplicates some tracing functionality, pass context not just logger
-        return recordRequest(future, service: config.service, operation: operationName, logger: context.logger)
+        return recordRequest(future, service: config.service, operation: operationName, context: context)
     }
 
     /// generate a signed URL
@@ -507,7 +506,8 @@ extension AWSClient {
         serviceConfig: AWSServiceConfig,
         context: CredentialProvider.Context
     ) -> EventLoopFuture<URL> {
-        let context = context.withRequest(.create(operation: "signURL", serviceConfig: serviceConfig))
+        var context = context
+        context.setRequest(.init(operation: "signURL", serviceConfig: serviceConfig))
         return InstrumentationSystem.tracingInstrument.span(named: "signURL", context: context) { span in
             createSigner(serviceConfig: serviceConfig, context: context.with(baggage: span.context)).map { signer in
                 signer.signURL(url: url, method: HTTPMethod(rawValue: httpMethod), expires: expires)
@@ -573,7 +573,9 @@ extension AWSClient.ClientError: CustomStringConvertible {
 
 extension AWSClient {
     /// Record request in swift-metrics, and swift-log
-    func recordRequest<Output>(_ future: EventLoopFuture<Output>, service: String, operation: String, logger: Logger) -> EventLoopFuture<Output> {
+    func recordRequest<Output>(_ future: EventLoopFuture<Output>, service: String, operation: String, context: AWSClient.Context) -> EventLoopFuture<Output> {
+        let logger = context.logger
+
         let dimensions: [(String, String)] = [("aws-service", service), ("aws-operation", operation)]
         let startTime = DispatchTime.now().uptimeNanoseconds
 
@@ -607,7 +609,7 @@ extension AWSClient {
 // TODO: revisit, see https://github.com/slashmo/gsoc-swift-baggage-context/issues/23
 
 extension AWSClient {
-    internal struct DefaultContext: AWSClient.Context {
+    private struct DefaultContext: AWSClient.Context {
         private let _logger: Logger
         var logger: Logger {
             get {
@@ -625,9 +627,7 @@ extension AWSClient {
             self.baggage = baggage
         }
     }
-}
 
-extension AWSClient {
     private static let loggingDisabled = Logger(label: "AWS-do-not-log", factory: { _ in SwiftLogNoOpLogHandler() })
 
     public static func emptyContext(logger: Logging.Logger? = nil, baggage: BaggageContext = .init()) -> AWSClient.Context {
@@ -636,6 +636,7 @@ extension AWSClient {
 }
 
 extension AWSClient.Context {
+    // TODO: discuss how to update context baggage
     public func with(baggage: BaggageContext) -> AWSClient.Context {
         var copy = self
         copy.baggage = baggage
@@ -659,13 +660,13 @@ private extension AWSClient {
     struct RequestMetadata: CustomStringConvertible {
         static let globalRequestID = NIOAtomic<Int>.makeAtomic(value: 0)
 
-        static func create(
-            operation: String,
-            serviceConfig: AWSServiceConfig,
-            requestId: Int = Self.globalRequestID.add(1)
-        ) -> RequestMetadata {
-            RequestMetadata(requestId: requestId, service: serviceConfig.service, operation: operation)
-        }
+//        static func create(
+//            operation: String,
+//            serviceConfig: AWSServiceConfig,
+//            requestId: Int = Self.globalRequestID.add(1)
+//        ) -> RequestMetadata {
+//            RequestMetadata(requestId: requestId, service: serviceConfig.service, operation: operation)
+//        }
 
 //        static func create(serviceConfig: AWSServiceConfig) -> (String) -> RequestMetadata {
 //            { operation in
@@ -678,21 +679,26 @@ private extension AWSClient {
         var operation: String
 
         var description: String {
-            "request-id=\(requestId),service=\(service),operation=\(operation)"
+            "aws-request-id=\(requestId),aws-service=\(service),aws-operation=\(operation)"
+        }
+
+        init(operation: String, serviceConfig: AWSServiceConfig, requestId: Int = Self.globalRequestID.add(1)) {
+            self.requestId = requestId
+            self.service = serviceConfig.service
+            self.operation = operation
         }
     }
 
     enum RequestKey: BaggageContextKey {
         typealias Value = RequestMetadata
+        // TODO: the name is not logged as the logger metadata key, check/report/fix
         var name: String { "aws-sdk" }
     }
 }
 
 private extension AWSClient.Context {
-    func withRequest(_ value: AWSClient.RequestMetadata) -> AWSClient.Context {
-        var copy = self
-        copy.baggage[AWSClient.RequestKey.self] = value
-        return copy
+    mutating func setRequest(_ value: AWSClient.RequestMetadata) {
+        baggage[AWSClient.RequestKey.self] = value
     }
 }
 

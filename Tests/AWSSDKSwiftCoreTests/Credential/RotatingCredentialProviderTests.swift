@@ -54,7 +54,7 @@ class RotatingCredentialProviderTests: XCTestCase {
             hitCount += 1
             return $0.makeSucceededFuture(cred)
         }
-        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, logger: Logger(label: "aws-sdk-swift"), baggage: .init())
+        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, context: TestEnvironment.context)
         let provider = RotatingCredentialProvider(context: context, provider: client)
 
         // get credentials for first time
@@ -98,7 +98,7 @@ class RotatingCredentialProviderTests: XCTestCase {
             hitCount += 1
             return promise.futureResult
         }
-        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, logger: TestEnvironment.logger, baggage: .init())
+        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, context: TestEnvironment.context)
         let provider = RotatingCredentialProvider(context: context, provider: client)
 
         var resultFutures = [EventLoopFuture<Void>]()
@@ -159,7 +159,7 @@ class RotatingCredentialProviderTests: XCTestCase {
             )
             return eventLoop.makeSucceededFuture(cred)
         }
-        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, logger: TestEnvironment.logger, baggage: .init())
+        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, context: TestEnvironment.context)
         let provider = RotatingCredentialProvider(context: context, provider: client)
         XCTAssertNoThrow(_ = try provider.getCredential(on: loop, context: TestEnvironment.context).wait())
         hitCount = 0

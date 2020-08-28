@@ -214,7 +214,7 @@ class AWSResponseTests: XCTestCase {
 
         var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .json(version: "1.1"), raw: false))
-        let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger)
+        let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.context.logger)
         XCTAssertEqual(error as? ServiceErrorType, .resourceNotFoundException(message: "Donald Where's Your Troosers?"))
     }
 
@@ -228,7 +228,7 @@ class AWSResponseTests: XCTestCase {
 
         var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml, raw: false))
-        let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger)
+        let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.context.logger)
         XCTAssertEqual(error as? ServiceErrorType, .noSuchKey(message: "It doesn't exist"))
     }
 
@@ -242,7 +242,7 @@ class AWSResponseTests: XCTestCase {
 
         var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .query, raw: false))
-        let error = awsResponse?.generateError(serviceConfig: queryService, logger: TestEnvironment.logger)
+        let error = awsResponse?.generateError(serviceConfig: queryService, logger: TestEnvironment.context.logger)
         XCTAssertEqual(error as? ServiceErrorType, .messageRejected(message: "Don't like it"))
     }
 
@@ -256,7 +256,7 @@ class AWSResponseTests: XCTestCase {
 
         var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .ec2, raw: false))
-        let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? AWSResponseError
+        let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.context.logger) as? AWSResponseError
         XCTAssertEqual(error?.errorCode, "NoSuchKey")
         XCTAssertEqual(error?.message, "It doesn't exist")
     }

@@ -72,10 +72,9 @@ public final class AWSClient {
         case createNew
     }
 
+    // TODO: make part of the context
     /// default logger that logs nothing
     public static let loggingDisabled = Logger(label: "AWS-do-not-log", factory: { _ in SwiftLogNoOpLogHandler() })
-
-    static let globalRequestID = NIOAtomic<Int>.makeAtomic(value: 0)
 
     /// AWS credentials provider
     public let credentialProvider: CredentialProvider
@@ -461,13 +460,13 @@ extension AWSClient {
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
-        // TODO: set metadata via baggage
-//        let logger = context.logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName, service: config.service)
+        // TODO: discuss hot to update the context (and its baggage)
+        var context = context.withRequest(.create(operation: operationName, serviceConfig: config))
         let span = InstrumentationSystem.tracingInstrument.startSpan(
             named: "\(config.service):\(operationName)", // TODO: or just "execute"?
             context: context
         )
-        let context = context.with(baggage: span.context)
+        context = context.with(baggage: span.context)
         let future: EventLoopFuture<Output> = InstrumentationSystem.tracingInstrument.span(named: "getCredential", context: context) { span in
             credentialProvider.getCredential(on: eventLoop, context: context.with(baggage: span.context))
         }
@@ -489,7 +488,7 @@ extension AWSClient {
             }
         }
         .endSpan(span)
-        // TODO: recordRequest duplicates some tracing functionality, pass context not jsut logger
+        // TODO: recordRequest duplicates some tracing functionality, pass context not just logger
         return recordRequest(future, service: config.service, operation: operationName, logger: context.logger)
     }
 
@@ -508,8 +507,7 @@ extension AWSClient {
         serviceConfig: AWSServiceConfig,
         context: CredentialProvider.Context
     ) -> EventLoopFuture<URL> {
-        // TODO: set metadata via baggage
-//        let logger = context.logger.attachingRequestId(Self.globalRequestID.add(1), operation: "signURL", service: serviceConfig.service)
+        let context = context.withRequest(.create(operation: "signURL", serviceConfig: serviceConfig))
         return InstrumentationSystem.tracingInstrument.span(named: "signURL", context: context) { span in
             createSigner(serviceConfig: serviceConfig, context: context.with(baggage: span.context)).map { signer in
                 signer.signURL(url: url, method: HTTPMethod(rawValue: httpMethod), expires: expires)
@@ -604,16 +602,6 @@ extension AWSClient {
     }
 }
 
-extension Logger {
-    func attachingRequestId(_ id: Int, operation: String, service: String) -> Logger {
-        var logger = self
-        logger[metadataKey: "aws-service"] = .string(service)
-        logger[metadataKey: "aws-operation"] = .string(operation)
-        logger[metadataKey: "aws-request-id"] = "\(id)"
-        return logger
-    }
-}
-
 // MARK: DefaultContext
 
 // TODO: revisit, see https://github.com/slashmo/gsoc-swift-baggage-context/issues/23
@@ -626,7 +614,7 @@ extension AWSClient {
                 self._logger.with(context: self.baggage)
             }
             set {
-                // TODO: remove
+                // TODO: will not be required in next release, see https://github.com/slashmo/gsoc-swift-baggage-context/pull/31
             }
         }
 
@@ -645,6 +633,59 @@ extension AWSClient.Context {
     public func with(baggage: BaggageContext) -> AWSClient.Context {
         var copy = self
         copy.baggage = baggage
+        return copy
+    }
+}
+
+// MARK: RequestMetadata
+
+// extension Logger {
+//    func attachingRequestId(_ id: Int, operation: String, service: String) -> Logger {
+//        var logger = self
+//        logger[metadataKey: "aws-service"] = .string(service)
+//        logger[metadataKey: "aws-operation"] = .string(operation)
+//        logger[metadataKey: "aws-request-id"] = "\(id)"
+//        return logger
+//    }
+// }
+
+private extension AWSClient {
+    struct RequestMetadata: CustomStringConvertible {
+        static let globalRequestID = NIOAtomic<Int>.makeAtomic(value: 0)
+
+        static func create(
+            operation: String,
+            serviceConfig: AWSServiceConfig,
+            requestId: Int = Self.globalRequestID.add(1)
+        ) -> RequestMetadata {
+            RequestMetadata(requestId: requestId, service: serviceConfig.service, operation: operation)
+        }
+
+//        static func create(serviceConfig: AWSServiceConfig) -> (String) -> RequestMetadata {
+//            { operation in
+//                Self.create(operation: operation, serviceConfig: serviceConfig)
+//            }
+//        }
+
+        var requestId: Int
+        var service: String
+        var operation: String
+
+        var description: String {
+            "request-id=\(requestId),service=\(service),operation=\(operation)"
+        }
+    }
+
+    enum RequestKey: BaggageContextKey {
+        typealias Value = RequestMetadata
+        var name: String { "aws-sdk" }
+    }
+}
+
+private extension AWSClient.Context {
+    func withRequest(_ value: AWSClient.RequestMetadata) -> AWSClient.Context {
+        var copy = self
+        copy.baggage[AWSClient.RequestKey.self] = value
         return copy
     }
 }

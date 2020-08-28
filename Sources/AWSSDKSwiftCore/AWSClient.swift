@@ -239,18 +239,13 @@ extension AWSClient {
 
     /// invoke HTTP request
     fileprivate func invoke(_ httpRequest: AWSHTTPRequest, with serviceConfig: AWSServiceConfig, on eventLoop: EventLoop, context: Context) -> EventLoopFuture<AWSHTTPResponse> {
-        // TODO: what should be the operation name?
-        let operationName: String = httpRequest.url.path
-        var span = InstrumentationSystem.tracingInstrument.startSpan(named: operationName, context: context, ofKind: .client, at: .now())
+        var span = InstrumentationSystem.tracingInstrument.startSpan(named: "invoke", context: context, ofKind: .client, at: .now())
         return invoke(with: serviceConfig, context: context) {
-            // TODO: change Span interface to return carrier?
-            var carrier = context
-            carrier.baggage = span.context
             return self.httpClient.execute(
                 request: httpRequest,
                 timeout: serviceConfig.timeout,
                 on: eventLoop,
-                context: carrier
+                context: context.with(baggage: span.context)
             )
         }
         // TODO: use NIO helpers, see https://github.com/slashmo/gsoc-swift-tracing/issues/125
@@ -263,15 +258,10 @@ extension AWSClient {
     }
 
     /// invoke HTTP request with response streaming
-    fileprivate func invoke(_ httpRequest: AWSHTTPRequest, with serviceConfig: AWSServiceConfig, on eventLoop: EventLoop, context: Context, stream: @escaping AWSHTTPClient.ResponseStream) -> EventLoopFuture<AWSHTTPResponse> {
-        // TODO: what should be the operation name?
-        let operationName: String = httpRequest.url.path
-        var span = InstrumentationSystem.tracingInstrument.startSpan(named: operationName, context: context, ofKind: .client, at: .now())
+    fileprivate func invoke(_ httpRequest: AWSHTTPRequest, with serviceConfig: AWSServiceConfig, on eventLoop: EventLoop, stream: @escaping AWSHTTPClient.ResponseStream, context: Context) -> EventLoopFuture<AWSHTTPResponse> {
+        var span = InstrumentationSystem.tracingInstrument.startSpan(named: "invoke", context: context, ofKind: .client, at: .now())
         return invoke(with: serviceConfig, context: context) {
-            // TODO: change Span interface to return carrier?
-            var carrier = context
-            carrier.baggage = span.context
-            return self.httpClient.execute(request: httpRequest, timeout: serviceConfig.timeout, on: eventLoop, context: carrier, stream: stream)
+            return self.httpClient.execute(request: httpRequest, timeout: serviceConfig.timeout, on: eventLoop, context: context.with(baggage: span.context), stream: stream)
         }
         // TODO: use NIO helpers, see https://github.com/slashmo/gsoc-swift-tracing/issues/125
         .always { result in
@@ -493,8 +483,8 @@ extension AWSClient {
                 request,
                 with: serviceConfig,
                 on: eventLoop,
-                context: context,
-                stream: stream
+                stream: stream,
+                context: context
             )
         }.flatMapThrowing { response in
             return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
@@ -619,5 +609,40 @@ extension Logger {
         logger[metadataKey: "aws-operation"] = .string(operation)
         logger[metadataKey: "aws-request-id"] = "\(id)"
         return logger
+    }
+}
+
+// MARK: DefaultContext
+
+// TODO: revisit, see https://github.com/slashmo/gsoc-swift-baggage-context/issues/23
+
+extension AWSClient {
+    internal struct DefaultContext: AWSClient.Context {
+        private let _logger: Logger = .init(label: "test")
+        var logger: Logger {
+            get {
+                self._logger.with(context: self.baggage)
+            }
+            set {
+                // TODO: remove
+            }
+        }
+
+        var baggage: BaggageContext = .init()
+    }
+}
+
+extension AWSClient {
+    /// Creates empty context.
+    public static func emptyContext() -> AWSClient.Context {
+        AWSClient.DefaultContext()
+    }
+}
+
+extension AWSClient.Context {
+    public func with(baggage: BaggageContext) -> AWSClient.Context {
+        var copy = self
+        copy.baggage = baggage
+        return copy
     }
 }

@@ -32,13 +32,11 @@ import NIOHTTP1
 import NIOTransportServices
 import TracingInstrumentation
 
-// TODO: instrument initialization
-
 /// This is the workhorse of aws-sdk-swift-core. You provide it with a `AWSShape` Input object, it converts it to `AWSRequest` which is then converted
 /// to a raw `HTTPClient` Request. This is then sent to AWS. When the response from AWS is received if it is successful it is converted to a `AWSResponse`
 /// which is then decoded to generate a `AWSShape` Output object. If it is not successful then `AWSClient` will throw an `AWSErrorType`.
 public final class AWSClient {
-    /// AWS operation context including trace context
+    /// AWS client context, carries trace context and logger.
     public typealias Context = BaggageLogging.LoggingBaggageContextCarrier
 
     /// Errors returned by AWSClient code
@@ -72,10 +70,6 @@ public final class AWSClient {
         case createNew
     }
 
-    // TODO: make part of the context
-    /// default logger that logs nothing
-    public static let loggingDisabled = Logger(label: "AWS-do-not-log", factory: { _ in SwiftLogNoOpLogHandler() })
-
     /// AWS credentials provider
     public let credentialProvider: CredentialProvider
     /// middleware code to be applied to requests and responses
@@ -88,8 +82,8 @@ public final class AWSClient {
     public var eventLoopGroup: EventLoopGroup { return httpClient.eventLoopGroup }
     /// Retry policy specifying what to do when a request fails
     public let retryPolicy: RetryPolicy
-    /// Logger used for non-request based output
-    let clientLogger: Logger
+
+    private let context: AWSClient.Context
 
     private let isShutdown = NIOAtomic<Bool>.makeAtomic(value: false)
 
@@ -99,34 +93,40 @@ public final class AWSClient {
     ///     - retryPolicy: Object returning whether retries should be attempted. Possible options are NoRetry(), ExponentialRetry() or JitterRetry()
     ///     - middlewares: Array of middlewares to apply to requests and responses
     ///     - httpClientProvider: HTTPClient to use. Use `.createNew` if you want the client to manage its own HTTPClient.
-    ///     - logger: Logger used to log background AWSClient events
     public init(
         credentialProvider credentialProviderFactory: CredentialProviderFactory = .default,
         retryPolicy retryPolicyFactory: RetryPolicyFactory = .default,
         middlewares: [AWSServiceMiddleware] = [],
         httpClientProvider: HTTPClientProvider,
-        logger clientLogger: Logger = AWSClient.loggingDisabled,
-        baggage: BaggageContext = .init() // TODO: empty baggage?
+        context: AWSClient.Context = AWSClient.emptyContext()
     ) {
+        // TODO: not sure if it makes sense as most resources are created lazily
+        var span = InstrumentationSystem.tracingInstrument.startSpan(named: "AWSClient.init", context: context)
+        defer {
+            span.end()
+        }
+
         // setup httpClient
         self.httpClientProvider = httpClientProvider
         switch httpClientProvider {
         case .shared(let providedHTTPClient):
             self.httpClient = providedHTTPClient
         case .createNew:
-            self.httpClient = AWSClient.createHTTPClient()
+            self.httpClient = InstrumentationSystem.tracingInstrument.span(named: "createHTTPClient", context: context.with(baggage: span.context)) { _ in
+                AWSClient.createHTTPClient()
+            }
         }
 
         self.credentialProvider = credentialProviderFactory.createProvider(context: .init(
             httpClient: httpClient,
             eventLoop: httpClient.eventLoopGroup.next(),
-            logger: clientLogger,
-            baggage: baggage
+            logger: context.logger,
+            baggage: context.baggage
         ))
 
         self.middlewares = middlewares
         self.retryPolicy = retryPolicyFactory.retryPolicy
-        self.clientLogger = clientLogger
+        self.context = context
     }
 
     deinit {
@@ -179,7 +179,7 @@ public final class AWSClient {
             case .createNew:
                 self.httpClient.shutdown(queue: queue) { error in
                     if let error = error {
-                        self.clientLogger.error("Error shutting down HTTP client", metadata: [
+                        self.context.logger.error("Error shutting down HTTP client", metadata: [
                             "aws-error": "\(error)",
                         ])
                     }
@@ -608,7 +608,7 @@ extension AWSClient {
 
 extension AWSClient {
     internal struct DefaultContext: AWSClient.Context {
-        private let _logger: Logger = .init(label: "test")
+        private let _logger: Logger
         var logger: Logger {
             get {
                 self._logger.with(context: self.baggage)
@@ -619,13 +619,19 @@ extension AWSClient {
         }
 
         var baggage: BaggageContext = .init()
+
+        internal init(logger: Logger, baggage: BaggageContext = .init()) {
+            self._logger = logger
+            self.baggage = baggage
+        }
     }
 }
 
 extension AWSClient {
-    /// Creates empty context.
-    public static func emptyContext() -> AWSClient.Context {
-        AWSClient.DefaultContext()
+    private static let loggingDisabled = Logger(label: "AWS-do-not-log", factory: { _ in SwiftLogNoOpLogHandler() })
+
+    public static func emptyContext(logger: Logging.Logger? = nil, baggage: BaggageContext = .init()) -> AWSClient.Context {
+        AWSClient.DefaultContext(logger: logger ?? Self.loggingDisabled, baggage: baggage)
     }
 }
 

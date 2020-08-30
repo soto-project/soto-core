@@ -221,20 +221,6 @@ extension AWSClient {
         return promise.futureResult
     }
 
-    /// invoke HTTP request
-    fileprivate func invoke(_ httpRequest: AWSHTTPRequest, with serviceConfig: AWSServiceConfig, on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<AWSHTTPResponse> {
-        return invoke(with: serviceConfig, logger: logger) {
-            return self.httpClient.execute(request: httpRequest, timeout: serviceConfig.timeout, on: eventLoop, logger: logger)
-        }
-    }
-
-    /// invoke HTTP request with response streaming
-    fileprivate func invoke(_ httpRequest: AWSHTTPRequest, with serviceConfig: AWSServiceConfig, on eventLoop: EventLoop, logger: Logger, stream: @escaping AWSHTTPClient.ResponseStream) -> EventLoopFuture<AWSHTTPResponse> {
-        return invoke(with: serviceConfig, logger: logger) {
-            return self.httpClient.execute(request: httpRequest, timeout: serviceConfig.timeout, on: eventLoop, logger: logger, stream: stream)
-        }
-    }
-
     /// create HTTPClient
     fileprivate static func createHTTPClient() -> AWSHTTPClient {
         return AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew)
@@ -248,8 +234,9 @@ extension AWSClient {
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
-    ///     - serviceConfig: AWS service configuration used in request creation and signing
     ///     - input: Input object
+    ///     - config: AWS service configuration used in request creation and signing
+    ///     - context: additional context for call
     /// - returns:
     ///     Empty Future that completes when response is received
     public func execute<Input: AWSEncodableShape>(
@@ -261,26 +248,27 @@ extension AWSClient {
         on eventLoop: EventLoop? = nil,
         logger: Logger = AWSClient.loggingDisabled
     ) -> EventLoopFuture<Void> {
-        let eventLoop = eventLoop ?? eventLoopGroup.next()
-        let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName, service: serviceConfig.service)
-        let future: EventLoopFuture<Void> = credentialProvider.getCredential(on: eventLoop, logger: logger).flatMapThrowing { credential in
-            let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
-            let awsRequest = try AWSRequest(
-                operation: operationName,
-                path: path,
-                httpMethod: httpMethod,
-                input: input,
-                configuration: serviceConfig
-            )
-            return try awsRequest
-                .applyMiddlewares(serviceConfig.middlewares + self.middlewares)
-                .createHTTPRequest(signer: signer)
-        }.flatMap { request in
-            return self.invoke(request, with: serviceConfig, on: eventLoop, logger: logger)
-        }.map { _ in
-            return
-        }
-        return recordRequest(future, service: serviceConfig.service, operation: operationName, logger: logger)
+        return execute(
+            operation: operationName,
+            createRequest: {
+                try AWSRequest(
+                    operation: operationName,
+                    path: path,
+                    httpMethod: httpMethod,
+                    input: input,
+                    configuration: serviceConfig
+                )
+            },
+            execute: { request, eventLoop, logger in
+                return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger)
+            },
+            processResponse: { _ in
+                return
+            },
+            config: serviceConfig,
+            on: eventLoop,
+            logger: logger
+        )
     }
 
     /// execute an empty request and return a future with an empty response
@@ -288,7 +276,8 @@ extension AWSClient {
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
-    ///     - serviceConfig: AWS service configuration used in request creation and signing
+    ///     - config: AWS service configuration used in request creation and signing
+    ///     - context: additional context for call
     /// - returns:
     ///     Empty Future that completes when response is received
     public func execute(
@@ -299,26 +288,26 @@ extension AWSClient {
         on eventLoop: EventLoop? = nil,
         logger: Logger = AWSClient.loggingDisabled
     ) -> EventLoopFuture<Void> {
-        let eventLoop = eventLoop ?? eventLoopGroup.next()
-        let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName, service: serviceConfig.service)
-        let future: EventLoopFuture<Void> = credentialProvider.getCredential(on: eventLoop, logger: logger).flatMapThrowing { credential -> AWSHTTPRequest in
-            let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
-            let awsRequest = try AWSRequest(
-                operation: operationName,
-                path: path,
-                httpMethod: httpMethod,
-                configuration: serviceConfig
-            )
-            return try awsRequest
-                .applyMiddlewares(serviceConfig.middlewares + self.middlewares)
-                .createHTTPRequest(signer: signer)
-
-        }.flatMap { request -> EventLoopFuture<AWSHTTPResponse> in
-            return self.invoke(request, with: serviceConfig, on: eventLoop, logger: logger)
-        }.map { _ in
-            return
-        }
-        return recordRequest(future, service: serviceConfig.service, operation: operationName, logger: logger)
+        return execute(
+            operation: operationName,
+            createRequest: {
+                try AWSRequest(
+                    operation: operationName,
+                    path: path,
+                    httpMethod: httpMethod,
+                    configuration: serviceConfig
+                )
+            },
+            execute: { request, eventLoop, logger in
+                return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger)
+            },
+            processResponse: { _ in
+                return
+            },
+            config: serviceConfig,
+            on: eventLoop,
+            logger: logger
+        )
     }
 
     /// execute an empty request and return a future with the output object generated from the response
@@ -326,7 +315,8 @@ extension AWSClient {
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
-    ///     - serviceConfig: AWS service configuration used in request creation and signing
+    ///     - config: AWS service configuration used in request creation and signing
+    ///     - context: additional context for call
     /// - returns:
     ///     Future containing output object that completes when response is received
     public func execute<Output: AWSDecodableShape>(
@@ -337,25 +327,26 @@ extension AWSClient {
         on eventLoop: EventLoop? = nil,
         logger: Logger = AWSClient.loggingDisabled
     ) -> EventLoopFuture<Output> {
-        let eventLoop = eventLoop ?? eventLoopGroup.next()
-        let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName, service: serviceConfig.service)
-        let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop, logger: logger).flatMapThrowing { credential in
-            let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
-            let awsRequest = try AWSRequest(
-                operation: operationName,
-                path: path,
-                httpMethod: httpMethod,
-                configuration: serviceConfig
-            )
-            return try awsRequest
-                .applyMiddlewares(serviceConfig.middlewares + self.middlewares)
-                .createHTTPRequest(signer: signer)
-        }.flatMap { request in
-            return self.invoke(request, with: serviceConfig, on: eventLoop, logger: logger)
-        }.flatMapThrowing { response in
-            return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
-        }
-        return recordRequest(future, service: serviceConfig.service, operation: operationName, logger: logger)
+        return execute(
+            operation: operationName,
+            createRequest: {
+                try AWSRequest(
+                    operation: operationName,
+                    path: path,
+                    httpMethod: httpMethod,
+                    configuration: serviceConfig
+                )
+            },
+            execute: { request, eventLoop, logger in
+                return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger)
+            },
+            processResponse: { response in
+                return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
+            },
+            config: serviceConfig,
+            on: eventLoop,
+            logger: logger
+        )
     }
 
     /// execute a request with an input object and return a future with the output object generated from the response
@@ -363,8 +354,9 @@ extension AWSClient {
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
-    ///     - serviceConfig: AWS service configuration used in request creation and signing
     ///     - input: Input object
+    ///     - config: AWS service configuration used in request creation and signing
+    ///     - context: additional context for call
     /// - returns:
     ///     Future containing output object that completes when response is received
     public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(
@@ -376,26 +368,27 @@ extension AWSClient {
         on eventLoop: EventLoop? = nil,
         logger: Logger = AWSClient.loggingDisabled
     ) -> EventLoopFuture<Output> {
-        let eventLoop = eventLoop ?? eventLoopGroup.next()
-        let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName, service: serviceConfig.service)
-        let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop, logger: logger).flatMapThrowing { credential in
-            let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
-            let awsRequest = try AWSRequest(
-                operation: operationName,
-                path: path,
-                httpMethod: httpMethod,
-                input: input,
-                configuration: serviceConfig
-            )
-            return try awsRequest
-                .applyMiddlewares(serviceConfig.middlewares + self.middlewares)
-                .createHTTPRequest(signer: signer)
-        }.flatMap { request in
-            return self.invoke(request, with: serviceConfig, on: eventLoop, logger: logger)
-        }.flatMapThrowing { response in
-            return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
-        }
-        return recordRequest(future, service: serviceConfig.service, operation: operationName, logger: logger)
+        return execute(
+            operation: operationName,
+            createRequest: {
+                try AWSRequest(
+                    operation: operationName,
+                    path: path,
+                    httpMethod: httpMethod,
+                    input: input,
+                    configuration: serviceConfig
+                )
+            },
+            execute: { request, eventLoop, logger in
+                return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger)
+            },
+            processResponse: { response in
+                return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
+            },
+            config: serviceConfig,
+            on: eventLoop,
+            logger: logger
+        )
     }
 
     /// execute a request with an input object and return a future with the output object generated from the response
@@ -403,8 +396,9 @@ extension AWSClient {
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
-    ///     - serviceConfig: AWS service configuration used in request creation and signing
     ///     - input: Input object
+    ///     - config: AWS service configuration used in request creation and signing
+    ///     - context: additional context for call
     /// - returns:
     ///     Future containing output object that completes when response is received
     public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(
@@ -417,26 +411,55 @@ extension AWSClient {
         logger: Logger = AWSClient.loggingDisabled,
         stream: @escaping AWSHTTPClient.ResponseStream
     ) -> EventLoopFuture<Output> {
+        return execute(
+            operation: operationName,
+            createRequest: {
+                try AWSRequest(
+                    operation: operationName,
+                    path: path,
+                    httpMethod: httpMethod,
+                    input: input,
+                    configuration: serviceConfig
+                )
+            },
+            execute: { request, eventLoop, logger in
+                return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger, stream: stream)
+            },
+            processResponse: { response in
+                return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
+            },
+            config: serviceConfig,
+            on: eventLoop,
+            logger: logger
+        )
+    }
+
+    /// internal version of execute
+    internal func execute<Output>(
+        operation operationName: String,
+        createRequest: @escaping () throws -> AWSRequest,
+        execute: @escaping (AWSHTTPRequest, EventLoop, Logger) -> EventLoopFuture<AWSHTTPResponse>,
+        processResponse: @escaping (AWSHTTPResponse) throws -> Output,
+        config: AWSServiceConfig,
+        on eventLoop: EventLoop? = nil,
+        logger: Logger = AWSClient.loggingDisabled
+    ) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
-        let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName, service: serviceConfig.service)
-        let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop, logger: logger).flatMapThrowing { credential in
-            let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
-            let awsRequest = try AWSRequest(
-                operation: operationName,
-                path: path,
-                httpMethod: httpMethod,
-                input: input,
-                configuration: serviceConfig
-            )
-            return try awsRequest
-                .applyMiddlewares(serviceConfig.middlewares + self.middlewares)
-                .createHTTPRequest(signer: signer)
-        }.flatMap { request in
-            return self.invoke(request, with: serviceConfig, on: eventLoop, logger: logger, stream: stream)
-        }.flatMapThrowing { response in
-            return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
-        }
-        return recordRequest(future, service: serviceConfig.service, operation: operationName, logger: logger)
+        let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName, service: config.service)
+
+        let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop, logger: logger)
+            .flatMapThrowing { credential in
+                let signer = AWSSigner(credentials: credential, name: config.signingName, region: config.region.rawValue)
+                let awsRequest = try createRequest()
+                return try awsRequest
+                    .applyMiddlewares(config.middlewares + self.middlewares)
+                    .createHTTPRequest(signer: signer)
+            }.flatMap { request in
+                return self.invoke(with: config, logger: logger) {
+                    execute(request, eventLoop, logger)
+                }
+            }.flatMapThrowing(processResponse)
+        return recordRequest(future, service: config.service, operation: operationName, logger: logger)
     }
 
     /// generate a signed URL

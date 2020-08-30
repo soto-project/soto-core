@@ -21,7 +21,7 @@ import NIOHTTP1
 class S3ChunkedStreamReader: StreamReader {
     /// Working buffer size
     static let bufferSize: Int = 64 * 1024
-    static let bufferSizeInHex: String = String(bufferSize, radix: 16)
+    static let bufferSizeInHex = String(bufferSize, radix: 16)
     static let bufferSizeLength = bufferSizeInHex.count
     static let chunkSignatureLength = 1 + 16 + 64 // ";" + "chunk-signature=" + hex(sha256)
     static let endOfLineLength = 2

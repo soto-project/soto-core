@@ -16,9 +16,6 @@ import AsyncHTTPClient
 import AWSSignerV4
 import AWSXML
 import Dispatch
-import struct Foundation.Data
-import class Foundation.JSONDecoder
-import class Foundation.JSONSerialization
 import struct Foundation.URL
 import struct Foundation.URLQueryItem
 import Logging

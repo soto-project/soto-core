@@ -14,7 +14,6 @@
 
 import AWSSignerV4
 import struct Foundation.CharacterSet
-import struct Foundation.Data
 import struct Foundation.Date
 import struct Foundation.URL
 import struct Foundation.URLComponents

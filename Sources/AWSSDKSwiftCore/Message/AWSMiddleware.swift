@@ -49,9 +49,9 @@ public struct AWSLoggingMiddleware: AWSServiceMiddleware {
         case .xml(let element):
             output += "\n  "
             output += element.description
-        case .json(let data):
+        case .json(let buffer):
             output += "\n  "
-            output += String(data: data, encoding: .utf8) ?? "Failed to convert JSON response to UTF8"
+            output += buffer.getString(at: buffer.readerIndex, length: buffer.readableBytes) ?? "Failed to convert JSON response to UTF8"
         case .raw(let payload):
             output += "raw (\(payload.size?.description ?? "unknown") bytes)"
         case .text(let string):

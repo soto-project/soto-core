@@ -57,7 +57,7 @@ public struct AWSResponse {
             return
         }
 
-        guard let data = body.getData(at: body.readerIndex, length: body.readableBytes, byteTransferStrategy: .noCopy) else {
+        if body.readableBytes == 0 {
             self.body = .empty
             return
         }
@@ -66,18 +66,14 @@ public struct AWSResponse {
 
         switch serviceProtocol {
         case .json, .restjson:
-            responseBody = .json(data)
+            responseBody = .json(body)
 
-        case .restxml, .query:
-            let xmlDocument = try XML.Document(data: data)
-            if let element = xmlDocument.rootElement() {
-                responseBody = .xml(element)
-            }
-
-        case .ec2:
-            let xmlDocument = try XML.Document(data: data)
-            if let element = xmlDocument.rootElement() {
-                responseBody = .xml(element)
+        case .restxml, .query, .ec2:
+            if let xmlString = body.getString(at: body.readerIndex, length: body.readableBytes) {
+                let xmlDocument = try XML.Document(string: xmlString)
+                if let element = xmlDocument.rootElement() {
+                    responseBody = .xml(element)
+                }
             }
         }
         self.body = responseBody
@@ -111,13 +107,14 @@ public struct AWSResponse {
 
         var outputDict: [String: Any] = [:]
         switch body {
-        case .json(let data):
-            outputDict = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] ?? [:]
-            // if payload path is set then the decode will expect the payload to decode to the relevant member variable
-            if let payloadKey = payloadKey {
-                outputDict = [payloadKey: outputDict]
+        case .json(let buffer):
+            if let data = buffer.getData(at: buffer.readerIndex, length: buffer.readableBytes, byteTransferStrategy: .noCopy) {
+                outputDict = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] ?? [:]
+                // if payload path is set then the decode will expect the payload to decode to the relevant member variable
+                if let payloadKey = payloadKey {
+                    outputDict = [payloadKey: outputDict]
+                }
             }
-
         case .xml(let node):
             var outputNode = node
             // if payload path is set then the decode will expect the payload to decode to the relevant member variable. Most CloudFront responses have this.

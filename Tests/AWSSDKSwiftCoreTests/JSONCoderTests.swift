@@ -126,9 +126,10 @@ class JSONCoderTests: XCTestCase {
         ))
     }
 
-    func testSerializeToDictionaryAndJSON() {
-        let json = try! self.testShapeWithDictionaries.encodeAsJSON()
-        let dict = try! JSONSerialization.jsonObject(with: json, options: []) as? [String: Any] ?? [:]
+    func testSerializeToDictionaryAndJSON() throws {
+        var json = try self.testShapeWithDictionaries.encodeAsJSON()
+        let data = try XCTUnwrap(json.readData(length: json.readableBytes))
+        let dict = try! JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] ?? [:]
 
         let dict2 = dict["s"] as? [String: Any]
 

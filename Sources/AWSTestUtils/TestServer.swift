@@ -149,7 +149,7 @@ extension AWSTestServer {
             headers: request.headers,
             url: request.uri
         )
-        let responseBody = try JSONEncoder().encodeAsByteBuffer(httpBinResponse, allocator: byteBufferAllocator)
+        let responseBody = try JSONEncoder().encodeAsByteBuffer(httpBinResponse, allocator: self.byteBufferAllocator)
         let headers = [
             "Content-Type": "application/json",
         ]

@@ -17,10 +17,9 @@ import NIO
 
 // AWS HAL services I know of are APIGateway, Pinpoint, Greengrass
 extension AWSResponse {
-    /// return if body is hypertext application language
-    /// - Returns: <#description#>
-    var isHypertextApplicationLanguage: Bool {
-        guard case .json = self.body,
+    /// process hal+json date. Extract properties from HAL
+    func getHypertextApplicationLanguageBody() throws -> Body {
+        guard case .json(let buffer) = self.body,
             let contentType = self.headers["content-type"] as? String,
             contentType.contains("hal+json")
         else {
@@ -33,10 +32,10 @@ extension AWSResponse {
     func getHypertextApplicationLanguageDictionary() throws -> [String: Any] {
         guard case .json(let buffer) = self.body else { return [:] }
         // extract embedded resources from HAL
-        guard let data = buffer.getData(at: buffer.readerIndex, length: buffer.readableBytes) else { return [:] }
-        let jsonObject = try JSONSerialization.jsonObject(with: data, options: [])
-        guard var dictionary = jsonObject as? [String: Any] else { return [:] }
-        guard let embedded = dictionary["_embedded"],
+        guard let data = buffer.getData(at: buffer.readerIndex, length: buffer.readableBytes) else { return self.body }
+        let json = try JSONSerialization.jsonObject(with: data, options: [])
+        guard var dictionary = json as? [String: Any],
+            let embedded = dictionary["_embedded"],
             let embeddedDictionary = embedded as? [String: Any]
         else {
             return dictionary
@@ -47,6 +46,7 @@ extension AWSResponse {
         dictionary["_embedded"] = nil
         // merge embedded resources into original dictionary
         dictionary.merge(embeddedDictionary) { first, _ in return first }
-        return dictionary
+        let jsonData = try JSONSerialization.data(withJSONObject: dictionary, options: [])
+        return .json(ByteBufferAllocator().buffer(data: jsonData))
     }
 }

@@ -110,7 +110,7 @@ public struct AWSPayload {
     }
 
     /// Return the size of the payload. If the payload is a stream it is always possible to return a size
-    var size: Int? {
+    public var size: Int? {
         switch payload {
         case .byteBuffer(let byteBuffer):
             return byteBuffer.readableBytes
@@ -165,7 +165,7 @@ public struct AWSPayload {
 }
 
 extension AWSPayload: Decodable {
-    // AWSPayload has to comform to Decodable so I can add it to AWSShape objects (which conform to Decodable). But we don't want the
+    // AWSPayload has to conform to Decodable so I can add it to AWSShape objects (which conform to Decodable). But we don't want the
     // Encoder/Decoder ever to process a AWSPayload
     public init(from decoder: Decoder) throws {
         preconditionFailure("Cannot decode an AWSPayload")

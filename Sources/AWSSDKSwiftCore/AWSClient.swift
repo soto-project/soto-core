@@ -450,7 +450,7 @@ extension AWSClient {
                 let awsRequest = try createRequest()
                 return try awsRequest
                     .applyMiddlewares(config.middlewares + self.middlewares)
-                    .createHTTPRequest(signer: signer)
+                    .createHTTPRequest(signer: signer, byteBufferAllocator: config.byteBufferAllocator)
             }.flatMap { request in
                 return self.invoke(with: config, logger: logger) {
                     execute(request, eventLoop, logger)

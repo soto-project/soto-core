@@ -217,9 +217,10 @@ class PerformanceTests: XCTestCase {
             name: config.service,
             region: config.region.rawValue
         )
+        let byteBufferAllocator = ByteBufferAllocator()
         measure {
             for _ in 0..<1000 {
-                _ = request.createHTTPRequest(signer: signer)
+                _ = request.createHTTPRequest(signer: signer, byteBufferAllocator: byteBufferAllocator)
             }
         }
     }
@@ -239,9 +240,10 @@ class PerformanceTests: XCTestCase {
         ).applyMiddlewares(config.middlewares + client.middlewares)
 
         let signer = try! client.createSigner(serviceConfig: config, logger: AWSClient.loggingDisabled).wait()
+        let byteBufferAllocator = ByteBufferAllocator()
         measure {
             for _ in 0..<1000 {
-                _ = awsRequest.createHTTPRequest(signer: signer)
+                _ = awsRequest.createHTTPRequest(signer: signer, byteBufferAllocator: byteBufferAllocator)
             }
         }
     }
@@ -262,9 +264,10 @@ class PerformanceTests: XCTestCase {
             name: config.service,
             region: config.region.rawValue
         )
+        let byteBufferAllocator = ByteBufferAllocator()
         measure {
             for _ in 0..<1000 {
-                _ = awsRequest.createHTTPRequest(signer: signer)
+                _ = awsRequest.createHTTPRequest(signer: signer, byteBufferAllocator: byteBufferAllocator)
             }
         }
     }

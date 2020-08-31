@@ -33,7 +33,7 @@ class S3ChunkedStreamReader: StreamReader {
         size: Int,
         seedSigningData: AWSSigner.ChunkedSigningData,
         signer: AWSSigner,
-        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
+        byteBufferAllocator: ByteBufferAllocator,
         read: @escaping (EventLoop) -> EventLoopFuture<StreamReaderResult>
     ) {
         self.size = size

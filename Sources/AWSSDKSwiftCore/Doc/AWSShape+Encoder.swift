@@ -18,8 +18,8 @@ import NIO
 
 internal extension AWSEncodableShape {
     /// Encode AWSShape as JSON
-    func encodeAsJSON() throws -> ByteBuffer {
-        return try JSONEncoder().encodeAsByteBuffer(self, allocator: ByteBufferAllocator())
+    func encodeAsJSON(byteBufferAllocator: ByteBufferAllocator) throws -> ByteBuffer {
+        return try JSONEncoder().encodeAsByteBuffer(self, allocator: byteBufferAllocator)
     }
 
     /// Encode AWSShape as XML

@@ -32,23 +32,23 @@ public struct AWSRequest {
 
     /// Create HTTP Client request from AWSRequest.
     /// If the signer's credentials are available the request will be sigend. Otherweise defaults to an unsinged request
-    func createHTTPRequest(signer: AWSSigner) -> AWSHTTPRequest {
+    func createHTTPRequest(signer: AWSSigner, byteBufferAllocator: ByteBufferAllocator) -> AWSHTTPRequest {
         // if credentials are empty don't sign request
         if signer.credentials.isEmpty() {
-            return self.toHTTPRequest()
+            return self.toHTTPRequest(byteBufferAllocator: byteBufferAllocator)
         }
 
-        return self.toHTTPRequestWithSignedHeader(signer: signer)
+        return self.toHTTPRequestWithSignedHeader(signer: signer, byteBufferAllocator: byteBufferAllocator)
     }
 
     /// Create HTTP Client request from AWSRequest
-    func toHTTPRequest() -> AWSHTTPRequest {
-        return AWSHTTPRequest(url: url, method: httpMethod, headers: httpHeaders, body: body.asPayload())
+    func toHTTPRequest(byteBufferAllocator: ByteBufferAllocator) -> AWSHTTPRequest {
+        return AWSHTTPRequest(url: url, method: httpMethod, headers: httpHeaders, body: body.asPayload(byteBufferAllocator: byteBufferAllocator))
     }
 
     /// Create HTTP Client request with signed headers from AWSRequest
-    func toHTTPRequestWithSignedHeader(signer: AWSSigner) -> AWSHTTPRequest {
-        let payload = self.body.asPayload()
+    func toHTTPRequestWithSignedHeader(signer: AWSSigner, byteBufferAllocator: ByteBufferAllocator) -> AWSHTTPRequest {
+        let payload = self.body.asPayload(byteBufferAllocator: byteBufferAllocator)
         let bodyDataForSigning: AWSSigner.BodyData?
         switch payload.payload {
         case .byteBuffer(let buffer):
@@ -186,7 +186,7 @@ extension AWSRequest {
                         Self.verifyStream(operation: operationName, payload: awsPayload, input: shapeWithPayload)
                         body = .raw(awsPayload)
                     case let shape as AWSEncodableShape:
-                        body = .json(try shape.encodeAsJSON())
+                        body = .json(try shape.encodeAsJSON(byteBufferAllocator: configuration.byteBufferAllocator))
                     default:
                         preconditionFailure("Cannot add this as a payload")
                     }
@@ -196,7 +196,7 @@ extension AWSRequest {
             } else {
                 // only include the body if there are members that are output in the body.
                 if memberVariablesCount > 0 {
-                    body = .json(try input.encodeAsJSON())
+                    body = .json(try input.encodeAsJSON(byteBufferAllocator: configuration.byteBufferAllocator))
                 }
             }
 

@@ -57,10 +57,10 @@ extension Body {
     }
 
     /// return as payload
-    public func asPayload() -> AWSPayload {
+    public func asPayload(byteBufferAllocator: ByteBufferAllocator) -> AWSPayload {
         switch self {
         case .text(let text):
-            var buffer = ByteBufferAllocator().buffer(capacity: text.utf8.count)
+            var buffer = byteBufferAllocator.buffer(capacity: text.utf8.count)
             buffer.writeString(text)
             return .byteBuffer(buffer)
 
@@ -77,7 +77,7 @@ extension Body {
         case .xml(let node):
             let xmlDocument = XML.Document(rootElement: node)
             let text = xmlDocument.xmlString
-            var buffer = ByteBufferAllocator().buffer(capacity: text.utf8.count)
+            var buffer = byteBufferAllocator.buffer(capacity: text.utf8.count)
             buffer.writeString(text)
             return .byteBuffer(buffer)
 
@@ -87,7 +87,7 @@ extension Body {
     }
 
     // return as ByteBuffer
-    public func asByteBuffer() -> ByteBuffer? {
-        return asPayload().asByteBuffer()
+    public func asByteBuffer(byteBufferAllocator: ByteBufferAllocator) -> ByteBuffer? {
+        return asPayload(byteBufferAllocator: byteBufferAllocator).asByteBuffer()
     }
 }

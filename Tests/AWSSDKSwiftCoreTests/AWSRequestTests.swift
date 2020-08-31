@@ -15,6 +15,7 @@
 @testable import AWSSDKSwiftCore
 import AWSSignerV4
 import AWSTestUtils
+import NIO
 import NIOHTTP1
 import XCTest
 
@@ -52,7 +53,7 @@ class AWSRequestTests: XCTestCase {
         var awsRequest: AWSRequest?
         XCTAssertNoThrow(awsRequest = try AWSRequest(operation: "Keyword", path: "/", httpMethod: .POST, input: request, configuration: config))
         XCTAssertEqual(awsRequest?.httpHeaders["repeat"].first, "Repeat")
-        XCTAssertTrue(try XCTUnwrap(awsRequest).body.asPayload().isEmpty)
+        XCTAssertTrue(try XCTUnwrap(awsRequest).body.asPayload(byteBufferAllocator: ByteBufferAllocator()).isEmpty)
     }
 
     func testCreateAwsRequestWithKeywordInQuery() {
@@ -68,7 +69,7 @@ class AWSRequestTests: XCTestCase {
         var awsRequest: AWSRequest?
         XCTAssertNoThrow(awsRequest = try AWSRequest(operation: "Keyword", path: "/", httpMethod: .POST, input: request, configuration: config))
         XCTAssertEqual(awsRequest?.url, URL(string: "https://s3.ca-central-1.amazonaws.com/?self=KeywordRequest")!)
-        XCTAssertEqual(try XCTUnwrap(awsRequest).body.asByteBuffer(), nil)
+        XCTAssertEqual(try XCTUnwrap(awsRequest).body.asByteBuffer(byteBufferAllocator: ByteBufferAllocator()), nil)
     }
 
     func testCreateNIORequest() {
@@ -92,7 +93,7 @@ class AWSRequestTests: XCTestCase {
             region: config.region.rawValue
         )
 
-        let signedRequest = awsRequest?.createHTTPRequest(signer: signer)
+        let signedRequest = awsRequest?.createHTTPRequest(signer: signer, byteBufferAllocator: ByteBufferAllocator())
         XCTAssertNotNil(signedRequest)
         XCTAssertEqual(signedRequest?.method, HTTPMethod.POST)
         XCTAssertEqual(signedRequest?.headers["Host"].first, "kinesis.us-east-1.amazonaws.com")
@@ -118,7 +119,7 @@ class AWSRequestTests: XCTestCase {
             region: config.region.rawValue
         )
 
-        let request = awsRequest?.createHTTPRequest(signer: signer)
+        let request = awsRequest?.createHTTPRequest(signer: signer, byteBufferAllocator: ByteBufferAllocator())
         XCTAssertNil(request?.headers["Authorization"].first)
     }
 
@@ -143,7 +144,7 @@ class AWSRequestTests: XCTestCase {
                 configuration: config
             ))
 
-            let request = awsRequest?.createHTTPRequest(signer: signer)
+            let request = awsRequest?.createHTTPRequest(signer: signer, byteBufferAllocator: ByteBufferAllocator())
             XCTAssertNotNil(request?.headers["Authorization"].first)
         }
     }

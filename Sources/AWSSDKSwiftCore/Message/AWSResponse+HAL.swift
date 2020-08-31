@@ -19,7 +19,7 @@ import NIO
 extension AWSResponse {
     /// return if body is hypertext application language
     /// - Returns: <#description#>
-    func IsHypertextApplicationLanguage() -> Bool {
+    var isHypertextApplicationLanguage: Bool {
         guard case .json = self.body,
             let contentType = self.headers["content-type"] as? String,
             contentType.contains("hal+json")

@@ -107,8 +107,8 @@ public struct AWSResponse {
         case .json(let buffer):
             if let data = buffer.getData(at: buffer.readerIndex, length: buffer.readableBytes, byteTransferStrategy: .noCopy) {
                 // if required apply hypertext application language transform to body
-                if IsHypertextApplicationLanguage() {
-                    outputDict = try getHypertextApplicationLanguageDictionary()
+                if self.isHypertextApplicationLanguage {
+                    outputDict = try self.getHypertextApplicationLanguageDictionary()
                 } else {
                     outputDict = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] ?? [:]
                 }

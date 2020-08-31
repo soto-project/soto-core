@@ -102,14 +102,16 @@ public struct AWSResponse {
         }
         let decoder = DictionaryDecoder()
 
-        // if required apply hypertext application language transform to body
-        let body = try getHypertextApplicationLanguageBody()
-
         var outputDict: [String: Any] = [:]
         switch body {
         case .json(let buffer):
             if let data = buffer.getData(at: buffer.readerIndex, length: buffer.readableBytes, byteTransferStrategy: .noCopy) {
-                outputDict = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] ?? [:]
+                // if required apply hypertext application language transform to body
+                if IsHypertextApplicationLanguage() {
+                    outputDict = try getHypertextApplicationLanguageDictionary()
+                } else {
+                    outputDict = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] ?? [:]
+                }
                 // if payload path is set then the decode will expect the payload to decode to the relevant member variable
                 if let payloadKey = payloadKey {
                     outputDict = [payloadKey: outputDict]

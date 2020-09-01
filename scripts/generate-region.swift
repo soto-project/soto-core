@@ -1,13 +1,13 @@
 #!/usr/bin/env swift sh
 //===----------------------------------------------------------------------===//
 //
-// This source file is part of the AWSSDKSwift open source project
+// This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the AWSSDKSwift project authors
+// Copyright (c) 2017-2020 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
-// See CONTRIBUTORS.txt for the list of AWSSDKSwift project authors
+// See CONTRIBUTORS.txt for the list of Soto project authors
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -113,4 +113,4 @@ let context: [String: Any] = [
 ]
 
 let regionsFile = try environment.renderTemplate(name: "Region.stencil", context: context)
-try Data(regionsFile.utf8).write(to: URL(fileURLWithPath: "Sources/AWSSDKSwiftCore/Doc/Region.swift"))
+try Data(regionsFile.utf8).write(to: URL(fileURLWithPath: "Sources/SotoCore/Doc/Region.swift"))

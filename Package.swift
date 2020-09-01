@@ -1,13 +1,13 @@
 // swift-tools-version:5.1
 //===----------------------------------------------------------------------===//
 //
-// This source file is part of the AWSSDKSwift open source project
+// This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the AWSSDKSwift project authors
+// Copyright (c) 2017-2020 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
-// See CONTRIBUTORS.txt for the list of AWSSDKSwift project authors
+// See CONTRIBUTORS.txt for the list of Soto project authors
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -16,9 +16,9 @@
 import PackageDescription
 
 let package = Package(
-    name: "aws-sdk-swift-core",
+    name: "soto-core",
     products: [
-        .library(name: "AWSSDKSwiftCore", targets: ["AWSSDKSwiftCore"]),
+        .library(name: "SotoCore", targets: ["SotoCore"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-log.git", from: "1.4.0"),
@@ -29,9 +29,9 @@ let package = Package(
         .package(url: "https://github.com/swift-server/async-http-client.git", .upToNextMajor(from: "1.2.0")),
     ],
     targets: [
-        .target(name: "AWSSDKSwiftCore", dependencies: [
-            .byName(name: "AWSSignerV4"),
-            .byName(name: "AWSXML"),
+        .target(name: "SotoCore", dependencies: [
+            .byName(name: "SotoSignerV4"),
+            .byName(name: "SotoXML"),
             .byName(name: "INIParser"),
             .product(name: "Logging", package: "swift-log"),
             .product(name: "AsyncHTTPClient", package: "async-http-client"),
@@ -42,37 +42,37 @@ let package = Package(
             .product(name: "NIOTransportServices", package: "swift-nio-transport-services"),
             .product(name: "NIOFoundationCompat", package: "swift-nio"),
         ]),
-        .target(name: "AWSCrypto", dependencies: []),
-        .target(name: "AWSSignerV4", dependencies: [
-            .byName(name: "AWSCrypto"),
+        .target(name: "SotoCrypto", dependencies: []),
+        .target(name: "SotoSignerV4", dependencies: [
+            .byName(name: "SotoCrypto"),
             .product(name: "NIOHTTP1", package: "swift-nio"),
         ]),
-        .target(name: "AWSTestUtils", dependencies: [
-            .byName(name: "AWSSDKSwiftCore"),
+        .target(name: "SotoTestUtils", dependencies: [
+            .byName(name: "SotoCore"),
             .product(name: "NIO", package: "swift-nio"),
             .product(name: "NIOHTTP1", package: "swift-nio"),
             .product(name: "NIOFoundationCompat", package: "swift-nio"),
             .product(name: "NIOTestUtils", package: "swift-nio"),
         ]),
-        .target(name: "AWSXML", dependencies: [
-            .byName(name: "CAWSExpat"),
+        .target(name: "SotoXML", dependencies: [
+            .byName(name: "CSotoExpat"),
         ]),
-        .target(name: "CAWSExpat", dependencies: []),
+        .target(name: "CSotoExpat", dependencies: []),
         .target(name: "INIParser", dependencies: []),
 
-        .testTarget(name: "AWSCryptoTests", dependencies: [
-            .byName(name: "AWSCrypto"),
+        .testTarget(name: "SotoCryptoTests", dependencies: [
+            .byName(name: "SotoCrypto"),
         ]),
-        .testTarget(name: "AWSSDKSwiftCoreTests", dependencies: [
-            .byName(name: "AWSSDKSwiftCore"),
-            .byName(name: "AWSTestUtils"),
+        .testTarget(name: "SotoCoreTests", dependencies: [
+            .byName(name: "SotoCore"),
+            .byName(name: "SotoTestUtils"),
         ]),
-        .testTarget(name: "AWSSignerTests", dependencies: [
-            .byName(name: "AWSSignerV4"),
+        .testTarget(name: "SotoSignerV4Tests", dependencies: [
+            .byName(name: "SotoSignerV4"),
         ]),
-        .testTarget(name: "AWSXMLTests", dependencies: [
-            .byName(name: "AWSXML"),
-            .byName(name: "AWSSDKSwiftCore"),
+        .testTarget(name: "SotoXMLTests", dependencies: [
+            .byName(name: "SotoXML"),
+            .byName(name: "SotoCore"),
         ]),
         .testTarget(name: "INIParserTests", dependencies: [
             .byName(name: "INIParser"),
@@ -90,5 +90,5 @@ let useSwiftCrypto = false
 // Use Swift cypto on Linux.
 if useSwiftCrypto {
     package.dependencies.append(.package(url: "https://github.com/apple/swift-crypto.git", from: "1.0.0"))
-    package.targets.first { $0.name == "AWSCrypto" }?.dependencies.append(.product(name: "Crypto", package: "swift-crypto"))
+    package.targets.first { $0.name == "SotoCrypto" }?.dependencies.append(.product(name: "Crypto", package: "swift-crypto"))
 }

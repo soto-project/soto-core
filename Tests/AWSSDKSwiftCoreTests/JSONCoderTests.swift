@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 @testable import AWSSDKSwiftCore
+import NIO
 import XCTest
 
 class JSONCoderTests: XCTestCase {
@@ -127,7 +128,7 @@ class JSONCoderTests: XCTestCase {
     }
 
     func testSerializeToDictionaryAndJSON() throws {
-        var json = try self.testShapeWithDictionaries.encodeAsJSON()
+        var json = try self.testShapeWithDictionaries.encodeAsJSON(byteBufferAllocator: ByteBufferAllocator())
         let data = try XCTUnwrap(json.readData(length: json.readableBytes))
         let dict = try! JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] ?? [:]
 

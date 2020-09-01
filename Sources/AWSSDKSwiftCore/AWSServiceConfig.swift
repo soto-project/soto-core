@@ -36,6 +36,8 @@ public final class AWSServiceConfig {
     public let middlewares: [AWSServiceMiddleware]
     /// timeout value for HTTP requests
     public let timeout: TimeAmount
+    /// ByteBuffer allocator used by service
+    public let byteBufferAllocator: ByteBufferAllocator
 
     /// Create a ServiceConfig object
     ///
@@ -66,7 +68,8 @@ public final class AWSServiceConfig {
         partitionEndpoints: [AWSPartition: (endpoint: String, region: Region)] = [:],
         possibleErrorTypes: [AWSErrorType.Type] = [],
         middlewares: [AWSServiceMiddleware] = [],
-        timeout: TimeAmount? = nil
+        timeout: TimeAmount? = nil,
+        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
     ) {
         var partition = partition
         if let region = region {
@@ -88,6 +91,7 @@ public final class AWSServiceConfig {
         self.possibleErrorTypes = possibleErrorTypes
         self.middlewares = middlewares
         self.timeout = timeout ?? .seconds(20)
+        self.byteBufferAllocator = byteBufferAllocator
 
         // work out endpoint, if provided use that otherwise
         if let endpoint = endpoint {

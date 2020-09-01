@@ -18,7 +18,6 @@ import NIO
 // AWS HAL services I know of are APIGateway, Pinpoint, Greengrass
 extension AWSResponse {
     /// return if body is hypertext application language
-    /// - Returns: <#description#>
     var isHypertextApplicationLanguage: Bool {
         guard case .json = self.body,
             let contentType = self.headers["content-type"] as? String,

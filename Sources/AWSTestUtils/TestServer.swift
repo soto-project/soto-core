@@ -149,7 +149,7 @@ extension AWSTestServer {
             headers: request.headers,
             url: request.uri
         )
-        let responseBody = try JSONEncoder().encodeAsByteBuffer(httpBinResponse, allocator: ByteBufferAllocator())
+        let responseBody = try JSONEncoder().encodeAsByteBuffer(httpBinResponse, allocator: self.byteBufferAllocator)
         let headers = [
             "Content-Type": "application/json",
         ]
@@ -236,7 +236,7 @@ extension AWSTestServer {
                 case .v1:
                     return .error(.notImplemented, continueProcessing: true)
                 case .v2:
-                    var responseBody = ByteBufferAllocator().buffer(capacity: token.utf8.count)
+                    var responseBody = byteBufferAllocator.buffer(capacity: token.utf8.count)
                     responseBody.writeString(token)
                     let headers: [String: String] = [:]
                     return .result(.init(httpStatus: .ok, headers: headers, body: responseBody), continueProcessing: true)
@@ -247,7 +247,7 @@ extension AWSTestServer {
                 guard version == .v1 || request.headers[InstanceMetaDataClient.TokenHeaderName] == token else {
                     return .error(.badRequest, continueProcessing: false)
                 }
-                var responseBody = ByteBufferAllocator().buffer(capacity: ec2Role.utf8.count)
+                var responseBody = byteBufferAllocator.buffer(capacity: ec2Role.utf8.count)
                 responseBody.writeString(ec2Role)
                 let headers: [String: String] = [:]
                 return .result(.init(httpStatus: .ok, headers: headers, body: responseBody), continueProcessing: true)
@@ -256,7 +256,7 @@ extension AWSTestServer {
                 // credentials
                 let encoder = JSONEncoder()
                 encoder.dateEncodingStrategy = .formatted(dateFormatter)
-                let responseBody = try encoder.encodeAsByteBuffer(metaData, allocator: ByteBufferAllocator())
+                let responseBody = try encoder.encodeAsByteBuffer(metaData, allocator: byteBufferAllocator)
                 let headers = [
                     "Content-Type": "application/json",
                 ]
@@ -279,7 +279,7 @@ extension AWSTestServer {
             if request.method == .GET, request.uri == path {
                 let encoder = JSONEncoder()
                 encoder.dateEncodingStrategy = .formatted(dateFormatter)
-                let responseBody = try encoder.encodeAsByteBuffer(metaData, allocator: ByteBufferAllocator())
+                let responseBody = try encoder.encodeAsByteBuffer(metaData, allocator: byteBufferAllocator)
                 let headers = [
                     "Content-Type": "application/json",
                 ]

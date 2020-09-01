@@ -13,13 +13,13 @@
 //===----------------------------------------------------------------------===//
 
 import AWSXML
-import struct Foundation.Data
 import class Foundation.JSONEncoder
+import NIO
 
 internal extension AWSEncodableShape {
     /// Encode AWSShape as JSON
-    func encodeAsJSON() throws -> Data {
-        return try JSONEncoder().encode(self)
+    func encodeAsJSON() throws -> ByteBuffer {
+        return try JSONEncoder().encodeAsByteBuffer(self, allocator: ByteBufferAllocator())
     }
 
     /// Encode AWSShape as XML

@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 import enum AWSXML.XML
-import struct Foundation.Data
 import NIO
 import NIOFoundationCompat
 
@@ -24,7 +23,7 @@ public enum Body {
     /// raw data
     case raw(AWSPayload)
     /// json data
-    case json(Data)
+    case json(ByteBuffer)
     /// xml
     case xml(XML.Element)
     /// empty body
@@ -45,8 +44,8 @@ extension Body {
                 return nil
             }
 
-        case .json(let data):
-            return String(data: data, encoding: .utf8)
+        case .json(let buffer):
+            return buffer.getString(at: buffer.readerIndex, length: buffer.readableBytes, encoding: .utf8)
 
         case .xml(let node):
             let xmlDocument = XML.Document(rootElement: node)
@@ -68,12 +67,10 @@ extension Body {
         case .raw(let payload):
             return payload
 
-        case .json(let data):
-            if data.isEmpty {
+        case .json(let buffer):
+            if buffer.readableBytes == 0 {
                 return .empty
             } else {
-                var buffer = ByteBufferAllocator().buffer(capacity: data.count)
-                buffer.writeBytes(data)
                 return .byteBuffer(buffer)
             }
 

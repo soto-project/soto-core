@@ -173,6 +173,15 @@ public enum XML {
             } catch ParsingError.emptyFile {}
         }
 
+        /// initialise XML.Document from xml string
+        public init(string: String) throws {
+            super.init(.document)
+            do {
+                let element = try XML.Element(xmlString: string)
+                setRootElement(element)
+            } catch ParsingError.emptyFile {}
+        }
+
         /// set the root element of the document
         public func setRootElement(_ rootElement: XML.Element) {
             for child in self.children ?? [] {

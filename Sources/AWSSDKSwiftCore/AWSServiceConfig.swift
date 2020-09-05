@@ -116,18 +116,17 @@ public final class AWSServiceConfig {
             self.endpoint = "https://\(serviceHost)"
         }
     }
-    
+
     /// Options used by client when processing requests
     public struct Options: OptionSet {
         public let rawValue: Int
-        
+
         public init(rawValue: RawValue) {
             self.rawValue = rawValue
         }
-            
+
         /// If you set a custom endpoint, s3 will choose path style addressing. With this paramteter you can force
         /// it to use virtual host style addressing
-        public static let s3ForceVirtualHost = Options(rawValue: 1<<0)
+        public static let s3ForceVirtualHost = Options(rawValue: 1 << 0)
     }
 }
-

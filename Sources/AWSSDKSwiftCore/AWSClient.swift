@@ -469,14 +469,14 @@ extension AWSClient {
     ///     A signed URL
     public func signURL(
         url: URL,
-        httpMethod: String,
+        httpMethod: HTTPMethod,
         expires: Int = 86400,
         serviceConfig: AWSServiceConfig,
         logger: Logger = AWSClient.loggingDisabled
     ) -> EventLoopFuture<URL> {
         let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: "signURL", service: serviceConfig.service)
         return createSigner(serviceConfig: serviceConfig, logger: logger).map { signer in
-            signer.signURL(url: url, method: HTTPMethod(rawValue: httpMethod), expires: expires)
+            signer.signURL(url: url, method: httpMethod, expires: expires)
         }
     }
 

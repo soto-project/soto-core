@@ -80,11 +80,12 @@ public struct AWSResponse {
     }
 
     /// return new response with middleware applied
-    func applyMiddlewares(_ middlewares: [AWSServiceMiddleware]) throws -> AWSResponse {
+    func applyMiddlewares(_ middlewares: [AWSServiceMiddleware], config: AWSServiceConfig) throws -> AWSResponse {
         var awsResponse = self
         // apply middleware to respons
+        let context = AWSMiddlewareContext(options: config.options)
         for middleware in middlewares {
-            awsResponse = try middleware.chain(response: awsResponse)
+            awsResponse = try middleware.chain(response: awsResponse, context: context)
         }
         return awsResponse
     }

@@ -449,7 +449,7 @@ extension AWSClient {
                 let signer = AWSSigner(credentials: credential, name: config.signingName, region: config.region.rawValue)
                 let awsRequest = try createRequest()
                 return try awsRequest
-                    .applyMiddlewares(config.middlewares + self.middlewares)
+                    .applyMiddlewares(config.middlewares + self.middlewares, config: config)
                     .createHTTPRequest(signer: signer, byteBufferAllocator: config.byteBufferAllocator)
             }.flatMap { request in
                 return self.invoke(with: config, logger: logger) {
@@ -495,7 +495,7 @@ extension AWSClient {
 
         let raw = (Output.self as? AWSShapeWithPayload.Type)?._payloadOptions.contains(.raw) == true
         let awsResponse = try AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol, raw: raw)
-            .applyMiddlewares(serviceConfig.middlewares + middlewares)
+            .applyMiddlewares(serviceConfig.middlewares + middlewares, config: serviceConfig)
 
         return try awsResponse.generateOutputShape(operation: operationName)
     }
@@ -504,7 +504,7 @@ extension AWSClient {
     internal func createError(for response: AWSHTTPResponse, serviceConfig: AWSServiceConfig, logger: Logger) -> Error {
         // if we can create an AWSResponse and create an error from it return that
         if let awsResponse = try? AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol)
-            .applyMiddlewares(serviceConfig.middlewares + middlewares),
+            .applyMiddlewares(serviceConfig.middlewares + middlewares, config: serviceConfig),
             let error = awsResponse.generateError(serviceConfig: serviceConfig, logger: logger)
         {
             return error

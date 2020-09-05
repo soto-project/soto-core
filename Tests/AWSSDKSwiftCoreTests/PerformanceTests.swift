@@ -237,7 +237,7 @@ class PerformanceTests: XCTestCase {
             path: "/",
             httpMethod: .GET,
             configuration: config
-        ).applyMiddlewares(config.middlewares + client.middlewares)
+        ).applyMiddlewares(config.middlewares + client.middlewares, config: config)
 
         let signer = try! client.createSigner(serviceConfig: config, logger: AWSClient.loggingDisabled).wait()
         let byteBufferAllocator = ByteBufferAllocator()

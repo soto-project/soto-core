@@ -14,22 +14,27 @@
 
 import NIOHTTP1
 
+/// Context object sent to `AWSServiceMiddleware` `chain` functions
+public struct AWSMiddlewareContext {
+    public let options: AWSServiceConfig.Options
+}
+
 /// Middleware protocol. Gives ability to process requests before they are sent to AWS and process responses before they are converted into output shapes
 public protocol AWSServiceMiddleware {
     /// Process AWSRequest before it is converted to a HTTPClient Request to be sent to AWS
-    func chain(request: AWSRequest) throws -> AWSRequest
+    func chain(request: AWSRequest, context: AWSMiddlewareContext) throws -> AWSRequest
 
     /// Process response before it is converted to an output AWSShape
-    func chain(response: AWSResponse) throws -> AWSResponse
+    func chain(response: AWSResponse, context: AWSMiddlewareContext) throws -> AWSResponse
 }
 
 /// Default versions of protocol functions
 public extension AWSServiceMiddleware {
-    func chain(request: AWSRequest) throws -> AWSRequest {
+    func chain(request: AWSRequest, context: AWSMiddlewareContext) throws -> AWSRequest {
         return request
     }
 
-    func chain(response: AWSResponse) throws -> AWSResponse {
+    func chain(response: AWSResponse, context: AWSMiddlewareContext) throws -> AWSResponse {
         return response
     }
 }
@@ -74,7 +79,7 @@ public struct AWSLoggingMiddleware: AWSServiceMiddleware {
     }
 
     /// output request
-    public func chain(request: AWSRequest) throws -> AWSRequest {
+    public func chain(request: AWSRequest, context: AWSMiddlewareContext) throws -> AWSRequest {
         self.log("Request:")
         self.log("  \(request.operation)")
         self.log("  \(request.httpMethod) \(request.url)")
@@ -84,7 +89,7 @@ public struct AWSLoggingMiddleware: AWSServiceMiddleware {
     }
 
     /// output response
-    public func chain(response: AWSResponse) throws -> AWSResponse {
+    public func chain(response: AWSResponse, context: AWSMiddlewareContext) throws -> AWSResponse {
         self.log("Response:")
         self.log("  Status : \(response.status.code)")
         self.log("  Headers: " + self.getHeadersOutput(HTTPHeaders(response.headers.map { ($0, "\($1)") })))

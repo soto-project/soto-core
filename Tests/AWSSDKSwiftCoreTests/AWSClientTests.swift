@@ -734,7 +734,7 @@ class AWSClientTests: XCTestCase {
 
     func testMiddlewareAppliedOnce() {
         struct URLAppendMiddleware: AWSServiceMiddleware {
-            func chain(request: AWSRequest) throws -> AWSRequest {
+            func chain(request: AWSRequest, context: AWSMiddlewareContext) throws -> AWSRequest {
                 var request = request
                 request.url.appendPathComponent("test")
                 return request

@@ -38,6 +38,8 @@ public final class AWSServiceConfig {
     public let timeout: TimeAmount
     /// ByteBuffer allocator used by service
     public let byteBufferAllocator: ByteBufferAllocator
+    /// options
+    public let options: Options
 
     /// Create a ServiceConfig object
     ///
@@ -55,6 +57,8 @@ public final class AWSServiceConfig {
     ///   - possibleErrorTypes: Array of possible error types that the client can throw
     ///   - middlewares: Array of middlewares to apply to requests and responses
     ///   - timeout: Time out value for HTTP requests
+    ///   - byteBufferAllocator: byte buffer allocator used throughout AWSClient
+    ///   - options: options used by client when processing requests
     public init(
         region: Region?,
         partition: AWSPartition,
@@ -69,7 +73,8 @@ public final class AWSServiceConfig {
         possibleErrorTypes: [AWSErrorType.Type] = [],
         middlewares: [AWSServiceMiddleware] = [],
         timeout: TimeAmount? = nil,
-        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
+        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
+        options: Options = []
     ) {
         var partition = partition
         if let region = region {
@@ -92,6 +97,7 @@ public final class AWSServiceConfig {
         self.middlewares = middlewares
         self.timeout = timeout ?? .seconds(20)
         self.byteBufferAllocator = byteBufferAllocator
+        self.options = options
 
         // work out endpoint, if provided use that otherwise
         if let endpoint = endpoint {
@@ -110,4 +116,18 @@ public final class AWSServiceConfig {
             self.endpoint = "https://\(serviceHost)"
         }
     }
+    
+    /// Options used by client when processing requests
+    public struct Options: OptionSet {
+        public let rawValue: Int
+        
+        public init(rawValue: RawValue) {
+            self.rawValue = rawValue
+        }
+            
+        /// If you set a custom endpoint, s3 will choose path style addressing. With this paramteter you can force
+        /// it to use virtual host style addressing
+        public static let s3ForceVirtualHost = Options(rawValue: 1<<0)
+    }
 }
+

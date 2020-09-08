@@ -22,8 +22,15 @@ import NIOConcurrencyHelpers
 public class DeferredCredentialProvider: CredentialProvider {
     let lock = Lock()
     var credential: Credential? {
-        self.lock.withLock {
-            internalCredential
+        get {
+            self.lock.withLock {
+                internalCredential
+            }
+        }
+        set {
+            self.lock.withLock {
+                internalCredential = newValue
+            }
         }
     }
 
@@ -41,7 +48,7 @@ public class DeferredCredentialProvider: CredentialProvider {
         provider.getCredential(on: context.eventLoop, logger: context.logger)
             .flatMapErrorThrowing { _ in throw CredentialProviderError.noProvider }
             .map { credential in
-                self.internalCredential = credential
+                self.credential = credential
                 context.logger.info("AWS credentials ready", metadata: ["aws-credential-provider": .string("\(self)")])
                 return credential
             }

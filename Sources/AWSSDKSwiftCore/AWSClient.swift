@@ -646,33 +646,9 @@ extension AWSClient.Context {
 
 // MARK: RequestMetadata
 
-// extension Logger {
-//    func attachingRequestId(_ id: Int, operation: String, service: String) -> Logger {
-//        var logger = self
-//        logger[metadataKey: "aws-service"] = .string(service)
-//        logger[metadataKey: "aws-operation"] = .string(operation)
-//        logger[metadataKey: "aws-request-id"] = "\(id)"
-//        return logger
-//    }
-// }
-
 private extension AWSClient {
     struct RequestMetadata: CustomStringConvertible {
         static let globalRequestID = NIOAtomic<Int>.makeAtomic(value: 0)
-
-//        static func create(
-//            operation: String,
-//            serviceConfig: AWSServiceConfig,
-//            requestId: Int = Self.globalRequestID.add(1)
-//        ) -> RequestMetadata {
-//            RequestMetadata(requestId: requestId, service: serviceConfig.service, operation: operation)
-//        }
-
-//        static func create(serviceConfig: AWSServiceConfig) -> (String) -> RequestMetadata {
-//            { operation in
-//                Self.create(operation: operation, serviceConfig: serviceConfig)
-//            }
-//        }
 
         var requestId: Int
         var service: String

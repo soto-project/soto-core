@@ -23,8 +23,7 @@ class LoggingTests: XCTestCase {
     override func setUp() {
         super.setUp()
 
-        // NoOpTracingInstrument does not propagate baggage
-        // TODO: discuss, see https://github.com/slashmo/gsoc-swift-tracing/issues/126#issuecomment-674631978
+        // TODO: will be fixed with https://github.com/slashmo/gsoc-swift-tracing/issues/138
         InstrumentationSystem.bootstrap(TestTracer())
     }
 

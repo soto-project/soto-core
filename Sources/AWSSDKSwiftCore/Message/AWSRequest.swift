@@ -18,8 +18,10 @@ import struct Foundation.Data
 import struct Foundation.Date
 import struct Foundation.URL
 import struct Foundation.URLComponents
+import Instrumentation
 import NIO
 import NIOHTTP1
+import TracingInstrumentation
 
 /// Object encapsulating all the information needed to generate a raw HTTP request to AWS
 public struct AWSRequest {
@@ -33,13 +35,13 @@ public struct AWSRequest {
 
     /// Create HTTP Client request from AWSRequest.
     /// If the signer's credentials are available the request will be sigend. Otherweise defaults to an unsinged request
-    func createHTTPRequest(signer: AWSSigner) -> AWSHTTPRequest {
+    func createHTTPRequest(signer: AWSSigner, context: AWSClient.Context) -> AWSHTTPRequest {
         // if credentials are empty don't sign request
         if signer.credentials.isEmpty() {
             return self.toHTTPRequest()
         }
 
-        return self.toHTTPRequestWithSignedHeader(signer: signer)
+        return self.toHTTPRequestWithSignedHeader(signer: signer, context: context)
     }
 
     /// Create HTTP Client request from AWSRequest
@@ -48,7 +50,12 @@ public struct AWSRequest {
     }
 
     /// Create HTTP Client request with signed headers from AWSRequest
-    func toHTTPRequestWithSignedHeader(signer: AWSSigner) -> AWSHTTPRequest {
+    func toHTTPRequestWithSignedHeader(signer: AWSSigner, context: AWSClient.Context) -> AWSHTTPRequest {
+        var span = InstrumentationSystem.tracingInstrument.startSpan(
+            named: "toHTTPRequestWithSignedHeader",
+            context: context
+        )
+        span.attributes["signer"] = .string(signer.name)
         let payload = self.body.asPayload()
         let bodyDataForSigning: AWSSigner.BodyData?
         switch payload.payload {
@@ -77,15 +84,18 @@ public struct AWSRequest {
             bodyDataForSigning = nil
         }
         let signedHeaders = signer.signHeaders(url: url, method: httpMethod, headers: httpHeaders, body: bodyDataForSigning, date: Date())
+        span.end()
         return AWSHTTPRequest(url: url, method: httpMethod, headers: signedHeaders, body: payload)
     }
 
     // return new request with middleware applied
-    func applyMiddlewares(_ middlewares: [AWSServiceMiddleware]) throws -> AWSRequest {
+    func applyMiddlewares(_ middlewares: [AWSServiceMiddleware], context: AWSClient.Context) throws -> AWSRequest {
         var awsRequest = self
         // apply middleware to request
         for middleware in middlewares {
-            awsRequest = try middleware.chain(request: awsRequest)
+            awsRequest = try InstrumentationSystem.tracingInstrument.span(named: "\(middleware)", context: context) { _ in
+                try middleware.chain(request: awsRequest)
+            }
         }
         return awsRequest
     }

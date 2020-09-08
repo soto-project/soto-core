@@ -474,8 +474,11 @@ extension AWSClient {
             let signer = AWSSigner(credentials: credential, name: config.signingName, region: config.region.rawValue)
             let awsRequest = try createRequest()
             return try awsRequest
-                .applyMiddlewares(config.middlewares + self.middlewares)
-                .createHTTPRequest(signer: signer)
+                .applyMiddlewares(
+                    config.middlewares + self.middlewares,
+                    context: context.with(baggage: span.context)
+                )
+                .createHTTPRequest(signer: signer, context: context.with(baggage: span.context))
         }.flatMap { request in
             return self.invoke(with: config, context: context) { context in
                 execute(request, eventLoop, context)

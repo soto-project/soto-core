@@ -92,7 +92,7 @@ class AWSRequestTests: XCTestCase {
             region: config.region.rawValue
         )
 
-        let signedRequest = awsRequest?.createHTTPRequest(signer: signer)
+        let signedRequest = awsRequest?.createHTTPRequest(signer: signer, context: TestEnvironment.context)
         XCTAssertNotNil(signedRequest)
         XCTAssertEqual(signedRequest?.method, HTTPMethod.POST)
         XCTAssertEqual(signedRequest?.headers["Host"].first, "kinesis.us-east-1.amazonaws.com")
@@ -118,7 +118,7 @@ class AWSRequestTests: XCTestCase {
             region: config.region.rawValue
         )
 
-        let request = awsRequest?.createHTTPRequest(signer: signer)
+        let request = awsRequest?.createHTTPRequest(signer: signer, context: TestEnvironment.context)
         XCTAssertNil(request?.headers["Authorization"].first)
     }
 
@@ -143,7 +143,7 @@ class AWSRequestTests: XCTestCase {
                 configuration: config
             ))
 
-            let request = awsRequest?.createHTTPRequest(signer: signer)
+            let request = awsRequest?.createHTTPRequest(signer: signer, context: TestEnvironment.context)
             XCTAssertNotNil(request?.headers["Authorization"].first)
         }
     }

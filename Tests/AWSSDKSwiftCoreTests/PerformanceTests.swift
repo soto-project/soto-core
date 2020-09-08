@@ -219,7 +219,7 @@ class PerformanceTests: XCTestCase {
         )
         measure {
             for _ in 0..<1000 {
-                _ = request.createHTTPRequest(signer: signer)
+                _ = request.createHTTPRequest(signer: signer, context: TestEnvironment.context)
             }
         }
     }
@@ -236,12 +236,12 @@ class PerformanceTests: XCTestCase {
             path: "/",
             httpMethod: .GET,
             configuration: config
-        ).applyMiddlewares(config.middlewares + client.middlewares)
+        ).applyMiddlewares(config.middlewares + client.middlewares, context: TestEnvironment.context)
 
         let signer = try! client.createSigner(serviceConfig: config, context: TestEnvironment.context).wait()
         measure {
             for _ in 0..<1000 {
-                _ = awsRequest.createHTTPRequest(signer: signer)
+                _ = awsRequest.createHTTPRequest(signer: signer, context: TestEnvironment.context)
             }
         }
     }
@@ -264,7 +264,7 @@ class PerformanceTests: XCTestCase {
         )
         measure {
             for _ in 0..<1000 {
-                _ = awsRequest.createHTTPRequest(signer: signer)
+                _ = awsRequest.createHTTPRequest(signer: signer, context: TestEnvironment.context)
             }
         }
     }

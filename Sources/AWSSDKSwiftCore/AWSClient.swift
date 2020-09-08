@@ -264,7 +264,7 @@ extension AWSClient {
     ) -> EventLoopFuture<Void> {
         return execute(
             operation: operationName,
-            createRequest: { _ in
+            createRequest: {
                 try AWSRequest(
                     operation: operationName,
                     path: path,
@@ -304,7 +304,7 @@ extension AWSClient {
     ) -> EventLoopFuture<Void> {
         return execute(
             operation: operationName,
-            createRequest: { _ in
+            createRequest: {
                 try AWSRequest(
                     operation: operationName,
                     path: path,
@@ -343,7 +343,7 @@ extension AWSClient {
     ) -> EventLoopFuture<Output> {
         return execute(
             operation: operationName,
-            createRequest: { _ in
+            createRequest: {
                 try AWSRequest(
                     operation: operationName,
                     path: path,
@@ -384,7 +384,7 @@ extension AWSClient {
     ) -> EventLoopFuture<Output> {
         return execute(
             operation: operationName,
-            createRequest: { _ in
+            createRequest: {
                 try AWSRequest(
                     operation: operationName,
                     path: path,
@@ -427,7 +427,7 @@ extension AWSClient {
     ) -> EventLoopFuture<Output> {
         return execute(
             operation: operationName,
-            createRequest: { _ in
+            createRequest: {
                 try AWSRequest(
                     operation: operationName,
                     path: path,
@@ -451,7 +451,7 @@ extension AWSClient {
     /// internal version of execute
     internal func execute<Output>(
         operation operationName: String,
-        createRequest: @escaping (AWSSigner) throws -> AWSRequest,
+        createRequest: @escaping () throws -> AWSRequest,
         execute: @escaping (AWSHTTPRequest, EventLoop, AWSClient.Context) -> EventLoopFuture<AWSHTTPResponse>,
         processResponse: @escaping (AWSHTTPResponse) throws -> Output,
         config: AWSServiceConfig,
@@ -472,9 +472,7 @@ extension AWSClient {
         }
         .flatMapThrowing { credential in
             let signer = AWSSigner(credentials: credential, name: config.signingName, region: config.region.rawValue)
-            let awsRequest = try InstrumentationSystem.tracingInstrument.span(named: "createRequest", context: context) { _ in
-                try createRequest(signer)
-            }
+            let awsRequest = try createRequest()
             return try awsRequest
                 .applyMiddlewares(config.middlewares + self.middlewares)
                 .createHTTPRequest(signer: signer)

@@ -8,5 +8,5 @@ To contribute a feature or idea to Soto, submit an issue and fill in the templat
 
 We use [Swift Format](https://github.com/nicklockwood/SwiftFormat) to ensure a standard formatting for all code in Soto. If you create a PR we run a script verifying the code conforms to this format. To be sure your code is compliant run `./scripts/sanity.sh` before you create your PR. This script runs a number of checks including running Swift Format and verifying all source files have the correct file header. 
 
-If you find a security vulnerability, please contact <soto-project-maintainers@googlegroups.com> and reach out on the soto-aws [slack](http://soto-aws.slack.com/) or the [**#aws**](https://discordapp.com/channels/431917998102675485/472522745067077632) channel on the Vapor Discord as soon as possible. We take these matters seriously.
+If you find a security vulnerability, please contact <swift-aws-maintainers@googlegroups.com> and reach out on the soto-aws [slack](http://soto-aws.slack.com/) or the [**#aws**](https://discordapp.com/channels/431917998102675485/472522745067077632) channel on the Vapor Discord as soon as possible. We take these matters seriously.
 

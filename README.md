@@ -1,12 +1,12 @@
 # Soto Core
 
 [<img src="http://img.shields.io/badge/swift-5.1-brightgreen.svg" alt="Swift 5.1" />](https://swift.org)
-[<img src="https://github.com/swift-aws/soto-core/workflows/CI/badge.svg" />](https://github.com/swift-aws/soto-core/actions)
-[<img src="https://codecov.io/gh/swift-aws/soto-core/branch/main/graph/badge.svg" alt="Codecov Result" />](https://codecov.io/gh/swift-aws/soto-core)
+[<img src="https://github.com/soto-project/soto-core/workflows/CI/badge.svg" />](https://github.com/soto-project/soto-core/actions)
+[<img src="https://codecov.io/gh/soto-project/soto-core/branch/main/graph/badge.svg" alt="Codecov Result" />](https://codecov.io/gh/soto-project/soto-core)
 
-The core framework for [Soto](https://github.com/swift-aws/soto) the Swift SDK for AWS.
+The core framework for [Soto](https://github.com/soto-project/soto) the Swift SDK for AWS.
 
-This is the underlying driver for executing requests to AWS, but you should likely use one of the libraries provided by the package above instead of this! Documentation can be found [here](https://swift-aws.github.io/soto-core).
+This is the underlying driver for executing requests to AWS, but you should likely use one of the libraries provided by the package above instead of this! Documentation can be found [here](https://soto-project.github.io/soto-core).
 
 ## Swift NIO
 

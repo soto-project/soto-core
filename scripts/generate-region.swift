@@ -17,7 +17,7 @@ import AsyncHTTPClient // swift-server/async-http-client
 import Foundation
 import NIO // apple/swift-nio
 import NIOFoundationCompat
-import Stencil // swift-aws/Stencil
+import Stencil // soto-project/Stencil
 
 struct Endpoints: Decodable {
     struct CredentialScope: Decodable {

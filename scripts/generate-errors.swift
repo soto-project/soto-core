@@ -14,7 +14,7 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
-import Stencil // swift-aws/Stencil
+import Stencil // soto-project/Stencil
 
 extension String {
     public func lowerFirst() -> String {

@@ -528,7 +528,7 @@ extension AWSClient.ClientError: CustomStringConvertible {
         case .invalidURL:
             return """
             The request url is invalid format.
-            This error is internal. So please make a issue on https://github.com/swift-aws/soto/issues to solve it.
+            This error is internal. So please make a issue on https://github.com/soto-project/soto/issues to solve it.
             """
         case .tooMuchData:
             return "You have supplied too much data for the Request."

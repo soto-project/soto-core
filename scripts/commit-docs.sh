@@ -29,7 +29,7 @@ rm -rf "$FOLDER"
 mv docs/ "$FOLDER"/
 # commit
 git add --all "$FOLDER"
-git commit -m "Documentation for https://github.com/swift-aws/soto-core/tree/$REVISION_HASH"
+git commit -m "Documentation for https://github.com/soto-project/soto-core/tree/$REVISION_HASH"
 git push
 # return to branch
 git checkout $CURRENT_BRANCH

@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SotoSignerV4
 import Logging
+import SotoSignerV4
 
 extension StaticCredential: CredentialProvider {
     public func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {

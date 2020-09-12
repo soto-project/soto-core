@@ -13,11 +13,11 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
-@testable import SotoCore
-import SotoTestUtils
 import Logging
 import NIO
 import NIOConcurrencyHelpers
+@testable import SotoCore
+import SotoTestUtils
 import XCTest
 
 class RotatingCredentialProviderTests: XCTestCase {

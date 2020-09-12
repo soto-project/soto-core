@@ -12,11 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SotoSignerV4
 import struct Foundation.TimeInterval
 import Logging
 import NIO
 import NIOConcurrencyHelpers
+import SotoSignerV4
 
 /// The `RotatingCredentialProvider` shall be of help if you wish to implement your own provider
 /// strategy. If your Credential conforms to the `ExpiringCredential` protocol, the `RotatingCredentialProvider`

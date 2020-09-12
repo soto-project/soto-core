@@ -12,10 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SotoSignerV4
 import INIParser
 import Logging
 import NIO
+import SotoSignerV4
 #if os(Linux)
 import Glibc
 #else

@@ -12,10 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import SotoCore
-import SotoTestUtils
 import Logging
 import NIOConcurrencyHelpers
+@testable import SotoCore
+import SotoTestUtils
 import XCTest
 
 class LoggingTests: XCTestCase {

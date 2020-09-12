@@ -13,9 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
-import SotoSignerV4
 import Dispatch
-import SotoXML
 import struct Foundation.URL
 import struct Foundation.URLQueryItem
 import Logging
@@ -24,6 +22,8 @@ import NIO
 import NIOConcurrencyHelpers
 import NIOHTTP1
 import NIOTransportServices
+import SotoSignerV4
+import SotoXML
 
 /// This is the workhorse of SotoCore. You provide it with a `AWSShape` Input object, it converts it to `AWSRequest` which is then converted
 /// to a raw `HTTPClient` Request. This is then sent to AWS. When the response from AWS is received if it is successful it is converted to a `AWSResponse`

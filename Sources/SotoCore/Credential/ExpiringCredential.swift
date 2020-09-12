@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SotoSignerV4
 import struct Foundation.TimeInterval
+import SotoSignerV4
 
 public protocol ExpiringCredential: Credential {
     func isExpiring(within: TimeInterval) -> Bool

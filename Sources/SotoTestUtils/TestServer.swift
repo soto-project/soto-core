@@ -12,12 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import SotoCore
-import SotoXML
 import NIO
 import NIOFoundationCompat
 import NIOHTTP1
 import NIOTestUtils
+@testable import SotoCore
+import SotoXML
 import XCTest
 
 /// Test server for AWSClient. Input and Output shapes are defined by process function

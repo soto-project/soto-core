@@ -13,9 +13,9 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+import NIO
 @testable import SotoCore
 import SotoTestUtils
-import NIO
 import XCTest
 
 class PaginateTests: XCTestCase {

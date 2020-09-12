@@ -12,10 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SotoSignerV4
 import Logging
 import NIO
 import NIOConcurrencyHelpers
+import SotoSignerV4
 
 /// Protocol providing future holding a credential
 public protocol CredentialProvider: CustomStringConvertible {

@@ -20,11 +20,11 @@ import struct Foundation.TimeInterval
 import struct Foundation.TimeZone
 import struct Foundation.URL
 
-import SotoSignerV4
 import Logging
 import NIO
 import NIOConcurrencyHelpers
 import NIOHTTP1
+import SotoSignerV4
 
 /// protocol to get Credentials from the Client. With this the AWSClient requests the credentials for request signing from ecs and ec2.
 protocol MetaDataClient: CredentialProvider {

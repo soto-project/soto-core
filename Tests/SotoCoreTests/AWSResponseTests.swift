@@ -12,11 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+import NIO
+import NIOHTTP1
 @testable import SotoCore
 import SotoTestUtils
 import SotoXML
-import NIO
-import NIOHTTP1
 import XCTest
 
 class AWSResponseTests: XCTestCase {

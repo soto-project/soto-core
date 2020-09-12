@@ -12,9 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-import enum SotoXML.XML
 import NIO
 import NIOFoundationCompat
+import enum SotoXML.XML
 
 /// Enumaration used to store request/response body in various forms
 public enum Body {

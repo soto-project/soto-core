@@ -12,12 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SotoXML
 import class Foundation.JSONDecoder
 import class Foundation.JSONSerialization
 import Logging
 import NIO
 import NIOHTTP1
+import SotoXML
 
 /// Structure encapsulating a processed HTTP Response
 public struct AWSResponse {

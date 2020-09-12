@@ -12,9 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SotoXML
 import class Foundation.JSONEncoder
 import NIO
+import SotoXML
 
 internal extension AWSEncodableShape {
     /// Encode AWSShape as JSON

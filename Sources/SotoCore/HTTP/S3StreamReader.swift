@@ -12,9 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SotoSignerV4
 import NIO
 import NIOHTTP1
+import SotoSignerV4
 
 /// S3 Chunked signed streamer. See https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-streaming.html
 /// for more details.

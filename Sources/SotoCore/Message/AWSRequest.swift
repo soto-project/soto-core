@@ -12,13 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SotoSignerV4
 import struct Foundation.CharacterSet
 import struct Foundation.Date
 import struct Foundation.URL
 import struct Foundation.URLComponents
 import NIO
 import NIOHTTP1
+import SotoSignerV4
 
 /// Object encapsulating all the information needed to generate a raw HTTP request to AWS
 public struct AWSRequest {

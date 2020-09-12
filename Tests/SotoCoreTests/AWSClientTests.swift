@@ -13,14 +13,14 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
-@testable import SotoCore
-import SotoTestUtils
-import SotoXML
 import Logging
 import NIO
 import NIOConcurrencyHelpers
 import NIOFoundationCompat
 import NIOHTTP1
+@testable import SotoCore
+import SotoTestUtils
+import SotoXML
 import XCTest
 
 class AWSClientTests: XCTestCase {

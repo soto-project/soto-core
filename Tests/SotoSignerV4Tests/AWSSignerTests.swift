@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import SotoSignerV4
 import NIO
+@testable import SotoSignerV4
 import XCTest
 
 @propertyWrapper struct EnvironmentVariable<Value: LosslessStringConvertible> {

@@ -13,10 +13,10 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
-@testable import SotoCore
-import SotoTestUtils
 import Logging
 import NIO
+@testable import SotoCore
+import SotoTestUtils
 import XCTest
 
 class CredentialProviderTests: XCTestCase {

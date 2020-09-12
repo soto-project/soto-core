@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import SotoCore
 import NIO
+@testable import SotoCore
 import XCTest
 
 class JSONCoderTests: XCTestCase {

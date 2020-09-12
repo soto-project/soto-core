@@ -12,7 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SotoCrypto
 import struct Foundation.CharacterSet
 import struct Foundation.Data
 import struct Foundation.Date
@@ -22,6 +21,7 @@ import struct Foundation.TimeZone
 import struct Foundation.URL
 import NIO
 import NIOHTTP1
+import SotoCrypto
 
 /// Amazon Web Services V4 Signer
 public struct AWSSigner {

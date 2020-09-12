@@ -12,9 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import SotoCore
 import Foundation
 import Logging
+@testable import SotoCore
 
 @propertyWrapper public struct EnvironmentVariable<Value: LosslessStringConvertible> {
     var defaultValue: Value

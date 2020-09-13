@@ -19,7 +19,11 @@ import NIO
 #if os(Linux)
 import Glibc
 #else
+#if os(macOS)
+import Foundation
+#else
 import Foundation.NSString
+#endif
 #endif
 
 struct AWSConfigFileCredentialProvider: CredentialProvider {
@@ -134,7 +138,15 @@ struct AWSConfigFileCredentialProvider: CredentialProvider {
             return pth
         }
         #else
+        #if os(macOS)
+        let pw = getpwuid(getuid())
+        let home = pw?.pointee.pw_dir
+        let homePath = FileManager.default.string(withFileSystemRepresentation: home!, length: Int(strlen(home!)))
+        let expandedPath = filePath.replacingOccurrences(of: "~", with: homePath)
+        return expandedPath
+        #else
         return NSString(string: filePath).expandingTildeInPath
+        #endif
         #endif
     }
 }

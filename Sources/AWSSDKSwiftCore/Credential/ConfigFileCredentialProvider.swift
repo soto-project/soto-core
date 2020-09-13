@@ -139,9 +139,8 @@ struct AWSConfigFileCredentialProvider: CredentialProvider {
         }
         #else
         #if os(macOS)
-        let pw = getpwuid(getuid())
-        let home = pw?.pointee.pw_dir
-        let homePath = FileManager.default.string(withFileSystemRepresentation: home!, length: Int(strlen(home!)))
+        guard let pw = getpwuid(getuid()) else { return filePath }
+        let homePath = FileManager.default.string(withFileSystemRepresentation: pw.pointee.pw_dir, length: Int(strlen(pw.pointee.pw_dir)))
         let expandedPath = filePath.replacingOccurrences(of: "~", with: homePath)
         return expandedPath
         #else

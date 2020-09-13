@@ -36,7 +36,7 @@ else
 fi
 
 printf "=> Checking license headers... "
-tmp=$(mktemp /tmp/.aws-sdk-swift-core-sanity_XXXXXX)
+tmp=$(mktemp /tmp/.soto-core-sanity_XXXXXX)
 
 for language in swift-or-c; do
   declare -a matching_files
@@ -45,18 +45,18 @@ for language in swift-or-c; do
   matching_files=( -name '*' )
   case "$language" in
       swift-or-c)
-        exceptions=( -path '*Sources/INIParser/*' -o -path '*Sources/CAWSExpat/*' -o -name Package.swift)
+        exceptions=( -path '*Sources/INIParser/*' -o -path '*Sources/CSotoExpat/*' -o -name Package.swift)
         matching_files=( -name '*.swift' -o -name '*.c' -o -name '*.h' )
         cat > "$tmp" <<"EOF"
 //===----------------------------------------------------------------------===//
 //
-// This source file is part of the AWSSDKSwift open source project
+// This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) YEARS the AWSSDKSwift project authors
+// Copyright (c) YEARS the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
-// See CONTRIBUTORS.txt for the list of AWSSDKSwift project authors
+// See CONTRIBUTORS.txt for the list of Soto project authors
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -68,13 +68,13 @@ EOF
         cat > "$tmp" <<"EOF"
 ##===----------------------------------------------------------------------===##
 ##
-## This source file is part of the AWSSDKSwift open source project
+## This source file is part of the Soto for AWS open source project
 ##
-## Copyright (c) YEARS the AWSSDKSwift project authors
+## Copyright (c) YEARS the Soto project authors
 ## Licensed under Apache License v2.0
 ##
 ## See LICENSE.txt for license information
-## See CONTRIBUTORS.txt for the list of AWSSDKSwift project authors
+## See CONTRIBUTORS.txt for the list of Soto project authors
 ##
 ## SPDX-License-Identifier: Apache-2.0
 ##

@@ -25,11 +25,11 @@ jobs:
     - name: Convert coverage files
       run: |
         xcrun llvm-cov export -format "lcov" \
-          .build/debug/aws-sdk-swift-corePackageTests.xctest/Contents/MacOs/aws-sdk-swift-corePackageTests \
+          .build/debug/soto-corePackageTests.xctest/Contents/MacOs/soto-corePackageTests \
           -ignore-filename-regex="\/Tests\/" \
           -instr-profile=.build/debug/codecov/default.profdata > info.lcov  
     - name: Upload to codecov.io
-      run: bash <(curl -s https://codecov.io/bash) -J 'aws-sdk-swift-core' -t ${{secrets.CODECOV_TOKEN}}
+      run: bash <(curl -s https://codecov.io/bash) -J 'soto-core' -t ${{secrets.CODECOV_TOKEN}}
 
   ios:
     runs-on: macOS-latest
@@ -40,8 +40,8 @@ jobs:
         fetch-depth: 1
     - name: Xcodebuild
       run: |
-        xcodebuild -scheme aws-sdk-swift-core -quiet -destination 'platform=iOS Simulator,name=iPhone 11'
-        xcodebuild test -scheme aws-sdk-swift-core -destination 'platform=iOS Simulator,name=iPhone 11'
+        xcodebuild -scheme soto-core -quiet -destination 'platform=iOS Simulator,name=iPhone 11'
+        xcodebuild test -scheme soto-core -destination 'platform=iOS Simulator,name=iPhone 11'
 
   linux:
     runs-on: ubuntu-latest
@@ -66,7 +66,7 @@ jobs:
     - name: Convert coverage files
       run: |
         llvm-cov export -format="lcov" \
-          .build/debug/aws-sdk-swift-corePackageTests.xctest \
+          .build/debug/soto-corePackageTests.xctest \
           -ignore-filename-regex="\/Tests\/" \
           -instr-profile .build/debug/codecov/default.profdata > info.lcov
     - name: Upload to codecov.io

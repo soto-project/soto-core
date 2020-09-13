@@ -18,6 +18,8 @@ SWIFT_VERSION=5.1
 set -eu
 here="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+which swiftformat > /dev/null 2>&1 || (echo "swiftformat not installed. You can install it using 'brew install swiftformat'" ; exit -1)
+
 function replace_acceptable_years() {
     # this needs to replace all acceptable forms with 'YEARS'
     sed -e 's/20[12][78901]-20[12][8901]/YEARS/' -e 's/20[12][8901]/YEARS/' -e '/^#!/ d'

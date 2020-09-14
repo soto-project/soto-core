@@ -133,17 +133,16 @@ struct AWSConfigFileCredentialProvider: CredentialProvider {
 
             return pth
         }
-        #else
-        #if os(macOS)
-        guard let home = getpwuid(getuid())?.pointee.pw_dir else {
+        #elseif os(macOS)
+        // can not use wordexp on macOS because for sandboxed application wexp.we_wordv == nil
+        guard let home = getpwuid(getuid())?.pointee.pw_dir,
+            let homePath = String(cString: home, encoding: .utf8)
+        else {
             return filePath
         }
-        let homePath = FileManager.default.string(withFileSystemRepresentation: home, length: Int(strlen(home)))
-        let expandedPath = filePath.replacingOccurrences(of: "~", with: homePath)
-        return expandedPath
+        return filePath.replacingOccurrences(of: "~", with: homePath)
         #else
         return NSString(string: filePath).expandingTildeInPath
-        #endif
         #endif
     }
 }

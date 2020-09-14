@@ -134,7 +134,16 @@ struct AWSConfigFileCredentialProvider: CredentialProvider {
             return pth
         }
         #else
+        #if os(macOS)
+        guard let home = getpwuid(getuid())?.pointee.pw_dir else {
+            return filePath
+        }
+        let homePath = FileManager.default.string(withFileSystemRepresentation: home, length: Int(strlen(home)))
+        let expandedPath = filePath.replacingOccurrences(of: "~", with: homePath)
+        return expandedPath
+        #else
         return NSString(string: filePath).expandingTildeInPath
+        #endif
         #endif
     }
 }

@@ -18,6 +18,12 @@
 //  Licensed under Apache License v2.0 http://www.apache.org/licenses/LICENSE-2.0.html
 //
 
+#if os(Linux)
+import Glibc
+#else
+import Darwin.C
+#endif
+
 @_implementationOnly import CSotoExpat
 
 /// Simple wrapper for the Expat parser. Though the block based Expat is

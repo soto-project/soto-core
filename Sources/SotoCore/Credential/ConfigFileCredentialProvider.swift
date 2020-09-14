@@ -140,7 +140,7 @@ struct AWSConfigFileCredentialProvider: CredentialProvider {
         else {
             return filePath
         }
-        return filePath.replacingOccurrences(of: "~", with: homePath)
+        return filePath.starts(with: "~") ? homePath + filePath.dropFirst() : filePath
         #else
         return NSString(string: filePath).expandingTildeInPath
         #endif

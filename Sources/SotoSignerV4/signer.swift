@@ -234,7 +234,7 @@ public struct AWSSigner {
             .sorted()
             .joined(separator: "\n")
         let canonicalRequest = "\(signingData.method.rawValue)\n" +
-            "\(signingData.unsignedURL.path.uriEncodeWithSlash())\n" +
+            "\(signingData.unsignedURL.pathWithSlash.uriEncodeWithSlash())\n" +
             "\(signingData.unsignedURL.query ?? "")\n" + // should really uriEncode all the query string values
             "\(canonicalHeaders)\n\n" +
             "\(signingData.signedHeaders)\n" +
@@ -326,5 +326,32 @@ public extension Sequence where Element == UInt8 {
     /// return a hexEncoded string buffer from an array of bytes
     func hexDigest() -> String {
         return self.map { String(format: "%02x", $0) }.joined(separator: "")
+    }
+}
+
+public extension URL {
+    /// return URL path, but do not remove the slash at the end if it exists.
+    ///
+    /// There doesn't seem to be anyway to do this without parsing the path myself
+    /// If I could guarantee macOS 10.11 then I could use `hasDirectoryPath`.
+    var pathWithSlash: String {
+        let relativeString = self.relativeString
+        let doesPathEndInSlash: Bool
+        // does path end in "/"
+        if let questionMark = relativeString.firstIndex(of: "?") {
+            let prevCharacter = relativeString.index(before: questionMark)
+            doesPathEndInSlash = (relativeString[prevCharacter] == "/")
+        } else if let hashCharacter = relativeString.firstIndex(of: "#") {
+            let prevCharacter = relativeString.index(before: hashCharacter)
+            doesPathEndInSlash = (relativeString[prevCharacter] == "/")
+        } else {
+            let prevCharacter = relativeString.index(before: relativeString.endIndex)
+            doesPathEndInSlash = (relativeString[prevCharacter] == "/")
+        }
+        var path = self.path
+        if doesPathEndInSlash, path != "/" {
+            path += "/"
+        }
+        return path
     }
 }

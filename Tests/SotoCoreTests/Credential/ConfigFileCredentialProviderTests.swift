@@ -128,6 +128,15 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         #if os(Linux)
         XCTAssert(!expandedNewPath.hasPrefix("~"))
         #else
+
+        #if os(macOS)
+        // on macOS, we want to be sure the expansion produces the posix $HOME and
+        // not the sanboxed home $HOME/Library/Containers/<bundle-id>/Data
+        let macOSHomePrefix = "/Users/"
+        XCTAssert(expandedNewPath.starts(with: macOSHomePrefix))
+        XCTAssert(!expandedNewPath.contains("/Library/Containers/"))
+        #endif
+
         // this doesn't work on linux because of SR-12843
         let expandedNSString = NSString(string: expandableFilePath).expandingTildeInPath
         XCTAssertEqual(expandedNewPath, expandedNSString)

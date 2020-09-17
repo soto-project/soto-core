@@ -53,6 +53,20 @@ class TimeStampTests: XCTestCase {
         }
     }
 
+    func testDecodeISONoMillisecondFromXML() {
+        do {
+            struct A: Codable {
+                @Coding<ISO8601TimeStampCoder> var date: TimeStamp
+            }
+            let xml = "<A><date>2017-01-01T00:01:00Z</date></A>"
+            let xmlElement = try XML.Element(xmlString: xml)
+            let a = try XMLDecoder().decode(A.self, from: xmlElement)
+            XCTAssertEqual(a.date.stringValue, "2017-01-01T00:01:00.000Z")
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+
     func testDecodeHttpFormattedTimestamp() {
         do {
             struct A: Codable {

@@ -462,21 +462,24 @@ extension AWSClient {
     /// generate a signed URL
     /// - parameters:
     ///     - url : URL to sign
-    ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - httpMethod: HTTP method to use (.GET, .PUT, .PUSH etc)
+    ///     - httpHeaders: Headers that are to be used with this URL. Be sure to include these headers when you used the returned URL
     ///     - expires: How long before the signed URL expires
     ///     - serviceConfig: additional AWS service configuration used to sign the url
+    ///     - logger: Logger to output to
     /// - returns:
     ///     A signed URL
     public func signURL(
         url: URL,
         httpMethod: HTTPMethod,
+        headers: HTTPHeaders = HTTPHeaders(),
         expires: Int = 86400,
         serviceConfig: AWSServiceConfig,
         logger: Logger = AWSClient.loggingDisabled
     ) -> EventLoopFuture<URL> {
         let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: "signURL", service: serviceConfig.service)
         return createSigner(serviceConfig: serviceConfig, logger: logger).map { signer in
-            signer.signURL(url: url, method: httpMethod, expires: expires)
+            signer.signURL(url: url, method: httpMethod, headers: headers, expires: expires)
         }
     }
 

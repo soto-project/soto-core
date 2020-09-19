@@ -81,8 +81,9 @@ public struct AWSSigner {
     }
 
     /// Generate a signed URL, for a HTTP request
-    public func signURL(url: URL, method: HTTPMethod = .GET, body: BodyData? = nil, date: Date = Date(), expires: Int = 86400) -> URL {
-        let headers = HTTPHeaders([("host", url.host ?? "")])
+    public func signURL(url: URL, method: HTTPMethod = .GET, headers: HTTPHeaders = HTTPHeaders(), body: BodyData? = nil, date: Date = Date(), expires: Int = 86400) -> URL {
+        var headers = headers
+        headers.replaceOrAdd(name: "host", value: url.host ?? "")
         // Create signing data
         var signingData = AWSSigner.SigningData(url: url, method: method, headers: headers, body: body, date: AWSSigner.timestamp(date), signer: self)
         // Construct query string. Start with original query strings and append all the signing info.

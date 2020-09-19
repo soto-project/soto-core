@@ -66,6 +66,17 @@ final class AWSSignerTests: XCTestCase {
         XCTAssertEqual(url.absoluteString, "https://test-bucket.s3.amazonaws.com/test-put.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=MYACCESSKEY%2F20010102%2Feu-west-1%2Fs3%2Faws4_request&X-Amz-Date=20010102T034640Z&X-Amz-Expires=86400&X-Amz-Security-Token=MYSESSIONTOKEN&X-Amz-SignedHeaders=host&X-Amz-Signature=969dfbc450089f34f5b430611b18def1701c72c9e7e1608142051a898094227e")
     }
 
+    func testSignS3PutWithHeaderURL() {
+        let signer = AWSSigner(credentials: credentialsWithSessionKey, name: "s3", region: "eu-west-1")
+        let url = signer.signURL(
+            url: URL(string: "https://test-bucket.s3.amazonaws.com/test-put.txt")!,
+            method: .PUT,
+            headers: ["x-amz-acl": "public-read"],
+            date: Date(timeIntervalSinceReferenceDate: 100_000)
+        )
+        XCTAssertEqual(url.absoluteString, "https://test-bucket.s3.amazonaws.com/test-put.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=MYACCESSKEY%2F20010102%2Feu-west-1%2Fs3%2Faws4_request&X-Amz-Date=20010102T034640Z&X-Amz-Expires=86400&X-Amz-Security-Token=MYSESSIONTOKEN&X-Amz-SignedHeaders=host%3Bx-amz-acl&X-Amz-Signature=a849c034af312e8424b3b0dd425e3e21ce7a61641f4b6a84c203b115447309c8")
+    }
+
     func testBodyData() {
         let string = "testing, testing, 1,2,1,2"
         let data = string.data(using: .utf8)!

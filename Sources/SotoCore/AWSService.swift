@@ -32,11 +32,19 @@ extension AWSService {
     /// generate a signed URL
     /// - parameters:
     ///     - url : URL to sign
-    ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - httpMethod: HTTP method to use (.GET, .PUT, .PUSH etc)
+    ///     - httpHeaders: Headers that are to be used with this URL. Be sure to include these headers when you used the returned URL
     ///     - expires: How long before the signed URL expires
+    ///     - logger: Logger to output to
     /// - returns:
     ///     A signed URL
-    public func signURL(url: URL, httpMethod: HTTPMethod, expires: Int = 86400, logger: Logger = AWSClient.loggingDisabled) -> EventLoopFuture<URL> {
-        return self.client.signURL(url: url, httpMethod: httpMethod, expires: expires, serviceConfig: self.config, logger: logger)
+    public func signURL(
+        url: URL,
+        httpMethod: HTTPMethod,
+        headers: HTTPHeaders = HTTPHeaders(),
+        expires: Int = 86400,
+        logger: Logger = AWSClient.loggingDisabled
+    ) -> EventLoopFuture<URL> {
+        return self.client.signURL(url: url, httpMethod: httpMethod, headers: headers, expires: expires, serviceConfig: self.config, logger: logger)
     }
 }

@@ -24,5 +24,5 @@
 @_exported import protocol NIO.EventLoopGroup
 @_exported import struct NIO.TimeAmount
 
-@_exported import enum NIOHTTP1.HTTPMethod
 @_exported import struct NIOHTTP1.HTTPHeaders
+@_exported import enum NIOHTTP1.HTTPMethod

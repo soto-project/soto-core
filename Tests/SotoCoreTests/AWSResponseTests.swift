@@ -218,6 +218,34 @@ class AWSResponseTests: XCTestCase {
         XCTAssertEqual(error as? ServiceErrorType, .resourceNotFoundException(message: "Donald Where's Your Troosers?"))
     }
 
+    func testRestJSONError() {
+        let response = AWSHTTPResponseImpl(
+            status: .notFound,
+            headers: ["x-amzn-errortype": "ResourceNotFoundException"],
+            bodyData: Data("{\"message\": \"Donald Where's Your Troosers?\"}".utf8)
+        )
+        let service = createServiceConfig(serviceProtocol: .restjson, possibleErrorTypes: [ServiceErrorType.self])
+
+        var awsResponse: AWSResponse?
+        XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .restjson, raw: false))
+        let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger)
+        XCTAssertEqual(error as? ServiceErrorType, .resourceNotFoundException(message: "Donald Where's Your Troosers?"))
+    }
+
+    func testRestJSONErrorV2() {
+        let response = AWSHTTPResponseImpl(
+            status: .notFound,
+            headers: ["x-amzn-errortype": "ResourceNotFoundException"],
+            bodyData: Data("{\"Message\": \"Donald Where's Your Troosers?\"}".utf8)
+        )
+        let service = createServiceConfig(serviceProtocol: .restjson, possibleErrorTypes: [ServiceErrorType.self])
+
+        var awsResponse: AWSResponse?
+        XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .restjson, raw: false))
+        let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger)
+        XCTAssertEqual(error as? ServiceErrorType, .resourceNotFoundException(message: "Donald Where's Your Troosers?"))
+    }
+
     func testXMLError() {
         let response = AWSHTTPResponseImpl(
             status: .notFound,

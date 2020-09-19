@@ -46,7 +46,7 @@ class RotatingCredentialProviderTests: XCTestCase {
             accessKeyId: "abc123",
             secretAccessKey: "abc123",
             sessionToken: "abc123",
-            expiration: Date(timeIntervalSinceNow: 60 * 5)
+            expiration: Date(timeIntervalSinceNow: 24 * 60 * 60)
         )
 
         var hitCount = 0
@@ -67,7 +67,7 @@ class RotatingCredentialProviderTests: XCTestCase {
         XCTAssertEqual((returned as? TestExpiringCredential)?.expiration, cred.expiration)
 
         // get credentials a second time, callback must not be hit
-        XCTAssertNoThrow(returned = try provider.getCredential(on: loop, logger: TestEnvironment.logger).wait())
+        XCTAssertNoThrow(returned = try provider.getCredential(on: loop, logger: Logger(label: "soto")).wait())
         XCTAssertEqual(returned?.accessKeyId, cred.accessKeyId)
         XCTAssertEqual(returned?.secretAccessKey, cred.secretAccessKey)
         XCTAssertEqual(returned?.sessionToken, cred.sessionToken)

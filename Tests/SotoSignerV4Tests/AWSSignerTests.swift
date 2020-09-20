@@ -42,6 +42,12 @@ final class AWSSignerTests: XCTestCase {
         XCTAssertEqual(headers["Authorization"].first, "AWS4-HMAC-SHA256 Credential=MYACCESSKEY/20010124/us-east-1/glacier/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date;x-amz-glacier-version, Signature=acfa9b03fca6b098d7b88bfd9bbdb4687f5b34e944a9c6ed9f4814c1b0b06d62")
     }
 
+    func testSignWithSlashAtEndOfPath() {
+        let signer = AWSSigner(credentials: credentials, name: "sns", region: "eu-central-1")
+        let headers = signer.signHeaders(url: URL(string: "https://sns.eu-central-1.amazonaws.com/topics/")!, method: .GET, date: Date(timeIntervalSinceReferenceDate: 2_000_000))
+        XCTAssertEqual(headers["Authorization"].first, "AWS4-HMAC-SHA256 Credential=MYACCESSKEY/20010124/eu-central-1/sns/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=9c04ae96a2ce8addfa7ce933bf7ddda342f42476bd8cef057d1d25f09fb059c1")
+    }
+
     func testSignPutHeaders() {
         let signer = AWSSigner(credentials: credentials, name: "sns", region: "eu-west-1")
         let headers = signer.signHeaders(url: URL(string: "https://sns.eu-west-1.amazonaws.com/")!, method: .POST, headers: ["Content-Type": "application/x-www-form-urlencoded; charset=utf-8"], body: .string("Action=ListTopics&Version=2010-03-31"), date: Date(timeIntervalSinceReferenceDate: 200))

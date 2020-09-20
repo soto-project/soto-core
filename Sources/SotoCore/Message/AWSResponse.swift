@@ -187,6 +187,17 @@ public struct AWSResponse {
     func generateError(serviceConfig: AWSServiceConfig, logger: Logger) -> Error? {
         var apiError: APIError?
         switch serviceConfig.serviceProtocol {
+        case .restjson:
+            guard case .json(let data) = self.body else { break }
+            apiError = try? JSONDecoder().decode(RESTJSONError.self, from: data)
+            if apiError?.code == nil {
+                apiError?.code = self.headers["x-amzn-errortype"] as? String
+            }
+
+        case .json:
+            guard case .json(let data) = self.body else { break }
+            apiError = try? JSONDecoder().decode(JSONError.self, from: data)
+
         case .query:
             guard case .xml(var element) = self.body else { break }
             if let errors = element.elements(forName: "Errors").first {
@@ -201,17 +212,6 @@ public struct AWSResponse {
                 element = error
             }
             apiError = try? XMLDecoder().decode(XMLQueryError.self, from: element)
-
-        case .restjson:
-            guard case .json(let data) = self.body else { break }
-            apiError = try? JSONDecoder().decode(RESTJSONError.self, from: data)
-            if apiError?.code == nil {
-                apiError?.code = self.headers["x-amzn-errortype"] as? String
-            }
-
-        case .json:
-            guard case .json(let data) = self.body else { break }
-            apiError = try? JSONDecoder().decode(JSONError.self, from: data)
 
         case .ec2:
             guard case .xml(var element) = self.body else { break }
@@ -265,7 +265,7 @@ public struct AWSResponse {
     private struct JSONError: Decodable, APIError {
         var code: String?
         var message: String
-        
+
         init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             self.code = try container.decode(String?.self, forKey: .code)
@@ -275,7 +275,7 @@ public struct AWSResponse {
         private enum CodingKeys: String, CodingKey {
             case code = "__type"
             case message
-            case Message = "Message"
+            case Message
         }
     }
 
@@ -292,7 +292,7 @@ public struct AWSResponse {
         private enum CodingKeys: String, CodingKey {
             case code
             case message
-            case Message = "Message"
+            case Message
         }
     }
 }

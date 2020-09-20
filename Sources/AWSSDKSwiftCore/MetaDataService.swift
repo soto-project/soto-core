@@ -204,7 +204,7 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
                 let roleName = String(data: response.body, encoding: .utf8) else {
                     throw MetaDataServiceError.couldNotGetInstanceRoleName
             }
-            return "\(InstanceMetaDataServiceProvider.baseURLString)/\(roleName)"
+            return "\(InstanceMetaDataServiceProvider.baseURLString)\(roleName)"
         }.flatMap { uri in
             // request credentials
             return self.request(uri: uri, timeout: 2, eventLoopGroup: eventLoopGroup)

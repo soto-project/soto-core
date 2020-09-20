@@ -204,14 +204,22 @@ public struct AWSResponse {
 
         case .restjson:
             guard case .json(let data) = self.body else { break }
+            // rest JSON errors come in two formats one "Message" key capitalized and one not
             apiError = try? JSONDecoder().decode(RESTJSONError.self, from: data)
+            if apiError == nil {
+                apiError = try? JSONDecoder().decode(RESTJSONErrorV2.self, from: data)
+            }
             if apiError?.code == nil {
                 apiError?.code = self.headers["x-amzn-errortype"] as? String
             }
 
         case .json:
             guard case .json(let data) = self.body else { break }
+            // rest JSON errors come in two formats one "Message" key capitalized and one not
             apiError = try? JSONDecoder().decode(JSONError.self, from: data)
+            if apiError == nil {
+                apiError = try? JSONDecoder().decode(JSONErrorV2.self, from: data)
+            }
 
         case .ec2:
             guard case .xml(var element) = self.body else { break }
@@ -272,6 +280,16 @@ public struct AWSResponse {
         }
     }
 
+    private struct JSONErrorV2: Codable, APIError {
+        var code: String?
+        var message: String
+
+        private enum CodingKeys: String, CodingKey {
+            case code = "__type"
+            case message = "Message"
+        }
+    }
+
     private struct RESTJSONError: Codable, APIError {
         var code: String?
         var message: String
@@ -279,6 +297,16 @@ public struct AWSResponse {
         private enum CodingKeys: String, CodingKey {
             case code
             case message
+        }
+    }
+
+    private struct RESTJSONErrorV2: Codable, APIError {
+        var code: String?
+        var message: String
+
+        private enum CodingKeys: String, CodingKey {
+            case code
+            case message = "Message"
         }
     }
 }

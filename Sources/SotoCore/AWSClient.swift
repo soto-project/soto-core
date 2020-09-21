@@ -258,7 +258,7 @@ extension AWSClient {
                     configuration: serviceConfig
                 )
             },
-            execute: { request, eventLoop, logger in
+            execute: { request, eventLoop, context in
                 return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, context: context)
             },
             processResponse: { _ in
@@ -298,7 +298,7 @@ extension AWSClient {
                     configuration: serviceConfig
                 )
             },
-            execute: { request, eventLoop, logger in
+            execute: { request, eventLoop, context in
                 return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, context: context)
             },
             processResponse: { _ in
@@ -338,7 +338,7 @@ extension AWSClient {
                     configuration: serviceConfig
                 )
             },
-            execute: { request, eventLoop, logger in
+            execute: { request, eventLoop, context in
                 return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, context: context)
             },
             processResponse: { response in
@@ -381,7 +381,7 @@ extension AWSClient {
                     configuration: serviceConfig
                 )
             },
-            execute: { request, eventLoop, logger in
+            execute: { request, eventLoop, context in
                 return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, context: context)
             },
             processResponse: { response in
@@ -426,7 +426,7 @@ extension AWSClient {
                     configuration: serviceConfig
                 )
             },
-            execute: { request, eventLoop, logger in
+            execute: { request, eventLoop, context in
                 return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, context: context, stream: stream)
             },
             processResponse: { response in
@@ -442,7 +442,7 @@ extension AWSClient {
     internal func execute<Output>(
         operation operationName: String,
         createRequest: @escaping () throws -> AWSRequest,
-        execute: @escaping (AWSHTTPRequest, EventLoop, Logger) -> EventLoopFuture<AWSHTTPResponse>,
+        execute: @escaping (AWSHTTPRequest, EventLoop, Context) -> EventLoopFuture<AWSHTTPResponse>,
         processResponse: @escaping (AWSHTTPResponse) throws -> Output,
         config: AWSServiceConfig,
         context: Context,
@@ -463,7 +463,7 @@ extension AWSClient {
                     .createHTTPRequest(signer: signer, byteBufferAllocator: config.byteBufferAllocator)
             }.flatMap { request in
                 return self.invoke(with: config, logger: context.logger) {
-                    execute(request, eventLoop, context.logger)
+                    execute(request, eventLoop, context)
                 }
             }.flatMapThrowing(processResponse)
         return recordRequest(future, service: config.service, operation: operationName, logger: context.logger)

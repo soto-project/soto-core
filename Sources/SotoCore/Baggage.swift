@@ -55,6 +55,5 @@ extension Baggage {
         set {
             self[_key: RequestIdKey.self] = newValue
         }
-
     }
 }

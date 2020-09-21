@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+import BaggageContext
 import NIO
 @testable import SotoCore
 import SotoTestUtils
@@ -66,15 +67,15 @@ class PaginateTests: XCTestCase {
         let outputToken: Int?
     }
 
-    func counter(_ input: CounterInput, on eventLoop: EventLoop?, logger: Logger) -> EventLoopFuture<CounterOutput> {
+    func counter(_ input: CounterInput, context: Context, on eventLoop: EventLoop?) -> EventLoopFuture<CounterOutput> {
         return self.client.execute(
             operation: "TestOperation",
             path: "/",
             httpMethod: .POST,
             serviceConfig: self.config,
             input: input,
-            on: eventLoop,
-            logger: logger
+            context: context,
+            on: eventLoop
         )
     }
 
@@ -83,7 +84,7 @@ class PaginateTests: XCTestCase {
             input: input,
             command: self.counter,
             tokenKey: \CounterOutput.outputToken,
-            logger: TestEnvironment.logger,
+            context: TestEnvironment.context,
             onPage: onPage
         )
     }
@@ -145,15 +146,15 @@ class PaginateTests: XCTestCase {
         let moreResults: Bool?
     }
 
-    func stringList(_ input: StringListInput, on eventLoop: EventLoop? = nil, logger: Logger) -> EventLoopFuture<StringListOutput> {
+    func stringList(_ input: StringListInput, context: Context, on eventLoop: EventLoop? = nil) -> EventLoopFuture<StringListOutput> {
         return self.client.execute(
             operation: "TestOperation",
             path: "/",
             httpMethod: .POST,
             serviceConfig: self.config,
             input: input,
-            on: eventLoop,
-            logger: logger
+            context: context,
+            on: eventLoop
         )
     }
 
@@ -163,8 +164,8 @@ class PaginateTests: XCTestCase {
             command: self.stringList,
             tokenKey: \StringListOutput.outputToken,
             moreResultsKey: \StringListOutput.moreResults,
+            context: TestEnvironment.context,
             on: eventLoop,
-            logger: TestEnvironment.logger,
             onPage: onPage
         )
     }

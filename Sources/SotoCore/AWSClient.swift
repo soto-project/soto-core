@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+import BaggageContext
 import Dispatch
 import struct Foundation.URL
 import struct Foundation.URLQueryItem
@@ -20,8 +21,6 @@ import Logging
 import Metrics
 import NIO
 import NIOConcurrencyHelpers
-import NIOHTTP1
-import NIOTransportServices
 import SotoSignerV4
 import SotoXML
 
@@ -62,6 +61,8 @@ public final class AWSClient {
 
     /// default logger that logs nothing
     public static let loggingDisabled = Logger(label: "AWS-do-not-log", factory: { _ in SwiftLogNoOpLogHandler() })
+    /// default baggage context
+    public static let emptyContext = DefaultContext.TODO(logger: loggingDisabled)
 
     static let globalRequestID = NIOAtomic<Int>.makeAtomic(value: 0)
 
@@ -231,9 +232,10 @@ extension AWSClient {
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - serviceConfig: AWS service configuration used in request creation and signing
     ///     - input: Input object
-    ///     - config: AWS service configuration used in request creation and signing
-    ///     - context: additional context for call
+    ///     - context: Baggage context, holding a logger and baggage for tracing
+    ///     - eventLoop: Eventloop to execute on
     /// - returns:
     ///     Empty Future that completes when response is received
     public func execute<Input: AWSEncodableShape>(
@@ -242,8 +244,8 @@ extension AWSClient {
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         input: Input,
-        on eventLoop: EventLoop? = nil,
-        logger: Logger = AWSClient.loggingDisabled
+        context: Context = AWSClient.emptyContext,
+        on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Void> {
         return execute(
             operation: operationName,
@@ -263,8 +265,8 @@ extension AWSClient {
                 return
             },
             config: serviceConfig,
-            on: eventLoop,
-            logger: logger
+            context: context,
+            on: eventLoop
         )
     }
 
@@ -273,8 +275,9 @@ extension AWSClient {
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
-    ///     - config: AWS service configuration used in request creation and signing
-    ///     - context: additional context for call
+    ///     - serviceConfig: AWS service configuration used in request creation and signing
+    ///     - context: Baggage context, holding a logger and baggage for tracing
+    ///     - eventLoop: Eventloop to execute on
     /// - returns:
     ///     Empty Future that completes when response is received
     public func execute(
@@ -282,8 +285,8 @@ extension AWSClient {
         path: String,
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
-        on eventLoop: EventLoop? = nil,
-        logger: Logger = AWSClient.loggingDisabled
+        context: Context = AWSClient.emptyContext,
+        on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Void> {
         return execute(
             operation: operationName,
@@ -302,8 +305,8 @@ extension AWSClient {
                 return
             },
             config: serviceConfig,
-            on: eventLoop,
-            logger: logger
+            context: context,
+            on: eventLoop
         )
     }
 
@@ -312,8 +315,9 @@ extension AWSClient {
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
-    ///     - config: AWS service configuration used in request creation and signing
-    ///     - context: additional context for call
+    ///     - serviceConfig: AWS service configuration used in request creation and signing
+    ///     - context: Baggage context, holding a logger and baggage for tracing
+    ///     - eventLoop: Eventloop to execute on
     /// - returns:
     ///     Future containing output object that completes when response is received
     public func execute<Output: AWSDecodableShape>(
@@ -321,8 +325,8 @@ extension AWSClient {
         path: String,
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
-        on eventLoop: EventLoop? = nil,
-        logger: Logger = AWSClient.loggingDisabled
+        context: Context = AWSClient.emptyContext,
+        on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Output> {
         return execute(
             operation: operationName,
@@ -341,8 +345,8 @@ extension AWSClient {
                 return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
             },
             config: serviceConfig,
-            on: eventLoop,
-            logger: logger
+            context: context,
+            on: eventLoop
         )
     }
 
@@ -351,9 +355,10 @@ extension AWSClient {
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - serviceConfig: AWS service configuration used in request creation and signing
     ///     - input: Input object
-    ///     - config: AWS service configuration used in request creation and signing
-    ///     - context: additional context for call
+    ///     - context: Baggage context, holding a logger and baggage for tracing
+    ///     - eventLoop: Eventloop to execute on
     /// - returns:
     ///     Future containing output object that completes when response is received
     public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(
@@ -362,8 +367,8 @@ extension AWSClient {
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         input: Input,
-        on eventLoop: EventLoop? = nil,
-        logger: Logger = AWSClient.loggingDisabled
+        context: Context = AWSClient.emptyContext,
+        on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Output> {
         return execute(
             operation: operationName,
@@ -383,8 +388,8 @@ extension AWSClient {
                 return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
             },
             config: serviceConfig,
-            on: eventLoop,
-            logger: logger
+            context: context,
+            on: eventLoop
         )
     }
 
@@ -393,9 +398,11 @@ extension AWSClient {
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - serviceConfig: AWS service configuration used in request creation and signing
     ///     - input: Input object
-    ///     - config: AWS service configuration used in request creation and signing
-    ///     - context: additional context for call
+    ///     - context: Baggage context, holding a logger and baggage for tracing
+    ///     - eventLoop: Eventloop to execute on
+    ///     - stream: closure receiving payload data as it is received
     /// - returns:
     ///     Future containing output object that completes when response is received
     public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(
@@ -404,8 +411,8 @@ extension AWSClient {
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         input: Input,
+        context: Context = AWSClient.emptyContext,
         on eventLoop: EventLoop? = nil,
-        logger: Logger = AWSClient.loggingDisabled,
         stream: @escaping AWSHTTPClient.ResponseStream
     ) -> EventLoopFuture<Output> {
         return execute(
@@ -426,8 +433,8 @@ extension AWSClient {
                 return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
             },
             config: serviceConfig,
-            on: eventLoop,
-            logger: logger
+            context: context,
+            on: eventLoop
         )
     }
 
@@ -438,13 +445,16 @@ extension AWSClient {
         execute: @escaping (AWSHTTPRequest, EventLoop, Logger) -> EventLoopFuture<AWSHTTPResponse>,
         processResponse: @escaping (AWSHTTPResponse) throws -> Output,
         config: AWSServiceConfig,
-        on eventLoop: EventLoop? = nil,
-        logger: Logger = AWSClient.loggingDisabled
+        context: Context,
+        on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
-        let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName, service: config.service)
+        var context = context
+        context.baggage.awsService = config.service
+        context.baggage.awsOperation = operationName
+        context.baggage.awsRequestId = Self.globalRequestID.add(1)
 
-        let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop, logger: logger)
+        let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop, logger: context.logger)
             .flatMapThrowing { credential in
                 let signer = AWSSigner(credentials: credential, name: config.signingName, region: config.region.rawValue)
                 let awsRequest = try createRequest()
@@ -452,11 +462,11 @@ extension AWSClient {
                     .applyMiddlewares(config.middlewares + self.middlewares, config: config)
                     .createHTTPRequest(signer: signer, byteBufferAllocator: config.byteBufferAllocator)
             }.flatMap { request in
-                return self.invoke(with: config, logger: logger) {
-                    execute(request, eventLoop, logger)
+                return self.invoke(with: config, logger: context.logger) {
+                    execute(request, eventLoop, context.logger)
                 }
             }.flatMapThrowing(processResponse)
-        return recordRequest(future, service: config.service, operation: operationName, logger: logger)
+        return recordRequest(future, service: config.service, operation: operationName, logger: context.logger)
     }
 
     /// generate a signed URL
@@ -466,7 +476,7 @@ extension AWSClient {
     ///     - httpHeaders: Headers that are to be used with this URL. Be sure to include these headers when you used the returned URL
     ///     - expires: How long before the signed URL expires
     ///     - serviceConfig: additional AWS service configuration used to sign the url
-    ///     - logger: Logger to output to
+    ///     - context: Baggage context, holding a logger and baggage for tracing
     /// - returns:
     ///     A signed URL
     public func signURL(
@@ -475,17 +485,21 @@ extension AWSClient {
         headers: HTTPHeaders = HTTPHeaders(),
         expires: TimeAmount,
         serviceConfig: AWSServiceConfig,
-        logger: Logger = AWSClient.loggingDisabled
+        context: Context = AWSClient.emptyContext
     ) -> EventLoopFuture<URL> {
-        let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: "signURL", service: serviceConfig.service)
-        return createSigner(serviceConfig: serviceConfig, logger: logger).map { signer in
+        var context = context
+        context.baggage.awsService = config.service
+        context.baggage.awsOperation = "signURL"
+        context.baggage.awsRequestId = Self.globalRequestID.add(1)
+
+        return createSigner(config: config, context: context).map { signer in
             signer.signURL(url: url, method: httpMethod, headers: headers, expires: expires)
         }
     }
 
-    func createSigner(serviceConfig: AWSServiceConfig, logger: Logger) -> EventLoopFuture<AWSSigner> {
-        return credentialProvider.getCredential(on: eventLoopGroup.next(), logger: logger).map { credential in
-            return AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
+    func createSigner(config: AWSServiceConfig, context: Context) -> EventLoopFuture<AWSSigner> {
+        return credentialProvider.getCredential(on: eventLoopGroup.next(), logger: context.logger).map { credential in
+            return AWSSigner(credentials: credential, name: config.signingName, region: config.region.rawValue)
         }
     }
 }
@@ -567,15 +581,5 @@ extension AWSClient {
             }
             throw error
         }
-    }
-}
-
-extension Logger {
-    func attachingRequestId(_ id: Int, operation: String, service: String) -> Logger {
-        var logger = self
-        logger[metadataKey: "aws-service"] = .string(service)
-        logger[metadataKey: "aws-operation"] = .string(operation)
-        logger[metadataKey: "aws-request-id"] = "\(id)"
-        return logger
     }
 }

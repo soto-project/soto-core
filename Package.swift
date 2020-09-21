@@ -27,14 +27,16 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio-ssl.git", .upToNextMajor(from: "2.7.2")),
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/swift-server/async-http-client.git", .upToNextMajor(from: "1.2.0")),
+        .package(url: "https://github.com/ktoso/gsoc-swift-baggage-context.git", .branch("simple-is-good-proposal")),
     ],
     targets: [
         .target(name: "SotoCore", dependencies: [
             .byName(name: "SotoSignerV4"),
             .byName(name: "SotoXML"),
             .byName(name: "INIParser"),
-            .product(name: "Logging", package: "swift-log"),
             .product(name: "AsyncHTTPClient", package: "async-http-client"),
+            .product(name: "BaggageContext", package: "swift-context"),
+            .product(name: "Logging", package: "swift-log"),
             .product(name: "Metrics", package: "swift-metrics"),
             .product(name: "NIO", package: "swift-nio"),
             .product(name: "NIOHTTP1", package: "swift-nio"),
@@ -49,6 +51,7 @@ let package = Package(
         ]),
         .target(name: "SotoTestUtils", dependencies: [
             .byName(name: "SotoCore"),
+            .product(name: "BaggageContext", package: "swift-context"),
             .product(name: "NIO", package: "swift-nio"),
             .product(name: "NIOHTTP1", package: "swift-nio"),
             .product(name: "NIOFoundationCompat", package: "swift-nio"),

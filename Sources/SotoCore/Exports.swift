@@ -15,6 +15,8 @@
 @_exported import protocol SotoSignerV4.Credential
 @_exported import struct SotoSignerV4.StaticCredential
 
+@_exported import protocol BaggageContext.Context
+
 @_exported import struct Logging.Logger
 
 @_exported import struct NIO.ByteBuffer

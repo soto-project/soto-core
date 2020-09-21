@@ -239,7 +239,7 @@ class PerformanceTests: XCTestCase {
             configuration: config
         ).applyMiddlewares(config.middlewares + client.middlewares, config: config)
 
-        let signer = try! client.createSigner(serviceConfig: config, logger: AWSClient.loggingDisabled).wait()
+        let signer = try! client.createSigner(config: config, context: AWSClient.emptyContext).wait()
         let byteBufferAllocator = ByteBufferAllocator()
         measure {
             for _ in 0..<1000 {

@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import BaggageContext
 import Foundation
 import Logging
 @testable import SotoCore
@@ -112,5 +113,9 @@ public struct TestEnvironment {
             }
         }
         return AWSClient.loggingDisabled
+    }()
+
+    public static var context: Context = {
+        DefaultContext.topLevel(logger: logger)
     }()
 }

@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import BaggageContext
 import Logging
 import NIO
 
@@ -34,17 +35,17 @@ extension AWSClient {
     ///   - onPage: closure called with each block of entries
     public func paginate<Input: AWSPaginateToken, Output: AWSShape>(
         input: Input,
-        command: @escaping (Input, EventLoop?, Logger) -> EventLoopFuture<Output>,
+        command: @escaping (Input, Context, EventLoop?) -> EventLoopFuture<Output>,
         tokenKey: KeyPath<Output, Input.Token?>,
+        context: Context = AWSClient.emptyContext,
         on eventLoop: EventLoop? = nil,
-        logger: Logger = AWSClient.loggingDisabled,
         onPage: @escaping (Output, EventLoop) -> EventLoopFuture<Bool>
     ) -> EventLoopFuture<Void> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let promise = eventLoop.makePromise(of: Void.self)
 
         func paginatePart(input: Input) {
-            let responseFuture = command(input, eventLoop, logger)
+            let responseFuture = command(input, context, eventLoop)
                 .flatMap { response in
                     return onPage(response, eventLoop)
                         .map { (rt) -> Void in
@@ -77,18 +78,18 @@ extension AWSClient {
     ///   - onPage: closure called with each block of entries
     public func paginate<Input: AWSPaginateToken, Output: AWSShape>(
         input: Input,
-        command: @escaping (Input, EventLoop?, Logger) -> EventLoopFuture<Output>,
+        command: @escaping (Input, Context, EventLoop?) -> EventLoopFuture<Output>,
         tokenKey: KeyPath<Output, Input.Token?>,
         moreResultsKey: KeyPath<Output, Bool>,
+        context: Context = AWSClient.emptyContext,
         on eventLoop: EventLoop? = nil,
-        logger: Logger = AWSClient.loggingDisabled,
         onPage: @escaping (Output, EventLoop) -> EventLoopFuture<Bool>
     ) -> EventLoopFuture<Void> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let promise = eventLoop.makePromise(of: Void.self)
 
         func paginatePart(input: Input) {
-            let responseFuture = command(input, eventLoop, logger)
+            let responseFuture = command(input, context, eventLoop)
                 .flatMap { response in
                     return onPage(response, eventLoop)
                         .map { (rt) -> Void in
@@ -122,18 +123,18 @@ extension AWSClient {
     ///   - onPage: closure called with each block of entries
     public func paginate<Input: AWSPaginateToken, Output: AWSShape>(
         input: Input,
-        command: @escaping (Input, EventLoop?, Logger) -> EventLoopFuture<Output>,
+        command: @escaping (Input, Context, EventLoop?) -> EventLoopFuture<Output>,
         tokenKey: KeyPath<Output, Input.Token?>,
         moreResultsKey: KeyPath<Output, Bool?>,
+        context: Context = AWSClient.emptyContext,
         on eventLoop: EventLoop? = nil,
-        logger: Logger = AWSClient.loggingDisabled,
         onPage: @escaping (Output, EventLoop) -> EventLoopFuture<Bool>
     ) -> EventLoopFuture<Void> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let promise = eventLoop.makePromise(of: Void.self)
 
         func paginatePart(input: Input) {
-            let responseFuture = command(input, eventLoop, logger)
+            let responseFuture = command(input, context, eventLoop)
                 .flatMap { response in
                     return onPage(response, eventLoop)
                         .map { (rt) -> Void in

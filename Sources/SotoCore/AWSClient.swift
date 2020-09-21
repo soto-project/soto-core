@@ -259,7 +259,7 @@ extension AWSClient {
                 )
             },
             execute: { request, eventLoop, logger in
-                return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger)
+                return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, context: context)
             },
             processResponse: { _ in
                 return
@@ -299,7 +299,7 @@ extension AWSClient {
                 )
             },
             execute: { request, eventLoop, logger in
-                return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger)
+                return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, context: context)
             },
             processResponse: { _ in
                 return
@@ -339,7 +339,7 @@ extension AWSClient {
                 )
             },
             execute: { request, eventLoop, logger in
-                return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger)
+                return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, context: context)
             },
             processResponse: { response in
                 return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
@@ -382,7 +382,7 @@ extension AWSClient {
                 )
             },
             execute: { request, eventLoop, logger in
-                return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger)
+                return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, context: context)
             },
             processResponse: { response in
                 return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
@@ -427,7 +427,7 @@ extension AWSClient {
                 )
             },
             execute: { request, eventLoop, logger in
-                return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger, stream: stream)
+                return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, context: context, stream: stream)
             },
             processResponse: { response in
                 return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)

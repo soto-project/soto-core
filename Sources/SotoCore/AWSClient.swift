@@ -486,7 +486,7 @@ extension AWSClient {
         httpMethod: HTTPMethod,
         headers: HTTPHeaders = HTTPHeaders(),
         expires: TimeAmount,
-        serviceConfig: AWSServiceConfig,
+        config: AWSServiceConfig,
         context: Context = AWSClient.defaultBaggageContext()
     ) -> EventLoopFuture<URL> {
         var context = context

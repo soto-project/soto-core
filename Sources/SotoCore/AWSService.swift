@@ -48,7 +48,7 @@ extension AWSService {
         expires: TimeAmount,
         context: Context
     ) -> EventLoopFuture<URL> {
-        return self.client.signURL(url: url, httpMethod: httpMethod, headers: headers, config: self.config, context: context, expires: expires)
+        return self.client.signURL(url: url, httpMethod: httpMethod, headers: headers, expires: expires, config: self.config, context: context)
     }
 
     /// Return new version of Service with edited parameters

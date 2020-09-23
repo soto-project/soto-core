@@ -1,4 +1,4 @@
-// swift-tools-version:5.1
+// swift-tools-version:5.3
 //===----------------------------------------------------------------------===//
 //
 // This source file is part of the Soto for AWS open source project
@@ -21,6 +21,7 @@ let package = Package(
         .library(name: "SotoCore", targets: ["SotoCore"]),
     ],
     dependencies: [
+        .package(url: "https://github.com/apple/swift-crypto.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.4.0"),
         .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0"..<"3.0.0"),
         .package(url: "https://github.com/apple/swift-nio.git", .upToNextMajor(from: "2.16.1")),
@@ -42,7 +43,9 @@ let package = Package(
             .product(name: "NIOTransportServices", package: "swift-nio-transport-services"),
             .product(name: "NIOFoundationCompat", package: "swift-nio"),
         ]),
-        .target(name: "SotoCrypto", dependencies: []),
+        .target(name: "SotoCrypto", dependencies: [
+            .product(name: "Crypto", package: "swift-crypto", condition: .when(platforms: [.linux]))
+        ]),
         .target(name: "SotoSignerV4", dependencies: [
             .byName(name: "SotoCrypto"),
             .product(name: "NIOHTTP1", package: "swift-nio"),
@@ -79,16 +82,3 @@ let package = Package(
         ]),
     ]
 )
-
-// switch for whether to use swift crypto. Swift crypto requires macOS10.15 or iOS13.I'd rather not pass this requirement on
-#if os(Linux)
-let useSwiftCrypto = true
-#else
-let useSwiftCrypto = false
-#endif
-
-// Use Swift cypto on Linux.
-if useSwiftCrypto {
-    package.dependencies.append(.package(url: "https://github.com/apple/swift-crypto.git", from: "1.0.0"))
-    package.targets.first { $0.name == "SotoCrypto" }?.dependencies.append(.product(name: "Crypto", package: "swift-crypto"))
-}

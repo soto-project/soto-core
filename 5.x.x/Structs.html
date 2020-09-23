@@ -8,14 +8,22 @@
     <script src="js/jquery.min.js" defer></script>
     <script src="js/jazzy.js" defer></script>
     
+    <script src="js/lunr.min.js" defer></script>
+    <script src="js/typeahead.jquery.js" defer></script>
+    <script src="js/jazzy.search.js" defer></script>
   </head>
   <body>
     <a name="//apple_ref/swift/Section/Structures" class="dashAnchor"></a>
     <a title="Structures  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html"> Docs</a> (57% documented)</p>
-        <p class="header-right"><a href="https://github.com/swift-aws/aws-sdk-swift-core"><img src="img/gh.png"/>View on GitHub</a></p>
+        <p><a href="index.html"> Docs</a> (54% documented)</p>
+        <p class="header-right"><a href="https://github.com/soto-project/soto-core"><img src="img/gh.png"/>View on GitHub</a></p>
+        <p class="header-right">
+          <form role="search" action="search.json">
+            <input type="text" placeholder="Search documentation" data-typeahead>
+          </form>
+        </p>
       </div>
     </header>
     <div class="content-wrapper">
@@ -35,22 +43,25 @@
                 <a href="Classes/AWSClient.html">AWSClient</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/AWSClient/RequestError.html">– RequestError</a>
+                <a href="Classes/AWSClient/ClientError.html">– ClientError</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/AWSClient/EventLoopGroupProvider.html">– EventLoopGroupProvider</a>
+                <a href="Classes/AWSClient/HTTPResponseError.html">– HTTPResponseError</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/NIOTSHTTPClient.html">NIOTSHTTPClient</a>
+                <a href="Classes/AWSClient/HTTPClientProvider.html">– HTTPClientProvider</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/NIOTSHTTPClient.html#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC7RequestV">– Request</a>
+                <a href="Classes/AWSServiceConfig.html">AWSServiceConfig</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/NIOTSHTTPClient.html#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC8ResponseV">– Response</a>
+                <a href="Classes/AWSServiceConfig/Options.html">– Options</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/NIOTSHTTPClient/HTTPError.html">– HTTPError</a>
+                <a href="Classes/DeferredCredentialProvider.html">DeferredCredentialProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/RotatingCredentialProvider.html">RotatingCredentialProvider</a>
               </li>
             </ul>
           </li>
@@ -58,34 +69,16 @@
             <a href="Enums.html">Enumerations</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a href="Enums/AWSClientError.html">AWSClientError</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Enums/AWSServerError.html">AWSServerError</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="Enums/Body.html">Body</a>
               </li>
               <li class="nav-group-task">
-                <a href="Enums/Region.html">Region</a>
+                <a href="Enums/RetryStatus.html">RetryStatus</a>
               </li>
               <li class="nav-group-task">
-                <a href="Enums/ServiceProtocolType.html">ServiceProtocolType</a>
+                <a href="Enums/ServiceProtocol.html">ServiceProtocol</a>
               </li>
               <li class="nav-group-task">
-                <a href="Enums/XML.html">XML</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Enums/XML/Node.html">– Node</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Enums/XML/Document.html">– Document</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Enums/XML/Element.html">– Element</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Enums/XMLContainerCoding.html">XMLContainerCoding</a>
+                <a href="Enums/StreamReaderResult.html">StreamReaderResult</a>
               </li>
             </ul>
           </li>
@@ -96,10 +89,19 @@
                 <a href="Extensions/AsyncHTTPClient.html">AsyncHTTPClient</a>
               </li>
               <li class="nav-group-task">
-                <a href="Extensions/AsyncHTTPClient.html#/HTTPClient">– HTTPClient</a>
+                <a href="Extensions/AsyncHTTPClient/HTTPClient.html">– HTTPClient</a>
               </li>
               <li class="nav-group-task">
-                <a href="Extensions/Sequence.html">Sequence</a>
+                <a href="Extensions/AsyncHTTPClient/HTTPClient.html">– HTTPClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/KeyedDecodingContainer.html">KeyedDecodingContainer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/KeyedEncodingContainer.html">KeyedEncodingContainer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/StaticCredential.html">StaticCredential</a>
               </li>
             </ul>
           </li>
@@ -107,13 +109,25 @@
             <a href="Protocols.html">Protocols</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
+                <a href="Protocols.html#/s:8SotoCore17AWSDecodableShapeP">AWSDecodableShape</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/AWSEncodableShape.html">AWSEncodableShape</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="Protocols/AWSErrorType.html">AWSErrorType</a>
               </li>
               <li class="nav-group-task">
-                <a href="Protocols/AWSPaginateIntToken.html">AWSPaginateIntToken</a>
+                <a href="Protocols/AWSHTTPClient.html">AWSHTTPClient</a>
               </li>
               <li class="nav-group-task">
-                <a href="Protocols/AWSPaginateStringToken.html">AWSPaginateStringToken</a>
+                <a href="Protocols/AWSHTTPResponse.html">AWSHTTPResponse</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/AWSPaginateToken.html">AWSPaginateToken</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/AWSService.html">AWSService</a>
               </li>
               <li class="nav-group-task">
                 <a href="Protocols/AWSServiceMiddleware.html">AWSServiceMiddleware</a>
@@ -122,10 +136,34 @@
                 <a href="Protocols/AWSShape.html">AWSShape</a>
               </li>
               <li class="nav-group-task">
-                <a href="Protocols/Credential.html">Credential</a>
+                <a href="Protocols/AWSShapeWithPayload.html">AWSShapeWithPayload</a>
               </li>
               <li class="nav-group-task">
-                <a href="Protocols/XMLCodable.html">XMLCodable</a>
+                <a href="Protocols/ArrayCoderProperties.html">ArrayCoderProperties</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/CredentialProvider.html">CredentialProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/CustomCoder.html">CustomCoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/CustomDecoder.html">CustomDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/CustomEncoder.html">CustomEncoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/DictionaryCoderProperties.html">DictionaryCoderProperties</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/ExpiringCredential.html">ExpiringCredential</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/OptionalCodingWrapper.html">OptionalCodingWrapper</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/RetryPolicy.html">RetryPolicy</a>
               </li>
             </ul>
           </li>
@@ -133,7 +171,13 @@
             <a href="Structs.html">Structures</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
+                <a href="Structs/AWSClientError.html">AWSClientError</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="Structs/AWSError.html">AWSError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/AWSHTTPRequest.html">AWSHTTPRequest</a>
               </li>
               <li class="nav-group-task">
                 <a href="Structs/AWSLoggingMiddleware.html">AWSLoggingMiddleware</a>
@@ -145,7 +189,13 @@
                 <a href="Structs/AWSMemberEncoding/Location.html">– Location</a>
               </li>
               <li class="nav-group-task">
-                <a href="Structs/AWSMemberEncoding/ShapeEncoding.html">– ShapeEncoding</a>
+                <a href="Structs/AWSMiddlewareContext.html">AWSMiddlewareContext</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/AWSPartition.html">AWSPartition</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/AWSPayload.html">AWSPayload</a>
               </li>
               <li class="nav-group-task">
                 <a href="Structs/AWSRequest.html">AWSRequest</a>
@@ -157,34 +207,69 @@
                 <a href="Structs/AWSResponseError.html">AWSResponseError</a>
               </li>
               <li class="nav-group-task">
-                <a href="Structs/AWSSigner.html">AWSSigner</a>
+                <a href="Structs/AWSServerError.html">AWSServerError</a>
               </li>
               <li class="nav-group-task">
-                <a href="Structs/AWSSigner/BodyData.html">– BodyData</a>
+                <a href="Structs/AWSShapePayloadOptions.html">AWSShapePayloadOptions</a>
               </li>
               <li class="nav-group-task">
-                <a href="Structs/EnvironmentCredential.html">EnvironmentCredential</a>
+                <a href="Structs/ArrayCoder.html">ArrayCoder</a>
               </li>
               <li class="nav-group-task">
-                <a href="Structs/ExpiringCredential.html">ExpiringCredential</a>
+                <a href="Structs/Coding.html">Coding</a>
               </li>
               <li class="nav-group-task">
-                <a href="Structs/ServiceProtocol.html">ServiceProtocol</a>
+                <a href="Structs/CredentialProviderError.html">CredentialProviderError</a>
               </li>
               <li class="nav-group-task">
-                <a href="Structs/ServiceProtocol/Version.html">– Version</a>
+                <a href="Structs/CredentialProviderFactory.html">CredentialProviderFactory</a>
               </li>
               <li class="nav-group-task">
-                <a href="Structs/SharedCredential.html">SharedCredential</a>
+                <a href="Structs/CredentialProviderFactory/Context.html">– Context</a>
               </li>
               <li class="nav-group-task">
-                <a href="Structs/SharedCredential/SharedCredentialError.html">– SharedCredentialError</a>
+                <a href="Structs/DefaultArrayCoderProperties.html">DefaultArrayCoderProperties</a>
               </li>
               <li class="nav-group-task">
-                <a href="Structs/StaticCredential.html">StaticCredential</a>
+                <a href="Structs/DefaultDictionaryCoderProperties.html">DefaultDictionaryCoderProperties</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/DictionaryCoder.html">DictionaryCoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/HTTPHeaderTimeStampCoder.html">HTTPHeaderTimeStampCoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/ISO8601TimeStampCoder.html">ISO8601TimeStampCoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/NullCredentialProvider.html">NullCredentialProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/OptionalCoding.html">OptionalCoding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/Region.html">Region</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/RetryPolicyFactory.html">RetryPolicyFactory</a>
               </li>
               <li class="nav-group-task">
                 <a href="Structs/TimeStamp.html">TimeStamp</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/UnixEpochTimeStampCoder.html">UnixEpochTimeStampCoder</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Typealiases.html">Type Aliases</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Typealiases.html#/s:8SotoCore17DefaultArrayCodera">DefaultArrayCoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Typealiases.html#/s:8SotoCore22DefaultDictionaryCodera">DefaultDictionaryCoder</a>
               </li>
             </ul>
           </li>
@@ -203,9 +288,39 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore9TimeStampV"></a>
+                    <a name="/s:8SotoCore10AWSPayloadV"></a>
+                    <a name="//apple_ref/swift/Struct/AWSPayload" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore10AWSPayloadV">AWSPayload</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Holds a request or response payload. A request payload can be in the form of either a ByteBuffer or a stream function that will supply ByteBuffers to the HTTP client.
+A response payload only comes in the form of a ByteBuffer</p>
+
+                        <a href="Structs/AWSPayload.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">AWSPayload</span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">AWSPayload</span><span class="p">:</span> <span class="kt">Decodable</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore9TimeStampV"></a>
                     <a name="//apple_ref/swift/Struct/TimeStamp" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore9TimeStampV">TimeStamp</a>
+                    <a class="token" href="#/s:8SotoCore9TimeStampV">TimeStamp</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -232,9 +347,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore18ExpiringCredentialV"></a>
-                    <a name="//apple_ref/swift/Struct/ExpiringCredential" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore18ExpiringCredentialV">ExpiringCredential</a>
+                    <a name="/s:8SotoCore25CredentialProviderFactoryV"></a>
+                    <a name="//apple_ref/swift/Struct/CredentialProviderFactory" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore25CredentialProviderFactoryV">CredentialProviderFactory</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -242,15 +357,15 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Provide AWS credentials directly</p>
+                        <p>A helper struct to defer the creation of a <code><a href="Protocols/CredentialProvider.html">CredentialProvider</a></code> until after the AWSClient has been created.</p>
 
-                        <a href="Structs/ExpiringCredential.html" class="slightly-smaller">See more</a>
+                        <a href="Structs/CredentialProviderFactory.html" class="slightly-smaller">See more</a>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">ExpiringCredential</span> <span class="p">:</span> <span class="kt"><a href="Protocols/Credential.html">Credential</a></span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">CredentialProviderFactory</span></code></pre>
 
                         </div>
                       </div>
@@ -260,9 +375,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore16SharedCredentialV"></a>
-                    <a name="//apple_ref/swift/Struct/SharedCredential" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore16SharedCredentialV">SharedCredential</a>
+                    <a name="/s:8SotoCore23CredentialProviderErrorV"></a>
+                    <a name="//apple_ref/swift/Struct/CredentialProviderError" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore23CredentialProviderErrorV">CredentialProviderError</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -270,15 +385,16 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Provide AWS credentials via the ~/.aws/credential file</p>
+                        <p>Undocumented</p>
 
-                        <a href="Structs/SharedCredential.html" class="slightly-smaller">See more</a>
+                        <a href="Structs/CredentialProviderError.html" class="slightly-smaller">See more</a>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">SharedCredential</span> <span class="p">:</span> <span class="kt"><a href="Protocols/Credential.html">Credential</a></span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">CredentialProviderError</span> <span class="p">:</span> <span class="kt">Error</span><span class="p">,</span> <span class="kt">Equatable</span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">CredentialProviderError</span><span class="p">:</span> <span class="kt">CustomStringConvertible</span></code></pre>
 
                         </div>
                       </div>
@@ -288,9 +404,37 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore17AWSMemberEncodingV"></a>
+                    <a name="/s:8SotoCore22NullCredentialProviderV"></a>
+                    <a name="//apple_ref/swift/Struct/NullCredentialProvider" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore22NullCredentialProviderV">NullCredentialProvider</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Credential provider that always fails</p>
+
+                        <a href="Structs/NullCredentialProvider.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">NullCredentialProvider</span> <span class="p">:</span> <span class="kt"><a href="Protocols/CredentialProvider.html">CredentialProvider</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore17AWSMemberEncodingV"></a>
                     <a name="//apple_ref/swift/Struct/AWSMemberEncoding" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore17AWSMemberEncodingV">AWSMemberEncoding</a>
+                    <a class="token" href="#/s:8SotoCore17AWSMemberEncodingV">AWSMemberEncoding</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -298,17 +442,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Structure defining how to serialize member of AWSShape.
-Below is the list of possible encodings and how they are setup</p>
-
-<ul>
-<li>Encode in header (label set to member name in json model, location set to .header(header name))</li>
-<li>Encode as part of uri (label set to member name in json model, location set to .uri(uri part to replace))</li>
-<li>Encode as uri query (label set to member name in json model, location set to .querystring(query string name))</li>
-<li>While encoding a Collection as XML or query string define additional element names (label set to member name in json model,
-shapeEncoding set to one of collection encoding types, if codingkey is different to label then set it to .body(codingkey))</li>
-<li>When encoding payload data blob (label set to member name in json model, shapeEncoding set to .blob)</li>
-</ul>
+                        <p>Structure defining where to serialize member of AWSShape.</p>
 
                         <a href="Structs/AWSMemberEncoding.html" class="slightly-smaller">See more</a>
                       </div>
@@ -326,9 +460,9 @@ shapeEncoding set to one of collection encoding types, if codingkey is different
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore15ServiceProtocolV"></a>
-                    <a name="//apple_ref/swift/Struct/ServiceProtocol" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore15ServiceProtocolV">ServiceProtocol</a>
+                    <a name="/s:8SotoCore22AWSShapePayloadOptionsV"></a>
+                    <a name="//apple_ref/swift/Struct/AWSShapePayloadOptions" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore22AWSShapePayloadOptionsV">AWSShapePayloadOptions</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -336,15 +470,15 @@ shapeEncoding set to one of collection encoding types, if codingkey is different
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>AWSShapeWithPayload options.</p>
 
-                        <a href="Structs/ServiceProtocol.html" class="slightly-smaller">See more</a>
+                        <a href="Structs/AWSShapePayloadOptions.html" class="slightly-smaller">See more</a>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">ServiceProtocol</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">AWSShapePayloadOptions</span> <span class="p">:</span> <span class="kt">OptionSet</span></code></pre>
 
                         </div>
                       </div>
@@ -354,9 +488,9 @@ shapeEncoding set to one of collection encoding types, if codingkey is different
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore16AWSResponseErrorV"></a>
-                    <a name="//apple_ref/swift/Struct/AWSResponseError" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore16AWSResponseErrorV">AWSResponseError</a>
+                    <a name="/s:8SotoCore6RegionV"></a>
+                    <a name="//apple_ref/swift/Struct/Region" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore6RegionV">Region</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -364,7 +498,382 @@ shapeEncoding set to one of collection encoding types, if codingkey is different
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Standard Response Error type returned by aws-sdk-swift. If the error is unrecognised then this is returned</p>
+                        <p>Undocumented</p>
+
+                        <a href="Structs/Region.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">Region</span> <span class="p">:</span> <span class="kt">RawRepresentable</span><span class="p">,</span> <span class="kt">Equatable</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore12AWSPartitionV"></a>
+                    <a name="//apple_ref/swift/Struct/AWSPartition" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore12AWSPartitionV">AWSPartition</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                        <a href="Structs/AWSPartition.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">AWSPartition</span> <span class="p">:</span> <span class="kt">RawRepresentable</span><span class="p">,</span> <span class="kt">Equatable</span><span class="p">,</span> <span class="kt">Hashable</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore6CodingV"></a>
+                    <a name="//apple_ref/swift/Struct/Coding" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore6CodingV">Coding</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Property wrapper that applies a custom encoder and decoder to its wrapped value</p>
+
+                        <a href="Structs/Coding.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@propertyWrapper</span>
+<span class="kd">public</span> <span class="kd">struct</span> <span class="kt">Coding</span><span class="o">&lt;</span><span class="kt">Coder</span><span class="o">&gt;</span> <span class="k">where</span> <span class="kt">Coder</span> <span class="p">:</span> <span class="kt"><a href="Protocols/CustomCoder.html">CustomCoder</a></span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Coding</span><span class="p">:</span> <span class="kt">Decodable</span> <span class="k">where</span> <span class="kt">Coder</span><span class="p">:</span> <span class="kt"><a href="Protocols/CustomDecoder.html">CustomDecoder</a></span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Coding</span><span class="p">:</span> <span class="kt">Encodable</span> <span class="k">where</span> <span class="kt">Coder</span><span class="p">:</span> <span class="kt"><a href="Protocols/CustomEncoder.html">CustomEncoder</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore14OptionalCodingV"></a>
+                    <a name="//apple_ref/swift/Struct/OptionalCoding" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore14OptionalCodingV">OptionalCoding</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Property wrapper that applies a custom encoder and decoder to its wrapped optional value</p>
+
+                        <a href="Structs/OptionalCoding.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@propertyWrapper</span>
+<span class="kd">public</span> <span class="kd">struct</span> <span class="kt">OptionalCoding</span><span class="o">&lt;</span><span class="kt">Coder</span><span class="o">&gt;</span> <span class="k">where</span> <span class="kt">Coder</span> <span class="p">:</span> <span class="kt"><a href="Protocols/CustomCoder.html">CustomCoder</a></span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">OptionalCoding</span><span class="p">:</span> <span class="kt"><a href="Protocols/OptionalCodingWrapper.html">OptionalCodingWrapper</a></span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">OptionalCoding</span><span class="p">:</span> <span class="kt">Decodable</span> <span class="k">where</span> <span class="kt">Coder</span><span class="p">:</span> <span class="kt"><a href="Protocols/CustomDecoder.html">CustomDecoder</a></span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">OptionalCoding</span><span class="p">:</span> <span class="kt">Encodable</span> <span class="k">where</span> <span class="kt">Coder</span><span class="p">:</span> <span class="kt"><a href="Protocols/CustomEncoder.html">CustomEncoder</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Collection%20Coders"></a>
+                <a name="//apple_ref/swift/Section/Collection Coders" class="dashAnchor"></a>
+                <div class="section-name-container">
+                  <a class="section-name-link" href="#/Collection%20Coders"></a>
+                  <h3 class="section-name"><p>Collection Coders</p>
+</h3>
+                </div>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore10ArrayCoderV"></a>
+                    <a name="//apple_ref/swift/Struct/ArrayCoder" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore10ArrayCoderV">ArrayCoder</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Coder for encoding/decoding Arrays. This is extended to support encoding and decoding based on whether <code>Element</code> is <code>Encodable</code> or <code>Decodable</code>.</p>
+
+                        <a href="Structs/ArrayCoder.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">ArrayCoder</span><span class="o">&lt;</span><span class="kt">Properties</span><span class="p">,</span> <span class="kt">Element</span><span class="o">&gt;</span> <span class="p">:</span> <span class="kt"><a href="Protocols/CustomCoder.html">CustomCoder</a></span> <span class="k">where</span> <span class="kt">Properties</span> <span class="p">:</span> <span class="kt"><a href="Protocols/ArrayCoderProperties.html">ArrayCoderProperties</a></span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">ArrayCoder</span><span class="p">:</span> <span class="kt"><a href="Protocols/CustomDecoder.html">CustomDecoder</a></span> <span class="k">where</span> <span class="kt">Element</span><span class="p">:</span> <span class="kt">Decodable</span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">ArrayCoder</span><span class="p">:</span> <span class="kt"><a href="Protocols/CustomEncoder.html">CustomEncoder</a></span> <span class="k">where</span> <span class="kt">Element</span><span class="p">:</span> <span class="kt">Encodable</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore15DictionaryCoderV"></a>
+                    <a name="//apple_ref/swift/Struct/DictionaryCoder" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore15DictionaryCoderV">DictionaryCoder</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Coder for encoding/decoding Dictionaries. This is extended to support encoding and decoding based on whether <code>Key</code> and <code>Value</code> are <code>Encodable</code> or <code>Decodable</code>.</p>
+
+                        <a href="Structs/DictionaryCoder.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">DictionaryCoder</span><span class="o">&lt;</span><span class="kt">Properties</span><span class="p">,</span> <span class="kt">Key</span><span class="p">,</span> <span class="kt">Value</span><span class="o">&gt;</span> <span class="p">:</span> <span class="kt"><a href="Protocols/CustomCoder.html">CustomCoder</a></span> <span class="k">where</span> <span class="kt">Properties</span> <span class="p">:</span> <span class="kt"><a href="Protocols/DictionaryCoderProperties.html">DictionaryCoderProperties</a></span><span class="p">,</span> <span class="kt">Key</span> <span class="p">:</span> <span class="kt">Hashable</span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">DictionaryCoder</span><span class="p">:</span> <span class="kt"><a href="Protocols/CustomDecoder.html">CustomDecoder</a></span> <span class="k">where</span> <span class="kt">Key</span><span class="p">:</span> <span class="kt">Decodable</span><span class="p">,</span> <span class="kt">Value</span><span class="p">:</span> <span class="kt">Decodable</span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">DictionaryCoder</span><span class="p">:</span> <span class="kt"><a href="Protocols/CustomEncoder.html">CustomEncoder</a></span> <span class="k">where</span> <span class="kt">Key</span><span class="p">:</span> <span class="kt">Encodable</span><span class="p">,</span> <span class="kt">Value</span><span class="p">:</span> <span class="kt">Encodable</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore27DefaultArrayCoderPropertiesV"></a>
+                    <a name="//apple_ref/swift/Struct/DefaultArrayCoderProperties" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore27DefaultArrayCoderPropertiesV">DefaultArrayCoderProperties</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The most common array encoding property is an element name &ldquo;member&rdquo;</p>
+
+                        <a href="Structs/DefaultArrayCoderProperties.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">DefaultArrayCoderProperties</span> <span class="p">:</span> <span class="kt"><a href="Protocols/ArrayCoderProperties.html">ArrayCoderProperties</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore32DefaultDictionaryCoderPropertiesV"></a>
+                    <a name="//apple_ref/swift/Struct/DefaultDictionaryCoderProperties" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore32DefaultDictionaryCoderPropertiesV">DefaultDictionaryCoderProperties</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The most common dictionary encoding properties are element name &ldquo;entry&rdquo;, key name &ldquo;key&rdquo;, value name &ldquo;value&rdquo;</p>
+
+                        <a href="Structs/DefaultDictionaryCoderProperties.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">DefaultDictionaryCoderProperties</span> <span class="p">:</span> <span class="kt"><a href="Protocols/DictionaryCoderProperties.html">DictionaryCoderProperties</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/TimeStamp%20Coders"></a>
+                <a name="//apple_ref/swift/Section/TimeStamp Coders" class="dashAnchor"></a>
+                <div class="section-name-container">
+                  <a class="section-name-link" href="#/TimeStamp%20Coders"></a>
+                  <h3 class="section-name"><p>TimeStamp Coders</p>
+</h3>
+                </div>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore21ISO8601TimeStampCoderV"></a>
+                    <a name="//apple_ref/swift/Struct/ISO8601TimeStampCoder" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore21ISO8601TimeStampCoderV">ISO8601TimeStampCoder</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Date coder for ISO8601 format</p>
+
+                        <a href="Structs/ISO8601TimeStampCoder.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">ISO8601TimeStampCoder</span> <span class="p">:</span> <span class="kt">TimeStampFormatCoder</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore24HTTPHeaderTimeStampCoderV"></a>
+                    <a name="//apple_ref/swift/Struct/HTTPHeaderTimeStampCoder" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore24HTTPHeaderTimeStampCoderV">HTTPHeaderTimeStampCoder</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Date coder for HTTP header format</p>
+
+                        <a href="Structs/HTTPHeaderTimeStampCoder.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">HTTPHeaderTimeStampCoder</span> <span class="p">:</span> <span class="kt">TimeStampFormatCoder</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore23UnixEpochTimeStampCoderV"></a>
+                    <a name="//apple_ref/swift/Struct/UnixEpochTimeStampCoder" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore23UnixEpochTimeStampCoderV">UnixEpochTimeStampCoder</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Unix Epoch Date coder</p>
+
+                        <a href="Structs/UnixEpochTimeStampCoder.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">UnixEpochTimeStampCoder</span> <span class="p">:</span> <span class="kt"><a href="Protocols/CustomDecoder.html">CustomDecoder</a></span><span class="p">,</span> <span class="kt"><a href="Protocols/CustomEncoder.html">CustomEncoder</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore14AWSClientErrorV"></a>
+                    <a name="//apple_ref/swift/Struct/AWSClientError" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore14AWSClientErrorV">AWSClientError</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                        <a href="Structs/AWSClientError.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">AWSClientError</span> <span class="p">:</span> <span class="kt"><a href="Protocols/AWSErrorType.html">AWSErrorType</a></span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">AWSClientError</span><span class="p">:</span> <span class="kt">Equatable</span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">AWSClientError</span><span class="p">:</span> <span class="kt">CustomStringConvertible</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore16AWSResponseErrorV"></a>
+                    <a name="//apple_ref/swift/Struct/AWSResponseError" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore16AWSResponseErrorV">AWSResponseError</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Standard Response Error type returned by Soto. If the error is unrecognised then this is returned</p>
 
                         <a href="Structs/AWSResponseError.html" class="slightly-smaller">See more</a>
                       </div>
@@ -382,9 +891,9 @@ shapeEncoding set to one of collection encoding types, if codingkey is different
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore8AWSErrorV"></a>
+                    <a name="/s:8SotoCore8AWSErrorV"></a>
                     <a name="//apple_ref/swift/Struct/AWSError" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore8AWSErrorV">AWSError</a>
+                    <a class="token" href="#/s:8SotoCore8AWSErrorV">AWSError</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -410,9 +919,95 @@ shapeEncoding set to one of collection encoding types, if codingkey is different
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore20AWSLoggingMiddlewareV"></a>
+                    <a name="/s:8SotoCore14AWSServerErrorV"></a>
+                    <a name="//apple_ref/swift/Struct/AWSServerError" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore14AWSServerErrorV">AWSServerError</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                        <a href="Structs/AWSServerError.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">AWSServerError</span> <span class="p">:</span> <span class="kt"><a href="Protocols/AWSErrorType.html">AWSErrorType</a></span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">AWSServerError</span><span class="p">:</span> <span class="kt">Equatable</span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">AWSServerError</span><span class="p">:</span> <span class="kt">CustomStringConvertible</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore14AWSHTTPRequestV"></a>
+                    <a name="//apple_ref/swift/Struct/AWSHTTPRequest" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore14AWSHTTPRequestV">AWSHTTPRequest</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>HTTP Request</p>
+
+                        <a href="Structs/AWSHTTPRequest.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">AWSHTTPRequest</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore20AWSMiddlewareContextV"></a>
+                    <a name="//apple_ref/swift/Struct/AWSMiddlewareContext" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore20AWSMiddlewareContextV">AWSMiddlewareContext</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Context object sent to <code><a href="Protocols/AWSServiceMiddleware.html">AWSServiceMiddleware</a></code> <code>chain</code> functions</p>
+
+                        <a href="Structs/AWSMiddlewareContext.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">AWSMiddlewareContext</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore20AWSLoggingMiddlewareV"></a>
                     <a name="//apple_ref/swift/Struct/AWSLoggingMiddleware" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore20AWSLoggingMiddlewareV">AWSLoggingMiddleware</a>
+                    <a class="token" href="#/s:8SotoCore20AWSLoggingMiddlewareV">AWSLoggingMiddleware</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -438,9 +1033,9 @@ shapeEncoding set to one of collection encoding types, if codingkey is different
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore10AWSRequestV"></a>
+                    <a name="/s:8SotoCore10AWSRequestV"></a>
                     <a name="//apple_ref/swift/Struct/AWSRequest" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore10AWSRequestV">AWSRequest</a>
+                    <a class="token" href="#/s:8SotoCore10AWSRequestV">AWSRequest</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -466,9 +1061,9 @@ shapeEncoding set to one of collection encoding types, if codingkey is different
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore11AWSResponseV"></a>
+                    <a name="/s:8SotoCore11AWSResponseV"></a>
                     <a name="//apple_ref/swift/Struct/AWSResponse" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore11AWSResponseV">AWSResponse</a>
+                    <a class="token" href="#/s:8SotoCore11AWSResponseV">AWSResponse</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -494,9 +1089,9 @@ shapeEncoding set to one of collection encoding types, if codingkey is different
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:11AWSSignerV416StaticCredentialV"></a>
-                    <a name="//apple_ref/swift/Struct/StaticCredential" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11AWSSignerV416StaticCredentialV">StaticCredential</a>
+                    <a name="/s:8SotoCore18RetryPolicyFactoryV"></a>
+                    <a name="//apple_ref/swift/Struct/RetryPolicyFactory" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore18RetryPolicyFactoryV">RetryPolicyFactory</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -504,71 +1099,15 @@ shapeEncoding set to one of collection encoding types, if codingkey is different
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>basic version of Credential where you supply the credentials</p>
+                        <p>Creates a RetryPolicy for AWSClient to use</p>
 
-                        <a href="Structs/StaticCredential.html" class="slightly-smaller">See more</a>
+                        <a href="Structs/RetryPolicyFactory.html" class="slightly-smaller">See more</a>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">StaticCredential</span> <span class="p">:</span> <span class="kt"><a href="Protocols/Credential.html">Credential</a></span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:11AWSSignerV421EnvironmentCredentialV"></a>
-                    <a name="//apple_ref/swift/Struct/EnvironmentCredential" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11AWSSignerV421EnvironmentCredentialV">EnvironmentCredential</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>environment variable version of credential that uses system environment variables to get credential details</p>
-
-                        <a href="Structs/EnvironmentCredential.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">EnvironmentCredential</span> <span class="p">:</span> <span class="kt"><a href="Protocols/Credential.html">Credential</a></span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:11AWSSignerV40A0V"></a>
-                    <a name="//apple_ref/swift/Struct/AWSSigner" class="dashAnchor"></a>
-                    <a class="token" href="#/s:11AWSSignerV40A0V">AWSSigner</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Amazon Web Services V4 Signer</p>
-
-                        <a href="Structs/AWSSigner.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">AWSSigner</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">RetryPolicyFactory</span></code></pre>
 
                         </div>
                       </div>
@@ -580,8 +1119,8 @@ shapeEncoding set to one of collection encoding types, if codingkey is different
           </section>
         </section>
         <section id="footer">
-          <p>© Copyright (c) 2019 Yuki Takei(noppoMan), Joe Smith(Yasumoto), Jonathan McAllister(jonnymacs), Adam Fowler (adam-fowler), Fabian Fett (fabianfett)</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.2</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+          <p>© Copyright (c) 2020 Soto project authors</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
     </div>

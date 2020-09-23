@@ -8,14 +8,22 @@
     <script src="../js/jquery.min.js" defer></script>
     <script src="../js/jazzy.js" defer></script>
     
+    <script src="../js/lunr.min.js" defer></script>
+    <script src="../js/typeahead.jquery.js" defer></script>
+    <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
     <a name="//apple_ref/swift/Struct/AWSRequest" class="dashAnchor"></a>
     <a title="AWSRequest Structure Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> Docs</a> (57% documented)</p>
-        <p class="header-right"><a href="https://github.com/swift-aws/aws-sdk-swift-core"><img src="../img/gh.png"/>View on GitHub</a></p>
+        <p><a href="../index.html"> Docs</a> (54% documented)</p>
+        <p class="header-right"><a href="https://github.com/soto-project/soto-core"><img src="../img/gh.png"/>View on GitHub</a></p>
+        <p class="header-right">
+          <form role="search" action="../search.json">
+            <input type="text" placeholder="Search documentation" data-typeahead>
+          </form>
+        </p>
       </div>
     </header>
     <div class="content-wrapper">
@@ -35,22 +43,25 @@
                 <a href="../Classes/AWSClient.html">AWSClient</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/AWSClient/RequestError.html">– RequestError</a>
+                <a href="../Classes/AWSClient/ClientError.html">– ClientError</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/AWSClient/EventLoopGroupProvider.html">– EventLoopGroupProvider</a>
+                <a href="../Classes/AWSClient/HTTPResponseError.html">– HTTPResponseError</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/NIOTSHTTPClient.html">NIOTSHTTPClient</a>
+                <a href="../Classes/AWSClient/HTTPClientProvider.html">– HTTPClientProvider</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/NIOTSHTTPClient.html#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC7RequestV">– Request</a>
+                <a href="../Classes/AWSServiceConfig.html">AWSServiceConfig</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/NIOTSHTTPClient.html#/s:15AWSSDKSwiftCore15NIOTSHTTPClientC8ResponseV">– Response</a>
+                <a href="../Classes/AWSServiceConfig/Options.html">– Options</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/NIOTSHTTPClient/HTTPError.html">– HTTPError</a>
+                <a href="../Classes/DeferredCredentialProvider.html">DeferredCredentialProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/RotatingCredentialProvider.html">RotatingCredentialProvider</a>
               </li>
             </ul>
           </li>
@@ -58,34 +69,16 @@
             <a href="../Enums.html">Enumerations</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a href="../Enums/AWSClientError.html">AWSClientError</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Enums/AWSServerError.html">AWSServerError</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Enums/Body.html">Body</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Enums/Region.html">Region</a>
+                <a href="../Enums/RetryStatus.html">RetryStatus</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Enums/ServiceProtocolType.html">ServiceProtocolType</a>
+                <a href="../Enums/ServiceProtocol.html">ServiceProtocol</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Enums/XML.html">XML</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Enums/XML/Node.html">– Node</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Enums/XML/Document.html">– Document</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Enums/XML/Element.html">– Element</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Enums/XMLContainerCoding.html">XMLContainerCoding</a>
+                <a href="../Enums/StreamReaderResult.html">StreamReaderResult</a>
               </li>
             </ul>
           </li>
@@ -96,10 +89,19 @@
                 <a href="../Extensions/AsyncHTTPClient.html">AsyncHTTPClient</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Extensions/AsyncHTTPClient.html#/HTTPClient">– HTTPClient</a>
+                <a href="../Extensions/AsyncHTTPClient/HTTPClient.html">– HTTPClient</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Extensions/Sequence.html">Sequence</a>
+                <a href="../Extensions/AsyncHTTPClient/HTTPClient.html">– HTTPClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/KeyedDecodingContainer.html">KeyedDecodingContainer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/KeyedEncodingContainer.html">KeyedEncodingContainer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/StaticCredential.html">StaticCredential</a>
               </li>
             </ul>
           </li>
@@ -107,13 +109,25 @@
             <a href="../Protocols.html">Protocols</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
+                <a href="../Protocols.html#/s:8SotoCore17AWSDecodableShapeP">AWSDecodableShape</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSEncodableShape.html">AWSEncodableShape</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Protocols/AWSErrorType.html">AWSErrorType</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Protocols/AWSPaginateIntToken.html">AWSPaginateIntToken</a>
+                <a href="../Protocols/AWSHTTPClient.html">AWSHTTPClient</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Protocols/AWSPaginateStringToken.html">AWSPaginateStringToken</a>
+                <a href="../Protocols/AWSHTTPResponse.html">AWSHTTPResponse</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSPaginateToken.html">AWSPaginateToken</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSService.html">AWSService</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Protocols/AWSServiceMiddleware.html">AWSServiceMiddleware</a>
@@ -122,10 +136,34 @@
                 <a href="../Protocols/AWSShape.html">AWSShape</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Protocols/Credential.html">Credential</a>
+                <a href="../Protocols/AWSShapeWithPayload.html">AWSShapeWithPayload</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Protocols/XMLCodable.html">XMLCodable</a>
+                <a href="../Protocols/ArrayCoderProperties.html">ArrayCoderProperties</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/CredentialProvider.html">CredentialProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/CustomCoder.html">CustomCoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/CustomDecoder.html">CustomDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/CustomEncoder.html">CustomEncoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/DictionaryCoderProperties.html">DictionaryCoderProperties</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/ExpiringCredential.html">ExpiringCredential</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/OptionalCodingWrapper.html">OptionalCodingWrapper</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/RetryPolicy.html">RetryPolicy</a>
               </li>
             </ul>
           </li>
@@ -133,7 +171,13 @@
             <a href="../Structs.html">Structures</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
+                <a href="../Structs/AWSClientError.html">AWSClientError</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Structs/AWSError.html">AWSError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSHTTPRequest.html">AWSHTTPRequest</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/AWSLoggingMiddleware.html">AWSLoggingMiddleware</a>
@@ -145,7 +189,13 @@
                 <a href="../Structs/AWSMemberEncoding/Location.html">– Location</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Structs/AWSMemberEncoding/ShapeEncoding.html">– ShapeEncoding</a>
+                <a href="../Structs/AWSMiddlewareContext.html">AWSMiddlewareContext</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSPartition.html">AWSPartition</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSPayload.html">AWSPayload</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/AWSRequest.html">AWSRequest</a>
@@ -157,34 +207,69 @@
                 <a href="../Structs/AWSResponseError.html">AWSResponseError</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Structs/AWSSigner.html">AWSSigner</a>
+                <a href="../Structs/AWSServerError.html">AWSServerError</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Structs/AWSSigner/BodyData.html">– BodyData</a>
+                <a href="../Structs/AWSShapePayloadOptions.html">AWSShapePayloadOptions</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Structs/EnvironmentCredential.html">EnvironmentCredential</a>
+                <a href="../Structs/ArrayCoder.html">ArrayCoder</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Structs/ExpiringCredential.html">ExpiringCredential</a>
+                <a href="../Structs/Coding.html">Coding</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Structs/ServiceProtocol.html">ServiceProtocol</a>
+                <a href="../Structs/CredentialProviderError.html">CredentialProviderError</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Structs/ServiceProtocol/Version.html">– Version</a>
+                <a href="../Structs/CredentialProviderFactory.html">CredentialProviderFactory</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Structs/SharedCredential.html">SharedCredential</a>
+                <a href="../Structs/CredentialProviderFactory/Context.html">– Context</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Structs/SharedCredential/SharedCredentialError.html">– SharedCredentialError</a>
+                <a href="../Structs/DefaultArrayCoderProperties.html">DefaultArrayCoderProperties</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Structs/StaticCredential.html">StaticCredential</a>
+                <a href="../Structs/DefaultDictionaryCoderProperties.html">DefaultDictionaryCoderProperties</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/DictionaryCoder.html">DictionaryCoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/HTTPHeaderTimeStampCoder.html">HTTPHeaderTimeStampCoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/ISO8601TimeStampCoder.html">ISO8601TimeStampCoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/NullCredentialProvider.html">NullCredentialProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/OptionalCoding.html">OptionalCoding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/Region.html">Region</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/RetryPolicyFactory.html">RetryPolicyFactory</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/TimeStamp.html">TimeStamp</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/UnixEpochTimeStampCoder.html">UnixEpochTimeStampCoder</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Typealiases.html">Type Aliases</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:8SotoCore17DefaultArrayCodera">DefaultArrayCoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:8SotoCore22DefaultDictionaryCodera">DefaultDictionaryCoder</a>
               </li>
             </ul>
           </li>
@@ -196,6 +281,7 @@
             <h1>AWSRequest</h1>
               <div class="declaration">
                 <div class="language">
+                  
                   <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">AWSRequest</span></code></pre>
 
                 </div>
@@ -209,9 +295,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore10AWSRequestV6regionAA6RegionOvp"></a>
+                    <a name="/s:8SotoCore10AWSRequestV6regionAA6RegionVvp"></a>
                     <a name="//apple_ref/swift/Property/region" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore10AWSRequestV6regionAA6RegionOvp">region</a>
+                    <a class="token" href="#/s:8SotoCore10AWSRequestV6regionAA6RegionVvp">region</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -226,7 +312,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">region</span><span class="p">:</span> <span class="kt"><a href="../Enums/Region.html">Region</a></span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">region</span><span class="p">:</span> <span class="kt"><a href="../Structs/Region.html">Region</a></span></code></pre>
 
                         </div>
                       </div>
@@ -236,9 +322,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore10AWSRequestV3url10Foundation3URLVvp"></a>
+                    <a name="/s:8SotoCore10AWSRequestV3url10Foundation3URLVvp"></a>
                     <a name="//apple_ref/swift/Property/url" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore10AWSRequestV3url10Foundation3URLVvp">url</a>
+                    <a class="token" href="#/s:8SotoCore10AWSRequestV3url10Foundation3URLVvp">url</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -263,9 +349,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore10AWSRequestV15serviceProtocolAA07ServiceE0Vvp"></a>
+                    <a name="/s:8SotoCore10AWSRequestV15serviceProtocolAA07ServiceE0Ovp"></a>
                     <a name="//apple_ref/swift/Property/serviceProtocol" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore10AWSRequestV15serviceProtocolAA07ServiceE0Vvp">serviceProtocol</a>
+                    <a class="token" href="#/s:8SotoCore10AWSRequestV15serviceProtocolAA07ServiceE0Ovp">serviceProtocol</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -280,7 +366,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">serviceProtocol</span><span class="p">:</span> <span class="kt"><a href="../Structs/ServiceProtocol.html">ServiceProtocol</a></span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">serviceProtocol</span><span class="p">:</span> <span class="kt"><a href="../Enums/ServiceProtocol.html">ServiceProtocol</a></span></code></pre>
 
                         </div>
                       </div>
@@ -290,9 +376,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore10AWSRequestV9operationSSvp"></a>
+                    <a name="/s:8SotoCore10AWSRequestV9operationSSvp"></a>
                     <a name="//apple_ref/swift/Property/operation" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore10AWSRequestV9operationSSvp">operation</a>
+                    <a class="token" href="#/s:8SotoCore10AWSRequestV9operationSSvp">operation</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -317,9 +403,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore10AWSRequestV10httpMethodSSvp"></a>
+                    <a name="/s:8SotoCore10AWSRequestV10httpMethod8NIOHTTP110HTTPMethodOvp"></a>
                     <a name="//apple_ref/swift/Property/httpMethod" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore10AWSRequestV10httpMethodSSvp">httpMethod</a>
+                    <a class="token" href="#/s:8SotoCore10AWSRequestV10httpMethod8NIOHTTP110HTTPMethodOvp">httpMethod</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -334,7 +420,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">httpMethod</span><span class="p">:</span> <span class="kt">String</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">httpMethod</span><span class="p">:</span> <span class="kt">HTTPMethod</span></code></pre>
 
                         </div>
                       </div>
@@ -344,9 +430,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore10AWSRequestV11httpHeadersSDySSypGvp"></a>
+                    <a name="/s:8SotoCore10AWSRequestV11httpHeaders8NIOHTTP111HTTPHeadersVvp"></a>
                     <a name="//apple_ref/swift/Property/httpHeaders" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore10AWSRequestV11httpHeadersSDySSypGvp">httpHeaders</a>
+                    <a class="token" href="#/s:8SotoCore10AWSRequestV11httpHeaders8NIOHTTP111HTTPHeadersVvp">httpHeaders</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -361,7 +447,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">httpHeaders</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span> <span class="p">:</span> <span class="kt">Any</span><span class="p">]</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">httpHeaders</span><span class="p">:</span> <span class="kt">HTTPHeaders</span></code></pre>
 
                         </div>
                       </div>
@@ -371,9 +457,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:15AWSSDKSwiftCore10AWSRequestV4bodyAA4BodyOvp"></a>
+                    <a name="/s:8SotoCore10AWSRequestV4bodyAA4BodyOvp"></a>
                     <a name="//apple_ref/swift/Property/body" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore10AWSRequestV4bodyAA4BodyOvp">body</a>
+                    <a class="token" href="#/s:8SotoCore10AWSRequestV4bodyAA4BodyOvp">body</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -395,189 +481,13 @@
                     </section>
                   </div>
                 </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:15AWSSDKSwiftCore10AWSRequestV6region3url15serviceProtocol9operation10httpMethod0I7Headers4bodyAcA6RegionO_10Foundation3URLVAA07ServiceG0VS2SSDySSypGAA4BodyOtcfc"></a>
-                    <a name="//apple_ref/swift/Method/init(region:url:serviceProtocol:operation:httpMethod:httpHeaders:body:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore10AWSRequestV6region3url15serviceProtocol9operation10httpMethod0I7Headers4bodyAcA6RegionO_10Foundation3URLVAA07ServiceG0VS2SSDySSypGAA4BodyOtcfc">init(region:<wbr>url:<wbr>serviceProtocol:<wbr>operation:<wbr>httpMethod:<wbr>httpHeaders:<wbr>body:<wbr>)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Initialize AWSRequest struct</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">region</span><span class="p">:</span> <span class="kt"><a href="../Enums/Region.html">Region</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">useast1</span><span class="p">,</span> <span class="nv">url</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span> <span class="nv">serviceProtocol</span><span class="p">:</span> <span class="kt"><a href="../Structs/ServiceProtocol.html">ServiceProtocol</a></span><span class="p">,</span> <span class="nv">operation</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">httpMethod</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">httpHeaders</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span> <span class="p">:</span> <span class="kt">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[:],</span> <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Enums/Body.html">Body</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">empty</span><span class="p">)</span></code></pre>
-
-                        </div>
-                      </div>
-                      <div>
-                        <h4>Parameters</h4>
-                        <table class="graybox">
-                          <tbody>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>region</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>Region of AWS server</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>url</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>Request URL</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>serviceProtocol</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>protocol of service (.json, .xml, .query etc)</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>operation</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>Name of AWS operation</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>httpMethod</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>HTTP method to use (&ldquo;GET&rdquo;, &ldquo;PUT&rdquo;, &ldquo;PUSH&rdquo; etc)</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>httpHeaders</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>HTTP request headers</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>body</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>HTTP Request body</p>
-                                </div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:15AWSSDKSwiftCore10AWSRequestV8addValue_18forHTTPHeaderFieldySS_SStF"></a>
-                    <a name="//apple_ref/swift/Method/addValue(_:forHTTPHeaderField:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:15AWSSDKSwiftCore10AWSRequestV8addValue_18forHTTPHeaderFieldySS_SStF">addValue(_:<wbr>forHTTPHeaderField:<wbr>)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Add a header value</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">mutating</span> <span class="kd">func</span> <span class="nf">addValue</span><span class="p">(</span><span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="n">forHTTPHeaderField</span> <span class="nv">field</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
-
-                        </div>
-                      </div>
-                      <div>
-                        <h4>Parameters</h4>
-                        <table class="graybox">
-                          <tbody>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>value</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>value</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>forHTTPHeaderField</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>name of header</p>
-                                </div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </section>
-                  </div>
-                </li>
               </ul>
             </div>
           </section>
         </section>
         <section id="footer">
-          <p>© Copyright (c) 2019 Yuki Takei(noppoMan), Joe Smith(Yasumoto), Jonathan McAllister(jonnymacs), Adam Fowler (adam-fowler), Fabian Fett (fabianfett)</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.2</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+          <p>© Copyright (c) 2020 Soto project authors</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
     </div>

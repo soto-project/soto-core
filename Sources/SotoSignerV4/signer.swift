@@ -81,7 +81,7 @@ public struct AWSSigner {
     }
 
     /// Generate a signed URL, for a HTTP request
-    public func signURL(url: URL, method: HTTPMethod = .GET, headers: HTTPHeaders = HTTPHeaders(), body: BodyData? = nil, date: Date = Date(), expires: Int = 86400) -> URL {
+    public func signURL(url: URL, method: HTTPMethod = .GET, headers: HTTPHeaders = HTTPHeaders(), body: BodyData? = nil, expires: TimeAmount, date: Date = Date()) -> URL {
         var headers = headers
         headers.replaceOrAdd(name: "host", value: url.host ?? "")
         // Create signing data
@@ -94,7 +94,7 @@ public struct AWSSigner {
         query += "X-Amz-Algorithm=AWS4-HMAC-SHA256"
         query += "&X-Amz-Credential=\(credentials.accessKeyId)/\(signingData.date)/\(region)/\(name)/aws4_request"
         query += "&X-Amz-Date=\(signingData.datetime)"
-        query += "&X-Amz-Expires=\(expires)"
+        query += "&X-Amz-Expires=\(expires.nanoseconds / 1_000_000_000)"
         query += "&X-Amz-SignedHeaders=\(signingData.signedHeaders)"
         if let sessionToken = credentials.sessionToken {
             query += "&X-Amz-Security-Token=\(sessionToken.uriEncode())"

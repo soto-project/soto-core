@@ -12,7 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
+import struct Foundation.URL
+import NIO
 
 public protocol AWSService {
     /// client used to communicate with AWS
@@ -42,7 +43,7 @@ extension AWSService {
         url: URL,
         httpMethod: HTTPMethod,
         headers: HTTPHeaders = HTTPHeaders(),
-        expires: Int = 86400,
+        expires: TimeAmount,
         logger: Logger = AWSClient.loggingDisabled
     ) -> EventLoopFuture<URL> {
         return self.client.signURL(url: url, httpMethod: httpMethod, headers: headers, expires: expires, serviceConfig: self.config, logger: logger)

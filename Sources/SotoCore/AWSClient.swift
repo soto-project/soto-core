@@ -473,7 +473,7 @@ extension AWSClient {
         url: URL,
         httpMethod: HTTPMethod,
         headers: HTTPHeaders = HTTPHeaders(),
-        expires: Int = 86400,
+        expires: TimeAmount,
         serviceConfig: AWSServiceConfig,
         logger: Logger = AWSClient.loggingDisabled
     ) -> EventLoopFuture<URL> {

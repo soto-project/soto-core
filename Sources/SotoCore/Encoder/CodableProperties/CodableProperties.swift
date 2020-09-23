@@ -30,7 +30,7 @@ public protocol CustomDecoder: CustomCoder {
 }
 
 /// Property wrapper that applies a custom encoder and decoder to its wrapped value
-@propertyWrapper public struct Coding<Coder: CustomCoder> {
+@propertyWrapper public struct CustomCoding<Coder: CustomCoder> {
     var value: Coder.CodableValue
 
     public init(wrappedValue value: Coder.CodableValue) {
@@ -44,21 +44,21 @@ public protocol CustomDecoder: CustomCoder {
 }
 
 /// add decode functionality if propertyWrapper conforms to `Decodable` and Coder conforms to `CustomDecoder`
-extension Coding: Decodable where Coder: CustomDecoder {
+extension CustomCoding: Decodable where Coder: CustomDecoder {
     public init(from decoder: Decoder) throws {
         self.value = try Coder.decode(from: decoder)
     }
 }
 
 /// add encoder functionality if propertyWrapper conforms to `Encodable` and Coder conforms to `CustomEncoder`
-extension Coding: Encodable where Coder: CustomEncoder {
+extension CustomCoding: Encodable where Coder: CustomEncoder {
     public func encode(to encoder: Encoder) throws {
         try Coder.encode(value: self.value, to: encoder)
     }
 }
 
 /// Property wrapper that applies a custom encoder and decoder to its wrapped optional value
-@propertyWrapper public struct OptionalCoding<Coder: CustomCoder> {
+@propertyWrapper public struct OptionalCustomCoding<Coder: CustomCoder> {
     var value: Coder.CodableValue?
 
     public init(wrappedValue value: Coder.CodableValue?) {
@@ -72,22 +72,22 @@ extension Coding: Encodable where Coder: CustomEncoder {
 }
 
 /// add decode functionality if propertyWrapper conforms to `Decodable` and Coder conforms to `CustomDecoder`
-extension OptionalCoding: Decodable where Coder: CustomDecoder {
+extension OptionalCustomCoding: Decodable where Coder: CustomDecoder {
     public init(from decoder: Decoder) throws {
         self.value = try Coder.decode(from: decoder)
     }
 }
 
 /// add encoder functionality if propertyWrapper conforms to `Encodable` and Coder conforms to `CustomEncoder`
-extension OptionalCoding: Encodable where Coder: CustomEncoder {
+extension OptionalCustomCoding: Encodable where Coder: CustomEncoder {
     public func encode(to encoder: Encoder) throws {
         guard let value = self.value else { return }
         try Coder.encode(value: value, to: encoder)
     }
 }
 
-/// Protocol for a PropertyWrapper to properly handle Coding when the wrappedValue is Optional
-public protocol OptionalCodingWrapper {
+/// Protocol for a PropertyWrapper to properly handle CustomCoding when the wrappedValue is Optional
+public protocol OptionalCustomCodingWrapper {
     associatedtype WrappedType
     var wrappedValue: WrappedType? { get }
     init(wrappedValue: WrappedType?)
@@ -96,7 +96,7 @@ public protocol OptionalCodingWrapper {
 /// extending `KeyedDecodingContainer` so it will only decode an optional value if it is present
 extension KeyedDecodingContainer {
     // This is used to override the default decoding behavior for OptionalCodingWrapper to allow a value to avoid a missing key Error
-    public func decode<T>(_ type: T.Type, forKey key: KeyedDecodingContainer<K>.Key) throws -> T where T: Decodable, T: OptionalCodingWrapper {
+    public func decode<T>(_ type: T.Type, forKey key: KeyedDecodingContainer<K>.Key) throws -> T where T: Decodable, T: OptionalCustomCodingWrapper {
         return try decodeIfPresent(T.self, forKey: key) ?? T(wrappedValue: nil)
     }
 }
@@ -104,14 +104,14 @@ extension KeyedDecodingContainer {
 /// extending `KeyedEncodingContainer` so it will only encode a wrapped value it is non nil
 extension KeyedEncodingContainer {
     // Used to make make sure OptionalCodingWrappers encode no value when it's wrappedValue is nil.
-    public mutating func encode<T>(_ value: T, forKey key: KeyedEncodingContainer<K>.Key) throws where T: Encodable, T: OptionalCodingWrapper {
+    public mutating func encode<T>(_ value: T, forKey key: KeyedEncodingContainer<K>.Key) throws where T: Encodable, T: OptionalCustomCodingWrapper {
         guard value.wrappedValue != nil else { return }
         try encodeIfPresent(value, forKey: key)
     }
 }
 
 /// extend OptionalCoding so it conforms to OptionalCodingWrapper
-extension OptionalCoding: OptionalCodingWrapper {}
+extension OptionalCustomCoding: OptionalCustomCodingWrapper {}
 
 /// CodingKey used by Encoder property wrappers
 internal struct EncodingWrapperKey: CodingKey {

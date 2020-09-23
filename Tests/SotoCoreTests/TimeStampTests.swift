@@ -42,7 +42,7 @@ class TimeStampTests: XCTestCase {
     func testDecodeISOFromXML() {
         do {
             struct A: Codable {
-                @Coding<ISO8601TimeStampCoder> var date: TimeStamp
+                @CustomCoding<ISO8601TimeStampCoder> var date: TimeStamp
             }
             let xml = "<A><date>2017-01-01T00:01:00.000Z</date></A>"
             let xmlElement = try XML.Element(xmlString: xml)
@@ -56,7 +56,7 @@ class TimeStampTests: XCTestCase {
     func testDecodeISONoMillisecondFromXML() {
         do {
             struct A: Codable {
-                @Coding<ISO8601TimeStampCoder> var date: TimeStamp
+                @CustomCoding<ISO8601TimeStampCoder> var date: TimeStamp
             }
             let xml = "<A><date>2017-01-01T00:01:00Z</date></A>"
             let xmlElement = try XML.Element(xmlString: xml)
@@ -98,7 +98,7 @@ class TimeStampTests: XCTestCase {
     func testEncodeISO8601ToXML() {
         do {
             struct A: Codable {
-                @Coding<ISO8601TimeStampCoder> var date: TimeStamp
+                @CustomCoding<ISO8601TimeStampCoder> var date: TimeStamp
             }
             let a = A(date: TimeStamp("2019-05-01T00:00:00.001Z")!)
             let xml = try XMLEncoder().encode(a)
@@ -110,7 +110,7 @@ class TimeStampTests: XCTestCase {
 
     func testEncodeHTTPHeaderToJSON() {
         struct A: AWSEncodableShape {
-            @Coding<HTTPHeaderTimeStampCoder> var date: TimeStamp
+            @CustomCoding<HTTPHeaderTimeStampCoder> var date: TimeStamp
         }
         let a = A(date: TimeStamp("2019-05-01T00:00:00.001Z")!)
         let config = createServiceConfig()
@@ -123,7 +123,7 @@ class TimeStampTests: XCTestCase {
     func testEncodeUnixEpochToJSON() {
         do {
             struct A: Codable {
-                @Coding<UnixEpochTimeStampCoder> var date: TimeStamp
+                @CustomCoding<UnixEpochTimeStampCoder> var date: TimeStamp
             }
             let a = A(date: TimeStamp(23_983_978_378))
             let data = try JSONEncoder().encode(a)

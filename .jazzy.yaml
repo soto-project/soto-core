@@ -1,7 +1,6 @@
 sourcekitten_sourcefile:
-  - sourcekitten/AWSSDKSwiftCore.json
-author: Yuki Takei, Joe Smith, Jonathan McAllister, Adam Fowler, Fabian Fett
-author_url: https://github.com/swift-aws
-github_url: https://github.com/swift-aws/aws-sdk-swift-core
-copyright: '© Copyright (c) 2019 Yuki Takei(noppoMan), Joe Smith(Yasumoto), Jonathan McAllister(jonnymacs), Adam Fowler (adam-fowler), Fabian Fett (fabianfett)'
+  - sourcekitten/SotoCore.json
+author_url: https://github.com/soto-project
+github_url: https://github.com/soto-project/soto-core
+copyright: '© Copyright (c) 2020 Soto project authors'
 readme: README.md

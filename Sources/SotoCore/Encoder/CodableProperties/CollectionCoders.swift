@@ -119,16 +119,16 @@ extension DictionaryCoder: CustomEncoder where Key: Encodable, Value: Encodable 
 }
 
 /// The most common array encoding property is an element name "member"
-public struct DefaultArrayCoderProperties: ArrayCoderProperties {
+public struct StandardArrayCoderProperties: ArrayCoderProperties {
     public static let member = "member"
 }
 
 /// The most common dictionary encoding properties are element name "entry", key name "key", value name "value"
-public struct DefaultDictionaryCoderProperties: DictionaryCoderProperties {
+public struct StandardDictionaryCoderProperties: DictionaryCoderProperties {
     public static let entry: String? = "entry"
     public static let key = "key"
     public static let value = "value"
 }
 
-public typealias DefaultArrayCoder<Element> = ArrayCoder<DefaultArrayCoderProperties, Element>
-public typealias DefaultDictionaryCoder<Key: Codable & Hashable, Value> = DictionaryCoder<DefaultDictionaryCoderProperties, Key, Value>
+public typealias StandardArrayCoder<Element> = ArrayCoder<StandardArrayCoderProperties, Element>
+public typealias StandardDictionaryCoder<Key: Codable & Hashable, Value> = DictionaryCoder<StandardDictionaryCoderProperties, Key, Value>

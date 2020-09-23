@@ -37,7 +37,7 @@ extension AWSClient {
         input: Input,
         command: @escaping (Input, Context, EventLoop?) -> EventLoopFuture<Output>,
         tokenKey: KeyPath<Output, Input.Token?>,
-        context: Context = AWSClient.emptyContext,
+        context: Context = AWSClient.defaultBaggageContext(),
         on eventLoop: EventLoop? = nil,
         onPage: @escaping (Output, EventLoop) -> EventLoopFuture<Bool>
     ) -> EventLoopFuture<Void> {
@@ -81,7 +81,7 @@ extension AWSClient {
         command: @escaping (Input, Context, EventLoop?) -> EventLoopFuture<Output>,
         tokenKey: KeyPath<Output, Input.Token?>,
         moreResultsKey: KeyPath<Output, Bool>,
-        context: Context = AWSClient.emptyContext,
+        context: Context = AWSClient.defaultBaggageContext(),
         on eventLoop: EventLoop? = nil,
         onPage: @escaping (Output, EventLoop) -> EventLoopFuture<Bool>
     ) -> EventLoopFuture<Void> {
@@ -126,7 +126,7 @@ extension AWSClient {
         command: @escaping (Input, Context, EventLoop?) -> EventLoopFuture<Output>,
         tokenKey: KeyPath<Output, Input.Token?>,
         moreResultsKey: KeyPath<Output, Bool?>,
-        context: Context = AWSClient.emptyContext,
+        context: Context = AWSClient.defaultBaggageContext(),
         on eventLoop: EventLoop? = nil,
         onPage: @escaping (Output, EventLoop) -> EventLoopFuture<Bool>
     ) -> EventLoopFuture<Void> {

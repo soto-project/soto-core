@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+import BaggageContext
 import Logging
 import NIO
 import NIOHTTP1

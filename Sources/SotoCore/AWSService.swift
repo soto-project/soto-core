@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import BaggageContext
 import struct Foundation.URL
-import NIO
 
 public protocol AWSService {
     /// client used to communicate with AWS

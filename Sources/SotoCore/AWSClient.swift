@@ -62,7 +62,9 @@ public final class AWSClient {
     /// default logger that logs nothing
     public static let loggingDisabled = Logger(label: "AWS-do-not-log", factory: { _ in SwiftLogNoOpLogHandler() })
     /// default baggage context
-    public static let emptyContext = DefaultContext.TODO(logger: loggingDisabled)
+    public static func defaultBaggageContext(file: String = #file, line: UInt = #line) -> Context {
+        return DefaultContext.TODO(logger: loggingDisabled, file: file, line: line)
+    }
 
     static let globalRequestID = NIOAtomic<Int>.makeAtomic(value: 0)
 
@@ -244,7 +246,7 @@ extension AWSClient {
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         input: Input,
-        context: Context = AWSClient.emptyContext,
+        context: Context = AWSClient.defaultBaggageContext(),
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Void> {
         return execute(
@@ -285,7 +287,7 @@ extension AWSClient {
         path: String,
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
-        context: Context = AWSClient.emptyContext,
+        context: Context = AWSClient.defaultBaggageContext(),
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Void> {
         return execute(
@@ -325,7 +327,7 @@ extension AWSClient {
         path: String,
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
-        context: Context = AWSClient.emptyContext,
+        context: Context = AWSClient.defaultBaggageContext(),
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Output> {
         return execute(
@@ -367,7 +369,7 @@ extension AWSClient {
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         input: Input,
-        context: Context = AWSClient.emptyContext,
+        context: Context = AWSClient.defaultBaggageContext(),
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Output> {
         return execute(
@@ -411,7 +413,7 @@ extension AWSClient {
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         input: Input,
-        context: Context = AWSClient.emptyContext,
+        context: Context = AWSClient.defaultBaggageContext(),
         on eventLoop: EventLoop? = nil,
         stream: @escaping AWSHTTPClient.ResponseStream
     ) -> EventLoopFuture<Output> {
@@ -485,7 +487,7 @@ extension AWSClient {
         headers: HTTPHeaders = HTTPHeaders(),
         expires: TimeAmount,
         serviceConfig: AWSServiceConfig,
-        context: Context = AWSClient.emptyContext
+        context: Context = AWSClient.defaultBaggageContext()
     ) -> EventLoopFuture<URL> {
         var context = context
         context.baggage.awsService = config.service

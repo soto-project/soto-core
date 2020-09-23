@@ -16,44 +16,44 @@ import Baggage
 
 private enum RequestIdKey: Baggage.Key {
     typealias Value = Int
-    static var name: String? { "aws-request-id" }
+    static var nameOverride: String? { "aws-request-id" }
 }
 
 private enum AWSServiceKey: Baggage.Key {
     typealias Value = String
-    static var name: String? { "aws-service" }
+    static var nameOverride: String? { "aws-service" }
 }
 
 private enum AWSOperationKey: Baggage.Key {
     typealias Value = String
-    static var name: String? { "aws-operation" }
+    static var nameOverride: String? { "aws-operation" }
 }
 
 extension Baggage {
     var awsService: String? {
         get {
-            self[_key: AWSServiceKey.self]
+            self[AWSServiceKey.self]
         }
         set {
-            self[_key: AWSServiceKey.self] = newValue
+            self[AWSServiceKey.self] = newValue
         }
     }
 
     var awsOperation: String? {
         get {
-            self[_key: AWSOperationKey.self]
+            self[AWSOperationKey.self]
         }
         set {
-            self[_key: AWSOperationKey.self] = newValue
+            self[AWSOperationKey.self] = newValue
         }
     }
 
     var awsRequestId: Int? {
         get {
-            self[_key: RequestIdKey.self]
+            self[RequestIdKey.self]
         }
         set {
-            self[_key: RequestIdKey.self] = newValue
+            self[RequestIdKey.self] = newValue
         }
     }
 }

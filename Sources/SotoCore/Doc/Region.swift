@@ -116,7 +116,7 @@ extension Region {
 }
 
 extension Region: CustomStringConvertible {
-    public var description: String { return rawValue }
+    public var description: String { return self.rawValue }
 }
 
 extension Region: Codable {}

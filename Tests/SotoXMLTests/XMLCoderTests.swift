@@ -174,7 +174,7 @@ class XMLCoderTests: XCTestCase {
 
     func testOptionalDictionary() {
         struct Test: Codable {
-            @OptionalCoding<DefaultDictionaryCoder> var a: [String: Int]?
+            @OptionalCustomCoding<DefaultDictionaryCoder> var a: [String: Int]?
         }
         let xml = "<Test><a><entry><key>one</key><value>1</value></entry></a></Test>"
         self.testDecodeEncode(type: Test.self, xml: xml)

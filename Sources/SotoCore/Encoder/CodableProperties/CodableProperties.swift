@@ -30,7 +30,7 @@ public protocol CustomDecoder: CustomCoder {
 }
 
 /// Property wrapper that applies a custom encoder and decoder to its wrapped value
-@propertyWrapper public struct Coding<Coder: CustomCoder> {
+@propertyWrapper public struct CustomCoding<Coder: CustomCoder> {
     var value: Coder.CodableValue
 
     public init(wrappedValue value: Coder.CodableValue) {
@@ -44,14 +44,14 @@ public protocol CustomDecoder: CustomCoder {
 }
 
 /// add decode functionality if propertyWrapper conforms to `Decodable` and Coder conforms to `CustomDecoder`
-extension Coding: Decodable where Coder: CustomDecoder {
+extension CustomCoding: Decodable where Coder: CustomDecoder {
     public init(from decoder: Decoder) throws {
         self.value = try Coder.decode(from: decoder)
     }
 }
 
 /// add encoder functionality if propertyWrapper conforms to `Encodable` and Coder conforms to `CustomEncoder`
-extension Coding: Encodable where Coder: CustomEncoder {
+extension CustomCoding: Encodable where Coder: CustomEncoder {
     public func encode(to encoder: Encoder) throws {
         try Coder.encode(value: self.value, to: encoder)
     }

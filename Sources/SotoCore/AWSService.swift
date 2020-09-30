@@ -51,7 +51,14 @@ extension AWSService {
         return self.client.signURL(url: url, httpMethod: httpMethod, headers: headers, expires: expires, serviceConfig: self.config, logger: logger)
     }
 
-    func with(
+    /// Return new version of Service with edited parameters
+    /// - Parameters:
+    ///   - middlewares: Additional middleware to add
+    ///   - timeout: Time out value for HTTP requests
+    ///   - byteBufferAllocator: byte buffer allocator used throughout AWSClient
+    ///   - options: options used by client when processing requests
+    /// - Returns: New version of the service
+    public func with(
         middlewares: [AWSServiceMiddleware] = [],
         timeout: TimeAmount? = nil,
         byteBufferAllocator: ByteBufferAllocator? = nil,

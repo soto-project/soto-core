@@ -121,7 +121,7 @@ public final class AWSServiceConfig {
     /// - Parameters:
     ///   - patch: parameters to patch service config
     /// - Returns: New AWSServiceConfig
-    func with(patch: Patch) -> AWSServiceConfig {
+    public func with(patch: Patch) -> AWSServiceConfig {
         return AWSServiceConfig(
             region: self.region,
             amzTarget: self.amzTarget,
@@ -138,7 +138,7 @@ public final class AWSServiceConfig {
         )
     }
 
-    /// Service config parameters you can patch 
+    /// Service config parameters you can patch
     public struct Patch {
         let middlewares: [AWSServiceMiddleware]
         let timeout: TimeAmount?

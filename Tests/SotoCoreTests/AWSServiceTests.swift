@@ -26,12 +26,12 @@ class AWSServiceTests: XCTestCase {
             self.client = client
             self.config = config
         }
+
         /// patch init
         init(from: Self, patch: AWSServiceConfig.Patch) {
-            client = from.client
-            config = from.config.with(patch: patch)
+            self.client = from.client
+            self.config = from.config.with(patch: patch)
         }
-
     }
 
     func testRegion() {
@@ -55,18 +55,18 @@ class AWSServiceTests: XCTestCase {
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let serviceConfig = createServiceConfig()
         let service = TestService(client: client, config: serviceConfig)
-        let service2 = service.with(timeout: .seconds(2048), options: .init(rawValue: 0x67ff))
+        let service2 = service.with(timeout: .seconds(2048), options: .init(rawValue: 0x67FF))
         XCTAssertEqual(service2.config.timeout, .seconds(2048))
-        XCTAssertEqual(service2.config.options, .init(rawValue: 0x67ff))
+        XCTAssertEqual(service2.config.options, .init(rawValue: 0x67FF))
     }
 
     func testWithMiddleware() {
-        struct TestMiddleware: AWSServiceMiddleware { }
+        struct TestMiddleware: AWSServiceMiddleware {}
         let client = createAWSClient()
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let serviceConfig = createServiceConfig()
         let service = TestService(client: client, config: serviceConfig)
         let service2 = service.with(middlewares: [TestMiddleware()])
-        XCTAssertNotNil(service2.config.middlewares.first {type(of: $0) == TestMiddleware.self})
+        XCTAssertNotNil(service2.config.middlewares.first { type(of: $0) == TestMiddleware.self })
     }
 }

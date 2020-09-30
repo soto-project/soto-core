@@ -117,6 +117,47 @@ public final class AWSServiceConfig {
         }
     }
 
+    /// Return new version of serviceConfig with a modified parameters
+    /// - Parameters:
+    ///   - patch: parameters to patch service config
+    /// - Returns: New AWSServiceConfig
+    public func with(patch: Patch) -> AWSServiceConfig {
+        return AWSServiceConfig(
+            region: self.region,
+            amzTarget: self.amzTarget,
+            service: self.service,
+            signingName: self.signingName,
+            serviceProtocol: self.serviceProtocol,
+            apiVersion: self.apiVersion,
+            endpoint: self.endpoint,
+            possibleErrorTypes: self.possibleErrorTypes,
+            middlewares: self.middlewares + patch.middlewares,
+            timeout: patch.timeout ?? self.timeout,
+            byteBufferAllocator: patch.byteBufferAllocator ?? self.byteBufferAllocator,
+            options: patch.options ?? self.options
+        )
+    }
+
+    /// Service config parameters you can patch
+    public struct Patch {
+        let middlewares: [AWSServiceMiddleware]
+        let timeout: TimeAmount?
+        let byteBufferAllocator: ByteBufferAllocator?
+        let options: Options?
+
+        init(
+            middlewares: [AWSServiceMiddleware] = [],
+            timeout: TimeAmount? = nil,
+            byteBufferAllocator: ByteBufferAllocator? = nil,
+            options: AWSServiceConfig.Options? = nil
+        ) {
+            self.middlewares = middlewares
+            self.timeout = timeout
+            self.byteBufferAllocator = byteBufferAllocator
+            self.options = options
+        }
+    }
+
     /// Options used by client when processing requests
     public struct Options: OptionSet {
         public let rawValue: Int
@@ -128,5 +169,33 @@ public final class AWSServiceConfig {
         /// If you set a custom endpoint, s3 will choose path style addressing. With this paramteter you can force
         /// it to use virtual host style addressing
         public static let s3ForceVirtualHost = Options(rawValue: 1 << 0)
+    }
+
+    private init(
+        region: Region,
+        amzTarget: String?,
+        service: String,
+        signingName: String,
+        serviceProtocol: ServiceProtocol,
+        apiVersion: String,
+        endpoint: String,
+        possibleErrorTypes: [AWSErrorType.Type],
+        middlewares: [AWSServiceMiddleware],
+        timeout: TimeAmount,
+        byteBufferAllocator: ByteBufferAllocator,
+        options: Options
+    ) {
+        self.region = region
+        self.amzTarget = amzTarget
+        self.service = service
+        self.signingName = signingName
+        self.serviceProtocol = serviceProtocol
+        self.apiVersion = apiVersion
+        self.endpoint = endpoint
+        self.possibleErrorTypes = possibleErrorTypes
+        self.middlewares = middlewares
+        self.timeout = timeout
+        self.byteBufferAllocator = byteBufferAllocator
+        self.options = options
     }
 }

@@ -20,6 +20,8 @@ public protocol AWSService {
     var client: AWSClient { get }
     /// service context details
     var config: AWSServiceConfig { get }
+    /// patch init
+    init(from: Self, patch: AWSServiceConfig.Patch)
 }
 
 extension AWSService {
@@ -47,5 +49,26 @@ extension AWSService {
         logger: Logger = AWSClient.loggingDisabled
     ) -> EventLoopFuture<URL> {
         return self.client.signURL(url: url, httpMethod: httpMethod, headers: headers, expires: expires, serviceConfig: self.config, logger: logger)
+    }
+
+    /// Return new version of Service with edited parameters
+    /// - Parameters:
+    ///   - middlewares: Additional middleware to add
+    ///   - timeout: Time out value for HTTP requests
+    ///   - byteBufferAllocator: byte buffer allocator used throughout AWSClient
+    ///   - options: options used by client when processing requests
+    /// - Returns: New version of the service
+    public func with(
+        middlewares: [AWSServiceMiddleware] = [],
+        timeout: TimeAmount? = nil,
+        byteBufferAllocator: ByteBufferAllocator? = nil,
+        options: AWSServiceConfig.Options? = nil
+    ) -> Self {
+        return Self(from: self, patch: .init(
+            middlewares: middlewares,
+            timeout: timeout,
+            byteBufferAllocator: byteBufferAllocator,
+            options: options
+        ))
     }
 }

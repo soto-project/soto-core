@@ -27,7 +27,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio-ssl.git", .upToNextMajor(from: "2.7.2")),
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/swift-server/async-http-client.git", .upToNextMajor(from: "1.2.0")),
-        .package(url: "https://github.com/ktoso/gsoc-swift-baggage-context.git", .branch("simple-is-good-proposal")),
+        .package(url: "https://github.com/slashmo/gsoc-swift-baggage-context.git", .branch("main")),
     ],
     targets: [
         .target(name: "SotoCore", dependencies: [

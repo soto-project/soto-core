@@ -201,21 +201,6 @@ extension AWSRequest {
                 }
             }
 
-        case .query:
-            var dict = try input.encodeAsQuery()
-
-            dict["Action"] = operationName
-            dict["Version"] = configuration.apiVersion
-
-            switch httpMethod {
-            case .GET:
-                queryParams.append(contentsOf: dict.map { (key: $0.key, value: $0) })
-            default:
-                if let urlEncodedQueryParams = Self.urlEncodeQueryParams(fromDictionary: dict) {
-                    body = .text(urlEncodedQueryParams)
-                }
-            }
-
         case .restxml:
             if let shapeWithPayload = Input.self as? AWSShapeWithPayload.Type {
                 let payload = shapeWithPayload._payloadPath
@@ -244,12 +229,14 @@ extension AWSRequest {
                 }
             }
 
+        case .query:
+            if let query = try input.encodeAsQuery(with: ["Action": operationName, "Version": configuration.apiVersion]) {
+                body = .text(query)
+            }
+            
         case .ec2:
-            var params = try input.encodeAsQueryForEC2()
-            params["Action"] = operationName
-            params["Version"] = configuration.apiVersion
-            if let urlEncodedQueryParams = Self.urlEncodeQueryParams(fromDictionary: params) {
-                body = .text(urlEncodedQueryParams)
+            if let query = try input.encodeAsQueryForEC2(with: ["Action": operationName, "Version": configuration.apiVersion]) {
+                body = .text(query)
             }
         }
 
@@ -286,6 +273,7 @@ extension AWSRequest {
         addStandardHeaders()
     }
 
+    /// Add headers standard to all requests "content-type" and "user-agent"
     private mutating func addStandardHeaders() {
         httpHeaders.replaceOrAdd(name: "user-agent", value: "Soto/5.0")
         guard httpHeaders["content-type"].first == nil else {
@@ -302,28 +290,15 @@ extension AWSRequest {
         }
     }
 
-    // this list of query allowed characters comes from https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html
+    /// this list of query allowed characters comes from https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html
     static let queryAllowedCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
 
+    /// percent encode query parameter value.
     private static func urlEncodeQueryParam(_ value: String) -> String {
         return value.addingPercentEncoding(withAllowedCharacters: AWSRequest.queryAllowedCharacters) ?? value
     }
 
-    private static func urlEncodeQueryParams(fromDictionary dict: [String: Any]) -> String? {
-        guard dict.count > 0 else { return nil }
-        var query = ""
-        let keys = Array(dict.keys).sorted()
-
-        for iterator in keys.enumerated() {
-            let value = dict[iterator.element]
-            query += iterator.element + "=" + urlEncodeQueryParam(String(describing: value ?? ""))
-            if iterator.offset < dict.count - 1 {
-                query += "&"
-            }
-        }
-        return query
-    }
-
+    /// verify  streaming is allowed for this operation
     internal static func verifyStream(operation: String, payload: AWSPayload, input: AWSShapeWithPayload.Type) {
         guard case .stream(let reader) = payload.payload else { return }
         precondition(input._payloadOptions.contains(.allowStreaming), "\(operation) does not allow streaming of data")

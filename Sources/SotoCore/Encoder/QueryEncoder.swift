@@ -25,7 +25,7 @@ public struct QueryEncoder {
     public var ec2: Bool = false
 
     /// additional keys to include
-    public var additionalKeys: [String: Any] = [:]
+    public var additionalKeys: [String: String] = [:]
 
     /// Options set on the top-level encoder to pass down the encoding hierarchy.
     fileprivate struct _Options {
@@ -56,18 +56,19 @@ public struct QueryEncoder {
         return value.addingPercentEncoding(withAllowedCharacters: AWSRequest.queryAllowedCharacters) ?? value
     }
 
-    private static func urlEncodeQueryParams(dictionary: [String: Any]) -> String? {
+    // generate string from
+    private static func urlEncodeQueryParams(dictionary: [(key: String, value: String)]) -> String? {
         guard dictionary.count > 0 else { return nil }
-        return dictionary.keys
-             .sorted()
-             .map { "\($0)=\(urlEncodeQueryParam(String(describing: dictionary[$0] ?? "")))" }
-             .joined(separator: "&")
+        return dictionary
+            .sorted { $0.key < $1.key }
+            .map { "\($0.key)=\(urlEncodeQueryParam(String(describing: $0.value)))" }
+            .joined(separator: "&")
     }
 
     /// Flatten dictionary and array tree into one dictionary
     /// - Parameter container: The root container
-    private func flatten(_ container: _QueryEncoderKeyedContainer?) -> [String: Any] {
-        var result: [String: Any] = additionalKeys
+    private func flatten(_ container: _QueryEncoderKeyedContainer?) -> [(key: String, value: String)] {
+        var result: [(key: String, value: String)] = additionalKeys.map { return $0 }
 
         func flatten(dictionary: [String: Any], path: String) {
             for (key, value) in dictionary {
@@ -77,7 +78,7 @@ public struct QueryEncoder {
                 case let unkeyed as _QueryEncoderUnkeyedContainer:
                     flatten(array: unkeyed.values, path: "\(path)\(key).")
                 default:
-                    result["\(path)\(key)"] = value
+                    result.append((key: "\(path)\(key)", value: String(describing: value)))
                 }
             }
         }
@@ -89,7 +90,7 @@ public struct QueryEncoder {
                 case let unkeyed as _QueryEncoderUnkeyedContainer:
                     flatten(array: unkeyed.values, path: "\(path)\(iterator.offset + 1)")
                 default:
-                    result["\(path)\(iterator.offset + 1)"] = iterator.element
+                    result.append((key: "\(path)\(iterator.offset + 1)", value: String(describing: iterator.element)))
                 }
             }
         }

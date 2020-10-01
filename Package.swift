@@ -44,7 +44,7 @@ let package = Package(
             .product(name: "NIOFoundationCompat", package: "swift-nio"),
         ]),
         .target(name: "SotoCrypto", dependencies: [
-            .product(name: "Crypto", package: "swift-crypto", condition: .when(platforms: [.linux]))
+            .product(name: "Crypto", package: "swift-crypto", condition: .when(platforms: [.linux])),
         ]),
         .target(name: "SotoSignerV4", dependencies: [
             .byName(name: "SotoCrypto"),

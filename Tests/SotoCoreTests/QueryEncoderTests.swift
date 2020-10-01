@@ -19,19 +19,9 @@ import XCTest
 class QueryEncoderTests: XCTestCase {
     @EnvironmentVariable("ENABLE_TIMING_TESTS", default: true) static var enableTimingTests: Bool
 
-    func queryString(dictionary: [String: Any]) -> String? {
-        var components = URLComponents()
-        components.queryItems = dictionary.map { URLQueryItem(name: $0.key, value: String(describing: $0.value)) }.sorted(by: { $0.name < $1.name })
-        if components.queryItems != nil, let url = components.url {
-            return url.query
-        }
-        return nil
-    }
-
     func testQuery<Input: Encodable>(_ value: Input, query: String) {
         do {
-            let queryDict = try QueryEncoder().encode(value)
-            let query2 = self.queryString(dictionary: queryDict)
+            let query2 = try QueryEncoder().encode(value)
             XCTAssertEqual(query2, query)
         } catch {
             XCTFail("\(error)")
@@ -224,8 +214,7 @@ class QueryEncoderTests: XCTestCase {
         }
         let data = Data("Testing".utf8)
         let test = Test(a: data)
-        let result = self.queryString(dictionary: ["a": data.base64EncodedString()])!
-        self.testQuery(test, query: result)
+        self.testQuery(test, query: "a=VGVzdGluZw%3D%3D")
     }
 
     func testEC2Encode() {
@@ -237,12 +226,11 @@ class QueryEncoderTests: XCTestCase {
         }
         do {
             let value = Test(object: Test2(data: "Hello"))
-            let queryEncoder = QueryEncoder()
+            var queryEncoder = QueryEncoder()
             queryEncoder.ec2 = true
-            let queryDict = try queryEncoder.encode(value)
-            let queryAsString = self.queryString(dictionary: queryDict)
+            let query = try queryEncoder.encode(value)
 
-            XCTAssertEqual(queryAsString, "Object.Data=Hello")
+            XCTAssertEqual(query, "Object.Data=Hello")
         } catch {
             XCTFail("\(error)")
         }

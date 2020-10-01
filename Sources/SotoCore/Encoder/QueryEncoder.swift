@@ -12,16 +12,20 @@
 //
 //===----------------------------------------------------------------------===//
 
+import struct Foundation.CharacterSet
 import struct Foundation.Data
 import class Foundation.NSData
 
-/// The wrapper class for encoding Codable classes to Query dictionary
-class QueryEncoder {
+/// The wrapper struct for encoding Codable classes to Query dictionary
+public struct QueryEncoder {
     /// Contextual user-provided information for use during encoding.
-    open var userInfo: [CodingUserInfoKey: Any] = [:]
+    public var userInfo: [CodingUserInfoKey: Any] = [:]
 
     /// Are we encoding for EC2
-    open var ec2: Bool = false
+    public var ec2: Bool = false
+
+    /// additional keys to include
+    public var additionalKeys: [String: String] = [:]
 
     /// Options set on the top-level encoder to pass down the encoding hierarchy.
     fileprivate struct _Options {
@@ -36,18 +40,35 @@ class QueryEncoder {
 
     public init() {}
 
-    open func encode<T: Encodable>(_ value: T, name: String? = nil) throws -> [String: Any] {
+    public func encode<T: Encodable>(_ value: T, name: String? = nil) throws -> String? {
         let encoder = _QueryEncoder(options: options)
         try value.encode(to: encoder)
 
         // encode generates a tree of dictionaries and arrays. We need to flatten this into a single dictionary with keys joined together
-        return flatten(encoder.result)
+        let result = flatten(encoder.result)
+        return Self.urlEncodeQueryParams(dictionary: result)
+    }
+
+    // this list of query allowed characters comes from https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html
+    static let queryAllowedCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
+
+    private static func urlEncodeQueryParam(_ value: String) -> String {
+        return value.addingPercentEncoding(withAllowedCharacters: AWSRequest.queryAllowedCharacters) ?? value
+    }
+
+    // generate string from
+    private static func urlEncodeQueryParams(dictionary: [(key: String, value: String)]) -> String? {
+        guard dictionary.count > 0 else { return nil }
+        return dictionary
+            .sorted { $0.key < $1.key }
+            .map { "\($0.key)=\(urlEncodeQueryParam(String(describing: $0.value)))" }
+            .joined(separator: "&")
     }
 
     /// Flatten dictionary and array tree into one dictionary
     /// - Parameter container: The root container
-    private func flatten(_ container: _QueryEncoderKeyedContainer?) -> [String: Any] {
-        var result: [String: Any] = [:]
+    private func flatten(_ container: _QueryEncoderKeyedContainer?) -> [(key: String, value: String)] {
+        var result: [(key: String, value: String)] = additionalKeys.map { return $0 }
 
         func flatten(dictionary: [String: Any], path: String) {
             for (key, value) in dictionary {
@@ -57,7 +78,7 @@ class QueryEncoder {
                 case let unkeyed as _QueryEncoderUnkeyedContainer:
                     flatten(array: unkeyed.values, path: "\(path)\(key).")
                 default:
-                    result["\(path)\(key)"] = value
+                    result.append((key: "\(path)\(key)", value: String(describing: value)))
                 }
             }
         }
@@ -69,7 +90,7 @@ class QueryEncoder {
                 case let unkeyed as _QueryEncoderUnkeyedContainer:
                     flatten(array: unkeyed.values, path: "\(path)\(iterator.offset + 1)")
                 default:
-                    result["\(path)\(iterator.offset + 1)"] = iterator.element
+                    result.append((key: "\(path)\(iterator.offset + 1)", value: String(describing: iterator.element)))
                 }
             }
         }

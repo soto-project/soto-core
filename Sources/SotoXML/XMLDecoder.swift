@@ -20,7 +20,7 @@ import class Foundation.NSNumber
 import struct Foundation.URL
 
 /// The wrapper class for decoding Codable classes from XMLNodes
-public final class XMLDecoder {
+public struct XMLDecoder {
     /// The strategy to use for decoding `Data` values.
     public enum DataDecodingStrategy {
         /// Decode the `Data` from a Base64-encoded string.

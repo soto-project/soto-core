@@ -46,7 +46,7 @@ extension AWSService {
         httpMethod: HTTPMethod,
         headers: HTTPHeaders = HTTPHeaders(),
         expires: TimeAmount,
-        context: Context
+        context: BaggageContext
     ) -> EventLoopFuture<URL> {
         return self.client.signURL(url: url, httpMethod: httpMethod, headers: headers, expires: expires, config: self.config, context: context)
     }

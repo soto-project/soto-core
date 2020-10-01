@@ -62,7 +62,7 @@ public final class AWSClient {
     /// default logger that logs nothing
     public static let loggingDisabled = Logger(label: "AWS-do-not-log", factory: { _ in SwiftLogNoOpLogHandler() })
     /// default baggage context
-    public static func defaultBaggageContext(file: String = #file, line: UInt = #line) -> Context {
+    public static func defaultBaggageContext(file: String = #file, line: UInt = #line) -> BaggageContext {
         return DefaultContext.TODO(logger: loggingDisabled, file: file, line: line)
     }
 
@@ -246,7 +246,7 @@ extension AWSClient {
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         input: Input,
-        context: Context = AWSClient.defaultBaggageContext(),
+        context: BaggageContext = AWSClient.defaultBaggageContext(),
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Void> {
         return execute(
@@ -287,7 +287,7 @@ extension AWSClient {
         path: String,
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
-        context: Context = AWSClient.defaultBaggageContext(),
+        context: BaggageContext = AWSClient.defaultBaggageContext(),
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Void> {
         return execute(
@@ -327,7 +327,7 @@ extension AWSClient {
         path: String,
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
-        context: Context = AWSClient.defaultBaggageContext(),
+        context: BaggageContext = AWSClient.defaultBaggageContext(),
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Output> {
         return execute(
@@ -369,7 +369,7 @@ extension AWSClient {
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         input: Input,
-        context: Context = AWSClient.defaultBaggageContext(),
+        context: BaggageContext = AWSClient.defaultBaggageContext(),
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Output> {
         return execute(
@@ -413,7 +413,7 @@ extension AWSClient {
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         input: Input,
-        context: Context = AWSClient.defaultBaggageContext(),
+        context: BaggageContext = AWSClient.defaultBaggageContext(),
         on eventLoop: EventLoop? = nil,
         stream: @escaping AWSHTTPClient.ResponseStream
     ) -> EventLoopFuture<Output> {
@@ -444,10 +444,10 @@ extension AWSClient {
     internal func execute<Output>(
         operation operationName: String,
         createRequest: @escaping () throws -> AWSRequest,
-        execute: @escaping (AWSHTTPRequest, Context, EventLoop) -> EventLoopFuture<AWSHTTPResponse>,
+        execute: @escaping (AWSHTTPRequest, BaggageContext, EventLoop) -> EventLoopFuture<AWSHTTPResponse>,
         processResponse: @escaping (AWSHTTPResponse) throws -> Output,
         config: AWSServiceConfig,
-        context: Context,
+        context: BaggageContext,
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
@@ -487,7 +487,7 @@ extension AWSClient {
         headers: HTTPHeaders = HTTPHeaders(),
         expires: TimeAmount,
         config: AWSServiceConfig,
-        context: Context = AWSClient.defaultBaggageContext()
+        context: BaggageContext = AWSClient.defaultBaggageContext()
     ) -> EventLoopFuture<URL> {
         var context = context
         context.baggage.awsService = config.service
@@ -499,7 +499,7 @@ extension AWSClient {
         }
     }
 
-    func createSigner(config: AWSServiceConfig, context: Context) -> EventLoopFuture<AWSSigner> {
+    func createSigner(config: AWSServiceConfig, context: BaggageContext) -> EventLoopFuture<AWSSigner> {
         return credentialProvider.getCredential(on: eventLoopGroup.next(), logger: context.logger).map { credential in
             return AWSSigner(credentials: credential, name: config.signingName, region: config.region.rawValue)
         }

@@ -142,6 +142,7 @@ class PaginateTests: XCTestCase {
     struct StringListOutput: AWSDecodableShape, Encodable {
         let array: [String]
         let outputToken: String?
+        let moreResults: Bool?
     }
 
     func stringList(_ input: StringListInput, on eventLoop: EventLoop? = nil, logger: Logger) -> EventLoopFuture<StringListOutput> {
@@ -161,6 +162,7 @@ class PaginateTests: XCTestCase {
             input: input,
             command: self.stringList,
             tokenKey: \StringListOutput.outputToken,
+            moreResultsKey: \StringListOutput.moreResults,
             on: eventLoop,
             logger: TestEnvironment.logger,
             onPage: onPage
@@ -183,12 +185,14 @@ class PaginateTests: XCTestCase {
             array.append(self.stringList[i])
         }
         var outputToken: String?
+        var moreResults: Bool?
         var continueProcessing = false
         if endIndex < self.stringList.count {
             outputToken = self.stringList[endIndex]
+            moreResults = true
             continueProcessing = true
         }
-        let output = StringListOutput(array: array, outputToken: outputToken)
+        let output = StringListOutput(array: array, outputToken: outputToken, moreResults: moreResults)
         return .result(output, continueProcessing: continueProcessing)
     }
 

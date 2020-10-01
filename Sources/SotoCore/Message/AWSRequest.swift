@@ -31,7 +31,7 @@ public struct AWSRequest {
     public var body: Body
 
     /// Create HTTP Client request from AWSRequest.
-    /// If the signer's credentials are available the request will be sigend. Otherweise defaults to an unsinged request
+    /// If the signer's credentials are available the request will be signed. Otherwise defaults to an unsigned request
     func createHTTPRequest(signer: AWSSigner, byteBufferAllocator: ByteBufferAllocator) -> AWSHTTPRequest {
         // if credentials are empty don't sign request
         if signer.credentials.isEmpty() {

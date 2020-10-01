@@ -22,7 +22,6 @@ class QueryEncoderTests: XCTestCase {
     func testQuery<Input: Encodable>(_ value: Input, query: String) {
         do {
             let query2 = try QueryEncoder().encode(value)
-            //let query2 = self.queryString(dictionary: queryDict)
             XCTAssertEqual(query2, query)
         } catch {
             XCTFail("\(error)")

@@ -233,7 +233,7 @@ extension AWSRequest {
             if let query = try input.encodeAsQuery(with: ["Action": operationName, "Version": configuration.apiVersion]) {
                 body = .text(query)
             }
-            
+
         case .ec2:
             if let query = try input.encodeAsQueryForEC2(with: ["Action": operationName, "Version": configuration.apiVersion]) {
                 body = .text(query)

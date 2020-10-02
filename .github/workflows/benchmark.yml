@@ -19,7 +19,12 @@ jobs:
     - name: Benchmark
       run: |
         cd soto-benchmark
-        swift package edit soto-core --revision ${GITHUB_SHA}
+        echo ${GITHUB_REF}
+        if [ -z ${GITHUB_REF} ]; then
+          swift package edit soto-core --branch ${GITHUB_REF}
+        else
+          swift package edit soto-core --revision ${GITHUB_SHA}
+        fi
         swift run -c release
 
   linux:
@@ -45,5 +50,9 @@ jobs:
     - name: Benchmark
       run: |
         cd soto-benchmark
-        swift package edit soto-core --revision ${GITHUB_SHA}
+        if [ -z ${GITHUB_REF} ]; then
+          swift package edit soto-core --branch ${GITHUB_REF}
+        else
+          swift package edit soto-core --revision ${GITHUB_SHA}
+        fi
         swift run -c release

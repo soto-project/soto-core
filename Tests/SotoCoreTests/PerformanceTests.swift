@@ -299,7 +299,7 @@ class PerformanceTests: XCTestCase {
     func testValidateJSONResponse() {
         guard Self.enableTimingTests == true else { return }
         var buffer = ByteBufferAllocator().buffer(capacity: 0)
-        buffer.writeString("{\"item1\":\"Hello\", \"item2\":5, \"item3\":3.14, \"item4\":\"2001-12-23T15:34:12.590Z\", \"item5\": [1,56,3,7]}")
+        buffer.writeString("{\"item1\":\"Hello\", \"item2\":5, \"item3\":3.14, \"item4\":3345984444, \"item5\": [1,56,3,7]}")
         let response = HTTPClient.Response(
             host: "localhost",
             status: .ok,

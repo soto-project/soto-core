@@ -17,7 +17,7 @@
     <a title="Structures  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html"> Docs</a> (54% documented)</p>
+        <p><a href="index.html"> Docs</a> (56% documented)</p>
         <p class="header-right"><a href="https://github.com/soto-project/soto-core"><img src="img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="search.json">
@@ -53,6 +53,9 @@
               </li>
               <li class="nav-group-task">
                 <a href="Classes/AWSServiceConfig.html">AWSServiceConfig</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/AWSServiceConfig.html#/s:8SotoCore16AWSServiceConfigC5PatchV">– Patch</a>
               </li>
               <li class="nav-group-task">
                 <a href="Classes/AWSServiceConfig/Options.html">– Options</a>
@@ -160,7 +163,7 @@
                 <a href="Protocols/ExpiringCredential.html">ExpiringCredential</a>
               </li>
               <li class="nav-group-task">
-                <a href="Protocols/OptionalCodingWrapper.html">OptionalCodingWrapper</a>
+                <a href="Protocols/OptionalCustomCodingWrapper.html">OptionalCustomCodingWrapper</a>
               </li>
               <li class="nav-group-task">
                 <a href="Protocols/RetryPolicy.html">RetryPolicy</a>
@@ -216,9 +219,6 @@
                 <a href="Structs/ArrayCoder.html">ArrayCoder</a>
               </li>
               <li class="nav-group-task">
-                <a href="Structs/Coding.html">Coding</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="Structs/CredentialProviderError.html">CredentialProviderError</a>
               </li>
               <li class="nav-group-task">
@@ -228,25 +228,25 @@
                 <a href="Structs/CredentialProviderFactory/Context.html">– Context</a>
               </li>
               <li class="nav-group-task">
-                <a href="Structs/DefaultArrayCoderProperties.html">DefaultArrayCoderProperties</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Structs/DefaultDictionaryCoderProperties.html">DefaultDictionaryCoderProperties</a>
+                <a href="Structs/CustomCoding.html">CustomCoding</a>
               </li>
               <li class="nav-group-task">
                 <a href="Structs/DictionaryCoder.html">DictionaryCoder</a>
               </li>
               <li class="nav-group-task">
-                <a href="Structs/HTTPHeaderTimeStampCoder.html">HTTPHeaderTimeStampCoder</a>
+                <a href="Structs/HTTPHeaderDateCoder.html">HTTPHeaderDateCoder</a>
               </li>
               <li class="nav-group-task">
-                <a href="Structs/ISO8601TimeStampCoder.html">ISO8601TimeStampCoder</a>
+                <a href="Structs/ISO8601DateCoder.html">ISO8601DateCoder</a>
               </li>
               <li class="nav-group-task">
                 <a href="Structs/NullCredentialProvider.html">NullCredentialProvider</a>
               </li>
               <li class="nav-group-task">
-                <a href="Structs/OptionalCoding.html">OptionalCoding</a>
+                <a href="Structs/OptionalCustomCoding.html">OptionalCustomCoding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/QueryEncoder.html">QueryEncoder</a>
               </li>
               <li class="nav-group-task">
                 <a href="Structs/Region.html">Region</a>
@@ -255,10 +255,13 @@
                 <a href="Structs/RetryPolicyFactory.html">RetryPolicyFactory</a>
               </li>
               <li class="nav-group-task">
-                <a href="Structs/TimeStamp.html">TimeStamp</a>
+                <a href="Structs/StandardArrayCoderProperties.html">StandardArrayCoderProperties</a>
               </li>
               <li class="nav-group-task">
-                <a href="Structs/UnixEpochTimeStampCoder.html">UnixEpochTimeStampCoder</a>
+                <a href="Structs/StandardDictionaryCoderProperties.html">StandardDictionaryCoderProperties</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/UnixEpochDateCoder.html">UnixEpochDateCoder</a>
               </li>
             </ul>
           </li>
@@ -266,10 +269,10 @@
             <a href="Typealiases.html">Type Aliases</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a href="Typealiases.html#/s:8SotoCore17DefaultArrayCodera">DefaultArrayCoder</a>
+                <a href="Typealiases.html#/s:8SotoCore18StandardArrayCodera">StandardArrayCoder</a>
               </li>
               <li class="nav-group-task">
-                <a href="Typealiases.html#/s:8SotoCore22DefaultDictionaryCodera">DefaultDictionaryCoder</a>
+                <a href="Typealiases.html#/s:8SotoCore23StandardDictionaryCodera">StandardDictionaryCoder</a>
               </li>
             </ul>
           </li>
@@ -309,35 +312,6 @@ A response payload only comes in the form of a ByteBuffer</p>
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">AWSPayload</span></code></pre>
 <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">AWSPayload</span><span class="p">:</span> <span class="kt">Decodable</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:8SotoCore9TimeStampV"></a>
-                    <a name="//apple_ref/swift/Struct/TimeStamp" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore9TimeStampV">TimeStamp</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Time stamp object that can encoded to ISO8601 format and decoded from ISO8601, HTTP date format and UNIX epoch seconds</p>
-
-                        <a href="Structs/TimeStamp.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">TimeStamp</span></code></pre>
-<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">TimeStamp</span><span class="p">:</span> <span class="kt">Codable</span></code></pre>
 
                         </div>
                       </div>
@@ -498,7 +472,7 @@ A response payload only comes in the form of a ByteBuffer</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Enumeration for all AWS server regions</p>
 
                         <a href="Structs/Region.html" class="slightly-smaller">See more</a>
                       </div>
@@ -507,6 +481,8 @@ A response payload only comes in the form of a ByteBuffer</p>
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">Region</span> <span class="p">:</span> <span class="kt">RawRepresentable</span><span class="p">,</span> <span class="kt">Equatable</span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Region</span><span class="p">:</span> <span class="kt">CustomStringConvertible</span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Region</span><span class="p">:</span> <span class="kt">Codable</span></code></pre>
 
                         </div>
                       </div>
@@ -526,7 +502,7 @@ A response payload only comes in the form of a ByteBuffer</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Enumeration for all AWS partitions</p>
 
                         <a href="Structs/AWSPartition.html" class="slightly-smaller">See more</a>
                       </div>
@@ -544,9 +520,9 @@ A response payload only comes in the form of a ByteBuffer</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore6CodingV"></a>
-                    <a name="//apple_ref/swift/Struct/Coding" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore6CodingV">Coding</a>
+                    <a name="/s:8SotoCore12CustomCodingV"></a>
+                    <a name="//apple_ref/swift/Struct/CustomCoding" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore12CustomCodingV">CustomCoding</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -556,16 +532,16 @@ A response payload only comes in the form of a ByteBuffer</p>
                       <div class="abstract">
                         <p>Property wrapper that applies a custom encoder and decoder to its wrapped value</p>
 
-                        <a href="Structs/Coding.html" class="slightly-smaller">See more</a>
+                        <a href="Structs/CustomCoding.html" class="slightly-smaller">See more</a>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@propertyWrapper</span>
-<span class="kd">public</span> <span class="kd">struct</span> <span class="kt">Coding</span><span class="o">&lt;</span><span class="kt">Coder</span><span class="o">&gt;</span> <span class="k">where</span> <span class="kt">Coder</span> <span class="p">:</span> <span class="kt"><a href="Protocols/CustomCoder.html">CustomCoder</a></span></code></pre>
-<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Coding</span><span class="p">:</span> <span class="kt">Decodable</span> <span class="k">where</span> <span class="kt">Coder</span><span class="p">:</span> <span class="kt"><a href="Protocols/CustomDecoder.html">CustomDecoder</a></span></code></pre>
-<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Coding</span><span class="p">:</span> <span class="kt">Encodable</span> <span class="k">where</span> <span class="kt">Coder</span><span class="p">:</span> <span class="kt"><a href="Protocols/CustomEncoder.html">CustomEncoder</a></span></code></pre>
+<span class="kd">public</span> <span class="kd">struct</span> <span class="kt">CustomCoding</span><span class="o">&lt;</span><span class="kt">Coder</span><span class="o">&gt;</span> <span class="k">where</span> <span class="kt">Coder</span> <span class="p">:</span> <span class="kt"><a href="Protocols/CustomCoder.html">CustomCoder</a></span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">CustomCoding</span><span class="p">:</span> <span class="kt">Decodable</span> <span class="k">where</span> <span class="kt">Coder</span><span class="p">:</span> <span class="kt"><a href="Protocols/CustomDecoder.html">CustomDecoder</a></span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">CustomCoding</span><span class="p">:</span> <span class="kt">Encodable</span> <span class="k">where</span> <span class="kt">Coder</span><span class="p">:</span> <span class="kt"><a href="Protocols/CustomEncoder.html">CustomEncoder</a></span></code></pre>
 
                         </div>
                       </div>
@@ -575,9 +551,9 @@ A response payload only comes in the form of a ByteBuffer</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore14OptionalCodingV"></a>
-                    <a name="//apple_ref/swift/Struct/OptionalCoding" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore14OptionalCodingV">OptionalCoding</a>
+                    <a name="/s:8SotoCore20OptionalCustomCodingV"></a>
+                    <a name="//apple_ref/swift/Struct/OptionalCustomCoding" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore20OptionalCustomCodingV">OptionalCustomCoding</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -587,17 +563,17 @@ A response payload only comes in the form of a ByteBuffer</p>
                       <div class="abstract">
                         <p>Property wrapper that applies a custom encoder and decoder to its wrapped optional value</p>
 
-                        <a href="Structs/OptionalCoding.html" class="slightly-smaller">See more</a>
+                        <a href="Structs/OptionalCustomCoding.html" class="slightly-smaller">See more</a>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@propertyWrapper</span>
-<span class="kd">public</span> <span class="kd">struct</span> <span class="kt">OptionalCoding</span><span class="o">&lt;</span><span class="kt">Coder</span><span class="o">&gt;</span> <span class="k">where</span> <span class="kt">Coder</span> <span class="p">:</span> <span class="kt"><a href="Protocols/CustomCoder.html">CustomCoder</a></span></code></pre>
-<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">OptionalCoding</span><span class="p">:</span> <span class="kt"><a href="Protocols/OptionalCodingWrapper.html">OptionalCodingWrapper</a></span></code></pre>
-<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">OptionalCoding</span><span class="p">:</span> <span class="kt">Decodable</span> <span class="k">where</span> <span class="kt">Coder</span><span class="p">:</span> <span class="kt"><a href="Protocols/CustomDecoder.html">CustomDecoder</a></span></code></pre>
-<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">OptionalCoding</span><span class="p">:</span> <span class="kt">Encodable</span> <span class="k">where</span> <span class="kt">Coder</span><span class="p">:</span> <span class="kt"><a href="Protocols/CustomEncoder.html">CustomEncoder</a></span></code></pre>
+<span class="kd">public</span> <span class="kd">struct</span> <span class="kt">OptionalCustomCoding</span><span class="o">&lt;</span><span class="kt">Coder</span><span class="o">&gt;</span> <span class="k">where</span> <span class="kt">Coder</span> <span class="p">:</span> <span class="kt"><a href="Protocols/CustomCoder.html">CustomCoder</a></span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">OptionalCustomCoding</span><span class="p">:</span> <span class="kt"><a href="Protocols/OptionalCustomCodingWrapper.html">OptionalCustomCodingWrapper</a></span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">OptionalCustomCoding</span><span class="p">:</span> <span class="kt">Decodable</span> <span class="k">where</span> <span class="kt">Coder</span><span class="p">:</span> <span class="kt"><a href="Protocols/CustomDecoder.html">CustomDecoder</a></span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">OptionalCustomCoding</span><span class="p">:</span> <span class="kt">Encodable</span> <span class="k">where</span> <span class="kt">Coder</span><span class="p">:</span> <span class="kt"><a href="Protocols/CustomEncoder.html">CustomEncoder</a></span></code></pre>
 
                         </div>
                       </div>
@@ -680,9 +656,9 @@ A response payload only comes in the form of a ByteBuffer</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore27DefaultArrayCoderPropertiesV"></a>
-                    <a name="//apple_ref/swift/Struct/DefaultArrayCoderProperties" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore27DefaultArrayCoderPropertiesV">DefaultArrayCoderProperties</a>
+                    <a name="/s:8SotoCore28StandardArrayCoderPropertiesV"></a>
+                    <a name="//apple_ref/swift/Struct/StandardArrayCoderProperties" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore28StandardArrayCoderPropertiesV">StandardArrayCoderProperties</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -692,13 +668,13 @@ A response payload only comes in the form of a ByteBuffer</p>
                       <div class="abstract">
                         <p>The most common array encoding property is an element name &ldquo;member&rdquo;</p>
 
-                        <a href="Structs/DefaultArrayCoderProperties.html" class="slightly-smaller">See more</a>
+                        <a href="Structs/StandardArrayCoderProperties.html" class="slightly-smaller">See more</a>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">DefaultArrayCoderProperties</span> <span class="p">:</span> <span class="kt"><a href="Protocols/ArrayCoderProperties.html">ArrayCoderProperties</a></span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">StandardArrayCoderProperties</span> <span class="p">:</span> <span class="kt"><a href="Protocols/ArrayCoderProperties.html">ArrayCoderProperties</a></span></code></pre>
 
                         </div>
                       </div>
@@ -708,9 +684,9 @@ A response payload only comes in the form of a ByteBuffer</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore32DefaultDictionaryCoderPropertiesV"></a>
-                    <a name="//apple_ref/swift/Struct/DefaultDictionaryCoderProperties" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore32DefaultDictionaryCoderPropertiesV">DefaultDictionaryCoderProperties</a>
+                    <a name="/s:8SotoCore33StandardDictionaryCoderPropertiesV"></a>
+                    <a name="//apple_ref/swift/Struct/StandardDictionaryCoderProperties" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore33StandardDictionaryCoderPropertiesV">StandardDictionaryCoderProperties</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -720,13 +696,13 @@ A response payload only comes in the form of a ByteBuffer</p>
                       <div class="abstract">
                         <p>The most common dictionary encoding properties are element name &ldquo;entry&rdquo;, key name &ldquo;key&rdquo;, value name &ldquo;value&rdquo;</p>
 
-                        <a href="Structs/DefaultDictionaryCoderProperties.html" class="slightly-smaller">See more</a>
+                        <a href="Structs/StandardDictionaryCoderProperties.html" class="slightly-smaller">See more</a>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">DefaultDictionaryCoderProperties</span> <span class="p">:</span> <span class="kt"><a href="Protocols/DictionaryCoderProperties.html">DictionaryCoderProperties</a></span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">StandardDictionaryCoderProperties</span> <span class="p">:</span> <span class="kt"><a href="Protocols/DictionaryCoderProperties.html">DictionaryCoderProperties</a></span></code></pre>
 
                         </div>
                       </div>
@@ -749,9 +725,9 @@ A response payload only comes in the form of a ByteBuffer</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore21ISO8601TimeStampCoderV"></a>
-                    <a name="//apple_ref/swift/Struct/ISO8601TimeStampCoder" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore21ISO8601TimeStampCoderV">ISO8601TimeStampCoder</a>
+                    <a name="/s:8SotoCore16ISO8601DateCoderV"></a>
+                    <a name="//apple_ref/swift/Struct/ISO8601DateCoder" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore16ISO8601DateCoderV">ISO8601DateCoder</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -761,13 +737,13 @@ A response payload only comes in the form of a ByteBuffer</p>
                       <div class="abstract">
                         <p>Date coder for ISO8601 format</p>
 
-                        <a href="Structs/ISO8601TimeStampCoder.html" class="slightly-smaller">See more</a>
+                        <a href="Structs/ISO8601DateCoder.html" class="slightly-smaller">See more</a>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">ISO8601TimeStampCoder</span> <span class="p">:</span> <span class="kt">TimeStampFormatCoder</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">ISO8601DateCoder</span> <span class="p">:</span> <span class="kt">DateFormatCoder</span></code></pre>
 
                         </div>
                       </div>
@@ -777,9 +753,9 @@ A response payload only comes in the form of a ByteBuffer</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore24HTTPHeaderTimeStampCoderV"></a>
-                    <a name="//apple_ref/swift/Struct/HTTPHeaderTimeStampCoder" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore24HTTPHeaderTimeStampCoderV">HTTPHeaderTimeStampCoder</a>
+                    <a name="/s:8SotoCore19HTTPHeaderDateCoderV"></a>
+                    <a name="//apple_ref/swift/Struct/HTTPHeaderDateCoder" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore19HTTPHeaderDateCoderV">HTTPHeaderDateCoder</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -789,13 +765,13 @@ A response payload only comes in the form of a ByteBuffer</p>
                       <div class="abstract">
                         <p>Date coder for HTTP header format</p>
 
-                        <a href="Structs/HTTPHeaderTimeStampCoder.html" class="slightly-smaller">See more</a>
+                        <a href="Structs/HTTPHeaderDateCoder.html" class="slightly-smaller">See more</a>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">HTTPHeaderTimeStampCoder</span> <span class="p">:</span> <span class="kt">TimeStampFormatCoder</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">HTTPHeaderDateCoder</span> <span class="p">:</span> <span class="kt">DateFormatCoder</span></code></pre>
 
                         </div>
                       </div>
@@ -805,9 +781,9 @@ A response payload only comes in the form of a ByteBuffer</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore23UnixEpochTimeStampCoderV"></a>
-                    <a name="//apple_ref/swift/Struct/UnixEpochTimeStampCoder" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore23UnixEpochTimeStampCoderV">UnixEpochTimeStampCoder</a>
+                    <a name="/s:8SotoCore18UnixEpochDateCoderV"></a>
+                    <a name="//apple_ref/swift/Struct/UnixEpochDateCoder" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore18UnixEpochDateCoderV">UnixEpochDateCoder</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -817,13 +793,41 @@ A response payload only comes in the form of a ByteBuffer</p>
                       <div class="abstract">
                         <p>Unix Epoch Date coder</p>
 
-                        <a href="Structs/UnixEpochTimeStampCoder.html" class="slightly-smaller">See more</a>
+                        <a href="Structs/UnixEpochDateCoder.html" class="slightly-smaller">See more</a>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">UnixEpochTimeStampCoder</span> <span class="p">:</span> <span class="kt"><a href="Protocols/CustomDecoder.html">CustomDecoder</a></span><span class="p">,</span> <span class="kt"><a href="Protocols/CustomEncoder.html">CustomEncoder</a></span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">UnixEpochDateCoder</span> <span class="p">:</span> <span class="kt"><a href="Protocols/CustomDecoder.html">CustomDecoder</a></span><span class="p">,</span> <span class="kt"><a href="Protocols/CustomEncoder.html">CustomEncoder</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore12QueryEncoderV"></a>
+                    <a name="//apple_ref/swift/Struct/QueryEncoder" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore12QueryEncoderV">QueryEncoder</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The wrapper struct for encoding Codable classes to Query dictionary</p>
+
+                        <a href="Structs/QueryEncoder.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">QueryEncoder</span></code></pre>
 
                         </div>
                       </div>

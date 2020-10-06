@@ -14,7 +14,10 @@
 
 import struct Foundation.CharacterSet
 import struct Foundation.Data
-import class Foundation.NSData
+import struct Foundation.Date
+import class Foundation.DateFormatter
+import struct Foundation.Locale
+import struct Foundation.TimeZone
 
 /// The wrapper struct for encoding Codable classes to Query dictionary
 public struct QueryEncoder {
@@ -377,6 +380,11 @@ extension _QueryEncoder: SingleValueEncodingContainer {
 }
 
 extension _QueryEncoder {
+    func box(_ date: Date) throws -> Any {
+        try encode(Self.dateFormatter.string(from: date))
+        return storage.popContainer()
+    }
+
     func box(_ data: Data) throws -> Any {
         try encode(data.base64EncodedString())
         return storage.popContainer()
@@ -384,13 +392,23 @@ extension _QueryEncoder {
 
     func box(_ value: Encodable) throws -> Any {
         let type = Swift.type(of: value)
-        if type == Data.self || type == NSData.self {
+        if type == Data.self {
             return try self.box(value as! Data)
+        } else if type == Date.self {
+            return try self.box(value as! Date)
         } else {
             try value.encode(to: self)
             return storage.popContainer()
         }
     }
+
+    static let dateFormatter: DateFormatter = {
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        return dateFormatter
+    }()
 }
 
 //===----------------------------------------------------------------------===//

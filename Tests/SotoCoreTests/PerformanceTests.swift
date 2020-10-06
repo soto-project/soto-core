@@ -31,14 +31,14 @@ struct HeaderRequest: AWSEncodableShape {
     let header1: String
     let header2: String
     let header3: String
-    let header4: TimeStamp
+    let header4: Date
 }
 
 struct StandardRequest: AWSEncodableShape {
     let item1: String
     let item2: Int
     let item3: Double
-    let item4: TimeStamp
+    let item4: Date
     let item5: [Int]
 }
 
@@ -56,14 +56,14 @@ struct MixedRequest: AWSEncodableShape {
     let item1: String
     let item2: Int
     let item3: Double
-    let item4: TimeStamp
+    let item4: Date
 }
 
 struct StandardResponse: AWSDecodableShape {
     let item1: String
     let item2: Int
     let item3: Double
-    let item4: TimeStamp
+    let item4: Date
     let item5: [Int]
 }
 
@@ -79,7 +79,7 @@ class PerformanceTests: XCTestCase {
             apiVersion: "1.0"
         )
         let date = Date()
-        let request = HeaderRequest(header1: "Header1", header2: "Header2", header3: "Header3", header4: TimeStamp(date))
+        let request = HeaderRequest(header1: "Header1", header2: "Header2", header3: "Header3", header4: date)
         measure {
             do {
                 for _ in 0..<1000 {
@@ -100,7 +100,7 @@ class PerformanceTests: XCTestCase {
             apiVersion: "1.0"
         )
         let date = Date()
-        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1, 2, 3, 4, 5])
+        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: date, item5: [1, 2, 3, 4, 5])
         measure {
             do {
                 for _ in 0..<1000 {
@@ -121,7 +121,7 @@ class PerformanceTests: XCTestCase {
             apiVersion: "1.0"
         )
         let date = Date()
-        let request = PayloadRequest(payload: StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1, 2, 3, 4, 5]))
+        let request = PayloadRequest(payload: StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: date, item5: [1, 2, 3, 4, 5]))
         measure {
             do {
                 for _ in 0..<1000 {
@@ -142,7 +142,7 @@ class PerformanceTests: XCTestCase {
             apiVersion: "1.0"
         )
         let date = Date()
-        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1, 2, 3, 4, 5])
+        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: date, item5: [1, 2, 3, 4, 5])
         measure {
             do {
                 for _ in 0..<1000 {
@@ -163,7 +163,7 @@ class PerformanceTests: XCTestCase {
             apiVersion: "1.0"
         )
         let date = Date()
-        let request = PayloadRequest(payload: StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1, 2, 3, 4, 5]))
+        let request = PayloadRequest(payload: StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: date, item5: [1, 2, 3, 4, 5]))
         measure {
             do {
                 for _ in 0..<1000 {
@@ -184,7 +184,7 @@ class PerformanceTests: XCTestCase {
             apiVersion: "1.0"
         )
         let date = Date()
-        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1, 2, 3, 4, 5])
+        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: date, item5: [1, 2, 3, 4, 5])
         measure {
             do {
                 for _ in 0..<1000 {
@@ -257,7 +257,7 @@ class PerformanceTests: XCTestCase {
             apiVersion: "1.0"
         )
         let date = Date()
-        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: TimeStamp(date), item5: [1, 2, 3, 4, 5])
+        let request = StandardRequest(item1: "item1", item2: 45, item3: 3.14, item4: date, item5: [1, 2, 3, 4, 5])
         let awsRequest = try! AWSRequest(operation: "Test", path: "/", httpMethod: .POST, input: request, configuration: config)
         let signer = AWSSigner(
             credentials: StaticCredential(accessKeyId: "", secretAccessKey: ""),
@@ -299,7 +299,7 @@ class PerformanceTests: XCTestCase {
     func testValidateJSONResponse() {
         guard Self.enableTimingTests == true else { return }
         var buffer = ByteBufferAllocator().buffer(capacity: 0)
-        buffer.writeString("{\"item1\":\"Hello\", \"item2\":5, \"item3\":3.14, \"item4\":\"2001-12-23T15:34:12.590Z\", \"item5\": [1,56,3,7]}")
+        buffer.writeString("{\"item1\":\"Hello\", \"item2\":5, \"item3\":3.14, \"item4\":3345984444, \"item5\": [1,56,3,7]}")
         let response = HTTPClient.Response(
             host: "localhost",
             status: .ok,

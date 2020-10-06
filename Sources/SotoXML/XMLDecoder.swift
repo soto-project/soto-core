@@ -15,8 +15,10 @@
 import struct Foundation.Data
 import struct Foundation.Date
 import class Foundation.DateFormatter
+import struct Foundation.Locale
 import class Foundation.NSNull
 import class Foundation.NSNumber
+import struct Foundation.TimeZone
 import struct Foundation.URL
 
 /// The wrapper class for decoding Codable classes from XMLNodes
@@ -604,6 +606,20 @@ private class _XMLDecoder: Decoder {
         return unboxValue
     }
 
+    fileprivate func unbox(_ element: XML.Node?, as type: Date.Type) throws -> Date {
+        guard let element = element else {
+            throw DecodingError.keyNotFound(codingPath.last!, DecodingError.Context(codingPath: codingPath, debugDescription: "Key not found"))
+        }
+
+        let string = try self.unbox(element, as: String.self)
+        for formatter in Self.dateFormatters {
+            if let date = formatter.date(from: string) {
+                return date
+            }
+        }
+        throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Date string does not match format expected"))
+    }
+
     /// get Data from XML.Node
     fileprivate func unbox(_ element: XML.Node?, as type: Data.Type) throws -> Data {
         guard let element = element else {
@@ -635,12 +651,27 @@ private class _XMLDecoder: Decoder {
     func unbox_(_ element: XML.Node?, as type: Decodable.Type) throws -> Any {
         if type == Data.self {
             return try self.unbox(element, as: Data.self)
+        } else if type == Date.self {
+            return try self.unbox(element, as: Date.self)
         } else {
             self.storage.push(container: element)
             defer { self.storage.popContainer() }
             return try type.init(from: self)
         }
     }
+
+    static let dateFormatters: [DateFormatter] = {
+        var dateFormatters: [DateFormatter] = []
+        let formats = ["yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", "yyyy-MM-dd'T'HH:mm:ss'Z'"]
+        for format in formats {
+            let dateFormatter = DateFormatter()
+            dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+            dateFormatter.dateFormat = format
+            dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+            dateFormatters.append(dateFormatter)
+        }
+        return dateFormatters
+    }()
 }
 
 //===----------------------------------------------------------------------===//

@@ -18,9 +18,9 @@ import struct Foundation.Locale
 import struct Foundation.TimeZone
 
 /// Time stamp object that can encoded to ISO8601 format and decoded from ISO8601, HTTP date format and UNIX epoch seconds
-public struct TimeStamp {
+public struct TimeStamp2 {
     public var stringValue: String {
-        return TimeStamp.string(from: dateValue)
+        return TimeStamp2.string(from: dateValue)
     }
 
     public let dateValue: Date
@@ -30,7 +30,7 @@ public struct TimeStamp {
     }
 
     public init?(_ string: String) {
-        guard let date = TimeStamp.date(from: string) else { return nil }
+        guard let date = TimeStamp2.date(from: string) else { return nil }
         self.dateValue = date
     }
 
@@ -81,15 +81,15 @@ public struct TimeStamp {
         return dateFormatters
     }
 
-    static var dateFormatters: [DateFormatter] = TimeStamp.createDateFormatters()
+    static var dateFormatters: [DateFormatter] = TimeStamp2.createDateFormatters()
 }
 
-extension TimeStamp: Codable {
+extension TimeStamp2: Codable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         if let value = try? container.decode(Double.self) {
             self.init(value)
-        } else if let value = try? container.decode(String.self), let date = TimeStamp.date(from: value) {
+        } else if let value = try? container.decode(String.self), let date = TimeStamp2.date(from: value) {
             self.init(date)
         } else if let date = try? container.decode(Date.self) {
             self.init(date)

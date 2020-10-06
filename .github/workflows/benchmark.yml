@@ -1,0 +1,58 @@
+name: Benchmark
+
+on:
+  pull_request:
+    branches:
+    - main
+  workflow_dispatch:
+
+jobs:
+  macos:
+    runs-on: macOS-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        repository: soto-project/soto-benchmark
+        path: soto-benchmark
+        fetch-depth: 1
+    - name: Benchmark
+      run: |
+        cd soto-benchmark
+        echo ${GITHUB_REF}
+        if [ -z ${GITHUB_REF} ]; then
+          swift package edit soto-core --branch ${GITHUB_REF}
+        else
+          swift package edit soto-core --revision ${GITHUB_SHA}
+        fi
+        swift run -c release
+
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        tag:
+          - swift:5.2
+          - swift:5.3
+    container:
+      image: ${{ matrix.tag }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        repository: soto-project/soto-benchmark
+        path: soto-benchmark
+        fetch-depth: 1
+    - name: Install dependencies
+      run: |
+        apt-get update -qq
+        apt-get install -q -y tzdata zlib1g-dev curl
+    - name: Benchmark
+      run: |
+        cd soto-benchmark
+        if [ -z ${GITHUB_REF} ]; then
+          swift package edit soto-core --branch ${GITHUB_REF}
+        else
+          swift package edit soto-core --revision ${GITHUB_SHA}
+        fi
+        swift run -c release

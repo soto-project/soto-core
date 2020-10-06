@@ -16,6 +16,8 @@ import struct Foundation.Data
 import struct Foundation.Date
 import class Foundation.DateFormatter
 import struct Foundation.URL
+import struct Foundation.Locale
+import struct Foundation.TimeZone
 
 /// The wrapper class for encoding Codable classes to XMLElements
 public struct XMLEncoder {
@@ -525,6 +527,10 @@ extension _XMLEncoder {
         return double.description
     }
 
+    func box(_ date: Date) throws -> XML.Element {
+        return XML.Element(name: currentKey, stringValue: Self.dateFormatter.string(from: date))
+    }
+
     func box(_ data: Data) throws -> XML.Element {
         switch self.options.dataEncodingStrategy {
         case .base64:
@@ -540,11 +546,21 @@ extension _XMLEncoder {
 
         if type == Data.self {
             return try self.box(value as! Data)
+        } else if type == Date.self {
+            return try self.box(value as! Date)
         } else {
             try value.encode(to: self)
             return storage.popContainer()
         }
     }
+    
+    static let dateFormatter: DateFormatter = {
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        return dateFormatter
+    }()
 }
 
 // MARK: - _XMLReferencingEncoder

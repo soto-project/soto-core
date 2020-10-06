@@ -19,7 +19,9 @@ import SotoXML
 internal extension AWSEncodableShape {
     /// Encode AWSShape as JSON
     func encodeAsJSON(byteBufferAllocator: ByteBufferAllocator) throws -> ByteBuffer {
-        return try JSONEncoder().encodeAsByteBuffer(self, allocator: byteBufferAllocator)
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .secondsSince1970
+        return try encoder.encodeAsByteBuffer(self, allocator: byteBufferAllocator)
     }
 
     /// Encode AWSShape as XML

@@ -15,11 +15,11 @@
 import struct Foundation.Data
 import struct Foundation.Date
 import class Foundation.DateFormatter
+import struct Foundation.Locale
 import class Foundation.NSNull
 import class Foundation.NSNumber
-import struct Foundation.URL
-import struct Foundation.Locale
 import struct Foundation.TimeZone
+import struct Foundation.URL
 
 /// The wrapper class for decoding Codable classes from XMLNodes
 public struct XMLDecoder {

@@ -37,20 +37,20 @@ class DictionaryDecoder {
     public enum DateDecodingStrategy {
         /// Defer to `Date` for decoding. This is the default strategy.
         case deferredToDate
-        
+
         /// Decode the `Date` as a UNIX timestamp from a JSON number.
         case secondsSince1970
-        
+
         /// Decode the `Date` as UNIX millisecond timestamp from a JSON number.
         case millisecondsSince1970
-        
+
         /// Decode the `Date` as a string parsed by the given formatter.
         case formatted(DateFormatter)
-        
+
         /// Decode the `Date` as a custom value decoded by the given closure.
         case custom((_ decoder: Decoder) throws -> Date)
     }
-    
+
     /// The strategy to use for decoding `Data` values.
     public enum DataDecodingStrategy {
         /// Decode the `Data` from a Base64-encoded string.
@@ -71,7 +71,7 @@ class DictionaryDecoder {
 
     /// The strategy to use in decoding dates. Defaults to `.deferredToDate`.
     open var dateDecodingStrategy: DateDecodingStrategy = .deferredToDate
-    
+
     /// The strategy to use in decoding binary data. Defaults to `.base64`.
     open var dataDecodingStrategy: DataDecodingStrategy = .base64
 
@@ -1289,29 +1289,29 @@ extension __DictionaryDecoder {
 
     fileprivate func unbox(_ value: Any, as type: Date.Type) throws -> Date? {
         guard !(value is NSNull) else { return nil }
-        
+
         switch self.options.dateDecodingStrategy {
         case .deferredToDate:
             self.storage.push(container: value)
             defer { self.storage.popContainer() }
             return try Date(from: self)
-            
+
         case .secondsSince1970:
             let double = try self.unbox(value, as: Double.self)!
             return Date(timeIntervalSince1970: double)
-            
+
         case .millisecondsSince1970:
             let double = try self.unbox(value, as: Double.self)!
             return Date(timeIntervalSince1970: double / 1000.0)
-            
+
         case .formatted(let formatter):
             let string = try self.unbox(value, as: String.self)!
             guard let date = formatter.date(from: string) else {
                 throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Date string does not match format expected by formatter."))
             }
-            
+
             return date
-            
+
         case .custom(let closure):
             self.storage.push(container: value)
             defer { self.storage.popContainer() }

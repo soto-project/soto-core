@@ -158,7 +158,6 @@ public struct AWSResponse {
 
         default:
             decoder.dateDecodingStrategy = .formatted(HTTPHeaderDateCoder.dateFormatters.first!)
-            break
         }
 
         // add header values to output dictionary, so they can be decoded into the response object

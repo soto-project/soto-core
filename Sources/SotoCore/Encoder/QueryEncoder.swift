@@ -401,7 +401,7 @@ extension _QueryEncoder {
             return storage.popContainer()
         }
     }
-    
+
     static let dateFormatter: DateFormatter = {
         let dateFormatter = DateFormatter()
         dateFormatter.locale = Locale(identifier: "en_US_POSIX")

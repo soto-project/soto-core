@@ -26,7 +26,7 @@ class TimeStampTests: XCTestCase {
         dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
         return dateFormatter
     }()
-    
+
     struct A: Codable {
         let date: Date
     }
@@ -55,7 +55,7 @@ class TimeStampTests: XCTestCase {
         XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", httpMethod: .GET, input: a, configuration: createServiceConfig()))
         XCTAssertEqual(request?.body.asString(), "{\"date\":23984978378}")
     }
-    
+
     func testDecodeXML() {
         do {
             struct A: AWSDecodableShape {
@@ -66,8 +66,8 @@ class TimeStampTests: XCTestCase {
             let response = AWSHTTPResponseImpl(status: .ok, headers: [:], body: byteBuffer)
             let awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml)
             let a: A = try awsResponse.generateOutputShape(operation: "TestOperation")
-            XCTAssertEqual(dateFormatter.string(from: a.date), "2017-01-01T00:01:00.000Z")
-            XCTAssertEqual(dateFormatter.string(from: a.date2), "2017-01-01T00:02:00.000Z")
+            XCTAssertEqual(self.dateFormatter.string(from: a.date), "2017-01-01T00:01:00.000Z")
+            XCTAssertEqual(self.dateFormatter.string(from: a.date2), "2017-01-01T00:02:00.000Z")
         } catch {
             XCTFail("\(error)")
         }
@@ -82,7 +82,7 @@ class TimeStampTests: XCTestCase {
         XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", httpMethod: .GET, input: a, configuration: createServiceConfig(serviceProtocol: .restxml)))
         XCTAssertEqual(request?.body.asString(), "<?xml version=\"1.0\" encoding=\"UTF-8\"?><A><date>2017-11-01T00:15:00.000Z</date></A>")
     }
-    
+
     func testEncodeQuery() {
         struct A: AWSEncodableShape {
             var date: Date
@@ -92,7 +92,7 @@ class TimeStampTests: XCTestCase {
         XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", httpMethod: .GET, input: a, configuration: createServiceConfig(serviceProtocol: .query)))
         XCTAssertEqual(request?.body.asString(), "Action=test&Version=01-01-2001&date=2017-11-01T00%3A15%3A00.000Z")
     }
-    
+
     func testDecodeHeader() {
         do {
             struct A: AWSDecodableShape {
@@ -105,7 +105,7 @@ class TimeStampTests: XCTestCase {
             let response = AWSHTTPResponseImpl(status: .ok, headers: ["Date": "Tue, 15 Nov 1994 12:45:27 GMT"], body: nil)
             let awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml)
             let a: A = try awsResponse.generateOutputShape(operation: "TestOperation")
-            XCTAssertEqual(dateFormatter.string(from: a.date), "1994-11-15T12:45:27.000Z")
+            XCTAssertEqual(self.dateFormatter.string(from: a.date), "1994-11-15T12:45:27.000Z")
         } catch {
             XCTFail("\(error)")
         }
@@ -120,7 +120,7 @@ class TimeStampTests: XCTestCase {
             let response = AWSHTTPResponseImpl(status: .ok, headers: [:], body: byteBuffer)
             let awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml)
             let a: A = try awsResponse.generateOutputShape(operation: "TestOperation")
-            XCTAssertEqual(dateFormatter.string(from: a.date), "2017-01-01T00:01:00.000Z")
+            XCTAssertEqual(self.dateFormatter.string(from: a.date), "2017-01-01T00:01:00.000Z")
         } catch {
             XCTFail("\(error)")
         }
@@ -135,7 +135,7 @@ class TimeStampTests: XCTestCase {
             let response = AWSHTTPResponseImpl(status: .ok, headers: [:], body: byteBuffer)
             let awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml)
             let a: A = try awsResponse.generateOutputShape(operation: "TestOperation")
-            XCTAssertEqual(dateFormatter.string(from: a.date), "2017-01-01T00:01:00.000Z")
+            XCTAssertEqual(self.dateFormatter.string(from: a.date), "2017-01-01T00:01:00.000Z")
         } catch {
             XCTFail("\(error)")
         }
@@ -151,7 +151,7 @@ class TimeStampTests: XCTestCase {
             let response = AWSHTTPResponseImpl(status: .ok, headers: [:], body: byteBuffer)
             let awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml)
             let a: A = try awsResponse.generateOutputShape(operation: "TestOperation")
-            XCTAssertEqual(dateFormatter.string(from: a.date), "1994-11-15T12:45:26.000Z")
+            XCTAssertEqual(self.dateFormatter.string(from: a.date), "1994-11-15T12:45:26.000Z")
         } catch {
             XCTFail("\(error)")
         }
@@ -167,7 +167,7 @@ class TimeStampTests: XCTestCase {
             let response = AWSHTTPResponseImpl(status: .ok, headers: [:], body: byteBuffer)
             let awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml)
             let a: A = try awsResponse.generateOutputShape(operation: "TestOperation")
-            XCTAssertEqual(dateFormatter.string(from: a.date), "2008-09-14T09:00:00.000Z")
+            XCTAssertEqual(self.dateFormatter.string(from: a.date), "2008-09-14T09:00:00.000Z")
         } catch {
             XCTFail("\(error)")
         }
@@ -179,7 +179,7 @@ class TimeStampTests: XCTestCase {
         }
         let a = A(date: dateFormatter.date(from: "2019-05-01T00:00:00.001Z")!)
         var request: AWSRequest?
-        XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", httpMethod: .GET, input: a, configuration: createServiceConfig(serviceProtocol:.restxml)))
+        XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", httpMethod: .GET, input: a, configuration: createServiceConfig(serviceProtocol: .restxml)))
         XCTAssertEqual(request?.body.asString(), "<?xml version=\"1.0\" encoding=\"UTF-8\"?><A><date>2019-05-01T00:00:00.001Z</date></A>")
     }
 
@@ -202,7 +202,7 @@ class TimeStampTests: XCTestCase {
         XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", httpMethod: .GET, input: a, configuration: createServiceConfig()))
         XCTAssertEqual(request?.body.asString(), "{\"date\":23983978378}")
     }
-    
+
     // MARK: Types used in tests
 
     struct AWSHTTPResponseImpl: AWSHTTPResponse {
@@ -225,5 +225,4 @@ class TimeStampTests: XCTestCase {
             self.init(status: status, headers: headers, body: body)
         }
     }
-
 }

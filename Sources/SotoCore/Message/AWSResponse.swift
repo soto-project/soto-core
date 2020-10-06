@@ -117,6 +117,7 @@ public struct AWSResponse {
                 if let payloadKey = payloadKey {
                     outputDict = [payloadKey: outputDict]
                 }
+                decoder.dateDecodingStrategy = .secondsSince1970
             }
         case .xml(let node):
             var outputNode = node
@@ -152,8 +153,11 @@ public struct AWSResponse {
             if let payloadKey = payloadKey {
                 outputDict[payloadKey] = payload
             }
+            // if body is raw or empty then assume any date to be decoded will be coming from headers
+            decoder.dateDecodingStrategy = .formatted(HTTPHeaderDateCoder.dateFormatters.first!)
 
         default:
+            decoder.dateDecodingStrategy = .formatted(HTTPHeaderDateCoder.dateFormatters.first!)
             break
         }
 

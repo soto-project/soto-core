@@ -207,8 +207,8 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         aws_secret_access_key = TESTPROFILE-AWSSECRETACCESSKEY
         """
         Environment.set("test-profile", for: "AWS_PROFILE")
-        defer { Environment.unset(name: "AWS_PROFILE")}
-        
+        defer { Environment.unset(name: "AWS_PROFILE") }
+
         let filename = "credentials"
         let filenameURL = URL(fileURLWithPath: filename)
         XCTAssertNoThrow(try Data(credentials.utf8).write(to: filenameURL))

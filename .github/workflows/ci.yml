@@ -3,10 +3,10 @@ name: CI
 on:
   push:
     branches:
-    - "*"
+    - main
   pull_request:
     branches:
-    - "*"
+    - main
 
 env:
   ENABLE_TIMING_TESTS: "false"

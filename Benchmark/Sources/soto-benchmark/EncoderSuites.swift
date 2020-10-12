@@ -1,24 +1,24 @@
-import SotoCore
-import SotoXML
 import Benchmark
 import Foundation
+import SotoCore
+import SotoXML
 
 protocol EncoderProtocol {
     associatedtype Output
     func encode<Input: Encodable>(_ type: Input) throws -> Output
 }
 
-extension XMLEncoder : EncoderProtocol {
+extension XMLEncoder: EncoderProtocol {
     typealias Output = XML.Element
     func encode<Input: Encodable>(_ value: Input) throws -> Output {
-        try encode(value, name: "BenchmarkTest")
+        try self.encode(value, name: "BenchmarkTest")
     }
 }
 
-extension QueryEncoder : EncoderProtocol {
+extension QueryEncoder: EncoderProtocol {
     typealias Output = String?
     func encode<Input: Encodable>(_ value: Input) throws -> Output {
-        try encode(value, name: "BenchmarkTest")
+        try self.encode(value, name: "BenchmarkTest")
     }
 }
 
@@ -49,17 +49,17 @@ func encoderSuite<E: EncoderProtocol>(for encoder: E, suite: BenchmarkSuite) {
     suite.benchmark("numbers") {
         _ = try encoder.encode(numbers)
     }
-    
+
     let strings = Strings(s: "Benchmark string", s2: "optional")
     suite.benchmark("strings") {
         _ = try encoder.encode(strings)
     }
-    
-    let arrays = Arrays(a1: [234,23,55,1], a2: ["Benchmark", "string"])
+
+    let arrays = Arrays(a1: [234, 23, 55, 1], a2: ["Benchmark", "string"])
     suite.benchmark("arrays") {
         _ = try encoder.encode(arrays)
     }
-    
+
     let dictionaries = Dictionaries(d: ["benchmark": 1, "tests": 2, "again": 6])
     suite.benchmark("dictionaries") {
         _ = try encoder.encode(dictionaries)
@@ -77,19 +77,19 @@ let xmlDecoderSuite = BenchmarkSuite(name: "XMLDecoder", settings: Iterations(10
     suite.benchmark("loadXML") {
         let result = try XML.Element(xmlString: xml)
     }
-    
+
     if let numbers = try? XML.Element(xmlString: #"<numbers><b>true</b><i>362222</i><f>3.14</f><d>2.777776</d></numbers>"#) {
         suite.benchmark("numbers") {
             _ = try XMLDecoder().decode(Numbers.self, from: numbers)
         }
     }
-    
+
     if let strings = try? XML.Element(xmlString: #"<strings><s>Benchmark testing XMLDecoder</s></strings>"#) {
         suite.benchmark("strings") {
             _ = try XMLDecoder().decode(Strings.self, from: strings)
         }
     }
-    
+
     if let arrays = try? XML.Element(xmlString: #"<strings><a1>23</a1><a1>89</a1><a1>28768234</a1><a2>test</a2></strings>"#) {
         suite.benchmark("arrays") {
             _ = try XMLDecoder().decode(Arrays.self, from: arrays)
@@ -101,4 +101,3 @@ let xmlDecoderSuite = BenchmarkSuite(name: "XMLDecoder", settings: Iterations(10
 let queryEncoderSuite = BenchmarkSuite(name: "QueryEncoder", settings: Iterations(10000), WarmupIterations(10)) { suite in
     encoderSuite(for: QueryEncoder(), suite: suite)
 }
-

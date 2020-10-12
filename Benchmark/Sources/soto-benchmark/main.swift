@@ -5,7 +5,7 @@ let suites = [
     queryEncoderSuite,
     xmlEncoderSuite,
     xmlDecoderSuite,
-    awsClientSuite
+    awsClientSuite,
 ]
 
 Benchmark.main(suites)

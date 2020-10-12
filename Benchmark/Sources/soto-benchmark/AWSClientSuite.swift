@@ -1,12 +1,12 @@
-import SotoCore
 import Benchmark
 import Dispatch
 import Foundation
 import NIO
+import SotoCore
 
 struct RequestThrowMiddleware: AWSServiceMiddleware {
     struct Error: Swift.Error {}
-    
+
     func chain(request: AWSRequest, context: AWSMiddlewareContext) throws -> AWSRequest {
         _ = request.body.asByteBuffer(byteBufferAllocator: ByteBufferAllocator())
         throw Error()
@@ -16,7 +16,7 @@ struct RequestThrowMiddleware: AWSServiceMiddleware {
 struct HeaderShape: AWSEncodableShape {
     static let _encoding: [AWSMemberEncoding] = [
         .init(label: "a", location: .header(locationName: "A")),
-        .init(label: "b", location: .header(locationName: "B"))
+        .init(label: "b", location: .header(locationName: "B")),
     ]
     let a: String
     let b: Int
@@ -25,7 +25,7 @@ struct HeaderShape: AWSEncodableShape {
 struct QueryShape: AWSEncodableShape {
     static let _encoding: [AWSMemberEncoding] = [
         .init(label: "a", location: .querystring(locationName: "A")),
-        .init(label: "b", location: .querystring(locationName: "B"))
+        .init(label: "b", location: .querystring(locationName: "B")),
     ]
     let a: String
     let b: Int
@@ -35,6 +35,7 @@ struct Shape1: AWSEncodableShape {
     let a: String
     let b: Int
 }
+
 struct Shape: AWSEncodableShape {
     let a: String
     let b: Int
@@ -63,19 +64,19 @@ let awsClientSuite = BenchmarkSuite(name: "AWSClient", settings: Iterations(1000
     suite.benchmark("empty-request") {
         try? client.execute(operation: "TestOperation", path: "/", httpMethod: .GET, serviceConfig: jsonService).wait()
     }
-    
-    let headerInput = HeaderShape(a: "TestString", b: 345348)
+
+    let headerInput = HeaderShape(a: "TestString", b: 345_348)
     suite.benchmark("header-request") {
         try? client.execute(operation: "TestOperation", path: "/", httpMethod: .GET, serviceConfig: jsonService, input: headerInput).wait()
     }
-    
-    let queryInput = QueryShape(a: "TestString", b: 345348)
+
+    let queryInput = QueryShape(a: "TestString", b: 345_348)
     suite.benchmark("querystring-request") {
         try? client.execute(operation: "TestOperation", path: "/", httpMethod: .GET, serviceConfig: jsonService, input: queryInput).wait()
     }
-    
+
     // test json, xml and query generation timing
-    let input = Shape(a: "TestString", b: 345348, c: ["one", "two", "three"], d: ["one":1, "two":2, "three":3])
+    let input = Shape(a: "TestString", b: 345_348, c: ["one", "two", "three"], d: ["one": 1, "two": 2, "three": 3])
     suite.benchmark("json-request") {
         try? client.execute(operation: "TestOperation", path: "/", httpMethod: .GET, serviceConfig: jsonService, input: input).wait()
     }

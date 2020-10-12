@@ -91,8 +91,8 @@ extension AWSClient {
         logger: Logger = AWSClient.loggingDisabled,
         onPage: @escaping (Output, EventLoop) -> EventLoopFuture<Bool>
     ) -> EventLoopFuture<Void> {
-        paginate(input: input, initialValue: (), command: command, tokenKey: tokenKey, on: eventLoop, logger: logger) { _, output, eventLoop in
-            return onPage(output, eventLoop).map { rt in (rt, ())}
+        self.paginate(input: input, initialValue: (), command: command, tokenKey: tokenKey, on: eventLoop, logger: logger) { _, output, eventLoop in
+            return onPage(output, eventLoop).map { rt in (rt, ()) }
         }
     }
 
@@ -169,8 +169,8 @@ extension AWSClient {
         logger: Logger = AWSClient.loggingDisabled,
         onPage: @escaping (Output, EventLoop) -> EventLoopFuture<Bool>
     ) -> EventLoopFuture<Void> {
-        paginate(input: input, initialValue: (), command: command, tokenKey: tokenKey, moreResultsKey: moreResultsKey, on: eventLoop, logger: logger) { _, output, eventLoop in
-            return onPage(output, eventLoop).map { rt in (rt, ())}
+        self.paginate(input: input, initialValue: (), command: command, tokenKey: tokenKey, moreResultsKey: moreResultsKey, on: eventLoop, logger: logger) { _, output, eventLoop in
+            return onPage(output, eventLoop).map { rt in (rt, ()) }
         }
     }
 
@@ -247,9 +247,8 @@ extension AWSClient {
         logger: Logger = AWSClient.loggingDisabled,
         onPage: @escaping (Output, EventLoop) -> EventLoopFuture<Bool>
     ) -> EventLoopFuture<Void> {
-        paginate(input: input, initialValue: (), command: command, tokenKey: tokenKey, moreResultsKey: moreResultsKey, on: eventLoop, logger: logger) { _, output, eventLoop in
-            return onPage(output, eventLoop).map { rt in (rt, ())}
+        self.paginate(input: input, initialValue: (), command: command, tokenKey: tokenKey, moreResultsKey: moreResultsKey, on: eventLoop, logger: logger) { _, output, eventLoop in
+            return onPage(output, eventLoop).map { rt in (rt, ()) }
         }
     }
 }
-

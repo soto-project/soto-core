@@ -40,8 +40,8 @@ jobs:
         fetch-depth: 1
     - name: Xcodebuild
       run: |
-        xcodebuild -scheme soto-core -quiet -destination 'platform=iOS Simulator,name=iPhone 11'
-        xcodebuild test -scheme soto-core -destination 'platform=iOS Simulator,name=iPhone 11'
+        xcodebuild -scheme soto-core-Package -quiet -destination 'platform=iOS Simulator,name=iPhone 11'
+        xcodebuild test -scheme soto-core-Package -destination 'platform=iOS Simulator,name=iPhone 11'
 
   linux:
     runs-on: ubuntu-latest

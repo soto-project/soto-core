@@ -16,7 +16,7 @@ import NIO
 import NIOFoundationCompat
 import NIOHTTP1
 import NIOTestUtils
-@testable import SotoCore
+import SotoCore
 import SotoXML
 import XCTest
 
@@ -220,6 +220,11 @@ extension AWSTestServer {
 
     /// fake ec2 metadata server
     public func ec2MetadataServer(version: IMDSVersion, metaData: EC2InstanceMetaData? = nil) throws {
+        struct InstanceMetaData {
+            static let CredentialUri = "/latest/meta-data/iam/security-credentials/"
+            static let TokenUri = "/latest/api/token"
+            static let TokenHeaderName = "X-aws-ec2-metadata-token"
+        }
         let ec2Role = "ec2-testserver-role"
         let token = "345-34hj-345jk-4875"
         let metaData = metaData ?? EC2InstanceMetaData.default
@@ -230,7 +235,7 @@ extension AWSTestServer {
 
         try self.processRaw { request in
             switch (request.method, request.uri) {
-            case (.PUT, InstanceMetaDataClient.TokenUri):
+            case (.PUT, InstanceMetaData.TokenUri):
                 // Token access
                 switch version {
                 case .v1:
@@ -242,9 +247,9 @@ extension AWSTestServer {
                     return .result(.init(httpStatus: .ok, headers: headers, body: responseBody), continueProcessing: true)
                 }
 
-            case (.GET, InstanceMetaDataClient.CredentialUri):
+            case (.GET, InstanceMetaData.CredentialUri):
                 // Role name
-                guard version == .v1 || request.headers[InstanceMetaDataClient.TokenHeaderName] == token else {
+                guard version == .v1 || request.headers[InstanceMetaData.TokenHeaderName] == token else {
                     return .error(.badRequest, continueProcessing: false)
                 }
                 var responseBody = byteBufferAllocator.buffer(capacity: ec2Role.utf8.count)
@@ -252,7 +257,7 @@ extension AWSTestServer {
                 let headers: [String: String] = [:]
                 return .result(.init(httpStatus: .ok, headers: headers, body: responseBody), continueProcessing: true)
 
-            case (.GET, InstanceMetaDataClient.CredentialUri + ec2Role):
+            case (.GET, InstanceMetaData.CredentialUri + ec2Role):
                 // credentials
                 let encoder = JSONEncoder()
                 encoder.dateEncodingStrategy = .formatted(dateFormatter)

@@ -14,7 +14,7 @@
 
 import Foundation
 import Logging
-@testable import SotoCore
+import SotoCore
 
 @propertyWrapper public struct EnvironmentVariable<Value: LosslessStringConvertible> {
     var defaultValue: Value

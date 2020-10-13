@@ -145,6 +145,13 @@ class PaginateTests: XCTestCase {
         let moreResults: Bool?
     }
 
+    // conform to Encodable so server can encode these
+    struct StringList2Output: AWSDecodableShape, Encodable {
+        let array: [String]
+        let outputToken: String?
+        let moreResults: Bool
+    }
+
     func stringList(_ input: StringListInput, on eventLoop: EventLoop? = nil, logger: Logger) -> EventLoopFuture<StringListOutput> {
         return self.client.execute(
             operation: "TestOperation",
@@ -169,6 +176,31 @@ class PaginateTests: XCTestCase {
         )
     }
 
+    func stringList2(_ input: StringListInput, on eventLoop: EventLoop? = nil, logger: Logger) -> EventLoopFuture<StringList2Output> {
+        return self.client.execute(
+            operation: "TestOperation",
+            path: "/",
+            httpMethod: .POST,
+            serviceConfig: self.config,
+            input: input,
+            on: eventLoop,
+            logger: logger
+        )
+    }
+
+    func stringListPaginator<Result>(_ input: StringListInput, _ initialValue: Result, on eventLoop: EventLoop? = nil, onPage: @escaping (Result, StringList2Output, EventLoop) -> EventLoopFuture<(Bool, Result)>) -> EventLoopFuture<Result> {
+        return self.client.paginate(
+            input: input,
+            initialValue: initialValue,
+            command: self.stringList2,
+            tokenKey: \StringList2Output.outputToken,
+            moreResultsKey: \StringList2Output.moreResults,
+            on: eventLoop,
+            logger: TestEnvironment.logger,
+            onPage: onPage
+        )
+    }
+
     // create list of unique strings
     let stringList = Set("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.".split(separator: " ").map { String($0) }).map { $0 }
 
@@ -185,7 +217,7 @@ class PaginateTests: XCTestCase {
             array.append(self.stringList[i])
         }
         var outputToken: String?
-        var moreResults: Bool?
+        var moreResults: Bool = false
         var continueProcessing = false
         if endIndex < self.stringList.count {
             outputToken = self.stringList[endIndex]
@@ -212,6 +244,28 @@ class PaginateTests: XCTestCase {
         // wait for response
         XCTAssertNoThrow(try future.wait())
 
+        // verify contents of array
+        XCTAssertEqual(finalArray.count, self.stringList.count)
+        for i in 0..<finalArray.count {
+            XCTAssertEqual(finalArray[i], self.stringList[i])
+        }
+    }
+
+    func testStringTokenReducePaginate() throws {
+        // paginate input
+        let input = StringListInput(inputToken: nil, pageSize: 5)
+        let future = self.stringListPaginator(input, []) { current, result, eventloop in
+            // collate results into array
+            return eventloop.makeSucceededFuture((true, current + result.array))
+        }
+
+        // aws server process
+        XCTAssertNoThrow(try self.awsServer.process(self.stringListServerProcess))
+
+        // wait for response
+        var array: [String]?
+        XCTAssertNoThrow(array = try future.wait())
+        let finalArray = try XCTUnwrap(array)
         // verify contents of array
         XCTAssertEqual(finalArray.count, self.stringList.count)
         for i in 0..<finalArray.count {

@@ -31,7 +31,7 @@ public final class AWSServiceConfig {
     /// The url to use in requests
     public let endpoint: String
     /// An array of the possible error types returned by the service
-    public let possibleErrorTypes: [AWSErrorType.Type]
+    public let errorType: AWSErrorType.Type?
     /// Middleware code specific to the service used to edit requests before they sent and responses before they are decoded
     public let middlewares: [AWSServiceMiddleware]
     /// timeout value for HTTP requests
@@ -70,7 +70,7 @@ public final class AWSServiceConfig {
         endpoint: String? = nil,
         serviceEndpoints: [String: String] = [:],
         partitionEndpoints: [AWSPartition: (endpoint: String, region: Region)] = [:],
-        possibleErrorTypes: [AWSErrorType.Type] = [],
+        errorType: AWSErrorType.Type? = nil,
         middlewares: [AWSServiceMiddleware] = [],
         timeout: TimeAmount? = nil,
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
@@ -93,7 +93,7 @@ public final class AWSServiceConfig {
         self.signingName = signingName ?? service
         self.amzTarget = amzTarget
         self.serviceProtocol = serviceProtocol
-        self.possibleErrorTypes = possibleErrorTypes
+        self.errorType = errorType
         self.middlewares = middlewares
         self.timeout = timeout ?? .seconds(20)
         self.byteBufferAllocator = byteBufferAllocator
@@ -130,7 +130,7 @@ public final class AWSServiceConfig {
             serviceProtocol: self.serviceProtocol,
             apiVersion: self.apiVersion,
             endpoint: self.endpoint,
-            possibleErrorTypes: self.possibleErrorTypes,
+            errorType: self.errorType,
             middlewares: self.middlewares + patch.middlewares,
             timeout: patch.timeout ?? self.timeout,
             byteBufferAllocator: patch.byteBufferAllocator ?? self.byteBufferAllocator,
@@ -179,7 +179,7 @@ public final class AWSServiceConfig {
         serviceProtocol: ServiceProtocol,
         apiVersion: String,
         endpoint: String,
-        possibleErrorTypes: [AWSErrorType.Type],
+        errorType: AWSErrorType.Type?,
         middlewares: [AWSServiceMiddleware],
         timeout: TimeAmount,
         byteBufferAllocator: ByteBufferAllocator,
@@ -192,7 +192,7 @@ public final class AWSServiceConfig {
         self.serviceProtocol = serviceProtocol
         self.apiVersion = apiVersion
         self.endpoint = endpoint
-        self.possibleErrorTypes = possibleErrorTypes
+        self.errorType = errorType
         self.middlewares = middlewares
         self.timeout = timeout
         self.byteBufferAllocator = byteBufferAllocator

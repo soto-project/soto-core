@@ -16,8 +16,11 @@ import NIOHTTP1
 
 /// Standard Error type returned by Soto. Initialized with error code and message. Must provide an implementation of var description : String
 public protocol AWSErrorType: Error, CustomStringConvertible {
+    /// initialize error
     init?(errorCode: String, context: AWSErrorContext)
+    /// Error code return by AWS
     var errorCode: String { get }
+    /// additional context information related to the error
     var context: AWSErrorContext? { get }
 }
 

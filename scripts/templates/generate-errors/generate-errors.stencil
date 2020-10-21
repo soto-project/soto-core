@@ -22,6 +22,7 @@ public struct {{name}}: AWSErrorType {
         case {{error.enum}} = "{{error.name}}"
 {%endfor %}
     }
+
     private let error: Code
     public let context: AWSErrorContext?
 
@@ -36,18 +37,18 @@ public struct {{name}}: AWSErrorType {
         self.error = error
         self.context = context
     }
-    
+
     internal init(_ error: Code, context: AWSErrorContext? = nil) {
         self.error = error
         self.context = context
     }
 
     /// return error code string
-    public var errorCode: String { error.rawValue }
+    public var errorCode: String { self.error.rawValue }
 
 {%for error in errors %}
     // {{error.description}}
-    public static var {{error.enum}}:{{name}} { .init(.{{error.enum}}) }
+    public static var {{error.enum}}: {{name}} { .init(.{{error.enum}}) }
 {%endfor %}
 }
 
@@ -57,8 +58,8 @@ extension {{name}}: Equatable {
     }
 }
 
-extension {{name}} : CustomStringConvertible {
+extension {{name}}: CustomStringConvertible {
     public var description: String {
-        return "\(error.rawValue): \(message ?? "")"
+        return "\(self.error.rawValue): \(message ?? "")"
     }
 }

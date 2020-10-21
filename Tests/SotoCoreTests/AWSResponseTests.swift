@@ -387,7 +387,7 @@ class AWSResponseTests: XCTestCase {
             self.context = context
         }
 
-        public var errorCode: String { error.rawValue }
+        public var errorCode: String { self.error.rawValue }
 
         public static var resourceNotFoundException: ServiceErrorType { .init(.resourceNotFoundException) }
         public static var noSuchKey: ServiceErrorType { .init(.noSuchKey) }
@@ -398,7 +398,7 @@ class AWSResponseTests: XCTestCase {
         }
 
         public var description: String {
-            return "\(error.rawValue): \(message ?? "")"
+            return "\(self.error.rawValue): \(message ?? "")"
         }
     }
 }

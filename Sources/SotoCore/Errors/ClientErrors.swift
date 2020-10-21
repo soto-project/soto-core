@@ -34,6 +34,7 @@ public struct AWSClientError: AWSErrorType {
         case throttling = "Throttling"
         case validationError = "ValidationError"
     }
+
     private let error: Code
     public let context: AWSErrorContext?
 
@@ -48,45 +49,45 @@ public struct AWSClientError: AWSErrorType {
         self.error = error
         self.context = context
     }
-    
+
     internal init(_ error: Code, context: AWSErrorContext? = nil) {
         self.error = error
         self.context = context
     }
 
     /// return error code string
-    public var errorCode: String { error.rawValue }
+    public var errorCode: String { self.error.rawValue }
 
     // Access has been denied.
-    public static var accessDenied:AWSClientError { .init(.accessDenied) }
+    public static var accessDenied: AWSClientError { .init(.accessDenied) }
     // The request signature does not conform to AWS standards.
-    public static var incompleteSignature:AWSClientError { .init(.incompleteSignature) }
+    public static var incompleteSignature: AWSClientError { .init(.incompleteSignature) }
     // The action or operation requested is not valid. Verify that the action is typed correctly.
-    public static var invalidAction:AWSClientError { .init(.invalidAction) }
+    public static var invalidAction: AWSClientError { .init(.invalidAction) }
     // The X.509 certificate or AWS access key ID provided does not exist in our records.
-    public static var invalidClientTokenId:AWSClientError { .init(.invalidClientTokenId) }
+    public static var invalidClientTokenId: AWSClientError { .init(.invalidClientTokenId) }
     // Indicates an incorrect combination of parameters, or a missing parameter. For example, trying to terminate an instance without specifying the instance ID.
-    public static var invalidParameterCombination:AWSClientError { .init(.invalidParameterCombination) }
+    public static var invalidParameterCombination: AWSClientError { .init(.invalidParameterCombination) }
     // A value specified in a parameter is not valid, is unsupported, or cannot be used. Ensure that you specify a resource by using its full ID. The returned message provides an explanation of the error value.
-    public static var invalidParameterValue:AWSClientError { .init(.invalidParameterValue) }
+    public static var invalidParameterValue: AWSClientError { .init(.invalidParameterValue) }
     // The AWS query string is malformed or does not adhere to AWS standards.
-    public static var invalidQueryParameter:AWSClientError { .init(.invalidQueryParameter) }
+    public static var invalidQueryParameter: AWSClientError { .init(.invalidQueryParameter) }
     // The query string contains a syntax error.
-    public static var malformedQueryString:AWSClientError { .init(.malformedQueryString) }
+    public static var malformedQueryString: AWSClientError { .init(.malformedQueryString) }
     // The request is missing an action or a required parameter.
-    public static var missingAction:AWSClientError { .init(.missingAction) }
+    public static var missingAction: AWSClientError { .init(.missingAction) }
     // The request must contain either a valid (registered) AWS access key ID or X.509 certificate.
-    public static var missingAuthenticationToken:AWSClientError { .init(.missingAuthenticationToken) }
+    public static var missingAuthenticationToken: AWSClientError { .init(.missingAuthenticationToken) }
     // The request is missing a required parameter. Ensure that you have supplied all the required parameters for the request; for example, the resource ID.
-    public static var missingParameter:AWSClientError { .init(.missingParameter) }
+    public static var missingParameter: AWSClientError { .init(.missingParameter) }
     // You are not authorized to use the requested service. Ensure that you have subscribed to the service you are trying to use. If you are new to AWS, your account might take some time to be activated while your credit card details are being verified.
-    public static var optInRequired:AWSClientError { .init(.optInRequired) }
+    public static var optInRequired: AWSClientError { .init(.optInRequired) }
     // The request reached the service more than 15 minutes after the date stamp on the request or more than 15 minutes after the request expiration date (such as for pre-signed URLs), or the date stamp on the request is more than 15 minutes in the future. If you're using temporary security credentials, this error can also occur if the credentials have expired. For more information, see Temporary Security Credentials in the IAM User Guide.
-    public static var requestExpired:AWSClientError { .init(.requestExpired) }
+    public static var requestExpired: AWSClientError { .init(.requestExpired) }
     // The request was denied due to request throttling.
-    public static var throttling:AWSClientError { .init(.throttling) }
+    public static var throttling: AWSClientError { .init(.throttling) }
     // The input fails to satisfy the constraints specified by an AWS service.
-    public static var validationError:AWSClientError { .init(.validationError) }
+    public static var validationError: AWSClientError { .init(.validationError) }
 }
 
 extension AWSClientError: Equatable {
@@ -95,8 +96,8 @@ extension AWSClientError: Equatable {
     }
 }
 
-extension AWSClientError : CustomStringConvertible {
+extension AWSClientError: CustomStringConvertible {
     public var description: String {
-        return "\(error.rawValue): \(message ?? "")"
+        return "\(self.error.rawValue): \(message ?? "")"
     }
 }

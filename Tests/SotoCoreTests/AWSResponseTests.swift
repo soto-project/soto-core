@@ -210,7 +210,7 @@ class AWSResponseTests: XCTestCase {
             headers: HTTPHeaders(),
             bodyData: "{\"__type\":\"ResourceNotFoundException\", \"message\": \"Donald Where's Your Troosers?\"}".data(using: .utf8)!
         )
-        let service = createServiceConfig(serviceProtocol: .json(version: "1.1"), possibleErrorTypes: [ServiceErrorType.self])
+        let service = createServiceConfig(serviceProtocol: .json(version: "1.1"), errorType: ServiceErrorType.self)
 
         var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .json(version: "1.1"), raw: false))
@@ -226,7 +226,7 @@ class AWSResponseTests: XCTestCase {
             headers: HTTPHeaders(),
             bodyData: "{\"__type\":\"ResourceNotFoundException\", \"Message\": \"Donald Where's Your Troosers?\"}".data(using: .utf8)!
         )
-        let service = createServiceConfig(serviceProtocol: .json(version: "1.1"), possibleErrorTypes: [ServiceErrorType.self])
+        let service = createServiceConfig(serviceProtocol: .json(version: "1.1"), errorType: ServiceErrorType.self)
 
         var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .json(version: "1.1"), raw: false))
@@ -242,7 +242,7 @@ class AWSResponseTests: XCTestCase {
             headers: ["x-amzn-errortype": "ResourceNotFoundException"],
             bodyData: Data("{\"message\": \"Donald Where's Your Troosers?\"}".utf8)
         )
-        let service = createServiceConfig(serviceProtocol: .restjson, possibleErrorTypes: [ServiceErrorType.self])
+        let service = createServiceConfig(serviceProtocol: .restjson, errorType: ServiceErrorType.self)
 
         var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .restjson, raw: false))
@@ -258,7 +258,7 @@ class AWSResponseTests: XCTestCase {
             headers: ["x-amzn-errortype": "ResourceNotFoundException"],
             bodyData: Data("{\"Message\": \"Donald Where's Your Troosers?\"}".utf8)
         )
-        let service = createServiceConfig(serviceProtocol: .restjson, possibleErrorTypes: [ServiceErrorType.self])
+        let service = createServiceConfig(serviceProtocol: .restjson, errorType: ServiceErrorType.self)
 
         var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .restjson, raw: false))
@@ -274,7 +274,7 @@ class AWSResponseTests: XCTestCase {
             headers: HTTPHeaders(),
             bodyData: "<Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message></Error>".data(using: .utf8)!
         )
-        let service = createServiceConfig(serviceProtocol: .restxml, possibleErrorTypes: [ServiceErrorType.self])
+        let service = createServiceConfig(serviceProtocol: .restxml, errorType: ServiceErrorType.self)
 
         var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml, raw: false))
@@ -290,7 +290,7 @@ class AWSResponseTests: XCTestCase {
             headers: HTTPHeaders(),
             bodyData: "<ErrorResponse><Error><Code>MessageRejected</Code><Message>Don't like it</Message></Error></ErrorResponse>".data(using: .utf8)!
         )
-        let queryService = createServiceConfig(serviceProtocol: .query, possibleErrorTypes: [ServiceErrorType.self])
+        let queryService = createServiceConfig(serviceProtocol: .query, errorType: ServiceErrorType.self)
 
         var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .query, raw: false))

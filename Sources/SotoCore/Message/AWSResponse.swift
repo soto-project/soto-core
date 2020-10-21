@@ -239,10 +239,10 @@ public struct AWSResponse {
             let context = AWSErrorContext(
                 message: errorMessage.message,
                 responseCode: self.status,
-                headers: .init(headers.map{ ($0.key, String(describing: $0.value)) })
+                headers: .init(headers.map { ($0.key, String(describing: $0.value)) })
             )
 
-            for errorType in serviceConfig.possibleErrorTypes {
+            if let errorType = serviceConfig.errorType {
                 if let error = errorType.init(errorCode: code, context: context) {
                     return error
                 }

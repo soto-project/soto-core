@@ -237,19 +237,19 @@ public struct AWSResponse {
             ])
 
             for errorType in serviceConfig.possibleErrorTypes {
-                if let error = errorType.init(errorCode: code, message: errorMessage.message) {
+                if let error = errorType.init(errorCode: code, message: errorMessage.message, statusCode: self.status, requestId: nil) {
                     return error
                 }
             }
-            if let error = AWSClientError(errorCode: code, message: errorMessage.message) {
+            if let error = AWSClientError(errorCode: code, message: errorMessage.message, statusCode: self.status, requestId: nil) {
                 return error
             }
 
-            if let error = AWSServerError(errorCode: code, message: errorMessage.message) {
+            if let error = AWSServerError(errorCode: code, message: errorMessage.message, statusCode: self.status, requestId: nil) {
                 return error
             }
 
-            return AWSResponseError(errorCode: code, message: errorMessage.message)
+            return AWSResponseError(errorCode: code, message: errorMessage.message, statusCode: self.status, requestId: nil)
         }
 
         return nil

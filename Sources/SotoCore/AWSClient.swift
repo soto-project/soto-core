@@ -517,7 +517,7 @@ extension AWSClient {
             if var body = response.body {
                 rawBodyString = body.readString(length: body.readableBytes)
             }
-            return AWSError(statusCode: response.status, message: "Unhandled Error", rawBody: rawBodyString)
+            return AWSError(message: "Unhandled Error", statusCode: response.status, rawBody: rawBodyString, requestId: nil)
         }
     }
 }

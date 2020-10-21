@@ -16,7 +16,7 @@ import NIOHTTP1
 
 /// Standard Error type returned by Soto. Initialized with error code and message. Must provide an implementation of var description : String
 public protocol AWSErrorType: Error, CustomStringConvertible {
-    init?(errorCode: String, message: String?)
+    init?(errorCode: String, message: String?, statusCode: HTTPResponseStatus?, requestId: String?)
 }
 
 extension AWSErrorType {
@@ -25,14 +25,18 @@ extension AWSErrorType {
     }
 }
 
-/// Standard Response Error type returned by Soto. If the error is unrecognised then this is returned
+/// Standard Response Error type returned by Soto. If the error code is unrecognised then this is returned
 public struct AWSResponseError: AWSErrorType {
     public let errorCode: String
     public let message: String?
+    public let statusCode: HTTPResponseStatus?
+    public let requestId: String?
 
-    public init(errorCode: String, message: String?) {
+    public init(errorCode: String, message: String?, statusCode: HTTPResponseStatus?, requestId: String?) {
         self.errorCode = errorCode
         self.message = message
+        self.statusCode = statusCode
+        self.requestId = requestId
     }
 
     public var description: String {
@@ -40,16 +44,18 @@ public struct AWSResponseError: AWSErrorType {
     }
 }
 
-/// Unrecognised error. Used when we cannot recognise the error code from the AWS response
+/// Unrecognised error. Used when we cannot extract an error code from the AWS response
 public struct AWSError: Error, CustomStringConvertible {
     public let message: String
-    public let rawBody: String?
     public let statusCode: HTTPResponseStatus
+    public let rawBody: String?
+    public let requestId: String?
 
-    init(statusCode: HTTPResponseStatus, message: String, rawBody: String?) {
+    init(message: String, statusCode: HTTPResponseStatus, rawBody: String?, requestId: String?) {
         self.statusCode = statusCode
         self.message = message
         self.rawBody = rawBody
+        self.requestId = requestId
     }
 
     public var description: String {

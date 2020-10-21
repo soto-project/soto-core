@@ -358,7 +358,7 @@ class AWSResponseTests: XCTestCase {
         case noSuchKey(message: String?)
         case messageRejected(message: String?)
 
-        init?(errorCode: String, message: String?) {
+        init?(errorCode: String, message: String?, statusCode: HTTPResponseStatus?, requestId: String?) {
             switch errorCode {
             case "ResourceNotFoundException":
                 self = .resourceNotFoundException(message: message)

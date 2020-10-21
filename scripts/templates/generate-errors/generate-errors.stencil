@@ -22,12 +22,11 @@ public struct {{name}}: AWSErrorType {
         case {{error.enum}} = "{{error.name}}"
 {%endfor %}
     }
-    private var error: Code
-    public var message: String?
-    public var statusCode: HTTPResponseStatus?
-    public var requestId: String?
+    private let error: Code
+    public let context: AWSErrorContext?
 
-    public init?(errorCode: String, message: String?, statusCode: HTTPResponseStatus? = nil, requestId: String? = nil) {
+    /// initialize {{name}}
+    public init?(errorCode: String, context: AWSErrorContext) {
         var errorCode = errorCode
         // remove "Exception" suffix
         if errorCode.hasSuffix("Exception") {
@@ -35,17 +34,16 @@ public struct {{name}}: AWSErrorType {
         }
         guard let error = Code(rawValue: errorCode) else { return nil }
         self.error = error
-        self.message = message
-        self.statusCode = statusCode
-        self.requestId = nil
+        self.context = context
     }
     
-    internal init(_ error: Code) {
+    internal init(_ error: Code, context: AWSErrorContext? = nil) {
         self.error = error
-        self.message = nil
-        self.statusCode = nil
-        self.requestId = nil
+        self.context = context
     }
+
+    /// return error code string
+    public var errorCode: String { error.rawValue }
 
 {%for error in errors %}
     // {{error.description}}

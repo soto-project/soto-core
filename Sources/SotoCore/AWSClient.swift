@@ -517,7 +517,12 @@ extension AWSClient {
             if var body = response.body {
                 rawBodyString = body.readString(length: body.readableBytes)
             }
-            return AWSError(message: "Unhandled Error", statusCode: response.status, rawBody: rawBodyString, requestId: nil)
+            let context = AWSErrorContext(
+                message: "Unhandled Error",
+                responseCode: response.status,
+                requestId: response.headers["x-amz-request-id"].first
+            )
+            return AWSRawError(rawBody: rawBodyString, context: context)
         }
     }
 }

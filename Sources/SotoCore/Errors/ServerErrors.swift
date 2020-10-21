@@ -21,12 +21,11 @@ public struct AWSServerError: AWSErrorType {
         case internalFailure = "InternalFailure"
         case serviceUnavailable = "ServiceUnavailable"
     }
-    private var error: Code
-    public var message: String?
-    public var statusCode: HTTPResponseStatus?
-    public var requestId: String?
+    private let error: Code
+    public let context: AWSErrorContext?
 
-    public init?(errorCode: String, message: String?, statusCode: HTTPResponseStatus? = nil, requestId: String? = nil) {
+    /// initialize AWSServerError
+    public init?(errorCode: String, context: AWSErrorContext) {
         var errorCode = errorCode
         // remove "Exception" suffix
         if errorCode.hasSuffix("Exception") {
@@ -34,17 +33,16 @@ public struct AWSServerError: AWSErrorType {
         }
         guard let error = Code(rawValue: errorCode) else { return nil }
         self.error = error
-        self.message = message
-        self.statusCode = statusCode
-        self.requestId = nil
+        self.context = context
     }
     
-    internal init(_ error: Code) {
+    internal init(_ error: Code, context: AWSErrorContext? = nil) {
         self.error = error
-        self.message = nil
-        self.statusCode = nil
-        self.requestId = nil
+        self.context = context
     }
+
+    /// return error code string
+    public var errorCode: String { error.rawValue }
 
     // The request processing has failed because of an unknown error, exception or failure.
     public static var internalFailure:AWSServerError { .init(.internalFailure) }

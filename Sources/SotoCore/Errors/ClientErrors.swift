@@ -34,12 +34,11 @@ public struct AWSClientError: AWSErrorType {
         case throttling = "Throttling"
         case validationError = "ValidationError"
     }
-    private var error: Code
-    public var message: String?
-    public var statusCode: HTTPResponseStatus?
-    public var requestId: String?
+    private let error: Code
+    public let context: AWSErrorContext?
 
-    public init?(errorCode: String, message: String?, statusCode: HTTPResponseStatus?, requestId: String?) {
+    /// initialize AWSClientError
+    public init?(errorCode: String, context: AWSErrorContext) {
         var errorCode = errorCode
         // remove "Exception" suffix
         if errorCode.hasSuffix("Exception") {
@@ -47,17 +46,16 @@ public struct AWSClientError: AWSErrorType {
         }
         guard let error = Code(rawValue: errorCode) else { return nil }
         self.error = error
-        self.message = message
-        self.statusCode = statusCode
-        self.requestId = nil
+        self.context = context
     }
     
-    internal init(_ error: Code, message: String? = nil) {
+    internal init(_ error: Code, context: AWSErrorContext? = nil) {
         self.error = error
-        self.message = message
-        self.statusCode = nil
-        self.requestId = nil
+        self.context = context
     }
+
+    /// return error code string
+    public var errorCode: String { error.rawValue }
 
     // Access has been denied.
     public static var accessDenied:AWSClientError { .init(.accessDenied) }

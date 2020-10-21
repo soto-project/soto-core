@@ -16,27 +16,42 @@ import NIOHTTP1
 
 /// Standard Error type returned by Soto. Initialized with error code and message. Must provide an implementation of var description : String
 public protocol AWSErrorType: Error, CustomStringConvertible {
-    init?(errorCode: String, message: String?, statusCode: HTTPResponseStatus?, requestId: String?)
+    init?(errorCode: String, context: AWSErrorContext)
+    var errorCode: String { get }
+    var context: AWSErrorContext? { get }
 }
 
 extension AWSErrorType {
     public var localizedDescription: String {
         return description
     }
+
+    public var message: String? {
+        return context?.message
+    }
+}
+
+/// Additional information about error
+public struct AWSErrorContext {
+    public let message: String
+    public let responseCode: HTTPResponseStatus
+    public let requestId: String?
+
+    internal init(message: String, responseCode: HTTPResponseStatus, requestId: String? = nil) {
+        self.message = message
+        self.responseCode = responseCode
+        self.requestId = requestId
+    }
 }
 
 /// Standard Response Error type returned by Soto. If the error code is unrecognised then this is returned
 public struct AWSResponseError: AWSErrorType {
     public let errorCode: String
-    public let message: String?
-    public let statusCode: HTTPResponseStatus?
-    public let requestId: String?
+    public let context: AWSErrorContext?
 
-    public init(errorCode: String, message: String?, statusCode: HTTPResponseStatus?, requestId: String?) {
+    public init(errorCode: String, context: AWSErrorContext) {
         self.errorCode = errorCode
-        self.message = message
-        self.statusCode = statusCode
-        self.requestId = requestId
+        self.context = context
     }
 
     public var description: String {
@@ -44,21 +59,17 @@ public struct AWSResponseError: AWSErrorType {
     }
 }
 
-/// Unrecognised error. Used when we cannot extract an error code from the AWS response
-public struct AWSError: Error, CustomStringConvertible {
-    public let message: String
-    public let statusCode: HTTPResponseStatus
+/// Unrecognised error. Used when we cannot extract an error code from the AWS response. Returns full body of error response
+public struct AWSRawError: Error, CustomStringConvertible {
     public let rawBody: String?
-    public let requestId: String?
+    public let context: AWSErrorContext
 
-    init(message: String, statusCode: HTTPResponseStatus, rawBody: String?, requestId: String?) {
-        self.statusCode = statusCode
-        self.message = message
+    init(rawBody: String?, context: AWSErrorContext) {
         self.rawBody = rawBody
-        self.requestId = requestId
+        self.context = context
     }
 
     public var description: String {
-        return "\(self.message), code: \(self.statusCode.code)\(self.rawBody.map { ", body: \($0)" } ?? "")"
+        return "Unhandled error, code: \(self.context.responseCode)\(self.rawBody.map { ", body: \($0)" } ?? "")"
     }
 }

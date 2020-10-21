@@ -236,20 +236,26 @@ public struct AWSResponse {
                 "aws-error-message": .string(errorMessage.message),
             ])
 
+            let context = AWSErrorContext(
+                message: errorMessage.message,
+                responseCode: self.status,
+                requestId: headers["x-amz-request-id"] as? String
+            )
+
             for errorType in serviceConfig.possibleErrorTypes {
-                if let error = errorType.init(errorCode: code, message: errorMessage.message, statusCode: self.status, requestId: nil) {
+                if let error = errorType.init(errorCode: code, context: context) {
                     return error
                 }
             }
-            if let error = AWSClientError(errorCode: code, message: errorMessage.message, statusCode: self.status, requestId: nil) {
+            if let error = AWSClientError(errorCode: code, context: context) {
                 return error
             }
 
-            if let error = AWSServerError(errorCode: code, message: errorMessage.message, statusCode: self.status, requestId: nil) {
+            if let error = AWSServerError(errorCode: code, context: context) {
                 return error
             }
 
-            return AWSResponseError(errorCode: code, message: errorMessage.message, statusCode: self.status, requestId: nil)
+            return AWSResponseError(errorCode: code, context: context)
         }
 
         return nil

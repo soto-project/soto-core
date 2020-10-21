@@ -214,8 +214,10 @@ class AWSResponseTests: XCTestCase {
 
         var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .json(version: "1.1"), raw: false))
-        let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger)
-        XCTAssertEqual(error as? ServiceErrorType, .resourceNotFoundException(message: "Donald Where's Your Troosers?"))
+        let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? ServiceErrorType
+        XCTAssertEqual(error, ServiceErrorType.resourceNotFoundException)
+        XCTAssertEqual(error?.message, "Donald Where's Your Troosers?")
+        XCTAssertEqual(error?.context?.responseCode, .notFound)
     }
 
     func testJSONErrorV2() {
@@ -228,8 +230,10 @@ class AWSResponseTests: XCTestCase {
 
         var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .json(version: "1.1"), raw: false))
-        let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger)
-        XCTAssertEqual(error as? ServiceErrorType, .resourceNotFoundException(message: "Donald Where's Your Troosers?"))
+        let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? ServiceErrorType
+        XCTAssertEqual(error, ServiceErrorType.resourceNotFoundException)
+        XCTAssertEqual(error?.message, "Donald Where's Your Troosers?")
+        XCTAssertEqual(error?.context?.responseCode, .notFound)
     }
 
     func testRestJSONError() {
@@ -242,8 +246,10 @@ class AWSResponseTests: XCTestCase {
 
         var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .restjson, raw: false))
-        let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger)
-        XCTAssertEqual(error as? ServiceErrorType, .resourceNotFoundException(message: "Donald Where's Your Troosers?"))
+        let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? ServiceErrorType
+        XCTAssertEqual(error, ServiceErrorType.resourceNotFoundException)
+        XCTAssertEqual(error?.message, "Donald Where's Your Troosers?")
+        XCTAssertEqual(error?.context?.responseCode, .notFound)
     }
 
     func testRestJSONErrorV2() {
@@ -256,8 +262,10 @@ class AWSResponseTests: XCTestCase {
 
         var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .restjson, raw: false))
-        let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger)
-        XCTAssertEqual(error as? ServiceErrorType, .resourceNotFoundException(message: "Donald Where's Your Troosers?"))
+        let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? ServiceErrorType
+        XCTAssertEqual(error, ServiceErrorType.resourceNotFoundException)
+        XCTAssertEqual(error?.message, "Donald Where's Your Troosers?")
+        XCTAssertEqual(error?.context?.responseCode, .notFound)
     }
 
     func testXMLError() {
@@ -270,8 +278,10 @@ class AWSResponseTests: XCTestCase {
 
         var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml, raw: false))
-        let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger)
-        XCTAssertEqual(error as? ServiceErrorType, .noSuchKey(message: "It doesn't exist"))
+        let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? ServiceErrorType
+        XCTAssertEqual(error, ServiceErrorType.noSuchKey)
+        XCTAssertEqual(error?.message, "It doesn't exist")
+        XCTAssertEqual(error?.context?.responseCode, .notFound)
     }
 
     func testQueryError() {
@@ -284,8 +294,10 @@ class AWSResponseTests: XCTestCase {
 
         var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .query, raw: false))
-        let error = awsResponse?.generateError(serviceConfig: queryService, logger: TestEnvironment.logger)
-        XCTAssertEqual(error as? ServiceErrorType, .messageRejected(message: "Don't like it"))
+        let error = awsResponse?.generateError(serviceConfig: queryService, logger: TestEnvironment.logger) as? ServiceErrorType
+        XCTAssertEqual(error, ServiceErrorType.messageRejected)
+        XCTAssertEqual(error?.message, "Don't like it")
+        XCTAssertEqual(error?.context?.responseCode, .notFound)
     }
 
     func testEC2Error() {
@@ -301,6 +313,7 @@ class AWSResponseTests: XCTestCase {
         let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? AWSResponseError
         XCTAssertEqual(error?.errorCode, "NoSuchKey")
         XCTAssertEqual(error?.message, "It doesn't exist")
+        XCTAssertEqual(error?.context?.responseCode, .notFound)
     }
 
     // MARK: Miscellaneous tests
@@ -353,33 +366,39 @@ class AWSResponseTests: XCTestCase {
         }
     }
 
-    enum ServiceErrorType: AWSErrorType, Equatable {
-        case resourceNotFoundException(message: String?)
-        case noSuchKey(message: String?)
-        case messageRejected(message: String?)
-
-        init?(errorCode: String, message: String?, statusCode: HTTPResponseStatus?, requestId: String?) {
-            switch errorCode {
-            case "ResourceNotFoundException":
-                self = .resourceNotFoundException(message: message)
-            case "NoSuchKey":
-                self = .noSuchKey(message: message)
-            case "MessageRejected":
-                self = .messageRejected(message: message)
-            default:
-                return nil
-            }
+    struct ServiceErrorType: AWSErrorType, Equatable {
+        enum Code: String {
+            case resourceNotFoundException = "ResourceNotFoundException"
+            case noSuchKey = "NoSuchKey"
+            case messageRejected = "MessageRejected"
         }
 
-        var description: String {
-            switch self {
-            case .resourceNotFoundException(let message):
-                return "ResourceNotFoundException :\(message ?? "")"
-            case .noSuchKey(let message):
-                return "NoSuchKey :\(message ?? "")"
-            case .messageRejected(let message):
-                return "MessageRejected :\(message ?? "")"
-            }
+        let error: Code
+        let context: AWSErrorContext?
+
+        init?(errorCode: String, context: AWSErrorContext) {
+            guard let error = Code(rawValue: errorCode) else { return nil }
+            self.error = error
+            self.context = context
+        }
+
+        internal init(_ error: Code, context: AWSErrorContext? = nil) {
+            self.error = error
+            self.context = context
+        }
+
+        public var errorCode: String { error.rawValue }
+
+        public static var resourceNotFoundException: ServiceErrorType { .init(.resourceNotFoundException) }
+        public static var noSuchKey: ServiceErrorType { .init(.noSuchKey) }
+        public static var messageRejected: ServiceErrorType { .init(.messageRejected) }
+
+        public static func == (lhs: ServiceErrorType, rhs: ServiceErrorType) -> Bool {
+            lhs.error == rhs.error
+        }
+
+        public var description: String {
+            return "\(error.rawValue): \(message ?? "")"
         }
     }
 }

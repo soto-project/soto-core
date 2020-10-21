@@ -520,7 +520,7 @@ extension AWSClient {
             let context = AWSErrorContext(
                 message: "Unhandled Error",
                 responseCode: response.status,
-                requestId: response.headers["x-amz-request-id"].first
+                headers: response.headers
             )
             return AWSRawError(rawBody: rawBodyString, context: context)
         }

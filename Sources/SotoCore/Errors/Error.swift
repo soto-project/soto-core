@@ -38,12 +38,12 @@ extension AWSErrorType {
 public struct AWSErrorContext {
     public let message: String
     public let responseCode: HTTPResponseStatus
-    public let requestId: String?
+    public let headers: HTTPHeaders
 
-    internal init(message: String, responseCode: HTTPResponseStatus, requestId: String? = nil) {
+    internal init(message: String, responseCode: HTTPResponseStatus, headers: HTTPHeaders = [:]) {
         self.message = message
         self.responseCode = responseCode
-        self.requestId = requestId
+        self.headers = headers
     }
 }
 

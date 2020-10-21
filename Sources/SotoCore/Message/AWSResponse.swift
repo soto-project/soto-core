@@ -239,7 +239,7 @@ public struct AWSResponse {
             let context = AWSErrorContext(
                 message: errorMessage.message,
                 responseCode: self.status,
-                requestId: headers["x-amz-request-id"] as? String
+                headers: .init(headers.map{ ($0.key, String(describing: $0.value)) })
             )
 
             for errorType in serviceConfig.possibleErrorTypes {

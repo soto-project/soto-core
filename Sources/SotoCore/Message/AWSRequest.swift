@@ -252,7 +252,7 @@ extension AWSRequest {
         }
 
         // Build URL. Don't use URLComponents as Foundation and AWS disagree on what should be percent encoded in the query values
-        var urlString = "\(baseURL.absoluteString)\(parsedPath.path)"
+        var urlString = "\(baseURL.absoluteString)\(parsedPath.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)!)"
         if queryParams.count > 0 {
             urlString.append("?")
             urlString.append(queryParams.sorted { $0.key < $1.key }.map { "\($0.key)=\(Self.urlEncodeQueryParam("\($0.value)"))" }.joined(separator: "&"))

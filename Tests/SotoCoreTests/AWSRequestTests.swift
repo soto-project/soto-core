@@ -308,7 +308,7 @@ class AWSRequestTests: XCTestCase {
         XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))
         XCTAssertEqual(request?.body.asString(), "Action=Test&Array.1=entry1&Array.2=entry2&Version=2013-12-02")
     }
-    
+
     func testPercentEncodePath() {
         struct Input: AWSEncodableShape {
             static let _encoding: [AWSMemberEncoding] = [.init(label: "path", location: .uri(locationName: "path"))]

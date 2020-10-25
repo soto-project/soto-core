@@ -167,7 +167,8 @@ extension AWSRequest {
 
                 case .uri(let location):
                     path = path
-                        .replacingOccurrences(of: "{\(location)}", with: "\(value)")
+                        // should really percent encode "/" in this situation but URLComponents removes this when we read the path again
+                        .replacingOccurrences(of: "{\(location)}", with: "\(value)".addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)!)
                         // percent-encode key which is part of the path
                         .replacingOccurrences(of: "{\(location)+}", with: "\(value)".addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)!)
 

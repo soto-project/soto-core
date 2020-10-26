@@ -186,28 +186,6 @@ class QueryEncoderTests: XCTestCase {
         testQuery(test, query: "A.1.entry=1&A.1.name=first")
     }
 
-    // array performance in QueryEncoder is slower than expected
-    func testQueryArrayPerformance() {
-        guard Self.enableTimingTests == true else { return }
-        struct Test: AWSEncodableShape {
-            let a: [Int]
-
-            private enum CodingKeys: String, CodingKey {
-                case a = "A"
-            }
-        }
-        let test = Test(a: [9, 8, 7, 6, 5, 4, 3])
-        measure {
-            do {
-                for _ in 1...1000 {
-                    _ = try QueryEncoder().encode(test)
-                }
-            } catch {
-                XCTFail("\(error)")
-            }
-        }
-    }
-
     func testDataBlobEncode() {
         struct Test: AWSEncodableShape {
             let a: Data

@@ -314,10 +314,12 @@ class AWSRequestTests: XCTestCase {
             static let _encoding: [AWSMemberEncoding] = [.init(label: "path", location: .uri(locationName: "path"))]
             let path: String
         }
-        let input = Input(path: "Test me/once")
+        let input = Input(path: "Test me/once+")
         let config = createServiceConfig(endpoint: "https://test.com")
         var request: AWSRequest?
         XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/{path+}", httpMethod: .GET, input: input, configuration: config))
-        XCTAssertEqual(request?.url, URL(string: "https://test.com/Test%20me/once")!)
+        XCTAssertEqual(request?.url, URL(string: "https://test.com/Test%20me/once%2B")!)
+        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/{path}", httpMethod: .GET, input: input, configuration: config))
+        XCTAssertEqual(request?.url, URL(string: "https://test.com/Test%20me%2Fonce%2B")!)
     }
 }

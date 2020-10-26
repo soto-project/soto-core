@@ -130,10 +130,6 @@ extension AWSRequest {
         // validate input parameters
         try input.validate()
 
-        guard let baseURL = URL(string: "\(configuration.endpoint)"), let _ = baseURL.host else {
-            throw AWSClient.ClientError.invalidURL
-        }
-
         // set x-amz-target header
         if let target = configuration.amzTarget {
             headers.replaceOrAdd(name: "x-amz-target", value: "\(target).\(operationName)")
@@ -167,10 +163,8 @@ extension AWSRequest {
 
                 case .uri(let location):
                     path = path
-                        // should really percent encode "/" in this situation but URLComponents removes this when we read the path again
-                        .replacingOccurrences(of: "{\(location)}", with: "\(value)".addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)!)
-                        // percent-encode key which is part of the path
-                        .replacingOccurrences(of: "{\(location)+}", with: "\(value)".addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)!)
+                        .replacingOccurrences(of: "{\(location)}", with: Self.urlEncodePathComponent(String(describing: value)))
+                        .replacingOccurrences(of: "{\(location)+}", with: Self.urlEncodePath(String(describing: value)))
 
                 default:
                     memberVariablesCount += 1
@@ -241,25 +235,28 @@ extension AWSRequest {
             }
         }
 
-        guard let parsedPath = URLComponents(string: path) else {
+        guard var urlComponents = URLComponents(string: "\(configuration.endpoint)\(path)") else {
             throw AWSClient.ClientError.invalidURL
         }
 
         // add queries from the parsed path to the query params list
-        if let pathQueryItems = parsedPath.queryItems {
+        if let pathQueryItems = urlComponents.queryItems {
             for item in pathQueryItems {
                 queryParams.append((key: item.name, value: item.value ?? ""))
             }
         }
 
-        // Build URL. Don't use URLComponents as Foundation and AWS disagree on what should be percent encoded in the query values
-        var urlString = "\(baseURL.absoluteString)\(parsedPath.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)!)"
+        // Set query params. Percent encode these ourselves as Foundation and AWS disagree on what should be percent encoded in the query values
+        // Also the signer doesn't percent encode the queries so they need to be encoded here
         if queryParams.count > 0 {
-            urlString.append("?")
-            urlString.append(queryParams.sorted { $0.key < $1.key }.map { "\($0.key)=\(Self.urlEncodeQueryParam("\($0.value)"))" }.joined(separator: "&"))
+            let urlQueryString = queryParams
+                .sorted { $0.key < $1.key }
+                .map { "\($0.key)=\(Self.urlEncodeQueryParam("\($0.value)"))" }
+                .joined(separator: "&")
+            urlComponents.percentEncodedQuery = urlQueryString
         }
 
-        guard let url = URL(string: urlString) else {
+        guard let url = urlComponents.url else {
             throw AWSClient.ClientError.invalidURL
         }
 
@@ -293,10 +290,22 @@ extension AWSRequest {
 
     /// this list of query allowed characters comes from https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html
     static let queryAllowedCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
+    static let pathAllowedCharacters = CharacterSet.urlPathAllowed.subtracting(.init(charactersIn: "+"))
+    static let pathComponentAllowedCharacters = CharacterSet.urlPathAllowed.subtracting(.init(charactersIn: "+/"))
 
     /// percent encode query parameter value.
     private static func urlEncodeQueryParam(_ value: String) -> String {
         return value.addingPercentEncoding(withAllowedCharacters: AWSRequest.queryAllowedCharacters) ?? value
+    }
+
+    /// percent encode path value.
+    private static func urlEncodePath(_ value: String) -> String {
+        return value.addingPercentEncoding(withAllowedCharacters: AWSRequest.pathAllowedCharacters) ?? value
+    }
+
+    /// percent encode path component value. ie also encode "/"
+    private static func urlEncodePathComponent(_ value: String) -> String {
+        return value.addingPercentEncoding(withAllowedCharacters: AWSRequest.pathComponentAllowedCharacters) ?? value
     }
 
     /// verify  streaming is allowed for this operation

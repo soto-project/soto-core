@@ -17,7 +17,7 @@
     <a title="AWSClient Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> Docs</a> (56% documented)</p>
+        <p><a href="../index.html"> Docs</a> (58% documented)</p>
         <p class="header-right"><a href="https://github.com/soto-project/soto-core"><img src="../img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="../search.json">
@@ -177,7 +177,7 @@
                 <a href="../Structs/AWSClientError.html">AWSClientError</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Structs/AWSError.html">AWSError</a>
+                <a href="../Structs/AWSErrorContext.html">AWSErrorContext</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/AWSHTTPRequest.html">AWSHTTPRequest</a>
@@ -199,6 +199,9 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/AWSPayload.html">AWSPayload</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSRawError.html">AWSRawError</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/AWSRequest.html">AWSRequest</a>
@@ -742,6 +745,136 @@ uses, we have to use a DispatchQueue to run some of this work on.</p>
                 <li class="item">
                   <div>
                     <code>
+                    <a name="/s:8SotoCore9AWSClientC8paginate5input12initialValue7command8tokenKey2on6logger0K4Page3NIO15EventLoopFutureCyq0_Gx_q0_ANyq_Gx_AL0oP0_pSg7Logging6LoggerVtcs0J4PathCyq_5TokenQzSgGAruNySb_q0_tGq0__q_AlQ_ptctAA011AWSPaginateU0RzAA8AWSShapeR_r1_lF"></a>
+                    <a name="//apple_ref/swift/Method/paginate(input:initialValue:command:tokenKey:on:logger:onPage:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC8paginate5input12initialValue7command8tokenKey2on6logger0K4Page3NIO15EventLoopFutureCyq0_Gx_q0_ANyq_Gx_AL0oP0_pSg7Logging6LoggerVtcs0J4PathCyq_5TokenQzSgGAruNySb_q0_tGq0__q_AlQ_ptctAA011AWSPaginateU0RzAA8AWSShapeR_r1_lF">paginate(input:<wbr>initialValue:<wbr>command:<wbr>tokenKey:<wbr>on:<wbr>logger:<wbr>onPage:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>If an AWS command is returning an arbituary sized array sometimes it adds support for paginating this array
+ie it will return the array in blocks of a defined size, each block also includes a token which can be used to access
+the next block. This function loads each block and calls a closure with each block as parameter. This function returns
+the result of combining all of these blocks using the given closure,</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">paginate</span><span class="o">&lt;</span><span class="kt">Input</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSPaginateToken.html">AWSPaginateToken</a></span><span class="p">,</span> <span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSShape.html">AWSShape</a></span><span class="p">,</span> <span class="kt">Result</span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="nv">input</span><span class="p">:</span> <span class="kt">Input</span><span class="p">,</span>
+    <span class="nv">initialValue</span><span class="p">:</span> <span class="kt">Result</span><span class="p">,</span>
+    <span class="nv">command</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Input</span><span class="p">,</span> <span class="kt">EventLoop</span><span class="p">?,</span> <span class="kt">Logger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="nv">tokenKey</span><span class="p">:</span> <span class="kt">KeyPath</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">,</span> <span class="kt">Input</span><span class="o">.</span><span class="kt">Token</span><span class="p">?</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+    <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
+    <span class="nv">onPage</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Result</span><span class="p">,</span> <span class="kt">Output</span><span class="p">,</span> <span class="kt">EventLoop</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="p">(</span><span class="kt">Bool</span><span class="p">,</span> <span class="kt">Result</span><span class="p">)</span><span class="o">&gt;</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Result</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>input</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Input for request</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>initialValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value to use as the initial accumulating value. <code>initialValue</code> is passed to <code>onPage</code> the first time it is called.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>command</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Command to be paginated</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>tokenKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of token in the response object to continue pagination</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>eventLoop</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>EventLoop to run this process on</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>logger</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Logger used flot logging</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>onPage</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>closure called with each block of entries. It combines an accumulating result with the contents of response from the call to AWS. This combined result is then returned
+along with a boolean indicating if the paginate operation should continue.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
                     <a name="/s:8SotoCore9AWSClientC8paginate5input7command8tokenKey2on6logger0I4Page3NIO15EventLoopFutureCyytGx_AMyq_Gx_AK0mN0_pSg7Logging6LoggerVtcs0H4PathCyq_5TokenQzSgGAqtMySbGq__AkP_ptctAA011AWSPaginateS0RzAA8AWSShapeR_r0_lF"></a>
                     <a name="//apple_ref/swift/Method/paginate(input:command:tokenKey:on:logger:onPage:)" class="dashAnchor"></a>
                     <a class="token" href="#/s:8SotoCore9AWSClientC8paginate5input7command8tokenKey2on6logger0I4Page3NIO15EventLoopFutureCyytGx_AMyq_Gx_AK0mN0_pSg7Logging6LoggerVtcs0H4PathCyq_5TokenQzSgGAqtMySbGq__AkP_ptctAA011AWSPaginateS0RzAA8AWSShapeR_r0_lF">paginate(input:<wbr>command:<wbr>tokenKey:<wbr>on:<wbr>logger:<wbr>onPage:<wbr>)</a>
@@ -815,12 +948,179 @@ the next block. This function loads each block and calls a closure with each blo
                             <tr>
                               <td>
                                 <code>
+                                <em>eventLoop</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>EventLoop to run this process on</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>logger</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Logger used flot logging</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
                                 <em>onPage</em>
                                 </code>
                               </td>
                               <td>
                                 <div>
-                                  <p>closure called with each block of entries</p>
+                                  <p>closure called with each block of entries. Returns boolean indicating whether we should continue.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore9AWSClientC8paginate5input12initialValue7command8tokenKey011moreResultsJ02on6logger0M4Page3NIO15EventLoopFutureCyq0_Gx_q0_AOyq_Gx_AM0qR0_pSg7Logging6LoggerVtcs0J4PathCyq_5TokenQzSgGAXyq_SbGAsvOySb_q0_tGq0__q_AmR_ptctAA011AWSPaginateW0RzAA8AWSShapeR_r1_lF"></a>
+                    <a name="//apple_ref/swift/Method/paginate(input:initialValue:command:tokenKey:moreResultsKey:on:logger:onPage:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC8paginate5input12initialValue7command8tokenKey011moreResultsJ02on6logger0M4Page3NIO15EventLoopFutureCyq0_Gx_q0_AOyq_Gx_AM0qR0_pSg7Logging6LoggerVtcs0J4PathCyq_5TokenQzSgGAXyq_SbGAsvOySb_q0_tGq0__q_AmR_ptctAA011AWSPaginateW0RzAA8AWSShapeR_r1_lF">paginate(input:<wbr>initialValue:<wbr>command:<wbr>tokenKey:<wbr>moreResultsKey:<wbr>on:<wbr>logger:<wbr>onPage:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>If an AWS command is returning an arbituary sized array sometimes it adds support for paginating this array
+ie it will return the array in blocks of a defined size, each block also includes a token which can be used to access
+the next block. This function loads each block and calls a closure with each block as parameter. This function returns
+the result of combining all of these blocks using the given closure,</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">paginate</span><span class="o">&lt;</span><span class="kt">Input</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSPaginateToken.html">AWSPaginateToken</a></span><span class="p">,</span> <span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSShape.html">AWSShape</a></span><span class="p">,</span> <span class="kt">Result</span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="nv">input</span><span class="p">:</span> <span class="kt">Input</span><span class="p">,</span>
+    <span class="nv">initialValue</span><span class="p">:</span> <span class="kt">Result</span><span class="p">,</span>
+    <span class="nv">command</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Input</span><span class="p">,</span> <span class="kt">EventLoop</span><span class="p">?,</span> <span class="kt">Logger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="nv">tokenKey</span><span class="p">:</span> <span class="kt">KeyPath</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">,</span> <span class="kt">Input</span><span class="o">.</span><span class="kt">Token</span><span class="p">?</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="nv">moreResultsKey</span><span class="p">:</span> <span class="kt">KeyPath</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">,</span> <span class="kt">Bool</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+    <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
+    <span class="nv">onPage</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Result</span><span class="p">,</span> <span class="kt">Output</span><span class="p">,</span> <span class="kt">EventLoop</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="p">(</span><span class="kt">Bool</span><span class="p">,</span> <span class="kt">Result</span><span class="p">)</span><span class="o">&gt;</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Result</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>input</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Input for request</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>initialValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value to use as the initial accumulating value. <code>initialValue</code> is passed to <code>onPage</code> the first time it is called.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>command</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Command to be paginated</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>tokenKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of token in the response object to continue pagination</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>moreResultsKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The KeyPath for the member of the output that indicates whether we should ask for more data</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>eventLoop</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>EventLoop to run this process on</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>logger</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Logger used flot logging</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>onPage</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>closure called with each block of entries. It combines an accumulating result with the contents of response from the call to AWS. This combined result is then returned
+along with a boolean indicating if the paginate operation should continue.</p>
                                 </div>
                               </td>
                             </tr>
@@ -907,12 +1207,191 @@ the next block. This function loads each block and calls a closure with each blo
                             <tr>
                               <td>
                                 <code>
+                                <em>moreResultsKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The KeyPath for the member of the output that indicates whether we should ask for more data</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>eventLoop</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>EventLoop to run this process on</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>logger</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Logger used flot logging</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
                                 <em>onPage</em>
                                 </code>
                               </td>
                               <td>
                                 <div>
-                                  <p>closure called with each block of entries</p>
+                                  <p>closure called with each block of entries. Returns boolean indicating whether we should continue.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore9AWSClientC8paginate5input12initialValue7command8tokenKey011moreResultsJ02on6logger0M4Page3NIO15EventLoopFutureCyq0_Gx_q0_AOyq_Gx_AM0qR0_pSg7Logging6LoggerVtcs0J4PathCyq_5TokenQzSgGAXyq_SbSgGAsvOySb_q0_tGq0__q_AmR_ptctAA011AWSPaginateW0RzAA8AWSShapeR_r1_lF"></a>
+                    <a name="//apple_ref/swift/Method/paginate(input:initialValue:command:tokenKey:moreResultsKey:on:logger:onPage:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC8paginate5input12initialValue7command8tokenKey011moreResultsJ02on6logger0M4Page3NIO15EventLoopFutureCyq0_Gx_q0_AOyq_Gx_AM0qR0_pSg7Logging6LoggerVtcs0J4PathCyq_5TokenQzSgGAXyq_SbSgGAsvOySb_q0_tGq0__q_AmR_ptctAA011AWSPaginateW0RzAA8AWSShapeR_r1_lF">paginate(input:<wbr>initialValue:<wbr>command:<wbr>tokenKey:<wbr>moreResultsKey:<wbr>on:<wbr>logger:<wbr>onPage:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>If an AWS command is returning an arbituary sized array sometimes it adds support for paginating this array
+ie it will return the array in blocks of a defined size, each block also includes a token which can be used to access
+the next block. This function loads each block and calls a closure with each block as parameter. This function returns
+the result of combining all of these blocks using the given closure,</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">paginate</span><span class="o">&lt;</span><span class="kt">Input</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSPaginateToken.html">AWSPaginateToken</a></span><span class="p">,</span> <span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSShape.html">AWSShape</a></span><span class="p">,</span> <span class="kt">Result</span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="nv">input</span><span class="p">:</span> <span class="kt">Input</span><span class="p">,</span>
+    <span class="nv">initialValue</span><span class="p">:</span> <span class="kt">Result</span><span class="p">,</span>
+    <span class="nv">command</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Input</span><span class="p">,</span> <span class="kt">EventLoop</span><span class="p">?,</span> <span class="kt">Logger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="nv">tokenKey</span><span class="p">:</span> <span class="kt">KeyPath</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">,</span> <span class="kt">Input</span><span class="o">.</span><span class="kt">Token</span><span class="p">?</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="nv">moreResultsKey</span><span class="p">:</span> <span class="kt">KeyPath</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">,</span> <span class="kt">Bool</span><span class="p">?</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+    <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
+    <span class="nv">onPage</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Result</span><span class="p">,</span> <span class="kt">Output</span><span class="p">,</span> <span class="kt">EventLoop</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="p">(</span><span class="kt">Bool</span><span class="p">,</span> <span class="kt">Result</span><span class="p">)</span><span class="o">&gt;</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Result</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>input</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Input for request</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>initialValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value to use as the initial accumulating value. <code>initialValue</code> is passed to <code>onPage</code> the first time it is called.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>command</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Command to be paginated</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>tokenKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of token in the response object to continue pagination</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>moreResultsKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The KeyPath for the member of the output that indicates whether we should ask for more data</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>eventLoop</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>EventLoop to run this process on</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>logger</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Logger used flot logging</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>onPage</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>closure called with each block of entries. It combines an accumulating result with the contents of response from the call to AWS. This combined result is then returned
+along with a boolean indicating if the paginate operation should continue.</p>
                                 </div>
                               </td>
                             </tr>
@@ -999,12 +1478,48 @@ the next block. This function loads each block and calls a closure with each blo
                             <tr>
                               <td>
                                 <code>
+                                <em>moreResultsKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The KeyPath for the member of the output that indicates whether we should ask for more data</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>eventLoop</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>EventLoop to run this process on</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>logger</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Logger used flot logging</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
                                 <em>onPage</em>
                                 </code>
                               </td>
                               <td>
                                 <div>
-                                  <p>closure called with each block of entries</p>
+                                  <p>closure called with each block of entries. Returns boolean indicating whether we should continue.</p>
                                 </div>
                               </td>
                             </tr>

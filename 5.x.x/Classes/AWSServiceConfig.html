@@ -17,7 +17,7 @@
     <a title="AWSServiceConfig Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> Docs</a> (56% documented)</p>
+        <p><a href="../index.html"> Docs</a> (58% documented)</p>
         <p class="header-right"><a href="https://github.com/soto-project/soto-core"><img src="../img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="../search.json">
@@ -177,7 +177,7 @@
                 <a href="../Structs/AWSClientError.html">AWSClientError</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Structs/AWSError.html">AWSError</a>
+                <a href="../Structs/AWSErrorContext.html">AWSErrorContext</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/AWSHTTPRequest.html">AWSHTTPRequest</a>
@@ -199,6 +199,9 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/AWSPayload.html">AWSPayload</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSRawError.html">AWSRawError</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/AWSRequest.html">AWSRequest</a>
@@ -487,9 +490,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore16AWSServiceConfigC18possibleErrorTypesSayAA12AWSErrorType_pXpGvp"></a>
-                    <a name="//apple_ref/swift/Property/possibleErrorTypes" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore16AWSServiceConfigC18possibleErrorTypesSayAA12AWSErrorType_pXpGvp">possibleErrorTypes</a>
+                    <a name="/s:8SotoCore16AWSServiceConfigC9errorTypeAA08AWSErrorF0_pXpSgvp"></a>
+                    <a name="//apple_ref/swift/Property/errorType" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore16AWSServiceConfigC9errorTypeAA08AWSErrorF0_pXpSgvp">errorType</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -504,7 +507,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">possibleErrorTypes</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Protocols/AWSErrorType.html">AWSErrorType</a></span><span class="o">.</span><span class="k">Type</span><span class="p">]</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">errorType</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSErrorType.html">AWSErrorType</a></span><span class="o">.</span><span class="k">Type</span><span class="p">?</span></code></pre>
 
                         </div>
                       </div>
@@ -622,9 +625,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore16AWSServiceConfigC6region9partition9amzTarget7service11signingName0I8Protocol10apiVersion8endpoint0I9Endpoints0fP018possibleErrorTypes11middlewares7timeout19byteBufferAllocator7optionsAcA6RegionVSg_AA12AWSPartitionVSSSgSSAxA07ServiceL0OSSAXSDyS2SGSDyAWSSAK_AtDtGSayAA12AWSErrorType_pXpGSayAA0C10Middleware_pG3NIO10TimeAmountVSgA5_04BytewX0VAC7OptionsVtcfc"></a>
-                    <a name="//apple_ref/swift/Method/init(region:partition:amzTarget:service:signingName:serviceProtocol:apiVersion:endpoint:serviceEndpoints:partitionEndpoints:possibleErrorTypes:middlewares:timeout:byteBufferAllocator:options:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore16AWSServiceConfigC6region9partition9amzTarget7service11signingName0I8Protocol10apiVersion8endpoint0I9Endpoints0fP018possibleErrorTypes11middlewares7timeout19byteBufferAllocator7optionsAcA6RegionVSg_AA12AWSPartitionVSSSgSSAxA07ServiceL0OSSAXSDyS2SGSDyAWSSAK_AtDtGSayAA12AWSErrorType_pXpGSayAA0C10Middleware_pG3NIO10TimeAmountVSgA5_04BytewX0VAC7OptionsVtcfc">init(region:<wbr>partition:<wbr>amzTarget:<wbr>service:<wbr>signingName:<wbr>serviceProtocol:<wbr>apiVersion:<wbr>endpoint:<wbr>serviceEndpoints:<wbr>partitionEndpoints:<wbr>possibleErrorTypes:<wbr>middlewares:<wbr>timeout:<wbr>byteBufferAllocator:<wbr>options:<wbr>)</a>
+                    <a name="/s:8SotoCore16AWSServiceConfigC6region9partition9amzTarget7service11signingName0I8Protocol10apiVersion8endpoint0I9Endpoints0fP09errorType11middlewares7timeout19byteBufferAllocator7optionsAcA6RegionVSg_AA12AWSPartitionVSSSgSSAxA07ServiceL0OSSAXSDyS2SGSDyAWSSAK_AtDtGAA08AWSErrorR0_pXpSgSayAA0C10Middleware_pG3NIO10TimeAmountVSgA5_04BytevW0VAC7OptionsVtcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(region:partition:amzTarget:service:signingName:serviceProtocol:apiVersion:endpoint:serviceEndpoints:partitionEndpoints:errorType:middlewares:timeout:byteBufferAllocator:options:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore16AWSServiceConfigC6region9partition9amzTarget7service11signingName0I8Protocol10apiVersion8endpoint0I9Endpoints0fP09errorType11middlewares7timeout19byteBufferAllocator7optionsAcA6RegionVSg_AA12AWSPartitionVSSSgSSAxA07ServiceL0OSSAXSDyS2SGSDyAWSSAK_AtDtGAA08AWSErrorR0_pXpSgSayAA0C10Middleware_pG3NIO10TimeAmountVSgA5_04BytevW0VAC7OptionsVtcfc">init(region:<wbr>partition:<wbr>amzTarget:<wbr>service:<wbr>signingName:<wbr>serviceProtocol:<wbr>apiVersion:<wbr>endpoint:<wbr>serviceEndpoints:<wbr>partitionEndpoints:<wbr>errorType:<wbr>middlewares:<wbr>timeout:<wbr>byteBufferAllocator:<wbr>options:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -650,7 +653,7 @@
     <span class="nv">endpoint</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
     <span class="nv">serviceEndpoints</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">:</span> <span class="kt">String</span><span class="p">]</span> <span class="o">=</span> <span class="p">[:],</span>
     <span class="nv">partitionEndpoints</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Structs/AWSPartition.html">AWSPartition</a></span><span class="p">:</span> <span class="p">(</span><span class="nv">endpoint</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">region</span><span class="p">:</span> <span class="kt"><a href="../Structs/Region.html">Region</a></span><span class="p">)]</span> <span class="o">=</span> <span class="p">[:],</span>
-    <span class="nv">possibleErrorTypes</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Protocols/AWSErrorType.html">AWSErrorType</a></span><span class="o">.</span><span class="k">Type</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
+    <span class="nv">errorType</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSErrorType.html">AWSErrorType</a></span><span class="o">.</span><span class="k">Type</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
     <span class="nv">middlewares</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Protocols/AWSServiceMiddleware.html">AWSServiceMiddleware</a></span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
     <span class="nv">timeout</span><span class="p">:</span> <span class="kt">TimeAmount</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
     <span class="nv">byteBufferAllocator</span><span class="p">:</span> <span class="kt">ByteBufferAllocator</span> <span class="o">=</span> <span class="kt">ByteBufferAllocator</span><span class="p">(),</span>

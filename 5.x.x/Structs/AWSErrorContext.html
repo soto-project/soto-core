@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>AWSError Structure Reference</title>
+    <title>AWSErrorContext Structure Reference</title>
     <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
     <meta charset='utf-8'>
@@ -13,11 +13,11 @@
     <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/swift/Struct/AWSError" class="dashAnchor"></a>
-    <a title="AWSError Structure Reference"></a>
+    <a name="//apple_ref/swift/Struct/AWSErrorContext" class="dashAnchor"></a>
+    <a title="AWSErrorContext Structure Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> Docs</a> (56% documented)</p>
+        <p><a href="../index.html"> Docs</a> (58% documented)</p>
         <p class="header-right"><a href="https://github.com/soto-project/soto-core"><img src="../img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="../search.json">
@@ -30,7 +30,7 @@
       <p id="breadcrumbs">
         <a href="../index.html"> Reference</a>
         <img id="carat" src="../img/carat.png" />
-        AWSError Structure Reference
+        AWSErrorContext Structure Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -177,7 +177,7 @@
                 <a href="../Structs/AWSClientError.html">AWSClientError</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Structs/AWSError.html">AWSError</a>
+                <a href="../Structs/AWSErrorContext.html">AWSErrorContext</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/AWSHTTPRequest.html">AWSHTTPRequest</a>
@@ -199,6 +199,9 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/AWSPayload.html">AWSPayload</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSRawError.html">AWSRawError</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/AWSRequest.html">AWSRequest</a>
@@ -281,15 +284,15 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>AWSError</h1>
+            <h1>AWSErrorContext</h1>
               <div class="declaration">
                 <div class="language">
                   
-                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">AWSError</span> <span class="p">:</span> <span class="kt">Error</span><span class="p">,</span> <span class="kt">CustomStringConvertible</span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">AWSErrorContext</span></code></pre>
 
                 </div>
               </div>
-            <p>Unrecognised error. Used when we cannot recognise the error code from the AWS response</p>
+            <p>Additional information about error</p>
 
           </section>
           <section class="section task-group-section">
@@ -298,9 +301,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore8AWSErrorV7messageSSvp"></a>
+                    <a name="/s:8SotoCore15AWSErrorContextV7messageSSvp"></a>
                     <a name="//apple_ref/swift/Property/message" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore8AWSErrorV7messageSSvp">message</a>
+                    <a class="token" href="#/s:8SotoCore15AWSErrorContextV7messageSSvp">message</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -325,9 +328,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore8AWSErrorV7rawBodySSSgvp"></a>
-                    <a name="//apple_ref/swift/Property/rawBody" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore8AWSErrorV7rawBodySSSgvp">rawBody</a>
+                    <a name="/s:8SotoCore15AWSErrorContextV12responseCode8NIOHTTP118HTTPResponseStatusOvp"></a>
+                    <a name="//apple_ref/swift/Property/responseCode" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore15AWSErrorContextV12responseCode8NIOHTTP118HTTPResponseStatusOvp">responseCode</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -342,7 +345,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">rawBody</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">responseCode</span><span class="p">:</span> <span class="kt">HTTPResponseStatus</span></code></pre>
 
                         </div>
                       </div>
@@ -352,9 +355,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore8AWSErrorV10statusCode8NIOHTTP118HTTPResponseStatusOvp"></a>
-                    <a name="//apple_ref/swift/Property/statusCode" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore8AWSErrorV10statusCode8NIOHTTP118HTTPResponseStatusOvp">statusCode</a>
+                    <a name="/s:8SotoCore15AWSErrorContextV7headers8NIOHTTP111HTTPHeadersVvp"></a>
+                    <a name="//apple_ref/swift/Property/headers" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore15AWSErrorContextV7headers8NIOHTTP111HTTPHeadersVvp">headers</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -369,33 +372,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">statusCode</span><span class="p">:</span> <span class="kt">HTTPResponseStatus</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:s23CustomStringConvertibleP11descriptionSSvp"></a>
-                    <a name="//apple_ref/swift/Property/description" class="dashAnchor"></a>
-                    <a class="token" href="#/s:s23CustomStringConvertibleP11descriptionSSvp">description</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">description</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">headers</span><span class="p">:</span> <span class="kt">HTTPHeaders</span></code></pre>
 
                         </div>
                       </div>

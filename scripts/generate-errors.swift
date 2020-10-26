@@ -34,8 +34,8 @@ struct Error {
     }
 }
 
-// list of errors comes from https://docs.aws.amazon.com/sns/latest/api/CommonErrors.html
 let clientErrors: [Error] = [
+    // list of errors comes from https://docs.aws.amazon.com/sns/latest/api/CommonErrors.html
     .init(name: "AccessDenied", description: "Access has been denied."),
     .init(name: "IncompleteSignature", description: "The request signature does not conform to AWS standards."),
     .init(name: "InvalidAction", description: "The action or operation requested is not valid. Verify that the action is typed correctly."),
@@ -51,6 +51,10 @@ let clientErrors: [Error] = [
     .init(name: "RequestExpired", description: "The request reached the service more than 15 minutes after the date stamp on the request or more than 15 minutes after the request expiration date (such as for pre-signed URLs), or the date stamp on the request is more than 15 minutes in the future. If you're using temporary security credentials, this error can also occur if the credentials have expired. For more information, see Temporary Security Credentials in the IAM User Guide."),
     .init(name: "Throttling", description: "The request was denied due to request throttling."),
     .init(name: "ValidationError", description: "The input fails to satisfy the constraints specified by an AWS service."),
+    // additional errors that are common across a number of services
+    .init(name: "UnrecognizedClient", description: "AWS access key ID provided does not exist in our records."),
+    .init(name: "InvalidSignature", description: "Authorization signature is invalid."),
+    .init(name: "SignatureDoesNotMatch", description: "Authorization signature does not match the signature provided."),
 ]
 
 let serverErrors: [Error] = [

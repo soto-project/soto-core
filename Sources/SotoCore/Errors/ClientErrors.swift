@@ -25,13 +25,16 @@ public struct AWSClientError: AWSErrorType {
         case invalidParameterCombination = "InvalidParameterCombination"
         case invalidParameterValue = "InvalidParameterValue"
         case invalidQueryParameter = "InvalidQueryParameter"
+        case invalidSignature = "InvalidSignature"
         case malformedQueryString = "MalformedQueryString"
         case missingAction = "MissingAction"
         case missingAuthenticationToken = "MissingAuthenticationToken"
         case missingParameter = "MissingParameter"
         case optInRequired = "OptInRequired"
         case requestExpired = "RequestExpired"
+        case signatureDoesNotMatch = "SignatureDoesNotMatch"
         case throttling = "Throttling"
+        case unrecognizedClient = "UnrecognizedClient"
         case validationError = "ValidationError"
     }
 
@@ -72,6 +75,8 @@ public struct AWSClientError: AWSErrorType {
     public static var invalidParameterValue: AWSClientError { .init(.invalidParameterValue) }
     // The AWS query string is malformed or does not adhere to AWS standards.
     public static var invalidQueryParameter: AWSClientError { .init(.invalidQueryParameter) }
+    // Authorization signature is invalid.
+    public static var invalidSignature: AWSClientError { .init(.invalidSignature) }
     // The query string contains a syntax error.
     public static var malformedQueryString: AWSClientError { .init(.malformedQueryString) }
     // The request is missing an action or a required parameter.
@@ -84,8 +89,12 @@ public struct AWSClientError: AWSErrorType {
     public static var optInRequired: AWSClientError { .init(.optInRequired) }
     // The request reached the service more than 15 minutes after the date stamp on the request or more than 15 minutes after the request expiration date (such as for pre-signed URLs), or the date stamp on the request is more than 15 minutes in the future. If you're using temporary security credentials, this error can also occur if the credentials have expired. For more information, see Temporary Security Credentials in the IAM User Guide.
     public static var requestExpired: AWSClientError { .init(.requestExpired) }
+    // Authorization signature does not match the signature provided.
+    public static var signatureDoesNotMatch: AWSClientError { .init(.signatureDoesNotMatch) }
     // The request was denied due to request throttling.
     public static var throttling: AWSClientError { .init(.throttling) }
+    // AWS access key ID provided does not exist in our records.
+    public static var unrecognizedClient: AWSClientError { .init(.unrecognizedClient) }
     // The input fails to satisfy the constraints specified by an AWS service.
     public static var validationError: AWSClientError { .init(.validationError) }
 }

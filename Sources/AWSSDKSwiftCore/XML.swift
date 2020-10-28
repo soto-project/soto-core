@@ -234,6 +234,7 @@ public class XML {
                 if let error = parserDelegate.error {
                     throw error
                 }
+                throw ParsingError.noXMLFound
             } else if let rootElement = parserDelegate.rootElement {
                 // copy contents of rootElement
                 self.setChildren(rootElement.children)
@@ -406,13 +407,16 @@ public class XML {
     }
 
     /// XML parsing errors
-    enum ParsingError : Error {
+    enum ParsingError: Error {
         case emptyFile
+        case noXMLFound
 
         var localizedDescription: String {
             switch self {
             case .emptyFile:
                 return "File contained nothing"
+            case .noXMLFound:
+                return "File didn't contain any XML"
             }
         }
     }

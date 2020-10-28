@@ -105,7 +105,16 @@ class XMLTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
     }
-    
+
+    func testInvalidXml() {
+        let xml = "{}"
+        do {
+            _ = try XML.Document(data: xml.data(using: .utf8)!)
+            XCTFail("Shouldnt reach here")
+        } catch {
+        }
+    }
+
     static var allTests : [(String, (XMLTests) -> () throws -> Void)] {
         return [
             ("testAddChild", testAddChild),

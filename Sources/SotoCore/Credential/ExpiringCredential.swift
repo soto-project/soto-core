@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import struct Foundation.Date
 import struct Foundation.TimeInterval
 import SotoSignerV4
 
@@ -23,4 +24,23 @@ public extension ExpiringCredential {
     var isExpired: Bool {
         isExpiring(within: 0)
     }
+}
+
+/// Basic implementation of a struct conforming to ExpiringCredential to be used with the `RotatingCredentialProvider`
+public struct RotatingCredential: ExpiringCredential {
+    public init(accessKeyId: String, secretAccessKey: String, sessionToken: String?, expiration: Date) {
+        self.accessKeyId = accessKeyId
+        self.secretAccessKey = secretAccessKey
+        self.sessionToken = sessionToken
+        self.expiration = expiration
+    }
+
+    public func isExpiring(within interval: TimeInterval) -> Bool {
+        return self.expiration.timeIntervalSinceNow < interval
+    }
+
+    public let accessKeyId: String
+    public let secretAccessKey: String
+    public let sessionToken: String?
+    public let expiration: Date
 }

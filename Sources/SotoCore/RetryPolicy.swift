@@ -75,6 +75,10 @@ extension StandardRetryPolicy {
         switch error {
         case let awsError as AWSErrorType:
             if let context = awsError.context {
+                // if response has a "Retry-After" header then use that
+                if let retryAfterString = context.headers["Retry-After"].first, let retryAfter = Int64(retryAfterString) {
+                    return .retry(wait: .seconds(retryAfter))
+                }
                 // server error or too many requests
                 if (500...).contains(context.responseCode.code) || context.responseCode.code == 429 {
                     return .retry(wait: calculateRetryWaitTime(attempt: attempt))

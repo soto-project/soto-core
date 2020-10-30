@@ -445,14 +445,18 @@ extension AWSClient {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName, service: config.service)
 
+        // get credentials
         let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop, logger: logger)
             .flatMapThrowing { credential in
+                // construct signer
                 let signer = AWSSigner(credentials: credential, name: config.signingName, region: config.region.rawValue)
+                // create request and sign with signer
                 let awsRequest = try createRequest()
                 return try awsRequest
                     .applyMiddlewares(config.middlewares + self.middlewares, config: config)
                     .createHTTPRequest(signer: signer, byteBufferAllocator: config.byteBufferAllocator)
             }.flatMap { request in
+                // send request to AWS and process result
                 return self.invoke(
                     with: config,
                     logger: logger,

@@ -239,7 +239,8 @@ public struct AWSResponse {
             let context = AWSErrorContext(
                 message: errorMessage.message,
                 responseCode: self.status,
-                headers: .init(headers.map { ($0.key, String(describing: $0.value)) })
+                headers: .init(headers.map { ($0.key, String(describing: $0.value)) }),
+                additionalFields: errorMessage.additionalFields
             )
 
             if let errorType = serviceConfig.errorType {
@@ -261,52 +262,92 @@ public struct AWSResponse {
         return nil
     }
 
+    /// Error used by XML output
     private struct XMLQueryError: Codable, APIError {
         var code: String?
-        var message: String
+        let message: String
+        let additionalFields: [String: String]
 
-        private enum CodingKeys: String, CodingKey {
-            case code = "Code"
-            case message = "Message"
+        init(from decoder: Decoder) throws {
+            // use `ErrorCodingKey` so we get extract additional keys from `container.allKeys`
+            let container = try decoder.container(keyedBy: ErrorCodingKey.self)
+            self.code = try container.decodeIfPresent(String.self, forKey: .init("Code"))
+            self.message = try container.decode(String.self, forKey: .init("Message"))
+
+            var additionalFields: [String: String] = [:]
+            for key in container.allKeys {
+                guard key.stringValue != "Code", key.stringValue != "Message" else { continue }
+                additionalFields[key.stringValue] = try container.decodeIfPresent(String.self, forKey: key)
+            }
+            self.additionalFields = additionalFields
         }
     }
 
+    /// Error used by JSON output
     private struct JSONError: Decodable, APIError {
         var code: String?
-        var message: String
+        let message: String
+        let additionalFields: [String: String]
 
         init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-            self.code = try container.decode(String?.self, forKey: .code)
-            self.message = try container.decodeIfPresent(String.self, forKey: .message) ?? container.decode(String.self, forKey: .Message)
-        }
+            // use `ErrorCodingKey` so we get extract additional keys from `container.allKeys`
+            let container = try decoder.container(keyedBy: ErrorCodingKey.self)
+            self.code = try container.decodeIfPresent(String.self, forKey: .init("__type"))
+            self.message = try container.decodeIfPresent(String.self, forKey: .init("message")) ?? container.decode(String.self, forKey: .init("Message"))
 
-        private enum CodingKeys: String, CodingKey {
-            case code = "__type"
-            case message
-            case Message
+            var additionalFields: [String: String] = [:]
+            for key in container.allKeys {
+                guard key.stringValue != "__type", key.stringValue != "message", key.stringValue != "Message" else { continue }
+                additionalFields[key.stringValue] = try container.decodeIfPresent(String.self, forKey: key)
+            }
+            self.additionalFields = additionalFields
         }
     }
 
+    /// Error used by REST JSON output
     private struct RESTJSONError: Decodable, APIError {
         var code: String?
-        var message: String
+        let message: String
+        let additionalFields: [String: String]
 
         init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-            self.code = try container.decodeIfPresent(String.self, forKey: .code)
-            self.message = try container.decodeIfPresent(String.self, forKey: .message) ?? container.decode(String.self, forKey: .Message)
+            // use `ErrorCodingKey` so we get extract additional keys from `container.allKeys`
+            let container = try decoder.container(keyedBy: ErrorCodingKey.self)
+            self.code = try container.decodeIfPresent(String.self, forKey: .init("code"))
+            self.message = try container.decodeIfPresent(String.self, forKey: .init("message")) ?? container.decode(String.self, forKey: .init("Message"))
+
+            var additionalFields: [String: String] = [:]
+            for key in container.allKeys {
+                guard key.stringValue != "code", key.stringValue != "message", key.stringValue != "Message" else { continue }
+                additionalFields[key.stringValue] = try container.decodeIfPresent(String.self, forKey: key)
+            }
+            self.additionalFields = additionalFields
+        }
+    }
+
+    /// CodingKey used when decoding Errors
+    private struct ErrorCodingKey: CodingKey {
+        var stringValue: String
+        var intValue: Int?
+
+        init(_ stringValue: String) {
+            self.stringValue = stringValue
+            self.intValue = nil
         }
 
-        private enum CodingKeys: String, CodingKey {
-            case code
-            case message
-            case Message
+        init?(stringValue: String) {
+            self.stringValue = stringValue
+            self.intValue = nil
+        }
+
+        init?(intValue: Int) {
+            return nil
         }
     }
 }
 
 private protocol APIError {
     var code: String? { get set }
-    var message: String { get set }
+    var message: String { get }
+    var additionalFields: [String: String] { get }
 }

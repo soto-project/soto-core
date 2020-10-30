@@ -264,6 +264,20 @@ public struct AWSResponse {
     private struct XMLQueryError: Codable, APIError {
         var code: String?
         var message: String
+        var additionalFields: [String: String]
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            self.code = try container.decodeIfPresent(String.self, forKey: .code)
+            self.message = try container.decode(String.self, forKey: .message)
+            
+            var additionalFields: [String: String] = [:]
+            for key in container.allKeys {
+                guard key != .code, key != .message else { continue }
+                additionalFields[key.stringValue] = try container.decodeIfPresent(String.self, forKey: key)
+            }
+            self.additionalFields = additionalFields
+        }
 
         private enum CodingKeys: String, CodingKey {
             case code = "Code"
@@ -274,11 +288,19 @@ public struct AWSResponse {
     private struct JSONError: Decodable, APIError {
         var code: String?
         var message: String
+        var additionalFields: [String: String]
 
         init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             self.code = try container.decode(String?.self, forKey: .code)
             self.message = try container.decodeIfPresent(String.self, forKey: .message) ?? container.decode(String.self, forKey: .Message)
+            
+            var additionalFields: [String: String] = [:]
+            for key in container.allKeys {
+                guard key != .code, key != .message, key != .Message else { continue }
+                additionalFields[key.stringValue] = try container.decodeIfPresent(String.self, forKey: key)
+            }
+            self.additionalFields = additionalFields
         }
 
         private enum CodingKeys: String, CodingKey {
@@ -291,11 +313,19 @@ public struct AWSResponse {
     private struct RESTJSONError: Decodable, APIError {
         var code: String?
         var message: String
+        var additionalFields: [String: String]
 
         init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             self.code = try container.decodeIfPresent(String.self, forKey: .code)
             self.message = try container.decodeIfPresent(String.self, forKey: .message) ?? container.decode(String.self, forKey: .Message)
+            
+            var additionalFields: [String: String] = [:]
+            for key in container.allKeys {
+                guard key != .code, key != .message, key != .Message else { continue }
+                additionalFields[key.stringValue] = try container.decodeIfPresent(String.self, forKey: key)
+            }
+            self.additionalFields = additionalFields
         }
 
         private enum CodingKeys: String, CodingKey {

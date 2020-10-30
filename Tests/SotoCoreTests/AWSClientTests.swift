@@ -57,13 +57,27 @@ class AWSClientTests: XCTestCase {
     }
 
     func testShutdown() {
-        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
-        let eventLoop = eventLoopGroup.next()
-        // currently only testing with httpClientProvider: .shared(httpClient)
+
         let client = createAWSClient(httpClientProvider: .shared(httpClient))
+        let promise: EventLoopPromise<Void> = httpClient.eventLoopGroup.next().makePromise()
+        client.shutdown { error in
+            if let error = error {
+                promise.completeWith(.failure(error))
+            } else {
+                promise.completeWith(.success(()))
+            }
+        }
+        XCTAssertNoThrow(try promise.futureResult.wait())
+    }
+
+    func testShutdownWithEventLoop() {
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+        let eventLoop = eventLoopGroup.next()
+
+        let client = createAWSClient(httpClientProvider: .createNewWithEventLoopGroup(eventLoopGroup))
         let promise: EventLoopPromise<Void> = eventLoop.makePromise()
         client.shutdown { error in
             if let error = error {
@@ -173,9 +187,15 @@ class AWSClientTests: XCTestCase {
             let i: Int64
         }
         do {
+            let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+            defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
-            let client = createAWSClient(credentialProvider: .empty, middlewares: [AWSLoggingMiddleware()])
+            let client = createAWSClient(
+                credentialProvider: .empty,
+                middlewares: [AWSLoggingMiddleware()],
+                httpClientProvider: .createNewWithEventLoopGroup(eventLoopGroup)
+            )
             defer {
                 XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try awsServer.stop())

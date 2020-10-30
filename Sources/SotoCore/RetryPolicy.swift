@@ -73,10 +73,12 @@ extension StandardRetryPolicy {
         guard attempt < maxRetries else { return .dontRetry }
 
         switch error {
-        // server error or too many requests
-        case let responseError as AWSClient.HTTPResponseError:
-            if (500...).contains(responseError.response.status.code) || responseError.response.status.code == 429 {
-                return .retry(wait: calculateRetryWaitTime(attempt: attempt))
+        case let awsError as AWSErrorType:
+            if let context = awsError.context {
+                // server error or too many requests
+                if (500...).contains(context.responseCode.code) || context.responseCode.code == 429 {
+                    return .retry(wait: calculateRetryWaitTime(attempt: attempt))
+                }
             }
             return .dontRetry
         case is NIOConnectionError:

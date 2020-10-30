@@ -47,10 +47,6 @@ public final class AWSClient {
         public static var tooMuchData: ClientError { .init(error: .tooMuchData) }
     }
 
-    public struct HTTPResponseError: Swift.Error {
-        public let response: AWSHTTPResponse
-    }
-
     /// Specifies how `HTTPClient` will be created and establishes lifecycle ownership.
     public enum HTTPClientProvider {
         /// HTTP Client will be provided by the user. Owner of this group is responsible for its lifecycle. Any HTTPClient that conforms to
@@ -182,17 +178,25 @@ public final class AWSClient {
 
 // invoker
 extension AWSClient {
-    fileprivate func invoke(with serviceConfig: AWSServiceConfig, logger: Logger, _ request: @escaping () -> EventLoopFuture<AWSHTTPResponse>) -> EventLoopFuture<AWSHTTPResponse> {
+    fileprivate func invoke<Output>(
+        with serviceConfig: AWSServiceConfig,
+        logger: Logger,
+        request: @escaping () -> EventLoopFuture<AWSHTTPResponse>,
+        processResponse: @escaping (AWSHTTPResponse) throws -> Output
+    ) -> EventLoopFuture<Output> {
         let eventloop = self.eventLoopGroup.next()
-        let promise = eventloop.makePromise(of: AWSHTTPResponse.self)
+        let promise = eventloop.makePromise(of: Output.self)
 
         func execute(attempt: Int) {
             // execute HTTP request
             _ = request()
                 .flatMapThrowing { (response) throws -> Void in
                     // if it returns an HTTP status code outside 2xx then throw an error
-                    guard (200..<300).contains(response.status.code) else { throw HTTPResponseError(response: response) }
-                    promise.succeed(response)
+                    guard (200..<300).contains(response.status.code) else {
+                        throw self.createError(for: response, serviceConfig: serviceConfig, logger: logger)
+                    }
+                    let output = try processResponse(response)
+                    promise.succeed(output)
                 }
                 .flatMapErrorThrowing { (error) -> Void in
                     // If I get a retry wait time for this error then attempt to retry request
@@ -204,9 +208,6 @@ extension AWSClient {
                         eventloop.scheduleTask(in: retryTime) {
                             execute(attempt: attempt + 1)
                         }
-                    } else if let responseError = error as? HTTPResponseError {
-                        // if there was no retry and error was a response status code then attempt to convert to AWS error
-                        promise.fail(self.createError(for: responseError.response, serviceConfig: serviceConfig, logger: logger))
                     } else {
                         promise.fail(error)
                     }
@@ -452,10 +453,13 @@ extension AWSClient {
                     .applyMiddlewares(config.middlewares + self.middlewares, config: config)
                     .createHTTPRequest(signer: signer, byteBufferAllocator: config.byteBufferAllocator)
             }.flatMap { request in
-                return self.invoke(with: config, logger: logger) {
-                    execute(request, eventLoop, logger)
-                }
-            }.flatMapThrowing(processResponse)
+                return self.invoke(
+                    with: config,
+                    logger: logger,
+                    request: { execute(request, eventLoop, logger) },
+                    processResponse: processResponse
+                )
+            }
         return recordRequest(future, service: config.service, operation: operationName, logger: logger)
     }
 

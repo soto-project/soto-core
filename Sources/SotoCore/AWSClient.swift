@@ -52,6 +52,9 @@ public final class AWSClient {
         /// HTTP Client will be provided by the user. Owner of this group is responsible for its lifecycle. Any HTTPClient that conforms to
         /// `AWSHTTPClient` can be specified here including AsyncHTTPClient
         case shared(AWSHTTPClient)
+        /// HTTP Client will be created by the client using provided EventLoopGroup. When `shutdown` is called, created `HTTPClient`
+        /// will be shut down as well.
+        case createNewWithEventLoopGroup(EventLoopGroup)
         /// HTTP Client will be created by the client. When `shutdown` is called, created `HTTPClient` will be shut down as well.
         case createNew
     }
@@ -97,8 +100,10 @@ public final class AWSClient {
         switch httpClientProvider {
         case .shared(let providedHTTPClient):
             self.httpClient = providedHTTPClient
+        case .createNewWithEventLoopGroup(let elg):
+            self.httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(elg))
         case .createNew:
-            self.httpClient = AWSClient.createHTTPClient()
+            self.httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew)
         }
 
         self.credentialProvider = credentialProviderFactory.createProvider(context: .init(
@@ -159,7 +164,7 @@ public final class AWSClient {
         credentialProvider.shutdown(on: eventLoop).whenComplete { _ in
             // if httpClient was created by AWSClient then it is required to shutdown the httpClient.
             switch self.httpClientProvider {
-            case .createNew:
+            case .createNew, .createNewWithEventLoopGroup:
                 self.httpClient.shutdown(queue: queue) { error in
                     if let error = error {
                         self.clientLogger.error("Error shutting down HTTP client", metadata: [
@@ -217,11 +222,6 @@ extension AWSClient {
         execute(attempt: 0)
 
         return promise.futureResult
-    }
-
-    /// create HTTPClient
-    fileprivate static func createHTTPClient() -> AWSHTTPClient {
-        return AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew)
     }
 }
 

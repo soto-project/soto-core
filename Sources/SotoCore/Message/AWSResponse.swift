@@ -261,7 +261,7 @@ public struct AWSResponse {
 
         return nil
     }
-    
+
     /// Error used by XML output
     private struct XMLQueryError: Codable, APIError {
         var code: String?
@@ -273,7 +273,7 @@ public struct AWSResponse {
             let container = try decoder.container(keyedBy: ErrorCodingKey.self)
             self.code = try container.decodeIfPresent(String.self, forKey: .init("Code"))
             self.message = try container.decode(String.self, forKey: .init("Message"))
-            
+
             var additionalFields: [String: String] = [:]
             for key in container.allKeys {
                 guard key.stringValue != "Code", key.stringValue != "Message" else { continue }
@@ -294,7 +294,7 @@ public struct AWSResponse {
             let container = try decoder.container(keyedBy: ErrorCodingKey.self)
             self.code = try container.decodeIfPresent(String.self, forKey: .init("__type"))
             self.message = try container.decodeIfPresent(String.self, forKey: .init("message")) ?? container.decode(String.self, forKey: .init("Message"))
-            
+
             var additionalFields: [String: String] = [:]
             for key in container.allKeys {
                 guard key.stringValue != "__type", key.stringValue != "message", key.stringValue != "Message" else { continue }
@@ -315,7 +315,7 @@ public struct AWSResponse {
             let container = try decoder.container(keyedBy: ErrorCodingKey.self)
             self.code = try container.decodeIfPresent(String.self, forKey: .init("code"))
             self.message = try container.decodeIfPresent(String.self, forKey: .init("message")) ?? container.decode(String.self, forKey: .init("Message"))
-            
+
             var additionalFields: [String: String] = [:]
             for key in container.allKeys {
                 guard key.stringValue != "code", key.stringValue != "message", key.stringValue != "Message" else { continue }
@@ -324,7 +324,7 @@ public struct AWSResponse {
             self.additionalFields = additionalFields
         }
     }
-    
+
     /// CodingKey used when decoding Errors
     private struct ErrorCodingKey: CodingKey {
         var stringValue: String
@@ -334,10 +334,12 @@ public struct AWSResponse {
             self.stringValue = stringValue
             self.intValue = nil
         }
+
         init?(stringValue: String) {
             self.stringValue = stringValue
             self.intValue = nil
         }
+
         init?(intValue: Int) {
             return nil
         }

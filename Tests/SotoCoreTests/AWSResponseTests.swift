@@ -224,7 +224,7 @@ class AWSResponseTests: XCTestCase {
         let response = AWSHTTPResponseImpl(
             status: .notFound,
             headers: HTTPHeaders(),
-            bodyData: "{\"__type\":\"ResourceNotFoundException\", \"Message\": \"Donald Where's Your Troosers?\"}".data(using: .utf8)!
+            bodyData: #"{"__type":"ResourceNotFoundException", "Message": "Donald Where's Your Troosers?", "fault": "client"}"#.data(using: .utf8)!
         )
         let service = createServiceConfig(serviceProtocol: .json(version: "1.1"), errorType: ServiceErrorType.self)
 
@@ -234,13 +234,14 @@ class AWSResponseTests: XCTestCase {
         XCTAssertEqual(error, ServiceErrorType.resourceNotFoundException)
         XCTAssertEqual(error?.message, "Donald Where's Your Troosers?")
         XCTAssertEqual(error?.context?.responseCode, .notFound)
+        XCTAssertEqual(error?.context?.additionalFields["fault"], "client")
     }
 
     func testRestJSONError() {
         let response = AWSHTTPResponseImpl(
             status: .notFound,
             headers: ["x-amzn-errortype": "ResourceNotFoundException"],
-            bodyData: Data("{\"message\": \"Donald Where's Your Troosers?\"}".utf8)
+            bodyData: Data(#"{"message": "Donald Where's Your Troosers?", "Fault": "Client"}"#.utf8)
         )
         let service = createServiceConfig(serviceProtocol: .restjson, errorType: ServiceErrorType.self)
 
@@ -250,13 +251,15 @@ class AWSResponseTests: XCTestCase {
         XCTAssertEqual(error, ServiceErrorType.resourceNotFoundException)
         XCTAssertEqual(error?.message, "Donald Where's Your Troosers?")
         XCTAssertEqual(error?.context?.responseCode, .notFound)
+        XCTAssertEqual(error?.context?.additionalFields["Fault"], "Client")
     }
 
     func testRestJSONErrorV2() {
+        // Capitalized "Message"
         let response = AWSHTTPResponseImpl(
             status: .notFound,
             headers: ["x-amzn-errortype": "ResourceNotFoundException"],
-            bodyData: Data("{\"Message\": \"Donald Where's Your Troosers?\"}".utf8)
+            bodyData: Data(#"{"Message": "Donald Where's Your Troosers?"}"#.utf8)
         )
         let service = createServiceConfig(serviceProtocol: .restjson, errorType: ServiceErrorType.self)
 
@@ -272,7 +275,7 @@ class AWSResponseTests: XCTestCase {
         let response = AWSHTTPResponseImpl(
             status: .notFound,
             headers: HTTPHeaders(),
-            bodyData: "<Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message></Error>".data(using: .utf8)!
+            bodyData: "<Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message><fault>client</fault></Error>".data(using: .utf8)!
         )
         let service = createServiceConfig(serviceProtocol: .restxml, errorType: ServiceErrorType.self)
 
@@ -282,13 +285,14 @@ class AWSResponseTests: XCTestCase {
         XCTAssertEqual(error, ServiceErrorType.noSuchKey)
         XCTAssertEqual(error?.message, "It doesn't exist")
         XCTAssertEqual(error?.context?.responseCode, .notFound)
+        XCTAssertEqual(error?.context?.additionalFields["fault"], "client")
     }
 
     func testQueryError() {
         let response = AWSHTTPResponseImpl(
             status: .notFound,
             headers: HTTPHeaders(),
-            bodyData: "<ErrorResponse><Error><Code>MessageRejected</Code><Message>Don't like it</Message></Error></ErrorResponse>".data(using: .utf8)!
+            bodyData: "<ErrorResponse><Error><Code>MessageRejected</Code><Message>Don't like it</Message><fault>client</fault></Error></ErrorResponse>".data(using: .utf8)!
         )
         let queryService = createServiceConfig(serviceProtocol: .query, errorType: ServiceErrorType.self)
 
@@ -298,13 +302,14 @@ class AWSResponseTests: XCTestCase {
         XCTAssertEqual(error, ServiceErrorType.messageRejected)
         XCTAssertEqual(error?.message, "Don't like it")
         XCTAssertEqual(error?.context?.responseCode, .notFound)
+        XCTAssertEqual(error?.context?.additionalFields["fault"], "client")
     }
 
     func testEC2Error() {
         let response = AWSHTTPResponseImpl(
             status: .notFound,
             headers: HTTPHeaders(),
-            bodyData: "<Errors><Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message></Error></Errors>".data(using: .utf8)!
+            bodyData: "<Errors><Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message><fault>client</fault></Error></Errors>".data(using: .utf8)!
         )
         let service = createServiceConfig(serviceProtocol: .ec2)
 
@@ -314,6 +319,21 @@ class AWSResponseTests: XCTestCase {
         XCTAssertEqual(error?.errorCode, "NoSuchKey")
         XCTAssertEqual(error?.message, "It doesn't exist")
         XCTAssertEqual(error?.context?.responseCode, .notFound)
+        XCTAssertEqual(error?.context?.additionalFields["fault"], "client")
+    }
+
+    func testAdditionalErrorFields() {
+        let response = AWSHTTPResponseImpl(
+            status: .notFound,
+            headers: HTTPHeaders(),
+            bodyData: "<Errors><Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message><fault>client</fault></Error></Errors>".data(using: .utf8)!
+        )
+        let service = createServiceConfig(serviceProtocol: .restxml)
+
+        var awsResponse: AWSResponse?
+        XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .ec2, raw: false))
+        let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? AWSResponseError
+        XCTAssertEqual(error?.context?.additionalFields["fault"], "client")
     }
 
     // MARK: Miscellaneous tests

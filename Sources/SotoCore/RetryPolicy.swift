@@ -82,7 +82,8 @@ extension StandardRetryPolicy {
                 // server error or too many requests
                 if (500...).contains(context.responseCode.code) ||
                     context.responseCode.code == 429 ||
-                    error.errorCode == AWSClientError.throttling.errorCode {
+                    error.errorCode == AWSClientError.throttling.errorCode
+                {
                     return .retry(wait: calculateRetryWaitTime(attempt: attempt))
                 }
             }

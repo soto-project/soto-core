@@ -73,10 +73,19 @@ extension StandardRetryPolicy {
         guard attempt < maxRetries else { return .dontRetry }
 
         switch error {
-        // server error or too many requests
-        case let responseError as AWSClient.HTTPResponseError:
-            if (500...).contains(responseError.response.status.code) || responseError.response.status.code == 429 {
-                return .retry(wait: calculateRetryWaitTime(attempt: attempt))
+        case let error as AWSErrorType:
+            if let context = error.context {
+                // if response has a "Retry-After" header then use that
+                if let retryAfterString = context.headers["Retry-After"].first, let retryAfter = Int64(retryAfterString) {
+                    return .retry(wait: .seconds(retryAfter))
+                }
+                // server error or too many requests
+                if (500...).contains(context.responseCode.code) ||
+                    context.responseCode.code == 429 ||
+                    error.errorCode == AWSClientError.throttling.errorCode
+                {
+                    return .retry(wait: calculateRetryWaitTime(attempt: attempt))
+                }
             }
             return .dontRetry
         case is NIOConnectionError:

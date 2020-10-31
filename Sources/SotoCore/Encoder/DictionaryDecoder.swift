@@ -15,8 +15,6 @@
 // based on JSONEncoder.swift from apple/swift as of Apr 18 2019
 // https://github.com/apple/swift/blob/2771eb520c4e3058058baf6bb3f6dba6184a17d3/stdlib/public/Darwin/Foundation/JSONEncoder.swift
 
-import CoreFoundation
-import struct Foundation.CharacterSet
 import struct Foundation.Data
 import struct Foundation.Date
 import class Foundation.DateFormatter
@@ -30,7 +28,7 @@ import class Foundation.NSNumber
 //===----------------------------------------------------------------------===//
 
 /// `DictionaryDecoder` facilitates the decoding of Dictionaries into semantic `Decodable` types.
-class DictionaryDecoder {
+public class DictionaryDecoder {
     // MARK: Options
 
     /// The strategy to use for decoding `Date` values.
@@ -70,16 +68,16 @@ class DictionaryDecoder {
     }
 
     /// The strategy to use in decoding dates. Defaults to `.deferredToDate`.
-    open var dateDecodingStrategy: DateDecodingStrategy = .deferredToDate
+    public var dateDecodingStrategy: DateDecodingStrategy = .deferredToDate
 
     /// The strategy to use in decoding binary data. Defaults to `.base64`.
-    open var dataDecodingStrategy: DataDecodingStrategy = .base64
+    public var dataDecodingStrategy: DataDecodingStrategy = .base64
 
     /// The strategy to use in decoding non-conforming numbers. Defaults to `.throw`.
-    open var nonConformingFloatDecodingStrategy: NonConformingFloatDecodingStrategy = .throw
+    public var nonConformingFloatDecodingStrategy: NonConformingFloatDecodingStrategy = .throw
 
     /// Contextual user-provided information for use during decoding.
-    open var userInfo: [CodingUserInfoKey: Any] = [:]
+    public var userInfo: [CodingUserInfoKey: Any] = [:]
 
     /// Options set on the top-level encoder to pass down the decoding hierarchy.
     fileprivate struct _Options {
@@ -113,7 +111,7 @@ class DictionaryDecoder {
     /// - returns: A value of the requested type.
     /// - throws: `DecodingError.dataCorrupted` if values requested from the payload are corrupted.
     /// - throws: An error if any value throws an error during decoding.
-    open func decode<T: Decodable>(_ type: T.Type, from dictionary: Any) throws -> T {
+    public func decode<T: Decodable>(_ type: T.Type, from dictionary: Any) throws -> T {
         let decoder = __DictionaryDecoder(referencing: dictionary, options: self.options)
         guard let value = try decoder.unbox(dictionary, as: type) else {
             throw DecodingError.valueNotFound(type, DecodingError.Context(codingPath: [], debugDescription: "The given data did not contain a top-level value."))

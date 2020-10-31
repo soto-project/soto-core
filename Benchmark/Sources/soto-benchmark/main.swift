@@ -19,6 +19,7 @@ let suites = [
     queryEncoderSuite,
     xmlEncoderSuite,
     xmlDecoderSuite,
+    dictionaryDecoderSuite,
     awsClientSuite,
 ]
 

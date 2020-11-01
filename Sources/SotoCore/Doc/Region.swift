@@ -80,8 +80,8 @@ public struct Region: RawRepresentable, Equatable {
     public static func other(_ name: String) -> Region { .init(rawValue: name) }
 }
 
-extension Region {
-    public var partition: AWSPartition {
+public extension Region {
+    var partition: AWSPartition {
         switch self {
         case .afsouth1: return .aws
         case .apeast1: return .aws
@@ -156,14 +156,81 @@ public struct AWSPartition: RawRepresentable, Equatable, Hashable {
     public static var awsisob: AWSPartition { .init(partition: .awsisob) }
 }
 
-extension AWSPartition {
-    public var dnsSuffix: String {
+public extension AWSPartition {
+    var dnsSuffix: String {
         switch self.partition {
         case .aws: return "amazonaws.com"
         case .awscn: return "amazonaws.com.cn"
         case .awsusgov: return "amazonaws.com"
         case .awsiso: return "c2s.ic.gov"
         case .awsisob: return "sc2s.sgov.gov"
+        }
+    }
+}
+
+// allows to create a Region from a String
+// this initialializer returns an Optional.
+// it is non nil for valid region name only
+public extension Region {
+    init?(regionName: String) {
+        switch regionName {
+        case "af-south-1":
+            self = Region.afsouth1
+        case "ap-east-1":
+            self = Region.apeast1
+        case "ap-northeast-1":
+            self = Region.apnortheast1
+        case "ap-northeast-2":
+            self = Region.apnortheast2
+        case "ap-northeast-3":
+            self = Region.apnortheast3
+        case "ap-south-1":
+            self = Region.apsouth1
+        case "ap-southeast-1":
+            self = Region.apsoutheast1
+        case "ap-southeast-2":
+            self = Region.apsoutheast2
+        case "ca-central-1":
+            self = Region.cacentral1
+        case "cn-north-1":
+            self = Region.cnnorth1
+        case "cn-northwest-1":
+            self = Region.cnnorthwest1
+        case "eu-central-1":
+            self = Region.eucentral1
+        case "eu-north-1":
+            self = Region.eunorth1
+        case "eu-south-1":
+            self = Region.eusouth1
+        case "eu-west-1":
+            self = Region.euwest1
+        case "eu-west-2":
+            self = Region.euwest2
+        case "eu-west-3":
+            self = Region.euwest3
+        case "me-south-1":
+            self = Region.mesouth1
+        case "sa-east-1":
+            self = Region.saeast1
+        case "us-east-1":
+            self = Region.useast1
+        case "us-east-2":
+            self = Region.useast2
+        case "us-gov-east-1":
+            self = Region.usgoveast1
+        case "us-gov-west-1":
+            self = Region.usgovwest1
+        case "us-iso-east-1":
+            self = Region.usisoeast1
+        case "us-isob-east-1":
+            self = Region.usisobeast1
+        case "us-west-1":
+            self = Region.uswest1
+        case "us-west-2":
+            self = Region.uswest2
+
+        default:
+            return nil
         }
     }
 }

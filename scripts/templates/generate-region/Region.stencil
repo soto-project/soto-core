@@ -83,3 +83,21 @@ extension AWSPartition {
         }
     }
 }
+    
+// allows to create a Region from a String
+// this initialializer returns an Optional.
+// it is non nil for valid region name only
+extension Region {
+    
+    public init?(regionName: String) {
+        switch regionName {
+{%for region in regions %}
+        case "{{region.name}}":
+            self = Region.{{region.enum}}
+{%endfor %}
+
+        default:
+            return nil
+        }
+    }
+}

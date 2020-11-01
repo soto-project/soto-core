@@ -114,7 +114,7 @@ public struct TestEnvironment {
         }
         return AWSClient.loggingDisabled
     }()
-    
+
     public static var context: BaggageContext = {
         DefaultContext.topLevel(logger: logger)
     }()

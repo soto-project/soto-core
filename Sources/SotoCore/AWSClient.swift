@@ -47,15 +47,14 @@ public final class AWSClient {
         public static var tooMuchData: ClientError { .init(error: .tooMuchData) }
     }
 
-    public struct HTTPResponseError: Swift.Error {
-        public let response: AWSHTTPResponse
-    }
-
     /// Specifies how `HTTPClient` will be created and establishes lifecycle ownership.
     public enum HTTPClientProvider {
         /// HTTP Client will be provided by the user. Owner of this group is responsible for its lifecycle. Any HTTPClient that conforms to
         /// `AWSHTTPClient` can be specified here including AsyncHTTPClient
         case shared(AWSHTTPClient)
+        /// HTTP Client will be created by the client using provided EventLoopGroup. When `shutdown` is called, created `HTTPClient`
+        /// will be shut down as well.
+        case createNewWithEventLoopGroup(EventLoopGroup)
         /// HTTP Client will be created by the client. When `shutdown` is called, created `HTTPClient` will be shut down as well.
         case createNew
     }
@@ -101,8 +100,10 @@ public final class AWSClient {
         switch httpClientProvider {
         case .shared(let providedHTTPClient):
             self.httpClient = providedHTTPClient
+        case .createNewWithEventLoopGroup(let elg):
+            self.httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(elg))
         case .createNew:
-            self.httpClient = AWSClient.createHTTPClient()
+            self.httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew)
         }
 
         self.credentialProvider = credentialProviderFactory.createProvider(context: .init(
@@ -163,7 +164,7 @@ public final class AWSClient {
         credentialProvider.shutdown(on: eventLoop).whenComplete { _ in
             // if httpClient was created by AWSClient then it is required to shutdown the httpClient.
             switch self.httpClientProvider {
-            case .createNew:
+            case .createNew, .createNewWithEventLoopGroup:
                 self.httpClient.shutdown(queue: queue) { error in
                     if let error = error {
                         self.clientLogger.error("Error shutting down HTTP client", metadata: [
@@ -182,17 +183,25 @@ public final class AWSClient {
 
 // invoker
 extension AWSClient {
-    fileprivate func invoke(with serviceConfig: AWSServiceConfig, logger: Logger, _ request: @escaping () -> EventLoopFuture<AWSHTTPResponse>) -> EventLoopFuture<AWSHTTPResponse> {
+    fileprivate func invoke<Output>(
+        with serviceConfig: AWSServiceConfig,
+        logger: Logger,
+        request: @escaping () -> EventLoopFuture<AWSHTTPResponse>,
+        processResponse: @escaping (AWSHTTPResponse) throws -> Output
+    ) -> EventLoopFuture<Output> {
         let eventloop = self.eventLoopGroup.next()
-        let promise = eventloop.makePromise(of: AWSHTTPResponse.self)
+        let promise = eventloop.makePromise(of: Output.self)
 
         func execute(attempt: Int) {
             // execute HTTP request
             _ = request()
                 .flatMapThrowing { (response) throws -> Void in
                     // if it returns an HTTP status code outside 2xx then throw an error
-                    guard (200..<300).contains(response.status.code) else { throw HTTPResponseError(response: response) }
-                    promise.succeed(response)
+                    guard (200..<300).contains(response.status.code) else {
+                        throw self.createError(for: response, serviceConfig: serviceConfig, logger: logger)
+                    }
+                    let output = try processResponse(response)
+                    promise.succeed(output)
                 }
                 .flatMapErrorThrowing { (error) -> Void in
                     // If I get a retry wait time for this error then attempt to retry request
@@ -204,9 +213,6 @@ extension AWSClient {
                         eventloop.scheduleTask(in: retryTime) {
                             execute(attempt: attempt + 1)
                         }
-                    } else if let responseError = error as? HTTPResponseError {
-                        // if there was no retry and error was a response status code then attempt to convert to AWS error
-                        promise.fail(self.createError(for: responseError.response, serviceConfig: serviceConfig, logger: logger))
                     } else {
                         promise.fail(error)
                     }
@@ -216,11 +222,6 @@ extension AWSClient {
         execute(attempt: 0)
 
         return promise.futureResult
-    }
-
-    /// create HTTPClient
-    fileprivate static func createHTTPClient() -> AWSHTTPClient {
-        return AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew)
     }
 }
 
@@ -444,18 +445,25 @@ extension AWSClient {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName, service: config.service)
 
+        // get credentials
         let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop, logger: logger)
             .flatMapThrowing { credential in
+                // construct signer
                 let signer = AWSSigner(credentials: credential, name: config.signingName, region: config.region.rawValue)
+                // create request and sign with signer
                 let awsRequest = try createRequest()
                 return try awsRequest
                     .applyMiddlewares(config.middlewares + self.middlewares, config: config)
                     .createHTTPRequest(signer: signer, byteBufferAllocator: config.byteBufferAllocator)
             }.flatMap { request in
-                return self.invoke(with: config, logger: logger) {
-                    execute(request, eventLoop, logger)
-                }
-            }.flatMapThrowing(processResponse)
+                // send request to AWS and process result
+                return self.invoke(
+                    with: config,
+                    logger: logger,
+                    request: { execute(request, eventLoop, logger) },
+                    processResponse: processResponse
+                )
+            }
         return recordRequest(future, service: config.service, operation: operationName, logger: logger)
     }
 

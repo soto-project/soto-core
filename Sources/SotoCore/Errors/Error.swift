@@ -39,11 +39,18 @@ public struct AWSErrorContext {
     public let message: String
     public let responseCode: HTTPResponseStatus
     public let headers: HTTPHeaders
+    public let additionalFields: [String: String]
 
-    internal init(message: String, responseCode: HTTPResponseStatus, headers: HTTPHeaders = [:]) {
+    internal init(
+        message: String,
+        responseCode: HTTPResponseStatus,
+        headers: HTTPHeaders = [:],
+        additionalFields: [String: String] = [:]
+    ) {
         self.message = message
         self.responseCode = responseCode
         self.headers = headers
+        self.additionalFields = additionalFields
     }
 }
 

@@ -20,6 +20,7 @@ import struct Foundation.TimeInterval
 import struct Foundation.TimeZone
 import struct Foundation.URL
 
+import BaggageContext
 import Logging
 import NIO
 import NIOConcurrencyHelpers
@@ -119,7 +120,12 @@ struct ECSMetaDataClient: MetaDataClient {
 
     private func request(url: String, timeout: TimeInterval, on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<AWSHTTPResponse> {
         let request = AWSHTTPRequest(url: URL(string: url)!, method: .GET, headers: [:], body: .empty)
-        return httpClient.execute(request: request, timeout: TimeAmount.seconds(2), on: eventLoop, logger: logger)
+        return httpClient.execute(
+            request: request,
+            timeout: TimeAmount.seconds(2),
+            on: eventLoop,
+            context: DefaultContext.TODO(logger: logger, "Replace with context passed to credential provider when implemented")
+        )
     }
 }
 
@@ -258,6 +264,11 @@ struct InstanceMetaDataClient: MetaDataClient {
         logger: Logger
     ) -> EventLoopFuture<AWSHTTPResponse> {
         let request = AWSHTTPRequest(url: url, method: method, headers: headers, body: .empty)
-        return httpClient.execute(request: request, timeout: timeout, on: eventLoop, logger: logger)
+        return httpClient.execute(
+            request: request,
+            timeout: timeout,
+            on: eventLoop,
+            context: DefaultContext.TODO(logger: logger, "Replace with context passed to credential provider when implemented")
+        )
     }
 }

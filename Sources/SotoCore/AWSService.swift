@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import BaggageContext
 import struct Foundation.URL
 import NIO
 
@@ -46,9 +47,9 @@ extension AWSService {
         httpMethod: HTTPMethod,
         headers: HTTPHeaders = HTTPHeaders(),
         expires: TimeAmount,
-        logger: Logger = AWSClient.loggingDisabled
+        context: BaggageContext = AWSClient.defaultBaggageContext()
     ) -> EventLoopFuture<URL> {
-        return self.client.signURL(url: url, httpMethod: httpMethod, headers: headers, expires: expires, serviceConfig: self.config, logger: logger)
+        return self.client.signURL(url: url, httpMethod: httpMethod, headers: headers, expires: expires, serviceConfig: self.config, context: context)
     }
 
     /// Return new version of Service with edited parameters

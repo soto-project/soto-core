@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+import BaggageContext
 import NIO
 @testable import SotoCore
 import SotoTestUtils
@@ -66,14 +67,14 @@ class PaginateTests: XCTestCase {
         let outputToken: Int?
     }
 
-    func counter(_ input: CounterInput, logger: Logger, on eventLoop: EventLoop?) -> EventLoopFuture<CounterOutput> {
+    func counter(_ input: CounterInput, context: BaggageContext, on eventLoop: EventLoop?) -> EventLoopFuture<CounterOutput> {
         return self.client.execute(
             operation: "TestOperation",
             path: "/",
             httpMethod: .POST,
             serviceConfig: self.config,
             input: input,
-            logger: logger,
+            context: context,
             on: eventLoop
         )
     }
@@ -83,7 +84,7 @@ class PaginateTests: XCTestCase {
             input: input,
             command: self.counter,
             tokenKey: \CounterOutput.outputToken,
-            logger: TestEnvironment.logger,
+            context: TestEnvironment.context,
             onPage: onPage
         )
     }
@@ -152,14 +153,14 @@ class PaginateTests: XCTestCase {
         let moreResults: Bool
     }
 
-    func stringList(_ input: StringListInput, logger: Logger, on eventLoop: EventLoop? = nil) -> EventLoopFuture<StringListOutput> {
+    func stringList(_ input: StringListInput, context: BaggageContext, on eventLoop: EventLoop? = nil) -> EventLoopFuture<StringListOutput> {
         return self.client.execute(
             operation: "TestOperation",
             path: "/",
             httpMethod: .POST,
             serviceConfig: self.config,
             input: input,
-            logger: logger,
+            context: context,
             on: eventLoop
         )
     }
@@ -170,20 +171,20 @@ class PaginateTests: XCTestCase {
             command: self.stringList,
             tokenKey: \StringListOutput.outputToken,
             moreResultsKey: \StringListOutput.moreResults,
-            logger: TestEnvironment.logger,
+            context: TestEnvironment.context,
             on: eventLoop,
             onPage: onPage
         )
     }
 
-    func stringList2(_ input: StringListInput, logger: Logger, on eventLoop: EventLoop? = nil) -> EventLoopFuture<StringList2Output> {
+    func stringList2(_ input: StringListInput, context: BaggageContext, on eventLoop: EventLoop? = nil) -> EventLoopFuture<StringList2Output> {
         return self.client.execute(
             operation: "TestOperation",
             path: "/",
             httpMethod: .POST,
             serviceConfig: self.config,
             input: input,
-            logger: logger,
+            context: context,
             on: eventLoop
         )
     }
@@ -195,7 +196,7 @@ class PaginateTests: XCTestCase {
             command: self.stringList2,
             tokenKey: \StringList2Output.outputToken,
             moreResultsKey: \StringList2Output.moreResults,
-            logger: TestEnvironment.logger,
+            context: TestEnvironment.context,
             on: eventLoop,
             onPage: onPage
         )

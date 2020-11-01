@@ -36,7 +36,7 @@ let package = Package(
             .byName(name: "SotoXML"),
             .byName(name: "INIParser"),
             .product(name: "AsyncHTTPClient", package: "async-http-client"),
-            .product(name: "BaggageContext", package: "swift-context"),
+            .byName(name: "BaggageContext"),
             .product(name: "Logging", package: "swift-log"),
             .product(name: "Metrics", package: "swift-metrics"),
             .product(name: "NIO", package: "swift-nio"),
@@ -52,7 +52,7 @@ let package = Package(
         ]),
         .target(name: "SotoTestUtils", dependencies: [
             .byName(name: "SotoCore"),
-            .product(name: "BaggageContext", package: "swift-context"),
+            .byName(name: "BaggageContext"),
             .product(name: "NIO", package: "swift-nio"),
             .product(name: "NIOHTTP1", package: "swift-nio"),
             .product(name: "NIOFoundationCompat", package: "swift-nio"),

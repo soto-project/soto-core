@@ -185,16 +185,16 @@ public final class AWSClient {
 extension AWSClient {
     fileprivate func invoke<Output>(
         with serviceConfig: AWSServiceConfig,
+        eventLoop: EventLoop,
         logger: Logger,
-        request: @escaping () -> EventLoopFuture<AWSHTTPResponse>,
+        request: @escaping (EventLoop) -> EventLoopFuture<AWSHTTPResponse>,
         processResponse: @escaping (AWSHTTPResponse) throws -> Output
     ) -> EventLoopFuture<Output> {
-        let eventloop = self.eventLoopGroup.next()
-        let promise = eventloop.makePromise(of: Output.self)
+        let promise = eventLoop.makePromise(of: Output.self)
 
         func execute(attempt: Int) {
             // execute HTTP request
-            _ = request()
+            _ = request(eventLoop)
                 .flatMapThrowing { (response) throws -> Void in
                     // if it returns an HTTP status code outside 2xx then throw an error
                     guard (200..<300).contains(response.status.code) else {
@@ -210,7 +210,7 @@ extension AWSClient {
                             "aws-retry-time": "\(Double(retryTime.nanoseconds) / 1_000_000_000)",
                         ])
                         // schedule task for retrying AWS request
-                        eventloop.scheduleTask(in: retryTime) {
+                        eventLoop.scheduleTask(in: retryTime) {
                             execute(attempt: attempt + 1)
                         }
                     } else {
@@ -264,8 +264,8 @@ extension AWSClient {
                 return
             },
             config: serviceConfig,
-            on: eventLoop,
-            logger: logger
+            logger: logger,
+            on: eventLoop
         )
     }
 
@@ -303,8 +303,8 @@ extension AWSClient {
                 return
             },
             config: serviceConfig,
-            on: eventLoop,
-            logger: logger
+            logger: logger,
+            on: eventLoop
         )
     }
 
@@ -342,8 +342,8 @@ extension AWSClient {
                 return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
             },
             config: serviceConfig,
-            on: eventLoop,
-            logger: logger
+            logger: logger,
+            on: eventLoop
         )
     }
 
@@ -384,8 +384,8 @@ extension AWSClient {
                 return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
             },
             config: serviceConfig,
-            on: eventLoop,
-            logger: logger
+            logger: logger,
+            on: eventLoop
         )
     }
 
@@ -427,8 +427,8 @@ extension AWSClient {
                 return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
             },
             config: serviceConfig,
-            on: eventLoop,
-            logger: logger
+            logger: logger,
+            on: eventLoop
         )
     }
 
@@ -439,8 +439,8 @@ extension AWSClient {
         execute: @escaping (AWSHTTPRequest, EventLoop, Logger) -> EventLoopFuture<AWSHTTPResponse>,
         processResponse: @escaping (AWSHTTPResponse) throws -> Output,
         config: AWSServiceConfig,
-        on eventLoop: EventLoop? = nil,
-        logger: Logger = AWSClient.loggingDisabled
+        logger: Logger = AWSClient.loggingDisabled,
+        on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName, service: config.service)
@@ -459,8 +459,9 @@ extension AWSClient {
                 // send request to AWS and process result
                 return self.invoke(
                     with: config,
+                    eventLoop: eventLoop,
                     logger: logger,
-                    request: { execute(request, eventLoop, logger) },
+                    request: { eventLoop in execute(request, eventLoop, logger) },
                     processResponse: processResponse
                 )
             }

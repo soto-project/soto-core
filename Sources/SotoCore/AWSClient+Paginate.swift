@@ -42,8 +42,8 @@ extension AWSClient {
         initialValue: Result,
         command: @escaping (Input, EventLoop?, Logger) -> EventLoopFuture<Output>,
         tokenKey: KeyPath<Output, Input.Token?>,
-        on eventLoop: EventLoop? = nil,
         logger: Logger = AWSClient.loggingDisabled,
+        on eventLoop: EventLoop? = nil,
         onPage: @escaping (Result, Output, EventLoop) -> EventLoopFuture<(Bool, Result)>
     ) -> EventLoopFuture<Result> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
@@ -87,11 +87,11 @@ extension AWSClient {
         input: Input,
         command: @escaping (Input, EventLoop?, Logger) -> EventLoopFuture<Output>,
         tokenKey: KeyPath<Output, Input.Token?>,
-        on eventLoop: EventLoop? = nil,
         logger: Logger = AWSClient.loggingDisabled,
+        on eventLoop: EventLoop? = nil,
         onPage: @escaping (Output, EventLoop) -> EventLoopFuture<Bool>
     ) -> EventLoopFuture<Void> {
-        self.paginate(input: input, initialValue: (), command: command, tokenKey: tokenKey, on: eventLoop, logger: logger) { _, output, eventLoop in
+        self.paginate(input: input, initialValue: (), command: command, tokenKey: tokenKey, logger: logger, on: eventLoop) { _, output, eventLoop in
             return onPage(output, eventLoop).map { rt in (rt, ()) }
         }
     }
@@ -117,8 +117,8 @@ extension AWSClient {
         command: @escaping (Input, EventLoop?, Logger) -> EventLoopFuture<Output>,
         tokenKey: KeyPath<Output, Input.Token?>,
         moreResultsKey: KeyPath<Output, Bool>,
-        on eventLoop: EventLoop? = nil,
         logger: Logger = AWSClient.loggingDisabled,
+        on eventLoop: EventLoop? = nil,
         onPage: @escaping (Result, Output, EventLoop) -> EventLoopFuture<(Bool, Result)>
     ) -> EventLoopFuture<Result> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
@@ -165,11 +165,11 @@ extension AWSClient {
         command: @escaping (Input, EventLoop?, Logger) -> EventLoopFuture<Output>,
         tokenKey: KeyPath<Output, Input.Token?>,
         moreResultsKey: KeyPath<Output, Bool>,
-        on eventLoop: EventLoop? = nil,
         logger: Logger = AWSClient.loggingDisabled,
+        on eventLoop: EventLoop? = nil,
         onPage: @escaping (Output, EventLoop) -> EventLoopFuture<Bool>
     ) -> EventLoopFuture<Void> {
-        self.paginate(input: input, initialValue: (), command: command, tokenKey: tokenKey, moreResultsKey: moreResultsKey, on: eventLoop, logger: logger) { _, output, eventLoop in
+        self.paginate(input: input, initialValue: (), command: command, tokenKey: tokenKey, moreResultsKey: moreResultsKey, logger: logger, on: eventLoop) { _, output, eventLoop in
             return onPage(output, eventLoop).map { rt in (rt, ()) }
         }
     }
@@ -195,8 +195,8 @@ extension AWSClient {
         command: @escaping (Input, EventLoop?, Logger) -> EventLoopFuture<Output>,
         tokenKey: KeyPath<Output, Input.Token?>,
         moreResultsKey: KeyPath<Output, Bool?>,
-        on eventLoop: EventLoop? = nil,
         logger: Logger = AWSClient.loggingDisabled,
+        on eventLoop: EventLoop? = nil,
         onPage: @escaping (Result, Output, EventLoop) -> EventLoopFuture<(Bool, Result)>
     ) -> EventLoopFuture<Result> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
@@ -243,11 +243,11 @@ extension AWSClient {
         command: @escaping (Input, EventLoop?, Logger) -> EventLoopFuture<Output>,
         tokenKey: KeyPath<Output, Input.Token?>,
         moreResultsKey: KeyPath<Output, Bool?>,
-        on eventLoop: EventLoop? = nil,
         logger: Logger = AWSClient.loggingDisabled,
+        on eventLoop: EventLoop? = nil,
         onPage: @escaping (Output, EventLoop) -> EventLoopFuture<Bool>
     ) -> EventLoopFuture<Void> {
-        self.paginate(input: input, initialValue: (), command: command, tokenKey: tokenKey, moreResultsKey: moreResultsKey, on: eventLoop, logger: logger) { _, output, eventLoop in
+        self.paginate(input: input, initialValue: (), command: command, tokenKey: tokenKey, moreResultsKey: moreResultsKey, logger: logger, on: eventLoop) { _, output, eventLoop in
             return onPage(output, eventLoop).map { rt in (rt, ()) }
         }
     }

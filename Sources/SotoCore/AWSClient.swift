@@ -243,8 +243,8 @@ extension AWSClient {
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         input: Input,
-        on eventLoop: EventLoop? = nil,
-        logger: Logger = AWSClient.loggingDisabled
+        logger: Logger = AWSClient.loggingDisabled,
+        on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Void> {
         return execute(
             operation: operationName,
@@ -283,8 +283,8 @@ extension AWSClient {
         path: String,
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
-        on eventLoop: EventLoop? = nil,
-        logger: Logger = AWSClient.loggingDisabled
+        logger: Logger = AWSClient.loggingDisabled,
+        on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Void> {
         return execute(
             operation: operationName,
@@ -322,8 +322,8 @@ extension AWSClient {
         path: String,
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
-        on eventLoop: EventLoop? = nil,
-        logger: Logger = AWSClient.loggingDisabled
+        logger: Logger = AWSClient.loggingDisabled,
+        on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Output> {
         return execute(
             operation: operationName,
@@ -363,8 +363,8 @@ extension AWSClient {
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         input: Input,
-        on eventLoop: EventLoop? = nil,
-        logger: Logger = AWSClient.loggingDisabled
+        logger: Logger = AWSClient.loggingDisabled,
+        on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Output> {
         return execute(
             operation: operationName,
@@ -405,8 +405,8 @@ extension AWSClient {
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         input: Input,
-        on eventLoop: EventLoop? = nil,
         logger: Logger = AWSClient.loggingDisabled,
+        on eventLoop: EventLoop? = nil,
         stream: @escaping AWSHTTPClient.ResponseStream
     ) -> EventLoopFuture<Output> {
         return execute(

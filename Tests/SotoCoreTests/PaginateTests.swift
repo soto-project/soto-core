@@ -73,8 +73,8 @@ class PaginateTests: XCTestCase {
             httpMethod: .POST,
             serviceConfig: self.config,
             input: input,
-            on: eventLoop,
-            logger: logger
+            logger: logger,
+            on: eventLoop
         )
     }
 
@@ -159,8 +159,8 @@ class PaginateTests: XCTestCase {
             httpMethod: .POST,
             serviceConfig: self.config,
             input: input,
-            on: eventLoop,
-            logger: logger
+            logger: logger,
+            on: eventLoop
         )
     }
 
@@ -170,8 +170,8 @@ class PaginateTests: XCTestCase {
             command: self.stringList,
             tokenKey: \StringListOutput.outputToken,
             moreResultsKey: \StringListOutput.moreResults,
-            on: eventLoop,
             logger: TestEnvironment.logger,
+            on: eventLoop,
             onPage: onPage
         )
     }
@@ -183,8 +183,8 @@ class PaginateTests: XCTestCase {
             httpMethod: .POST,
             serviceConfig: self.config,
             input: input,
-            on: eventLoop,
-            logger: logger
+            logger: logger,
+            on: eventLoop
         )
     }
 
@@ -195,8 +195,8 @@ class PaginateTests: XCTestCase {
             command: self.stringList2,
             tokenKey: \StringList2Output.outputToken,
             moreResultsKey: \StringList2Output.moreResults,
-            on: eventLoop,
             logger: TestEnvironment.logger,
+            on: eventLoop,
             onPage: onPage
         )
     }

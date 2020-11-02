@@ -452,15 +452,6 @@ class AWSClientTests: XCTestCase {
         }
     }
 
-    func testRegionEnum() {
-        let region = Region(rawValue: "my-region")
-        if Region.other("my-region") == region {
-            XCTAssertEqual(region.rawValue, "my-region")
-        } else {
-            XCTFail("Did not construct Region.other()")
-        }
-    }
-
     func testServerError() {
         do {
             let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew)

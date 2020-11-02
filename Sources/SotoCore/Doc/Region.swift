@@ -169,66 +169,40 @@ public extension AWSPartition {
 }
 
 // allows to create a Region from a String
-// this initialializer returns an Optional.
-// it is non nil for valid region name only
+// it will only create a Region if the provided
+// region name is valid.
 public extension Region {
-    init?(regionName: String) {
-        switch regionName {
-        case "af-south-1":
-            self = Region.afsouth1
-        case "ap-east-1":
-            self = Region.apeast1
-        case "ap-northeast-1":
-            self = Region.apnortheast1
-        case "ap-northeast-2":
-            self = Region.apnortheast2
-        case "ap-northeast-3":
-            self = Region.apnortheast3
-        case "ap-south-1":
-            self = Region.apsouth1
-        case "ap-southeast-1":
-            self = Region.apsoutheast1
-        case "ap-southeast-2":
-            self = Region.apsoutheast2
-        case "ca-central-1":
-            self = Region.cacentral1
-        case "cn-north-1":
-            self = Region.cnnorth1
-        case "cn-northwest-1":
-            self = Region.cnnorthwest1
-        case "eu-central-1":
-            self = Region.eucentral1
-        case "eu-north-1":
-            self = Region.eunorth1
-        case "eu-south-1":
-            self = Region.eusouth1
-        case "eu-west-1":
-            self = Region.euwest1
-        case "eu-west-2":
-            self = Region.euwest2
-        case "eu-west-3":
-            self = Region.euwest3
-        case "me-south-1":
-            self = Region.mesouth1
-        case "sa-east-1":
-            self = Region.saeast1
-        case "us-east-1":
-            self = Region.useast1
-        case "us-east-2":
-            self = Region.useast2
-        case "us-gov-east-1":
-            self = Region.usgoveast1
-        case "us-gov-west-1":
-            self = Region.usgovwest1
-        case "us-iso-east-1":
-            self = Region.usisoeast1
-        case "us-isob-east-1":
-            self = Region.usisobeast1
-        case "us-west-1":
-            self = Region.uswest1
-        case "us-west-2":
-            self = Region.uswest2
-
+    init?(awsRegionName: String) {
+        self.init(rawValue: awsRegionName)
+        switch self {
+        case .afsouth1,
+             .apeast1,
+             .apnortheast1,
+             .apnortheast2,
+             .apnortheast3,
+             .apsouth1,
+             .apsoutheast1,
+             .apsoutheast2,
+             .cacentral1,
+             .cnnorth1,
+             .cnnorthwest1,
+             .eucentral1,
+             .eunorth1,
+             .eusouth1,
+             .euwest1,
+             .euwest2,
+             .euwest3,
+             .mesouth1,
+             .saeast1,
+             .useast1,
+             .useast2,
+             .usgoveast1,
+             .usgovwest1,
+             .usisoeast1,
+             .usisobeast1,
+             .uswest1,
+             .uswest2:
+            return
         default:
             return nil
         }

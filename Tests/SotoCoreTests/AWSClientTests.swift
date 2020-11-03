@@ -638,8 +638,8 @@ class AWSClientTests: XCTestCase {
                 path: "/",
                 httpMethod: .POST,
                 serviceConfig: config,
-                on: eventLoop,
-                logger: TestEnvironment.logger
+                logger: TestEnvironment.logger,
+                on: eventLoop
             )
 
             try awsServer.processRaw { _ in

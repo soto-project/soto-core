@@ -471,8 +471,9 @@ extension AWSClient {
                 // send request to AWS and process result
                 return self.invoke(
                     with: config,
+                    eventLoop: eventLoop,
                     logger: context.logger,
-                    request: { execute(request, context, eventLoop) },
+                    request: { eventLoop in execute(request, context, eventLoop) },
                     processResponse: processResponse
                 )
             }

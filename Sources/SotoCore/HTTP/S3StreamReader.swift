@@ -152,26 +152,6 @@ class S3ChunkedStreamReader: StreamReader {
         }
     }
 
-    /*func flushChunks(on eventLoop: EventLoop) -> EventLoopFuture<[ByteBuffer]> {
-        var byteBuffers: [ByteBuffer] = []
-        var promise: EventLoopPromise<[ByteBuffer]> = eventLoop.makePromise()
-        
-        func _flushChunks(on eventLoop: EventLoop) -> EventLoopFuture<[ByteBuffer]> {
-            self.fillWorkingBuffer(on: eventLoop).map { buffer in
-                if buffer.readableBytes == 0 {
-                    promise.succeed(byteBuffers)
-                }
-                // sign header etc
-                self.signingData = self.signer.signChunk(body: .byteBuffer(buffer), signingData: self.signingData)
-                let header = "\(String(buffer.readableBytes, radix: 16));chunk-signature=\(self.signingData.signature)\r\n"
-                self.headerBuffer.clear()
-                self.headerBuffer.writeString(header)
-
-                byteBuffers += [self.headerBuffer, buffer, self.tailBuffer]
-            }//.cascadeFailure(to: promise)
-        }
-        return promise.futureResult
-    }*/
     /// Calculate content size for aws chunked data.
     var contentSize: Int? {
         let size = self.size!

@@ -95,9 +95,10 @@ class S3ChunkedStreamReader: StreamReader {
                 }
                 self.bytesLeftToRead -= buffer.readableBytes
                 // if working buffer is empty and this buffer is the chunk buffer size or there is no data
-                // left to read then just return this buffer. This allows us to avoid the buffer copy
+                // left to read and this buffer is less than the size of the chunk buffer then just return
+                // this buffer. This allows us to avoid the buffer copy
                 if self.workingBuffer.readableBytes == 0 {
-                    if buffer.readableBytes == Self.bufferSize || self.bytesLeftToRead == 0 {
+                    if buffer.readableBytes == Self.bufferSize || (self.bytesLeftToRead == 0 && buffer.readableBytes < Self.bufferSize) {
                         promise.succeed(buffer)
                         return
                     }
@@ -141,6 +142,7 @@ class S3ChunkedStreamReader: StreamReader {
     func streamChunks(on eventLoop: EventLoop) -> EventLoopFuture<[ByteBuffer]> {
         return self.fillWorkingBuffer(on: eventLoop).map { buffer in
             // sign header etc
+            assert(buffer.readableBytes <= Self.bufferSize)
             self.signingData = self.signer.signChunk(body: .byteBuffer(buffer), signingData: self.signingData)
             let header = "\(String(buffer.readableBytes, radix: 16));chunk-signature=\(self.signingData.signature)\r\n"
             self.headerBuffer.clear()
@@ -150,6 +152,26 @@ class S3ChunkedStreamReader: StreamReader {
         }
     }
 
+    /*func flushChunks(on eventLoop: EventLoop) -> EventLoopFuture<[ByteBuffer]> {
+        var byteBuffers: [ByteBuffer] = []
+        var promise: EventLoopPromise<[ByteBuffer]> = eventLoop.makePromise()
+        
+        func _flushChunks(on eventLoop: EventLoop) -> EventLoopFuture<[ByteBuffer]> {
+            self.fillWorkingBuffer(on: eventLoop).map { buffer in
+                if buffer.readableBytes == 0 {
+                    promise.succeed(byteBuffers)
+                }
+                // sign header etc
+                self.signingData = self.signer.signChunk(body: .byteBuffer(buffer), signingData: self.signingData)
+                let header = "\(String(buffer.readableBytes, radix: 16));chunk-signature=\(self.signingData.signature)\r\n"
+                self.headerBuffer.clear()
+                self.headerBuffer.writeString(header)
+
+                byteBuffers += [self.headerBuffer, buffer, self.tailBuffer]
+            }//.cascadeFailure(to: promise)
+        }
+        return promise.futureResult
+    }*/
     /// Calculate content size for aws chunked data.
     var contentSize: Int? {
         let size = self.size!

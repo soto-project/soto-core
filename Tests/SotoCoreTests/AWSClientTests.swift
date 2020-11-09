@@ -232,14 +232,16 @@ class AWSClientTests: XCTestCase {
         let payload = AWSPayload.stream(size: bufferSize) { eventLoop in
             let size = min(blockSize, byteBuffer.readableBytes)
             // don't ask for 0 bytes
-            XCTAssertNotEqual(size, 0)
+            if size == 0 {
+                return eventLoop.makeSucceededFuture(.end)
+            }
             let buffer = byteBuffer.readSlice(length: size)!
             return eventLoop.makeSucceededFuture(.byteBuffer(buffer))
         }
         let input = Input(payload: payload)
         let response = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: TestEnvironment.logger)
 
-        try server.processRaw { request in
+        try? server.processRaw { request in
             let bytes = request.body.getBytes(at: 0, length: request.body.readableBytes)
             XCTAssertEqual(bytes, data)
             let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
@@ -287,7 +289,7 @@ class AWSClientTests: XCTestCase {
         XCTAssertNoThrow(try self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 65552, blockSize: 65552))
     }
 
-    func testRequestStreamingTooMuchData() {
+    func testRequestStreamingWithPayload(_ payload: AWSPayload) throws {
         struct Input: AWSEncodableShape & AWSShapeWithPayload {
             static var _payloadPath: String = "payload"
             static var _payloadOptions: AWSShapePayloadOptions = [.allowStreaming]
@@ -305,19 +307,41 @@ class AWSClientTests: XCTestCase {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try httpClient.syncShutdown())
         }
-        do {
-            // set up stream of 8 bytes but supply more than that
-            let payload = AWSPayload.stream(size: 8) { eventLoop in
-                var buffer = ByteBufferAllocator().buffer(capacity: 0)
-                buffer.writeString("String longer than 8 bytes")
-                return eventLoop.makeSucceededFuture(.byteBuffer(buffer))
+        let input = Input(payload: payload)
+        let response = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: TestEnvironment.logger)
+        try response.wait()
+    }
+
+    func testRequestStreamingTooMuchData() {
+        // set up stream of 8 bytes but supply more than that
+        let payload = AWSPayload.stream(size: 8) { eventLoop in
+            var buffer = ByteBufferAllocator().buffer(capacity: 0)
+            buffer.writeString("String longer than 8 bytes")
+            return eventLoop.makeSucceededFuture(.byteBuffer(buffer))
+        }
+        XCTAssertThrowsError(try testRequestStreamingWithPayload(payload)) { error in
+            guard let error = error as? AWSClient.ClientError, error == .tooMuchData else {
+                XCTFail()
+                return
             }
-            let input = Input(payload: payload)
-            let response = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: TestEnvironment.logger)
-            try response.wait()
-        } catch let error as HTTPClientError where error == .bodyLengthMismatch {
-        } catch {
-            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+    func testRequestStreamingNotEnoughData() {
+        var byteBuffer = ByteBufferAllocator().buffer(staticString: "Buffer")
+        let payload = AWSPayload.stream(size: byteBuffer.readableBytes+1) { eventLoop in
+            let size = byteBuffer.readableBytes
+            if size == 0 {
+                return eventLoop.makeSucceededFuture(.end)
+            }
+            let buffer = byteBuffer.readSlice(length: size)!
+            return eventLoop.makeSucceededFuture(.byteBuffer(buffer))
+        }
+        XCTAssertThrowsError(try testRequestStreamingWithPayload(payload)) { error in
+            guard let error = error as? AWSClient.ClientError, error == .notEnoughData else {
+                XCTFail()
+                return
+            }
         }
     }
 

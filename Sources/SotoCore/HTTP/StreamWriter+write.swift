@@ -37,8 +37,16 @@ extension AsyncHTTPClient.HTTPClient.Body.StreamWriter {
                     // calculate amount left to write
                     let newAmountLeft: Int?
                     if let amountLeft = amountLeft {
+                        guard byteBuffers.count > 0 else {
+                            promise.fail(AWSClient.ClientError.notEnoughData)
+                            return
+                        }
                         let bytesToWrite = byteBuffers.reduce(0) { $0 + $1.readableBytes }
                         newAmountLeft = amountLeft - bytesToWrite
+                        guard newAmountLeft! >= 0 else {
+                            promise.fail(AWSClient.ClientError.tooMuchData)
+                            return
+                        }
                     } else {
                         newAmountLeft = nil
                     }

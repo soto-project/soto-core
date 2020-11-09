@@ -89,11 +89,19 @@ class S3ChunkedStreamReader: StreamReader {
             self.read(eventLoop).map { (result) -> Void in
                 // check if a byte buffer was returned. If not then it must have been `.end`
                 guard case .byteBuffer(var buffer) = result else {
-                    // if we have `.end` then return what we have in the working buffer
-                    promise.succeed(self.workingBuffer)
+                    if self.bytesLeftToRead == self.workingBuffer.readableBytes {
+                        promise.succeed(self.workingBuffer)
+                    } else {
+                        promise.fail(AWSClient.ClientError.notEnoughData)
+                    }
                     return
                 }
                 self.bytesLeftToRead -= buffer.readableBytes
+
+                guard self.bytesLeftToRead >= 0 else {
+                    promise.fail(AWSClient.ClientError.tooMuchData)
+                    return
+                }
                 // if working buffer is empty and this buffer is the chunk buffer size or there is no data
                 // left to read and this buffer is less than the size of the chunk buffer then just return
                 // this buffer. This allows us to avoid the buffer copy

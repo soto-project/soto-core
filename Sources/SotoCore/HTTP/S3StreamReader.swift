@@ -120,6 +120,7 @@ class S3ChunkedStreamReader: StreamReader {
                     // if the supplied buffer still has readable bytes then store this buffer so those bytes can
                     // be used in the next call to `fillWorkingBuffer`.
                     if buffer.readableBytes > 0 {
+                        buffer.discardReadBytes()
                         self.previouslyReadBuffer = buffer
                     }
                     promise.succeed(self.workingBuffer)

@@ -319,7 +319,7 @@ class AWSClientTests: XCTestCase {
             buffer.writeString("String longer than 8 bytes")
             return eventLoop.makeSucceededFuture(.byteBuffer(buffer))
         }
-        XCTAssertThrowsError(try testRequestStreamingWithPayload(payload)) { error in
+        XCTAssertThrowsError(try self.testRequestStreamingWithPayload(payload)) { error in
             guard let error = error as? AWSClient.ClientError, error == .tooMuchData else {
                 XCTFail()
                 return
@@ -329,7 +329,7 @@ class AWSClientTests: XCTestCase {
 
     func testRequestStreamingNotEnoughData() {
         var byteBuffer = ByteBufferAllocator().buffer(staticString: "Buffer")
-        let payload = AWSPayload.stream(size: byteBuffer.readableBytes+1) { eventLoop in
+        let payload = AWSPayload.stream(size: byteBuffer.readableBytes + 1) { eventLoop in
             let size = byteBuffer.readableBytes
             if size == 0 {
                 return eventLoop.makeSucceededFuture(.end)
@@ -337,7 +337,7 @@ class AWSClientTests: XCTestCase {
             let buffer = byteBuffer.readSlice(length: size)!
             return eventLoop.makeSucceededFuture(.byteBuffer(buffer))
         }
-        XCTAssertThrowsError(try testRequestStreamingWithPayload(payload)) { error in
+        XCTAssertThrowsError(try self.testRequestStreamingWithPayload(payload)) { error in
             guard let error = error as? AWSClient.ClientError, error == .notEnoughData else {
                 XCTFail()
                 return

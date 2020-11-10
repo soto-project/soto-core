@@ -232,7 +232,7 @@ public struct AWSSigner {
     /// Stage 1 Create the canonical request as in https://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
     func canonicalRequest(signingData: SigningData) -> String {
         let canonicalHeaders = signingData.headersToSign
-            .map { (key: $0.key.lowercased(), value: $0.value)}
+            .map { (key: $0.key.lowercased(), value: $0.value) }
             .sorted { $0.key < $1.key }
             .map { return "\($0.key):\($0.value.trimmingCharacters(in: CharacterSet.whitespaces))" }
             .joined(separator: "\n")

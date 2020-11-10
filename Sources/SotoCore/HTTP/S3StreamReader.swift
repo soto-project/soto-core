@@ -89,15 +89,24 @@ class S3ChunkedStreamReader: StreamReader {
             self.read(eventLoop).map { (result) -> Void in
                 // check if a byte buffer was returned. If not then it must have been `.end`
                 guard case .byteBuffer(var buffer) = result else {
-                    // if we have `.end` then return what we have in the working buffer
-                    promise.succeed(self.workingBuffer)
+                    if self.bytesLeftToRead == self.workingBuffer.readableBytes {
+                        promise.succeed(self.workingBuffer)
+                    } else {
+                        promise.fail(AWSClient.ClientError.notEnoughData)
+                    }
                     return
                 }
                 self.bytesLeftToRead -= buffer.readableBytes
+
+                guard self.bytesLeftToRead >= 0 else {
+                    promise.fail(AWSClient.ClientError.tooMuchData)
+                    return
+                }
                 // if working buffer is empty and this buffer is the chunk buffer size or there is no data
-                // left to read then just return this buffer. This allows us to avoid the buffer copy
+                // left to read and this buffer is less than the size of the chunk buffer then just return
+                // this buffer. This allows us to avoid the buffer copy
                 if self.workingBuffer.readableBytes == 0 {
-                    if buffer.readableBytes == Self.bufferSize || self.bytesLeftToRead == 0 {
+                    if buffer.readableBytes == Self.bufferSize || (self.bytesLeftToRead == 0 && buffer.readableBytes < Self.bufferSize) {
                         promise.succeed(buffer)
                         return
                     }
@@ -111,6 +120,7 @@ class S3ChunkedStreamReader: StreamReader {
                     // if the supplied buffer still has readable bytes then store this buffer so those bytes can
                     // be used in the next call to `fillWorkingBuffer`.
                     if buffer.readableBytes > 0 {
+                        buffer.discardReadBytes()
                         self.previouslyReadBuffer = buffer
                     }
                     promise.succeed(self.workingBuffer)
@@ -141,6 +151,7 @@ class S3ChunkedStreamReader: StreamReader {
     func streamChunks(on eventLoop: EventLoop) -> EventLoopFuture<[ByteBuffer]> {
         return self.fillWorkingBuffer(on: eventLoop).map { buffer in
             // sign header etc
+            assert(buffer.readableBytes <= Self.bufferSize)
             self.signingData = self.signer.signChunk(body: .byteBuffer(buffer), signingData: self.signingData)
             let header = "\(String(buffer.readableBytes, radix: 16));chunk-signature=\(self.signingData.signature)\r\n"
             self.headerBuffer.clear()

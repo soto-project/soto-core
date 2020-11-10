@@ -35,6 +35,7 @@ public final class AWSClient {
             case alreadyShutdown
             case invalidURL
             case tooMuchData
+            case notEnoughData
         }
 
         let error: Error
@@ -45,6 +46,8 @@ public final class AWSClient {
         public static var invalidURL: ClientError { .init(error: .invalidURL) }
         /// Too much data has been supplied for the Request
         public static var tooMuchData: ClientError { .init(error: .tooMuchData) }
+        /// Not enough data has been supplied for the Request
+        public static var notEnoughData: ClientError { .init(error: .notEnoughData) }
     }
 
     /// Specifies how `HTTPClient` will be created and establishes lifecycle ownership.
@@ -101,9 +104,9 @@ public final class AWSClient {
         case .shared(let providedHTTPClient):
             self.httpClient = providedHTTPClient
         case .createNewWithEventLoopGroup(let elg):
-            self.httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(elg))
+            self.httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(elg), configuration: .init(timeout: .init(connect: .seconds(10))))
         case .createNew:
-            self.httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew)
+            self.httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew, configuration: .init(timeout: .init(connect: .seconds(10))))
         }
 
         self.credentialProvider = credentialProviderFactory.createProvider(context: .init(
@@ -185,16 +188,16 @@ public final class AWSClient {
 extension AWSClient {
     fileprivate func invoke<Output>(
         with serviceConfig: AWSServiceConfig,
+        eventLoop: EventLoop,
         logger: Logger,
-        request: @escaping () -> EventLoopFuture<AWSHTTPResponse>,
+        request: @escaping (EventLoop) -> EventLoopFuture<AWSHTTPResponse>,
         processResponse: @escaping (AWSHTTPResponse) throws -> Output
     ) -> EventLoopFuture<Output> {
-        let eventloop = self.eventLoopGroup.next()
-        let promise = eventloop.makePromise(of: Output.self)
+        let promise = eventLoop.makePromise(of: Output.self)
 
         func execute(attempt: Int) {
             // execute HTTP request
-            _ = request()
+            _ = request(eventLoop)
                 .flatMapThrowing { (response) throws -> Void in
                     // if it returns an HTTP status code outside 2xx then throw an error
                     guard (200..<300).contains(response.status.code) else {
@@ -210,7 +213,7 @@ extension AWSClient {
                             "aws-retry-time": "\(Double(retryTime.nanoseconds) / 1_000_000_000)",
                         ])
                         // schedule task for retrying AWS request
-                        eventloop.scheduleTask(in: retryTime) {
+                        eventLoop.scheduleTask(in: retryTime) {
                             execute(attempt: attempt + 1)
                         }
                     } else {
@@ -243,8 +246,8 @@ extension AWSClient {
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         input: Input,
-        on eventLoop: EventLoop? = nil,
-        logger: Logger = AWSClient.loggingDisabled
+        logger: Logger = AWSClient.loggingDisabled,
+        on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Void> {
         return execute(
             operation: operationName,
@@ -264,8 +267,8 @@ extension AWSClient {
                 return
             },
             config: serviceConfig,
-            on: eventLoop,
-            logger: logger
+            logger: logger,
+            on: eventLoop
         )
     }
 
@@ -283,8 +286,8 @@ extension AWSClient {
         path: String,
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
-        on eventLoop: EventLoop? = nil,
-        logger: Logger = AWSClient.loggingDisabled
+        logger: Logger = AWSClient.loggingDisabled,
+        on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Void> {
         return execute(
             operation: operationName,
@@ -303,8 +306,8 @@ extension AWSClient {
                 return
             },
             config: serviceConfig,
-            on: eventLoop,
-            logger: logger
+            logger: logger,
+            on: eventLoop
         )
     }
 
@@ -322,8 +325,8 @@ extension AWSClient {
         path: String,
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
-        on eventLoop: EventLoop? = nil,
-        logger: Logger = AWSClient.loggingDisabled
+        logger: Logger = AWSClient.loggingDisabled,
+        on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Output> {
         return execute(
             operation: operationName,
@@ -342,8 +345,8 @@ extension AWSClient {
                 return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
             },
             config: serviceConfig,
-            on: eventLoop,
-            logger: logger
+            logger: logger,
+            on: eventLoop
         )
     }
 
@@ -363,8 +366,8 @@ extension AWSClient {
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         input: Input,
-        on eventLoop: EventLoop? = nil,
-        logger: Logger = AWSClient.loggingDisabled
+        logger: Logger = AWSClient.loggingDisabled,
+        on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Output> {
         return execute(
             operation: operationName,
@@ -384,8 +387,8 @@ extension AWSClient {
                 return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
             },
             config: serviceConfig,
-            on: eventLoop,
-            logger: logger
+            logger: logger,
+            on: eventLoop
         )
     }
 
@@ -405,8 +408,8 @@ extension AWSClient {
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         input: Input,
-        on eventLoop: EventLoop? = nil,
         logger: Logger = AWSClient.loggingDisabled,
+        on eventLoop: EventLoop? = nil,
         stream: @escaping AWSHTTPClient.ResponseStream
     ) -> EventLoopFuture<Output> {
         return execute(
@@ -427,8 +430,8 @@ extension AWSClient {
                 return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
             },
             config: serviceConfig,
-            on: eventLoop,
-            logger: logger
+            logger: logger,
+            on: eventLoop
         )
     }
 
@@ -439,8 +442,8 @@ extension AWSClient {
         execute: @escaping (AWSHTTPRequest, EventLoop, Logger) -> EventLoopFuture<AWSHTTPResponse>,
         processResponse: @escaping (AWSHTTPResponse) throws -> Output,
         config: AWSServiceConfig,
-        on eventLoop: EventLoop? = nil,
-        logger: Logger = AWSClient.loggingDisabled
+        logger: Logger = AWSClient.loggingDisabled,
+        on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName, service: config.service)
@@ -459,8 +462,9 @@ extension AWSClient {
                 // send request to AWS and process result
                 return self.invoke(
                     with: config,
+                    eventLoop: eventLoop,
                     logger: logger,
-                    request: { execute(request, eventLoop, logger) },
+                    request: { eventLoop in execute(request, eventLoop, logger) },
                     processResponse: processResponse
                 )
             }
@@ -548,6 +552,8 @@ extension AWSClient.ClientError: CustomStringConvertible {
             """
         case .tooMuchData:
             return "You have supplied too much data for the Request."
+        case .notEnoughData:
+            return "You have not supplied enough data for the Request."
         }
     }
 }

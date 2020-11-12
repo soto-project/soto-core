@@ -104,7 +104,12 @@ enum Environment {
     }
 }
 
-// Use Swift cypto on Linux.
+// Use Swift cypto on Linux. This is a hack which would be fixed by `condition: .when(platforms: [.linux])` on the "Crypto" dependency of SotoCrypto,
+// but without https://bugs.swift.org/browse/SR-13761 being fixed this doesn't work. So this if statement is still required.
+//
+// When running cross compilation this fails as the Package.swift is being read with macOS and not Linux. I have added a test for the environment
+// variable SOTO_CROSS_COMPILE. If you want to cross compile for a Linux OS set environment variable SOTO_CROSS_COMPILE to true. Remember to clear
+// this variable if you go back to compiling for macOS.
 if useSwiftCrypto || Environment["SOTO_CROSS_COMPILE"] == "true" {
     package.dependencies.append(.package(url: "https://github.com/apple/swift-crypto.git", from: "1.0.0"))
     package.targets.first { $0.name == "SotoCrypto" }?.dependencies.append(.product(name: "Crypto", package: "swift-crypto"))

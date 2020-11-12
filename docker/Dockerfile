@@ -1,4 +1,4 @@
-FROM swift:5.2 as builder
+FROM swift:5.3 as builder
 
 RUN apt-get -qq update && apt-get install -y \
   zlib1g-dev \

@@ -15,6 +15,12 @@
 
 import PackageDescription
 
+#if os(Linux)
+import Glibc
+#else
+import Darwin.C
+#endif
+
 let package = Package(
     name: "soto-core",
     products: [
@@ -59,7 +65,7 @@ let package = Package(
         .target(name: "SotoXML", dependencies: [
             .byName(name: "CSotoExpat"),
         ]),
-        .target(name: "CSotoExpat", dependencies: []),
+        .target(name: "CSotoExpat", dependencies: [], exclude: ["AUTHORS", "COPYING"]),
         .target(name: "INIParser", dependencies: []),
 
         .testTarget(name: "SotoCryptoTests", dependencies: [
@@ -89,8 +95,17 @@ let useSwiftCrypto = true
 let useSwiftCrypto = false
 #endif
 
+enum Environment {
+    static subscript(_ name: String) -> String? {
+        guard let value = getenv(name) else {
+            return nil
+        }
+        return String(cString: value)
+    }
+}
+
 // Use Swift cypto on Linux.
-if useSwiftCrypto {
+if useSwiftCrypto || Environment["SOTO_CROSS_COMPILE"] == "true" {
     package.dependencies.append(.package(url: "https://github.com/apple/swift-crypto.git", from: "1.0.0"))
     package.targets.first { $0.name == "SotoCrypto" }?.dependencies.append(.product(name: "Crypto", package: "swift-crypto"))
 }

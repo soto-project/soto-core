@@ -58,7 +58,7 @@ let package = Package(
         .target(name: "SotoXML", dependencies: [
             .byName(name: "CSotoExpat"),
         ]),
-        .target(name: "CSotoExpat", dependencies: []),
+        .target(name: "CSotoExpat", dependencies: [], exclude: ["COPYING", "AUTHORS"]),
         .target(name: "INIParser", dependencies: []),
 
         .testTarget(name: "SotoCryptoTests", dependencies: [

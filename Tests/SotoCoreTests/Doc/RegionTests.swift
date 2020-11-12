@@ -18,10 +18,33 @@ import SotoCore
 import XCTest
 
 class RegionTests: XCTestCase {
-    func testStringToRegion() {
-        let region = Region(awsRegionName: "eu-west-3")
+    private func testStringToOneRegion(regionName: String, regionEnum: Region) {
+        let region = Region(awsRegionName: regionName)
         XCTAssertNotNil(region)
-        XCTAssert(region! == Region.euwest3)
+        XCTAssert(region! == regionEnum)
+    }
+
+    func testStringToRegion() {
+        self.testStringToOneRegion(regionName: "af-south-1", regionEnum: Region.afsouth1)
+        self.testStringToOneRegion(regionName: "ap-east-1", regionEnum: Region.apeast1)
+        self.testStringToOneRegion(regionName: "ap-northeast-1", regionEnum: Region.apnortheast1)
+        self.testStringToOneRegion(regionName: "ap-northeast-3", regionEnum: Region.apnortheast3)
+        self.testStringToOneRegion(regionName: "ap-south-1", regionEnum: Region.apsouth1)
+        self.testStringToOneRegion(regionName: "ap-southeast-1", regionEnum: Region.apsoutheast1)
+        self.testStringToOneRegion(regionName: "ap-southeast-2", regionEnum: Region.apsoutheast2)
+        self.testStringToOneRegion(regionName: "ca-central-1", regionEnum: Region.cacentral1)
+        self.testStringToOneRegion(regionName: "cn-northwest-1", regionEnum: Region.cnnorthwest1)
+        self.testStringToOneRegion(regionName: "eu-central-1", regionEnum: Region.eucentral1)
+        self.testStringToOneRegion(regionName: "eu-north-1", regionEnum: Region.eunorth1)
+        self.testStringToOneRegion(regionName: "eu-west-1", regionEnum: Region.euwest1)
+        self.testStringToOneRegion(regionName: "eu-west-2", regionEnum: Region.euwest2)
+        self.testStringToOneRegion(regionName: "eu-west-3", regionEnum: Region.euwest3)
+        self.testStringToOneRegion(regionName: "me-south-1", regionEnum: Region.mesouth1)
+        self.testStringToOneRegion(regionName: "sa-east-1", regionEnum: Region.saeast1)
+        self.testStringToOneRegion(regionName: "us-east-2", regionEnum: Region.useast2)
+        self.testStringToOneRegion(regionName: "us-gov-east-1", regionEnum: Region.usgoveast1)
+        self.testStringToOneRegion(regionName: "us-west-1", regionEnum: Region.uswest1)
+        self.testStringToOneRegion(regionName: "us-west-2", regionEnum: Region.uswest2)
     }
 
     func testStringToInvalidRegion() {
@@ -61,13 +84,6 @@ class RegionTests: XCTestCase {
             XCTFail("Did not construct Region(rawValue:) for ap-northeast-1")
         }
 
-        region = Region(rawValue: "ap-northeast-2")
-        if Region.apnortheast2 == region {
-            XCTAssertEqual(region.rawValue, "ap-northeast-2")
-        } else {
-            XCTFail("Did not construct Region(rawValue:) for ap-northeast-2")
-        }
-
         region = Region(rawValue: "ap-northeast-3")
         if Region.apnortheast3 == region {
             XCTAssertEqual(region.rawValue, "ap-northeast-3")
@@ -103,13 +119,6 @@ class RegionTests: XCTestCase {
             XCTFail("Did not construct Region(rawValue:) for ca-central-1")
         }
 
-        region = Region(rawValue: "cn-north-1")
-        if Region.cnnorth1 == region {
-            XCTAssertEqual(region.rawValue, "cn-north-1")
-        } else {
-            XCTFail("Did not construct Region(rawValue:) for cn-north-1")
-        }
-
         region = Region(rawValue: "cn-northwest-1")
         if Region.cnnorthwest1 == region {
             XCTAssertEqual(region.rawValue, "cn-northwest-1")
@@ -129,13 +138,6 @@ class RegionTests: XCTestCase {
             XCTAssertEqual(region.rawValue, "eu-north-1")
         } else {
             XCTFail("Did not construct Region(rawValue:) for eu-north-1")
-        }
-
-        region = Region(rawValue: "eu-south-1")
-        if Region.eusouth1 == region {
-            XCTAssertEqual(region.rawValue, "eu-south-1")
-        } else {
-            XCTFail("Did not construct Region(rawValue:) for eu-south-1")
         }
 
         region = Region(rawValue: "eu-west-1")
@@ -173,13 +175,6 @@ class RegionTests: XCTestCase {
             XCTFail("Did not construct Region(rawValue:) for sa-east-1")
         }
 
-        region = Region(rawValue: "us-east-1")
-        if Region.useast1 == region {
-            XCTAssertEqual(region.rawValue, "us-east-1")
-        } else {
-            XCTFail("Did not construct Region(rawValue:) for us-east-1")
-        }
-
         region = Region(rawValue: "us-east-2")
         if Region.useast2 == region {
             XCTAssertEqual(region.rawValue, "us-east-2")
@@ -192,27 +187,6 @@ class RegionTests: XCTestCase {
             XCTAssertEqual(region.rawValue, "us-gov-east-1")
         } else {
             XCTFail("Did not construct Region(rawValue:) for us-gov-east-1")
-        }
-
-        region = Region(rawValue: "us-gov-west-1")
-        if Region.usgovwest1 == region {
-            XCTAssertEqual(region.rawValue, "us-gov-west-1")
-        } else {
-            XCTFail("Did not construct Region(rawValue:) for us-gov-west-1")
-        }
-
-        region = Region(rawValue: "us-iso-east-1")
-        if Region.usisoeast1 == region {
-            XCTAssertEqual(region.rawValue, "us-iso-east-1")
-        } else {
-            XCTFail("Did not construct Region(rawValue:) for us-iso-east-1")
-        }
-
-        region = Region(rawValue: "us-isob-east-1")
-        if Region.usisobeast1 == region {
-            XCTAssertEqual(region.rawValue, "us-isob-east-1")
-        } else {
-            XCTFail("Did not construct Region(rawValue:) for us-isob-east-1")
         }
 
         region = Region(rawValue: "us-west-1")

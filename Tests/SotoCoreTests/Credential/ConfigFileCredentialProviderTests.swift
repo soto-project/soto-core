@@ -229,6 +229,145 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         XCTAssertEqual(credential?.secretAccessKey, "TESTPROFILE-AWSSECRETACCESSKEY")
     }
 
+    func testAWSProfileConfigFileWithDefaultSessionToken() {
+        let credentials = """
+        [default]
+        aws_session_token = TESTDEFAULT-SESSIONTOKEN
+        aws_access_key_id = TESTDEFAULT-AWSACCESSKEYID
+        aws_secret_access_key = TESTDEFAULT-AWSSECRETACCESSKEY
+
+        [test-profile]
+        aws_access_key_id = TESTPROFILE-AWSACCESSKEYID
+        aws_secret_access_key = TESTPROFILE-AWSSECRETACCESSKEY
+        """
+        Environment.set("test-profile", for: "AWS_PROFILE")
+        defer { Environment.unset(name: "AWS_PROFILE") }
+
+        let filename = "credentials"
+        let filenameURL = URL(fileURLWithPath: filename)
+        XCTAssertNoThrow(try Data(credentials.utf8).write(to: filenameURL))
+        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: filenameURL)) }
+
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        let eventLoop = eventLoopGroup.next()
+        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoop))
+        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
+        let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
+
+        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger))
+
+        var credential: Credential?
+        XCTAssertNoThrow(credential = try provider.getCredential(on: eventLoop, logger: TestEnvironment.logger).wait())
+        XCTAssertEqual(credential?.sessionToken, "TESTDEFAULT-SESSIONTOKEN")
+        XCTAssertEqual(credential?.accessKeyId, "TESTPROFILE-AWSACCESSKEYID")
+        XCTAssertEqual(credential?.secretAccessKey, "TESTPROFILE-AWSSECRETACCESSKEY")
+    }
+
+    func testAWSProfileConfigFileWithDefaultAccessKey() {
+        let credentials = """
+        [default]
+        aws_session_token = TESTDEFAULT-SESSIONTOKEN
+        aws_access_key_id = TESTDEFAULT-AWSACCESSKEYID
+        aws_secret_access_key = TESTDEFAULT-AWSSECRETACCESSKEY
+
+        [test-profile]
+        aws_session_token = TESTPROFILE-SESSIONTOKEN
+        aws_secret_access_key = TESTPROFILE-AWSSECRETACCESSKEY
+        """
+        Environment.set("test-profile", for: "AWS_PROFILE")
+        defer { Environment.unset(name: "AWS_PROFILE") }
+
+        let filename = "credentials"
+        let filenameURL = URL(fileURLWithPath: filename)
+        XCTAssertNoThrow(try Data(credentials.utf8).write(to: filenameURL))
+        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: filenameURL)) }
+
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        let eventLoop = eventLoopGroup.next()
+        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoop))
+        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
+        let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
+
+        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger))
+
+        var credential: Credential?
+        XCTAssertNoThrow(credential = try provider.getCredential(on: eventLoop, logger: TestEnvironment.logger).wait())
+        XCTAssertEqual(credential?.sessionToken, "TESTPROFILE-SESSIONTOKEN")
+        XCTAssertEqual(credential?.accessKeyId, "TESTDEFAULT-AWSACCESSKEYID")
+        XCTAssertEqual(credential?.secretAccessKey, "TESTPROFILE-AWSSECRETACCESSKEY")
+    }
+
+    func testAWSProfileConfigFileWithDefaultSecretKey() {
+        let credentials = """
+        [default]
+        aws_session_token = TESTDEFAULT-SESSIONTOKEN
+        aws_access_key_id = TESTDEFAULT-AWSACCESSKEYID
+        aws_secret_access_key = TESTDEFAULT-AWSSECRETACCESSKEY
+
+        [test-profile]
+        aws_session_token = TESTPROFILE-SESSIONTOKEN
+        aws_access_key_id = TESTPROFILE-AWSACCESSKEYID
+        """
+        Environment.set("test-profile", for: "AWS_PROFILE")
+        defer { Environment.unset(name: "AWS_PROFILE") }
+
+        let filename = "credentials"
+        let filenameURL = URL(fileURLWithPath: filename)
+        XCTAssertNoThrow(try Data(credentials.utf8).write(to: filenameURL))
+        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: filenameURL)) }
+
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        let eventLoop = eventLoopGroup.next()
+        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoop))
+        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
+        let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
+
+        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger))
+
+        var credential: Credential?
+        XCTAssertNoThrow(credential = try provider.getCredential(on: eventLoop, logger: TestEnvironment.logger).wait())
+        XCTAssertEqual(credential?.sessionToken, "TESTPROFILE-SESSIONTOKEN")
+        XCTAssertEqual(credential?.accessKeyId, "TESTPROFILE-AWSACCESSKEYID")
+        XCTAssertEqual(credential?.secretAccessKey, "TESTDEFAULT-AWSSECRETACCESSKEY")
+    }
+
+    func testAWSProfileConfigFileWithAllDefault() {
+        let credentials = """
+        [default]
+        aws_session_token = TESTDEFAULT-SESSIONTOKEN
+        aws_access_key_id = TESTDEFAULT-AWSACCESSKEYID
+        aws_secret_access_key = TESTDEFAULT-AWSSECRETACCESSKEY
+
+        [test-profile]
+        foo = bar
+        """
+        Environment.set("test-profile", for: "AWS_PROFILE")
+        defer { Environment.unset(name: "AWS_PROFILE") }
+
+        let filename = "credentials"
+        let filenameURL = URL(fileURLWithPath: filename)
+        XCTAssertNoThrow(try Data(credentials.utf8).write(to: filenameURL))
+        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: filenameURL)) }
+
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        let eventLoop = eventLoopGroup.next()
+        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoop))
+        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
+        let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
+
+        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger))
+
+        var credential: Credential?
+        XCTAssertNoThrow(credential = try provider.getCredential(on: eventLoop, logger: TestEnvironment.logger).wait())
+        XCTAssertEqual(credential?.sessionToken, "TESTDEFAULT-SESSIONTOKEN")
+        XCTAssertEqual(credential?.accessKeyId, "TESTDEFAULT-AWSACCESSKEYID")
+        XCTAssertEqual(credential?.secretAccessKey, "TESTDEFAULT-AWSSECRETACCESSKEY")
+    }
+
     func testConfigFileNotAvailable() {
         let filename = "credentials_not_existing"
         let filenameURL = URL(fileURLWithPath: filename)

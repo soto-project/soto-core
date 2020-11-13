@@ -99,15 +99,18 @@ struct AWSConfigFileCredentialProvider: CredentialProvider {
             throw ConfigFileError.missingProfile(profile)
         }
 
-        guard let accessKeyId = config["aws_access_key_id"] else {
+        // Profile credentials can "borrow" values from the 'default' profile when they have not been overriden
+        let defaultConfig = parser.sections["default"]
+
+        guard let accessKeyId = config["aws_access_key_id"] ?? defaultConfig?["aws_access_key_id"] else {
             throw ConfigFileError.missingAccessKeyId
         }
 
-        guard let secretAccessKey = config["aws_secret_access_key"] else {
+        guard let secretAccessKey = config["aws_secret_access_key"] ?? defaultConfig?["aws_secret_access_key"] else {
             throw ConfigFileError.missingSecretAccessKey
         }
 
-        let sessionToken = config["aws_session_token"]
+        let sessionToken = config["aws_session_token"] ?? defaultConfig?["aws_session_token"]
 
         return StaticCredential(accessKeyId: accessKeyId, secretAccessKey: secretAccessKey, sessionToken: sessionToken)
     }

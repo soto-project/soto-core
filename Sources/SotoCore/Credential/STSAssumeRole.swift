@@ -68,7 +68,7 @@ struct STSCredentials: AWSDecodableShape, ExpiringCredential {
     func isExpiring(within interval: TimeInterval) -> Bool {
         return self.expiration.timeIntervalSinceNow < interval
     }
-    
+
     private enum CodingKeys: String, CodingKey {
         case accessKeyId = "AccessKeyId"
         case expiration = "Expiration"
@@ -125,13 +125,13 @@ struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
     }
 
     func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
-        assumeRole(request, logger: logger, on: eventLoop)
+        self.assumeRole(self.request, logger: logger, on: eventLoop)
             .flatMapThrowing { response in
                 guard let credentials = response.credentials else { throw CredentialProviderError.noProvider }
                 return credentials
             }
     }
-    
+
     func assumeRole(_ input: STSAssumeRoleRequest, logger: Logger, on eventLoop: EventLoop?) -> EventLoopFuture<STSAssumeRoleResponse> {
         return self.client.execute(operation: "AssumeRole", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger, on: eventLoop)
     }
@@ -161,4 +161,3 @@ extension CredentialProviderFactory {
         }
     }
 }
-

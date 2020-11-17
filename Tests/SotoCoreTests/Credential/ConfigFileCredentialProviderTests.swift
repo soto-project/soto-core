@@ -253,11 +253,11 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         let client = createAWSClient(credentialProvider: .configFile())
         XCTAssertNoThrow(try client.syncShutdown())
     }
-    
+
     func testInternalSTSAssumeRoleProvider() throws {
         let credentials = STSCredentials(
             accessKeyId: "STSACCESSKEYID",
-            expiration: Date(timeIntervalSince1970: 87387346),
+            expiration: Date(timeIntervalSince1970: 87_387_346),
             secretAccessKey: "STSSECRETACCESSKEY",
             sessionToken: "STSSESSIONTOKEN"
         )
@@ -272,8 +272,8 @@ class ConfigFileCredentialProviderTests: XCTestCase {
             httpClientProvider: .createNew
         )
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
-        
-        XCTAssertNoThrow(try testServer.processRaw { request in
+
+        XCTAssertNoThrow(try testServer.processRaw { _ in
             let output = STSAssumeRoleResponse(credentials: credentials)
             let xml = try XMLEncoder().encode(output)
             let byteBuffer = ByteBufferAllocator().buffer(string: xml.xmlString)
@@ -298,6 +298,7 @@ extension STSAssumeRoleRequest: Decodable {
         let roleSessionName = try container.decode(String.self, forKey: .roleSessionName)
         self.init(roleArn: roleArn, roleSessionName: roleSessionName)
     }
+
     private enum CodingKeys: String, CodingKey {
         case roleArn = "RoleArn"
         case roleSessionName = "RoleSessionName"
@@ -310,6 +311,7 @@ extension STSAssumeRoleResponse: Encodable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(credentials, forKey: .credentials)
     }
+
     private enum CodingKeys: String, CodingKey {
         case credentials = "Credentials"
     }
@@ -324,6 +326,7 @@ extension STSCredentials: Encodable {
         try container.encode(secretAccessKey, forKey: .secretAccessKey)
         try container.encode(sessionToken, forKey: .sessionToken)
     }
+
     private enum CodingKeys: String, CodingKey {
         case accessKeyId = "AccessKeyId"
         case expiration = "Expiration"

@@ -269,7 +269,8 @@ class ConfigFileCredentialProviderTests: XCTestCase {
                 region: .useast1,
                 endpoint: testServer.address
             ),
-            httpClientProvider: .createNew
+            httpClientProvider: .createNew,
+            logger: TestEnvironment.logger
         )
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
 

@@ -266,6 +266,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         let client = AWSClient(
             credentialProvider: .internalSTSAssumeRole(
                 request: .init(roleArn: "arn:aws:iam::000000000000:role/test-sts-assume-role", roleSessionName: "testInternalSTSAssumeRoleProvider"),
+                credentialProvider: .empty,
                 region: .useast1,
                 endpoint: testServer.address
             ),

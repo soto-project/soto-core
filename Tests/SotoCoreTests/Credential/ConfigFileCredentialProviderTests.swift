@@ -151,7 +151,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         XCTAssertEqual(unexpandedNewPath, unexpandableFilePath)
     }
 
-    func testConfigFileCredentialINIParser() {
+    func testConfigFileCredentialINIParser() throws {
         // setup
         let credentials = """
         [default]
@@ -167,12 +167,23 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
         let eventLoop = eventLoopGroup.next()
 //        let path = filenameURL.absoluteString
-        let future = AWSConfigFileCredentialProvider.fromSharedCredentials(credentialsFilePath: filenameURL.path, on: eventLoop)
+        let threadPool = NIOThreadPool(numberOfThreads: 1)
+        threadPool.start()
+        defer { XCTAssertNoThrow(try threadPool.syncShutdownGracefully()) }
+        let fileIO = NonBlockingFileIO(threadPool: threadPool)
 
-        var credential: StaticCredential?
+        let future = AWSConfigFileCredentialProvider.getSharedCredentialsFromDisk(
+            credentialsFilePath: filenameURL.path,
+            profile: "default",
+            on: eventLoop,
+            using: fileIO
+        )
+
+        var credential: CredentialProvider?
         XCTAssertNoThrow(credential = try future.wait())
-        XCTAssertEqual(credential?.accessKeyId, "AWSACCESSKEYID")
-        XCTAssertEqual(credential?.secretAccessKey, "AWSSECRETACCESSKEY")
+        let staticCredential = try XCTUnwrap(credential as? StaticCredential)
+        XCTAssertEqual(staticCredential.accessKeyId, "AWSACCESSKEYID")
+        XCTAssertEqual(staticCredential.secretAccessKey, "AWSSECRETACCESSKEY")
     }
 
     func testConfigFileSuccess() {

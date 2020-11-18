@@ -15,6 +15,7 @@
 import INIParser
 import Logging
 import NIO
+import NIOConcurrencyHelpers
 import SotoSignerV4
 #if os(Linux)
 import Glibc
@@ -22,7 +23,7 @@ import Glibc
 import Foundation.NSString
 #endif
 
-struct AWSConfigFileCredentialProvider: CredentialProvider {
+class AWSConfigFileCredentialProvider: CredentialProviderSelector {
     /// Errors occurring when initializing a FileCredential
     ///
     /// - missingProfile: If the profile requested was not found
@@ -35,37 +36,43 @@ struct AWSConfigFileCredentialProvider: CredentialProvider {
         case missingSecretAccessKey
     }
 
-    let credentialsFilePath: String
-    let profile: String
+    /// promise to find a credential provider
+    let startupPromise: EventLoopPromise<CredentialProvider>
+    /// lock for access to _internalProvider.
+    let lock = Lock()
+    /// internal version of internal provider. Should access this through `internalProvider`
+    var _internalProvider: CredentialProvider?
 
-    init(credentialsFilePath: String, profile: String? = nil) {
-        self.credentialsFilePath = credentialsFilePath
-        self.profile = profile ?? Environment["AWS_PROFILE"] ?? "default"
+    init(credentialsFilePath: String, profile: String? = nil, context: CredentialProviderFactory.Context) {
+        self.startupPromise = context.eventLoop.makePromise(of: CredentialProvider.self)
+        self.startupPromise.futureResult.whenSuccess { result in
+            self.internalProvider = result
+        }
+        self.fromSharedCredentials(credentialsFilePath: credentialsFilePath, profile: profile, on: context.eventLoop)
     }
 
-    func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
-        return AWSConfigFileCredentialProvider.fromSharedCredentials(credentialsFilePath: self.credentialsFilePath, profile: self.profile, on: eventLoop)
-            .map { $0 }
-    }
-
-    /// Load static credentials from the aws cli config path `~/.aws/credentials`
+    /// Load credentials from the aws cli config path `~/.aws/credentials`
     ///
-    /// - returns: An `EventLoopFuture` with a `SharedCredentialError` in the error
-    ///            case or a `StaticCredential` in the success case
-    static func fromSharedCredentials(
+    /// - Parameters:
+    ///   - credentialsFilePath: credential config file
+    ///   - profile: profile to use
+    ///   - eventLoop: eventLoop to run everything on
+    func fromSharedCredentials(
         credentialsFilePath: String,
-        profile: String = Environment["AWS_PROFILE"] ?? "default",
+        profile: String?,
         on eventLoop: EventLoop
-    ) -> EventLoopFuture<StaticCredential> {
+    ) {
+        let profile = profile ?? Environment["AWS_PROFILE"] ?? "default"
         let threadPool = NIOThreadPool(numberOfThreads: 1)
         threadPool.start()
         let fileIO = NonBlockingFileIO(threadPool: threadPool)
 
-        return Self.getSharedCredentialsFromDisk(credentialsFilePath: credentialsFilePath, profile: profile, on: eventLoop, using: fileIO)
+        Self.getSharedCredentialsFromDisk(credentialsFilePath: credentialsFilePath, profile: profile, on: eventLoop, using: fileIO)
             .always { _ in
                 // shutdown the threadpool async
                 threadPool.shutdownGracefully { _ in }
             }
+            .cascade(to: self.startupPromise)
     }
 
     static func getSharedCredentialsFromDisk(
@@ -73,7 +80,7 @@ struct AWSConfigFileCredentialProvider: CredentialProvider {
         profile: String,
         on eventLoop: EventLoop,
         using fileIO: NonBlockingFileIO
-    ) -> EventLoopFuture<StaticCredential> {
+    ) -> EventLoopFuture<CredentialProvider> {
         let filePath = Self.expandTildeInFilePath(credentialsFilePath)
 
         return fileIO.openFile(path: filePath, eventLoop: eventLoop)

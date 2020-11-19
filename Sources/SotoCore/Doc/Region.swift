@@ -80,8 +80,8 @@ public struct Region: RawRepresentable, Equatable {
     public static func other(_ name: String) -> Region { .init(rawValue: name) }
 }
 
-extension Region {
-    public var partition: AWSPartition {
+public extension Region {
+    var partition: AWSPartition {
         switch self {
         case .afsouth1: return .aws
         case .apeast1: return .aws
@@ -156,14 +156,55 @@ public struct AWSPartition: RawRepresentable, Equatable, Hashable {
     public static var awsisob: AWSPartition { .init(partition: .awsisob) }
 }
 
-extension AWSPartition {
-    public var dnsSuffix: String {
+public extension AWSPartition {
+    var dnsSuffix: String {
         switch self.partition {
         case .aws: return "amazonaws.com"
         case .awscn: return "amazonaws.com.cn"
         case .awsusgov: return "amazonaws.com"
         case .awsiso: return "c2s.ic.gov"
         case .awsisob: return "sc2s.sgov.gov"
+        }
+    }
+}
+
+// allows to create a Region from a String
+// it will only create a Region if the provided
+// region name is valid.
+public extension Region {
+    init?(awsRegionName: String) {
+        self.init(rawValue: awsRegionName)
+        switch self {
+        case .afsouth1,
+             .apeast1,
+             .apnortheast1,
+             .apnortheast2,
+             .apnortheast3,
+             .apsouth1,
+             .apsoutheast1,
+             .apsoutheast2,
+             .cacentral1,
+             .cnnorth1,
+             .cnnorthwest1,
+             .eucentral1,
+             .eunorth1,
+             .eusouth1,
+             .euwest1,
+             .euwest2,
+             .euwest3,
+             .mesouth1,
+             .saeast1,
+             .useast1,
+             .useast2,
+             .usgoveast1,
+             .usgovwest1,
+             .usisoeast1,
+             .usisobeast1,
+             .uswest1,
+             .uswest2:
+            return
+        default:
+            return nil
         }
     }
 }

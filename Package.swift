@@ -20,6 +20,7 @@ let package = Package(
     products: [
         .library(name: "SotoCore", targets: ["SotoCore"]),
         .library(name: "SotoTestUtils", targets: ["SotoTestUtils"]),
+        .library(name: "SotoSignerV4", targets: ["SotoSignerV4"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-log.git", from: "1.4.0"),

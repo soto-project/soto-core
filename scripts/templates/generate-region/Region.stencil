@@ -83,3 +83,29 @@ extension AWSPartition {
         }
     }
 }
+    
+// allows to create a Region from a String
+// it will only create a Region if the provided
+// region name is valid.
+extension Region {
+    
+    public init?(awsRegionName: String) {
+        self.init(rawValue: awsRegionName)
+        switch self {
+{%for region in regions %}
+{%if forloop.first %}
+        case .{{region.enum}},
+{%endif %}
+{%if not forloop.first and not forloop.last%}
+             .{{region.enum}},
+{%endif %}
+{%if forloop.last %}
+             .{{region.enum}}:
+{%endif %}
+{%endfor %}
+             return
+        default:
+            return nil
+        }
+    }
+}

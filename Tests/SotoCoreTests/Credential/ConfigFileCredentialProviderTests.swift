@@ -20,6 +20,9 @@ import SotoXML
 import XCTest
 
 class ConfigFileCredentialProviderTests: XCTestCase {
+
+    // MARK: Config File Shared Credentials Parsing
+
     func testConfigFileCredentials() {
         let profile = "profile1"
         let accessKey = "FAKE-ACCESS-KEY123"
@@ -53,7 +56,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
         byteBuffer.writeString(credential)
         XCTAssertThrowsError(_ = try AWSConfigFileCredentialProvider.sharedCredentials(from: byteBuffer, for: profile)) {
-            XCTAssertEqual($0 as? AWSConfigFileCredentialProvider.ConfigFileError, .missingAccessKeyId)
+            XCTAssertEqual($0 as? AWSConfigFileCredentialProvider.ConfigFileCredentialProviderError, .missingAccessKeyId)
         }
     }
 
@@ -68,7 +71,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
         byteBuffer.writeString(credential)
         XCTAssertThrowsError(_ = try AWSConfigFileCredentialProvider.sharedCredentials(from: byteBuffer, for: profile)) {
-            XCTAssertEqual($0 as? AWSConfigFileCredentialProvider.ConfigFileError, .missingSecretAccessKey)
+            XCTAssertEqual($0 as? AWSConfigFileCredentialProvider.ConfigFileCredentialProviderError, .missingSecretAccessKey)
         }
     }
 
@@ -105,7 +108,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
         byteBuffer.writeString(credential)
         XCTAssertThrowsError(_ = try AWSConfigFileCredentialProvider.sharedCredentials(from: byteBuffer, for: "profile2")) {
-            XCTAssertEqual($0 as? AWSConfigFileCredentialProvider.ConfigFileError, .missingProfile("profile2"))
+            XCTAssertEqual($0 as? ConfigFileLoader.ConfigFileError, .missingProfile("profile2"))
         }
     }
 
@@ -118,38 +121,11 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
         byteBuffer.writeString(credential)
         XCTAssertThrowsError(_ = try AWSConfigFileCredentialProvider.sharedCredentials(from: byteBuffer, for: "default")) {
-            XCTAssertEqual($0 as? AWSConfigFileCredentialProvider.ConfigFileError, .invalidCredentialFileSyntax)
+            XCTAssertEqual($0 as? ConfigFileLoader.ConfigFileError, .invalidCredentialFileSyntax)
         }
     }
 
-    func testExpandTildeInFilePath() {
-        let expandableFilePath = "~/.aws/credentials"
-        let expandedNewPath = AWSConfigFileCredentialProvider.expandTildeInFilePath(expandableFilePath)
-
-        #if os(Linux)
-        XCTAssert(!expandedNewPath.hasPrefix("~"))
-        #else
-
-        #if os(macOS)
-        // on macOS, we want to be sure the expansion produces the posix $HOME and
-        // not the sanboxed home $HOME/Library/Containers/<bundle-id>/Data
-        let macOSHomePrefix = "/Users/"
-        XCTAssert(expandedNewPath.starts(with: macOSHomePrefix))
-        XCTAssert(!expandedNewPath.contains("/Library/Containers/"))
-        #endif
-
-        // this doesn't work on linux because of SR-12843
-        let expandedNSString = NSString(string: expandableFilePath).expandingTildeInPath
-        XCTAssertEqual(expandedNewPath, expandedNSString)
-        #endif
-
-        let unexpandableFilePath = "/.aws/credentials"
-        let unexpandedNewPath = AWSConfigFileCredentialProvider.expandTildeInFilePath(unexpandableFilePath)
-        let unexpandedNSString = NSString(string: unexpandableFilePath).expandingTildeInPath
-
-        XCTAssertEqual(unexpandedNewPath, unexpandedNSString)
-        XCTAssertEqual(unexpandedNewPath, unexpandableFilePath)
-    }
+    // MARK: - Load Shared Credentials from Disk
 
     func testConfigFileCredentialINIParser() throws {
         // setup
@@ -186,6 +162,8 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         XCTAssertEqual(staticCredential.accessKeyId, "AWSACCESSKEYID")
         XCTAssertEqual(staticCredential.secretAccessKey, "AWSSECRETACCESSKEY")
     }
+
+    // MARK: - Config File Credentials Provider
 
     func testConfigFileSuccess() {
         let credentials = """
@@ -407,87 +385,5 @@ class ConfigFileCredentialProviderTests: XCTestCase {
     func testConfigFileShutdown() {
         let client = createAWSClient(credentialProvider: .configFile())
         XCTAssertNoThrow(try client.syncShutdown())
-    }
-
-    func testInternalSTSAssumeRoleProvider() throws {
-        let credentials = STSCredentials(
-            accessKeyId: "STSACCESSKEYID",
-            expiration: Date(timeIntervalSince1970: 87_387_346),
-            secretAccessKey: "STSSECRETACCESSKEY",
-            sessionToken: "STSSESSIONTOKEN"
-        )
-        let testServer = AWSTestServer(serviceProtocol: .xml)
-        defer { XCTAssertNoThrow(try testServer.stop()) }
-        let client = AWSClient(
-            credentialProvider: .internalSTSAssumeRole(
-                request: .init(roleArn: "arn:aws:iam::000000000000:role/test-sts-assume-role", roleSessionName: "testInternalSTSAssumeRoleProvider"),
-                credentialProvider: .empty,
-                region: .useast1,
-                endpoint: testServer.address
-            ),
-            httpClientProvider: .createNew,
-            logger: TestEnvironment.logger
-        )
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
-
-        XCTAssertNoThrow(try testServer.processRaw { _ in
-            let output = STSAssumeRoleResponse(credentials: credentials)
-            let xml = try XMLEncoder().encode(output)
-            let byteBuffer = ByteBufferAllocator().buffer(string: xml.xmlString)
-            let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
-            return .result(response)
-        })
-        var result: Credential?
-        XCTAssertNoThrow(result = try client.credentialProvider.getCredential(on: client.eventLoopGroup.next(), logger: AWSClient.loggingDisabled).wait())
-        let stsCredentials = result as? STSCredentials
-        XCTAssertEqual(stsCredentials?.accessKeyId, credentials.accessKeyId)
-        XCTAssertEqual(stsCredentials?.expiration, credentials.expiration)
-        XCTAssertEqual(stsCredentials?.secretAccessKey, credentials.secretAccessKey)
-        XCTAssertEqual(stsCredentials?.sessionToken, credentials.sessionToken)
-    }
-}
-
-// Extend STSAssumeRoleRequest so it can be used with the AWSTestServer
-extension STSAssumeRoleRequest: Decodable {
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        let roleArn = try container.decode(String.self, forKey: .roleArn)
-        let roleSessionName = try container.decode(String.self, forKey: .roleSessionName)
-        self.init(roleArn: roleArn, roleSessionName: roleSessionName)
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case roleArn = "RoleArn"
-        case roleSessionName = "RoleSessionName"
-    }
-}
-
-// Extend STSAssumeRoleResponse so it can be used with the AWSTestServer
-extension STSAssumeRoleResponse: Encodable {
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(credentials, forKey: .credentials)
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case credentials = "Credentials"
-    }
-}
-
-// Extend STSCredentials so it can be used with the AWSTestServer
-extension STSCredentials: Encodable {
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(accessKeyId, forKey: .accessKeyId)
-        try container.encode(expiration, forKey: .expiration)
-        try container.encode(secretAccessKey, forKey: .secretAccessKey)
-        try container.encode(sessionToken, forKey: .sessionToken)
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case accessKeyId = "AccessKeyId"
-        case expiration = "Expiration"
-        case secretAccessKey = "SecretAccessKey"
-        case sessionToken = "SessionToken"
     }
 }

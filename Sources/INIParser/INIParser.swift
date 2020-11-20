@@ -47,7 +47,7 @@ public final class INIParser {
         for c in line {
             switch c {
             case " ", "\t":
-                if state == .SingleQuotation || state == .DoubleQuotation {
+                if state == .SingleQuotation || state == .DoubleQuotation || state == .Title {
                     cache.append(c)
                 }
             case "[":

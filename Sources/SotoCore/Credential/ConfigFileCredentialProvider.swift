@@ -12,7 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import INIParser
 import Logging
 import NIO
 import NIOConcurrencyHelpers
@@ -26,12 +25,9 @@ import Foundation.NSString
 class AWSConfigFileCredentialProvider: CredentialProviderSelector {
     /// Errors occurring when initializing a FileCredential
     ///
-    /// - missingProfile: If the profile requested was not found
     /// - missingAccessKeyId: If the access key ID was not found
     /// - missingSecretAccessKey: If the secret access key was not found
-    enum ConfigFileError: Error, Equatable {
-        case invalidCredentialFileSyntax
-        case missingProfile(String)
+    enum ConfigFileCredentialProviderError: Error, Equatable {
         case missingAccessKeyId
         case missingSecretAccessKey
     }
@@ -87,7 +83,7 @@ class AWSConfigFileCredentialProvider: CredentialProviderSelector {
         on eventLoop: EventLoop,
         using fileIO: NonBlockingFileIO
     ) -> EventLoopFuture<CredentialProvider> {
-        let filePath = Self.expandTildeInFilePath(credentialsFilePath)
+        let filePath = ConfigFileLoader.expandTildeInFilePath(credentialsFilePath)
 
         return fileIO.openFile(path: filePath, eventLoop: eventLoop)
             .flatMap { handle, region in
@@ -100,14 +96,14 @@ class AWSConfigFileCredentialProvider: CredentialProviderSelector {
     }
 
     static func sharedCredentials(from byteBuffer: ByteBuffer, for profile: String) throws -> StaticCredential {
-        let settings = try self.settings(from: byteBuffer, for: profile, sourceProfile: nil)
+        let settings = try ConfigFileLoader.loadCredentials(from: byteBuffer, for: profile, sourceProfile: nil)
 
         guard let accessKeyId = settings["aws_access_key_id"] else {
-            throw ConfigFileError.missingAccessKeyId
+            throw ConfigFileCredentialProviderError.missingAccessKeyId
         }
 
         guard let secretAccessKey = settings["aws_secret_access_key"] else {
-            throw ConfigFileError.missingSecretAccessKey
+            throw ConfigFileCredentialProviderError.missingSecretAccessKey
         }
 
         let sessionToken = settings["aws_session_token"]
@@ -115,76 +111,4 @@ class AWSConfigFileCredentialProvider: CredentialProviderSelector {
         return StaticCredential(accessKeyId: accessKeyId, secretAccessKey: secretAccessKey, sessionToken: sessionToken)
     }
 
-    /// Load profile settings from a file (passed in as byte-buffer), usually `~/.aws/credentials` or `~/.aws/config`.
-    ///
-    /// If `role_arn` and `source_profile` are found in the settings, the settings from the source profile are also loaded and mixed in.
-    /// In the scenario that a setting does exist in both profiles, the setting from `profile` will take precedence.
-    ///
-    /// >  `source_profile` specifies a named profile with long-term credentials that the AWS CLI can use to assume
-    /// >  a role that you specified with the `role_arn` parameter. You cannot specify both `source_profile` and
-    /// >  `credential_source` in the same profile.
-    ///
-    /// - Parameters:
-    ///   - byteBuffer: contents of the file to parse
-    ///   - profile: AWS named profile to load (usually `default`)
-    ///   - sourceProfile: specifies a named profile with long-term credentials that the AWS CLI can use to assume a role that you specified with the `role_arn` parameter.
-    /// - Returns: Combined profile settings
-    static func settings(from byteBuffer: ByteBuffer, for profile: String, sourceProfile: String?) throws -> [String: String] {
-        guard let content = byteBuffer.getString(at: 0, length: byteBuffer.readableBytes) else {
-            throw ConfigFileError.invalidCredentialFileSyntax
-        }
-        var parser: INIParser
-        do {
-            parser = try INIParser(content)
-        } catch INIParser.Error.invalidSyntax {
-            throw ConfigFileError.invalidCredentialFileSyntax
-        }
-
-        guard var settings = parser.sections[profile] else {
-            throw ConfigFileError.missingProfile(profile)
-        }
-
-        if let sourceProfile = sourceProfile ?? settings["source_profile"] {
-            guard let sourceConfig = parser.sections[sourceProfile] else {
-                throw ConfigFileError.missingProfile(sourceProfile)
-            }
-            settings.merge(sourceConfig) { (profile, _) in profile }
-        }
-
-        return settings
-    }
-
-    static func expandTildeInFilePath(_ filePath: String) -> String {
-        #if os(Linux)
-        // We don't want to add more dependencies on Foundation than needed.
-        // For this reason we get the expanded filePath on Linux from libc.
-        // Since `wordexp` and `wordfree` are not available on iOS we stay
-        // with NSString on Darwin.
-        return filePath.withCString { (ptr) -> String in
-            var wexp = wordexp_t()
-            guard wordexp(ptr, &wexp, 0) == 0, let we_wordv = wexp.we_wordv else {
-                return filePath
-            }
-            defer {
-                wordfree(&wexp)
-            }
-
-            guard let resolved = we_wordv[0], let pth = String(cString: resolved, encoding: .utf8) else {
-                return filePath
-            }
-
-            return pth
-        }
-        #elseif os(macOS)
-        // can not use wordexp on macOS because for sandboxed application wexp.we_wordv == nil
-        guard let home = getpwuid(getuid())?.pointee.pw_dir,
-            let homePath = String(cString: home, encoding: .utf8)
-        else {
-            return filePath
-        }
-        return filePath.starts(with: "~") ? homePath + filePath.dropFirst() : filePath
-        #else
-        return NSString(string: filePath).expandingTildeInPath
-        #endif
-    }
 }

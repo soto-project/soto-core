@@ -52,9 +52,6 @@ class AWSConfigFileCredentialProvider: CredentialProviderSelector {
         threadPool.start()
         let fileIO = NonBlockingFileIO(threadPool: threadPool)
 
-        // TODO:
-        // - Identify if a profile configuration is needed/exists
-        // - Determine if need to load temporary credentials from STS
         Self.getSharedCredentialsFromDisk(credentialsFilePath: credentialsFilePath, configFilePath: configFilePath, profile: profile, on: eventLoop, using: fileIO)
             .always { _ in
                 // shutdown the threadpool async
@@ -63,6 +60,14 @@ class AWSConfigFileCredentialProvider: CredentialProviderSelector {
             .cascade(to: self.startupPromise)
     }
 
+    /// Load credentials from disk
+    /// - Parameters:
+    ///   - credentialsFilePath: file path for AWS credentials file
+    ///   - configFilePath: file path for AWS config file (optional)
+    ///   - profile: named profile to load (optional)
+    ///   - eventLoop: event loop to run everything on
+    ///   - fileIO: non-blocking file IO
+    /// - Returns: Promise of a Credential Provider (StaticCredentials or STSAssumeRole)
     static func getSharedCredentialsFromDisk(
         credentialsFilePath: String,
         configFilePath: String?,
@@ -70,31 +75,37 @@ class AWSConfigFileCredentialProvider: CredentialProviderSelector {
         on eventLoop: EventLoop,
         using fileIO: NonBlockingFileIO
     ) -> EventLoopFuture<CredentialProvider> {
-        let credentialsFilePath = ConfigFileLoader.expandTildeInFilePath(credentialsFilePath)
-        let configFilePath = configFilePath.flatMap(ConfigFileLoader.expandTildeInFilePath(_:))
 
-        return fileIO.openFile(path: credentialsFilePath, eventLoop: eventLoop)
+        return loadFile(path: credentialsFilePath, on: eventLoop, using: fileIO)
+            .flatMap { credentialsByteBuffer -> EventLoopFuture<(ByteBuffer, ByteBuffer?)> in
+                if let path = configFilePath {
+                    return Self.loadFile(path: path, on: eventLoop, using: fileIO).map { (credentialsByteBuffer, $0) }
+                }
+                else {
+                    return eventLoop.makeSucceededFuture((credentialsByteBuffer, nil))
+                }
+            }
+            .flatMapThrowing { credentialsByteBuffer, configByteBuffer in
+                return try Self.sharedCredentials(from: credentialsByteBuffer, configByteBuffer: configByteBuffer, for: profile)
+            }
+    }
+
+    /// Load a file from disk without blocking the current thread
+    /// - Parameters:
+    ///   - path: path for the file to load
+    ///   - eventLoop: event loop to run everything on
+    ///   - fileIO: non-blocking file IO
+    /// - Returns: Event loop future with file contents in a byte-buffer
+    static func loadFile(path: String, on eventLoop: EventLoop, using fileIO: NonBlockingFileIO) -> EventLoopFuture<ByteBuffer> {
+        let path = ConfigFileLoader.expandTildeInFilePath(path)
+
+        return fileIO.openFile(path: path, eventLoop: eventLoop)
             .flatMap { handle, region in
                 fileIO.read(fileRegion: region, allocator: ByteBufferAllocator(), eventLoop: eventLoop).map { ($0, handle) }
             }
-            .flatMap { credentialsByteBuffer, credentialsHandle in
-                if let path = configFilePath {
-                    return fileIO.openFile(path: configFilePath, eventLoop: eventLoop).map { handle, region in
-                        (credentialsByteBuffer, credentialsHandle, handle, region)
-                    }
-                } else {
-                    return (credentialsByteBuffer, credentialsHandle, nil, nil)
-                }
-            }
-            .flatMap { credentialsByteBuffer, credentialsHandle, configHandle, configRegion in
-                fileIO.read(fileRegion: configRegion, allocator: ByteBufferAllocator(), eventLoop: eventLoop).map { content, handle in
-                    return (credentialsByteBuffer, credentialsHandle, content, configHandle)
-                }
-            }
-            .flatMapThrowing { credentialsByteBuffer, credentialsHandle, configByteBuffer, configHandle in
-                try credentialsHandle.close()
-                try configByteBuffer?.close()
-                return try Self.sharedCredentials(from: credentialsByteBuffer, configByteBuffer: configByteBuffer, for: profile)
+            .flatMapThrowing { byteBuffer, handle in
+                try handle.close()
+                return byteBuffer
             }
     }
 
@@ -104,13 +115,17 @@ class AWSConfigFileCredentialProvider: CredentialProviderSelector {
     ///   - credentialsByteBuffer: contents of AWS shared credentials file (usually `~/.aws/credentials`
     ///   - configByteBuffer: contents of AWS profile configuration file (usually `~/.aws/config`
     ///   - profile: named profile to load (usually `default`)
-    static func sharedCredentials(from credentialsByteBuffer: ByteBuffer, configByteBuffer: ByteBuffer?, for profile: String) throws -> StaticCredential {
+    /// - Returns: Credential Provider (StaticCredentials or STSAssumeRole)
+    static func sharedCredentials(from credentialsByteBuffer: ByteBuffer, configByteBuffer: ByteBuffer? = nil, for profile: String) throws -> StaticCredential {
         var config: ConfigFileLoader.ProfileConfig?
         if let byteBuffer = configByteBuffer {
             config = try ConfigFileLoader.loadProfileConfig(from: byteBuffer, for: profile)
         }
         let credentials = try ConfigFileLoader.loadCredentials(from: credentialsByteBuffer, for: profile, sourceProfile: config?.sourceProfile)
+        dump(config)
+        dump(credentials)
 
+        // TODO: Check if credentials containe a `role_arn`, in which case an STSAssumeRole credentails provided is needed.
 
         return StaticCredential(accessKeyId: credentials.accessKey,
                                 secretAccessKey: credentials.secretAccessKey,

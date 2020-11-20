@@ -16,8 +16,13 @@ import Logging
 import NIO
 import NIOConcurrencyHelpers
 import SotoSignerV4
+#if os(Linux)
+import Glibc
+#else
+import Foundation.NSString
+#endif
 
-class AWSConfigFileCredentialProvider: CredentialProviderSelector {
+class ConfigFileCredentialProvider: CredentialProviderSelector {
 
     /// promise to find a credential provider
     let startupPromise: EventLoopPromise<CredentialProvider>
@@ -31,7 +36,7 @@ class AWSConfigFileCredentialProvider: CredentialProviderSelector {
         self.startupPromise.futureResult.whenSuccess { result in
             self.internalProvider = result
         }
-        self.fromSharedCredentials(credentialsFilePath: credentialsFilePath, configFilePath: configFilePath, profile: profile, on: context.eventLoop)
+        self.fromSharedCredentials(credentialsFilePath: credentialsFilePath, configFilePath: configFilePath, profile: profile, context: context)
     }
 
     /// Load credentials from AWS cli credentials and profile configuration files
@@ -40,19 +45,20 @@ class AWSConfigFileCredentialProvider: CredentialProviderSelector {
     ///   - credentialsFilePath: credential config file
     ///   - configFilePath: profile configuration file
     ///   - profile: profile to use
-    ///   - eventLoop: eventLoop to run everything on
+    ///   - context: credential provider factory context
     func fromSharedCredentials(
         credentialsFilePath: String,
         configFilePath: String?,
         profile: String?,
-        on eventLoop: EventLoop
+        context: CredentialProviderFactory.Context
     ) {
         let profile = profile ?? Environment["AWS_PROFILE"] ?? ConfigFileLoader.default
         let threadPool = NIOThreadPool(numberOfThreads: 1)
         threadPool.start()
         let fileIO = NonBlockingFileIO(threadPool: threadPool)
 
-        Self.getSharedCredentialsFromDisk(credentialsFilePath: credentialsFilePath, configFilePath: configFilePath, profile: profile, on: eventLoop, using: fileIO)
+        Self.getSharedCredentialsFromDisk(credentialsFilePath: credentialsFilePath, configFilePath: configFilePath,
+                                          profile: profile, context: context, using: fileIO)
             .always { _ in
                 // shutdown the threadpool async
                 threadPool.shutdownGracefully { _ in }
@@ -65,28 +71,29 @@ class AWSConfigFileCredentialProvider: CredentialProviderSelector {
     ///   - credentialsFilePath: file path for AWS credentials file
     ///   - configFilePath: file path for AWS config file (optional)
     ///   - profile: named profile to load (optional)
-    ///   - eventLoop: event loop to run everything on
+    ///   - context: credential provider factory context
     ///   - fileIO: non-blocking file IO
     /// - Returns: Promise of a Credential Provider (StaticCredentials or STSAssumeRole)
     static func getSharedCredentialsFromDisk(
         credentialsFilePath: String,
         configFilePath: String?,
         profile: String,
-        on eventLoop: EventLoop,
+        context: CredentialProviderFactory.Context,
         using fileIO: NonBlockingFileIO
     ) -> EventLoopFuture<CredentialProvider> {
 
-        return loadFile(path: credentialsFilePath, on: eventLoop, using: fileIO)
+        return loadFile(path: credentialsFilePath, on: context.eventLoop, using: fileIO)
             .flatMap { credentialsByteBuffer -> EventLoopFuture<(ByteBuffer, ByteBuffer?)> in
                 if let path = configFilePath {
-                    return Self.loadFile(path: path, on: eventLoop, using: fileIO).map { (credentialsByteBuffer, $0) }
+                    return Self.loadFile(path: path, on: context.eventLoop, using: fileIO).map { (credentialsByteBuffer, $0) }
                 }
                 else {
-                    return eventLoop.makeSucceededFuture((credentialsByteBuffer, nil))
+                    return context.eventLoop.makeSucceededFuture((credentialsByteBuffer, nil))
                 }
             }
             .flatMapThrowing { credentialsByteBuffer, configByteBuffer in
-                return try Self.sharedCredentials(from: credentialsByteBuffer, configByteBuffer: configByteBuffer, for: profile)
+                return try ConfigFileLoader.sharedCredentials(from: credentialsByteBuffer, configByteBuffer: configByteBuffer,
+                                                              for: profile, context: context)
             }
     }
 
@@ -97,7 +104,7 @@ class AWSConfigFileCredentialProvider: CredentialProviderSelector {
     ///   - fileIO: non-blocking file IO
     /// - Returns: Event loop future with file contents in a byte-buffer
     static func loadFile(path: String, on eventLoop: EventLoop, using fileIO: NonBlockingFileIO) -> EventLoopFuture<ByteBuffer> {
-        let path = ConfigFileLoader.expandTildeInFilePath(path)
+        let path = expandTildeInFilePath(path)
 
         return fileIO.openFile(path: path, eventLoop: eventLoop)
             .flatMap { handle, region in
@@ -109,27 +116,38 @@ class AWSConfigFileCredentialProvider: CredentialProviderSelector {
             }
     }
 
-    /// Load shared credentials and profile configuration from passed in byte-buffers
-    ///
-    /// - Parameters:
-    ///   - credentialsByteBuffer: contents of AWS shared credentials file (usually `~/.aws/credentials`
-    ///   - configByteBuffer: contents of AWS profile configuration file (usually `~/.aws/config`
-    ///   - profile: named profile to load (usually `default`)
-    /// - Returns: Credential Provider (StaticCredentials or STSAssumeRole)
-    static func sharedCredentials(from credentialsByteBuffer: ByteBuffer, configByteBuffer: ByteBuffer? = nil, for profile: String) throws -> StaticCredential {
-        var config: ConfigFileLoader.ProfileConfig?
-        if let byteBuffer = configByteBuffer {
-            config = try ConfigFileLoader.loadProfileConfig(from: byteBuffer, for: profile)
+    static func expandTildeInFilePath(_ filePath: String) -> String {
+        #if os(Linux)
+        // We don't want to add more dependencies on Foundation than needed.
+        // For this reason we get the expanded filePath on Linux from libc.
+        // Since `wordexp` and `wordfree` are not available on iOS we stay
+        // with NSString on Darwin.
+        return filePath.withCString { (ptr) -> String in
+            var wexp = wordexp_t()
+            guard wordexp(ptr, &wexp, 0) == 0, let we_wordv = wexp.we_wordv else {
+                return filePath
+            }
+            defer {
+                wordfree(&wexp)
+            }
+
+            guard let resolved = we_wordv[0], let pth = String(cString: resolved, encoding: .utf8) else {
+                return filePath
+            }
+
+            return pth
         }
-        let credentials = try ConfigFileLoader.loadCredentials(from: credentialsByteBuffer, for: profile, sourceProfile: config?.sourceProfile)
-        dump(config)
-        dump(credentials)
-
-        // TODO: Check if credentials containe a `role_arn`, in which case an STSAssumeRole credentails provided is needed.
-
-        return StaticCredential(accessKeyId: credentials.accessKey,
-                                secretAccessKey: credentials.secretAccessKey,
-                                sessionToken: credentials.sessionToken)
+        #elseif os(macOS)
+        // can not use wordexp on macOS because for sandboxed application wexp.we_wordv == nil
+        guard let home = getpwuid(getuid())?.pointee.pw_dir,
+            let homePath = String(cString: home, encoding: .utf8)
+        else {
+            return filePath
+        }
+        return filePath.starts(with: "~") ? homePath + filePath.dropFirst() : filePath
+        #else
+        return NSString(string: filePath).expandingTildeInPath
+        #endif
     }
 
 }

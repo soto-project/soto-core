@@ -15,17 +15,10 @@
 import INIParser
 import Logging
 import NIO
-#if os(Linux)
-import Glibc
-#else
-import Foundation.NSString
-#endif
+import struct Foundation.UUID
 
 /// Load settings from AWS credentials and profile configuration files
 /// https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
-///
-/// Credentials file settings have precedence over profile configuration settings
-/// https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-precedence
 struct ConfigFileLoader {
 
     static let `default` = "default"
@@ -38,6 +31,7 @@ struct ConfigFileLoader {
         let secretAccessKey: String
         let sessionToken: String?
         let roleArn: String?
+        let roleSessionName: String?
         let sourceProfile: String?
         let credentialSource: CredentialSource?
     }
@@ -45,7 +39,7 @@ struct ConfigFileLoader {
     /// The credentials and config file are updated when you run the command aws configure. The config file is located at `~/.aws/config` on Linux
     /// or macOS, or at C:\Users\USERNAME\.aws\config on Windows. This file contains the configuration settings for the default profile and any named profiles.
     struct ProfileConfig: Equatable {
-        let region: String?
+        let region: Region?
         let roleArn: String?
         let roleSessionName: String?
         let sourceProfile: String?
@@ -72,6 +66,49 @@ struct ConfigFileLoader {
         case missingProfile(String)
         case missingAccessKeyId
         case missingSecretAccessKey
+        case missingSourceProfile
+    }
+
+    /// Load shared credentials and profile configuration from passed-in byte-buffers
+    ///
+    /// Credentials file settings have precedence over profile configuration settings
+    /// https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-precedence
+    ///
+    /// - Parameters:
+    ///   - credentialsByteBuffer: contents of AWS shared credentials file (usually `~/.aws/credentials`
+    ///   - configByteBuffer: contents of AWS profile configuration file (usually `~/.aws/config`
+    ///   - profile: named profile to load (usually `default`)
+    ///   - context: credential provider factory context
+    /// - Returns: Credential Provider (StaticCredentials or STSAssumeRole)
+    static func sharedCredentials(from credentialsByteBuffer: ByteBuffer,
+                                  configByteBuffer: ByteBuffer? = nil,
+                                  for profile: String,
+                                  context: CredentialProviderFactory.Context) throws -> CredentialProvider {
+        var config: ConfigFileLoader.ProfileConfig?
+        if let byteBuffer = configByteBuffer {
+            config = try loadProfileConfig(from: byteBuffer, for: profile)
+        }
+        let credentials = try loadCredentials(from: credentialsByteBuffer, for: profile, sourceProfile: config?.sourceProfile)
+        dump(config)
+        dump(credentials)
+
+        // When `role_arn` is defined, temporary credentials must be loaded via STS Assume Role operation
+        if let roleArn = credentials.roleArn ?? config?.roleArn {
+            // If `role_arn` is defined, `source_profile` must be defined too (don't yet support `credential_source`).
+            guard credentials.sourceProfile != nil || config?.sourceProfile != nil else {
+                throw ConfigFileError.missingSourceProfile
+            }
+            // Proceed with STSAssumeRole operation
+            let sessionName = credentials.roleSessionName ?? config?.roleSessionName ?? UUID().uuidString
+            let request = STSAssumeRoleRequest(roleArn: roleArn, roleSessionName: sessionName)
+            let region = config?.region ?? .useast1
+            return STSAssumeRoleCredentialProvider(request: request, credentialProvider: .default, region: region, httpClient: context.httpClient)
+        }
+        else {
+            return StaticCredential(accessKeyId: credentials.accessKey,
+                                    secretAccessKey: credentials.secretAccessKey,
+                                    sessionToken: credentials.sessionToken)
+        }
     }
 
     /// Load profile configuraton from a file (passed in as byte-buffer), usually `~/.aws/config`
@@ -103,7 +140,7 @@ struct ConfigFileLoader {
 
         // All values are optional for profile configuration
         return ProfileConfig(
-            region: settings["region"],
+            region: settings["region"].flatMap(Region.init(awsRegionName:)),
             roleArn: settings["role_arn"],
             roleSessionName: settings["role_session_name"],
             sourceProfile: settings["source_profile"],
@@ -139,7 +176,9 @@ struct ConfigFileLoader {
         var profileSecretAccessKey = settings["aws_secret_access_key"]
         var profileSessionToken = settings["aws_session_token"]
 
-        if let sourceProfile = sourceProfile ?? settings["source_profile"] {
+        // If a source profile is indicated, load credentials for STS Assume Role operation.
+        // Credentials file settings have precedence over profile configuration settings.
+        if let sourceProfile = settings["source_profile"] ?? sourceProfile {
             guard let sourceSettings = parser.sections[sourceProfile] else {
                 throw ConfigFileError.missingProfile(sourceProfile)
             }
@@ -160,43 +199,10 @@ struct ConfigFileLoader {
             secretAccessKey: secretAccessKey,
             sessionToken: profileSessionToken,
             roleArn: settings["role_arn"],
+            roleSessionName: settings["role_session_name"],
             sourceProfile: sourceProfile ?? settings["source_profile"],
             credentialSource: settings["credential_source"].flatMap(CredentialSource.init(rawValue:))
         )
-    }
-
-    static func expandTildeInFilePath(_ filePath: String) -> String {
-        #if os(Linux)
-        // We don't want to add more dependencies on Foundation than needed.
-        // For this reason we get the expanded filePath on Linux from libc.
-        // Since `wordexp` and `wordfree` are not available on iOS we stay
-        // with NSString on Darwin.
-        return filePath.withCString { (ptr) -> String in
-            var wexp = wordexp_t()
-            guard wordexp(ptr, &wexp, 0) == 0, let we_wordv = wexp.we_wordv else {
-                return filePath
-            }
-            defer {
-                wordfree(&wexp)
-            }
-
-            guard let resolved = we_wordv[0], let pth = String(cString: resolved, encoding: .utf8) else {
-                return filePath
-            }
-
-            return pth
-        }
-        #elseif os(macOS)
-        // can not use wordexp on macOS because for sandboxed application wexp.we_wordv == nil
-        guard let home = getpwuid(getuid())?.pointee.pw_dir,
-            let homePath = String(cString: home, encoding: .utf8)
-        else {
-            return filePath
-        }
-        return filePath.starts(with: "~") ? homePath + filePath.dropFirst() : filePath
-        #else
-        return NSString(string: filePath).expandingTildeInPath
-        #endif
     }
 
 }

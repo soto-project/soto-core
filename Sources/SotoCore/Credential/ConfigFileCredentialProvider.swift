@@ -16,11 +16,6 @@ import Logging
 import NIO
 import NIOConcurrencyHelpers
 import SotoSignerV4
-#if os(Linux)
-import Glibc
-#else
-import Foundation.NSString
-#endif
 
 class AWSConfigFileCredentialProvider: CredentialProviderSelector {
 
@@ -52,7 +47,7 @@ class AWSConfigFileCredentialProvider: CredentialProviderSelector {
         profile: String?,
         on eventLoop: EventLoop
     ) {
-        let profile = profile ?? Environment["AWS_PROFILE"] ?? "default"
+        let profile = profile ?? Environment["AWS_PROFILE"] ?? ConfigFileLoader.default
         let threadPool = NIOThreadPool(numberOfThreads: 1)
         threadPool.start()
         let fileIO = NonBlockingFileIO(threadPool: threadPool)
@@ -75,20 +70,47 @@ class AWSConfigFileCredentialProvider: CredentialProviderSelector {
         on eventLoop: EventLoop,
         using fileIO: NonBlockingFileIO
     ) -> EventLoopFuture<CredentialProvider> {
-        let filePath = ConfigFileLoader.expandTildeInFilePath(credentialsFilePath)
+        let credentialsFilePath = ConfigFileLoader.expandTildeInFilePath(credentialsFilePath)
+        let configFilePath = configFilePath.flatMap(ConfigFileLoader.expandTildeInFilePath(_:))
 
-        return fileIO.openFile(path: filePath, eventLoop: eventLoop)
+        return fileIO.openFile(path: credentialsFilePath, eventLoop: eventLoop)
             .flatMap { handle, region in
                 fileIO.read(fileRegion: region, allocator: ByteBufferAllocator(), eventLoop: eventLoop).map { ($0, handle) }
             }
-            .flatMapThrowing { byteBuffer, handle in
-                try handle.close()
-                return try Self.sharedCredentials(from: byteBuffer, for: profile)
+            .flatMap { credentialsByteBuffer, credentialsHandle in
+                if let path = configFilePath {
+                    return fileIO.openFile(path: configFilePath, eventLoop: eventLoop).map { handle, region in
+                        (credentialsByteBuffer, credentialsHandle, handle, region)
+                    }
+                } else {
+                    return (credentialsByteBuffer, credentialsHandle, nil, nil)
+                }
+            }
+            .flatMap { credentialsByteBuffer, credentialsHandle, configHandle, configRegion in
+                fileIO.read(fileRegion: configRegion, allocator: ByteBufferAllocator(), eventLoop: eventLoop).map { content, handle in
+                    return (credentialsByteBuffer, credentialsHandle, content, configHandle)
+                }
+            }
+            .flatMapThrowing { credentialsByteBuffer, credentialsHandle, configByteBuffer, configHandle in
+                try credentialsHandle.close()
+                try configByteBuffer?.close()
+                return try Self.sharedCredentials(from: credentialsByteBuffer, configByteBuffer: configByteBuffer, for: profile)
             }
     }
 
-    static func sharedCredentials(from byteBuffer: ByteBuffer, for profile: String) throws -> StaticCredential {
-        let credentials = try ConfigFileLoader.loadCredentials(from: byteBuffer, for: profile, sourceProfile: nil)
+    /// Load shared credentials and profile configuration from passed in byte-buffers
+    ///
+    /// - Parameters:
+    ///   - credentialsByteBuffer: contents of AWS shared credentials file (usually `~/.aws/credentials`
+    ///   - configByteBuffer: contents of AWS profile configuration file (usually `~/.aws/config`
+    ///   - profile: named profile to load (usually `default`)
+    static func sharedCredentials(from credentialsByteBuffer: ByteBuffer, configByteBuffer: ByteBuffer?, for profile: String) throws -> StaticCredential {
+        var config: ConfigFileLoader.ProfileConfig?
+        if let byteBuffer = configByteBuffer {
+            config = try ConfigFileLoader.loadProfileConfig(from: byteBuffer, for: profile)
+        }
+        let credentials = try ConfigFileLoader.loadCredentials(from: credentialsByteBuffer, for: profile, sourceProfile: config?.sourceProfile)
+
 
         return StaticCredential(accessKeyId: credentials.accessKey,
                                 secretAccessKey: credentials.secretAccessKey,

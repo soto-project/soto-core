@@ -15,13 +15,35 @@
 import INIParser
 import Logging
 import NIO
-
+#if os(Linux)
+import Glibc
+#else
+import Foundation.NSString
+#endif
 
 /// Load settings from AWS credentials and profile configuration files
 /// https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
+///
+/// Credentials file settings have precedence over profile configuration settings
+/// https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-precedence
 struct ConfigFileLoader {
 
-    /// Profile Config loaded from file
+    static let `default` = "default"
+
+    /// CLI credentials file – The credentials and config file are updated when you run the command aws configure. The credentials file is located
+    /// at `~/.aws/credentials` on Linux or macOS, or at C:\Users\USERNAME\.aws\credentials on Windows. This file can contain the credential
+    /// details for the default profile and any named profiles.
+    struct ProfileCredentials: Equatable {
+        let accessKey: String
+        let secretAccessKey: String
+        let sessionToken: String?
+        let roleArn: String?
+        let sourceProfile: String?
+        let credentialSource: CredentialSource?
+    }
+
+    /// The credentials and config file are updated when you run the command aws configure. The config file is located at `~/.aws/config` on Linux
+    /// or macOS, or at C:\Users\USERNAME\.aws\config on Windows. This file contains the configuration settings for the default profile and any named profiles.
     struct ProfileConfig: Equatable {
         let region: String?
         let roleArn: String?
@@ -38,16 +60,6 @@ struct ConfigFileLoader {
         case environment = "Environment"
         case ec2Instance = "Ec2InstanceMetadata"
         case ecsContainer = "EcsContainer"
-    }
-
-    /// Profile credentials loaded from file
-    struct ProfileCredentials: Equatable {
-        let accessKey: String
-        let secretAccessKey: String
-        let sessionToken: String?
-        let roleArn: String?
-        let sourceProfile: String?
-        let credentialSource: CredentialSource?
     }
 
     /// Errors occurring when loading credentials and profile configuration
@@ -68,7 +80,7 @@ struct ConfigFileLoader {
     ///   - byteBuffer: contents of the file to parse
     ///   - profile: AWS named profile to load (usually `default`)
     /// - Returns: Combined profile settings
-    static func loadProfileConfig(from byteBuffer: ByteBuffer, for profile: String = "default") throws -> ProfileConfig {
+    static func loadProfileConfig(from byteBuffer: ByteBuffer, for profile: String) throws -> ProfileConfig {
         guard let content = byteBuffer.getString(at: 0, length: byteBuffer.readableBytes) else {
             throw ConfigFileError.invalidCredentialFileSyntax
         }
@@ -79,7 +91,11 @@ struct ConfigFileLoader {
             throw ConfigFileError.invalidCredentialFileSyntax
         }
 
-        let loadedProfile = profile == "default" ? profile : "profile \(profile)"
+        // The credentials file uses a different naming format than the CLI config file for named profiles. Include
+        // the prefix word "profile" only when configuring a named profile in the config file. Do not use the word
+        // profile when creating an entry in the credentials file.
+        // https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html
+        let loadedProfile = profile == Self.default ? profile : "profile \(profile)"
 
         guard let settings = parser.sections[loadedProfile] else {
             throw ConfigFileError.missingProfile(loadedProfile)

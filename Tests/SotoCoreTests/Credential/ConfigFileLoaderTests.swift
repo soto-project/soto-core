@@ -28,31 +28,37 @@ class ConfigFileLoadersTests: XCTestCase {
         [default]
         role_arn = arn:aws:iam::123456789012:role/marketingadminrole
         source_profile = user1
+        region=us-west-2
         """
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
 
-
-        let config = try ConfigFileLoader.loadProfileConfig(from: byteBuffer)
+        let config = try ConfigFileLoader.loadProfileConfig(from: byteBuffer, for: ConfigFileLoader.default)
         XCTAssertEqual(config.roleArn, "arn:aws:iam::123456789012:role/marketingadminrole")
         XCTAssertEqual(config.sourceProfile, "user1")
+        XCTAssertEqual(config.region, "us-west-2")
     }
 
-    func testConfigFileProfile() throws {
+    func testConfigFileNamedProfile() throws {
         let content = """
+        [default]
+        region=us-west-2
+        output=json
+
         [profile marketingadmin]
         role_arn = arn:aws:iam::123456789012:role/marketingadminrole
         source_profile = user1
         role_session_name = foo@example.com
+        region = us-west-1
         """
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
-
 
         let config = try ConfigFileLoader.loadProfileConfig(from: byteBuffer, for: "marketingadmin")
         XCTAssertEqual(config.roleArn, "arn:aws:iam::123456789012:role/marketingadminrole")
         XCTAssertEqual(config.sourceProfile, "user1")
         XCTAssertEqual(config.roleSessionName, "foo@example.com")
+        XCTAssertEqual(config.region, "us-west-1")
     }
 
     func testConfigFileCredentialSourceEc2() throws {
@@ -63,7 +69,6 @@ class ConfigFileLoadersTests: XCTestCase {
         """
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
-
 
         let config = try ConfigFileLoader.loadProfileConfig(from: byteBuffer, for: "marketingadmin")
         XCTAssertEqual(config.credentialSource, .ec2Instance)
@@ -99,8 +104,57 @@ class ConfigFileLoadersTests: XCTestCase {
 
     // MARK: - Credentials File
 
-    func testCredentialsFile() throws {
+    func testCredentialsDefault() throws {
+        let content = """
+        [default]
+        aws_access_key_id=AKIAIOSFODNN7EXAMPLE
+        aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+        """
+        var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
+        byteBuffer.writeString(content)
 
+        let config = try ConfigFileLoader.loadCredentials(from: byteBuffer, for: ConfigFileLoader.default, sourceProfile: nil)
+        XCTAssertEqual(config.accessKey, "AKIAIOSFODNN7EXAMPLE")
+        XCTAssertEqual(config.secretAccessKey, "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
+    }
+
+    func testCredentialsNamedProfile() throws {
+        let content = """
+        [default]
+        aws_access_key_id=AKIAIOSFODNN7EXAMPLE
+        aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+
+        [user1]
+        aws_access_key_id=AKIAI44QH8DHBEXAMPLE
+        aws_secret_access_key=je7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY
+        """
+        var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
+        byteBuffer.writeString(content)
+
+        let config = try ConfigFileLoader.loadCredentials(from: byteBuffer, for: "user1", sourceProfile: nil)
+        XCTAssertEqual(config.accessKey, "AKIAI44QH8DHBEXAMPLE")
+        XCTAssertEqual(config.secretAccessKey, "je7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY")
+    }
+
+    func testCredentialsWithSourceProfile() throws {
+        let content = """
+        [default]
+        aws_access_key_id=AKIAIOSFODNN7EXAMPLE
+        aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+
+        [user1]
+        role_arn = arn:aws:iam::123456789012:role/marketingadminrole
+        source_profile = default
+        role_session_name = foo@example.com
+        """
+        var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
+        byteBuffer.writeString(content)
+
+        let config = try ConfigFileLoader.loadCredentials(from: byteBuffer, for: "user1", sourceProfile: nil)
+        XCTAssertEqual(config.accessKey, "AKIAIOSFODNN7EXAMPLE")
+        XCTAssertEqual(config.secretAccessKey, "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
+        XCTAssertEqual(config.roleArn, "arn:aws:iam::123456789012:role/marketingadminrole")
+        XCTAssertEqual(config.sourceProfile, ConfigFileLoader.default)
     }
 
     // MARK: - Config file path expansion

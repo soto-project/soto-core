@@ -174,6 +174,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
 
         let future = AWSConfigFileCredentialProvider.getSharedCredentialsFromDisk(
             credentialsFilePath: filenameURL.path,
+            configFilePath: nil,
             profile: "default",
             on: eventLoop,
             using: fileIO
@@ -249,6 +250,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         aws_secret_access_key = TESTDEFAULT-AWSSECRETACCESSKEY
 
         [test-profile]
+        source_profile = default
         aws_access_key_id = TESTPROFILE-AWSACCESSKEYID
         aws_secret_access_key = TESTPROFILE-AWSSECRETACCESSKEY
         """
@@ -284,6 +286,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         aws_secret_access_key = TESTDEFAULT-AWSSECRETACCESSKEY
 
         [test-profile]
+        source_profile = default
         aws_session_token = TESTPROFILE-SESSIONTOKEN
         aws_secret_access_key = TESTPROFILE-AWSSECRETACCESSKEY
         """
@@ -319,6 +322,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         aws_secret_access_key = TESTDEFAULT-AWSSECRETACCESSKEY
 
         [test-profile]
+        source_profile = default
         aws_session_token = TESTPROFILE-SESSIONTOKEN
         aws_access_key_id = TESTPROFILE-AWSACCESSKEYID
         """
@@ -354,6 +358,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         aws_secret_access_key = TESTDEFAULT-AWSSECRETACCESSKEY
 
         [test-profile]
+        source_profile = default
         foo = bar
         """
         Environment.set("test-profile", for: "AWS_PROFILE")

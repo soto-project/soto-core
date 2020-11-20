@@ -43,22 +43,24 @@ class AWSConfigFileCredentialProvider: CredentialProviderSelector {
     /// internal version of internal provider. Should access this through `internalProvider`
     var _internalProvider: CredentialProvider?
 
-    init(credentialsFilePath: String, profile: String? = nil, context: CredentialProviderFactory.Context) {
+    init(credentialsFilePath: String, configFilePath: String? = nil, profile: String? = nil, context: CredentialProviderFactory.Context) {
         self.startupPromise = context.eventLoop.makePromise(of: CredentialProvider.self)
         self.startupPromise.futureResult.whenSuccess { result in
             self.internalProvider = result
         }
-        self.fromSharedCredentials(credentialsFilePath: credentialsFilePath, profile: profile, on: context.eventLoop)
+        self.fromSharedCredentials(credentialsFilePath: credentialsFilePath, configFilePath: configFilePath, profile: profile, on: context.eventLoop)
     }
 
-    /// Load credentials from the aws cli config path `~/.aws/credentials`
+    /// Load credentials from AWS cli credentials and profile configuration files
     ///
     /// - Parameters:
     ///   - credentialsFilePath: credential config file
+    ///   - configFilePath: profile configuration file
     ///   - profile: profile to use
     ///   - eventLoop: eventLoop to run everything on
     func fromSharedCredentials(
         credentialsFilePath: String,
+        configFilePath: String?,
         profile: String?,
         on eventLoop: EventLoop
     ) {
@@ -67,7 +69,10 @@ class AWSConfigFileCredentialProvider: CredentialProviderSelector {
         threadPool.start()
         let fileIO = NonBlockingFileIO(threadPool: threadPool)
 
-        Self.getSharedCredentialsFromDisk(credentialsFilePath: credentialsFilePath, profile: profile, on: eventLoop, using: fileIO)
+        // TODO:
+        // - Identify if a profile configuration is needed/exists
+        // - Determine if need to load temporary credentials from STS
+        Self.getSharedCredentialsFromDisk(credentialsFilePath: credentialsFilePath, configFilePath: configFilePath, profile: profile, on: eventLoop, using: fileIO)
             .always { _ in
                 // shutdown the threadpool async
                 threadPool.shutdownGracefully { _ in }
@@ -77,6 +82,7 @@ class AWSConfigFileCredentialProvider: CredentialProviderSelector {
 
     static func getSharedCredentialsFromDisk(
         credentialsFilePath: String,
+        configFilePath: String?,
         profile: String,
         on eventLoop: EventLoop,
         using fileIO: NonBlockingFileIO
@@ -94,32 +100,58 @@ class AWSConfigFileCredentialProvider: CredentialProviderSelector {
     }
 
     static func sharedCredentials(from byteBuffer: ByteBuffer, for profile: String) throws -> StaticCredential {
-        let string = byteBuffer.getString(at: 0, length: byteBuffer.readableBytes)!
+        let settings = try self.settings(from: byteBuffer, for: profile, sourceProfile: nil)
+
+        guard let accessKeyId = settings["aws_access_key_id"] else {
+            throw ConfigFileError.missingAccessKeyId
+        }
+
+        guard let secretAccessKey = settings["aws_secret_access_key"] else {
+            throw ConfigFileError.missingSecretAccessKey
+        }
+
+        let sessionToken = settings["aws_session_token"]
+
+        return StaticCredential(accessKeyId: accessKeyId, secretAccessKey: secretAccessKey, sessionToken: sessionToken)
+    }
+
+    /// Load profile settings from a file (passed in as byte-buffer), usually `~/.aws/credentials` or `~/.aws/config`.
+    ///
+    /// If `role_arn` and `source_profile` are found in the settings, the settings from the source profile are also loaded and mixed in.
+    /// In the scenario that a setting does exist in both profiles, the setting from `profile` will take precedence.
+    ///
+    /// >  `source_profile` specifies a named profile with long-term credentials that the AWS CLI can use to assume
+    /// >  a role that you specified with the `role_arn` parameter. You cannot specify both `source_profile` and
+    /// >  `credential_source` in the same profile.
+    ///
+    /// - Parameters:
+    ///   - byteBuffer: contents of the file to parse
+    ///   - profile: AWS named profile to load (usually `default`)
+    ///   - sourceProfile: specifies a named profile with long-term credentials that the AWS CLI can use to assume a role that you specified with the `role_arn` parameter.
+    /// - Returns: Combined profile settings
+    static func settings(from byteBuffer: ByteBuffer, for profile: String, sourceProfile: String?) throws -> [String: String] {
+        guard let content = byteBuffer.getString(at: 0, length: byteBuffer.readableBytes) else {
+            throw ConfigFileError.invalidCredentialFileSyntax
+        }
         var parser: INIParser
         do {
-            parser = try INIParser(string)
+            parser = try INIParser(content)
         } catch INIParser.Error.invalidSyntax {
             throw ConfigFileError.invalidCredentialFileSyntax
         }
 
-        guard let config = parser.sections[profile] else {
+        guard var settings = parser.sections[profile] else {
             throw ConfigFileError.missingProfile(profile)
         }
 
-        // Profile credentials can "borrow" values from the 'default' profile when they have not been overriden
-        let defaultConfig = parser.sections["default"]
-
-        guard let accessKeyId = config["aws_access_key_id"] ?? defaultConfig?["aws_access_key_id"] else {
-            throw ConfigFileError.missingAccessKeyId
+        if let sourceProfile = sourceProfile ?? settings["source_profile"] {
+            guard let sourceConfig = parser.sections[sourceProfile] else {
+                throw ConfigFileError.missingProfile(sourceProfile)
+            }
+            settings.merge(sourceConfig) { (profile, _) in profile }
         }
 
-        guard let secretAccessKey = config["aws_secret_access_key"] ?? defaultConfig?["aws_secret_access_key"] else {
-            throw ConfigFileError.missingSecretAccessKey
-        }
-
-        let sessionToken = config["aws_session_token"] ?? defaultConfig?["aws_session_token"]
-
-        return StaticCredential(accessKeyId: accessKeyId, secretAccessKey: secretAccessKey, sessionToken: sessionToken)
+        return settings
     }
 
     static func expandTildeInFilePath(_ filePath: String) -> String {

@@ -56,7 +56,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
         byteBuffer.writeString(credential)
         XCTAssertThrowsError(_ = try AWSConfigFileCredentialProvider.sharedCredentials(from: byteBuffer, for: profile)) {
-            XCTAssertEqual($0 as? AWSConfigFileCredentialProvider.ConfigFileCredentialProviderError, .missingAccessKeyId)
+            XCTAssertEqual($0 as? ConfigFileLoader.ConfigFileError, .missingAccessKeyId)
         }
     }
 
@@ -71,7 +71,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
         byteBuffer.writeString(credential)
         XCTAssertThrowsError(_ = try AWSConfigFileCredentialProvider.sharedCredentials(from: byteBuffer, for: profile)) {
-            XCTAssertEqual($0 as? AWSConfigFileCredentialProvider.ConfigFileCredentialProviderError, .missingSecretAccessKey)
+            XCTAssertEqual($0 as? ConfigFileLoader.ConfigFileError, .missingSecretAccessKey)
         }
     }
 
@@ -252,8 +252,8 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         var credential: Credential?
         XCTAssertNoThrow(credential = try provider.getCredential(on: eventLoop, logger: TestEnvironment.logger).wait())
         XCTAssertEqual(credential?.sessionToken, "TESTDEFAULT-SESSIONTOKEN")
-        XCTAssertEqual(credential?.accessKeyId, "TESTPROFILE-AWSACCESSKEYID")
-        XCTAssertEqual(credential?.secretAccessKey, "TESTPROFILE-AWSSECRETACCESSKEY")
+        XCTAssertEqual(credential?.accessKeyId, "TESTDEFAULT-AWSACCESSKEYID")
+        XCTAssertEqual(credential?.secretAccessKey, "TESTDEFAULT-AWSSECRETACCESSKEY")
     }
 
     func testAWSProfileConfigFileWithDefaultAccessKey() {
@@ -287,9 +287,9 @@ class ConfigFileCredentialProviderTests: XCTestCase {
 
         var credential: Credential?
         XCTAssertNoThrow(credential = try provider.getCredential(on: eventLoop, logger: TestEnvironment.logger).wait())
-        XCTAssertEqual(credential?.sessionToken, "TESTPROFILE-SESSIONTOKEN")
+        XCTAssertEqual(credential?.sessionToken, "TESTDEFAULT-SESSIONTOKEN")
         XCTAssertEqual(credential?.accessKeyId, "TESTDEFAULT-AWSACCESSKEYID")
-        XCTAssertEqual(credential?.secretAccessKey, "TESTPROFILE-AWSSECRETACCESSKEY")
+        XCTAssertEqual(credential?.secretAccessKey, "TESTDEFAULT-AWSSECRETACCESSKEY")
     }
 
     func testAWSProfileConfigFileWithDefaultSecretKey() {
@@ -323,8 +323,8 @@ class ConfigFileCredentialProviderTests: XCTestCase {
 
         var credential: Credential?
         XCTAssertNoThrow(credential = try provider.getCredential(on: eventLoop, logger: TestEnvironment.logger).wait())
-        XCTAssertEqual(credential?.sessionToken, "TESTPROFILE-SESSIONTOKEN")
-        XCTAssertEqual(credential?.accessKeyId, "TESTPROFILE-AWSACCESSKEYID")
+        XCTAssertEqual(credential?.sessionToken, "TESTDEFAULT-SESSIONTOKEN")
+        XCTAssertEqual(credential?.accessKeyId, "TESTDEFAULT-AWSACCESSKEYID")
         XCTAssertEqual(credential?.secretAccessKey, "TESTDEFAULT-AWSSECRETACCESSKEY")
     }
 

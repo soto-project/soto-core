@@ -19,8 +19,8 @@ import NIO
 
 /// Load settings from AWS credentials and profile configuration files
 /// https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
-///
 struct ConfigFileLoader {
+
     /// Profile Config loaded from file
     struct ProfileConfig: Equatable {
         let region: String?
@@ -31,8 +31,9 @@ struct ConfigFileLoader {
     }
 
     /// Profile credential source `credential_source`
-    /// - Used within Amazon EC2 instances or EC2 containers to specify where the AWS CLI can find credentials to use to assume the role you specified
-    ///  with the `role_arn` parameter. You cannot specify both `source_profile` and `credential_source` in the same profile.
+    ///
+    /// Used within Amazon EC2 instances or EC2 containers to specify where the AWS CLI can find credentials to use to assume the role you
+    /// specified with the `role_arn` parameter. You cannot specify both `source_profile` and `credential_source` in the same profile.
     enum CredentialSource: String, Equatable {
         case environment = "Environment"
         case ec2Instance = "Ec2InstanceMetadata"
@@ -43,6 +44,7 @@ struct ConfigFileLoader {
     struct ProfileCredentials: Equatable {
         let accessKey: String
         let secretAccessKey: String
+        let sessionToken: String?
         let roleArn: String?
         let sourceProfile: String?
         let credentialSource: CredentialSource?
@@ -60,17 +62,7 @@ struct ConfigFileLoader {
         case missingSecretAccessKey
     }
 
-    /// If `role_arn` and `source_profile` are found in the settings, the settings from the source profile are also loaded and mixed in.
-    /// In the scenario that a setting does exist in both profiles, the setting from `profile` will take precedence.
-    ///
-    /// >  `source_profile` specifies a named profile with long-term credentials that the AWS CLI can use to assume
-    /// >  a role that you specified with the `role_arn` parameter. You cannot specify both `source_profile` and
-    /// >  `credential_source` in the same profile.
-
-    //********************
-
-
-    /// Load profile configuraton from a file (passed in as byte-buffer), usually `~/.aws/config`.
+    /// Load profile configuraton from a file (passed in as byte-buffer), usually `~/.aws/config`
     ///
     /// - Parameters:
     ///   - byteBuffer: contents of the file to parse
@@ -103,21 +95,16 @@ struct ConfigFileLoader {
         )
     }
 
-    /// Load profile settings from a file (passed in as byte-buffer), usually `~/.aws/credentials` or `~/.aws/config`.
+    /// Load profile credentials from a file (passed in as byte-buffer), usually `~/.aws/credentials`
     ///
-    /// If `role_arn` and `source_profile` are found in the settings, the settings from the source profile are also loaded and mixed in.
-    /// In the scenario that a setting does exist in both profiles, the setting from `profile` will take precedence.
-    ///
-    /// >  `source_profile` specifies a named profile with long-term credentials that the AWS CLI can use to assume
-    /// >  a role that you specified with the `role_arn` parameter. You cannot specify both `source_profile` and
-    /// >  `credential_source` in the same profile.
+    /// If `source_profile` is passed in, or found in the settings, credentials will be loaded from the source profile for use with STS Assume Role.
     ///
     /// - Parameters:
     ///   - byteBuffer: contents of the file to parse
     ///   - profile: AWS named profile to load (usually `default`)
     ///   - sourceProfile: specifies a named profile with long-term credentials that the AWS CLI can use to assume a role that you specified with the `role_arn` parameter.
-    /// - Returns: Combined profile settings
-    static func loadCredentials(from byteBuffer: ByteBuffer, for profile: String, sourceProfile: String?) throws -> [String: String] {
+    /// - Returns: Combined profile credentials
+    static func loadCredentials(from byteBuffer: ByteBuffer, for profile: String, sourceProfile: String?) throws -> ProfileCredentials {
         guard let content = byteBuffer.getString(at: 0, length: byteBuffer.readableBytes) else {
             throw ConfigFileError.invalidCredentialFileSyntax
         }
@@ -128,18 +115,38 @@ struct ConfigFileLoader {
             throw ConfigFileError.invalidCredentialFileSyntax
         }
 
-        guard var settings = parser.sections[profile] else {
+        guard let settings = parser.sections[profile] else {
             throw ConfigFileError.missingProfile(profile)
         }
 
+        var profileAccessKey = settings["aws_access_key_id"]
+        var profileSecretAccessKey = settings["aws_secret_access_key"]
+        var profileSessionToken = settings["aws_session_token"]
+
         if let sourceProfile = sourceProfile ?? settings["source_profile"] {
-            guard let sourceConfig = parser.sections[sourceProfile] else {
+            guard let sourceSettings = parser.sections[sourceProfile] else {
                 throw ConfigFileError.missingProfile(sourceProfile)
             }
-            settings.merge(sourceConfig) { (profile, _) in profile }
+            profileAccessKey = sourceSettings["aws_access_key_id"]
+            profileSecretAccessKey = sourceSettings["aws_secret_access_key"]
+            profileSessionToken = sourceSettings["aws_session_token"]
         }
 
-        return settings
+        guard let accessKey = profileAccessKey else {
+            throw ConfigFileError.missingAccessKeyId
+        }
+        guard let secretAccessKey = profileSecretAccessKey else {
+            throw ConfigFileError.missingSecretAccessKey
+        }
+
+        return ProfileCredentials(
+            accessKey: accessKey,
+            secretAccessKey: secretAccessKey,
+            sessionToken: profileSessionToken,
+            roleArn: settings["role_arn"],
+            sourceProfile: sourceProfile ?? settings["source_profile"],
+            credentialSource: settings["credential_source"].flatMap(CredentialSource.init(rawValue:))
+        )
     }
 
     static func expandTildeInFilePath(_ filePath: String) -> String {

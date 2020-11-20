@@ -23,14 +23,6 @@ import Foundation.NSString
 #endif
 
 class AWSConfigFileCredentialProvider: CredentialProviderSelector {
-    /// Errors occurring when initializing a FileCredential
-    ///
-    /// - missingAccessKeyId: If the access key ID was not found
-    /// - missingSecretAccessKey: If the secret access key was not found
-    enum ConfigFileCredentialProviderError: Error, Equatable {
-        case missingAccessKeyId
-        case missingSecretAccessKey
-    }
 
     /// promise to find a credential provider
     let startupPromise: EventLoopPromise<CredentialProvider>
@@ -96,19 +88,11 @@ class AWSConfigFileCredentialProvider: CredentialProviderSelector {
     }
 
     static func sharedCredentials(from byteBuffer: ByteBuffer, for profile: String) throws -> StaticCredential {
-        let settings = try ConfigFileLoader.loadCredentials(from: byteBuffer, for: profile, sourceProfile: nil)
+        let credentials = try ConfigFileLoader.loadCredentials(from: byteBuffer, for: profile, sourceProfile: nil)
 
-        guard let accessKeyId = settings["aws_access_key_id"] else {
-            throw ConfigFileCredentialProviderError.missingAccessKeyId
-        }
-
-        guard let secretAccessKey = settings["aws_secret_access_key"] else {
-            throw ConfigFileCredentialProviderError.missingSecretAccessKey
-        }
-
-        let sessionToken = settings["aws_session_token"]
-
-        return StaticCredential(accessKeyId: accessKeyId, secretAccessKey: secretAccessKey, sessionToken: sessionToken)
+        return StaticCredential(accessKeyId: credentials.accessKey,
+                                secretAccessKey: credentials.secretAccessKey,
+                                sessionToken: credentials.sessionToken)
     }
 
 }

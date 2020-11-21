@@ -127,7 +127,10 @@ struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
     func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
         self.assumeRole(self.request, logger: logger, on: eventLoop)
             .flatMapThrowing { response in
-                guard let credentials = response.credentials else { throw CredentialProviderError.noProvider }
+                guard let credentials = response.credentials else {
+                    throw CredentialProviderError.noProvider
+                }
+                _ = self.shutdown(on: eventLoop)
                 return credentials
             }
     }

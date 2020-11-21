@@ -89,8 +89,6 @@ struct ConfigFileLoader {
             config = try loadProfileConfig(from: byteBuffer, for: profile)
         }
         let credentials = try loadCredentials(from: credentialsByteBuffer, for: profile, sourceProfile: config?.sourceProfile)
-        dump(config)
-        dump(credentials)
 
         // When `role_arn` is defined, temporary credentials must be loaded via STS Assume Role operation
         if let roleArn = credentials.roleArn ?? config?.roleArn {
@@ -102,7 +100,8 @@ struct ConfigFileLoader {
             let sessionName = credentials.roleSessionName ?? config?.roleSessionName ?? UUID().uuidString
             let request = STSAssumeRoleRequest(roleArn: roleArn, roleSessionName: sessionName)
             let region = config?.region ?? .useast1
-            return STSAssumeRoleCredentialProvider(request: request, credentialProvider: .default, region: region, httpClient: context.httpClient)
+            let provider = STSAssumeRoleCredentialProvider(request: request, credentialProvider: .default, region: region, httpClient: context.httpClient)
+            return RotatingCredentialProvider(context: context, provider: provider)
         }
         else {
             return StaticCredential(accessKeyId: credentials.accessKey,

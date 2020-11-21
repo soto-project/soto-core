@@ -46,7 +46,7 @@ public struct AWSResponse {
 
         // body
         guard let body = response.body,
-            body.readableBytes > 0
+              body.readableBytes > 0
         else {
             self.body = .empty
             return

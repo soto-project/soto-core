@@ -224,7 +224,7 @@ class AWSResponseTests: XCTestCase {
         let response = AWSHTTPResponseImpl(
             status: .notFound,
             headers: HTTPHeaders(),
-            bodyData: #"{"__type":"ResourceNotFoundException", "Message": "Donald Where's Your Troosers?", "fault": "client"}"# .data(using: .utf8)!
+            bodyData: #"{"__type":"ResourceNotFoundException", "Message": "Donald Where's Your Troosers?", "fault": "client"}"#.data(using: .utf8)!
         )
         let service = createServiceConfig(serviceProtocol: .json(version: "1.1"), errorType: ServiceErrorType.self)
 
@@ -241,7 +241,7 @@ class AWSResponseTests: XCTestCase {
         let response = AWSHTTPResponseImpl(
             status: .notFound,
             headers: ["x-amzn-errortype": "ResourceNotFoundException"],
-            bodyData: Data(#"{"message": "Donald Where's Your Troosers?", "Fault": "Client"}"# .utf8)
+            bodyData: Data(#"{"message": "Donald Where's Your Troosers?", "Fault": "Client"}"#.utf8)
         )
         let service = createServiceConfig(serviceProtocol: .restjson, errorType: ServiceErrorType.self)
 
@@ -259,7 +259,7 @@ class AWSResponseTests: XCTestCase {
         let response = AWSHTTPResponseImpl(
             status: .notFound,
             headers: ["x-amzn-errortype": "ResourceNotFoundException"],
-            bodyData: Data(#"{"Message": "Donald Where's Your Troosers?"}"# .utf8)
+            bodyData: Data(#"{"Message": "Donald Where's Your Troosers?"}"#.utf8)
         )
         let service = createServiceConfig(serviceProtocol: .restjson, errorType: ServiceErrorType.self)
 
@@ -351,7 +351,7 @@ class AWSResponseTests: XCTestCase {
         let response = AWSHTTPResponseImpl(
             status: .ok,
             headers: ["Content-Type": "application/hal+json"],
-            bodyData: Data(#"{"_embedded": {"a": [{"s":"Hello", "i":1234}, {"s":"Hello2", "i":12345}]}, "d":3.14, "b":true}"# .utf8)
+            bodyData: Data(#"{"_embedded": {"a": [{"s":"Hello", "i":1234}, {"s":"Hello2", "i":12345}]}, "d":3.14, "b":true}"#.utf8)
         )
 
         var awsResponse: AWSResponse?

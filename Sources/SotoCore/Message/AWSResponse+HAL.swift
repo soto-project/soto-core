@@ -20,8 +20,8 @@ extension AWSResponse {
     /// return if body is hypertext application language
     var isHypertextApplicationLanguage: Bool {
         guard case .json = self.body,
-            let contentType = self.headers["content-type"] as? String,
-            contentType.contains("hal+json")
+              let contentType = self.headers["content-type"] as? String,
+              contentType.contains("hal+json")
         else {
             return false
         }
@@ -36,7 +36,7 @@ extension AWSResponse {
         let jsonObject = try JSONSerialization.jsonObject(with: data, options: [])
         guard var dictionary = jsonObject as? [String: Any] else { return [:] }
         guard let embedded = dictionary["_embedded"],
-            let embeddedDictionary = embedded as? [String: Any]
+              let embeddedDictionary = embedded as? [String: Any]
         else {
             return dictionary
         }

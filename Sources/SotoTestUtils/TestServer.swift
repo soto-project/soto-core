@@ -220,7 +220,7 @@ extension AWSTestServer {
 
     /// fake ec2 metadata server
     public func ec2MetadataServer(version: IMDSVersion, metaData: EC2InstanceMetaData? = nil) throws {
-        struct InstanceMetaData {
+        enum InstanceMetaData {
             static let CredentialUri = "/latest/meta-data/iam/security-credentials/"
             static let TokenUri = "/latest/api/token"
             static let TokenHeaderName = "X-aws-ec2-metadata-token"

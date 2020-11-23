@@ -132,7 +132,7 @@ extension AWSClient {
                             guard continuePaginate == true else { return promise.succeed(result) }
                             // get next block token and construct a new input with this token
                             guard let token = response[keyPath: tokenKey],
-                                response[keyPath: moreResultsKey] else { return promise.succeed(result) }
+                                  response[keyPath: moreResultsKey] else { return promise.succeed(result) }
 
                             let input = input.usingPaginationToken(token)
                             paginatePart(input: input, currentValue: result)
@@ -210,7 +210,7 @@ extension AWSClient {
                             guard continuePaginate == true else { return promise.succeed(result) }
                             // get next block token and construct a new input with this token
                             guard let token = response[keyPath: tokenKey],
-                                response[keyPath: moreResultsKey] == true else { return promise.succeed(result) }
+                                  response[keyPath: moreResultsKey] == true else { return promise.succeed(result) }
 
                             let input = input.usingPaginationToken(token)
                             paginatePart(input: input, currentValue: result)

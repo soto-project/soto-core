@@ -20,6 +20,6 @@ jobs:
       uses: Cyberbeni/install-swift-tool@v2
       with:
         url: https://github.com/nicklockwood/SwiftFormat
-        branch: '0.46.3'
+        branch: '0.47.4'
     - name: run script
       run: ./scripts/sanity.sh

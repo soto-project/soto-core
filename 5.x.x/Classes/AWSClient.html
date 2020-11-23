@@ -17,7 +17,7 @@
     <a title="AWSClient Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> Docs</a> (58% documented)</p>
+        <p><a href="../index.html"> Docs</a> (59% documented)</p>
         <p class="header-right"><a href="https://github.com/soto-project/soto-core"><img src="../img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="../search.json">
@@ -46,9 +46,6 @@
                 <a href="../Classes/AWSClient/ClientError.html">– ClientError</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/AWSClient/HTTPResponseError.html">– HTTPResponseError</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Classes/AWSClient/HTTPClientProvider.html">– HTTPClientProvider</a>
               </li>
               <li class="nav-group-task">
@@ -62,6 +59,18 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/DeferredCredentialProvider.html">DeferredCredentialProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/DictionaryDecoder.html">DictionaryDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/DictionaryDecoder/DateDecodingStrategy.html">– DateDecodingStrategy</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/DictionaryDecoder/DataDecodingStrategy.html">– DataDecodingStrategy</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/DictionaryDecoder/NonConformingFloatDecodingStrategy.html">– NonConformingFloatDecodingStrategy</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/RotatingCredentialProvider.html">RotatingCredentialProvider</a>
@@ -258,6 +267,9 @@
                 <a href="../Structs/RetryPolicyFactory.html">RetryPolicyFactory</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Structs/RotatingCredential.html">RotatingCredential</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Structs/StandardArrayCoderProperties.html">StandardArrayCoderProperties</a>
               </li>
               <li class="nav-group-task">
@@ -323,34 +335,6 @@ which is then decoded to generate a <code><a href="../Protocols/AWSShape.html">A
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">ClientError</span> <span class="p">:</span> <span class="kt">Swift</span><span class="o">.</span><span class="kt">Error</span><span class="p">,</span> <span class="kt">Equatable</span></code></pre>
 <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt"><a href="../Classes/AWSClient.html">AWSClient</a></span><span class="o">.</span><span class="kt">ClientError</span><span class="p">:</span> <span class="kt">CustomStringConvertible</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:8SotoCore9AWSClientC17HTTPResponseErrorV"></a>
-                    <a name="//apple_ref/swift/Struct/HTTPResponseError" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore9AWSClientC17HTTPResponseErrorV">HTTPResponseError</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Undocumented</p>
-
-                        <a href="../Classes/AWSClient/HTTPResponseError.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">HTTPResponseError</span> <span class="p">:</span> <span class="kt">Swift</span><span class="o">.</span><span class="kt">Error</span></code></pre>
 
                         </div>
                       </div>
@@ -745,9 +729,9 @@ uses, we have to use a DispatchQueue to run some of this work on.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore9AWSClientC8paginate5input12initialValue7command8tokenKey2on6logger0K4Page3NIO15EventLoopFutureCyq0_Gx_q0_ANyq_Gx_AL0oP0_pSg7Logging6LoggerVtcs0J4PathCyq_5TokenQzSgGAruNySb_q0_tGq0__q_AlQ_ptctAA011AWSPaginateU0RzAA8AWSShapeR_r1_lF"></a>
-                    <a name="//apple_ref/swift/Method/paginate(input:initialValue:command:tokenKey:on:logger:onPage:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore9AWSClientC8paginate5input12initialValue7command8tokenKey2on6logger0K4Page3NIO15EventLoopFutureCyq0_Gx_q0_ANyq_Gx_AL0oP0_pSg7Logging6LoggerVtcs0J4PathCyq_5TokenQzSgGAruNySb_q0_tGq0__q_AlQ_ptctAA011AWSPaginateU0RzAA8AWSShapeR_r1_lF">paginate(input:<wbr>initialValue:<wbr>command:<wbr>tokenKey:<wbr>on:<wbr>logger:<wbr>onPage:<wbr>)</a>
+                    <a name="/s:8SotoCore9AWSClientC8paginate5input12initialValue7command8tokenKey6logger2on0L4Page3NIO15EventLoopFutureCyq0_Gx_q0_ANyq_Gx_7Logging6LoggerVAL0oP0_pSgtcs0J4PathCyq_5TokenQzSgGAsuNySb_q0_tGq0__q_AlT_ptctAA011AWSPaginateU0RzAA8AWSShapeR_r1_lF"></a>
+                    <a name="//apple_ref/swift/Method/paginate(input:initialValue:command:tokenKey:logger:on:onPage:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC8paginate5input12initialValue7command8tokenKey6logger2on0L4Page3NIO15EventLoopFutureCyq0_Gx_q0_ANyq_Gx_7Logging6LoggerVAL0oP0_pSgtcs0J4PathCyq_5TokenQzSgGAsuNySb_q0_tGq0__q_AlT_ptctAA011AWSPaginateU0RzAA8AWSShapeR_r1_lF">paginate(input:<wbr>initialValue:<wbr>command:<wbr>tokenKey:<wbr>logger:<wbr>on:<wbr>onPage:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -768,10 +752,10 @@ the result of combining all of these blocks using the given closure,</p>
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">paginate</span><span class="o">&lt;</span><span class="kt">Input</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSPaginateToken.html">AWSPaginateToken</a></span><span class="p">,</span> <span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSShape.html">AWSShape</a></span><span class="p">,</span> <span class="kt">Result</span><span class="o">&gt;</span><span class="p">(</span>
     <span class="nv">input</span><span class="p">:</span> <span class="kt">Input</span><span class="p">,</span>
     <span class="nv">initialValue</span><span class="p">:</span> <span class="kt">Result</span><span class="p">,</span>
-    <span class="nv">command</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Input</span><span class="p">,</span> <span class="kt">EventLoop</span><span class="p">?,</span> <span class="kt">Logger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="nv">command</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Input</span><span class="p">,</span> <span class="kt">Logger</span><span class="p">,</span> <span class="kt">EventLoop</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span><span class="p">,</span>
     <span class="nv">tokenKey</span><span class="p">:</span> <span class="kt">KeyPath</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">,</span> <span class="kt">Input</span><span class="o">.</span><span class="kt">Token</span><span class="p">?</span><span class="o">&gt;</span><span class="p">,</span>
-    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
     <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
+    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
     <span class="nv">onPage</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Result</span><span class="p">,</span> <span class="kt">Output</span><span class="p">,</span> <span class="kt">EventLoop</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="p">(</span><span class="kt">Bool</span><span class="p">,</span> <span class="kt">Result</span><span class="p">)</span><span class="o">&gt;</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Result</span><span class="o">&gt;</span></code></pre>
 
@@ -875,9 +859,9 @@ along with a boolean indicating if the paginate operation should continue.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore9AWSClientC8paginate5input7command8tokenKey2on6logger0I4Page3NIO15EventLoopFutureCyytGx_AMyq_Gx_AK0mN0_pSg7Logging6LoggerVtcs0H4PathCyq_5TokenQzSgGAqtMySbGq__AkP_ptctAA011AWSPaginateS0RzAA8AWSShapeR_r0_lF"></a>
-                    <a name="//apple_ref/swift/Method/paginate(input:command:tokenKey:on:logger:onPage:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore9AWSClientC8paginate5input7command8tokenKey2on6logger0I4Page3NIO15EventLoopFutureCyytGx_AMyq_Gx_AK0mN0_pSg7Logging6LoggerVtcs0H4PathCyq_5TokenQzSgGAqtMySbGq__AkP_ptctAA011AWSPaginateS0RzAA8AWSShapeR_r0_lF">paginate(input:<wbr>command:<wbr>tokenKey:<wbr>on:<wbr>logger:<wbr>onPage:<wbr>)</a>
+                    <a name="/s:8SotoCore9AWSClientC8paginate5input7command8tokenKey6logger2on0J4Page3NIO15EventLoopFutureCyytGx_AMyq_Gx_7Logging6LoggerVAK0mN0_pSgtcs0H4PathCyq_5TokenQzSgGArtMySbGq__AkS_ptctAA011AWSPaginateS0RzAA8AWSShapeR_r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/paginate(input:command:tokenKey:logger:on:onPage:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC8paginate5input7command8tokenKey6logger2on0J4Page3NIO15EventLoopFutureCyytGx_AMyq_Gx_7Logging6LoggerVAK0mN0_pSgtcs0H4PathCyq_5TokenQzSgGArtMySbGq__AkS_ptctAA011AWSPaginateS0RzAA8AWSShapeR_r0_lF">paginate(input:<wbr>command:<wbr>tokenKey:<wbr>logger:<wbr>on:<wbr>onPage:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -896,10 +880,10 @@ the next block. This function loads each block and calls a closure with each blo
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">paginate</span><span class="o">&lt;</span><span class="kt">Input</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSPaginateToken.html">AWSPaginateToken</a></span><span class="p">,</span> <span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSShape.html">AWSShape</a></span><span class="o">&gt;</span><span class="p">(</span>
     <span class="nv">input</span><span class="p">:</span> <span class="kt">Input</span><span class="p">,</span>
-    <span class="nv">command</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Input</span><span class="p">,</span> <span class="kt">EventLoop</span><span class="p">?,</span> <span class="kt">Logger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="nv">command</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Input</span><span class="p">,</span> <span class="kt">Logger</span><span class="p">,</span> <span class="kt">EventLoop</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span><span class="p">,</span>
     <span class="nv">tokenKey</span><span class="p">:</span> <span class="kt">KeyPath</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">,</span> <span class="kt">Input</span><span class="o">.</span><span class="kt">Token</span><span class="p">?</span><span class="o">&gt;</span><span class="p">,</span>
-    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
     <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
+    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
     <span class="nv">onPage</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Output</span><span class="p">,</span> <span class="kt">EventLoop</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Bool</span><span class="o">&gt;</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Void</span><span class="o">&gt;</span></code></pre>
 
@@ -990,9 +974,9 @@ the next block. This function loads each block and calls a closure with each blo
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore9AWSClientC8paginate5input12initialValue7command8tokenKey011moreResultsJ02on6logger0M4Page3NIO15EventLoopFutureCyq0_Gx_q0_AOyq_Gx_AM0qR0_pSg7Logging6LoggerVtcs0J4PathCyq_5TokenQzSgGAXyq_SbGAsvOySb_q0_tGq0__q_AmR_ptctAA011AWSPaginateW0RzAA8AWSShapeR_r1_lF"></a>
-                    <a name="//apple_ref/swift/Method/paginate(input:initialValue:command:tokenKey:moreResultsKey:on:logger:onPage:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore9AWSClientC8paginate5input12initialValue7command8tokenKey011moreResultsJ02on6logger0M4Page3NIO15EventLoopFutureCyq0_Gx_q0_AOyq_Gx_AM0qR0_pSg7Logging6LoggerVtcs0J4PathCyq_5TokenQzSgGAXyq_SbGAsvOySb_q0_tGq0__q_AmR_ptctAA011AWSPaginateW0RzAA8AWSShapeR_r1_lF">paginate(input:<wbr>initialValue:<wbr>command:<wbr>tokenKey:<wbr>moreResultsKey:<wbr>on:<wbr>logger:<wbr>onPage:<wbr>)</a>
+                    <a name="/s:8SotoCore9AWSClientC8paginate5input12initialValue7command8tokenKey011moreResultsJ06logger2on0N4Page3NIO15EventLoopFutureCyq0_Gx_q0_AOyq_Gx_7Logging6LoggerVAM0qR0_pSgtcs0J4PathCyq_5TokenQzSgGAXyq_SbGAtvOySb_q0_tGq0__q_AmU_ptctAA011AWSPaginateW0RzAA8AWSShapeR_r1_lF"></a>
+                    <a name="//apple_ref/swift/Method/paginate(input:initialValue:command:tokenKey:moreResultsKey:logger:on:onPage:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC8paginate5input12initialValue7command8tokenKey011moreResultsJ06logger2on0N4Page3NIO15EventLoopFutureCyq0_Gx_q0_AOyq_Gx_7Logging6LoggerVAM0qR0_pSgtcs0J4PathCyq_5TokenQzSgGAXyq_SbGAtvOySb_q0_tGq0__q_AmU_ptctAA011AWSPaginateW0RzAA8AWSShapeR_r1_lF">paginate(input:<wbr>initialValue:<wbr>command:<wbr>tokenKey:<wbr>moreResultsKey:<wbr>logger:<wbr>on:<wbr>onPage:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1013,11 +997,11 @@ the result of combining all of these blocks using the given closure,</p>
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">paginate</span><span class="o">&lt;</span><span class="kt">Input</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSPaginateToken.html">AWSPaginateToken</a></span><span class="p">,</span> <span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSShape.html">AWSShape</a></span><span class="p">,</span> <span class="kt">Result</span><span class="o">&gt;</span><span class="p">(</span>
     <span class="nv">input</span><span class="p">:</span> <span class="kt">Input</span><span class="p">,</span>
     <span class="nv">initialValue</span><span class="p">:</span> <span class="kt">Result</span><span class="p">,</span>
-    <span class="nv">command</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Input</span><span class="p">,</span> <span class="kt">EventLoop</span><span class="p">?,</span> <span class="kt">Logger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="nv">command</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Input</span><span class="p">,</span> <span class="kt">Logger</span><span class="p">,</span> <span class="kt">EventLoop</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span><span class="p">,</span>
     <span class="nv">tokenKey</span><span class="p">:</span> <span class="kt">KeyPath</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">,</span> <span class="kt">Input</span><span class="o">.</span><span class="kt">Token</span><span class="p">?</span><span class="o">&gt;</span><span class="p">,</span>
     <span class="nv">moreResultsKey</span><span class="p">:</span> <span class="kt">KeyPath</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">,</span> <span class="kt">Bool</span><span class="o">&gt;</span><span class="p">,</span>
-    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
     <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
+    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
     <span class="nv">onPage</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Result</span><span class="p">,</span> <span class="kt">Output</span><span class="p">,</span> <span class="kt">EventLoop</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="p">(</span><span class="kt">Bool</span><span class="p">,</span> <span class="kt">Result</span><span class="p">)</span><span class="o">&gt;</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Result</span><span class="o">&gt;</span></code></pre>
 
@@ -1133,9 +1117,9 @@ along with a boolean indicating if the paginate operation should continue.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore9AWSClientC8paginate5input7command8tokenKey011moreResultsH02on6logger0K4Page3NIO15EventLoopFutureCyytGx_ANyq_Gx_AL0oP0_pSg7Logging6LoggerVtcs0H4PathCyq_5TokenQzSgGAWyq_SbGAruNySbGq__AlQ_ptctAA011AWSPaginateU0RzAA8AWSShapeR_r0_lF"></a>
-                    <a name="//apple_ref/swift/Method/paginate(input:command:tokenKey:moreResultsKey:on:logger:onPage:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore9AWSClientC8paginate5input7command8tokenKey011moreResultsH02on6logger0K4Page3NIO15EventLoopFutureCyytGx_ANyq_Gx_AL0oP0_pSg7Logging6LoggerVtcs0H4PathCyq_5TokenQzSgGAWyq_SbGAruNySbGq__AlQ_ptctAA011AWSPaginateU0RzAA8AWSShapeR_r0_lF">paginate(input:<wbr>command:<wbr>tokenKey:<wbr>moreResultsKey:<wbr>on:<wbr>logger:<wbr>onPage:<wbr>)</a>
+                    <a name="/s:8SotoCore9AWSClientC8paginate5input7command8tokenKey011moreResultsH06logger2on0L4Page3NIO15EventLoopFutureCyytGx_ANyq_Gx_7Logging6LoggerVAL0oP0_pSgtcs0H4PathCyq_5TokenQzSgGAWyq_SbGAsuNySbGq__AlT_ptctAA011AWSPaginateU0RzAA8AWSShapeR_r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/paginate(input:command:tokenKey:moreResultsKey:logger:on:onPage:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC8paginate5input7command8tokenKey011moreResultsH06logger2on0L4Page3NIO15EventLoopFutureCyytGx_ANyq_Gx_7Logging6LoggerVAL0oP0_pSgtcs0H4PathCyq_5TokenQzSgGAWyq_SbGAsuNySbGq__AlT_ptctAA011AWSPaginateU0RzAA8AWSShapeR_r0_lF">paginate(input:<wbr>command:<wbr>tokenKey:<wbr>moreResultsKey:<wbr>logger:<wbr>on:<wbr>onPage:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1154,11 +1138,11 @@ the next block. This function loads each block and calls a closure with each blo
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">paginate</span><span class="o">&lt;</span><span class="kt">Input</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSPaginateToken.html">AWSPaginateToken</a></span><span class="p">,</span> <span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSShape.html">AWSShape</a></span><span class="o">&gt;</span><span class="p">(</span>
     <span class="nv">input</span><span class="p">:</span> <span class="kt">Input</span><span class="p">,</span>
-    <span class="nv">command</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Input</span><span class="p">,</span> <span class="kt">EventLoop</span><span class="p">?,</span> <span class="kt">Logger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="nv">command</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Input</span><span class="p">,</span> <span class="kt">Logger</span><span class="p">,</span> <span class="kt">EventLoop</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span><span class="p">,</span>
     <span class="nv">tokenKey</span><span class="p">:</span> <span class="kt">KeyPath</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">,</span> <span class="kt">Input</span><span class="o">.</span><span class="kt">Token</span><span class="p">?</span><span class="o">&gt;</span><span class="p">,</span>
     <span class="nv">moreResultsKey</span><span class="p">:</span> <span class="kt">KeyPath</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">,</span> <span class="kt">Bool</span><span class="o">&gt;</span><span class="p">,</span>
-    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
     <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
+    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
     <span class="nv">onPage</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Output</span><span class="p">,</span> <span class="kt">EventLoop</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Bool</span><span class="o">&gt;</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Void</span><span class="o">&gt;</span></code></pre>
 
@@ -1261,9 +1245,9 @@ the next block. This function loads each block and calls a closure with each blo
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore9AWSClientC8paginate5input12initialValue7command8tokenKey011moreResultsJ02on6logger0M4Page3NIO15EventLoopFutureCyq0_Gx_q0_AOyq_Gx_AM0qR0_pSg7Logging6LoggerVtcs0J4PathCyq_5TokenQzSgGAXyq_SbSgGAsvOySb_q0_tGq0__q_AmR_ptctAA011AWSPaginateW0RzAA8AWSShapeR_r1_lF"></a>
-                    <a name="//apple_ref/swift/Method/paginate(input:initialValue:command:tokenKey:moreResultsKey:on:logger:onPage:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore9AWSClientC8paginate5input12initialValue7command8tokenKey011moreResultsJ02on6logger0M4Page3NIO15EventLoopFutureCyq0_Gx_q0_AOyq_Gx_AM0qR0_pSg7Logging6LoggerVtcs0J4PathCyq_5TokenQzSgGAXyq_SbSgGAsvOySb_q0_tGq0__q_AmR_ptctAA011AWSPaginateW0RzAA8AWSShapeR_r1_lF">paginate(input:<wbr>initialValue:<wbr>command:<wbr>tokenKey:<wbr>moreResultsKey:<wbr>on:<wbr>logger:<wbr>onPage:<wbr>)</a>
+                    <a name="/s:8SotoCore9AWSClientC8paginate5input12initialValue7command8tokenKey011moreResultsJ06logger2on0N4Page3NIO15EventLoopFutureCyq0_Gx_q0_AOyq_Gx_7Logging6LoggerVAM0qR0_pSgtcs0J4PathCyq_5TokenQzSgGAXyq_SbSgGAtvOySb_q0_tGq0__q_AmU_ptctAA011AWSPaginateW0RzAA8AWSShapeR_r1_lF"></a>
+                    <a name="//apple_ref/swift/Method/paginate(input:initialValue:command:tokenKey:moreResultsKey:logger:on:onPage:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC8paginate5input12initialValue7command8tokenKey011moreResultsJ06logger2on0N4Page3NIO15EventLoopFutureCyq0_Gx_q0_AOyq_Gx_7Logging6LoggerVAM0qR0_pSgtcs0J4PathCyq_5TokenQzSgGAXyq_SbSgGAtvOySb_q0_tGq0__q_AmU_ptctAA011AWSPaginateW0RzAA8AWSShapeR_r1_lF">paginate(input:<wbr>initialValue:<wbr>command:<wbr>tokenKey:<wbr>moreResultsKey:<wbr>logger:<wbr>on:<wbr>onPage:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1284,11 +1268,11 @@ the result of combining all of these blocks using the given closure,</p>
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">paginate</span><span class="o">&lt;</span><span class="kt">Input</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSPaginateToken.html">AWSPaginateToken</a></span><span class="p">,</span> <span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSShape.html">AWSShape</a></span><span class="p">,</span> <span class="kt">Result</span><span class="o">&gt;</span><span class="p">(</span>
     <span class="nv">input</span><span class="p">:</span> <span class="kt">Input</span><span class="p">,</span>
     <span class="nv">initialValue</span><span class="p">:</span> <span class="kt">Result</span><span class="p">,</span>
-    <span class="nv">command</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Input</span><span class="p">,</span> <span class="kt">EventLoop</span><span class="p">?,</span> <span class="kt">Logger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="nv">command</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Input</span><span class="p">,</span> <span class="kt">Logger</span><span class="p">,</span> <span class="kt">EventLoop</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span><span class="p">,</span>
     <span class="nv">tokenKey</span><span class="p">:</span> <span class="kt">KeyPath</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">,</span> <span class="kt">Input</span><span class="o">.</span><span class="kt">Token</span><span class="p">?</span><span class="o">&gt;</span><span class="p">,</span>
     <span class="nv">moreResultsKey</span><span class="p">:</span> <span class="kt">KeyPath</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">,</span> <span class="kt">Bool</span><span class="p">?</span><span class="o">&gt;</span><span class="p">,</span>
-    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
     <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
+    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
     <span class="nv">onPage</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Result</span><span class="p">,</span> <span class="kt">Output</span><span class="p">,</span> <span class="kt">EventLoop</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="p">(</span><span class="kt">Bool</span><span class="p">,</span> <span class="kt">Result</span><span class="p">)</span><span class="o">&gt;</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Result</span><span class="o">&gt;</span></code></pre>
 
@@ -1404,9 +1388,9 @@ along with a boolean indicating if the paginate operation should continue.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore9AWSClientC8paginate5input7command8tokenKey011moreResultsH02on6logger0K4Page3NIO15EventLoopFutureCyytGx_ANyq_Gx_AL0oP0_pSg7Logging6LoggerVtcs0H4PathCyq_5TokenQzSgGAWyq_SbSgGAruNySbGq__AlQ_ptctAA011AWSPaginateU0RzAA8AWSShapeR_r0_lF"></a>
-                    <a name="//apple_ref/swift/Method/paginate(input:command:tokenKey:moreResultsKey:on:logger:onPage:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore9AWSClientC8paginate5input7command8tokenKey011moreResultsH02on6logger0K4Page3NIO15EventLoopFutureCyytGx_ANyq_Gx_AL0oP0_pSg7Logging6LoggerVtcs0H4PathCyq_5TokenQzSgGAWyq_SbSgGAruNySbGq__AlQ_ptctAA011AWSPaginateU0RzAA8AWSShapeR_r0_lF">paginate(input:<wbr>command:<wbr>tokenKey:<wbr>moreResultsKey:<wbr>on:<wbr>logger:<wbr>onPage:<wbr>)</a>
+                    <a name="/s:8SotoCore9AWSClientC8paginate5input7command8tokenKey011moreResultsH06logger2on0L4Page3NIO15EventLoopFutureCyytGx_ANyq_Gx_7Logging6LoggerVAL0oP0_pSgtcs0H4PathCyq_5TokenQzSgGAWyq_SbSgGAsuNySbGq__AlT_ptctAA011AWSPaginateU0RzAA8AWSShapeR_r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/paginate(input:command:tokenKey:moreResultsKey:logger:on:onPage:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC8paginate5input7command8tokenKey011moreResultsH06logger2on0L4Page3NIO15EventLoopFutureCyytGx_ANyq_Gx_7Logging6LoggerVAL0oP0_pSgtcs0H4PathCyq_5TokenQzSgGAWyq_SbSgGAsuNySbGq__AlT_ptctAA011AWSPaginateU0RzAA8AWSShapeR_r0_lF">paginate(input:<wbr>command:<wbr>tokenKey:<wbr>moreResultsKey:<wbr>logger:<wbr>on:<wbr>onPage:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1425,11 +1409,11 @@ the next block. This function loads each block and calls a closure with each blo
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">paginate</span><span class="o">&lt;</span><span class="kt">Input</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSPaginateToken.html">AWSPaginateToken</a></span><span class="p">,</span> <span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSShape.html">AWSShape</a></span><span class="o">&gt;</span><span class="p">(</span>
     <span class="nv">input</span><span class="p">:</span> <span class="kt">Input</span><span class="p">,</span>
-    <span class="nv">command</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Input</span><span class="p">,</span> <span class="kt">EventLoop</span><span class="p">?,</span> <span class="kt">Logger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="nv">command</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Input</span><span class="p">,</span> <span class="kt">Logger</span><span class="p">,</span> <span class="kt">EventLoop</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span><span class="p">,</span>
     <span class="nv">tokenKey</span><span class="p">:</span> <span class="kt">KeyPath</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">,</span> <span class="kt">Input</span><span class="o">.</span><span class="kt">Token</span><span class="p">?</span><span class="o">&gt;</span><span class="p">,</span>
     <span class="nv">moreResultsKey</span><span class="p">:</span> <span class="kt">KeyPath</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">,</span> <span class="kt">Bool</span><span class="p">?</span><span class="o">&gt;</span><span class="p">,</span>
-    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
     <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
+    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
     <span class="nv">onPage</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Output</span><span class="p">,</span> <span class="kt">EventLoop</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Bool</span><span class="o">&gt;</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Void</span><span class="o">&gt;</span></code></pre>
 
@@ -1532,9 +1516,9 @@ the next block. This function loads each block and calls a closure with each blo
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input2on6logger3NIO15EventLoopFutureCyytGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0CxAL0oP0_pSg7Logging6LoggerVtAA17AWSEncodableShapeRzlF"></a>
-                    <a name="//apple_ref/swift/Method/execute(operation:path:httpMethod:serviceConfig:input:on:logger:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input2on6logger3NIO15EventLoopFutureCyytGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0CxAL0oP0_pSg7Logging6LoggerVtAA17AWSEncodableShapeRzlF">execute(operation:<wbr>path:<wbr>httpMethod:<wbr>serviceConfig:<wbr>input:<wbr>on:<wbr>logger:<wbr>)</a>
+                    <a name="/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input6logger2on3NIO15EventLoopFutureCyytGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0Cx7Logging6LoggerVAL0oP0_pSgtAA17AWSEncodableShapeRzlF"></a>
+                    <a name="//apple_ref/swift/Method/execute(operation:path:httpMethod:serviceConfig:input:logger:on:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input6logger2on3NIO15EventLoopFutureCyytGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0Cx7Logging6LoggerVAL0oP0_pSgtAA17AWSEncodableShapeRzlF">execute(operation:<wbr>path:<wbr>httpMethod:<wbr>serviceConfig:<wbr>input:<wbr>logger:<wbr>on:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1555,8 +1539,8 @@ the next block. This function loads each block and calls a closure with each blo
     <span class="nv">httpMethod</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span>
     <span class="nv">serviceConfig</span><span class="p">:</span> <span class="kt"><a href="../Classes/AWSServiceConfig.html">AWSServiceConfig</a></span><span class="p">,</span>
     <span class="nv">input</span><span class="p">:</span> <span class="kt">Input</span><span class="p">,</span>
-    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
-    <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span>
+    <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
+    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Void</span><span class="o">&gt;</span></code></pre>
 
                         </div>
@@ -1650,9 +1634,9 @@ the next block. This function loads each block and calls a closure with each blo
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig2on6logger3NIO15EventLoopFutureCyytGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0CAK0nO0_pSg7Logging6LoggerVtF"></a>
-                    <a name="//apple_ref/swift/Method/execute(operation:path:httpMethod:serviceConfig:on:logger:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig2on6logger3NIO15EventLoopFutureCyytGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0CAK0nO0_pSg7Logging6LoggerVtF">execute(operation:<wbr>path:<wbr>httpMethod:<wbr>serviceConfig:<wbr>on:<wbr>logger:<wbr>)</a>
+                    <a name="/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig6logger2on3NIO15EventLoopFutureCyytGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0C7Logging6LoggerVAK0nO0_pSgtF"></a>
+                    <a name="//apple_ref/swift/Method/execute(operation:path:httpMethod:serviceConfig:logger:on:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig6logger2on3NIO15EventLoopFutureCyytGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0C7Logging6LoggerVAK0nO0_pSgtF">execute(operation:<wbr>path:<wbr>httpMethod:<wbr>serviceConfig:<wbr>logger:<wbr>on:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1672,8 +1656,8 @@ the next block. This function loads each block and calls a closure with each blo
     <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
     <span class="nv">httpMethod</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span>
     <span class="nv">serviceConfig</span><span class="p">:</span> <span class="kt"><a href="../Classes/AWSServiceConfig.html">AWSServiceConfig</a></span><span class="p">,</span>
-    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
-    <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span>
+    <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
+    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Void</span><span class="o">&gt;</span></code></pre>
 
                         </div>
@@ -1755,9 +1739,9 @@ the next block. This function loads each block and calls a closure with each blo
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig2on6logger3NIO15EventLoopFutureCyxGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0CAK0nO0_pSg7Logging6LoggerVtAA17AWSDecodableShapeRzlF"></a>
-                    <a name="//apple_ref/swift/Method/execute(operation:path:httpMethod:serviceConfig:on:logger:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig2on6logger3NIO15EventLoopFutureCyxGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0CAK0nO0_pSg7Logging6LoggerVtAA17AWSDecodableShapeRzlF">execute(operation:<wbr>path:<wbr>httpMethod:<wbr>serviceConfig:<wbr>on:<wbr>logger:<wbr>)</a>
+                    <a name="/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig6logger2on3NIO15EventLoopFutureCyxGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0C7Logging6LoggerVAK0nO0_pSgtAA17AWSDecodableShapeRzlF"></a>
+                    <a name="//apple_ref/swift/Method/execute(operation:path:httpMethod:serviceConfig:logger:on:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig6logger2on3NIO15EventLoopFutureCyxGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0C7Logging6LoggerVAK0nO0_pSgtAA17AWSDecodableShapeRzlF">execute(operation:<wbr>path:<wbr>httpMethod:<wbr>serviceConfig:<wbr>logger:<wbr>on:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1777,8 +1761,8 @@ the next block. This function loads each block and calls a closure with each blo
     <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
     <span class="nv">httpMethod</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span>
     <span class="nv">serviceConfig</span><span class="p">:</span> <span class="kt"><a href="../Classes/AWSServiceConfig.html">AWSServiceConfig</a></span><span class="p">,</span>
-    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
-    <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span>
+    <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
+    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span></code></pre>
 
                         </div>
@@ -1860,9 +1844,9 @@ the next block. This function loads each block and calls a closure with each blo
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input2on6logger3NIO15EventLoopFutureCyxGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0Cq_AL0oP0_pSg7Logging6LoggerVtAA17AWSDecodableShapeRzAA012AWSEncodableX0R_r0_lF"></a>
-                    <a name="//apple_ref/swift/Method/execute(operation:path:httpMethod:serviceConfig:input:on:logger:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input2on6logger3NIO15EventLoopFutureCyxGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0Cq_AL0oP0_pSg7Logging6LoggerVtAA17AWSDecodableShapeRzAA012AWSEncodableX0R_r0_lF">execute(operation:<wbr>path:<wbr>httpMethod:<wbr>serviceConfig:<wbr>input:<wbr>on:<wbr>logger:<wbr>)</a>
+                    <a name="/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input6logger2on3NIO15EventLoopFutureCyxGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0Cq_7Logging6LoggerVAL0oP0_pSgtAA17AWSDecodableShapeRzAA012AWSEncodableX0R_r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/execute(operation:path:httpMethod:serviceConfig:input:logger:on:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input6logger2on3NIO15EventLoopFutureCyxGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0Cq_7Logging6LoggerVAL0oP0_pSgtAA17AWSDecodableShapeRzAA012AWSEncodableX0R_r0_lF">execute(operation:<wbr>path:<wbr>httpMethod:<wbr>serviceConfig:<wbr>input:<wbr>logger:<wbr>on:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1883,8 +1867,8 @@ the next block. This function loads each block and calls a closure with each blo
     <span class="nv">httpMethod</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span>
     <span class="nv">serviceConfig</span><span class="p">:</span> <span class="kt"><a href="../Classes/AWSServiceConfig.html">AWSServiceConfig</a></span><span class="p">,</span>
     <span class="nv">input</span><span class="p">:</span> <span class="kt">Input</span><span class="p">,</span>
-    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
-    <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span>
+    <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
+    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span></code></pre>
 
                         </div>
@@ -1978,9 +1962,9 @@ the next block. This function loads each block and calls a closure with each blo
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input2on6logger6stream3NIO15EventLoopFutureCyxGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0Cq_AM0pQ0_pSg7Logging6LoggerVAOyytGAM10ByteBufferV_AmV_ptctAA17AWSDecodableShapeRzAA17AWSEncodableShapeR_r0_lF"></a>
-                    <a name="//apple_ref/swift/Method/execute(operation:path:httpMethod:serviceConfig:input:on:logger:stream:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input2on6logger6stream3NIO15EventLoopFutureCyxGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0Cq_AM0pQ0_pSg7Logging6LoggerVAOyytGAM10ByteBufferV_AmV_ptctAA17AWSDecodableShapeRzAA17AWSEncodableShapeR_r0_lF">execute(operation:<wbr>path:<wbr>httpMethod:<wbr>serviceConfig:<wbr>input:<wbr>on:<wbr>logger:<wbr>stream:<wbr>)</a>
+                    <a name="/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input6logger2on6stream3NIO15EventLoopFutureCyxGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0Cq_7Logging6LoggerVAM0pQ0_pSgAOyytGAM10ByteBufferV_AmY_ptctAA17AWSDecodableShapeRzAA17AWSEncodableShapeR_r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/execute(operation:path:httpMethod:serviceConfig:input:logger:on:stream:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input6logger2on6stream3NIO15EventLoopFutureCyxGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0Cq_7Logging6LoggerVAM0pQ0_pSgAOyytGAM10ByteBufferV_AmY_ptctAA17AWSDecodableShapeRzAA17AWSEncodableShapeR_r0_lF">execute(operation:<wbr>path:<wbr>httpMethod:<wbr>serviceConfig:<wbr>input:<wbr>logger:<wbr>on:<wbr>stream:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2001,8 +1985,8 @@ the next block. This function loads each block and calls a closure with each blo
     <span class="nv">httpMethod</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span>
     <span class="nv">serviceConfig</span><span class="p">:</span> <span class="kt"><a href="../Classes/AWSServiceConfig.html">AWSServiceConfig</a></span><span class="p">,</span>
     <span class="nv">input</span><span class="p">:</span> <span class="kt">Input</span><span class="p">,</span>
-    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
     <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
+    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
     <span class="nv">stream</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Protocols/AWSHTTPClient.html">AWSHTTPClient</a></span><span class="o">.</span><span class="kt">ResponseStream</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span></code></pre>
 
@@ -2217,7 +2201,7 @@ the next block. This function loads each block and calls a closure with each blo
         </section>
         <section id="footer">
           <p>© Copyright (c) 2020 Soto project authors</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
     </div>

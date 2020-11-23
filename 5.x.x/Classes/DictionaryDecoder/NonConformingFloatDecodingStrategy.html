@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>HTTPResponseError Structure Reference</title>
+    <title>NonConformingFloatDecodingStrategy Enumeration Reference</title>
     <link rel="stylesheet" type="text/css" href="../../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../../css/highlight.css" />
     <meta charset='utf-8'>
@@ -13,11 +13,11 @@
     <script src="../../js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/swift/Struct/HTTPResponseError" class="dashAnchor"></a>
-    <a title="HTTPResponseError Structure Reference"></a>
+    <a name="//apple_ref/swift/Enum/NonConformingFloatDecodingStrategy" class="dashAnchor"></a>
+    <a title="NonConformingFloatDecodingStrategy Enumeration Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../../index.html"> Docs</a> (58% documented)</p>
+        <p><a href="../../index.html"> Docs</a> (59% documented)</p>
         <p class="header-right"><a href="https://github.com/soto-project/soto-core"><img src="../../img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="../../search.json">
@@ -30,7 +30,7 @@
       <p id="breadcrumbs">
         <a href="../../index.html"> Reference</a>
         <img id="carat" src="../../img/carat.png" />
-        HTTPResponseError Structure Reference
+        NonConformingFloatDecodingStrategy Enumeration Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -46,9 +46,6 @@
                 <a href="../../Classes/AWSClient/ClientError.html">– ClientError</a>
               </li>
               <li class="nav-group-task">
-                <a href="../../Classes/AWSClient/HTTPResponseError.html">– HTTPResponseError</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../../Classes/AWSClient/HTTPClientProvider.html">– HTTPClientProvider</a>
               </li>
               <li class="nav-group-task">
@@ -62,6 +59,18 @@
               </li>
               <li class="nav-group-task">
                 <a href="../../Classes/DeferredCredentialProvider.html">DeferredCredentialProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Classes/DictionaryDecoder.html">DictionaryDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Classes/DictionaryDecoder/DateDecodingStrategy.html">– DateDecodingStrategy</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Classes/DictionaryDecoder/DataDecodingStrategy.html">– DataDecodingStrategy</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Classes/DictionaryDecoder/NonConformingFloatDecodingStrategy.html">– NonConformingFloatDecodingStrategy</a>
               </li>
               <li class="nav-group-task">
                 <a href="../../Classes/RotatingCredentialProvider.html">RotatingCredentialProvider</a>
@@ -258,6 +267,9 @@
                 <a href="../../Structs/RetryPolicyFactory.html">RetryPolicyFactory</a>
               </li>
               <li class="nav-group-task">
+                <a href="../../Structs/RotatingCredential.html">RotatingCredential</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../../Structs/StandardArrayCoderProperties.html">StandardArrayCoderProperties</a>
               </li>
               <li class="nav-group-task">
@@ -284,15 +296,15 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>HTTPResponseError</h1>
+            <h1>NonConformingFloatDecodingStrategy</h1>
               <div class="declaration">
                 <div class="language">
                   
-                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">HTTPResponseError</span> <span class="p">:</span> <span class="kt">Swift</span><span class="o">.</span><span class="kt">Error</span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">NonConformingFloatDecodingStrategy</span></code></pre>
 
                 </div>
               </div>
-            <p>Undocumented</p>
+            <p>The strategy to use for non-JSON-conforming floating-point values (IEEE 754 infinity and NaN).</p>
 
           </section>
           <section class="section task-group-section">
@@ -301,9 +313,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore9AWSClientC17HTTPResponseErrorV8responseAA15AWSHTTPResponse_pvp"></a>
-                    <a name="//apple_ref/swift/Property/response" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore9AWSClientC17HTTPResponseErrorV8responseAA15AWSHTTPResponse_pvp">response</a>
+                    <a name="/s:8SotoCore17DictionaryDecoderC34NonConformingFloatDecodingStrategyO5throwyA2EmF"></a>
+                    <a name="//apple_ref/swift/Element/throw" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore17DictionaryDecoderC34NonConformingFloatDecodingStrategyO5throwyA2EmF">throw</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -311,14 +323,41 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Throw upon encountering non-conforming values. This is the default strategy.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">response</span><span class="p">:</span> <span class="kt"><a href="../../Protocols/AWSHTTPResponse.html">AWSHTTPResponse</a></span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="err">`</span><span class="k">throw</span><span class="err">`</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore17DictionaryDecoderC34NonConformingFloatDecodingStrategyO17convertFromStringyAESS_S2StcAEmF"></a>
+                    <a name="//apple_ref/swift/Element/convertFromString(positiveInfinity:negativeInfinity:nan:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore17DictionaryDecoderC34NonConformingFloatDecodingStrategyO17convertFromStringyAESS_S2StcAEmF">convertFromString(positiveInfinity:<wbr>negativeInfinity:<wbr>nan:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Decode the values from the given representation strings.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">convertFromString</span><span class="p">(</span><span class="nv">positiveInfinity</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">negativeInfinity</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">nan</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -331,7 +370,7 @@
         </section>
         <section id="footer">
           <p>© Copyright (c) 2020 Soto project authors</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.5</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
     </div>

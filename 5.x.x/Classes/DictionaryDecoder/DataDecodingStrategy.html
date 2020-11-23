@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Context Structure Reference</title>
+    <title>DataDecodingStrategy Enumeration Reference</title>
     <link rel="stylesheet" type="text/css" href="../../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../../css/highlight.css" />
     <meta charset='utf-8'>
@@ -13,8 +13,8 @@
     <script src="../../js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/swift/Struct/Context" class="dashAnchor"></a>
-    <a title="Context Structure Reference"></a>
+    <a name="//apple_ref/swift/Enum/DataDecodingStrategy" class="dashAnchor"></a>
+    <a title="DataDecodingStrategy Enumeration Reference"></a>
     <header>
       <div class="content-wrapper">
         <p><a href="../../index.html"> Docs</a> (59% documented)</p>
@@ -30,7 +30,7 @@
       <p id="breadcrumbs">
         <a href="../../index.html"> Reference</a>
         <img id="carat" src="../../img/carat.png" />
-        Context Structure Reference
+        DataDecodingStrategy Enumeration Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -296,15 +296,15 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>Context</h1>
+            <h1>DataDecodingStrategy</h1>
               <div class="declaration">
                 <div class="language">
                   
-                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">Context</span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">DataDecodingStrategy</span></code></pre>
 
                 </div>
               </div>
-            <p>The initialization context for a <code>ContextProvider</code></p>
+            <p>The strategy to use for decoding <code>Data</code> values.</p>
 
           </section>
           <section class="section task-group-section">
@@ -313,9 +313,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore25CredentialProviderFactoryV7ContextV10httpClientAA13AWSHTTPClient_pvp"></a>
-                    <a name="//apple_ref/swift/Property/httpClient" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore25CredentialProviderFactoryV7ContextV10httpClientAA13AWSHTTPClient_pvp">httpClient</a>
+                    <a name="/s:8SotoCore17DictionaryDecoderC20DataDecodingStrategyO6base64yA2EmF"></a>
+                    <a name="//apple_ref/swift/Element/base64" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore17DictionaryDecoderC20DataDecodingStrategyO6base64yA2EmF">base64</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -323,14 +323,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The <code><a href="../../Classes/AWSClient.html">AWSClient</a></code>s internal <code>HTTPClient</code></p>
+                        <p>Decode the <code>Data</code> from a Base64-encoded string.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">httpClient</span><span class="p">:</span> <span class="kt"><a href="../../Protocols/AWSHTTPClient.html">AWSHTTPClient</a></span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">base64</span></code></pre>
 
                         </div>
                       </div>
@@ -340,9 +340,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore25CredentialProviderFactoryV7ContextV9eventLoop3NIO05EventH0_pvp"></a>
-                    <a name="//apple_ref/swift/Property/eventLoop" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore25CredentialProviderFactoryV7ContextV9eventLoop3NIO05EventH0_pvp">eventLoop</a>
+                    <a name="/s:8SotoCore17DictionaryDecoderC20DataDecodingStrategyO3rawyA2EmF"></a>
+                    <a name="//apple_ref/swift/Element/raw" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore17DictionaryDecoderC20DataDecodingStrategyO3rawyA2EmF">raw</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -350,41 +350,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The <code>EventLoop</code> that the <code><a href="../../Protocols/CredentialProvider.html">CredentialProvider</a></code> should use for credential refreshs</p>
+                        <p>Don&rsquo;t decode. This is the default strategy.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:8SotoCore25CredentialProviderFactoryV7ContextV6logger7Logging6LoggerVvp"></a>
-                    <a name="//apple_ref/swift/Property/logger" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore25CredentialProviderFactoryV7ContextV6logger7Logging6LoggerVvp">logger</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>The <code>Logger</code> attached to the AWSClient</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">raw</span></code></pre>
 
                         </div>
                       </div>

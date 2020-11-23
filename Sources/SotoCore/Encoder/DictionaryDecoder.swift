@@ -1225,7 +1225,7 @@ extension __DictionaryDecoder {
              */
 
         } else if let string = value as? String,
-            case .convertFromString(let posInfString, let negInfString, let nanString) = self.options.nonConformingFloatDecodingStrategy
+                  case .convertFromString(let posInfString, let negInfString, let nanString) = self.options.nonConformingFloatDecodingStrategy
         {
             if string == posInfString {
                 return Float.infinity
@@ -1261,7 +1261,7 @@ extension __DictionaryDecoder {
              */
 
         } else if let string = value as? String,
-            case .convertFromString(let posInfString, let negInfString, let nanString) = self.options.nonConformingFloatDecodingStrategy
+                  case .convertFromString(let posInfString, let negInfString, let nanString) = self.options.nonConformingFloatDecodingStrategy
         {
             if string == posInfString {
                 return Double.infinity

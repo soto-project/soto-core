@@ -12,14 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
+import struct Foundation.UUID
 import Logging
 import NIO
 import NIOConcurrencyHelpers
 import SotoSignerV4
-import struct Foundation.UUID
 
 class ConfigFileCredentialProvider: CredentialProviderSelector {
-
     /// promise to find a credential provider
     let startupPromise: EventLoopPromise<CredentialProvider>
     /// lock for access to _internalProvider.
@@ -46,16 +45,21 @@ class ConfigFileCredentialProvider: CredentialProviderSelector {
     ///   - profile: named profile to load (usually `default`)
     ///   - context: credential provider factory context
     /// - Returns: Credential Provider (StaticCredentials or STSAssumeRole)
-    static func sharedCredentials(from credentialsFilePath: String,
-                                  configFilePath: String? = nil,
-                                  for profile: String,
-                                  context: CredentialProviderFactory.Context) -> EventLoopFuture<CredentialProvider> {
-
-        return ConfigFileLoader.loadSharedCredentials(credentialsFilePath: credentialsFilePath, configFilePath: configFilePath,
-                                                      profile: profile, context: context)
-            .flatMap { (credentials, config) in
-                return context.eventLoop.makeSucceededFuture(sharedCredentials(from: credentials, config: config, for: profile, context: context))
-            }
+    static func sharedCredentials(
+        from credentialsFilePath: String,
+        configFilePath: String? = nil,
+        for profile: String,
+        context: CredentialProviderFactory.Context
+    ) -> EventLoopFuture<CredentialProvider> {
+        return ConfigFileLoader.loadSharedCredentials(
+            credentialsFilePath: credentialsFilePath,
+            configFilePath: configFilePath,
+            profile: profile,
+            context: context
+        )
+        .flatMap { credentials, config in
+            return context.eventLoop.makeSucceededFuture(sharedCredentials(from: credentials, config: config, for: profile, context: context))
+        }
     }
 
     /// Generate credential provider based on shared credentials and profile configuration
@@ -69,18 +73,22 @@ class ConfigFileCredentialProvider: CredentialProviderSelector {
     ///   - profile: named profile to load (usually `default`)
     ///   - context: credential provider factory context
     /// - Returns: Credential Provider (StaticCredentials or STSAssumeRole)
-    static func sharedCredentials(from credentials: ConfigFileLoader.ProfileCredentials,
-                                  config: ConfigFileLoader.ProfileConfig?,
-                                  for profile: String,
-                                  context: CredentialProviderFactory.Context) -> CredentialProvider {
-
-        let staticCredential = StaticCredential(accessKeyId: credentials.accessKey,
-                                                secretAccessKey: credentials.secretAccessKey,
-                                                sessionToken: credentials.sessionToken)
+    static func sharedCredentials(
+        from credentials: ConfigFileLoader.ProfileCredentials,
+        config: ConfigFileLoader.ProfileConfig?,
+        for profile: String,
+        context: CredentialProviderFactory.Context
+    ) -> CredentialProvider {
+        let staticCredential = StaticCredential(
+            accessKeyId: credentials.accessKey,
+            secretAccessKey: credentials.secretAccessKey,
+            sessionToken: credentials.sessionToken
+        )
 
         // If `role_arn` and `sourcer_profile` are defined, temporary credentials must be loaded via STS Assume Role operation
         if let roleArn = credentials.roleArn ?? config?.roleArn,
-           let _ = credentials.sourceProfile ?? config?.sourceProfile {
+           let _ = credentials.sourceProfile ?? config?.sourceProfile
+        {
             // Proceed with STSAssumeRole operation
             let sessionName = credentials.roleSessionName ?? config?.roleSessionName ?? UUID().uuidString
             let request = STSAssumeRoleRequest(roleArn: roleArn, roleSessionName: sessionName)
@@ -91,12 +99,12 @@ class ConfigFileCredentialProvider: CredentialProviderSelector {
 
         // If `role_arn` and `credental_source` are defined, temporary credentials must be loaded from source
         if let _ = credentials.roleArn ?? config?.roleArn,
-           let _ = credentials.credentialSource ?? config?.credentialSource {
+           let _ = credentials.credentialSource ?? config?.credentialSource
+        {
             fatalError("'credential_source' setting not yet supported")
         }
 
         // Return static credentials
         return staticCredential
     }
-
 }

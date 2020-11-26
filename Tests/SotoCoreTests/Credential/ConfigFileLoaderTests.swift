@@ -20,7 +20,6 @@ import SotoXML
 import XCTest
 
 class ConfigFileLoadersTests: XCTestCase {
-
     // MARK: - Config File parsing
 
     func testConfigFileDefault() throws {
@@ -83,7 +82,6 @@ class ConfigFileLoadersTests: XCTestCase {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
 
-
         let config = try ConfigFileLoader.parseProfileConfig(from: byteBuffer, for: "marketingadmin")
         XCTAssertEqual(config.credentialSource, .ecsContainer)
     }
@@ -96,7 +94,6 @@ class ConfigFileLoadersTests: XCTestCase {
         """
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
-
 
         let config = try ConfigFileLoader.parseProfileConfig(from: byteBuffer, for: "marketingadmin")
         XCTAssertEqual(config.credentialSource, .environment)
@@ -187,5 +184,4 @@ class ConfigFileLoadersTests: XCTestCase {
         XCTAssertEqual(unexpandedNewPath, unexpandedNSString)
         XCTAssertEqual(unexpandedNewPath, unexpandableFilePath)
     }
-
 }

@@ -20,7 +20,6 @@ import SotoXML
 import XCTest
 
 class ConfigFileCredentialProviderTests: XCTestCase {
-
     // MARK: Shared Credentials parsing (combined credentials & config)
 
 //    func makeContext() throws -> CredentialProviderFactory.Context {
@@ -152,7 +151,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
 //        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
 //        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
 //        let eventLoop = eventLoopGroup.next()
-////        let path = filenameURL.absoluteString
+//        // let path = filenameURL.absoluteString
 //        let threadPool = NIOThreadPool(numberOfThreads: 1)
 //        threadPool.start()
 //        defer { XCTAssertNoThrow(try threadPool.syncShutdownGracefully()) }
@@ -255,5 +254,4 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         let client = createAWSClient(credentialProvider: .configFile())
         XCTAssertNoThrow(try client.syncShutdown())
     }
-
 }

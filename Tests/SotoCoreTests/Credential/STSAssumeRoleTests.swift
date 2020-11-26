@@ -20,7 +20,6 @@ import SotoXML
 import XCTest
 
 class STSAssumeRoleTests: XCTestCase {
-
     func testInternalSTSAssumeRoleProvider() throws {
         let credentials = STSCredentials(
             accessKeyId: "STSACCESSKEYID",

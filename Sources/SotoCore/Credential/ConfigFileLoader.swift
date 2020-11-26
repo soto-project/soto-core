@@ -24,7 +24,6 @@ import Foundation.NSString
 /// Load settings from AWS credentials and profile configuration files
 /// https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
 struct ConfigFileLoader {
-
     static let defaultProfile = "default"
 
     /// CLI credentials file – The credentials and config file are updated when you run the command aws configure. The credentials file is located
@@ -87,12 +86,11 @@ struct ConfigFileLoader {
         profile: String,
         context: CredentialProviderFactory.Context
     ) -> EventLoopFuture<(ProfileCredentials, ProfileConfig?)> {
-
         let threadPool = NIOThreadPool(numberOfThreads: 1)
         threadPool.start()
         let fileIO = NonBlockingFileIO(threadPool: threadPool)
 
-        return loadFile(path: credentialsFilePath, on: context.eventLoop, using: fileIO)
+        return self.loadFile(path: credentialsFilePath, on: context.eventLoop, using: fileIO)
             .always { _ in
                 // shutdown the threadpool async
                 threadPool.shutdownGracefully { _ in }
@@ -115,7 +113,7 @@ struct ConfigFileLoader {
     ///   - fileIO: non-blocking file IO
     /// - Returns: Event loop future with file contents in a byte-buffer
     static func loadFile(path: String, on eventLoop: EventLoop, using fileIO: NonBlockingFileIO) -> EventLoopFuture<ByteBuffer> {
-        let path = expandTildeInFilePath(path)
+        let path = self.expandTildeInFilePath(path)
 
         return fileIO.openFile(path: path, eventLoop: eventLoop)
             .flatMap { handle, region in
@@ -130,7 +128,7 @@ struct ConfigFileLoader {
     // MARK: - Byte Buffer parsing (INIParser)
 
     /// Parse credentials from files (passed in as byte-buffers)
-    /// 
+    ///
     /// Credentials file settings have precedence over profile configuration settings
     /// https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-precedence
     ///
@@ -142,7 +140,7 @@ struct ConfigFileLoader {
     static func parseSharedCredentials(from credentialsByteBuffer: ByteBuffer, configByteBuffer: ByteBuffer?, for profile: String) throws -> (ProfileCredentials, ProfileConfig?) {
         var config: ProfileConfig?
         if let byteBuffer = configByteBuffer {
-            config = try parseProfileConfig(from: byteBuffer, for: profile)
+            config = try self.parseProfileConfig(from: byteBuffer, for: profile)
         }
         let credentials = try parseCredentials(from: credentialsByteBuffer, for: profile, sourceProfile: config?.sourceProfile)
         return (credentials, config)
@@ -277,5 +275,4 @@ struct ConfigFileLoader {
         return NSString(string: filePath).expandingTildeInPath
         #endif
     }
-
 }

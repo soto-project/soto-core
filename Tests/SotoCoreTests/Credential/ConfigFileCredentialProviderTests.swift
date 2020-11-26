@@ -21,6 +21,120 @@ import XCTest
 
 class ConfigFileCredentialProviderTests: XCTestCase {
 
+    // MARK: Shared Credentials parsing (combined credentials & config)
+
+    func makeContext() throws -> CredentialProviderFactory.Context {
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+        let eventLoop = eventLoopGroup.next()
+        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoop))
+        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
+
+        return .init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger)
+    }
+
+    func testConfigFileCredentials() {
+        let profile = "profile1"
+        let accessKey = "FAKE-ACCESS-KEY123"
+        let secretKey = "Asecretreglkjrd"
+        let sessionToken = "xyz"
+        let credential = """
+        [\(profile)]
+        aws_access_key_id=\(accessKey)
+        aws_secret_access_key=\(secretKey)
+        aws_session_token=\(sessionToken)
+        """
+
+        var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
+        byteBuffer.writeString(credential)
+        var cred: CredentialProvider?
+        XCTAssertNoThrow(cred = try ConfigFileCredentialProvider.sharedCredentials(from: byteBuffer, for: profile, context: makeContext()))
+
+        XCTAssertEqual((cred as? StaticCredential)?.accessKeyId, accessKey)
+        XCTAssertEqual((cred as? StaticCredential)?.secretAccessKey, secretKey)
+        XCTAssertEqual((cred as? StaticCredential)?.sessionToken, sessionToken)
+    }
+
+    func testConfigFileCredentialsMissingAccessKey() {
+        let profile = "profile1"
+        let secretKey = "Asecretreglkjrd"
+        let credential = """
+        [\(profile)]
+        aws_secret_access_key=\(secretKey)
+        """
+
+        var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
+        byteBuffer.writeString(credential)
+        XCTAssertThrowsError(_ = try ConfigFileCredentialProvider.sharedCredentials(from: byteBuffer, for: profile, context: makeContext())) {
+            XCTAssertEqual($0 as? ConfigFileLoader.ConfigFileError, .missingAccessKeyId)
+        }
+    }
+
+    func testConfigFileCredentialsMissingSecretKey() {
+        let profile = "profile1"
+        let accessKey = "FAKE-ACCESS-KEY123"
+        let credential = """
+        [\(profile)]
+        aws_access_key_id=\(accessKey)
+        """
+
+        var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
+        byteBuffer.writeString(credential)
+        XCTAssertThrowsError(_ = try ConfigFileCredentialProvider.sharedCredentials(from: byteBuffer, for: profile, context: makeContext())) {
+            XCTAssertEqual($0 as? ConfigFileLoader.ConfigFileError, .missingSecretAccessKey)
+        }
+    }
+
+    func testConfigFileCredentialsMissingSessionToken() {
+        let profile = "profile1"
+        let accessKey = "FAKE-ACCESS-KEY123"
+        let secretKey = "Asecretreglkjrd"
+        let credential = """
+        [\(profile)]
+        aws_access_key_id=\(accessKey)
+        aws_secret_access_key=\(secretKey)
+        """
+
+        var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
+        byteBuffer.writeString(credential)
+        var cred: CredentialProvider?
+        XCTAssertNoThrow(cred = try ConfigFileCredentialProvider.sharedCredentials(from: byteBuffer, for: profile, context: makeContext()))
+
+        XCTAssertEqual((cred as? StaticCredential)?.accessKeyId, accessKey)
+        XCTAssertEqual((cred as? StaticCredential)?.secretAccessKey, secretKey)
+        XCTAssertNil((cred as? StaticCredential)?.sessionToken)
+    }
+
+    func testConfigFileCredentialsMissingProfile() {
+        let profile = "profile1"
+        let accessKey = "FAKE-ACCESS-KEY123"
+        let secretKey = "Asecretreglkjrd"
+        let credential = """
+        [\(profile)]
+        aws_access_key_id=\(accessKey)
+        aws_secret_access_key=\(secretKey)
+        """
+
+        var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
+        byteBuffer.writeString(credential)
+        XCTAssertThrowsError(_ = try ConfigFileCredentialProvider.sharedCredentials(from: byteBuffer, for: "profile2", context: makeContext())) {
+            XCTAssertEqual($0 as? ConfigFileLoader.ConfigFileError, .missingProfile("profile2"))
+        }
+    }
+
+    func testConfigFileCredentialsParseFailure() {
+        let credential = """
+        [default]
+        aws_access_key_id
+        """
+
+        var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
+        byteBuffer.writeString(credential)
+        XCTAssertThrowsError(_ = try ConfigFileCredentialProvider.sharedCredentials(from: byteBuffer, for: "default", context: makeContext())) {
+            XCTAssertEqual($0 as? ConfigFileLoader.ConfigFileError, .invalidCredentialFileSyntax)
+        }
+    }
+
     // MARK: - Load Shared Credentials from Disk
 
     func testConfigFileCredentialINIParser() throws {

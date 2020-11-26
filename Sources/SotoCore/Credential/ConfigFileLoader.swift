@@ -21,7 +21,7 @@ import struct Foundation.UUID
 /// https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
 struct ConfigFileLoader {
 
-    static let `default` = "default"
+    static let defaultProfile = "default"
 
     /// CLI credentials file – The credentials and config file are updated when you run the command aws configure. The credentials file is located
     /// at `~/.aws/credentials` on Linux or macOS, or at C:\Users\USERNAME\.aws\credentials on Windows. This file can contain the credential
@@ -69,47 +69,6 @@ struct ConfigFileLoader {
         case missingSourceProfile
     }
 
-    /// Load shared credentials and profile configuration from passed-in byte-buffers
-    ///
-    /// Credentials file settings have precedence over profile configuration settings
-    /// https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-precedence
-    ///
-    /// - Parameters:
-    ///   - credentialsByteBuffer: contents of AWS shared credentials file (usually `~/.aws/credentials`
-    ///   - configByteBuffer: contents of AWS profile configuration file (usually `~/.aws/config`
-    ///   - profile: named profile to load (usually `default`)
-    ///   - context: credential provider factory context
-    /// - Returns: Credential Provider (StaticCredentials or STSAssumeRole)
-    static func sharedCredentials(from credentialsByteBuffer: ByteBuffer,
-                                  configByteBuffer: ByteBuffer? = nil,
-                                  for profile: String,
-                                  context: CredentialProviderFactory.Context) throws -> CredentialProvider {
-        var config: ConfigFileLoader.ProfileConfig?
-        if let byteBuffer = configByteBuffer {
-            config = try loadProfileConfig(from: byteBuffer, for: profile)
-        }
-        let credentials = try loadCredentials(from: credentialsByteBuffer, for: profile, sourceProfile: config?.sourceProfile)
-
-        // When `role_arn` is defined, temporary credentials must be loaded via STS Assume Role operation
-        if let roleArn = credentials.roleArn ?? config?.roleArn {
-            // If `role_arn` is defined, `source_profile` must be defined too (don't yet support `credential_source`).
-            guard credentials.sourceProfile != nil || config?.sourceProfile != nil else {
-                throw ConfigFileError.missingSourceProfile
-            }
-            // Proceed with STSAssumeRole operation
-            let sessionName = credentials.roleSessionName ?? config?.roleSessionName ?? UUID().uuidString
-            let request = STSAssumeRoleRequest(roleArn: roleArn, roleSessionName: sessionName)
-            let region = config?.region ?? .useast1
-            let provider = STSAssumeRoleCredentialProvider(request: request, credentialProvider: .default, region: region, httpClient: context.httpClient)
-            return RotatingCredentialProvider(context: context, provider: provider)
-        }
-        else {
-            return StaticCredential(accessKeyId: credentials.accessKey,
-                                    secretAccessKey: credentials.secretAccessKey,
-                                    sessionToken: credentials.sessionToken)
-        }
-    }
-
     /// Load profile configuraton from a file (passed in as byte-buffer), usually `~/.aws/config`
     ///
     /// - Parameters:
@@ -131,7 +90,7 @@ struct ConfigFileLoader {
         // the prefix word "profile" only when configuring a named profile in the config file. Do not use the word
         // profile when creating an entry in the credentials file.
         // https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html
-        let loadedProfile = profile == Self.default ? profile : "profile \(profile)"
+        let loadedProfile = profile == Self.defaultProfile ? profile : "profile \(profile)"
 
         guard let settings = parser.sections[loadedProfile] else {
             throw ConfigFileError.missingProfile(loadedProfile)

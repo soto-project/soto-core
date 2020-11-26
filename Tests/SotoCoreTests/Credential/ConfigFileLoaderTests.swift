@@ -33,7 +33,7 @@ class ConfigFileLoadersTests: XCTestCase {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
 
-        let config = try ConfigFileLoader.loadProfileConfig(from: byteBuffer, for: ConfigFileLoader.defaultProfile)
+        let config = try ConfigFileLoader.parseProfileConfig(from: byteBuffer, for: ConfigFileLoader.defaultProfile)
         XCTAssertEqual(config.roleArn, "arn:aws:iam::123456789012:role/marketingadminrole")
         XCTAssertEqual(config.sourceProfile, "user1")
         XCTAssertEqual(config.region, .uswest2)
@@ -54,7 +54,7 @@ class ConfigFileLoadersTests: XCTestCase {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
 
-        let config = try ConfigFileLoader.loadProfileConfig(from: byteBuffer, for: "marketingadmin")
+        let config = try ConfigFileLoader.parseProfileConfig(from: byteBuffer, for: "marketingadmin")
         XCTAssertEqual(config.roleArn, "arn:aws:iam::123456789012:role/marketingadminrole")
         XCTAssertEqual(config.sourceProfile, "user1")
         XCTAssertEqual(config.roleSessionName, "foo@example.com")
@@ -70,7 +70,7 @@ class ConfigFileLoadersTests: XCTestCase {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
 
-        let config = try ConfigFileLoader.loadProfileConfig(from: byteBuffer, for: "marketingadmin")
+        let config = try ConfigFileLoader.parseProfileConfig(from: byteBuffer, for: "marketingadmin")
         XCTAssertEqual(config.credentialSource, .ec2Instance)
     }
 
@@ -84,7 +84,7 @@ class ConfigFileLoadersTests: XCTestCase {
         byteBuffer.writeString(content)
 
 
-        let config = try ConfigFileLoader.loadProfileConfig(from: byteBuffer, for: "marketingadmin")
+        let config = try ConfigFileLoader.parseProfileConfig(from: byteBuffer, for: "marketingadmin")
         XCTAssertEqual(config.credentialSource, .ecsContainer)
     }
 
@@ -98,7 +98,7 @@ class ConfigFileLoadersTests: XCTestCase {
         byteBuffer.writeString(content)
 
 
-        let config = try ConfigFileLoader.loadProfileConfig(from: byteBuffer, for: "marketingadmin")
+        let config = try ConfigFileLoader.parseProfileConfig(from: byteBuffer, for: "marketingadmin")
         XCTAssertEqual(config.credentialSource, .environment)
     }
 
@@ -113,7 +113,7 @@ class ConfigFileLoadersTests: XCTestCase {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
 
-        let config = try ConfigFileLoader.loadCredentials(from: byteBuffer, for: ConfigFileLoader.defaultProfile, sourceProfile: nil)
+        let config = try ConfigFileLoader.parseCredentials(from: byteBuffer, for: ConfigFileLoader.defaultProfile, sourceProfile: nil)
         XCTAssertEqual(config.accessKey, "AKIAIOSFODNN7EXAMPLE")
         XCTAssertEqual(config.secretAccessKey, "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
     }
@@ -131,7 +131,7 @@ class ConfigFileLoadersTests: XCTestCase {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
 
-        let config = try ConfigFileLoader.loadCredentials(from: byteBuffer, for: "user1", sourceProfile: nil)
+        let config = try ConfigFileLoader.parseCredentials(from: byteBuffer, for: "user1", sourceProfile: nil)
         XCTAssertEqual(config.accessKey, "AKIAI44QH8DHBEXAMPLE")
         XCTAssertEqual(config.secretAccessKey, "je7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY")
     }
@@ -150,11 +150,42 @@ class ConfigFileLoadersTests: XCTestCase {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
 
-        let config = try ConfigFileLoader.loadCredentials(from: byteBuffer, for: "user1", sourceProfile: nil)
+        let config = try ConfigFileLoader.parseCredentials(from: byteBuffer, for: "user1", sourceProfile: nil)
         XCTAssertEqual(config.accessKey, "AKIAIOSFODNN7EXAMPLE")
         XCTAssertEqual(config.secretAccessKey, "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
         XCTAssertEqual(config.roleArn, "arn:aws:iam::123456789012:role/marketingadminrole")
         XCTAssertEqual(config.sourceProfile, ConfigFileLoader.defaultProfile)
+    }
+
+    // MARK: - Config file path expansion
+
+    func testExpandTildeInFilePath() {
+        let expandableFilePath = "~/.aws/credentials"
+        let expandedNewPath = ConfigFileLoader.expandTildeInFilePath(expandableFilePath)
+
+        #if os(Linux)
+        XCTAssert(!expandedNewPath.hasPrefix("~"))
+        #else
+
+        #if os(macOS)
+        // on macOS, we want to be sure the expansion produces the posix $HOME and
+        // not the sanboxed home $HOME/Library/Containers/<bundle-id>/Data
+        let macOSHomePrefix = "/Users/"
+        XCTAssert(expandedNewPath.starts(with: macOSHomePrefix))
+        XCTAssert(!expandedNewPath.contains("/Library/Containers/"))
+        #endif
+
+        // this doesn't work on linux because of SR-12843
+        let expandedNSString = NSString(string: expandableFilePath).expandingTildeInPath
+        XCTAssertEqual(expandedNewPath, expandedNSString)
+        #endif
+
+        let unexpandableFilePath = "/.aws/credentials"
+        let unexpandedNewPath = ConfigFileLoader.expandTildeInFilePath(unexpandableFilePath)
+        let unexpandedNSString = NSString(string: unexpandableFilePath).expandingTildeInPath
+
+        XCTAssertEqual(unexpandedNewPath, unexpandedNSString)
+        XCTAssertEqual(unexpandedNewPath, unexpandableFilePath)
     }
 
 }

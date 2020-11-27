@@ -21,10 +21,15 @@ import Glibc
 import Foundation.NSString
 #endif
 
+public struct ConfigFile {
+    public static let defaultCredentialsPath = "~/.aws/credentials"
+    public static let defaultProfileConfigPath = "~/.aws/config"
+    public static let defaultProfile = "default"
+}
+
 /// Load settings from AWS credentials and profile configuration files
 /// https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
 struct ConfigFileLoader {
-    static let defaultProfile = "default"
 
     /// CLI credentials file – The credentials and config file are updated when you run the command aws configure. The credentials file is located
     /// at `~/.aws/credentials` on Linux or macOS, or at C:\Users\USERNAME\.aws\credentials on Windows. This file can contain the credential
@@ -76,13 +81,13 @@ struct ConfigFileLoader {
     /// Load credentials from disk
     /// - Parameters:
     ///   - credentialsFilePath: file path for AWS credentials file
-    ///   - configFilePath: file path for AWS config file (optional)
-    ///   - profile: named profile to load (optional)
+    ///   - configFilePath: file path for AWS config file
+    ///   - profile: named profile to load
     ///   - context: credential provider factory context
     /// - Returns: Promise of a Credential Provider (StaticCredentials or STSAssumeRole)
     static func loadSharedCredentials(
         credentialsFilePath: String,
-        configFilePath: String?,
+        configFilePath: String,
         profile: String,
         context: CredentialProviderFactory.Context
     ) -> EventLoopFuture<(ProfileCredentials, ProfileConfig?)> {
@@ -95,11 +100,15 @@ struct ConfigFileLoader {
                 // shutdown the threadpool async
                 threadPool.shutdownGracefully { _ in }
             }
-            .flatMap { credentialsByteBuffer -> EventLoopFuture<(ByteBuffer, ByteBuffer?)> in
-                if let path = configFilePath {
-                    return loadFile(path: path, on: context.eventLoop, using: fileIO).map { (credentialsByteBuffer, $0) }
-                }
-                return context.eventLoop.makeSucceededFuture((credentialsByteBuffer, nil))
+            .flatMap { credentialsByteBuffer in
+                return loadFile(path: configFilePath, on: context.eventLoop, using: fileIO)
+                    .map {
+                        (credentialsByteBuffer, $0)
+                    }
+                    .flatMapError { _ in
+                        // Recover from error if profile config file does not exist
+                        context.eventLoop.makeSucceededFuture((credentialsByteBuffer, nil))
+                    }
             }
             .flatMapThrowing { credentialsByteBuffer, configByteBuffer in
                 return try parseSharedCredentials(from: credentialsByteBuffer, configByteBuffer: configByteBuffer, for: profile)
@@ -167,7 +176,7 @@ struct ConfigFileLoader {
         // the prefix word "profile" only when configuring a named profile in the config file. Do not use the word
         // profile when creating an entry in the credentials file.
         // https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html
-        let loadedProfile = profile == Self.defaultProfile ? profile : "profile \(profile)"
+        let loadedProfile = profile == ConfigFile.defaultProfile ? profile : "profile \(profile)"
 
         guard let settings = parser.sections[loadedProfile] else {
             throw ConfigFileError.missingProfile(loadedProfile)

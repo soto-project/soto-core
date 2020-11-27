@@ -26,13 +26,13 @@ class ConfigFileCredentialProvider: CredentialProviderSelector {
     /// internal version of internal provider. Should access this through `internalProvider`
     var _internalProvider: CredentialProvider?
 
-    init(credentialsFilePath: String, configFilePath: String? = nil, profile: String? = nil, context: CredentialProviderFactory.Context) {
+    init(credentialsFilePath: String, configFilePath: String, profile: String? = nil, context: CredentialProviderFactory.Context) {
         startupPromise = context.eventLoop.makePromise(of: CredentialProvider.self)
         startupPromise.futureResult.whenSuccess { result in
             self.internalProvider = result
         }
 
-        let profile = profile ?? Environment["AWS_PROFILE"] ?? ConfigFileLoader.defaultProfile
+        let profile = profile ?? Environment["AWS_PROFILE"] ?? ConfigFile.defaultProfile
         Self.sharedCredentials(from: credentialsFilePath, configFilePath: configFilePath, for: profile, context: context)
             .cascade(to: self.startupPromise)
     }
@@ -47,7 +47,7 @@ class ConfigFileCredentialProvider: CredentialProviderSelector {
     /// - Returns: Credential Provider (StaticCredentials or STSAssumeRole)
     static func sharedCredentials(
         from credentialsFilePath: String,
-        configFilePath: String? = nil,
+        configFilePath: String,
         for profile: String,
         context: CredentialProviderFactory.Context
     ) -> EventLoopFuture<CredentialProvider> {

@@ -18,11 +18,6 @@ import NIO
 import NIOConcurrencyHelpers
 import SotoSignerV4
 
-/// Errors occurring when loading credentials and profile configuration
-enum ConfigFileCredentialProviderError: Error, Equatable {
-    case notSupported
-}
-
 class ConfigFileCredentialProvider: CredentialProviderSelector {
     /// promise to find a credential provider
     let startupPromise: EventLoopPromise<CredentialProvider>
@@ -82,12 +77,6 @@ class ConfigFileCredentialProvider: CredentialProviderSelector {
         config: ConfigFileLoader.ProfileConfig?,
         context: CredentialProviderFactory.Context
     ) throws -> CredentialProvider {
-        let staticCredential = StaticCredential(
-            accessKeyId: credentials.accessKey,
-            secretAccessKey: credentials.secretAccessKey,
-            sessionToken: credentials.sessionToken
-        )
-
         // If `role_arn` and `sourcer_profile` are defined, temporary credentials must be loaded via STS Assume Role operation
         if let roleArn = credentials.roleArn ?? config?.roleArn,
            let _ = credentials.sourceProfile ?? config?.sourceProfile
@@ -96,18 +85,18 @@ class ConfigFileCredentialProvider: CredentialProviderSelector {
             let sessionName = credentials.roleSessionName ?? config?.roleSessionName ?? UUID().uuidString
             let request = STSAssumeRoleRequest(roleArn: roleArn, roleSessionName: sessionName)
             let region = config?.region ?? .useast1
-            let provider = STSAssumeRoleCredentialProvider(request: request, credentialProvider: .default, region: region, httpClient: context.httpClient)
-            return RotatingCredentialProvider(context: context, provider: provider)
+            let provider = CredentialProviderFactory.static(accessKeyId: credentials.accessKey, secretAccessKey: credentials.secretAccessKey, sessionToken: credentials.sessionToken)
+            return STSAssumeRoleCredentialProvider(request: request, credentialProvider: provider, region: region, httpClient: context.httpClient)
         }
 
         // If `role_arn` and `credental_source` are defined, temporary credentials must be loaded from source
         if let _ = credentials.roleArn ?? config?.roleArn,
            let _ = credentials.credentialSource ?? config?.credentialSource
         {
-            throw ConfigFileCredentialProviderError.notSupported
+            throw CredentialProviderError.notSupported
         }
 
         // Return static credentials
-        return staticCredential
+        return StaticCredential(accessKeyId: credentials.accessKey, secretAccessKey: credentials.secretAccessKey, sessionToken: credentials.sessionToken)
     }
 }

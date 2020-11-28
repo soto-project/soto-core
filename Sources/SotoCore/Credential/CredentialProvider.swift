@@ -115,7 +115,7 @@ extension CredentialProviderFactory {
     ) -> CredentialProviderFactory {
         return Self { context in
             let provider = ConfigFileCredentialProvider(credentialsFilePath: credentialsFilePath, configFilePath: configFilePath, profile: profile, context: context)
-            return DeferredCredentialProvider(context: context, provider: provider)
+            return RotatingCredentialProvider(context: context, provider: provider)
         }
     }
 

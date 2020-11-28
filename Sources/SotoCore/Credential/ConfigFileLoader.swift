@@ -95,8 +95,10 @@ struct ConfigFileLoader {
         threadPool.start()
         let fileIO = NonBlockingFileIO(threadPool: threadPool)
 
+        // Load credentials file
         return self.loadFile(path: credentialsFilePath, on: context.eventLoop, using: fileIO)
             .flatMap { credentialsByteBuffer in
+                // Load profile config file
                 return loadFile(path: configFilePath, on: context.eventLoop, using: fileIO)
                     .map {
                         (credentialsByteBuffer, $0)
@@ -105,6 +107,10 @@ struct ConfigFileLoader {
                         // Recover from error if profile config file does not exist
                         context.eventLoop.makeSucceededFuture((credentialsByteBuffer, nil))
                     }
+            }
+            .flatMapErrorThrowing { (error) -> (ByteBuffer, ByteBuffer?) in
+                // Throw `.noProvider` error if credential file cannot be loaded
+                throw CredentialProviderError.noProvider
             }
             .flatMapThrowing { credentialsByteBuffer, configByteBuffer in
                 return try parseSharedCredentials(from: credentialsByteBuffer, configByteBuffer: configByteBuffer, for: profile)

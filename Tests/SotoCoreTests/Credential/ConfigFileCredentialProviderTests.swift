@@ -22,14 +22,14 @@ import XCTest
 class ConfigFileCredentialProviderTests: XCTestCase {
     // MARK: - Credential Provider
 
-    func makeContext() throws -> (CredentialProviderFactory.Context, MultiThreadedEventLoopGroup, HTTPClient) {
+    func makeContext() -> (CredentialProviderFactory.Context, MultiThreadedEventLoopGroup, HTTPClient) {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         let eventLoop = eventLoopGroup.next()
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoop))
         return (.init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger), eventLoopGroup, httpClient)
     }
 
-    func testCredentialProvider() throws {
+    func testCredentialProvider() {
         let credentials = ConfigFileLoader.ProfileCredentials(
             accessKey: "foo",
             secretAccessKey: "bar",
@@ -38,23 +38,22 @@ class ConfigFileCredentialProviderTests: XCTestCase {
             roleSessionName: nil,
             sourceProfile: nil,
             credentialSource: nil)
-        let (context, eventLoopGroup, httpClient) = try makeContext()
+        let (context, eventLoopGroup, httpClient) = makeContext()
 
-        defer {
-            try? httpClient.syncShutdown()
-            try? eventLoopGroup.syncShutdownGracefully()
-        }
-
-        let provider = try ConfigFileCredentialProvider.credentialProvider(
+        let provider = try? ConfigFileCredentialProvider.credentialProvider(
             from: credentials,
             config: nil,
             context: context
         )
         XCTAssertEqual((provider as? StaticCredential)?.accessKeyId, "foo")
         XCTAssertEqual((provider as? StaticCredential)?.secretAccessKey, "bar")
+
+        XCTAssertNoThrow(try provider?.shutdown(on: context.eventLoop).wait())
+        XCTAssertNoThrow(try httpClient.syncShutdown())
+        XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
     }
 
-    func testCredentialProviderSTSAssumeRole() throws {
+    func testCredentialProviderSTSAssumeRole() {
         let credentials = ConfigFileLoader.ProfileCredentials(
             accessKey: "foo",
             secretAccessKey: "bar",
@@ -63,23 +62,22 @@ class ConfigFileCredentialProviderTests: XCTestCase {
             roleSessionName: nil,
             sourceProfile: "baz",
             credentialSource: nil)
-        let (context, eventLoopGroup, httpClient) = try makeContext()
+        let (context, eventLoopGroup, httpClient) = makeContext()
 
-        defer {
-            try? httpClient.syncShutdown()
-            try? eventLoopGroup.syncShutdownGracefully()
-        }
-
-        let provider = try ConfigFileCredentialProvider.credentialProvider(
+        let provider = try? ConfigFileCredentialProvider.credentialProvider(
             from: credentials,
             config: nil,
             context: context
         )
-        XCTAssertTrue(provider is RotatingCredentialProvider)
-        XCTAssertTrue((provider as? RotatingCredentialProvider)?.provider is STSAssumeRoleCredentialProvider)
+        XCTAssertTrue(provider is STSAssumeRoleCredentialProvider)
+        XCTAssertEqual((provider as? STSAssumeRoleCredentialProvider)?.request.roleArn, "arn")
+
+        XCTAssertNoThrow(try provider?.shutdown(on: context.eventLoop).wait())
+        XCTAssertNoThrow(try httpClient.syncShutdown())
+        XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
     }
 
-    func testCredentialProviderCredentialSource() throws {
+    func testCredentialProviderCredentialSource() {
         let credentials = ConfigFileLoader.ProfileCredentials(
             accessKey: "foo",
             secretAccessKey: "bar",
@@ -88,12 +86,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
             roleSessionName: nil,
             sourceProfile: nil,
             credentialSource: .ec2Instance)
-        let (context, eventLoopGroup, httpClient) = try makeContext()
-
-        defer {
-            try? httpClient.syncShutdown()
-            try? eventLoopGroup.syncShutdownGracefully()
-        }
+        let (context, eventLoopGroup, httpClient) = makeContext()
 
         do {
             _ = try ConfigFileCredentialProvider.credentialProvider(
@@ -102,8 +95,11 @@ class ConfigFileCredentialProviderTests: XCTestCase {
                 context: context
             )
         } catch {
-            XCTAssertEqual(error as? ConfigFileCredentialProviderError, ConfigFileCredentialProviderError.notSupported)
+            XCTAssertEqual(error as? CredentialProviderError, .notSupported)
         }
+
+        XCTAssertNoThrow(try httpClient.syncShutdown())
+        XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
     }
 
     // MARK: - Config File Credentials Provider

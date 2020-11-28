@@ -39,7 +39,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
             sourceProfile: nil,
             credentialSource: nil
         )
-        let (context, eventLoopGroup, httpClient) = makeContext()
+        let (context, eventLoopGroup, httpClient) = self.makeContext()
 
         let provider = try? ConfigFileCredentialProvider.credentialProvider(
             from: credentials,
@@ -64,7 +64,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
             sourceProfile: "baz",
             credentialSource: nil
         )
-        let (context, eventLoopGroup, httpClient) = makeContext()
+        let (context, eventLoopGroup, httpClient) = self.makeContext()
 
         let provider = try? ConfigFileCredentialProvider.credentialProvider(
             from: credentials,
@@ -89,7 +89,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
             sourceProfile: nil,
             credentialSource: .ec2Instance
         )
-        let (context, eventLoopGroup, httpClient) = makeContext()
+        let (context, eventLoopGroup, httpClient) = self.makeContext()
 
         do {
             _ = try ConfigFileCredentialProvider.credentialProvider(

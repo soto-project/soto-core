@@ -30,7 +30,6 @@ public enum ConfigFile {
 /// Load settings from AWS credentials and profile configuration files
 /// https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
 enum ConfigFileLoader {
-
     /// CLI credentials file – The credentials and config file are updated when you run the command aws configure. The credentials file is located
     /// at `~/.aws/credentials` on Linux or macOS, or at C:\Users\USERNAME\.aws\credentials on Windows. This file can contain the credential
     /// details for the default profile and any named profiles.

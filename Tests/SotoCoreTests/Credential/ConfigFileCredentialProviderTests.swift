@@ -37,7 +37,8 @@ class ConfigFileCredentialProviderTests: XCTestCase {
             roleArn: nil,
             roleSessionName: nil,
             sourceProfile: nil,
-            credentialSource: nil)
+            credentialSource: nil
+        )
         let (context, eventLoopGroup, httpClient) = makeContext()
 
         let provider = try? ConfigFileCredentialProvider.credentialProvider(
@@ -61,7 +62,8 @@ class ConfigFileCredentialProviderTests: XCTestCase {
             roleArn: "arn",
             roleSessionName: nil,
             sourceProfile: "baz",
-            credentialSource: nil)
+            credentialSource: nil
+        )
         let (context, eventLoopGroup, httpClient) = makeContext()
 
         let provider = try? ConfigFileCredentialProvider.credentialProvider(
@@ -85,7 +87,8 @@ class ConfigFileCredentialProviderTests: XCTestCase {
             roleArn: "arn",
             roleSessionName: nil,
             sourceProfile: nil,
-            credentialSource: .ec2Instance)
+            credentialSource: .ec2Instance
+        )
         let (context, eventLoopGroup, httpClient) = makeContext()
 
         do {

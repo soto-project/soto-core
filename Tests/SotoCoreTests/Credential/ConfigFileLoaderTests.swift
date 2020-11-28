@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct Foundation.UUID
 import AsyncHTTPClient
+import struct Foundation.UUID
 import NIO
 @testable import SotoCore
 import SotoTestUtils
@@ -196,7 +196,7 @@ class ConfigFileLoadersTests: XCTestCase {
         XCTAssertEqual(config?.credentialSource, .environment)
     }
 
-    func testConfigMissingProfile() throws {
+    func testConfigMissingProfile() {
         let content = """
         [profile foo]
         bar = foo
@@ -208,13 +208,12 @@ class ConfigFileLoadersTests: XCTestCase {
             _ = try ConfigFileLoader.parseProfileConfig(from: byteBuffer, for: "bar")
         } catch ConfigFileLoader.ConfigFileError.missingProfile(let profile) {
             XCTAssertEqual(profile, "profile bar")
-        }
-        catch {
+        } catch {
             XCTFail("Expected missingProfile error, got \(error.localizedDescription)")
         }
     }
 
-    func testParseInvalidConfig() throws {
+    func testParseInvalidConfig() {
         let content = """
         [profile
         = foo
@@ -226,8 +225,7 @@ class ConfigFileLoadersTests: XCTestCase {
             _ = try ConfigFileLoader.parseProfileConfig(from: byteBuffer, for: ConfigFile.defaultProfile)
         } catch ConfigFileLoader.ConfigFileError.invalidCredentialFileSyntax {
             // pass
-        }
-        catch {
+        } catch {
             XCTFail("Expected invalidCredentialFileSyntax error, got \(error.localizedDescription)")
         }
     }
@@ -318,7 +316,7 @@ class ConfigFileLoadersTests: XCTestCase {
         XCTAssertEqual(config.sourceProfile, ConfigFile.defaultProfile)
     }
 
-    func testCredentialsMissingProfile() throws {
+    func testCredentialsMissingProfile() {
         let content = """
         [default]
         aws_access_key_id=AKIAIOSFODNN7EXAMPLE
@@ -331,13 +329,12 @@ class ConfigFileLoadersTests: XCTestCase {
             _ = try ConfigFileLoader.parseCredentials(from: byteBuffer, for: "user1", sourceProfile: nil)
         } catch ConfigFileLoader.ConfigFileError.missingProfile(let profile) {
             XCTAssertEqual(profile, "user1")
-        }
-        catch {
+        } catch {
             XCTFail("Expected missingProfile error, got \(error.localizedDescription)")
         }
     }
 
-    func testCredentialsMissingSourceProfile() throws {
+    func testCredentialsMissingSourceProfile() {
         let content = """
         [foo]
         aws_access_key_id=AKIAIOSFODNN7EXAMPLE
@@ -350,13 +347,12 @@ class ConfigFileLoadersTests: XCTestCase {
             _ = try ConfigFileLoader.parseCredentials(from: byteBuffer, for: "foo", sourceProfile: ConfigFile.defaultProfile)
         } catch ConfigFileLoader.ConfigFileError.missingProfile(let profile) {
             XCTAssertEqual(profile, ConfigFile.defaultProfile)
-        }
-        catch {
+        } catch {
             XCTFail("Expected missingProfile error, got \(error.localizedDescription)")
         }
     }
 
-    func testCredentialsMissingAccessKey() throws {
+    func testCredentialsMissingAccessKey() {
         let content = """
         [foo]
         aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
@@ -368,13 +364,12 @@ class ConfigFileLoadersTests: XCTestCase {
             _ = try ConfigFileLoader.parseCredentials(from: byteBuffer, for: "foo", sourceProfile: nil)
         } catch ConfigFileLoader.ConfigFileError.missingAccessKeyId {
             // pass
-        }
-        catch {
+        } catch {
             XCTFail("Expected missingProfile error, got \(error.localizedDescription)")
         }
     }
 
-    func testCredentialsMissingSecretAccessKey() throws {
+    func testCredentialsMissingSecretAccessKey() {
         let content = """
         [foo]
         aws_access_key_id=AKIAIOSFODNN7EXAMPLE
@@ -386,13 +381,12 @@ class ConfigFileLoadersTests: XCTestCase {
             _ = try ConfigFileLoader.parseCredentials(from: byteBuffer, for: "foo", sourceProfile: nil)
         } catch ConfigFileLoader.ConfigFileError.missingSecretAccessKey {
             // pass
-        }
-        catch {
+        } catch {
             XCTFail("Expected missingProfile error, got \(error.localizedDescription)")
         }
     }
 
-    func testCredentialsMissingAccessKeyFromSourceProfile() throws {
+    func testCredentialsMissingAccessKeyFromSourceProfile() {
         let content = """
         [foo]
         aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
@@ -407,13 +401,12 @@ class ConfigFileLoadersTests: XCTestCase {
             _ = try ConfigFileLoader.parseCredentials(from: byteBuffer, for: "bar", sourceProfile: "foo")
         } catch ConfigFileLoader.ConfigFileError.missingAccessKeyId {
             // pass
-        }
-        catch {
+        } catch {
             XCTFail("Expected missingProfile error, got \(error.localizedDescription)")
         }
     }
 
-    func testCredentialsMissingSecretAccessKeyFromSourceProfile() throws {
+    func testCredentialsMissingSecretAccessKeyFromSourceProfile() {
         let content = """
         [foo]
         aws_access_key_id=AKIAIOSFODNN7EXAMPLE
@@ -428,8 +421,7 @@ class ConfigFileLoadersTests: XCTestCase {
             _ = try ConfigFileLoader.parseCredentials(from: byteBuffer, for: "bar", sourceProfile: "foo")
         } catch ConfigFileLoader.ConfigFileError.missingSecretAccessKey {
             // pass
-        }
-        catch {
+        } catch {
             XCTFail("Expected missingProfile error, got \(error.localizedDescription)")
         }
     }
@@ -482,7 +474,7 @@ class ConfigFileLoadersTests: XCTestCase {
         XCTAssertEqual(config.credentialSource, .environment)
     }
 
-    func testParseInvalidCredentials() throws {
+    func testParseInvalidCredentials() {
         let content = """
         [profile
         = foo
@@ -494,8 +486,7 @@ class ConfigFileLoadersTests: XCTestCase {
             _ = try ConfigFileLoader.parseCredentials(from: byteBuffer, for: ConfigFile.defaultProfile, sourceProfile: nil)
         } catch ConfigFileLoader.ConfigFileError.invalidCredentialFileSyntax {
             // pass
-        }
-        catch {
+        } catch {
             XCTFail("Expected invalidCredentialFileSyntax error, got \(error.localizedDescription)")
         }
     }

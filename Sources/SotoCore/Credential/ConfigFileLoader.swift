@@ -21,7 +21,7 @@ import Glibc
 import Foundation.NSString
 #endif
 
-public struct ConfigFile {
+public enum ConfigFile {
     public static let defaultCredentialsPath = "~/.aws/credentials"
     public static let defaultProfileConfigPath = "~/.aws/config"
     public static let defaultProfile = "default"
@@ -29,7 +29,7 @@ public struct ConfigFile {
 
 /// Load settings from AWS credentials and profile configuration files
 /// https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
-struct ConfigFileLoader {
+enum ConfigFileLoader {
 
     /// CLI credentials file – The credentials and config file are updated when you run the command aws configure. The credentials file is located
     /// at `~/.aws/credentials` on Linux or macOS, or at C:\Users\USERNAME\.aws\credentials on Windows. This file can contain the credential
@@ -108,7 +108,7 @@ struct ConfigFileLoader {
                         context.eventLoop.makeSucceededFuture((credentialsByteBuffer, nil))
                     }
             }
-            .flatMapErrorThrowing { (error) -> (ByteBuffer, ByteBuffer?) in
+            .flatMapErrorThrowing { _ in
                 // Throw `.noProvider` error if credential file cannot be loaded
                 throw CredentialProviderError.noProvider
             }

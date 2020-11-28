@@ -96,10 +96,6 @@ struct ConfigFileLoader {
         let fileIO = NonBlockingFileIO(threadPool: threadPool)
 
         return self.loadFile(path: credentialsFilePath, on: context.eventLoop, using: fileIO)
-            .always { _ in
-                // shutdown the threadpool async
-                threadPool.shutdownGracefully { _ in }
-            }
             .flatMap { credentialsByteBuffer in
                 return loadFile(path: configFilePath, on: context.eventLoop, using: fileIO)
                     .map {
@@ -112,6 +108,10 @@ struct ConfigFileLoader {
             }
             .flatMapThrowing { credentialsByteBuffer, configByteBuffer in
                 return try parseSharedCredentials(from: credentialsByteBuffer, configByteBuffer: configByteBuffer, for: profile)
+            }
+            .always { _ in
+                // shutdown the threadpool async
+                threadPool.shutdownGracefully { _ in }
             }
     }
 
@@ -126,7 +126,10 @@ struct ConfigFileLoader {
 
         return fileIO.openFile(path: path, eventLoop: eventLoop)
             .flatMap { handle, region in
-                fileIO.read(fileRegion: region, allocator: ByteBufferAllocator(), eventLoop: eventLoop).map { ($0, handle) }
+                fileIO.read(fileRegion: region, allocator: ByteBufferAllocator(), eventLoop: eventLoop)
+                    .map {
+                        ($0, handle)
+                    }
             }
             .flatMapThrowing { byteBuffer, handle in
                 try handle.close()
@@ -161,7 +164,7 @@ struct ConfigFileLoader {
     ///   - byteBuffer: contents of the file to parse
     ///   - profile: AWS named profile to load (usually `default`)
     /// - Returns: Combined profile settings
-    static func parseProfileConfig(from byteBuffer: ByteBuffer, for profile: String) throws -> ProfileConfig {
+    static func parseProfileConfig(from byteBuffer: ByteBuffer, for profile: String) throws -> ProfileConfig? {
         guard let content = byteBuffer.getString(at: 0, length: byteBuffer.readableBytes) else {
             throw ConfigFileError.invalidCredentialFileSyntax
         }
@@ -178,8 +181,9 @@ struct ConfigFileLoader {
         // https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html
         let loadedProfile = profile == ConfigFile.defaultProfile ? profile : "profile \(profile)"
 
+        // Gracefully fail if there is no configuration for the given profile
         guard let settings = parser.sections[loadedProfile] else {
-            throw ConfigFileError.missingProfile(loadedProfile)
+            return nil
         }
 
         // All values are optional for profile configuration

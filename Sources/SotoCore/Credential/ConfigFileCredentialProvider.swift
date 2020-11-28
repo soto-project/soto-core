@@ -18,6 +18,11 @@ import NIO
 import NIOConcurrencyHelpers
 import SotoSignerV4
 
+/// Errors occurring when loading credentials and profile configuration
+enum ConfigFileCredentialProviderError: Error, Equatable {
+    case notSupported
+}
+
 class ConfigFileCredentialProvider: CredentialProviderSelector {
     /// promise to find a credential provider
     let startupPromise: EventLoopPromise<CredentialProvider>
@@ -33,11 +38,11 @@ class ConfigFileCredentialProvider: CredentialProviderSelector {
         }
 
         let profile = profile ?? Environment["AWS_PROFILE"] ?? ConfigFile.defaultProfile
-        Self.sharedCredentials(from: credentialsFilePath, configFilePath: configFilePath, for: profile, context: context)
+        Self.credentialProvider(from: credentialsFilePath, configFilePath: configFilePath, for: profile, context: context)
             .cascade(to: self.startupPromise)
     }
 
-    /// Load shared credentials and profile configuration
+    /// Credential provider from shared credentials and profile configuration files
     ///
     /// - Parameters:
     ///   - credentialsByteBuffer: contents of AWS shared credentials file (usually `~/.aws/credentials`
@@ -45,7 +50,7 @@ class ConfigFileCredentialProvider: CredentialProviderSelector {
     ///   - profile: named profile to load (usually `default`)
     ///   - context: credential provider factory context
     /// - Returns: Credential Provider (StaticCredentials or STSAssumeRole)
-    static func sharedCredentials(
+    static func credentialProvider(
         from credentialsFilePath: String,
         configFilePath: String,
         for profile: String,
@@ -57,8 +62,8 @@ class ConfigFileCredentialProvider: CredentialProviderSelector {
             profile: profile,
             context: context
         )
-        .flatMap { credentials, config in
-            return context.eventLoop.makeSucceededFuture(sharedCredentials(from: credentials, config: config, for: profile, context: context))
+        .flatMapThrowing { credentials, config in
+            return try credentialProvider(from: credentials, config: config, context: context)
         }
     }
 
@@ -70,15 +75,13 @@ class ConfigFileCredentialProvider: CredentialProviderSelector {
     /// - Parameters:
     ///   - credentialsBuffer: contents of AWS shared credentials file (usually `~/.aws/credentials`
     ///   - configByteBuffer: contents of AWS profile configuration file (usually `~/.aws/config`
-    ///   - profile: named profile to load (usually `default`)
     ///   - context: credential provider factory context
     /// - Returns: Credential Provider (StaticCredentials or STSAssumeRole)
-    static func sharedCredentials(
+    static func credentialProvider(
         from credentials: ConfigFileLoader.ProfileCredentials,
         config: ConfigFileLoader.ProfileConfig?,
-        for profile: String,
         context: CredentialProviderFactory.Context
-    ) -> CredentialProvider {
+    ) throws -> CredentialProvider {
         let staticCredential = StaticCredential(
             accessKeyId: credentials.accessKey,
             secretAccessKey: credentials.secretAccessKey,
@@ -101,7 +104,7 @@ class ConfigFileCredentialProvider: CredentialProviderSelector {
         if let _ = credentials.roleArn ?? config?.roleArn,
            let _ = credentials.credentialSource ?? config?.credentialSource
         {
-            fatalError("'credential_source' setting not yet supported")
+            throw ConfigFileCredentialProviderError.notSupported
         }
 
         // Return static credentials

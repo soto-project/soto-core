@@ -29,38 +29,8 @@ import SotoXML
 /// to a raw `HTTPClient` Request. This is then sent to AWS. When the response from AWS is received if it is successful it is converted to a `AWSResponse`
 /// which is then decoded to generate a `AWSShape` Output object. If it is not successful then `AWSClient` will throw an `AWSErrorType`.
 public final class AWSClient {
-    /// Errors returned by AWSClient code
-    public struct ClientError: Swift.Error, Equatable {
-        enum Error {
-            case alreadyShutdown
-            case invalidURL
-            case tooMuchData
-            case notEnoughData
-        }
 
-        let error: Error
-
-        /// client has already been shutdown
-        public static var alreadyShutdown: ClientError { .init(error: .alreadyShutdown) }
-        /// URL provided to client is invalid
-        public static var invalidURL: ClientError { .init(error: .invalidURL) }
-        /// Too much data has been supplied for the Request
-        public static var tooMuchData: ClientError { .init(error: .tooMuchData) }
-        /// Not enough data has been supplied for the Request
-        public static var notEnoughData: ClientError { .init(error: .notEnoughData) }
-    }
-
-    /// Specifies how `HTTPClient` will be created and establishes lifecycle ownership.
-    public enum HTTPClientProvider {
-        /// HTTP Client will be provided by the user. Owner of this group is responsible for its lifecycle. Any HTTPClient that conforms to
-        /// `AWSHTTPClient` can be specified here including AsyncHTTPClient
-        case shared(AWSHTTPClient)
-        /// HTTP Client will be created by the client using provided EventLoopGroup. When `shutdown` is called, created `HTTPClient`
-        /// will be shut down as well.
-        case createNewWithEventLoopGroup(EventLoopGroup)
-        /// HTTP Client will be created by the client. When `shutdown` is called, created `HTTPClient` will be shut down as well.
-        case createNew
-    }
+    // MARK: Member variables
 
     /// default logger that logs nothing
     public static let loggingDisabled = Logger(label: "AWS-do-not-log", factory: { _ in SwiftLogNoOpLogHandler() })
@@ -84,7 +54,9 @@ public final class AWSClient {
 
     private let isShutdown = NIOAtomic<Bool>.makeAtomic(value: false)
 
-    /// Initialize an AWSClient struct
+    // MARK: Initialization
+
+     /// Initialize an AWSClient struct
     /// - parameters:
     ///     - credentialProvider: An object that returns valid signing credentials for request signing.
     ///     - retryPolicy: Object returning whether retries should be attempted. Possible options are NoRetry(), ExponentialRetry() or JitterRetry()
@@ -123,6 +95,8 @@ public final class AWSClient {
     deinit {
         assert(self.isShutdown.load(), "AWSClient not shut down before the deinit. Please call client.syncShutdown() when no longer needed.")
     }
+
+    // MARK: API Calls
 
     /// Shutdown client synchronously. Before an AWSClient is deleted you need to call this function or the async version `shutdown`
     /// to do a clean shutdown of the client. It cleans up CredentialProvider tasks and shuts down the HTTP client if it was created by this
@@ -182,51 +156,44 @@ public final class AWSClient {
             }
         }
     }
-}
 
-// invoker
-extension AWSClient {
-    fileprivate func invoke<Output>(
-        with serviceConfig: AWSServiceConfig,
-        eventLoop: EventLoop,
-        logger: Logger,
-        request: @escaping (EventLoop) -> EventLoopFuture<AWSHTTPResponse>,
-        processResponse: @escaping (AWSHTTPResponse) throws -> Output
-    ) -> EventLoopFuture<Output> {
-        let promise = eventLoop.makePromise(of: Output.self)
+    // MARK: Member structs/enums
 
-        func execute(attempt: Int) {
-            // execute HTTP request
-            _ = request(eventLoop)
-                .flatMapThrowing { (response) throws -> Void in
-                    // if it returns an HTTP status code outside 2xx then throw an error
-                    guard (200..<300).contains(response.status.code) else {
-                        throw self.createError(for: response, serviceConfig: serviceConfig, logger: logger)
-                    }
-                    let output = try processResponse(response)
-                    promise.succeed(output)
-                }
-                .flatMapErrorThrowing { (error) -> Void in
-                    // If I get a retry wait time for this error then attempt to retry request
-                    if case .retry(let retryTime) = self.retryPolicy.getRetryWaitTime(error: error, attempt: attempt) {
-                        logger.info("Retrying request", metadata: [
-                            "aws-retry-time": "\(Double(retryTime.nanoseconds) / 1_000_000_000)",
-                        ])
-                        // schedule task for retrying AWS request
-                        eventLoop.scheduleTask(in: retryTime) {
-                            execute(attempt: attempt + 1)
-                        }
-                    } else {
-                        promise.fail(error)
-                    }
-                }
+    /// Errors returned by AWSClient code
+    public struct ClientError: Swift.Error, Equatable {
+        enum Error {
+            case alreadyShutdown
+            case invalidURL
+            case tooMuchData
+            case notEnoughData
         }
 
-        execute(attempt: 0)
+        let error: Error
 
-        return promise.futureResult
+        /// client has already been shutdown
+        public static var alreadyShutdown: ClientError { .init(error: .alreadyShutdown) }
+        /// URL provided to client is invalid
+        public static var invalidURL: ClientError { .init(error: .invalidURL) }
+        /// Too much data has been supplied for the Request
+        public static var tooMuchData: ClientError { .init(error: .tooMuchData) }
+        /// Not enough data has been supplied for the Request
+        public static var notEnoughData: ClientError { .init(error: .notEnoughData) }
+    }
+
+    /// Specifies how `HTTPClient` will be created and establishes lifecycle ownership.
+    public enum HTTPClientProvider {
+        /// HTTP Client will be provided by the user. Owner of this group is responsible for its lifecycle. Any HTTPClient that conforms to
+        /// `AWSHTTPClient` can be specified here including AsyncHTTPClient
+        case shared(AWSHTTPClient)
+        /// HTTP Client will be created by the client using provided EventLoopGroup. When `shutdown` is called, created `HTTPClient`
+        /// will be shut down as well.
+        case createNewWithEventLoopGroup(EventLoopGroup)
+        /// HTTP Client will be created by the client. When `shutdown` is called, created `HTTPClient` will be shut down as well.
+        case createNew
     }
 }
+
+// MARK: API Calls
 
 // public facing apis
 extension AWSClient {
@@ -536,6 +503,50 @@ extension AWSClient {
             )
             return AWSRawError(rawBody: rawBodyString, context: context)
         }
+    }
+}
+
+// invoker
+extension AWSClient {
+    fileprivate func invoke<Output>(
+        with serviceConfig: AWSServiceConfig,
+        eventLoop: EventLoop,
+        logger: Logger,
+        request: @escaping (EventLoop) -> EventLoopFuture<AWSHTTPResponse>,
+        processResponse: @escaping (AWSHTTPResponse) throws -> Output
+    ) -> EventLoopFuture<Output> {
+        let promise = eventLoop.makePromise(of: Output.self)
+
+        func execute(attempt: Int) {
+            // execute HTTP request
+            _ = request(eventLoop)
+                .flatMapThrowing { (response) throws -> Void in
+                    // if it returns an HTTP status code outside 2xx then throw an error
+                    guard (200..<300).contains(response.status.code) else {
+                        throw self.createError(for: response, serviceConfig: serviceConfig, logger: logger)
+                    }
+                    let output = try processResponse(response)
+                    promise.succeed(output)
+                }
+                .flatMapErrorThrowing { (error) -> Void in
+                    // If I get a retry wait time for this error then attempt to retry request
+                    if case .retry(let retryTime) = self.retryPolicy.getRetryWaitTime(error: error, attempt: attempt) {
+                        logger.debug("Retrying request", metadata: [
+                            "aws-retry-time": "\(Double(retryTime.nanoseconds) / 1_000_000_000)",
+                        ])
+                        // schedule task for retrying AWS request
+                        eventLoop.scheduleTask(in: retryTime) {
+                            execute(attempt: attempt + 1)
+                        }
+                    } else {
+                        promise.fail(error)
+                    }
+                }
+        }
+
+        execute(attempt: 0)
+
+        return promise.futureResult
     }
 }
 

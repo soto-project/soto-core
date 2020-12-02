@@ -15,6 +15,7 @@
 import struct Foundation.URL
 import NIO
 
+/// Protocol for services objects. Contains a client to communicate with AWS and config for defining how to communicate
 public protocol AWSService {
     /// client used to communicate with AWS
     var client: AWSClient { get }

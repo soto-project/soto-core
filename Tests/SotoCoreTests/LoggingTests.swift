@@ -151,7 +151,7 @@ class LoggingTests: XCTestCase {
 
         XCTAssertNoThrow(_ = try response.wait())
         XCTAssertEqual(logCollection.filter(metadata: "aws-retry-time").first?.message, "Retrying request")
-        XCTAssertEqual(logCollection.filter(metadata: "aws-retry-time").first?.level, .info)
+        XCTAssertEqual(logCollection.filter(metadata: "aws-retry-time").first?.level, .debug)
     }
 
     func testNoCredentialProvider() {

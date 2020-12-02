@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+import struct Foundation.UUID
 import NIO
 @testable import SotoCore
 import SotoTestUtils
@@ -44,7 +45,8 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         let provider = try? ConfigFileCredentialProvider.credentialProvider(
             from: credentials,
             config: nil,
-            context: context
+            context: context,
+            endpoint: nil
         )
         XCTAssertEqual((provider as? StaticCredential)?.accessKeyId, "foo")
         XCTAssertEqual((provider as? StaticCredential)?.secretAccessKey, "bar")
@@ -69,7 +71,8 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         let provider = try? ConfigFileCredentialProvider.credentialProvider(
             from: credentials,
             config: nil,
-            context: context
+            context: context,
+            endpoint: nil
         )
         XCTAssertTrue(provider is STSAssumeRoleCredentialProvider)
         XCTAssertEqual((provider as? STSAssumeRoleCredentialProvider)?.request.roleArn, "arn")
@@ -95,7 +98,8 @@ class ConfigFileCredentialProviderTests: XCTestCase {
             _ = try ConfigFileCredentialProvider.credentialProvider(
                 from: credentials,
                 config: nil,
-                context: context
+                context: context,
+                endpoint: nil
             )
         } catch {
             XCTAssertEqual(error as? CredentialProviderError, .notSupported)
@@ -184,5 +188,77 @@ class ConfigFileCredentialProviderTests: XCTestCase {
     func testConfigFileShutdown() {
         let client = createAWSClient(credentialProvider: .configFile())
         XCTAssertNoThrow(try client.syncShutdown())
+    }
+
+    // MARK: - Role ARN Credential
+
+    func testRoleARNSourceProfile() throws {
+        let profile = "user1"
+
+        // Prepare mock STSAssumeRole credentials
+        let stsCredentials = STSCredentials(
+            accessKeyId: "STSACCESSKEYID",
+            expiration: Date().addingTimeInterval(60),
+            secretAccessKey: "STSSECRETACCESSKEY",
+            sessionToken: "STSSESSIONTOKEN"
+        )
+
+        // Prepare credentials file
+        let credentialsFile = """
+        [default]
+        aws_access_key_id = DEFAULTACCESSKEY
+        aws_secret_access_key=DEFAULTSECRETACCESSKEY
+        aws_session_token =TOKENFOO
+
+        [\(profile)]
+        role_arn       = arn:aws:iam::000000000000:role/test-sts-assume-role
+        source_profile = default
+        color          = ff0000
+        """
+        let credentialsFilePath = "credentials-" + UUID().uuidString
+        try credentialsFile.write(toFile: credentialsFilePath, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(atPath: credentialsFilePath) }
+
+        // Prepare config file
+        let configFile = """
+        region=us-west-2
+        role_session_name =testRoleARNSourceProfile
+        """
+        let configFilePath = "config-" + UUID().uuidString
+        try configFile.write(toFile: configFilePath, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(atPath: configFilePath) }
+
+        // Prepare test server and AWS client
+        let testServer = AWSTestServer(serviceProtocol: .xml)
+        let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+
+        // Here we use `.custom` provider factory, since we need to inject the testServer endpoint
+        let client = createAWSClient(credentialProvider: .custom({ (context) -> CredentialProvider in
+            ConfigFileCredentialProvider(
+                credentialsFilePath: credentialsFilePath,
+                configFilePath: configFilePath,
+                profile: profile,
+                context: context,
+                endpoint: testServer.address
+            )
+        }), httpClientProvider: .shared(httpClient))
+
+        try testServer.processRaw { _ in
+            let output = STSAssumeRoleResponse(credentials: stsCredentials)
+            let xml = try XMLEncoder().encode(output)
+            let byteBuffer = ByteBufferAllocator().buffer(string: xml.xmlString)
+            let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
+            return .result(response)
+        }
+
+        let credentials = try client.credentialProvider.getCredential(on: client.eventLoopGroup.next(),
+                                                                      logger: TestEnvironment.logger).wait()
+        XCTAssertEqual(credentials.accessKeyId, stsCredentials.accessKeyId)
+        XCTAssertEqual(credentials.secretAccessKey, stsCredentials.secretAccessKey)
+
+        try httpClient.syncShutdown()
+        try testServer.stop()
+        try client.syncShutdown()
+        try httpClient.syncShutdown()
     }
 }

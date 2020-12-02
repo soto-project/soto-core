@@ -130,7 +130,6 @@ struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
                 guard let credentials = response.credentials else {
                     throw CredentialProviderError.noProvider
                 }
-                _ = self.shutdown(on: eventLoop)
                 return credentials
             }
     }

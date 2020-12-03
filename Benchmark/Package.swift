@@ -7,7 +7,7 @@ let package = Package(
     name: "soto-benchmark",
     dependencies: [
         .package(url: "https://github.com/soto-project/soto-core", .branch("main")),
-        .package(name: "Benchmark", url: "https://github.com/google/swift-benchmark", .branch("master")),
+        .package(name: "Benchmark", url: "https://github.com/google/swift-benchmark", from: "0.1.0"),
     ],
     targets: [
         .target(name: "soto-benchmark", dependencies: [

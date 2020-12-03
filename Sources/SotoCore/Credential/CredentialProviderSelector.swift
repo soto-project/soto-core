@@ -17,6 +17,20 @@ import NIO
 import NIOConcurrencyHelpers
 import SotoSignerV4
 
+/// Protocol for CredentialProvider that uses an internal CredentialProvider
+///
+/// When conforming to this protocol once you ahve the internal provider it should be supplying to
+/// the startupPromise and you should set `internalProvider` when the setupPromise
+/// result is available.
+/// ```
+/// init(providers: [CredentialProviderFactory], context: CredentialProviderFactory.Context) {
+///    self.startupPromise = context.eventLoop.makePromise(of: CredentialProvider.self)
+///    self.startupPromise.futureResult.whenSuccess { result in
+///        self.internalProvider = result
+///    }
+///    self.setupInternalProvider(providers: providers, context: context)
+///}
+/// ```
 protocol CredentialProviderSelector: CredentialProvider, AnyObject {
     /// promise to find a credential provider
     var startupPromise: EventLoopPromise<CredentialProvider> { get }
@@ -39,7 +53,7 @@ extension CredentialProviderSelector {
         }
     }
 
-    func shudown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
+    func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
         return self.startupPromise.futureResult.flatMap { provider in
             provider.shutdown(on: eventLoop)
         }.hop(to: eventLoop)

@@ -15,6 +15,7 @@
 import AsyncHTTPClient
 import Logging
 import NIO
+import NIOConcurrencyHelpers
 @testable import SotoCore
 import SotoTestUtils
 import XCTest
@@ -99,5 +100,42 @@ class CredentialProviderTests: XCTestCase {
             print("\(error)")
             XCTAssertEqual(error as? CredentialProviderError, .noProvider)
         }
+    }
+    
+    func testCredentialSelectorShutdown() {
+        class TestCredentialProvider: CredentialProvider {
+            var active = true
+
+            func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
+                return eventLoop.makeSucceededFuture(StaticCredential(accessKeyId: "", secretAccessKey: ""))
+            }
+            
+            func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
+                self.active = false
+                return eventLoop.makeSucceededFuture(())
+            }
+            
+            deinit {
+                XCTAssertEqual(active, false)
+            }
+        }
+        class CredentialProviderOwner: CredentialProviderSelector {
+            /// promise to find a credential provider
+            let startupPromise: EventLoopPromise<CredentialProvider>
+            let lock = Lock()
+            var _internalProvider: CredentialProvider?
+
+            init(eventLoop: EventLoop) {
+                self.startupPromise = eventLoop.makePromise(of: CredentialProvider.self)
+                self.startupPromise.futureResult.whenSuccess { result in
+                    self.internalProvider = result
+                }
+                self.startupPromise.succeed(TestCredentialProvider())
+            }
+        }
+        let elg = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        defer { XCTAssertNoThrow(try elg.syncShutdownGracefully())}
+        let provider = CredentialProviderOwner(eventLoop: elg.next())
+        XCTAssertNoThrow(try provider.shutdown(on: elg.next()).wait())
     }
 }

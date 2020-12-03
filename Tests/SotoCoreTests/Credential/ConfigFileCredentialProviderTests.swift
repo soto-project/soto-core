@@ -243,6 +243,8 @@ class ConfigFileCredentialProviderTests: XCTestCase {
             )
         }), httpClientProvider: .shared(httpClient))
 
+        let futureCredentials = client.credentialProvider.getCredential(on: client.eventLoopGroup.next(),
+                                                                        logger: TestEnvironment.logger)
         try testServer.processRaw { _ in
             let output = STSAssumeRoleResponse(credentials: stsCredentials)
             let xml = try XMLEncoder().encode(output)
@@ -251,12 +253,11 @@ class ConfigFileCredentialProviderTests: XCTestCase {
             return .result(response)
         }
 
-        let credentials = try client.credentialProvider.getCredential(on: client.eventLoopGroup.next(),
-                                                                      logger: TestEnvironment.logger).wait()
+        let credentials = try futureCredentials.wait()
+
         XCTAssertEqual(credentials.accessKeyId, stsCredentials.accessKeyId)
         XCTAssertEqual(credentials.secretAccessKey, stsCredentials.secretAccessKey)
 
-        try httpClient.syncShutdown()
         try testServer.stop()
         try client.syncShutdown()
         try httpClient.syncShutdown()

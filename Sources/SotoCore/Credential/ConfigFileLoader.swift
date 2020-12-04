@@ -30,12 +30,19 @@ public enum ConfigFile {
 /// Load settings from AWS credentials and profile configuration files
 /// https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
 enum ConfigFileLoader {
-    /// CLI credentials file – The credentials and config file are updated when you run the command aws configure. The credentials file is located
+    /// Specific type of credentials loaded from disk
+    enum SharedCredentials: Equatable {
+        case staticCredential(credential: StaticCredential)
+        case assumeRole(roleArn: String, sessionName: String, region: Region?, sourceCredential: StaticCredential)
+        case credentialSource(roleArn: String, source: CredentialSource)
+    }
+
+    /// Credentials file – The credentials and config file are updated when you run the command aws configure. The credentials file is located
     /// at `~/.aws/credentials` on Linux or macOS, or at C:\Users\USERNAME\.aws\credentials on Windows. This file can contain the credential
     /// details for the default profile and any named profiles.
     struct ProfileCredentials: Equatable {
-        let accessKey: String
-        let secretAccessKey: String
+        let accessKey: String?
+        let secretAccessKey: String?
         let sessionToken: String?
         let roleArn: String?
         let roleSessionName: String?
@@ -64,12 +71,12 @@ enum ConfigFileLoader {
     }
 
     /// Errors occurring when loading credentials and profile configuration
-    ///
+    /// - invalidCredentialFile: If credentials could not be loaded from disk because of invalid configuration or syntax
     /// - missingProfile: If the profile requested was not found
     /// - missingAccessKeyId: If the access key ID was not found
     /// - missingSecretAccessKey: If the secret access key was not found
     enum ConfigFileError: Error, Equatable {
-        case invalidCredentialFileSyntax
+        case invalidCredentialFile
         case missingProfile(String)
         case missingAccessKeyId
         case missingSecretAccessKey
@@ -83,13 +90,13 @@ enum ConfigFileLoader {
     ///   - configFilePath: file path for AWS config file
     ///   - profile: named profile to load
     ///   - context: credential provider factory context
-    /// - Returns: Promise of a Credential Provider (StaticCredentials or STSAssumeRole)
+    /// - Returns: Promise of SharedCredentials
     static func loadSharedCredentials(
         credentialsFilePath: String,
         configFilePath: String,
         profile: String,
         context: CredentialProviderFactory.Context
-    ) -> EventLoopFuture<(ProfileCredentials, ProfileConfig?)> {
+    ) -> EventLoopFuture<SharedCredentials> {
         let threadPool = NIOThreadPool(numberOfThreads: 1)
         threadPool.start()
         let fileIO = NonBlockingFileIO(threadPool: threadPool)
@@ -144,23 +151,54 @@ enum ConfigFileLoader {
 
     // MARK: - Byte Buffer parsing (INIParser)
 
-    /// Parse credentials from files (passed in as byte-buffers)
+    /// Parse credentials from files (passed in as byte-buffers).
+    /// This method ensures credentials are valid according to AWS documentation.
     ///
-    /// Credentials file settings have precedence over profile configuration settings
+    /// Credentials file settings have precedence over profile configuration settings.
     /// https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-precedence
     ///
     /// - Parameters:
-    ///   - credentialsBuffer: contents of AWS shared credentials file (usually `~/.aws/credentials`
-    ///   - configByteBuffer: contents of AWS profile configuration file (usually `~/.aws/config`
+    ///   - credentialsBuffer: contents of AWS shared credentials file (usually `~/.aws/credentials`)
+    ///   - configByteBuffer: contents of AWS profile configuration file (usually `~/.aws/config`)
     ///   - profile: named profile to load (optional)
-    /// - Returns: Promise of a Credential Provider (StaticCredentials or STSAssumeRole)
-    static func parseSharedCredentials(from credentialsByteBuffer: ByteBuffer, configByteBuffer: ByteBuffer?, for profile: String) throws -> (ProfileCredentials, ProfileConfig?) {
-        var config: ProfileConfig?
-        if let byteBuffer = configByteBuffer {
-            config = try self.parseProfileConfig(from: byteBuffer, for: profile)
-        }
+    /// - Returns: Parsed SharedCredentials
+    static func parseSharedCredentials(from credentialsByteBuffer: ByteBuffer, configByteBuffer: ByteBuffer?, for profile: String) throws -> SharedCredentials {
+        let config = try configByteBuffer.flatMap { try parseProfileConfig(from: $0, for: profile) }
         let credentials = try parseCredentials(from: credentialsByteBuffer, for: profile, sourceProfile: config?.sourceProfile)
-        return (credentials, config)
+
+        // If `role_arn` is defined, check for source profile or credential source
+        if let roleArn = credentials.roleArn ?? config?.roleArn {
+            // If `source_profile` is defined, temporary credentials must be loaded via STS AssumeRole operation
+            if let _ = credentials.sourceProfile ?? config?.sourceProfile {
+                guard let accessKey = credentials.accessKey else {
+                    throw ConfigFileError.missingAccessKeyId
+                }
+                guard let secretAccessKey = credentials.secretAccessKey else {
+                    throw ConfigFileError.missingSecretAccessKey
+                }
+                let sessionName = credentials.roleSessionName ?? config?.roleSessionName ?? UUID().uuidString
+                let region = config?.region ?? .useast1
+                let sourceCredential = StaticCredential(accessKeyId: accessKey, secretAccessKey: secretAccessKey, sessionToken: credentials.sessionToken)
+                return .assumeRole(roleArn: roleArn, sessionName: sessionName, region: region, sourceCredential: sourceCredential)
+            }
+            // If `credental_source` is defined, temporary credentials must be loaded from source
+            else if let credentialSource = credentials.credentialSource ?? config?.credentialSource
+            {
+                return .credentialSource(roleArn: roleArn, source: credentialSource)
+            }
+            // Invalid configuration
+            throw ConfigFileError.invalidCredentialFile
+        }
+
+        // Return static credentials
+        guard let accessKey = credentials.accessKey else {
+            throw ConfigFileError.missingAccessKeyId
+        }
+        guard let secretAccessKey = credentials.secretAccessKey else {
+            throw ConfigFileError.missingSecretAccessKey
+        }
+        let credential = StaticCredential(accessKeyId: accessKey, secretAccessKey: secretAccessKey, sessionToken: credentials.sessionToken)
+        return .staticCredential(credential: credential)
     }
 
     /// Parse profile configuraton from a file (passed in as byte-buffer), usually `~/.aws/config`
@@ -170,14 +208,9 @@ enum ConfigFileLoader {
     ///   - profile: AWS named profile to load (usually `default`)
     /// - Returns: Combined profile settings
     static func parseProfileConfig(from byteBuffer: ByteBuffer, for profile: String) throws -> ProfileConfig? {
-        guard let content = byteBuffer.getString(at: 0, length: byteBuffer.readableBytes) else {
-            throw ConfigFileError.invalidCredentialFileSyntax
-        }
-        let parser: INIParser
-        do {
-            parser = try INIParser(content)
-        } catch INIParser.Error.invalidSyntax {
-            throw ConfigFileError.invalidCredentialFileSyntax
+        guard let content = byteBuffer.getString(at: 0, length: byteBuffer.readableBytes),
+              let parser = try? INIParser(content) else {
+            throw ConfigFileError.invalidCredentialFile
         }
 
         // The credentials file uses a different naming format than the CLI config file for named profiles. Include
@@ -203,31 +236,24 @@ enum ConfigFileLoader {
 
     /// Parse profile credentials from a file (passed in as byte-buffer), usually `~/.aws/credentials`
     ///
-    /// If `source_profile` is passed in, or found in the settings, credentials will be loaded from the source profile for using with STS Assume Role.
-    ///
     /// - Parameters:
     ///   - byteBuffer: contents of the file to parse
     ///   - profile: AWS named profile to load (usually `default`)
     ///   - sourceProfile: specifies a named profile with long-term credentials that the AWS CLI can use to assume a role that you specified with the `role_arn` parameter.
     /// - Returns: Combined profile credentials
     static func parseCredentials(from byteBuffer: ByteBuffer, for profile: String, sourceProfile: String?) throws -> ProfileCredentials {
-        guard let content = byteBuffer.getString(at: 0, length: byteBuffer.readableBytes) else {
-            throw ConfigFileError.invalidCredentialFileSyntax
-        }
-        var parser: INIParser
-        do {
-            parser = try INIParser(content)
-        } catch INIParser.Error.invalidSyntax {
-            throw ConfigFileError.invalidCredentialFileSyntax
+        guard let content = byteBuffer.getString(at: 0, length: byteBuffer.readableBytes),
+              let parser = try? INIParser(content) else {
+            throw ConfigFileError.invalidCredentialFile
         }
 
         guard let settings = parser.sections[profile] else {
             throw ConfigFileError.missingProfile(profile)
         }
 
-        var profileAccessKey = settings["aws_access_key_id"]
-        var profileSecretAccessKey = settings["aws_secret_access_key"]
-        var profileSessionToken = settings["aws_session_token"]
+        var accessKey = settings["aws_access_key_id"]
+        var secretAccessKey = settings["aws_secret_access_key"]
+        var sessionToken = settings["aws_session_token"]
 
         // If a source profile is indicated, load credentials for STS Assume Role operation.
         // Credentials file settings have precedence over profile configuration settings.
@@ -235,22 +261,15 @@ enum ConfigFileLoader {
             guard let sourceSettings = parser.sections[sourceProfile] else {
                 throw ConfigFileError.missingProfile(sourceProfile)
             }
-            profileAccessKey = sourceSettings["aws_access_key_id"]
-            profileSecretAccessKey = sourceSettings["aws_secret_access_key"]
-            profileSessionToken = sourceSettings["aws_session_token"]
-        }
-
-        guard let accessKey = profileAccessKey else {
-            throw ConfigFileError.missingAccessKeyId
-        }
-        guard let secretAccessKey = profileSecretAccessKey else {
-            throw ConfigFileError.missingSecretAccessKey
+            accessKey = sourceSettings["aws_access_key_id"]
+            secretAccessKey = sourceSettings["aws_secret_access_key"]
+            sessionToken = sourceSettings["aws_session_token"]
         }
 
         return ProfileCredentials(
             accessKey: accessKey,
             secretAccessKey: secretAccessKey,
-            sessionToken: profileSessionToken,
+            sessionToken: sessionToken,
             roleArn: settings["role_arn"],
             roleSessionName: settings["role_session_name"],
             sourceProfile: sourceProfile ?? settings["source_profile"],

@@ -55,16 +55,20 @@ class ConfigFileLoadersTests: XCTestCase {
             try? eventLoopGroup.syncShutdownGracefully()
         }
 
-        let (credentials, config) = try ConfigFileLoader.loadSharedCredentials(
+        let sharedCredentials = try ConfigFileLoader.loadSharedCredentials(
             credentialsFilePath: credentialsPath,
             configFilePath: "/dev/null",
             profile: profile,
             context: context
         ).wait()
 
-        XCTAssertEqual(credentials.accessKey, accessKey)
-        XCTAssertEqual(credentials.secretAccessKey, secretKey)
-        XCTAssertNil(config)
+        switch sharedCredentials {
+        case let .staticCredential(credentials):
+            XCTAssertEqual(credentials.accessKeyId, accessKey)
+            XCTAssertEqual(credentials.secretAccessKey, secretKey)
+        default:
+            XCTFail("Expected static credentials")
+        }
     }
 
     func testLoadFileCredentialsAndConfig() throws {
@@ -99,19 +103,232 @@ class ConfigFileLoadersTests: XCTestCase {
             try? eventLoopGroup.syncShutdownGracefully()
         }
 
-        let (credentials, config) = try ConfigFileLoader.loadSharedCredentials(
+        let sharedCredentials = try ConfigFileLoader.loadSharedCredentials(
             credentialsFilePath: credentialsPath,
             configFilePath: configPath,
             profile: profile,
             context: context
         ).wait()
 
-        XCTAssertEqual(credentials.accessKey, accessKey)
-        XCTAssertEqual(credentials.secretAccessKey, secretKey)
-        XCTAssertEqual(credentials.roleArn, roleArn)
-        XCTAssertEqual(credentials.sourceProfile, sourceProfile)
-        XCTAssertEqual(config?.roleSessionName, sessionName)
-        XCTAssertEqual(config?.region, .uswest1)
+        switch sharedCredentials {
+        case let .assumeRole(aRoleArn, aSessionName, region, sourceCredential):
+            XCTAssertEqual(sourceCredential.accessKeyId, accessKey)
+            XCTAssertEqual(sourceCredential.secretAccessKey, secretKey)
+            XCTAssertEqual(aRoleArn, roleArn)
+            XCTAssertEqual(aSessionName, sessionName)
+            XCTAssertEqual(region, .uswest1)
+        default:
+            XCTFail("Expected STS Assume Role")
+        }
+    }
+
+    func testLoadFileConfigNotFound() throws {
+        let profile = "marketingadmin"
+        let roleArn = "arn:aws:iam::123456789012:role/marketingadminrole"
+        let credentialsFile = """
+        [\(profile)]
+        role_arn = \(roleArn)
+        credential_source = Ec2InstanceMetadata
+        """
+
+        let credentialsPath = try save(content: credentialsFile, prefix: "credentials")
+        let (context, eventLoopGroup, httpClient) = try makeContext()
+
+        defer {
+            try? FileManager.default.removeItem(atPath: credentialsPath)
+            try? httpClient.syncShutdown()
+            try? eventLoopGroup.syncShutdownGracefully()
+        }
+
+        let sharedCredentials = try ConfigFileLoader.loadSharedCredentials(
+            credentialsFilePath: credentialsPath,
+            configFilePath: "non-existing-file-path",
+            profile: profile,
+            context: context
+        ).wait()
+
+        switch sharedCredentials {
+        case let .credentialSource(aRoleArn, source):
+            XCTAssertEqual(aRoleArn, roleArn)
+            XCTAssertEqual(source, .ec2Instance)
+        default:
+            XCTFail("Expected credential source")
+        }
+    }
+
+    func testLoadFileMissingAccessKey() throws {
+        let secretKey = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+        let profile = ConfigFile.defaultProfile
+        let credentialsFile = """
+        [\(profile)]
+        aws_secret_access_key= \(secretKey)
+        """
+
+        let credentialsPath = try save(content: credentialsFile, prefix: "credentials")
+        let (context, eventLoopGroup, httpClient) = try makeContext()
+
+        defer {
+            try? FileManager.default.removeItem(atPath: credentialsPath)
+            try? httpClient.syncShutdown()
+            try? eventLoopGroup.syncShutdownGracefully()
+        }
+
+        do {
+            _ = try ConfigFileLoader.loadSharedCredentials(
+                credentialsFilePath: credentialsPath,
+                configFilePath: "/dev/null",
+                profile: profile,
+                context: context
+            ).wait()
+        }
+        catch ConfigFileLoader.ConfigFileError.missingAccessKeyId {
+            // Pass
+        }
+        catch {
+            XCTFail("Expected ConfigFileLoader.ConfigFileError.missingAccessKeyId, got \(error.localizedDescription)")
+        }
+    }
+
+    func testLoadFileMissingSecretKey() throws {
+        let accessKey = "AKIAIOSFODNN7EXAMPLE"
+        let profile = ConfigFile.defaultProfile
+        let credentialsFile = """
+        [\(profile)]
+        aws_access_key_id = \(accessKey)
+        """
+
+        let credentialsPath = try save(content: credentialsFile, prefix: "credentials")
+        let (context, eventLoopGroup, httpClient) = try makeContext()
+
+        defer {
+            try? FileManager.default.removeItem(atPath: credentialsPath)
+            try? httpClient.syncShutdown()
+            try? eventLoopGroup.syncShutdownGracefully()
+        }
+
+        do {
+            _ = try ConfigFileLoader.loadSharedCredentials(
+                credentialsFilePath: credentialsPath,
+                configFilePath: "/dev/null",
+                profile: profile,
+                context: context
+            ).wait()
+        }
+        catch ConfigFileLoader.ConfigFileError.missingSecretAccessKey {
+            // Pass
+        }
+        catch {
+            XCTFail("Expected ConfigFileLoader.ConfigFileError.missingSecretAccessKey, got \(error.localizedDescription)")
+        }
+    }
+
+    func testLoadFileMissingSourceAccessKey() throws {
+        let secretKey = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+        let profile = "marketingadmin"
+        let sourceProfile = ConfigFile.defaultProfile
+        let roleArn = "arn:aws:iam::123456789012:role/marketingadminrole"
+        let credentialsFile = """
+        [\(sourceProfile)]
+        aws_secret_access_key=\(secretKey)
+        [\(profile)]
+        role_arn = \(roleArn)
+        source_profile = \(sourceProfile)
+        """
+
+        let credentialsPath = try save(content: credentialsFile, prefix: "credentials")
+        let (context, eventLoopGroup, httpClient) = try makeContext()
+
+        defer {
+            try? FileManager.default.removeItem(atPath: credentialsPath)
+            try? httpClient.syncShutdown()
+            try? eventLoopGroup.syncShutdownGracefully()
+        }
+
+        do {
+            _ = try ConfigFileLoader.loadSharedCredentials(
+                credentialsFilePath: credentialsPath,
+                configFilePath: "/dev/null",
+                profile: profile,
+                context: context
+            ).wait()
+        }
+        catch ConfigFileLoader.ConfigFileError.missingAccessKeyId {
+            // Pass
+        }
+        catch {
+            XCTFail("Expected ConfigFileLoader.ConfigFileError.missingAccessKeyId, got \(error.localizedDescription)")
+        }
+    }
+
+    func testLoadFileMissingSourceSecretKey() throws {
+        let accessKey = "AKIAIOSFODNN7EXAMPLE"
+        let profile = "marketingadmin"
+        let sourceProfile = ConfigFile.defaultProfile
+        let roleArn = "arn:aws:iam::123456789012:role/marketingadminrole"
+        let credentialsFile = """
+        [\(sourceProfile)]
+        aws_access_key_id = \(accessKey)
+        [\(profile)]
+        role_arn = \(roleArn)
+        source_profile = \(sourceProfile)
+        """
+
+        let credentialsPath = try save(content: credentialsFile, prefix: "credentials")
+        let (context, eventLoopGroup, httpClient) = try makeContext()
+
+        defer {
+            try? FileManager.default.removeItem(atPath: credentialsPath)
+            try? httpClient.syncShutdown()
+            try? eventLoopGroup.syncShutdownGracefully()
+        }
+
+        do {
+            _ = try ConfigFileLoader.loadSharedCredentials(
+                credentialsFilePath: credentialsPath,
+                configFilePath: "/dev/null",
+                profile: profile,
+                context: context
+            ).wait()
+        }
+        catch ConfigFileLoader.ConfigFileError.missingSecretAccessKey {
+            // Pass
+        }
+        catch {
+            XCTFail("Expected ConfigFileLoader.ConfigFileError.missingSecretAccessKey, got \(error.localizedDescription)")
+        }
+    }
+
+    func testLoadFileRoleArnOnly() throws {
+        let profile = "marketingadmin"
+        let roleArn = "arn:aws:iam::123456789012:role/marketingadminrole"
+        let credentialsFile = """
+        [\(profile)]
+        role_arn = \(roleArn)
+        """
+
+        let credentialsPath = try save(content: credentialsFile, prefix: "credentials")
+        let (context, eventLoopGroup, httpClient) = try makeContext()
+
+        defer {
+            try? FileManager.default.removeItem(atPath: credentialsPath)
+            try? httpClient.syncShutdown()
+            try? eventLoopGroup.syncShutdownGracefully()
+        }
+
+        do {
+            _ = try ConfigFileLoader.loadSharedCredentials(
+                credentialsFilePath: credentialsPath,
+                configFilePath: "/dev/null",
+                profile: profile,
+                context: context
+            ).wait()
+        }
+        catch ConfigFileLoader.ConfigFileError.invalidCredentialFile {
+            // Pass
+        }
+        catch {
+            XCTFail("Expected ConfigFileLoader.ConfigFileError.invalidCredentialFile, got \(error.localizedDescription)")
+        }
     }
 
     // MARK: - Config File parsing
@@ -223,7 +440,7 @@ class ConfigFileLoadersTests: XCTestCase {
 
         do {
             _ = try ConfigFileLoader.parseProfileConfig(from: byteBuffer, for: ConfigFile.defaultProfile)
-        } catch ConfigFileLoader.ConfigFileError.invalidCredentialFileSyntax {
+        } catch ConfigFileLoader.ConfigFileError.invalidCredentialFile {
             // pass
         } catch {
             XCTFail("Expected invalidCredentialFileSyntax error, got \(error.localizedDescription)")
@@ -484,7 +701,7 @@ class ConfigFileLoadersTests: XCTestCase {
 
         do {
             _ = try ConfigFileLoader.parseCredentials(from: byteBuffer, for: ConfigFile.defaultProfile, sourceProfile: nil)
-        } catch ConfigFileLoader.ConfigFileError.invalidCredentialFileSyntax {
+        } catch ConfigFileLoader.ConfigFileError.invalidCredentialFile {
             // pass
         } catch {
             XCTFail("Expected invalidCredentialFileSyntax error, got \(error.localizedDescription)")

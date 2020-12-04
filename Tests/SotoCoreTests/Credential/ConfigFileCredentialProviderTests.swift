@@ -30,21 +30,12 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         return (.init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger), eventLoopGroup, httpClient)
     }
 
-    func testCredentialProvider() {
-        let credentials = ConfigFileLoader.ProfileCredentials(
-            accessKey: "foo",
-            secretAccessKey: "bar",
-            sessionToken: nil,
-            roleArn: nil,
-            roleSessionName: nil,
-            sourceProfile: nil,
-            credentialSource: nil
-        )
+    func testCredentialProviderStatic() {
+        let credentials = ConfigFileLoader.SharedCredentials.staticCredential(credential: StaticCredential(accessKeyId: "foo", secretAccessKey: "bar"))
         let (context, eventLoopGroup, httpClient) = self.makeContext()
 
         let provider = try? ConfigFileCredentialProvider.credentialProvider(
             from: credentials,
-            config: nil,
             context: context,
             endpoint: nil
         )
@@ -57,20 +48,16 @@ class ConfigFileCredentialProviderTests: XCTestCase {
     }
 
     func testCredentialProviderSTSAssumeRole() {
-        let credentials = ConfigFileLoader.ProfileCredentials(
-            accessKey: "foo",
-            secretAccessKey: "bar",
-            sessionToken: nil,
+        let credentials = ConfigFileLoader.SharedCredentials.assumeRole(
             roleArn: "arn",
-            roleSessionName: nil,
-            sourceProfile: "baz",
-            credentialSource: nil
+            sessionName: "baz",
+            region: nil,
+            sourceCredential: StaticCredential(accessKeyId: "foo", secretAccessKey: "bar")
         )
         let (context, eventLoopGroup, httpClient) = self.makeContext()
 
         let provider = try? ConfigFileCredentialProvider.credentialProvider(
             from: credentials,
-            config: nil,
             context: context,
             endpoint: nil
         )
@@ -83,21 +70,12 @@ class ConfigFileCredentialProviderTests: XCTestCase {
     }
 
     func testCredentialProviderCredentialSource() {
-        let credentials = ConfigFileLoader.ProfileCredentials(
-            accessKey: "foo",
-            secretAccessKey: "bar",
-            sessionToken: nil,
-            roleArn: "arn",
-            roleSessionName: nil,
-            sourceProfile: nil,
-            credentialSource: .ec2Instance
-        )
+        let credentials = ConfigFileLoader.SharedCredentials.credentialSource(roleArn: "arn", source: .ec2Instance)
         let (context, eventLoopGroup, httpClient) = self.makeContext()
 
         do {
             _ = try ConfigFileCredentialProvider.credentialProvider(
                 from: credentials,
-                config: nil,
                 context: context,
                 endpoint: nil
             )

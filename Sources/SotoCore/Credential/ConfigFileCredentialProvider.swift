@@ -46,8 +46,8 @@ class ConfigFileCredentialProvider: CredentialProviderSelector {
     /// Credential provider from shared credentials and profile configuration files
     ///
     /// - Parameters:
-    ///   - credentialsByteBuffer: contents of AWS shared credentials file (usually `~/.aws/credentials`
-    ///   - configByteBuffer: contents of AWS profile configuration file (usually `~/.aws/config`
+    ///   - credentialsByteBuffer: contents of AWS shared credentials file (usually `~/.aws/credentials`)
+    ///   - configByteBuffer: contents of AWS profile configuration file (usually `~/.aws/config`)
     ///   - profile: named profile to load (usually `default`)
     ///   - context: credential provider factory context
     ///   - endpoint: STS Assume role endpoint (for unit testing)
@@ -65,8 +65,8 @@ class ConfigFileCredentialProvider: CredentialProviderSelector {
             profile: profile,
             context: context
         )
-        .flatMapThrowing { credentials, config in
-            return try credentialProvider(from: credentials, config: config, context: context, endpoint: endpoint)
+        .flatMapThrowing { sharedCredentials in
+            return try credentialProvider(from: sharedCredentials, context: context, endpoint: endpoint)
         }
     }
 
@@ -76,26 +76,26 @@ class ConfigFileCredentialProvider: CredentialProviderSelector {
     /// https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-precedence
     ///
     /// - Parameters:
-    ///   - credentials: credentials loaded from file (usually `~/.aws/credentials`
-    ///   - config: profile configuration loaded from file (usually `~/.aws/config`
+    ///   - sharedCredentials: combined credentials loaded from disl (usually `~/.aws/credentials` and `~/.aws/config`)
     ///   - context: credential provider factory context
     ///   - endpoint: STS Assume role endpoint (for unit testing)
     /// - Returns: Credential Provider (StaticCredentials or STSAssumeRole)
     static func credentialProvider(
-        from credentials: ConfigFileLoader.ProfileCredentials,
-        config: ConfigFileLoader.ProfileConfig?,
+        from sharedCredentials: ConfigFileLoader.SharedCredentials,
         context: CredentialProviderFactory.Context,
         endpoint: String?
     ) throws -> CredentialProvider {
-        // If `role_arn` and `sourcer_profile` are defined, temporary credentials must be loaded via STS Assume Role operation
-        if let roleArn = credentials.roleArn ?? config?.roleArn,
-           let _ = credentials.sourceProfile ?? config?.sourceProfile
-        {
-            // Proceed with STSAssumeRole operation
-            let sessionName = credentials.roleSessionName ?? config?.roleSessionName ?? UUID().uuidString
+        switch sharedCredentials {
+        case let .staticCredential(staticCredential):
+            return staticCredential
+        case let .assumeRole(roleArn, sessionName, region, sourceCredential):
             let request = STSAssumeRoleRequest(roleArn: roleArn, roleSessionName: sessionName)
-            let region = config?.region ?? .useast1
-            let provider = CredentialProviderFactory.static(accessKeyId: credentials.accessKey, secretAccessKey: credentials.secretAccessKey, sessionToken: credentials.sessionToken)
+            let provider = CredentialProviderFactory.static(
+                accessKeyId: sourceCredential.accessKeyId,
+                secretAccessKey: sourceCredential.secretAccessKey,
+                sessionToken: sourceCredential.sessionToken
+            )
+            let region = region ?? .useast1
             return STSAssumeRoleCredentialProvider(
                 request: request,
                 credentialProvider: provider,
@@ -103,16 +103,8 @@ class ConfigFileCredentialProvider: CredentialProviderSelector {
                 httpClient: context.httpClient,
                 endpoint: endpoint
             )
-        }
-
-        // If `role_arn` and `credental_source` are defined, temporary credentials must be loaded from source
-        if let _ = credentials.roleArn ?? config?.roleArn,
-           let _ = credentials.credentialSource ?? config?.credentialSource
-        {
+        case .credentialSource:
             throw CredentialProviderError.notSupported
         }
-
-        // Return static credentials
-        return StaticCredential(accessKeyId: credentials.accessKey, secretAccessKey: credentials.secretAccessKey, sessionToken: credentials.sessionToken)
     }
 }

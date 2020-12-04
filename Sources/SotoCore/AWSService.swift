@@ -17,11 +17,11 @@ import NIO
 
 /// Protocol for services objects. Contains a client to communicate with AWS and config for defining how to communicate
 public protocol AWSService {
-    /// client used to communicate with AWS
+    /// Client used to communicate with AWS
     var client: AWSClient { get }
-    /// service context details
+    /// Service context details
     var config: AWSServiceConfig { get }
-    /// patch init
+    /// Patch initialization
     init(from: Self, patch: AWSServiceConfig.Patch)
 }
 

@@ -18,10 +18,10 @@ import NIO
 import NIOConcurrencyHelpers
 import SotoSignerV4
 
-/// The `RotatingCredentialProvider` shall be of help if you wish to implement your own provider
-/// strategy. If your Credential conforms to the `ExpiringCredential` protocol, the `RotatingCredentialProvider`
-/// checks whether your `credential` is still valid before every request.
-/// If needed the `RotatingCrendentialProvider` requests a new credential from the provided `Client`.
+/// Used for wrapping another credential provider whose `getCredential` method returns an `ExpiringCredential`.
+/// If no credential is available, or the current credentials are going to expire in the near future  the wrapped credential provider
+/// `getCredential` is called. If current credentials have not expired they are returned otherwise we wait on new
+/// credentials being provided.
 public final class RotatingCredentialProvider: CredentialProvider {
     let remainingTokenLifetimeForUse: TimeInterval
 
@@ -36,6 +36,7 @@ public final class RotatingCredentialProvider: CredentialProvider {
         _ = refreshCredentials(on: context.eventLoop, logger: context.logger)
     }
 
+    /// Shutdown credential provider
     public func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
         return self.lock.withLock {
             if let future = credentialFuture {

@@ -86,7 +86,7 @@ extension Body {
         }
     }
 
-    // return as ByteBuffer
+    /// return as ByteBuffer
     public func asByteBuffer(byteBufferAllocator: ByteBufferAllocator) -> ByteBuffer? {
         return asPayload(byteBufferAllocator: byteBufferAllocator).asByteBuffer()
     }

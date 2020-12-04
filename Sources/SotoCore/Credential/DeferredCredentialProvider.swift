@@ -17,7 +17,7 @@ import NIO
 import NIOConcurrencyHelpers
 
 /// Used for wrapping another credential provider whose `getCredential` method doesn't return instantly and
-/// it only needs to be called once. After the wrapped `CredentialProvider` has generated a credential this is
+/// is only needed to be called once. After the wrapped `CredentialProvider` has generated a credential this is
 /// returned instead of calling the wrapped `CredentialProvider's` `getCredentials` again.
 public class DeferredCredentialProvider: CredentialProvider {
     let lock = Lock()
@@ -54,7 +54,8 @@ public class DeferredCredentialProvider: CredentialProvider {
             }
             .cascade(to: self.startupPromise)
     }
-
+    
+    /// Shutdown credential provider
     public func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
         return self.startupPromise.futureResult
             .and(self.provider.shutdown(on: eventLoop))

@@ -17,10 +17,12 @@ import struct Foundation.TimeInterval
 import SotoSignerV4
 
 public protocol ExpiringCredential: Credential {
+    /// Will credential expire within a certain time
     func isExpiring(within: TimeInterval) -> Bool
 }
 
 public extension ExpiringCredential {
+    /// Has credential expired
     var isExpired: Bool {
         isExpiring(within: 0)
     }
@@ -35,6 +37,7 @@ public struct RotatingCredential: ExpiringCredential {
         self.expiration = expiration
     }
 
+    /// Will credential expire within a certain time
     public func isExpiring(within interval: TimeInterval) -> Bool {
         return self.expiration.timeIntervalSinceNow < interval
     }

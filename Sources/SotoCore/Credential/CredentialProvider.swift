@@ -19,7 +19,14 @@ import SotoSignerV4
 
 /// Protocol providing future holding a credential
 public protocol CredentialProvider: CustomStringConvertible {
+    /// Return credential
+    /// - Parameters:
+    ///   - eventLoop: EventLoop to run on
+    ///   - logger: Logger to use
     func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential>
+    
+    /// Shutdown credential provider
+    /// - Parameter eventLoop: EventLoop to use when shutiting down
     func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void>
 }
 

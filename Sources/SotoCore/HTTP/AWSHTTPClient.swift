@@ -34,13 +34,17 @@ public struct AWSHTTPRequest {
 
 /// HTTP Response
 public protocol AWSHTTPResponse {
+    /// HTTP response status
     var status: HTTPResponseStatus { get }
+    /// HTTP response headers
     var headers: HTTPHeaders { get }
+    /// Payload of response
     var body: ByteBuffer? { get }
 }
 
 /// Protocol defining requirements for a HTTPClient
 public protocol AWSHTTPClient {
+    /// Function that streamed response chunks are sent ot
     typealias ResponseStream = (ByteBuffer, EventLoop) -> EventLoopFuture<Void>
 
     /// Execute HTTP request and return a future holding a HTTP Response

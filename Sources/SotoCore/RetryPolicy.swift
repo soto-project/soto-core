@@ -40,13 +40,15 @@ public struct RetryPolicyFactory {
 
 /// Return value for `RetryPolicy.getRetryWaitTime`. Either retry after time amount or don't retry
 public enum RetryStatus {
+    /// retry after `wait` time amount
     case retry(wait: TimeAmount)
+    /// do not retry
     case dontRetry
 }
 
 /// Protocol for Retry strategy. Has function returning amount of time before the next retry after an HTTP error
 public protocol RetryPolicy {
-    /// Returns whether we should retry (nil means don't) and how long we should wait before retrying
+    /// Returns whether we should retry and how long we should wait before retrying
     /// - Parameters:
     ///   - error: Error returned by HTTP client
     ///   - attempt: retry attempt number

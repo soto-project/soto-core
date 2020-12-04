@@ -32,18 +32,18 @@ public final class AWSClient {
 
     // MARK: Member variables
 
-    /// default logger that logs nothing
+    /// Default logger that logs nothing
     public static let loggingDisabled = Logger(label: "AWS-do-not-log", factory: { _ in SwiftLogNoOpLogHandler() })
 
     static let globalRequestID = NIOAtomic<Int>.makeAtomic(value: 0)
 
     /// AWS credentials provider
     public let credentialProvider: CredentialProvider
-    /// middleware code to be applied to requests and responses
+    /// Middleware code to be applied to requests and responses
     public let middlewares: [AWSServiceMiddleware]
     /// HTTP client used by AWSClient
     public let httpClient: AWSHTTPClient
-    /// keeps a record of how we obtained the HTTP client
+    /// Keeps a record of how we obtained the HTTP client
     let httpClientProvider: HTTPClientProvider
     /// EventLoopGroup used by AWSClient
     public var eventLoopGroup: EventLoopGroup { return httpClient.eventLoopGroup }
@@ -98,9 +98,9 @@ public final class AWSClient {
 
     // MARK: API Calls
 
-    /// Shutdown client synchronously. Before an AWSClient is deleted you need to call this function or the async version `shutdown`
-    /// to do a clean shutdown of the client. It cleans up CredentialProvider tasks and shuts down the HTTP client if it was created by this
-    /// AWSClient.
+    /// Shutdown client synchronously. Before an `AWSClient` is deleted you need to call this function or the async version `shutdown`
+    /// to do a clean shutdown of the client. It cleans up `CredentialProvider` tasks and shuts down the HTTP client if it was created by
+    /// the `AWSClient`.
     ///
     /// - Throws: AWSClient.ClientError.alreadyShutdown: You have already shutdown the client
     public func syncShutdown() throws {
@@ -123,10 +123,10 @@ public final class AWSClient {
         }
     }
 
-    /// Shutdown AWSClient asynchronously. Before an AWSClient is deleted you need to call this function or the synchronous
-    /// version `syncShutdown` to do a clean shutdown of the client. It cleans up CredentialProvider tasks and shuts down
-    /// the HTTP client if it was created by this AWSClient. Given we could be destroying the EventLoopGroup the client
-    /// uses, we have to use a DispatchQueue to run some of this work on.
+    /// Shutdown AWSClient asynchronously. Before an `AWSClient` is deleted you need to call this function or the synchronous
+    /// version `syncShutdown` to do a clean shutdown of the client. It cleans up `CredentialProvider` tasks and shuts down
+    /// the HTTP client if it was created by the `AWSClient`. Given we could be destroying the `EventLoopGroup` the client
+    /// uses, we have to use a `DispatchQueue` to run some of this work on.
     ///
     /// - Parameters:
     ///   - queue: Dispatch Queue to run shutdown on
@@ -159,7 +159,7 @@ public final class AWSClient {
 
     // MARK: Member structs/enums
 
-    /// Errors returned by AWSClient code
+    /// Errors returned by `AWSClient` code
     public struct ClientError: Swift.Error, Equatable {
         enum Error {
             case alreadyShutdown
@@ -239,7 +239,7 @@ extension AWSClient {
         )
     }
 
-    /// execute an empty request and return a future with an empty response
+    /// Execute an empty request and return a future with an empty response
     /// - parameters:
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
@@ -278,7 +278,7 @@ extension AWSClient {
         )
     }
 
-    /// execute an empty request and return a future with the output object generated from the response
+    /// Execute an empty request and return a future with the output object generated from the response
     /// - parameters:
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
@@ -317,7 +317,7 @@ extension AWSClient {
         )
     }
 
-    /// execute a request with an input object and return a future with the output object generated from the response
+    /// Execute a request with an input object and return a future with the output object generated from the response
     /// - parameters:
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
@@ -359,7 +359,7 @@ extension AWSClient {
         )
     }
 
-    /// execute a request with an input object and return a future with the output object generated from the response
+    /// Execute a request with an input object and return a future with the output object generated from the response
     /// - parameters:
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
@@ -438,7 +438,7 @@ extension AWSClient {
         return recordRequest(future, service: config.service, operation: operationName, logger: logger)
     }
 
-    /// generate a signed URL
+    /// Generate a signed URL
     /// - parameters:
     ///     - url : URL to sign
     ///     - httpMethod: HTTP method to use (.GET, .PUT, .PUSH etc)

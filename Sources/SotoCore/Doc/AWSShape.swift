@@ -34,7 +34,7 @@ extension AWSShape {
     }
 
     /// return list of member variables serialized in the headers
-    public static var headerParams: [String: String] {
+    static var headerParams: [String: String] {
         var params: [String: String] = [:]
         for member in _encoding {
             guard let location = member.location else { continue }
@@ -46,7 +46,7 @@ extension AWSShape {
     }
 
     /// return list of member variables serialized in the headers
-    public static var statusCodeParam: String? {
+    static var statusCodeParam: String? {
         for member in _encoding {
             guard let location = member.location else { continue }
             if case .statusCode = location {
@@ -85,7 +85,8 @@ public extension AWSEncodableShape {
 
     /// stub validate function for all shapes
     func validate(name: String) throws {}
-
+    
+    /// Return validation error
     static func validationError(_ message: String) -> Error {
         return AWSClientError(.validationError, context: .init(message: message, responseCode: .badRequest))
     }
@@ -194,8 +195,11 @@ public struct AWSShapePayloadOptions: OptionSet {
         self.rawValue = rawValue
     }
 
+    /// Payload can be streamed
     public static let allowStreaming = AWSShapePayloadOptions(rawValue: 1 << 0)
+    /// Payload can be streamed using Transfer-Encoding: chunked
     public static let allowChunkedStreaming = AWSShapePayloadOptions(rawValue: 1 << 1)
+    /// Payload is raw data
     public static let raw = AWSShapePayloadOptions(rawValue: 1 << 2)
 }
 

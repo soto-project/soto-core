@@ -230,7 +230,9 @@ class ConfigFileCredentialProviderTests: XCTestCase {
 
         // Prepare test server and AWS client
         let testServer = AWSTestServer(serviceProtocol: .xml)
+        defer { XCTAssertNoThrow(try testServer.stop()) }
         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
 
         // Here we use `.custom` provider factory, since we need to inject the testServer endpoint
         let client = createAWSClient(credentialProvider: .custom { (context) -> CredentialProvider in
@@ -242,7 +244,9 @@ class ConfigFileCredentialProviderTests: XCTestCase {
                 endpoint: testServer.address
             )
         }, httpClientProvider: .shared(httpClient))
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
 
+        // Retrieve credentials
         let futureCredentials = client.credentialProvider.getCredential(
             on: client.eventLoopGroup.next(),
             logger: TestEnvironment.logger
@@ -254,14 +258,10 @@ class ConfigFileCredentialProviderTests: XCTestCase {
             let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
             return .result(response)
         }
-
         let credentials = try futureCredentials.wait()
 
+        // Verify credentials match those returned from STS Assume Role operation
         XCTAssertEqual(credentials.accessKeyId, stsCredentials.accessKeyId)
         XCTAssertEqual(credentials.secretAccessKey, stsCredentials.secretAccessKey)
-
-        try testServer.stop()
-        try client.syncShutdown()
-        try httpClient.syncShutdown()
     }
 }

@@ -101,7 +101,7 @@ class CredentialProviderTests: XCTestCase {
             XCTAssertEqual(error as? CredentialProviderError, .noProvider)
         }
     }
-    
+
     func testCredentialSelectorShutdown() {
         class TestCredentialProvider: CredentialProvider {
             var active = true
@@ -109,12 +109,12 @@ class CredentialProviderTests: XCTestCase {
             func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
                 return eventLoop.makeSucceededFuture(StaticCredential(accessKeyId: "", secretAccessKey: ""))
             }
-            
+
             func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
                 self.active = false
                 return eventLoop.makeSucceededFuture(())
             }
-            
+
             deinit {
                 XCTAssertEqual(active, false)
             }

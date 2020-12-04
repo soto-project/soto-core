@@ -29,7 +29,6 @@ import SotoXML
 /// to a raw `HTTPClient` Request. This is then sent to AWS. When the response from AWS is received if it is successful it is converted to a `AWSResponse`
 /// which is then decoded to generate a `AWSShape` Output object. If it is not successful then `AWSClient` will throw an `AWSErrorType`.
 public final class AWSClient {
-
     // MARK: Member variables
 
     /// default logger that logs nothing
@@ -56,7 +55,7 @@ public final class AWSClient {
 
     // MARK: Initialization
 
-     /// Initialize an AWSClient struct
+    /// Initialize an AWSClient struct
     /// - parameters:
     ///     - credentialProvider: An object that returns valid signing credentials for request signing.
     ///     - retryPolicy: Object returning whether retries should be attempted. Possible options are NoRetry(), ExponentialRetry() or JitterRetry()

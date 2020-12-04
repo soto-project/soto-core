@@ -29,7 +29,7 @@ import SotoSignerV4
 ///        self.internalProvider = result
 ///    }
 ///    self.setupInternalProvider(providers: providers, context: context)
-///}
+/// }
 /// ```
 protocol CredentialProviderSelector: CredentialProvider, AnyObject {
     /// promise to find a credential provider

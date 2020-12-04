@@ -134,7 +134,7 @@ class CredentialProviderTests: XCTestCase {
             }
         }
         let elg = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { XCTAssertNoThrow(try elg.syncShutdownGracefully())}
+        defer { XCTAssertNoThrow(try elg.syncShutdownGracefully()) }
         let provider = CredentialProviderOwner(eventLoop: elg.next())
         XCTAssertNoThrow(try provider.shutdown(on: elg.next()).wait())
     }

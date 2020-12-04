@@ -233,7 +233,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
 
         // Here we use `.custom` provider factory, since we need to inject the testServer endpoint
-        let client = createAWSClient(credentialProvider: .custom({ (context) -> CredentialProvider in
+        let client = createAWSClient(credentialProvider: .custom { (context) -> CredentialProvider in
             ConfigFileCredentialProvider(
                 credentialsFilePath: credentialsFilePath,
                 configFilePath: configFilePath,
@@ -241,10 +241,12 @@ class ConfigFileCredentialProviderTests: XCTestCase {
                 context: context,
                 endpoint: testServer.address
             )
-        }), httpClientProvider: .shared(httpClient))
+        }, httpClientProvider: .shared(httpClient))
 
-        let futureCredentials = client.credentialProvider.getCredential(on: client.eventLoopGroup.next(),
-                                                                        logger: TestEnvironment.logger)
+        let futureCredentials = client.credentialProvider.getCredential(
+            on: client.eventLoopGroup.next(),
+            logger: TestEnvironment.logger
+        )
         try testServer.processRaw { _ in
             let output = STSAssumeRoleResponse(credentials: stsCredentials)
             let xml = try XMLEncoder().encode(output)

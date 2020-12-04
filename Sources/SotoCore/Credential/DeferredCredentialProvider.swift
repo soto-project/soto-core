@@ -54,7 +54,7 @@ public class DeferredCredentialProvider: CredentialProvider {
             }
             .cascade(to: self.startupPromise)
     }
-    
+
     /// Shutdown credential provider
     public func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
         return self.startupPromise.futureResult

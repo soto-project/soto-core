@@ -176,7 +176,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         // Prepare mock STSAssumeRole credentials
         let stsCredentials = STSCredentials(
             accessKeyId: "STSACCESSKEYID",
-            expiration: Date().addingTimeInterval(60),
+            expiration: Date.distantFuture,
             secretAccessKey: "STSSECRETACCESSKEY",
             sessionToken: "STSSESSIONTOKEN"
         )

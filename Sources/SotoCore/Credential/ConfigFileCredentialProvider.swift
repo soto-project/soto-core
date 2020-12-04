@@ -32,8 +32,8 @@ class ConfigFileCredentialProvider: CredentialProviderSelector {
         context: CredentialProviderFactory.Context,
         endpoint: String? = nil
     ) {
-        startupPromise = context.eventLoop.makePromise(of: CredentialProvider.self)
-        startupPromise.futureResult.whenSuccess { result in
+        self.startupPromise = context.eventLoop.makePromise(of: CredentialProvider.self)
+        self.startupPromise.futureResult.whenSuccess { result in
             self.internalProvider = result
         }
 

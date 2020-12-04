@@ -86,9 +86,9 @@ class ConfigFileCredentialProvider: CredentialProviderSelector {
         endpoint: String?
     ) throws -> CredentialProvider {
         switch sharedCredentials {
-        case let .staticCredential(staticCredential):
+        case .staticCredential(let staticCredential):
             return staticCredential
-        case let .assumeRole(roleArn, sessionName, region, sourceCredential):
+        case .assumeRole(let roleArn, let sessionName, let region, let sourceCredential):
             let request = STSAssumeRoleRequest(roleArn: roleArn, roleSessionName: sessionName)
             let provider = CredentialProviderFactory.static(
                 accessKeyId: sourceCredential.accessKeyId,

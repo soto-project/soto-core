@@ -63,7 +63,7 @@ class ConfigFileLoadersTests: XCTestCase {
         ).wait()
 
         switch sharedCredentials {
-        case let .staticCredential(credentials):
+        case .staticCredential(let credentials):
             XCTAssertEqual(credentials.accessKeyId, accessKey)
             XCTAssertEqual(credentials.secretAccessKey, secretKey)
         default:
@@ -111,7 +111,7 @@ class ConfigFileLoadersTests: XCTestCase {
         ).wait()
 
         switch sharedCredentials {
-        case let .assumeRole(aRoleArn, aSessionName, region, sourceCredential):
+        case .assumeRole(let aRoleArn, let aSessionName, let region, let sourceCredential):
             XCTAssertEqual(sourceCredential.accessKeyId, accessKey)
             XCTAssertEqual(sourceCredential.secretAccessKey, secretKey)
             XCTAssertEqual(aRoleArn, roleArn)
@@ -148,7 +148,7 @@ class ConfigFileLoadersTests: XCTestCase {
         ).wait()
 
         switch sharedCredentials {
-        case let .credentialSource(aRoleArn, source):
+        case .credentialSource(let aRoleArn, let source):
             XCTAssertEqual(aRoleArn, roleArn)
             XCTAssertEqual(source, .ec2Instance)
         default:
@@ -180,11 +180,9 @@ class ConfigFileLoadersTests: XCTestCase {
                 profile: profile,
                 context: context
             ).wait()
-        }
-        catch ConfigFileLoader.ConfigFileError.missingAccessKeyId {
+        } catch ConfigFileLoader.ConfigFileError.missingAccessKeyId {
             // Pass
-        }
-        catch {
+        } catch {
             XCTFail("Expected ConfigFileLoader.ConfigFileError.missingAccessKeyId, got \(error.localizedDescription)")
         }
     }
@@ -213,11 +211,9 @@ class ConfigFileLoadersTests: XCTestCase {
                 profile: profile,
                 context: context
             ).wait()
-        }
-        catch ConfigFileLoader.ConfigFileError.missingSecretAccessKey {
+        } catch ConfigFileLoader.ConfigFileError.missingSecretAccessKey {
             // Pass
-        }
-        catch {
+        } catch {
             XCTFail("Expected ConfigFileLoader.ConfigFileError.missingSecretAccessKey, got \(error.localizedDescription)")
         }
     }
@@ -251,11 +247,9 @@ class ConfigFileLoadersTests: XCTestCase {
                 profile: profile,
                 context: context
             ).wait()
-        }
-        catch ConfigFileLoader.ConfigFileError.missingAccessKeyId {
+        } catch ConfigFileLoader.ConfigFileError.missingAccessKeyId {
             // Pass
-        }
-        catch {
+        } catch {
             XCTFail("Expected ConfigFileLoader.ConfigFileError.missingAccessKeyId, got \(error.localizedDescription)")
         }
     }
@@ -289,11 +283,9 @@ class ConfigFileLoadersTests: XCTestCase {
                 profile: profile,
                 context: context
             ).wait()
-        }
-        catch ConfigFileLoader.ConfigFileError.missingSecretAccessKey {
+        } catch ConfigFileLoader.ConfigFileError.missingSecretAccessKey {
             // Pass
-        }
-        catch {
+        } catch {
             XCTFail("Expected ConfigFileLoader.ConfigFileError.missingSecretAccessKey, got \(error.localizedDescription)")
         }
     }
@@ -322,11 +314,9 @@ class ConfigFileLoadersTests: XCTestCase {
                 profile: profile,
                 context: context
             ).wait()
-        }
-        catch ConfigFileLoader.ConfigFileError.invalidCredentialFile {
+        } catch ConfigFileLoader.ConfigFileError.invalidCredentialFile {
             // Pass
-        }
-        catch {
+        } catch {
             XCTFail("Expected ConfigFileLoader.ConfigFileError.invalidCredentialFile, got \(error.localizedDescription)")
         }
     }

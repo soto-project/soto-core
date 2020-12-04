@@ -209,7 +209,8 @@ enum ConfigFileLoader {
     /// - Returns: Combined profile settings
     static func parseProfileConfig(from byteBuffer: ByteBuffer, for profile: String) throws -> ProfileConfig? {
         guard let content = byteBuffer.getString(at: 0, length: byteBuffer.readableBytes),
-              let parser = try? INIParser(content) else {
+              let parser = try? INIParser(content)
+        else {
             throw ConfigFileError.invalidCredentialFile
         }
 
@@ -243,7 +244,8 @@ enum ConfigFileLoader {
     /// - Returns: Combined profile credentials
     static func parseCredentials(from byteBuffer: ByteBuffer, for profile: String, sourceProfile: String?) throws -> ProfileCredentials {
         guard let content = byteBuffer.getString(at: 0, length: byteBuffer.readableBytes),
-              let parser = try? INIParser(content) else {
+              let parser = try? INIParser(content)
+        else {
             throw ConfigFileError.invalidCredentialFile
         }
 

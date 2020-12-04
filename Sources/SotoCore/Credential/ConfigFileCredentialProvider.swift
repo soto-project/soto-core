@@ -12,7 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct Foundation.UUID
 import Logging
 import NIO
 import NIOConcurrencyHelpers

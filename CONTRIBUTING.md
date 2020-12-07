@@ -1,12 +1,57 @@
 # Contributing
 
-All developers should feel welcome and encouraged to contribute to Soto.
+## Legal
+By submitting a pull request, you represent that you have the right to license your contribution to the community, and agree by submitting the patch
+that your contributions are licensed under the Apache 2.0 license (see [LICENSE](LICENSE.txt)).
 
-As contributors and maintainers of this project, and in the interest of fostering an open and welcoming community, we pledge to respect all people who contribute through reporting issues, posting feature requests, updating documentation, submitting pull requests or patches, and other activities.
+## Contributor Conduct
+All contributors are expected to adhere to the project's [Code of Conduct](CODE_OF_CONDUCT.md).
 
-To contribute a feature or idea to Soto, submit an issue and fill in the template. If the request is approved, you or one of the members of the community can start working on it.
+## Submitting a bug or issue
+Please ensure to include the following in your bug report
+- A consise description of the issue, what happened and what you expected.
+- Simple reproduction steps
+- Version of the library you are using
+- Contextual information (Swift version, OS etc)
 
-We use [Swift Format](https://github.com/nicklockwood/SwiftFormat) to ensure a standard formatting for all code in Soto. If you create a PR we run a script verifying the code conforms to this format. To be sure your code is compliant run `./scripts/sanity.sh` before you create your PR. This script runs a number of checks including running Swift Format and verifying all source files have the correct file header. 
+## Security 
 
-If you find a security vulnerability, please contact <swift-aws-maintainers@googlegroups.com> and reach out on the soto-aws [slack](http://soto-aws.slack.com/) or the [**#aws**](https://discordapp.com/channels/431917998102675485/472522745067077632) channel on the Vapor Discord as soon as possible. We take these matters seriously.
+If you find a security vulnerability, please contact us on <swift-aws-maintainers@googlegroups.com>. We take these matters seriously.
 
+## Submitting a Pull Request
+
+Please ensure to include the following in your Pull Request
+- A description of what you are trying to do. What the PR provides to the library, additional functionality, fixing a bug etc
+- A description of the code changes
+- Documentation on how these changes are being tested
+- Additional tests to show your code working and to ensure future changes don't break your code.
+
+Please keep you PRs to a minimal number of changes. If a PR is large try to split it up into smaller PRs. Don't move code around unnecessarily it makes comparing old with new very hard. 
+
+The main development branch of the repository is  `main`. Each major version release has it's own branch named "version number".x.x eg `4.x.x` . If you are submitting code for an older version then you should use the version branch as the base for your code changes. 
+
+### Formatting
+
+We use Nick Lockwood's SwiftFormat for formatting code. PRs will not be accepted if they haven't be formatted. The current version of SwiftFormat we are using is v0.47.4.
+
+All new files need to include the following file header at the top
+```swift
+//===----------------------------------------------------------------------===//
+//
+// This source file is part of the Soto for AWS open source project
+//
+// Copyright (c) 2017-2020 the Soto project authors
+// Licensed under Apache License v2.0
+//
+// See LICENSE.txt for license information
+// See CONTRIBUTORS.txt for the list of Soto project authors
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+//===----------------------------------------------------------------------===//
+```
+Please ensure the dates are correct in the header.
+
+## Community
+
+You can also contribute by becoming an active member of the Soto community.  Join us on the soto-aws [slack](https://join.slack.com/t/soto-project/shared_invite/zt-juqk6l9w-z9zruW5pjlod4AscdWlz7Q).

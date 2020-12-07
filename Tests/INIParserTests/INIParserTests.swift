@@ -35,6 +35,7 @@ class INIParserTests: XCTestCase {
           变量1 = 🇨🇳 ;使用utf8
           变量2 = 加拿大。
           [ 乱死了 ]
+            foo = bar
         """
 
         var ini: INIParser?
@@ -50,6 +51,7 @@ class INIParserTests: XCTestCase {
         XCTAssertEqual(ini?.sections["database"]?["file"] ?? "", "\"中文.dat  \' \' \"")
         XCTAssertEqual(ini?.sections["汉化"]?["变量1"] ?? "", "🇨🇳")
         XCTAssertEqual(ini?.sections["汉化"]?["变量2"] ?? "", "加拿大。")
+        XCTAssertNotNil(ini?.sections[" 乱死了 "])
     }
 
     static var allTests = [

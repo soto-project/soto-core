@@ -198,7 +198,7 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
             XCTAssertEqual(credential.secretAccessKey, "AWSSECRETACCESSKEY")
             XCTAssertEqual(credential.sessionToken, nil)
             let internalProvider = try XCTUnwrap((client.credentialProvider as? RuntimeSelectorCredentialProvider)?.internalProvider)
-            XCTAssert(internalProvider is DeferredCredentialProvider)
+            XCTAssert(internalProvider is RotatingCredentialProvider)
         }
         XCTAssertNoThrow(try futureResult.wait())
     }

@@ -114,11 +114,15 @@ extension CredentialProviderFactory {
         }
     }
 
-    /// Use this method to load credentials from your aws cli credential file, normally located at `~/.aws/credentials`
-    public static func configFile(credentialsFilePath: String = "~/.aws/credentials", profile: String? = nil) -> CredentialProviderFactory {
+    /// Use this method to load credentials from your AWS cli credentials and optional profile configuration files, normally located at `~/.aws/credentials` and `~/.aws/config`.
+    public static func configFile(
+        credentialsFilePath: String = ConfigFile.defaultCredentialsPath,
+        configFilePath: String = ConfigFile.defaultProfileConfigPath,
+        profile: String? = nil
+    ) -> CredentialProviderFactory {
         return Self { context in
-            let provider = AWSConfigFileCredentialProvider(credentialsFilePath: credentialsFilePath, profile: profile, context: context)
-            return DeferredCredentialProvider(context: context, provider: provider)
+            let provider = ConfigFileCredentialProvider(credentialsFilePath: credentialsFilePath, configFilePath: configFilePath, profile: profile, context: context)
+            return RotatingCredentialProvider(context: context, provider: provider)
         }
     }
 

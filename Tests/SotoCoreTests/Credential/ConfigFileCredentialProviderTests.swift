@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+import struct Foundation.UUID
 import NIO
 @testable import SotoCore
 import SotoTestUtils
@@ -20,171 +21,73 @@ import SotoXML
 import XCTest
 
 class ConfigFileCredentialProviderTests: XCTestCase {
-    func testConfigFileCredentials() {
-        let profile = "profile1"
-        let accessKey = "FAKE-ACCESS-KEY123"
-        let secretKey = "Asecretreglkjrd"
-        let sessionToken = "xyz"
-        let credential = """
-        [\(profile)]
-        aws_access_key_id=\(accessKey)
-        aws_secret_access_key=\(secretKey)
-        aws_session_token=\(sessionToken)
-        """
+    // MARK: - Credential Provider
 
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
-        byteBuffer.writeString(credential)
-        var cred: StaticCredential?
-        XCTAssertNoThrow(cred = try AWSConfigFileCredentialProvider.sharedCredentials(from: byteBuffer, for: profile))
-
-        XCTAssertEqual(cred?.accessKeyId, accessKey)
-        XCTAssertEqual(cred?.secretAccessKey, secretKey)
-        XCTAssertEqual(cred?.sessionToken, sessionToken)
-    }
-
-    func testConfigFileCredentialsMissingAccessKey() {
-        let profile = "profile1"
-        let secretKey = "Asecretreglkjrd"
-        let credential = """
-        [\(profile)]
-        aws_secret_access_key=\(secretKey)
-        """
-
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
-        byteBuffer.writeString(credential)
-        XCTAssertThrowsError(_ = try AWSConfigFileCredentialProvider.sharedCredentials(from: byteBuffer, for: profile)) {
-            XCTAssertEqual($0 as? AWSConfigFileCredentialProvider.ConfigFileError, .missingAccessKeyId)
-        }
-    }
-
-    func testConfigFileCredentialsMissingSecretKey() {
-        let profile = "profile1"
-        let accessKey = "FAKE-ACCESS-KEY123"
-        let credential = """
-        [\(profile)]
-        aws_access_key_id=\(accessKey)
-        """
-
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
-        byteBuffer.writeString(credential)
-        XCTAssertThrowsError(_ = try AWSConfigFileCredentialProvider.sharedCredentials(from: byteBuffer, for: profile)) {
-            XCTAssertEqual($0 as? AWSConfigFileCredentialProvider.ConfigFileError, .missingSecretAccessKey)
-        }
-    }
-
-    func testConfigFileCredentialsMissingSessionToken() {
-        let profile = "profile1"
-        let accessKey = "FAKE-ACCESS-KEY123"
-        let secretKey = "Asecretreglkjrd"
-        let credential = """
-        [\(profile)]
-        aws_access_key_id=\(accessKey)
-        aws_secret_access_key=\(secretKey)
-        """
-
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
-        byteBuffer.writeString(credential)
-        var cred: StaticCredential?
-        XCTAssertNoThrow(cred = try AWSConfigFileCredentialProvider.sharedCredentials(from: byteBuffer, for: profile))
-
-        XCTAssertEqual(cred?.accessKeyId, accessKey)
-        XCTAssertEqual(cred?.secretAccessKey, secretKey)
-        XCTAssertNil(cred?.sessionToken)
-    }
-
-    func testConfigFileCredentialsMissingProfile() {
-        let profile = "profile1"
-        let accessKey = "FAKE-ACCESS-KEY123"
-        let secretKey = "Asecretreglkjrd"
-        let credential = """
-        [\(profile)]
-        aws_access_key_id=\(accessKey)
-        aws_secret_access_key=\(secretKey)
-        """
-
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
-        byteBuffer.writeString(credential)
-        XCTAssertThrowsError(_ = try AWSConfigFileCredentialProvider.sharedCredentials(from: byteBuffer, for: "profile2")) {
-            XCTAssertEqual($0 as? AWSConfigFileCredentialProvider.ConfigFileError, .missingProfile("profile2"))
-        }
-    }
-
-    func testConfigFileCredentialsParseFailure() {
-        let credential = """
-        [default]
-        aws_access_key_id
-        """
-
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
-        byteBuffer.writeString(credential)
-        XCTAssertThrowsError(_ = try AWSConfigFileCredentialProvider.sharedCredentials(from: byteBuffer, for: "default")) {
-            XCTAssertEqual($0 as? AWSConfigFileCredentialProvider.ConfigFileError, .invalidCredentialFileSyntax)
-        }
-    }
-
-    func testExpandTildeInFilePath() {
-        let expandableFilePath = "~/.aws/credentials"
-        let expandedNewPath = AWSConfigFileCredentialProvider.expandTildeInFilePath(expandableFilePath)
-
-        #if os(Linux)
-        XCTAssert(!expandedNewPath.hasPrefix("~"))
-        #else
-
-        #if os(macOS)
-        // on macOS, we want to be sure the expansion produces the posix $HOME and
-        // not the sanboxed home $HOME/Library/Containers/<bundle-id>/Data
-        let macOSHomePrefix = "/Users/"
-        XCTAssert(expandedNewPath.starts(with: macOSHomePrefix))
-        XCTAssert(!expandedNewPath.contains("/Library/Containers/"))
-        #endif
-
-        // this doesn't work on linux because of SR-12843
-        let expandedNSString = NSString(string: expandableFilePath).expandingTildeInPath
-        XCTAssertEqual(expandedNewPath, expandedNSString)
-        #endif
-
-        let unexpandableFilePath = "/.aws/credentials"
-        let unexpandedNewPath = AWSConfigFileCredentialProvider.expandTildeInFilePath(unexpandableFilePath)
-        let unexpandedNSString = NSString(string: unexpandableFilePath).expandingTildeInPath
-
-        XCTAssertEqual(unexpandedNewPath, unexpandedNSString)
-        XCTAssertEqual(unexpandedNewPath, unexpandableFilePath)
-    }
-
-    func testConfigFileCredentialINIParser() throws {
-        // setup
-        let credentials = """
-        [default]
-        aws_access_key_id = AWSACCESSKEYID
-        aws_secret_access_key = AWSSECRETACCESSKEY
-        """
-        let filename = "credentials"
-        let filenameURL = URL(fileURLWithPath: filename)
-        XCTAssertNoThrow(try Data(credentials.utf8).write(to: filenameURL))
-        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: filenameURL)) }
-
+    func makeContext() -> (CredentialProviderFactory.Context, MultiThreadedEventLoopGroup, HTTPClient) {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
         let eventLoop = eventLoopGroup.next()
-//        let path = filenameURL.absoluteString
-        let threadPool = NIOThreadPool(numberOfThreads: 1)
-        threadPool.start()
-        defer { XCTAssertNoThrow(try threadPool.syncShutdownGracefully()) }
-        let fileIO = NonBlockingFileIO(threadPool: threadPool)
-
-        let future = AWSConfigFileCredentialProvider.getSharedCredentialsFromDisk(
-            credentialsFilePath: filenameURL.path,
-            profile: "default",
-            on: eventLoop,
-            using: fileIO
-        )
-
-        var credential: CredentialProvider?
-        XCTAssertNoThrow(credential = try future.wait())
-        let staticCredential = try XCTUnwrap(credential as? StaticCredential)
-        XCTAssertEqual(staticCredential.accessKeyId, "AWSACCESSKEYID")
-        XCTAssertEqual(staticCredential.secretAccessKey, "AWSSECRETACCESSKEY")
+        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoop))
+        return (.init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger), eventLoopGroup, httpClient)
     }
+
+    func testCredentialProviderStatic() {
+        let credentials = ConfigFileLoader.SharedCredentials.staticCredential(credential: StaticCredential(accessKeyId: "foo", secretAccessKey: "bar"))
+        let (context, eventLoopGroup, httpClient) = self.makeContext()
+
+        let provider = try? ConfigFileCredentialProvider.credentialProvider(
+            from: credentials,
+            context: context,
+            endpoint: nil
+        )
+        XCTAssertEqual((provider as? StaticCredential)?.accessKeyId, "foo")
+        XCTAssertEqual((provider as? StaticCredential)?.secretAccessKey, "bar")
+
+        XCTAssertNoThrow(try provider?.shutdown(on: context.eventLoop).wait())
+        XCTAssertNoThrow(try httpClient.syncShutdown())
+        XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
+    }
+
+    func testCredentialProviderSTSAssumeRole() {
+        let credentials = ConfigFileLoader.SharedCredentials.assumeRole(
+            roleArn: "arn",
+            sessionName: "baz",
+            region: nil,
+            sourceCredential: StaticCredential(accessKeyId: "foo", secretAccessKey: "bar")
+        )
+        let (context, eventLoopGroup, httpClient) = self.makeContext()
+
+        let provider = try? ConfigFileCredentialProvider.credentialProvider(
+            from: credentials,
+            context: context,
+            endpoint: nil
+        )
+        XCTAssertTrue(provider is STSAssumeRoleCredentialProvider)
+        XCTAssertEqual((provider as? STSAssumeRoleCredentialProvider)?.request.roleArn, "arn")
+
+        XCTAssertNoThrow(try provider?.shutdown(on: context.eventLoop).wait())
+        XCTAssertNoThrow(try httpClient.syncShutdown())
+        XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
+    }
+
+    func testCredentialProviderCredentialSource() {
+        let credentials = ConfigFileLoader.SharedCredentials.credentialSource(roleArn: "arn", source: .ec2Instance)
+        let (context, eventLoopGroup, httpClient) = self.makeContext()
+
+        do {
+            _ = try ConfigFileCredentialProvider.credentialProvider(
+                from: credentials,
+                context: context,
+                endpoint: nil
+            )
+        } catch {
+            XCTAssertEqual(error as? CredentialProviderError, .notSupported)
+        }
+
+        XCTAssertNoThrow(try httpClient.syncShutdown())
+        XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
+    }
+
+    // MARK: - Config File Credentials Provider
 
     func testConfigFileSuccess() {
         let credentials = """
@@ -265,85 +168,78 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         XCTAssertNoThrow(try client.syncShutdown())
     }
 
-    func testInternalSTSAssumeRoleProvider() throws {
-        let credentials = STSCredentials(
+    // MARK: - Role ARN Credential
+
+    func testRoleARNSourceProfile() throws {
+        let profile = "user1"
+
+        // Prepare mock STSAssumeRole credentials
+        let stsCredentials = STSCredentials(
             accessKeyId: "STSACCESSKEYID",
-            expiration: Date(timeIntervalSince1970: 87_387_346),
+            expiration: Date.distantFuture,
             secretAccessKey: "STSSECRETACCESSKEY",
             sessionToken: "STSSESSIONTOKEN"
         )
+
+        // Prepare credentials file
+        let credentialsFile = """
+        [default]
+        aws_access_key_id = DEFAULTACCESSKEY
+        aws_secret_access_key=DEFAULTSECRETACCESSKEY
+        aws_session_token =TOKENFOO
+
+        [\(profile)]
+        role_arn       = arn:aws:iam::000000000000:role/test-sts-assume-role
+        source_profile = default
+        color          = ff0000
+        """
+        let credentialsFilePath = "credentials-" + UUID().uuidString
+        try credentialsFile.write(toFile: credentialsFilePath, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(atPath: credentialsFilePath) }
+
+        // Prepare config file
+        let configFile = """
+        region=us-west-2
+        role_session_name =testRoleARNSourceProfile
+        """
+        let configFilePath = "config-" + UUID().uuidString
+        try configFile.write(toFile: configFilePath, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(atPath: configFilePath) }
+
+        // Prepare test server and AWS client
         let testServer = AWSTestServer(serviceProtocol: .xml)
         defer { XCTAssertNoThrow(try testServer.stop()) }
-        let client = AWSClient(
-            credentialProvider: .internalSTSAssumeRole(
-                request: .init(roleArn: "arn:aws:iam::000000000000:role/test-sts-assume-role", roleSessionName: "testInternalSTSAssumeRoleProvider"),
-                credentialProvider: .empty,
-                region: .useast1,
+        let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
+
+        // Here we use `.custom` provider factory, since we need to inject the testServer endpoint
+        let client = createAWSClient(credentialProvider: .custom { (context) -> CredentialProvider in
+            ConfigFileCredentialProvider(
+                credentialsFilePath: credentialsFilePath,
+                configFilePath: configFilePath,
+                profile: profile,
+                context: context,
                 endpoint: testServer.address
-            ),
-            httpClientProvider: .createNew,
-            logger: TestEnvironment.logger
-        )
+            )
+        }, httpClientProvider: .shared(httpClient))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
 
-        XCTAssertNoThrow(try testServer.processRaw { _ in
-            let output = STSAssumeRoleResponse(credentials: credentials)
+        // Retrieve credentials
+        let futureCredentials = client.credentialProvider.getCredential(
+            on: client.eventLoopGroup.next(),
+            logger: TestEnvironment.logger
+        )
+        try testServer.processRaw { _ in
+            let output = STSAssumeRoleResponse(credentials: stsCredentials)
             let xml = try XMLEncoder().encode(output)
             let byteBuffer = ByteBufferAllocator().buffer(string: xml.xmlString)
             let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
             return .result(response)
-        })
-        var result: Credential?
-        XCTAssertNoThrow(result = try client.credentialProvider.getCredential(on: client.eventLoopGroup.next(), logger: AWSClient.loggingDisabled).wait())
-        let stsCredentials = result as? STSCredentials
-        XCTAssertEqual(stsCredentials?.accessKeyId, credentials.accessKeyId)
-        XCTAssertEqual(stsCredentials?.expiration, credentials.expiration)
-        XCTAssertEqual(stsCredentials?.secretAccessKey, credentials.secretAccessKey)
-        XCTAssertEqual(stsCredentials?.sessionToken, credentials.sessionToken)
-    }
-}
+        }
+        let credentials = try futureCredentials.wait()
 
-// Extend STSAssumeRoleRequest so it can be used with the AWSTestServer
-extension STSAssumeRoleRequest: Decodable {
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        let roleArn = try container.decode(String.self, forKey: .roleArn)
-        let roleSessionName = try container.decode(String.self, forKey: .roleSessionName)
-        self.init(roleArn: roleArn, roleSessionName: roleSessionName)
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case roleArn = "RoleArn"
-        case roleSessionName = "RoleSessionName"
-    }
-}
-
-// Extend STSAssumeRoleResponse so it can be used with the AWSTestServer
-extension STSAssumeRoleResponse: Encodable {
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(credentials, forKey: .credentials)
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case credentials = "Credentials"
-    }
-}
-
-// Extend STSCredentials so it can be used with the AWSTestServer
-extension STSCredentials: Encodable {
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(accessKeyId, forKey: .accessKeyId)
-        try container.encode(expiration, forKey: .expiration)
-        try container.encode(secretAccessKey, forKey: .secretAccessKey)
-        try container.encode(sessionToken, forKey: .sessionToken)
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case accessKeyId = "AccessKeyId"
-        case expiration = "Expiration"
-        case secretAccessKey = "SecretAccessKey"
-        case sessionToken = "SessionToken"
+        // Verify credentials match those returned from STS Assume Role operation
+        XCTAssertEqual(credentials.accessKeyId, stsCredentials.accessKeyId)
+        XCTAssertEqual(credentials.secretAccessKey, stsCredentials.secretAccessKey)
     }
 }

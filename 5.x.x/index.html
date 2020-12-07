@@ -16,7 +16,7 @@
     <a title="  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html"> Docs</a> (59% documented)</p>
+        <p><a href="index.html"> Docs</a> (64% documented)</p>
         <p class="header-right"><a href="https://github.com/soto-project/soto-core"><img src="img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="search.json">
@@ -302,43 +302,9 @@
 <a href="https://github.com/soto-project/soto-core/actions"><img src="https://github.com/soto-project/soto-core/workflows/CI/badge.svg" /></a>
 <a href="https://codecov.io/gh/soto-project/soto-core"><img src="https://codecov.io/gh/soto-project/soto-core/branch/main/graph/badge.svg" alt="Codecov Result" /></a></p>
 
-<p>The core framework for <a href="https://github.com/soto-project/soto">Soto</a> the Swift SDK for AWS.</p>
+<p>The core framework for <a href="https://github.com/soto-project/soto">Soto</a> the Swift SDK for AWS. This is the underlying driver for executing requests to AWS, but you should be using one of the libraries provided by Soto instead of this! </p>
 
-<p>This is the underlying driver for executing requests to AWS, but you should likely use one of the libraries provided by the package above instead of this! Documentation can be found <a href="https://soto-project.github.io/soto-core">here</a>.</p>
-<h2 id='swift-nio' class='heading'>Swift NIO</h2>
-
-<p>This client utilizes <a href="https://github.com/apple/swift-nio#conceptual-overview">Swift NIO</a> to power its interactions with AWS. It returns an <a href="https://apple.github.io/swift-nio/docs/current/NIO/Classes/EventLoopFuture.html"><code>EventLoopFuture</code></a> in order to allow non-blocking frameworks to use this code. Please see the <a href="https://apple.github.io/swift-nio/">Swift NIO documentation</a> for more details, and please let us know via an Issue if you have questions!</p>
-<h2 id='compatibility' class='heading'>Compatibility</h2>
-
-<p>Versions 4.x of soto-core are dependent on swift-nio 2, this means certain libraries/frameworks that are dependent on an earlier version of swift-nio will not work with version 4 of soto-core. Version 3.x of soto-core can be used if you need to use an earlier version of swift-nio. For instance Vapor 3 uses swift-nio 1.13 so you can only use versions 3.x of soto-core with Vapor 3. Below is a compatibility table for versions 3 and 4 of soto-core.</p>
-
-<table><thead>
-<tr>
-<th>Version</th>
-<th>Swift</th>
-<th>MacOS</th>
-<th>iOS</th>
-<th>Linux</th>
-<th>Vapor</th>
-</tr>
-</thead><tbody>
-<tr>
-<td>3.x</td>
-<td>4.2 -</td>
-<td>✓</td>
-<td></td>
-<td>Ubuntu 14.04-18.04</td>
-<td>3.0</td>
-</tr>
-<tr>
-<td>4.x</td>
-<td>5.0 -</td>
-<td>✓</td>
-<td>12.0 -</td>
-<td>Ubuntu 14.04-18.04</td>
-<td>4.0</td>
-</tr>
-</tbody></table>
+<p>Documentation for the core library can be found <a href="https://soto-project.github.io/soto-core">here</a>. Documentation for Soto can be found <a href="https://soto.codes">here</a>.</p>
 <h2 id='contributing' class='heading'>Contributing</h2>
 
 <p>We welcome and encourage contributions from all developers. Please read <a href="CONTRIBUTING.md">CONTRIBUTING.md</a> for our contributing guidelines.</p>

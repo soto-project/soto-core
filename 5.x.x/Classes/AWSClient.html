@@ -17,7 +17,7 @@
     <a title="AWSClient Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> Docs</a> (64% documented)</p>
+        <p><a href="../index.html"> Docs</a> (59% documented)</p>
         <p class="header-right"><a href="https://github.com/soto-project/soto-core"><img src="../img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="../search.json">
@@ -311,16 +311,64 @@ which is then decoded to generate a <code><a href="../Protocols/AWSShape.html">A
           </section>
           <section class="section task-group-section">
             <div class="task-group">
-              <div class="task-name-container">
-                <a name="/Member%20variables"></a>
-                <a name="//apple_ref/swift/Section/Member variables" class="dashAnchor"></a>
-                <div class="section-name-container">
-                  <a class="section-name-link" href="#/Member%20variables"></a>
-                  <h3 class="section-name"><p>Member variables</p>
-</h3>
-                </div>
-              </div>
               <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore9AWSClientC11ClientErrorV"></a>
+                    <a name="//apple_ref/swift/Struct/ClientError" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC11ClientErrorV">ClientError</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Errors returned by AWSClient code</p>
+
+                        <a href="../Classes/AWSClient/ClientError.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">ClientError</span> <span class="p">:</span> <span class="kt">Swift</span><span class="o">.</span><span class="kt">Error</span><span class="p">,</span> <span class="kt">Equatable</span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt"><a href="../Classes/AWSClient.html">AWSClient</a></span><span class="o">.</span><span class="kt">ClientError</span><span class="p">:</span> <span class="kt">CustomStringConvertible</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore9AWSClientC18HTTPClientProviderO"></a>
+                    <a name="//apple_ref/swift/Enum/HTTPClientProvider" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC18HTTPClientProviderO">HTTPClientProvider</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Specifies how <code>HTTPClient</code> will be created and establishes lifecycle ownership.</p>
+
+                        <a href="../Classes/AWSClient/HTTPClientProvider.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">HTTPClientProvider</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
                 <li class="item">
                   <div>
                     <code>
@@ -334,7 +382,7 @@ which is then decoded to generate a <code><a href="../Protocols/AWSShape.html">A
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Default logger that logs nothing</p>
+                        <p>default logger that logs nothing</p>
 
                       </div>
                       <div class="declaration">
@@ -388,7 +436,7 @@ which is then decoded to generate a <code><a href="../Protocols/AWSShape.html">A
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Middleware code to be applied to requests and responses</p>
+                        <p>middleware code to be applied to requests and responses</p>
 
                       </div>
                       <div class="declaration">
@@ -483,19 +531,6 @@ which is then decoded to generate a <code><a href="../Protocols/AWSShape.html">A
                     </section>
                   </div>
                 </li>
-              </ul>
-            </div>
-            <div class="task-group">
-              <div class="task-name-container">
-                <a name="/Initialization"></a>
-                <a name="//apple_ref/swift/Section/Initialization" class="dashAnchor"></a>
-                <div class="section-name-container">
-                  <a class="section-name-link" href="#/Initialization"></a>
-                  <h3 class="section-name"><p>Initialization</p>
-</h3>
-                </div>
-              </div>
-              <ul>
                 <li class="item">
                   <div>
                     <code>
@@ -596,19 +631,6 @@ which is then decoded to generate a <code><a href="../Protocols/AWSShape.html">A
                     </section>
                   </div>
                 </li>
-              </ul>
-            </div>
-            <div class="task-group">
-              <div class="task-name-container">
-                <a name="/API%20Calls"></a>
-                <a name="//apple_ref/swift/Section/API Calls" class="dashAnchor"></a>
-                <div class="section-name-container">
-                  <a class="section-name-link" href="#/API%20Calls"></a>
-                  <h3 class="section-name"><p>API Calls</p>
-</h3>
-                </div>
-              </div>
-              <ul>
                 <li class="item">
                   <div>
                     <code>
@@ -622,9 +644,9 @@ which is then decoded to generate a <code><a href="../Protocols/AWSShape.html">A
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Shutdown client synchronously. Before an <code>AWSClient</code> is deleted you need to call this function or the async version <code>shutdown</code>
-to do a clean shutdown of the client. It cleans up <code><a href="../Protocols/CredentialProvider.html">CredentialProvider</a></code> tasks and shuts down the HTTP client if it was created by
-the <code>AWSClient</code>.</p>
+                        <p>Shutdown client synchronously. Before an AWSClient is deleted you need to call this function or the async version <code>shutdown</code>
+to do a clean shutdown of the client. It cleans up CredentialProvider tasks and shuts down the HTTP client if it was created by this
+AWSClient.</p>
 <div class="aside aside-throws">
     <p class="aside-title">Throws</p>
     AWSClient.ClientError.alreadyShutdown: You have already shutdown the client
@@ -656,10 +678,10 @@ the <code>AWSClient</code>.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Shutdown AWSClient asynchronously. Before an <code>AWSClient</code> is deleted you need to call this function or the synchronous
-version <code>syncShutdown</code> to do a clean shutdown of the client. It cleans up <code><a href="../Protocols/CredentialProvider.html">CredentialProvider</a></code> tasks and shuts down
-the HTTP client if it was created by the <code>AWSClient</code>. Given we could be destroying the <code>EventLoopGroup</code> the client
-uses, we have to use a <code>DispatchQueue</code> to run some of this work on.</p>
+                        <p>Shutdown AWSClient asynchronously. Before an AWSClient is deleted you need to call this function or the synchronous
+version <code>syncShutdown</code> to do a clean shutdown of the client. It cleans up CredentialProvider tasks and shuts down
+the HTTP client if it was created by this AWSClient. Given we could be destroying the EventLoopGroup the client
+uses, we have to use a DispatchQueue to run some of this work on.</p>
 
                       </div>
                       <div class="declaration">
@@ -700,76 +722,6 @@ uses, we have to use a <code>DispatchQueue</code> to run some of this work on.</
                             </tr>
                           </tbody>
                         </table>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-              </ul>
-            </div>
-            <div class="task-group">
-              <div class="task-name-container">
-                <a name="/Member%20structs%2Fenums"></a>
-                <a name="//apple_ref/swift/Section/Member structs/enums" class="dashAnchor"></a>
-                <div class="section-name-container">
-                  <a class="section-name-link" href="#/Member%20structs%2Fenums"></a>
-                  <h3 class="section-name"><p>Member structs/enums</p>
-</h3>
-                </div>
-              </div>
-              <ul>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:8SotoCore9AWSClientC11ClientErrorV"></a>
-                    <a name="//apple_ref/swift/Struct/ClientError" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore9AWSClientC11ClientErrorV">ClientError</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Errors returned by <code><a href="../Classes/AWSClient.html">AWSClient</a></code> code</p>
-
-                        <a href="../Classes/AWSClient/ClientError.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">ClientError</span> <span class="p">:</span> <span class="kt">Swift</span><span class="o">.</span><span class="kt">Error</span><span class="p">,</span> <span class="kt">Equatable</span></code></pre>
-<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt"><a href="../Classes/AWSClient.html">AWSClient</a></span><span class="o">.</span><span class="kt">ClientError</span><span class="p">:</span> <span class="kt">CustomStringConvertible</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:8SotoCore9AWSClientC18HTTPClientProviderO"></a>
-                    <a name="//apple_ref/swift/Enum/HTTPClientProvider" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore9AWSClientC18HTTPClientProviderO">HTTPClientProvider</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Specifies how <code>HTTPClient</code> will be created and establishes lifecycle ownership.</p>
-
-                        <a href="../Classes/AWSClient/HTTPClientProvider.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">HTTPClientProvider</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -1561,19 +1513,6 @@ the next block. This function loads each block and calls a closure with each blo
                     </section>
                   </div>
                 </li>
-              </ul>
-            </div>
-            <div class="task-group">
-              <div class="task-name-container">
-                <a name="/API%20Calls2"></a>
-                <a name="//apple_ref/swift/Section/API Calls" class="dashAnchor"></a>
-                <div class="section-name-container">
-                  <a class="section-name-link" href="#/API%20Calls2"></a>
-                  <h3 class="section-name"><p>API Calls</p>
-</h3>
-                </div>
-              </div>
-              <ul>
                 <li class="item">
                   <div>
                     <code>
@@ -1705,7 +1644,7 @@ the next block. This function loads each block and calls a closure with each blo
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Execute an empty request and return a future with an empty response</p>
+                        <p>execute an empty request and return a future with an empty response</p>
 
                       </div>
                       <div class="declaration">
@@ -1810,7 +1749,7 @@ the next block. This function loads each block and calls a closure with each blo
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Execute an empty request and return a future with the output object generated from the response</p>
+                        <p>execute an empty request and return a future with the output object generated from the response</p>
 
                       </div>
                       <div class="declaration">
@@ -1915,7 +1854,7 @@ the next block. This function loads each block and calls a closure with each blo
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Execute a request with an input object and return a future with the output object generated from the response</p>
+                        <p>execute a request with an input object and return a future with the output object generated from the response</p>
 
                       </div>
                       <div class="declaration">
@@ -2033,7 +1972,7 @@ the next block. This function loads each block and calls a closure with each blo
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Execute a request with an input object and return a future with the output object generated from the response</p>
+                        <p>execute a request with an input object and return a future with the output object generated from the response</p>
 
                       </div>
                       <div class="declaration">
@@ -2152,7 +2091,7 @@ the next block. This function loads each block and calls a closure with each blo
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Generate a signed URL</p>
+                        <p>generate a signed URL</p>
 
                       </div>
                       <div class="declaration">

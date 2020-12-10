@@ -71,7 +71,7 @@ class AWSServiceTests: XCTestCase {
     }
 
     func testSignURL() throws {
-        let client = createAWSClient()
+        let client = createAWSClient(credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let serviceConfig = createServiceConfig()
         let service = TestService(client: client, config: serviceConfig)

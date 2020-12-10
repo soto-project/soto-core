@@ -27,6 +27,8 @@ class STSAssumeRoleTests: XCTestCase {
             secretAccessKey: "STSSECRETACCESSKEY",
             sessionToken: "STSSESSIONTOKEN"
         )
+        let elg = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        defer { XCTAssertNoThrow(try elg.syncShutdownGracefully()) }
         let testServer = AWSTestServer(serviceProtocol: .xml)
         defer { XCTAssertNoThrow(try testServer.stop()) }
         let client = AWSClient(
@@ -36,7 +38,7 @@ class STSAssumeRoleTests: XCTestCase {
                 region: .useast1,
                 endpoint: testServer.address
             ),
-            httpClientProvider: .createNew,
+            httpClientProvider: .createNewWithEventLoopGroup(elg),
             logger: TestEnvironment.logger
         )
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
@@ -49,7 +51,7 @@ class STSAssumeRoleTests: XCTestCase {
             return .result(response)
         })
         var result: Credential?
-        XCTAssertNoThrow(result = try client.credentialProvider.getCredential(on: client.eventLoopGroup.next(), logger: AWSClient.loggingDisabled).wait())
+        XCTAssertNoThrow(result = try client.credentialProvider.getCredential(on: client.eventLoopGroup.next(), logger: TestEnvironment.logger).wait())
         let stsCredentials = result as? STSCredentials
         XCTAssertEqual(stsCredentials?.accessKeyId, credentials.accessKeyId)
         XCTAssertEqual(stsCredentials?.secretAccessKey, credentials.secretAccessKey)

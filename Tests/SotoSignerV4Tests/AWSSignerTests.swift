@@ -81,7 +81,7 @@ final class AWSSignerTests: XCTestCase {
         let url3 = URL(string: "https://test.s3.amazonaws.com?test=hello%20goodbye")!
         XCTAssertEqual(signer.processURL(url: url3), URL(string: "https://test.s3.amazonaws.com?test=hello%20goodbye"))
     }
-    
+
     func testSignS3PutWithHeaderURL() {
         let signer = AWSSigner(credentials: credentialsWithSessionKey, name: "s3", region: "eu-west-1")
         let url = signer.signURL(

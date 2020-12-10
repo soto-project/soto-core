@@ -52,7 +52,7 @@ public struct AWSSigner {
         case unsignedPayload
         case s3chunked
     }
-    
+
     /// `signURL` and `signHeaders` make assumptions about the URLs they are provided, this function cleans up a URL so it is ready
     /// to be signed by either of these functions. It sorts the query params and ensures they are properly percent encoded
     public func processURL(url: URL) -> URL? {
@@ -64,7 +64,7 @@ public struct AWSSigner {
         urlComponents.percentEncodedQuery = urlQueryString
         return urlComponents.url
     }
-    
+
     /// Generate signed headers, for a HTTP request
     public func signHeaders(url: URL, method: HTTPMethod = .GET, headers: HTTPHeaders = HTTPHeaders(), body: BodyData? = nil, date: Date = Date()) -> HTTPHeaders {
         let bodyHash = AWSSigner.hashedPayload(body)

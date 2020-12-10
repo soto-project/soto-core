@@ -456,8 +456,11 @@ extension AWSClient {
         logger: Logger = AWSClient.loggingDisabled
     ) -> EventLoopFuture<URL> {
         let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: "signURL", service: serviceConfig.service)
-        return createSigner(serviceConfig: serviceConfig, logger: logger).map { signer in
-            signer.signURL(url: url, method: httpMethod, headers: headers, expires: expires)
+        return createSigner(serviceConfig: serviceConfig, logger: logger).flatMapThrowing { signer in
+            guard let cleanURL = signer.processURL(url: url) else {
+                throw AWSClient.ClientError.invalidURL
+            }
+            return signer.signURL(url: cleanURL, method: httpMethod, headers: headers, expires: expires)
         }
     }
 

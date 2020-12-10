@@ -19,6 +19,7 @@ import class Foundation.DateFormatter
 import struct Foundation.Locale
 import struct Foundation.TimeZone
 import struct Foundation.URL
+import struct Foundation.URLComponents
 import NIO
 import NIOHTTP1
 import SotoCrypto
@@ -51,7 +52,19 @@ public struct AWSSigner {
         case unsignedPayload
         case s3chunked
     }
-
+    
+    /// `signURL` and `signHeaders` make assumptions about the URLs they are provided, this function cleans up a URL so it is ready
+    /// to be signed by either of these functions. It sorts the query params and ensures they are properly percent encoded
+    public func processURL(url: URL) -> URL? {
+        guard var urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return nil }
+        let urlQueryString = urlComponents.queryItems?
+            .sorted { $0.name < $1.name }
+            .map { item in item.value.map { "\(item.name)=\($0.uriEncode())" } ?? item.name }
+            .joined(separator: "&")
+        urlComponents.percentEncodedQuery = urlQueryString
+        return urlComponents.url
+    }
+    
     /// Generate signed headers, for a HTTP request
     public func signHeaders(url: URL, method: HTTPMethod = .GET, headers: HTTPHeaders = HTTPHeaders(), body: BodyData? = nil, date: Date = Date()) -> HTTPHeaders {
         let bodyHash = AWSSigner.hashedPayload(body)
@@ -242,7 +255,7 @@ public struct AWSSigner {
         }
         let canonicalRequest = "\(signingData.method.rawValue)\n" +
             "\(canonicalPath)\n" +
-            "\(signingData.unsignedURL.query ?? "")\n" + // should really uriEncode all the query string values
+            "\(signingData.unsignedURL.query ?? "")\n" + // assuming query parameters have are already percent encoded correctly
             "\(canonicalHeaders)\n\n" +
             "\(signingData.signedHeaders)\n" +
             signingData.hashedPayload

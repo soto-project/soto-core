@@ -72,6 +72,16 @@ final class AWSSignerTests: XCTestCase {
         XCTAssertEqual(url.absoluteString, "https://test-bucket.s3.amazonaws.com/test-put.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=MYACCESSKEY%2F20010102%2Feu-west-1%2Fs3%2Faws4_request&X-Amz-Date=20010102T034640Z&X-Amz-Expires=86400&X-Amz-Security-Token=MYSESSIONTOKEN&X-Amz-SignedHeaders=host&X-Amz-Signature=969dfbc450089f34f5b430611b18def1701c72c9e7e1608142051a898094227e")
     }
 
+    func testProcessURL() {
+        let signer = AWSSigner(credentials: credentials, name: "s3", region: "eu-west-1")
+        let url = URL(string: "https://test.s3.amazonaws.com?test2=true&test1=false")!
+        XCTAssertEqual(signer.processURL(url: url), URL(string: "https://test.s3.amazonaws.com?test1=false&test2=true"))
+        let url2 = URL(string: "https://test.s3.amazonaws.com?test=hello+goodbye")!
+        XCTAssertEqual(signer.processURL(url: url2), URL(string: "https://test.s3.amazonaws.com?test=hello%2Bgoodbye"))
+        let url3 = URL(string: "https://test.s3.amazonaws.com?test=hello%20goodbye")!
+        XCTAssertEqual(signer.processURL(url: url3), URL(string: "https://test.s3.amazonaws.com?test=hello%20goodbye"))
+    }
+    
     func testSignS3PutWithHeaderURL() {
         let signer = AWSSigner(credentials: credentialsWithSessionKey, name: "s3", region: "eu-west-1")
         let url = signer.signURL(

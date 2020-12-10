@@ -236,8 +236,12 @@ public struct AWSSigner {
             .sorted { $0.key < $1.key }
             .map { return "\($0.key):\($0.value.trimmingCharacters(in: CharacterSet.whitespaces))" }
             .joined(separator: "\n")
+        var canonicalPath = signingData.unsignedURL.pathWithSlash.uriEncodeWithSlash()
+        if name != "s3" {
+            canonicalPath = canonicalPath.uriEncodeWithSlash()
+        }
         let canonicalRequest = "\(signingData.method.rawValue)\n" +
-            "\(signingData.unsignedURL.pathWithSlash.uriEncodeWithSlash())\n" +
+            "\(canonicalPath)\n" +
             "\(signingData.unsignedURL.query ?? "")\n" + // should really uriEncode all the query string values
             "\(canonicalHeaders)\n\n" +
             "\(signingData.signedHeaders)\n" +

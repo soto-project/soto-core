@@ -23,7 +23,7 @@ class STSAssumeRoleTests: XCTestCase {
     func testInternalSTSAssumeRoleProvider() throws {
         let credentials = STSCredentials(
             accessKeyId: "STSACCESSKEYID",
-            expiration: Date(timeIntervalSinceNow: 1000000),
+            expiration: Date(timeIntervalSinceNow: 1_000_000),
             secretAccessKey: "STSSECRETACCESSKEY",
             sessionToken: "STSSESSIONTOKEN"
         )

@@ -155,7 +155,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         role_arn = \(roleArn)
         credential_source = Environment
         """
-        
+
         Environment.set(accessKey, for: "AWS_ACCESS_KEY_ID")
         Environment.set(secretKey, for: "AWS_SECRET_ACCESS_KEY")
         defer {

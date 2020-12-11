@@ -110,8 +110,8 @@ class ConfigFileLoadersTests: XCTestCase {
             context: context
         ).wait()
 
-        defer { XCTAssertNoThrow(try httpClient.syncShutdown())}
-        
+        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
+
         switch sharedCredentials {
         case .assumeRole(let aRoleArn, let aSessionName, let region, let sourceCredentialProvider):
             let credentials = try sourceCredentialProvider.createProvider(context: context).getCredential(on: context.eventLoop, logger: context.logger).wait()

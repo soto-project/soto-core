@@ -52,7 +52,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
             roleArn: "arn",
             sessionName: "baz",
             region: nil,
-            sourceCredential: StaticCredential(accessKeyId: "foo", secretAccessKey: "bar")
+            sourceCredentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar")
         )
         let (context, eventLoopGroup, httpClient) = self.makeContext()
 
@@ -65,24 +65,6 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         XCTAssertEqual((provider as? STSAssumeRoleCredentialProvider)?.request.roleArn, "arn")
 
         XCTAssertNoThrow(try provider?.shutdown(on: context.eventLoop).wait())
-        XCTAssertNoThrow(try httpClient.syncShutdown())
-        XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
-    }
-
-    func testCredentialProviderCredentialSource() {
-        let credentials = ConfigFileLoader.SharedCredentials.credentialSource(roleArn: "arn", source: .ec2Instance)
-        let (context, eventLoopGroup, httpClient) = self.makeContext()
-
-        do {
-            _ = try ConfigFileCredentialProvider.credentialProvider(
-                from: credentials,
-                context: context,
-                endpoint: nil
-            )
-        } catch {
-            XCTAssertEqual(error as? CredentialProviderError, .notSupported)
-        }
-
         XCTAssertNoThrow(try httpClient.syncShutdown())
         XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
     }
@@ -160,6 +142,52 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         XCTAssertThrowsError(_ = try provider.getCredential(on: eventLoop, logger: TestEnvironment.logger).wait()) { error in
             print("\(error)")
             XCTAssertEqual(error as? CredentialProviderError, .noProvider)
+        }
+    }
+
+    func testCredentialProviderSourceEnvironment() throws {
+        let accessKey = "AKIAIOSFODNN7EXAMPLE"
+        let secretKey = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+        let profile = "marketingadmin"
+        let roleArn = "arn:aws:iam::123456789012:role/marketingadminrole"
+        let credentialsFile = """
+        [\(profile)]
+        role_arn = \(roleArn)
+        credential_source = Environment
+        """
+        
+        Environment.set(accessKey, for: "AWS_ACCESS_KEY_ID")
+        Environment.set(secretKey, for: "AWS_SECRET_ACCESS_KEY")
+        defer {
+            Environment.unset(name: accessKey)
+            Environment.unset(name: secretKey)
+        }
+        let filename = "credentials"
+        let filenameURL = URL(fileURLWithPath: filename)
+        XCTAssertNoThrow(try Data(credentialsFile.utf8).write(to: filenameURL))
+        let (context, eventLoopGroup, httpClient) = makeContext()
+
+        defer {
+            XCTAssertNoThrow(try FileManager.default.removeItem(at: filenameURL))
+            XCTAssertNoThrow(try httpClient.syncShutdown())
+            XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
+        }
+
+        let sharedCredentials = try ConfigFileLoader.loadSharedCredentials(
+            credentialsFilePath: filename,
+            configFilePath: "/dev/null",
+            profile: profile,
+            context: context
+        ).wait()
+
+        switch sharedCredentials {
+        case .assumeRole(let aRoleArn, _, _, let sourceCredentialProvider):
+            let credentials = try sourceCredentialProvider.createProvider(context: context).getCredential(on: context.eventLoop, logger: context.logger).wait()
+            XCTAssertEqual(credentials.accessKeyId, accessKey)
+            XCTAssertEqual(credentials.secretAccessKey, secretKey)
+            XCTAssertEqual(aRoleArn, roleArn)
+        default:
+            XCTFail("Expected STS Assume Role")
         }
     }
 

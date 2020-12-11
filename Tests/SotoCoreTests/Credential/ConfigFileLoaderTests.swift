@@ -110,10 +110,13 @@ class ConfigFileLoadersTests: XCTestCase {
             context: context
         ).wait()
 
+        defer { XCTAssertNoThrow(try httpClient.syncShutdown())}
+        
         switch sharedCredentials {
-        case .assumeRole(let aRoleArn, let aSessionName, let region, let sourceCredential):
-            XCTAssertEqual(sourceCredential.accessKeyId, accessKey)
-            XCTAssertEqual(sourceCredential.secretAccessKey, secretKey)
+        case .assumeRole(let aRoleArn, let aSessionName, let region, let sourceCredentialProvider):
+            let credentials = try sourceCredentialProvider.createProvider(context: context).getCredential(on: context.eventLoop, logger: context.logger).wait()
+            XCTAssertEqual(credentials.accessKeyId, accessKey)
+            XCTAssertEqual(credentials.secretAccessKey, secretKey)
             XCTAssertEqual(aRoleArn, roleArn)
             XCTAssertEqual(aSessionName, sessionName)
             XCTAssertEqual(region, .uswest1)
@@ -148,9 +151,11 @@ class ConfigFileLoadersTests: XCTestCase {
         ).wait()
 
         switch sharedCredentials {
-        case .credentialSource(let aRoleArn, let source):
+        case .assumeRole(let aRoleArn, _, _, let source):
+            let credentialProvider = source.createProvider(context: context)
             XCTAssertEqual(aRoleArn, roleArn)
-            XCTAssertEqual(source, .ec2Instance)
+            let rotatingCredentials: RotatingCredentialProvider = try XCTUnwrap(credentialProvider as? RotatingCredentialProvider)
+            XCTAssert(rotatingCredentials.provider is InstanceMetaDataClient)
         default:
             XCTFail("Expected credential source")
         }

@@ -23,7 +23,7 @@ class STSAssumeRoleTests: XCTestCase {
     func testInternalSTSAssumeRoleProvider() throws {
         let credentials = STSCredentials(
             accessKeyId: "STSACCESSKEYID",
-            expiration: Date(timeIntervalSince1970: 87_387_346),
+            expiration: Date(timeIntervalSinceNow: 1_000_000),
             secretAccessKey: "STSSECRETACCESSKEY",
             sessionToken: "STSSESSIONTOKEN"
         )
@@ -52,7 +52,6 @@ class STSAssumeRoleTests: XCTestCase {
         XCTAssertNoThrow(result = try client.credentialProvider.getCredential(on: client.eventLoopGroup.next(), logger: AWSClient.loggingDisabled).wait())
         let stsCredentials = result as? STSCredentials
         XCTAssertEqual(stsCredentials?.accessKeyId, credentials.accessKeyId)
-        XCTAssertEqual(stsCredentials?.expiration, credentials.expiration)
         XCTAssertEqual(stsCredentials?.secretAccessKey, credentials.secretAccessKey)
         XCTAssertEqual(stsCredentials?.sessionToken, credentials.sessionToken)
     }
@@ -100,5 +99,30 @@ extension STSCredentials: Encodable {
         case expiration = "Expiration"
         case secretAccessKey = "SecretAccessKey"
         case sessionToken = "SessionToken"
+    }
+}
+
+extension CredentialProviderFactory {
+    /// Internal version of AssumeRole credential provider used by ConfigFileCredentialProvider
+    /// - Parameters:
+    ///   - request: AssumeRole request structure
+    ///   - credentialProvider: Credential provider used in client that runs the AssumeRole operation
+    ///   - region: Region to run request in
+    static func internalSTSAssumeRole(
+        request: STSAssumeRoleRequest,
+        credentialProvider: CredentialProviderFactory = .default,
+        region: Region,
+        endpoint: String? = nil
+    ) -> CredentialProviderFactory {
+        .custom { context in
+            let provider = STSAssumeRoleCredentialProvider(
+                request: request,
+                credentialProvider: credentialProvider,
+                region: region,
+                httpClient: context.httpClient,
+                endpoint: endpoint
+            )
+            return RotatingCredentialProvider(context: context, provider: provider)
+        }
     }
 }

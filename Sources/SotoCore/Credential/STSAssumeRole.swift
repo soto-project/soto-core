@@ -138,28 +138,3 @@ struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
         return self.client.execute(operation: "AssumeRole", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger, on: eventLoop)
     }
 }
-
-extension CredentialProviderFactory {
-    /// Internal version of AssumeRole credential provider used by ConfigFileCredentialProvider
-    /// - Parameters:
-    ///   - request: AssumeRole request structure
-    ///   - credentialProvider: Credential provider used in client that runs the AssumeRole operation
-    ///   - region: Region to run request in
-    static func internalSTSAssumeRole(
-        request: STSAssumeRoleRequest,
-        credentialProvider: CredentialProviderFactory = .default,
-        region: Region,
-        endpoint: String? = nil
-    ) -> CredentialProviderFactory {
-        .custom { context in
-            let provider = STSAssumeRoleCredentialProvider(
-                request: request,
-                credentialProvider: credentialProvider,
-                region: region,
-                httpClient: context.httpClient,
-                endpoint: endpoint
-            )
-            return RotatingCredentialProvider(context: context, provider: provider)
-        }
-    }
-}

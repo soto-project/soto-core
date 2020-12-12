@@ -464,6 +464,34 @@ extension AWSClient {
         }
     }
 
+    /// Generate signed headers
+    /// - parameters:
+    ///     - url : URL to sign
+    ///     - httpMethod: HTTP method to use (.GET, .PUT, .PUSH etc)
+    ///     - httpHeaders: Headers that are to be used with this URL.
+    ///     - body: Payload to sign as well. While it is unnecessary to provide the body for S3 other services may require it
+    ///     - serviceConfig: additional AWS service configuration used to sign the url
+    ///     - logger: Logger to output to
+    /// - returns:
+    ///     A set of signed headers that include the original headers supplied
+    public func signHeaders(
+        url: URL,
+        httpMethod: HTTPMethod,
+        headers: HTTPHeaders = HTTPHeaders(),
+        body: AWSPayload,
+        serviceConfig: AWSServiceConfig,
+        logger: Logger = AWSClient.loggingDisabled
+    ) -> EventLoopFuture<HTTPHeaders> {
+        let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: "signURL", service: serviceConfig.service)
+        return createSigner(serviceConfig: serviceConfig, logger: logger).flatMapThrowing { signer in
+            guard let cleanURL = signer.processURL(url: url) else {
+                throw AWSClient.ClientError.invalidURL
+            }
+            let body: AWSSigner.BodyData? = body.asByteBuffer().map { .byteBuffer($0) }
+            return signer.signHeaders(url: cleanURL, method: httpMethod, headers: headers, body: body)
+        }
+    }
+
     func createSigner(serviceConfig: AWSServiceConfig, logger: Logger) -> EventLoopFuture<AWSSigner> {
         return credentialProvider.getCredential(on: eventLoopGroup.next(), logger: logger).map { credential in
             return AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)

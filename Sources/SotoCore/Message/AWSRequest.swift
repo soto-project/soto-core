@@ -250,8 +250,14 @@ extension AWSRequest {
         // Also the signer doesn't percent encode the queries so they need to be encoded here
         if queryParams.count > 0 {
             let urlQueryString = queryParams
-                .sorted { $0.key < $1.key }
-                .map { "\($0.key)=\(Self.urlEncodeQueryParam("\($0.value)"))" }
+                .map { (key: $0.key, value: "\($0.value)")}
+                .sorted {
+                    // sort by key. if key are equal then sort by value
+                    if $0.key < $1.key { return true }
+                    if $0.key > $1.key { return false }
+                    return $0.value < $1.value
+                }
+                .map { "\($0.key)=\(Self.urlEncodeQueryParam($0.value))" }
                 .joined(separator: "&")
             urlComponents.percentEncodedQuery = urlQueryString
         }

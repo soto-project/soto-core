@@ -80,6 +80,8 @@ final class AWSSignerTests: XCTestCase {
         XCTAssertEqual(signer.processURL(url: url2), URL(string: "https://test.s3.amazonaws.com?test=hello%2Bgoodbye"))
         let url3 = URL(string: "https://test.s3.amazonaws.com?test=hello%20goodbye")!
         XCTAssertEqual(signer.processURL(url: url3), URL(string: "https://test.s3.amazonaws.com?test=hello%20goodbye"))
+        let url4 = URL(string: "https://test.s3.amazonaws.com?test=hello&item=orange&item=apple")!
+        XCTAssertEqual(signer.processURL(url: url4), URL(string: "https://test.s3.amazonaws.com?item=apple&item=orange&test=hello"))
     }
 
     func testSignS3PutWithHeaderURL() {
@@ -108,5 +110,30 @@ final class AWSSignerTests: XCTestCase {
         XCTAssertNotNil(headers1["Authorization"].first)
         XCTAssertEqual(headers1["Authorization"].first, headers2["Authorization"].first)
         XCTAssertEqual(headers2["Authorization"].first, headers3["Authorization"].first)
+    }
+
+    func testCanonicalRequest() throws {
+        let url = URL(string: "https://test.com/test?hello=true&item=apple")!
+        let signer = AWSSigner(credentials: credentials, name: "sns", region: "eu-west-1")
+        let signingData = AWSSigner.SigningData(
+            url: url,
+            method: .POST,
+            headers: ["Content-Type": "application/json", "host": "localhost"],
+            body: .string("{}"),
+            date: AWSSigner.timestamp(Date(timeIntervalSince1970: 234_873)),
+            signer: signer
+        )
+        let request = signer.canonicalRequest(signingData: signingData)
+        let expectedRequest = """
+        POST
+        /test
+        hello=true&item=apple
+        content-type:application/json
+        host:localhost
+
+        content-type;host
+        44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+        """
+        XCTAssertEqual(request, expectedRequest)
     }
 }

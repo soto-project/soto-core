@@ -58,7 +58,12 @@ public struct AWSSigner {
     public func processURL(url: URL) -> URL? {
         guard var urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return nil }
         let urlQueryString = urlComponents.queryItems?
-            .sorted { $0.name < $1.name }
+            .sorted {
+                if $0.name < $1.name { return true }
+                if $0.name > $1.name { return false }
+                guard let value1 = $0.value, let value2 = $1.value else { return false }
+                return value1 < value2
+            }
             .map { item in item.value.map { "\(item.name)=\($0.uriEncode())" } ?? item.name }
             .joined(separator: "&")
         urlComponents.percentEncodedQuery = urlQueryString

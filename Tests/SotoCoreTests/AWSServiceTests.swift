@@ -88,4 +88,20 @@ class AWSServiceTests: XCTestCase {
             .joined(separator: "&")
         XCTAssertEqual(queryItems, "percent=addi%2Btion&space=sp%20ace&test2=true")
     }
+
+    func testSignHeaders() throws {
+        let client = createAWSClient(credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"))
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
+        let serviceConfig = createServiceConfig()
+        let service = TestService(client: client, config: serviceConfig)
+        let url = URL(string: "https://test.amazonaws.com?test2=true&space=sp%20ace&percent=addi+tion")!
+        let headers = try service.signHeaders(
+            url: url,
+            httpMethod: .GET,
+            headers: ["Content-Type": "application/json"],
+            body: .string("Test payload")
+        ).wait()
+        // remove signed query params
+        XCTAssertNotNil(headers["Authorization"].first)
+    }
 }

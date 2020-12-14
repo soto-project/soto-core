@@ -32,10 +32,9 @@ public enum ConfigFile {
 /// https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
 enum ConfigFileLoader {
     /// Specific type of credentials loaded from disk
-    enum SharedCredentials: Equatable {
+    enum SharedCredentials {
         case staticCredential(credential: StaticCredential)
-        case assumeRole(roleArn: String, sessionName: String, region: Region?, sourceCredential: StaticCredential)
-        case credentialSource(roleArn: String, source: CredentialSource)
+        case assumeRole(roleArn: String, sessionName: String, region: Region?, sourceCredentialProvider: CredentialProviderFactory)
     }
 
     /// Credentials file – The credentials and config file are updated when you run the command aws configure. The credentials file is located
@@ -169,6 +168,8 @@ enum ConfigFileLoader {
 
         // If `role_arn` is defined, check for source profile or credential source
         if let roleArn = credentials.roleArn ?? config?.roleArn {
+            let sessionName = credentials.roleSessionName ?? config?.roleSessionName ?? UUID().uuidString
+            let region = config?.region ?? .useast1
             // If `source_profile` is defined, temporary credentials must be loaded via STS AssumeRole operation
             if let _ = credentials.sourceProfile ?? config?.sourceProfile {
                 guard let accessKey = credentials.accessKey else {
@@ -177,15 +178,22 @@ enum ConfigFileLoader {
                 guard let secretAccessKey = credentials.secretAccessKey else {
                     throw ConfigFileError.missingSecretAccessKey
                 }
-                let sessionName = credentials.roleSessionName ?? config?.roleSessionName ?? UUID().uuidString
-                let region = config?.region ?? .useast1
-                let sourceCredential = StaticCredential(accessKeyId: accessKey, secretAccessKey: secretAccessKey, sessionToken: credentials.sessionToken)
-                return .assumeRole(roleArn: roleArn, sessionName: sessionName, region: region, sourceCredential: sourceCredential)
+                let provider: CredentialProviderFactory = .static(accessKeyId: accessKey, secretAccessKey: secretAccessKey, sessionToken: credentials.sessionToken)
+                return .assumeRole(roleArn: roleArn, sessionName: sessionName, region: region, sourceCredentialProvider: provider)
             }
             // If `credental_source` is defined, temporary credentials must be loaded from source
             else if let credentialSource = credentials.credentialSource ?? config?.credentialSource
             {
-                return .credentialSource(roleArn: roleArn, source: credentialSource)
+                let provider: CredentialProviderFactory
+                switch credentialSource {
+                case .environment:
+                    provider = .environment
+                case .ec2Instance:
+                    provider = .ec2
+                case .ecsContainer:
+                    provider = .ecs
+                }
+                return .assumeRole(roleArn: roleArn, sessionName: sessionName, region: region, sourceCredentialProvider: provider)
             }
             // Invalid configuration
             throw ConfigFileError.invalidCredentialFile

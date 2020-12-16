@@ -67,6 +67,10 @@ public struct AWSSigner {
             .map { item in item.value.map { "\(item.name)=\($0.uriEncode())" } ?? item.name }
             .joined(separator: "&")
         urlComponents.percentEncodedQuery = urlQueryString
+        // S3 requires "+" encoded in the URL
+        if name == "s3" {
+            urlComponents.percentEncodedPath = urlComponents.path.awsPathEncode()
+        }
         return urlComponents.url
     }
 
@@ -254,9 +258,13 @@ public struct AWSSigner {
             .sorted { $0.key < $1.key }
             .map { return "\($0.key):\($0.value.trimmingCharacters(in: CharacterSet.whitespaces))" }
             .joined(separator: "\n")
-        var canonicalPath = signingData.unsignedURL.pathWithSlash.uriEncodeWithSlash()
-        if name != "s3" {
-            canonicalPath = canonicalPath.uriEncodeWithSlash()
+        let canonicalPath: String
+        let urlComps = URLComponents(url: signingData.unsignedURL, resolvingAgainstBaseURL: false)!
+        if name == "s3" {
+            canonicalPath = urlComps.path.uriEncodeWithSlash()
+        } else {
+            // non S3 paths need to be encoded twice
+            canonicalPath = urlComps.percentEncodedPath.uriEncodeWithSlash()
         }
         let canonicalRequest = "\(signingData.method.rawValue)\n" +
             "\(canonicalPath)\n" +
@@ -334,6 +342,10 @@ extension String {
         return addingPercentEncoding(withAllowedCharacters: String.queryAllowedCharacters) ?? self
     }
 
+    func awsPathEncode() -> String {
+        return addingPercentEncoding(withAllowedCharacters: String.awsPathAllowedCharacters) ?? self
+    }
+
     func uriEncode() -> String {
         return addingPercentEncoding(withAllowedCharacters: String.uriAllowedCharacters) ?? self
     }
@@ -342,6 +354,7 @@ extension String {
         return addingPercentEncoding(withAllowedCharacters: String.uriAllowedWithSlashCharacters) ?? self
     }
 
+    static let awsPathAllowedCharacters = CharacterSet.urlPathAllowed.subtracting(.init(charactersIn: "+"))
     static let uriAllowedWithSlashCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~/")
     static let uriAllowedCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
     static let queryAllowedCharacters = CharacterSet(charactersIn: "/;+").inverted

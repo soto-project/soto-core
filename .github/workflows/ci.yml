@@ -12,7 +12,7 @@ on:
 
 env:
   ENABLE_TIMING_TESTS: "false"
-  AWS_LOG_LEVEL: "info"
+  AWS_LOG_LEVEL: "trace"
 
 jobs:
   macos:

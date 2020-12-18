@@ -19,6 +19,7 @@ import class Foundation.DateFormatter
 import struct Foundation.Locale
 import struct Foundation.TimeZone
 import struct Foundation.URL
+import struct Foundation.URLComponents
 import NIO
 import NIOHTTP1
 import SotoCrypto
@@ -50,6 +51,27 @@ public struct AWSSigner {
         case byteBuffer(ByteBuffer)
         case unsignedPayload
         case s3chunked
+    }
+
+    /// `signURL` and `signHeaders` make assumptions about the URLs they are provided, this function cleans up a URL so it is ready
+    /// to be signed by either of these functions. It sorts the query params and ensures they are properly percent encoded
+    public func processURL(url: URL) -> URL? {
+        guard var urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return nil }
+        let urlQueryString = urlComponents.queryItems?
+            .sorted {
+                if $0.name < $1.name { return true }
+                if $0.name > $1.name { return false }
+                guard let value1 = $0.value, let value2 = $1.value else { return false }
+                return value1 < value2
+            }
+            .map { item in item.value.map { "\(item.name)=\($0.uriEncode())" } ?? item.name }
+            .joined(separator: "&")
+        urlComponents.percentEncodedQuery = urlQueryString
+        // S3 requires "+" encoded in the URL
+        if name == "s3" {
+            urlComponents.percentEncodedPath = urlComponents.path.awsPathEncode()
+        }
+        return urlComponents.url
     }
 
     /// Generate signed headers, for a HTTP request
@@ -236,9 +258,17 @@ public struct AWSSigner {
             .sorted { $0.key < $1.key }
             .map { return "\($0.key):\($0.value.trimmingCharacters(in: CharacterSet.whitespaces))" }
             .joined(separator: "\n")
+        let canonicalPath: String
+        let urlComps = URLComponents(url: signingData.unsignedURL, resolvingAgainstBaseURL: false)!
+        if name == "s3" {
+            canonicalPath = urlComps.path.uriEncodeWithSlash()
+        } else {
+            // non S3 paths need to be encoded twice
+            canonicalPath = urlComps.percentEncodedPath.uriEncodeWithSlash()
+        }
         let canonicalRequest = "\(signingData.method.rawValue)\n" +
-            "\(signingData.unsignedURL.pathWithSlash.uriEncodeWithSlash())\n" +
-            "\(signingData.unsignedURL.query ?? "")\n" + // should really uriEncode all the query string values
+            "\(canonicalPath)\n" +
+            "\(signingData.unsignedURL.query ?? "")\n" + // assuming query parameters have are already percent encoded correctly
             "\(canonicalHeaders)\n\n" +
             "\(signingData.signedHeaders)\n" +
             signingData.hashedPayload
@@ -312,6 +342,10 @@ extension String {
         return addingPercentEncoding(withAllowedCharacters: String.queryAllowedCharacters) ?? self
     }
 
+    func awsPathEncode() -> String {
+        return addingPercentEncoding(withAllowedCharacters: String.awsPathAllowedCharacters) ?? self
+    }
+
     func uriEncode() -> String {
         return addingPercentEncoding(withAllowedCharacters: String.uriAllowedCharacters) ?? self
     }
@@ -320,6 +354,7 @@ extension String {
         return addingPercentEncoding(withAllowedCharacters: String.uriAllowedWithSlashCharacters) ?? self
     }
 
+    static let awsPathAllowedCharacters = CharacterSet.urlPathAllowed.subtracting(.init(charactersIn: "+"))
     static let uriAllowedWithSlashCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~/")
     static let uriAllowedCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
     static let queryAllowedCharacters = CharacterSet(charactersIn: "/;+").inverted

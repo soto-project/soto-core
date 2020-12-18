@@ -322,4 +322,16 @@ class AWSRequestTests: XCTestCase {
         XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/{path}", httpMethod: .GET, input: input, configuration: config))
         XCTAssertEqual(request?.url, URL(string: "https://test.com/Test%20me%2Fonce%2B")!)
     }
+
+    func testSortedArrayQuery() {
+        struct Input: AWSEncodableShape {
+            static let _encoding: [AWSMemberEncoding] = [.init(label: "items", location: .querystring(locationName: "item"))]
+            let items: [String]
+        }
+        let input = Input(items: ["orange", "apple"])
+        let config = createServiceConfig(endpoint: "https://test.com")
+        var request: AWSRequest?
+        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))
+        XCTAssertEqual(request?.url, URL(string: "https://test.com/?item=apple&item=orange")!)
+    }
 }

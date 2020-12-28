@@ -169,6 +169,13 @@ public final class AWSServiceConfig {
         /// If you set a custom endpoint, s3 will choose path style addressing. With this paramteter you can force
         /// it to use virtual host style addressing
         public static let s3ForceVirtualHost = Options(rawValue: 1 << 0)
+
+        /// Use a dual stack S3 endpoint. WHen you make a request to a dual-stack endpoint the bucket URL resolves
+        /// to an IPv6 or an IPv4 address
+        public static let s3UseDualStackEndpoint = Options(rawValue: 1 << 1)
+
+        /// Use S3 transfer accelerated endpoint. You need to enable transfer acceleration on the bucket for this to work
+        public static let s3UseTransferAcceleratedEndpoint = Options(rawValue: 1 << 2)
     }
 
     private init(

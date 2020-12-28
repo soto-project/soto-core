@@ -337,11 +337,16 @@ class AWSRequestTests: XCTestCase {
 
     func testCustomEncoderInQuery() {
         struct Input: AWSEncodableShape {
-            static let _encoding: [AWSMemberEncoding] = [.init(label: "_date", location: .querystring(locationName: "date"))]
+            static let _encoding: [AWSMemberEncoding] = [
+                .init(label: "_date", location: .querystring(locationName: "date")),
+                .init(label: "_values", location: .querystring(locationName: "values")),
+            ]
             @OptionalCustomCoding<HTTPHeaderDateCoder>
             var date: Date?
+            @CustomCoding<StandardArrayCoder>
+            var values: [Int]
         }
-        let input = Input(date: Date(timeIntervalSince1970: 10_000_000))
+        let input = Input(date: Date(timeIntervalSince1970: 10_000_000), values: [1])
         let config = createServiceConfig(endpoint: "https://test.com")
         var request: AWSRequest?
         XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))

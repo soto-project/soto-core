@@ -21,7 +21,14 @@ public protocol CustomCoder {
 
 /// Protocol for object that will encode a value
 public protocol CustomEncoder: CustomCoder {
+    /// encode CodableValue with supplied encoder
     static func encode(value: CodableValue, to encoder: Encoder) throws
+    /// return value as a String. Used by query string and header values
+    static func string(from: CodableValue) -> String?
+}
+
+extension CustomEncoder {
+    public static func string(from: CodableValue) -> String? { return nil }
 }
 
 /// Protocol for object that will decode a value

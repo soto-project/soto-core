@@ -46,6 +46,10 @@ extension DateFormatCoder {
         try container.encode(dateFormatters[0].string(from: value))
     }
 
+    public static func string(from value: Date) -> String? {
+        dateFormatters[0].string(from: value)
+    }
+
     /// create DateFormatter
     static func createDateFormatters() -> [DateFormatter] {
         var dateFormatters: [DateFormatter] = []

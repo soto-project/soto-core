@@ -145,6 +145,8 @@ extension AWSRequest {
                 switch encoding.location {
                 case .header(let location):
                     switch value {
+                    case let string as AWSRequestEncodableString:
+                        string.encoded.map { headers.replaceOrAdd(name: location, value: $0) }
                     case let dictionary as AWSRequestEncodableDictionary:
                         dictionary.encoded.forEach { headers.replaceOrAdd(name: "\(location)\($0.key)", value: $0.value) }
                     default:
@@ -153,6 +155,8 @@ extension AWSRequest {
 
                 case .querystring(let location):
                     switch value {
+                    case let string as AWSRequestEncodableString:
+                        string.encoded.map { queryParams.append((key: location, value: $0)) }
                     case let array as AWSRequestEncodableArray:
                         array.encoded.forEach { queryParams.append((key: location, value: $0)) }
                     case let dictionary as AWSRequestEncodableDictionary:
@@ -337,5 +341,22 @@ private protocol AWSRequestEncodableDictionary {
 extension Dictionary: AWSRequestEncodableDictionary {
     var encoded: [(key: String, value: String)] {
         return self.map { (key: "\($0.key)", value: "\($0.value)") }
+    }
+}
+
+private protocol AWSRequestEncodableString {
+    var encoded: String? { get }
+}
+
+extension CustomCoding: AWSRequestEncodableString where Coder: CustomEncoder {
+    var encoded: String? {
+        return Coder.string(from: self.wrappedValue)
+    }
+}
+
+extension OptionalCustomCoding: AWSRequestEncodableString where Coder: CustomEncoder {
+    var encoded: String? {
+        guard let value = self.wrappedValue else { return nil }
+        return Coder.string(from: value)
     }
 }

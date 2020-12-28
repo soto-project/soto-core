@@ -334,4 +334,17 @@ class AWSRequestTests: XCTestCase {
         XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))
         XCTAssertEqual(request?.url, URL(string: "https://test.com/?item=apple&item=orange")!)
     }
+
+    func testCustomEncoderInQuery() {
+        struct Input: AWSEncodableShape {
+            static let _encoding: [AWSMemberEncoding] = [.init(label: "_date", location: .querystring(locationName: "date"))]
+            @OptionalCustomCoding<HTTPHeaderDateCoder>
+            var date: Date?
+        }
+        let input = Input(date: Date(timeIntervalSince1970: 10_000_000))
+        let config = createServiceConfig(endpoint: "https://test.com")
+        var request: AWSRequest?
+        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))
+        XCTAssertEqual(request?.url, URL(string: "https://test.com/?date=Sun%2C%2026%20Apr%201970%2017%3A46%3A40%20GMT")!)
+    }
 }

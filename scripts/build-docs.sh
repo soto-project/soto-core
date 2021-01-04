@@ -19,7 +19,7 @@ set -eux
 mkdir -p sourcekitten
 
 # generate source kitten json
-sourcekitten doc --spm-module "SotoCore" > sourcekitten/SotoCore.json;
+sourcekitten doc --spm --module-name "SotoCore" > sourcekitten/SotoCore.json;
 
 # generate documentation with jazzy
 jazzy --clean

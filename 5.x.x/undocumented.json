@@ -15,38 +15,31 @@
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/AWSService.swift",
-      "line": 18,
-      "symbol": "AWSService",
-      "symbol_kind": "source.lang.swift.decl.protocol",
+      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Credential/ConfigFileLoader.swift",
+      "line": 25,
+      "symbol": "ConfigFile",
+      "symbol_kind": "source.lang.swift.decl.enum",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/AWSService.swift",
+      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Credential/ConfigFileLoader.swift",
+      "line": 26,
+      "symbol": "ConfigFile.defaultCredentialsPath",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Credential/ConfigFileLoader.swift",
       "line": 27,
-      "symbol": "AWSService",
-      "symbol_kind": "source.lang.swift.decl.extension",
+      "symbol": "ConfigFile.defaultProfileConfigPath",
+      "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Credential/CredentialProvider.swift",
-      "line": 22,
-      "symbol": "CredentialProvider.getCredential(on:logger:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Credential/CredentialProvider.swift",
-      "line": 23,
-      "symbol": "CredentialProvider.shutdown(on:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Credential/CredentialProvider.swift",
-      "line": 27,
-      "symbol": "CredentialProvider.shutdown(on:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Credential/ConfigFileLoader.swift",
+      "line": 28,
+      "symbol": "ConfigFile.defaultProfile",
+      "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
@@ -71,13 +64,6 @@
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Credential/DeferredCredentialProvider.swift",
-      "line": 58,
-      "symbol": "DeferredCredentialProvider.shutdown(on:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Credential/ExpiringCredential.swift",
       "line": 19,
       "symbol": "ExpiringCredential",
@@ -86,63 +72,42 @@
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Credential/ExpiringCredential.swift",
-      "line": 20,
-      "symbol": "ExpiringCredential.isExpiring(within:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Credential/ExpiringCredential.swift",
-      "line": 23,
+      "line": 24,
       "symbol": "ExpiringCredential",
       "symbol_kind": "source.lang.swift.decl.extension",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Credential/ExpiringCredential.swift",
-      "line": 24,
-      "symbol": "ExpiringCredential.isExpired",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Credential/ExpiringCredential.swift",
-      "line": 31,
+      "line": 33,
       "symbol": "RotatingCredential.init(accessKeyId:secretAccessKey:sessionToken:expiration:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Credential/ExpiringCredential.swift",
-      "line": 38,
-      "symbol": "RotatingCredential.isExpiring(within:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Credential/ExpiringCredential.swift",
-      "line": 42,
+      "line": 45,
       "symbol": "RotatingCredential.accessKeyId",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Credential/ExpiringCredential.swift",
-      "line": 43,
+      "line": 46,
       "symbol": "RotatingCredential.secretAccessKey",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Credential/ExpiringCredential.swift",
-      "line": 44,
+      "line": 47,
       "symbol": "RotatingCredential.sessionToken",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Credential/ExpiringCredential.swift",
-      "line": 45,
+      "line": 48,
       "symbol": "RotatingCredential.expiration",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
@@ -150,7 +115,7 @@
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Credential/NullCredentialProvider.swift",
       "line": 21,
-      "symbol": "NullCredentialProvider.getCredential(on:logger:)",
+      "symbol": "NullCredentialProvider.init()",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
@@ -166,34 +131,6 @@
       "line": 33,
       "symbol": "RotatingCredentialProvider.init(context:provider:remainingTokenLifetimeForUse:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Credential/RotatingCredentialProvider.swift",
-      "line": 39,
-      "symbol": "RotatingCredentialProvider.shutdown(on:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Credential/RotatingCredentialProvider.swift",
-      "line": 48,
-      "symbol": "RotatingCredentialProvider.getCredential(on:logger:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Credential/StaticCredential+CredentialProvider.swift",
-      "line": 19,
-      "symbol": "StaticCredential.getCredential(on:logger:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Credential/StaticCredential+Environment.swift",
-      "line": 19,
-      "symbol": "StaticCredential.fromEnvironment()",
-      "symbol_kind": "source.lang.swift.decl.function.method.static",
       "warning": "undocumented"
     },
     {
@@ -247,168 +184,140 @@
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/AWSShape.swift",
-      "line": 89,
-      "symbol": "AWSEncodableShape.validationError(_:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.static",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/AWSShape.swift",
-      "line": 93,
+      "line": 94,
       "symbol": "AWSEncodableShape.validate(_:name:parent:min:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/AWSShape.swift",
-      "line": 97,
+      "line": 98,
       "symbol": "AWSEncodableShape.validate(_:name:parent:max:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/AWSShape.swift",
-      "line": 101,
+      "line": 102,
       "symbol": "AWSEncodableShape.validate(_:name:parent:min:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/AWSShape.swift",
-      "line": 105,
+      "line": 106,
       "symbol": "AWSEncodableShape.validate(_:name:parent:max:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/AWSShape.swift",
-      "line": 109,
+      "line": 110,
       "symbol": "AWSEncodableShape.validate(_:name:parent:min:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/AWSShape.swift",
-      "line": 113,
+      "line": 114,
       "symbol": "AWSEncodableShape.validate(_:name:parent:max:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/AWSShape.swift",
-      "line": 117,
+      "line": 118,
       "symbol": "AWSEncodableShape.validate(_:name:parent:min:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/AWSShape.swift",
-      "line": 125,
+      "line": 126,
       "symbol": "AWSEncodableShape.validate(_:name:parent:max:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/AWSShape.swift",
-      "line": 133,
+      "line": 134,
       "symbol": "AWSEncodableShape.validate(_:name:parent:pattern:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/AWSShape.swift",
-      "line": 140,
+      "line": 141,
       "symbol": "AWSEncodableShape.validate(_:name:parent:min:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/AWSShape.swift",
-      "line": 145,
+      "line": 146,
       "symbol": "AWSEncodableShape.validate(_:name:parent:max:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/AWSShape.swift",
-      "line": 150,
+      "line": 151,
       "symbol": "AWSEncodableShape.validate(_:name:parent:min:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/AWSShape.swift",
-      "line": 155,
+      "line": 156,
       "symbol": "AWSEncodableShape.validate(_:name:parent:max:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/AWSShape.swift",
-      "line": 160,
+      "line": 161,
       "symbol": "AWSEncodableShape.validate(_:name:parent:min:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/AWSShape.swift",
-      "line": 165,
+      "line": 166,
       "symbol": "AWSEncodableShape.validate(_:name:parent:max:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/AWSShape.swift",
-      "line": 170,
+      "line": 171,
       "symbol": "AWSEncodableShape.validate(_:name:parent:min:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/AWSShape.swift",
-      "line": 175,
+      "line": 176,
       "symbol": "AWSEncodableShape.validate(_:name:parent:max:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/AWSShape.swift",
-      "line": 180,
+      "line": 181,
       "symbol": "AWSEncodableShape.validate(_:name:parent:pattern:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/AWSShape.swift",
-      "line": 197,
-      "symbol": "AWSShapePayloadOptions.allowStreaming",
-      "symbol_kind": "source.lang.swift.decl.var.static",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/AWSShape.swift",
-      "line": 198,
-      "symbol": "AWSShapePayloadOptions.allowChunkedStreaming",
-      "symbol_kind": "source.lang.swift.decl.var.static",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/AWSShape.swift",
-      "line": 199,
-      "symbol": "AWSShapePayloadOptions.raw",
-      "symbol_kind": "source.lang.swift.decl.var.static",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/AWSShape.swift",
-      "line": 206,
+      "line": 210,
       "symbol": "AWSShapeWithPayload._payloadOptions",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/AWSShape.swift",
-      "line": 210,
+      "line": 214,
       "symbol": "AWSShapeWithPayload._payloadOptions",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
@@ -730,77 +639,70 @@
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Encoder/CodableProperties/CodableProperties.swift",
-      "line": 24,
-      "symbol": "CustomEncoder.encode(value:to:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.static",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Encoder/CodableProperties/CodableProperties.swift",
-      "line": 29,
+      "line": 36,
       "symbol": "CustomDecoder.decode(from:)",
       "symbol_kind": "source.lang.swift.decl.function.method.static",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Encoder/CodableProperties/CodableProperties.swift",
-      "line": 36,
+      "line": 43,
       "symbol": "CustomCoding.init(wrappedValue:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Encoder/CodableProperties/CodableProperties.swift",
-      "line": 40,
+      "line": 47,
       "symbol": "CustomCoding.wrappedValue",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Encoder/CodableProperties/CodableProperties.swift",
-      "line": 64,
+      "line": 71,
       "symbol": "OptionalCustomCoding.init(wrappedValue:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Encoder/CodableProperties/CodableProperties.swift",
-      "line": 68,
+      "line": 75,
       "symbol": "OptionalCustomCoding.wrappedValue",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Encoder/CodableProperties/CodableProperties.swift",
-      "line": 91,
+      "line": 98,
       "symbol": "OptionalCustomCodingWrapper.WrappedType",
       "symbol_kind": "source.lang.swift.decl.associatedtype",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Encoder/CodableProperties/CodableProperties.swift",
-      "line": 92,
+      "line": 99,
       "symbol": "OptionalCustomCodingWrapper.wrappedValue",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Encoder/CodableProperties/CodableProperties.swift",
-      "line": 93,
+      "line": 100,
       "symbol": "OptionalCustomCodingWrapper.init(wrappedValue:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Encoder/CodableProperties/CodableProperties.swift",
-      "line": 99,
+      "line": 106,
       "symbol": "KeyedDecodingContainer.decode(_:forKey:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Encoder/CodableProperties/CodableProperties.swift",
-      "line": 107,
+      "line": 114,
       "symbol": "KeyedEncodingContainer.encode(_:forKey:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
@@ -823,13 +725,6 @@
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Encoder/CodableProperties/CollectionCoders.swift",
       "line": 31,
       "symbol": "ArrayCoder.decode(from:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.static",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Encoder/CodableProperties/CollectionCoders.swift",
-      "line": 47,
-      "symbol": "ArrayCoder.encode(value:to:)",
       "symbol_kind": "source.lang.swift.decl.function.method.static",
       "warning": "undocumented"
     },
@@ -865,13 +760,6 @@
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Encoder/CodableProperties/CollectionCoders.swift",
       "line": 72,
       "symbol": "DictionaryCoder.decode(from:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.static",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Encoder/CodableProperties/CollectionCoders.swift",
-      "line": 101,
-      "symbol": "DictionaryCoder.encode(value:to:)",
       "symbol_kind": "source.lang.swift.decl.function.method.static",
       "warning": "undocumented"
     },
@@ -919,22 +807,15 @@
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Encoder/CodableProperties/DateCoders.swift",
-      "line": 78,
+      "line": 82,
       "symbol": "UnixEpochDateCoder.CodableValue",
       "symbol_kind": "source.lang.swift.decl.typealias",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Encoder/CodableProperties/DateCoders.swift",
-      "line": 80,
+      "line": 84,
       "symbol": "UnixEpochDateCoder.decode(from:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.static",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Encoder/CodableProperties/DateCoders.swift",
-      "line": 86,
-      "symbol": "UnixEpochDateCoder.encode(value:to:)",
       "symbol_kind": "source.lang.swift.decl.function.method.static",
       "warning": "undocumented"
     },
@@ -1226,34 +1107,6 @@
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/HTTP/AWSHTTPClient.swift",
-      "line": 37,
-      "symbol": "AWSHTTPResponse.status",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/HTTP/AWSHTTPClient.swift",
-      "line": 38,
-      "symbol": "AWSHTTPResponse.headers",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/HTTP/AWSHTTPClient.swift",
-      "line": 39,
-      "symbol": "AWSHTTPResponse.body",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/HTTP/AWSHTTPClient.swift",
-      "line": 44,
-      "symbol": "AWSHTTPClient.ResponseStream",
-      "symbol_kind": "source.lang.swift.decl.typealias",
-      "warning": "undocumented"
-    },
-    {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/HTTP/StreamReader.swift",
       "line": 20,
       "symbol": "StreamReaderResult.byteBuffer(_:)",
@@ -1324,31 +1177,10 @@
       "warning": "undocumented"
     },
     {
-      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Message/Body.swift",
-      "line": 90,
-      "symbol": "Body.asByteBuffer(byteBufferAllocator:)",
-      "symbol_kind": "source.lang.swift.decl.function.method.instance",
-      "warning": "undocumented"
-    },
-    {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/RetryPolicy.swift",
-      "line": 20,
+      "line": 21,
       "symbol": "RetryPolicyFactory.retryPolicy",
       "symbol_kind": "source.lang.swift.decl.var.instance",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/RetryPolicy.swift",
-      "line": 43,
-      "symbol": "RetryStatus.retry(wait:)",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/RetryPolicy.swift",
-      "line": 44,
-      "symbol": "RetryStatus.dontRetry",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     }
   ],

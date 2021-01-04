@@ -17,7 +17,7 @@
     <a title="Classes  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html"> Docs</a> (59% documented)</p>
+        <p><a href="index.html"> Docs</a> (65% documented)</p>
         <p class="header-right"><a href="https://github.com/soto-project/soto-core"><img src="img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="search.json">
@@ -82,6 +82,9 @@
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
                 <a href="Enums/Body.html">Body</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/ConfigFile.html">ConfigFile</a>
               </li>
               <li class="nav-group-task">
                 <a href="Enums/RetryStatus.html">RetryStatus</a>
@@ -375,7 +378,7 @@ which is then decoded to generate a <code><a href="Protocols/AWSShape.html">AWSS
                       <div class="pointer"></div>
                       <div class="abstract">
                         <p>Used for wrapping another credential provider whose <code>getCredential</code> method doesn&rsquo;t return instantly and
-it only needs to be called once. After the wrapped <code><a href="Protocols/CredentialProvider.html">CredentialProvider</a></code> has generated a credential this is
+is only needed to be called once. After the wrapped <code><a href="Protocols/CredentialProvider.html">CredentialProvider</a></code> has generated a credential this is
 returned instead of calling the wrapped <code>CredentialProvider&#39;s</code> <code>getCredentials</code> again.</p>
 
                         <a href="Classes/DeferredCredentialProvider.html" class="slightly-smaller">See more</a>
@@ -405,10 +408,10 @@ returned instead of calling the wrapped <code>CredentialProvider&#39;s</code> <c
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The <code>RotatingCredentialProvider</code> shall be of help if you wish to implement your own provider
-strategy. If your Credential conforms to the <code><a href="Protocols/ExpiringCredential.html">ExpiringCredential</a></code> protocol, the <code>RotatingCredentialProvider</code>
-checks whether your <code>credential</code> is still valid before every request.
-If needed the <code>RotatingCrendentialProvider</code> requests a new credential from the provided <code>Client</code>.</p>
+                        <p>Used for wrapping another credential provider whose <code>getCredential</code> method returns an <code><a href="Protocols/ExpiringCredential.html">ExpiringCredential</a></code>.
+If no credential is available, or the current credentials are going to expire in the near future  the wrapped credential provider
+<code>getCredential</code> is called. If current credentials have not expired they are returned otherwise we wait on new
+credentials being provided.</p>
 
                         <a href="Classes/RotatingCredentialProvider.html" class="slightly-smaller">See more</a>
                       </div>

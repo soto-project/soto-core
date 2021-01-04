@@ -17,7 +17,7 @@
     <a title="AWSService Protocol Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> Docs</a> (59% documented)</p>
+        <p><a href="../index.html"> Docs</a> (65% documented)</p>
         <p class="header-right"><a href="https://github.com/soto-project/soto-core"><img src="../img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="../search.json">
@@ -82,6 +82,9 @@
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
                 <a href="../Enums/Body.html">Body</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ConfigFile.html">ConfigFile</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Enums/RetryStatus.html">RetryStatus</a>
@@ -304,7 +307,7 @@
 
                 </div>
               </div>
-            <p>Undocumented</p>
+            <p>Protocol for services objects. Contains a client to communicate with AWS and config for defining how to communicate</p>
 
           </section>
           <section class="section task-group-section">
@@ -323,7 +326,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>client used to communicate with AWS</p>
+                        <p>Client used to communicate with AWS</p>
 
                       </div>
                       <div class="declaration">
@@ -350,7 +353,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>service context details</p>
+                        <p>Service context details</p>
 
                       </div>
                       <div class="declaration">
@@ -377,7 +380,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>patch init</p>
+                        <p>Patch initialization</p>
 
                       </div>
                       <div class="declaration">
@@ -497,7 +500,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>generate a signed URL</p>
+                        <p>Generate a signed URL</p>
 
                       </div>
                       <div class="declaration">
@@ -545,7 +548,7 @@
                             <tr>
                               <td>
                                 <code>
-                                <em>httpHeaders</em>
+                                <em>headers</em>
                                 </code>
                               </td>
                               <td>
@@ -584,6 +587,113 @@
                       <div>
                         <h4>Return Value</h4>
                         <p>A signed URL</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore10AWSServicePAAE11signHeaders3url10httpMethod7headers4body6logger3NIO15EventLoopFutureCy8NIOHTTP111HTTPHeadersVG10Foundation3URLV_AM10HTTPMethodOAoA10AWSPayloadV7Logging6LoggerVtF"></a>
+                    <a name="//apple_ref/swift/Method/signHeaders(url:httpMethod:headers:body:logger:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore10AWSServicePAAE11signHeaders3url10httpMethod7headers4body6logger3NIO15EventLoopFutureCy8NIOHTTP111HTTPHeadersVG10Foundation3URLV_AM10HTTPMethodOAoA10AWSPayloadV7Logging6LoggerVtF">signHeaders(url:<wbr>httpMethod:<wbr>headers:<wbr>body:<wbr>logger:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Generate signed headers</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">signHeaders</span><span class="p">(</span>
+    <span class="nv">url</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span>
+    <span class="nv">httpMethod</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span>
+    <span class="nv">headers</span><span class="p">:</span> <span class="kt">HTTPHeaders</span> <span class="o">=</span> <span class="kt">HTTPHeaders</span><span class="p">(),</span>
+    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Structs/AWSPayload.html">AWSPayload</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">empty</span><span class="p">,</span>
+    <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt"><a href="../Classes/AWSClient.html">AWSClient</a></span><span class="o">.</span><span class="n">loggingDisabled</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">HTTPHeaders</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>url</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>URL to sign</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>httpMethod</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>HTTP method to use (.GET, .PUT, .PUSH etc)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>headers</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Headers that are to be used with this URL. Be sure to include these headers when you used the returned URL</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>body</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>body payload to sign as well. While it is unnecessary to provide the body for S3 other services require it</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>logger</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Logger to output to</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>A series of signed headers including the original headers provided to the function</p>
                       </div>
                     </section>
                   </div>

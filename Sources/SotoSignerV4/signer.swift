@@ -162,7 +162,9 @@ public struct AWSSigner {
         if let sessionToken = credentials.sessionToken {
             headers.add(name: "x-amz-security-token", value: sessionToken)
         }
-
+        // remove content-length header
+        headers.remove(name: "content-length")
+        
         // construct signing data. Do this after adding the headers as it uses data from the headers
         let signingData = AWSSigner.SigningData(url: url, method: method, headers: headers, bodyHash: bodyHash, date: dateString, signer: self)
         let signingKey = self.signingKey(date: signingData.date)

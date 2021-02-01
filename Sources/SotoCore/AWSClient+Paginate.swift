@@ -32,9 +32,10 @@ extension AWSClient {
     ///   - input: Input for request
     ///   - initialValue: The value to use as the initial accumulating value. `initialValue` is passed to `onPage` the first time it is called.
     ///   - command: Command to be paginated
-    ///   - tokenKey: The name of token in the response object to continue pagination
+    ///   - inputKey: The name of token in the request object to continue pagination
+    ///   - outputKey: The name of token in the response object to continue pagination
     ///   - eventLoop: EventLoop to run this process on
-    ///   - logger: Logger used flot logging
+    ///   - logger: Logger used for logging
     ///   - onPage: closure called with each block of entries. It combines an accumulating result with the contents of response from the call to AWS. This combined result is then returned
     ///         along with a boolean indicating if the paginate operation should continue.
     public func paginate<Input: AWSPaginateToken, Output: AWSShape, Result>(
@@ -59,9 +60,8 @@ extension AWSClient {
                             // get next block token and construct a new input with this token
                             guard let outputToken = response[keyPath: outputKey] else { return promise.succeed(result) }
                             // if output token is still the same as the input token then exit with success
-                            if outputToken == input[keyPath: inputKey] {
-                                promise.succeed(result)
-                            }
+                            guard outputToken != input[keyPath: inputKey] else { return promise.succeed(result) }
+
                             let input = input.usingPaginationToken(outputToken)
                             paginatePart(input: input, currentValue: result)
                         }
@@ -83,9 +83,10 @@ extension AWSClient {
     /// - Parameters:
     ///   - input: Input for request
     ///   - command: Command to be paginated
-    ///   - tokenKey: The name of token in the response object to continue pagination
+    ///   - inputKey: The name of token in the request object to continue pagination
+    ///   - outputKey: The name of token in the response object to continue pagination
     ///   - eventLoop: EventLoop to run this process on
-    ///   - logger: Logger used flot logging
+    ///   - logger: Logger used for logging
     ///   - onPage: closure called with each block of entries. Returns boolean indicating whether we should continue.
     public func paginate<Input: AWSPaginateToken, Output: AWSShape>(
         input: Input,
@@ -112,7 +113,7 @@ extension AWSClient {
     ///   - command: Command to be paginated
     ///   - tokenKey: The name of token in the response object to continue pagination
     ///   - eventLoop: EventLoop to run this process on
-    ///   - logger: Logger used flot logging
+    ///   - logger: Logger used for logging
     ///   - onPage: closure called with each block of entries. It combines an accumulating result with the contents of response from the call to AWS. This combined result is then returned
     ///         along with a boolean indicating if the paginate operation should continue.
     public func paginate<Input: AWSPaginateToken, Output: AWSShape, Result>(
@@ -159,7 +160,7 @@ extension AWSClient {
     ///   - command: Command to be paginated
     ///   - tokenKey: The name of token in the response object to continue pagination
     ///   - eventLoop: EventLoop to run this process on
-    ///   - logger: Logger used flot logging
+    ///   - logger: Logger used for logging
     ///   - onPage: closure called with each block of entries. Returns boolean indicating whether we should continue.
     public func paginate<Input: AWSPaginateToken, Output: AWSShape>(
         input: Input,
@@ -186,7 +187,7 @@ extension AWSClient {
     ///   - tokenKey: The name of token in the response object to continue pagination
     ///   - moreResultsKey: The KeyPath for the member of the output that indicates whether we should ask for more data
     ///   - eventLoop: EventLoop to run this process on
-    ///   - logger: Logger used flot logging
+    ///   - logger: Logger used for logging
     ///   - onPage: closure called with each block of entries. It combines an accumulating result with the contents of response from the call to AWS. This combined result is then returned
     ///         along with a boolean indicating if the paginate operation should continue.
     @available(*, deprecated, message: "Deprecated this version of paginate in favour of version that includes the inputKey")
@@ -237,7 +238,7 @@ extension AWSClient {
     ///   - tokenKey: The name of token in the response object to continue pagination
     ///   - moreResultsKey: The KeyPath for the member of the output that indicates whether we should ask for more data
     ///   - eventLoop: EventLoop to run this process on
-    ///   - logger: Logger used flot logging
+    ///   - logger: Logger used for logging
     ///   - onPage: closure called with each block of entries. Returns boolean indicating whether we should continue.
     @available(*, deprecated, message: "Deprecated this version of paginate in favour of version that includes the inputKey")
     public func paginate<Input: AWSPaginateToken, Output: AWSShape>(
@@ -266,7 +267,7 @@ extension AWSClient {
     ///   - tokenKey: The name of token in the response object to continue pagination
     ///   - moreResultsKey: The KeyPath for the member of the output that indicates whether we should ask for more data
     ///   - eventLoop: EventLoop to run this process on
-    ///   - logger: Logger used flot logging
+    ///   - logger: Logger used for logging
     ///   - onPage: closure called with each block of entries. It combines an accumulating result with the contents of response from the call to AWS. This combined result is then returned
     ///         along with a boolean indicating if the paginate operation should continue.
     @available(*, deprecated, message: "Deprecated this version of paginate in favour of version that includes the inputKey")
@@ -317,7 +318,7 @@ extension AWSClient {
     ///   - tokenKey: The name of token in the response object to continue pagination
     ///   - moreResultsKey: The KeyPath for the member of the output that indicates whether we should ask for more data
     ///   - eventLoop: EventLoop to run this process on
-    ///   - logger: Logger used flot logging
+    ///   - logger: Logger used for logging
     ///   - onPage: closure called with each block of entries. Returns boolean indicating whether we should continue.
     @available(*, deprecated, message: "Deprecated this version of paginate in favour of version that includes the inputKey")
     public func paginate<Input: AWSPaginateToken, Output: AWSShape>(

@@ -142,14 +142,12 @@ class PaginateTests: XCTestCase {
     struct StringListOutput: AWSDecodableShape, Encodable {
         let array: [String]
         let outputToken: String?
-        let moreResults: Bool?
     }
 
     // conform to Encodable so server can encode these
     struct StringList2Output: AWSDecodableShape, Encodable {
         let array: [String]
         let outputToken: String?
-        let moreResults: Bool
     }
 
     func stringList(_ input: StringListInput, logger: Logger, on eventLoop: EventLoop? = nil) -> EventLoopFuture<StringListOutput> {
@@ -168,8 +166,8 @@ class PaginateTests: XCTestCase {
         return self.client.paginate(
             input: input,
             command: self.stringList,
-            tokenKey: \StringListOutput.outputToken,
-            moreResultsKey: \StringListOutput.moreResults,
+            inputKey: \StringListInput.inputToken,
+            outputKey: \StringListOutput.outputToken,
             logger: TestEnvironment.logger,
             on: eventLoop,
             onPage: onPage
@@ -193,8 +191,8 @@ class PaginateTests: XCTestCase {
             input: input,
             initialValue: initialValue,
             command: self.stringList2,
-            tokenKey: \StringList2Output.outputToken,
-            moreResultsKey: \StringList2Output.moreResults,
+            inputKey: \StringListInput.inputToken,
+            outputKey: \StringList2Output.outputToken,
             logger: TestEnvironment.logger,
             on: eventLoop,
             onPage: onPage
@@ -217,14 +215,14 @@ class PaginateTests: XCTestCase {
             array.append(self.stringList[i])
         }
         var outputToken: String?
-        var moreResults: Bool = false
         var continueProcessing = false
         if endIndex < self.stringList.count {
             outputToken = self.stringList[endIndex]
-            moreResults = true
             continueProcessing = true
+        } else {
+            outputToken = input.inputToken
         }
-        let output = StringListOutput(array: array, outputToken: outputToken, moreResults: moreResults)
+        let output = StringListOutput(array: array, outputToken: outputToken)
         return .result(output, continueProcessing: continueProcessing)
     }
 

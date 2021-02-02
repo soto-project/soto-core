@@ -80,11 +80,11 @@ public struct AWSSigner {
         let dateString = AWSSigner.timestamp(date)
         var headers = headers
         // add date, host, sha256 and if available security token headers
-        headers.add(name: "X-Amz-Date", value: dateString)
-        headers.add(name: "host", value: "\(url.host ?? "")\(url.port.map { ":\($0)" } ?? "")")
-        headers.add(name: "x-amz-content-sha256", value: bodyHash)
+        headers.replaceOrAdd(name: "X-Amz-Date", value: dateString)
+        headers.replaceOrAdd(name: "host", value: Self.hostname(from: url))
+        headers.replaceOrAdd(name: "x-amz-content-sha256", value: bodyHash)
         if let sessionToken = credentials.sessionToken {
-            headers.add(name: "x-amz-security-token", value: sessionToken)
+            headers.replaceOrAdd(name: "x-amz-security-token", value: sessionToken)
         }
 
         // construct signing data. Do this after adding the headers as it uses data from the headers
@@ -97,7 +97,7 @@ public struct AWSSigner {
             "Signature=\(signature(signingData: signingData))"
 
         // add Authorization header
-        headers.add(name: "Authorization", value: authorization)
+        headers.replaceOrAdd(name: "Authorization", value: authorization)
 
         return headers
     }
@@ -105,7 +105,7 @@ public struct AWSSigner {
     /// Generate a signed URL, for a HTTP request
     public func signURL(url: URL, method: HTTPMethod = .GET, headers: HTTPHeaders = HTTPHeaders(), body: BodyData? = nil, expires: TimeAmount, date: Date = Date()) -> URL {
         var headers = headers
-        headers.replaceOrAdd(name: "host", value: url.host ?? "")
+        headers.replaceOrAdd(name: "host", value: Self.hostname(from: url))
         // Create signing data
         var signingData = AWSSigner.SigningData(url: url, method: method, headers: headers, body: body, date: AWSSigner.timestamp(date), signer: self)
         // Construct query string. Start with original query strings and append all the signing info.
@@ -157,14 +157,14 @@ public struct AWSSigner {
         var headers = headers
         // add date, host, sha256 and if available security token headers
         headers.add(name: "X-Amz-Date", value: dateString)
-        headers.add(name: "host", value: url.host ?? "")
+        headers.add(name: "host", value: Self.hostname(from: url))
         headers.add(name: "x-amz-content-sha256", value: bodyHash)
         if let sessionToken = credentials.sessionToken {
             headers.add(name: "x-amz-security-token", value: sessionToken)
         }
         // remove content-length header
         headers.remove(name: "content-length")
-        
+
         // construct signing data. Do this after adding the headers as it uses data from the headers
         let signingData = AWSSigner.SigningData(url: url, method: method, headers: headers, bodyHash: bodyHash, date: dateString, signer: self)
         let signingKey = self.signingKey(date: signingData.date)
@@ -336,6 +336,18 @@ public struct AWSSigner {
     /// return a timestamp formatted for signing requests
     static func timestamp(_ date: Date) -> String {
         return timeStampDateFormatter.string(from: date)
+    }
+
+    /// returns port from URL. If port is set to 80 on an http url or 443 on an https url nil is returned
+    private static func port(from url: URL) -> Int? {
+        guard let port = url.port else { return nil }
+        guard url.scheme != "http" || port != 80 else { return nil }
+        guard url.scheme != "https" || port != 443 else { return nil }
+        return port
+    }
+
+    private static func hostname(from url: URL) -> String {
+        "\(url.host ?? "")\(port(from: url).map { ":\($0)" } ?? "")"
     }
 }
 

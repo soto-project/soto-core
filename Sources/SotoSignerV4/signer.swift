@@ -20,8 +20,6 @@ import struct Foundation.Locale
 import struct Foundation.TimeZone
 import struct Foundation.URL
 import struct Foundation.URLComponents
-import NIO
-import NIOHTTP1
 import SotoCrypto
 
 /// Amazon Web Services V4 Signer

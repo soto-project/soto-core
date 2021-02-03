@@ -482,7 +482,7 @@ extension AWSClient {
         serviceConfig: AWSServiceConfig,
         logger: Logger = AWSClient.loggingDisabled
     ) -> EventLoopFuture<HTTPHeaders> {
-        let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: "signURL", service: serviceConfig.service)
+        let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: "signHeaders", service: serviceConfig.service)
         return createSigner(serviceConfig: serviceConfig, logger: logger).flatMapThrowing { signer in
             guard let cleanURL = signer.processURL(url: url) else {
                 throw AWSClient.ClientError.invalidURL

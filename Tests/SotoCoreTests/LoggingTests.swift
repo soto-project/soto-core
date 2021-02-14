@@ -169,6 +169,72 @@ class LoggingTests: XCTestCase {
         ).wait())
         XCTAssertNotNil(logCollection.filter(metadata: "aws-error-message", with: "No credential provider found").first)
     }
+
+    func testRequestLogLevel() throws {
+        let logCollection = LoggingCollector.Logs()
+        var logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection) })
+        logger.logLevel = .trace
+        let server = AWSTestServer(serviceProtocol: .json)
+        defer { XCTAssertNoThrow(try server.stop()) }
+        let client = AWSClient(
+            credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
+            options: .init(requestLogLevel: .trace),
+            httpClientProvider: .createNew,
+            logger: logger
+        )
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
+        let config = createServiceConfig(
+            service: "test-service",
+            serviceProtocol: .json(version: "1.1"),
+            endpoint: server.address
+        )
+
+        let response = client.execute(operation: "TestOperation", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
+
+        XCTAssertNoThrow(try server.processRaw { _ in
+            return .result(.ok, continueProcessing: false)
+        })
+
+        XCTAssertNoThrow(_ = try response.wait())
+        let requestEntry = try XCTUnwrap(logCollection.filter(message: "AWS Request").first)
+        XCTAssertEqual(requestEntry.level, .trace)
+    }
+
+    func testLoggingMiddleware() throws {
+        struct Output: AWSDecodableShape & Encodable {
+            let s: String
+        }
+        let logCollection = LoggingCollector.Logs()
+        var logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection) })
+        logger.logLevel = .trace
+        let server = AWSTestServer(serviceProtocol: .json)
+        defer { XCTAssertNoThrow(try server.stop()) }
+        let client = AWSClient(
+            credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
+            middlewares: [AWSLoggingMiddleware(logger: logger, logLevel: .info)],
+            httpClientProvider: .createNew,
+            logger: logger
+        )
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
+        let config = createServiceConfig(
+            service: "test-service",
+            serviceProtocol: .json(version: "1.1"),
+            endpoint: server.address
+        )
+
+        let response: EventLoopFuture<Output> = client.execute(operation: "TestOperation", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
+
+        XCTAssertNoThrow(try server.processRaw { _ in
+            let output = Output(s: "TestOutputString")
+            let byteBuffer = try JSONEncoder().encodeAsByteBuffer(output, allocator: ByteBufferAllocator())
+            let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
+            return .result(response)
+        })
+
+        XCTAssertNoThrow(_ = try response.wait())
+        XCTAssertNotNil(logCollection.filter { $0.message.hasPrefix("Request") }.first)
+        XCTAssertNotNil(logCollection.filter { $0.message.hasPrefix("Response") }.first)
+    }
 }
 
 struct LoggingCollector: LogHandler {
@@ -197,6 +263,10 @@ struct LoggingCollector: LogHandler {
                     metadata: metadata?.mapValues { $0.description } ?? [:]
                 ))
             }
+        }
+
+        func filter(_ test: (Entry) -> Bool) -> [Entry] {
+            return self.allEntries.filter { test($0) }
         }
 
         func filter(message: String) -> [Entry] {

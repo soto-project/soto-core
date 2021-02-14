@@ -193,7 +193,6 @@ class AWSClientTests: XCTestCase {
             let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
             let client = createAWSClient(
                 credentialProvider: .empty,
-                middlewares: [AWSLoggingMiddleware()],
                 httpClientProvider: .createNewWithEventLoopGroup(eventLoopGroup)
             )
             defer {

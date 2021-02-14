@@ -35,6 +35,7 @@ public func createAWSClient(
     credentialProvider: CredentialProviderFactory = .default,
     retryPolicy: RetryPolicyFactory = .noRetry,
     middlewares: [AWSServiceMiddleware] = TestEnvironment.middlewares,
+    options: AWSClient.Options = .init(),
     httpClientProvider: AWSClient.HTTPClientProvider = .createNew,
     logger: Logger = TestEnvironment.logger
 ) -> AWSClient {
@@ -42,6 +43,7 @@ public func createAWSClient(
         credentialProvider: credentialProvider,
         retryPolicy: retryPolicy,
         middlewares: middlewares,
+        options: options,
         httpClientProvider: httpClientProvider,
         logger: logger
     )
@@ -100,7 +102,7 @@ public func createRandomBuffer(_ w: UInt, _ z: UInt, size: Int) -> [UInt8] {
 public enum TestEnvironment {
     /// current list of middleware
     public static var middlewares: [AWSServiceMiddleware] {
-        return (Environment["AWS_ENABLE_LOGGING"] == "true") ? [AWSLoggingMiddleware()] : []
+        return (Environment["AWS_ENABLE_LOGGING"] == "true") ? [AWSLoggingMiddleware(logger: TestEnvironment.logger, logLevel: .info)] : []
     }
 
     public static var logger: Logger = {

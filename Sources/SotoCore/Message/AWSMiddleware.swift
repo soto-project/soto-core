@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Logging
 import NIOHTTP1
 
 /// Context object sent to `AWSServiceMiddleware` `chain` functions
@@ -41,11 +42,19 @@ public extension AWSServiceMiddleware {
 
 /// Middleware struct that outputs the contents of requests being sent to AWS and the bodies of the responses received
 public struct AWSLoggingMiddleware: AWSServiceMiddleware {
-    /// initialize AWSLoggingMiddleware class
+    /// initialize AWSLoggingMiddleware
     /// - parameters:
     ///     - log: Function to call with logging output
     public init(log: @escaping (String) -> Void = { print($0) }) {
-        self.log = log
+        self.log = { log($0()) }
+    }
+
+    /// initialize AWSLoggingMiddleware to use Logger
+    /// - Parameters:
+    ///   - logger: Logger to use
+    ///   - logLevel: Log level to output at
+    public init(logger: Logger, logLevel: Logger.Level = .info) {
+        self.log = { logger.log(level: logLevel, "\($0())")}
     }
 
     func getBodyOutput(_ body: Body) -> String {
@@ -80,22 +89,26 @@ public struct AWSLoggingMiddleware: AWSServiceMiddleware {
 
     /// output request
     public func chain(request: AWSRequest, context: AWSMiddlewareContext) throws -> AWSRequest {
-        self.log("Request:")
-        self.log("  \(request.operation)")
-        self.log("  \(request.httpMethod) \(request.url)")
-        self.log("  Headers: " + self.getHeadersOutput(request.httpHeaders))
-        self.log("  Body: " + self.getBodyOutput(request.body))
+        self.log(
+            "Request:\n" +
+            "  \(request.operation)\n" +
+            "  \(request.httpMethod) \(request.url)\n" +
+            "  Headers: \(self.getHeadersOutput(request.httpHeaders))\n" +
+            "  Body: \(self.getBodyOutput(request.body))"
+        )
         return request
     }
 
     /// output response
     public func chain(response: AWSResponse, context: AWSMiddlewareContext) throws -> AWSResponse {
-        self.log("Response:")
-        self.log("  Status : \(response.status.code)")
-        self.log("  Headers: " + self.getHeadersOutput(HTTPHeaders(response.headers.map { ($0, "\($1)") })))
-        self.log("  Body: " + self.getBodyOutput(response.body))
+        self.log(
+            "Response:\n" +
+            "  Status : \(response.status.code)\n" +
+            "  Headers: \(self.getHeadersOutput(HTTPHeaders(response.headers.map { ($0, "\($1)") })))\n" +
+            "  Body: \(self.getBodyOutput(response.body))"
+        )
         return response
     }
 
-    let log: (String) -> Void
+    let log: (@autoclosure ()->String) -> Void
 }

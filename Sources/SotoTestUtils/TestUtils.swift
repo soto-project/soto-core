@@ -100,7 +100,7 @@ public func createRandomBuffer(_ w: UInt, _ z: UInt, size: Int) -> [UInt8] {
 public enum TestEnvironment {
     /// current list of middleware
     public static var middlewares: [AWSServiceMiddleware] {
-        return (Environment["AWS_ENABLE_LOGGING"] == "true") ? [AWSLoggingMiddleware()] : []
+        return (Environment["AWS_ENABLE_LOGGING"] == "true") ? [AWSLoggingMiddleware(logger: TestEnvironment.logger, logLevel: .info)] : []
     }
 
     public static var logger: Logger = {

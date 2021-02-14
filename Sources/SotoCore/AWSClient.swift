@@ -50,6 +50,8 @@ public final class AWSClient {
     public let retryPolicy: RetryPolicy
     /// Logger used for non-request based output
     let clientLogger: Logger
+    /// client options
+    let options: Options
 
     private let isShutdown = NIOAtomic<Bool>.makeAtomic(value: false)
 
@@ -66,6 +68,7 @@ public final class AWSClient {
         credentialProvider credentialProviderFactory: CredentialProviderFactory = .default,
         retryPolicy retryPolicyFactory: RetryPolicyFactory = .default,
         middlewares: [AWSServiceMiddleware] = [],
+        options: Options,
         httpClientProvider: HTTPClientProvider,
         logger clientLogger: Logger = AWSClient.loggingDisabled
     ) {
@@ -89,6 +92,31 @@ public final class AWSClient {
         self.middlewares = middlewares
         self.retryPolicy = retryPolicyFactory.retryPolicy
         self.clientLogger = clientLogger
+        self.options = options
+    }
+
+    /// Initialize an AWSClient struct
+    /// - parameters:
+    ///     - credentialProvider: An object that returns valid signing credentials for request signing.
+    ///     - retryPolicy: Object returning whether retries should be attempted. Possible options are NoRetry(), ExponentialRetry() or JitterRetry()
+    ///     - middlewares: Array of middlewares to apply to requests and responses
+    ///     - httpClientProvider: HTTPClient to use. Use `.createNew` if you want the client to manage its own HTTPClient.
+    ///     - logger: Logger used to log background AWSClient events
+    public convenience init(
+        credentialProvider credentialProviderFactory: CredentialProviderFactory = .default,
+        retryPolicy retryPolicyFactory: RetryPolicyFactory = .default,
+        middlewares: [AWSServiceMiddleware] = [],
+        httpClientProvider: HTTPClientProvider,
+        logger clientLogger: Logger = AWSClient.loggingDisabled
+    ) {
+        self.init(
+            credentialProvider: credentialProviderFactory,
+            retryPolicy: retryPolicyFactory,
+            middlewares: middlewares,
+            options: Options(),
+            httpClientProvider: httpClientProvider,
+            logger: clientLogger
+        )
     }
 
     deinit {
@@ -189,6 +217,18 @@ public final class AWSClient {
         case createNewWithEventLoopGroup(EventLoopGroup)
         /// HTTP Client will be created by the client. When `shutdown` is called, created `HTTPClient` will be shut down as well.
         case createNew
+    }
+
+    /// Additional options
+    public struct Options {
+        /// log level used for request logging
+        let requestLogLevel: Logger.Level
+
+        /// Initialize AWSClient.Options
+        /// - Parameter requestLogLevel:Log level used for request logging
+        public init(requestLogLevel: Logger.Level = .info){
+            self.requestLogLevel = requestLogLevel
+        }
     }
 }
 
@@ -606,7 +646,7 @@ extension AWSClient {
         let startTime = DispatchTime.now().uptimeNanoseconds
 
         Counter(label: "aws_requests_total", dimensions: dimensions).increment()
-        logger.info("AWS Request")
+        logger.log(level: self.options.requestLogLevel, "AWS Request")
 
         return future.map { response in
             logger.trace("AWS Response")

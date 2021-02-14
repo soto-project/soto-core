@@ -169,6 +169,36 @@ class LoggingTests: XCTestCase {
         ).wait())
         XCTAssertNotNil(logCollection.filter(metadata: "aws-error-message", with: "No credential provider found").first)
     }
+
+    func testRequestLogLevel() throws {
+        let logCollection = LoggingCollector.Logs()
+        var logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection) })
+        logger.logLevel = .trace
+        let server = AWSTestServer(serviceProtocol: .json)
+        defer { XCTAssertNoThrow(try server.stop()) }
+        let client = AWSClient(
+            credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
+            options: .init(requestLogLevel: .trace),
+            httpClientProvider: .createNew,
+            logger: logger
+        )
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
+        let config = createServiceConfig(
+            service: "test-service",
+            serviceProtocol: .json(version: "1.1"),
+            endpoint: server.address
+        )
+
+        let response = client.execute(operation: "TestOperation", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
+
+        XCTAssertNoThrow(try server.processRaw { _ in
+            return .result(.ok, continueProcessing: false)
+        })
+
+        XCTAssertNoThrow(_ = try response.wait())
+        let requestEntry = try XCTUnwrap(logCollection.filter(message: "AWS Request").first)
+        XCTAssertEqual(requestEntry.level, .trace)
+    }
 }
 
 struct LoggingCollector: LogHandler {

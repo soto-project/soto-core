@@ -35,6 +35,7 @@ public func createAWSClient(
     credentialProvider: CredentialProviderFactory = .default,
     retryPolicy: RetryPolicyFactory = .noRetry,
     middlewares: [AWSServiceMiddleware] = TestEnvironment.middlewares,
+    options: AWSClient.Options = .init(),
     httpClientProvider: AWSClient.HTTPClientProvider = .createNew,
     logger: Logger = TestEnvironment.logger
 ) -> AWSClient {
@@ -42,6 +43,7 @@ public func createAWSClient(
         credentialProvider: credentialProvider,
         retryPolicy: retryPolicy,
         middlewares: middlewares,
+        options: options,
         httpClientProvider: httpClientProvider,
         logger: logger
     )

@@ -54,7 +54,7 @@ public struct AWSLoggingMiddleware: AWSServiceMiddleware {
     ///   - logger: Logger to use
     ///   - logLevel: Log level to output at
     public init(logger: Logger, logLevel: Logger.Level = .info) {
-        self.log = { logger.log(level: logLevel, "\($0())")}
+        self.log = { logger.log(level: logLevel, "\($0())") }
     }
 
     func getBodyOutput(_ body: Body) -> String {
@@ -91,10 +91,10 @@ public struct AWSLoggingMiddleware: AWSServiceMiddleware {
     public func chain(request: AWSRequest, context: AWSMiddlewareContext) throws -> AWSRequest {
         self.log(
             "Request:\n" +
-            "  \(request.operation)\n" +
-            "  \(request.httpMethod) \(request.url)\n" +
-            "  Headers: \(self.getHeadersOutput(request.httpHeaders))\n" +
-            "  Body: \(self.getBodyOutput(request.body))"
+                "  \(request.operation)\n" +
+                "  \(request.httpMethod) \(request.url)\n" +
+                "  Headers: \(self.getHeadersOutput(request.httpHeaders))\n" +
+                "  Body: \(self.getBodyOutput(request.body))"
         )
         return request
     }
@@ -103,12 +103,12 @@ public struct AWSLoggingMiddleware: AWSServiceMiddleware {
     public func chain(response: AWSResponse, context: AWSMiddlewareContext) throws -> AWSResponse {
         self.log(
             "Response:\n" +
-            "  Status : \(response.status.code)\n" +
-            "  Headers: \(self.getHeadersOutput(HTTPHeaders(response.headers.map { ($0, "\($1)") })))\n" +
-            "  Body: \(self.getBodyOutput(response.body))"
+                "  Status : \(response.status.code)\n" +
+                "  Headers: \(self.getHeadersOutput(HTTPHeaders(response.headers.map { ($0, "\($1)") })))\n" +
+                "  Body: \(self.getBodyOutput(response.body))"
         )
         return response
     }
 
-    let log: (@autoclosure ()->String) -> Void
+    let log: (@autoclosure () -> String) -> Void
 }

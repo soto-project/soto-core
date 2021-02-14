@@ -226,7 +226,7 @@ public final class AWSClient {
 
         /// Initialize AWSClient.Options
         /// - Parameter requestLogLevel:Log level used for request logging
-        public init(requestLogLevel: Logger.Level = .info){
+        public init(requestLogLevel: Logger.Level = .info) {
             self.requestLogLevel = requestLogLevel
         }
     }

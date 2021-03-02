@@ -269,7 +269,7 @@ public enum XML {
                 }
                 .onCharacterData { characters in
                     // if string with white space removed still has characters, add text node
-                    if characters.split(omittingEmptySubsequences: true, whereSeparator: { $0.isWhitespaceOrNewline }).joined().count > 0 {
+                    if characters.split(omittingEmptySubsequences: true, whereSeparator: { $0.isWhitespace && !$0.isNewline }).joined().count > 0 {
                         currentElement?.addChild(XML.Node.text(stringValue: characters))
                     }
                 }

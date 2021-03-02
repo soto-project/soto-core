@@ -117,6 +117,15 @@ class XMLTests: XCTestCase {
         XCTAssertEqual(xml2, "<?xml version=\"1.0\" encoding=\"UTF-8\"?><test><a> before</a><b></b><c>after </c></test>")
     }
 
+    func testNewlines() {
+        let xml = """
+        <?xml version=\"1.0\" encoding=\"UTF-8\"?><test>Hello
+
+        Goodbye</test>
+        """
+        XCTAssertNoThrow(try self.testDecodeEncode(xml: xml))
+    }
+
     func testDecodeRubbish() {
         let xml = "{}"
         XCTAssertThrowsError(try XML.Document(data: Data(xml.utf8)))

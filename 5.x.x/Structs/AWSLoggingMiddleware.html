@@ -49,6 +49,9 @@
                 <a href="../Classes/AWSClient/HTTPClientProvider.html">– HTTPClientProvider</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Classes/AWSClient/Options.html">– Options</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Classes/AWSServiceConfig.html">AWSServiceConfig</a>
               </li>
               <li class="nav-group-task">
@@ -326,7 +329,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>initialize AWSLoggingMiddleware class</p>
+                        <p>initialize AWSLoggingMiddleware</p>
 
                       </div>
                       <div class="declaration">
@@ -350,6 +353,64 @@
                               <td>
                                 <div>
                                   <p>Function to call with logging output</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore20AWSLoggingMiddlewareV6logger8logLevelAC7Logging6LoggerV_AH0G0Otcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(logger:logLevel:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore20AWSLoggingMiddlewareV6logger8logLevelAC7Logging6LoggerV_AH0G0Otcfc">init(logger:<wbr>logLevel:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>initialize AWSLoggingMiddleware to use Logger</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span><span class="p">,</span> <span class="nv">logLevel</span><span class="p">:</span> <span class="kt">Logger</span><span class="o">.</span><span class="kt">Level</span> <span class="o">=</span> <span class="o">.</span><span class="n">info</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>logger</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Logger to use</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>logLevel</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Log level to output at</p>
                                 </div>
                               </td>
                             </tr>

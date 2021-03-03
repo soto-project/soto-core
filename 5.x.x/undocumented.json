@@ -1122,7 +1122,7 @@
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Message/AWSMiddleware.swift",
-      "line": 19,
+      "line": 20,
       "symbol": "AWSMiddlewareContext.options",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"

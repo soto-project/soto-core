@@ -90,4 +90,11 @@ extension Body {
     public func asByteBuffer(byteBufferAllocator: ByteBufferAllocator) -> ByteBuffer? {
         return asPayload(byteBufferAllocator: byteBufferAllocator).asByteBuffer()
     }
+
+    var isStreaming: Bool {
+        if case .raw(let payload) = self, case .stream = payload.payload {
+            return true
+        }
+        return false
+    }
 }

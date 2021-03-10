@@ -453,10 +453,9 @@ extension AWSClient {
     ) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName, service: config.service)
-
         // get credentials
         let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop, logger: logger)
-            .flatMapThrowing { credential in
+            .flatMapThrowing { credential -> AWSHTTPRequest in
                 // construct signer
                 let signer = AWSSigner(credentials: credential, name: config.signingName, region: config.region.rawValue)
                 // create request and sign with signer
@@ -464,14 +463,22 @@ extension AWSClient {
                 return try awsRequest
                     .applyMiddlewares(config.middlewares + self.middlewares, config: config)
                     .createHTTPRequest(signer: signer, byteBufferAllocator: config.byteBufferAllocator)
-            }.flatMap { request in
+            }.flatMap { request -> EventLoopFuture<Output> in
                 // send request to AWS and process result
+                let streaming: Bool
+                switch request.body.payload {
+                case .stream:
+                    streaming = true
+                default:
+                    streaming = false
+                }
                 return self.invoke(
                     with: config,
                     eventLoop: eventLoop,
                     logger: logger,
                     request: { eventLoop in execute(request, eventLoop, logger) },
-                    processResponse: processResponse
+                    processResponse: processResponse,
+                    streaming: streaming
                 )
             }
         return recordRequest(future, service: config.service, operation: operationName, logger: logger)
@@ -583,7 +590,8 @@ extension AWSClient {
         eventLoop: EventLoop,
         logger: Logger,
         request: @escaping (EventLoop) -> EventLoopFuture<AWSHTTPResponse>,
-        processResponse: @escaping (AWSHTTPResponse) throws -> Output
+        processResponse: @escaping (AWSHTTPResponse) throws -> Output,
+        streaming: Bool
     ) -> EventLoopFuture<Output> {
         let promise = eventLoop.makePromise(of: Output.self)
 
@@ -599,6 +607,13 @@ extension AWSClient {
                     promise.succeed(output)
                 }
                 .flatMapErrorThrowing { (error) -> Void in
+                    // if streaming and the error returned is an AWS error fail immediately. Do not attempt
+                    // to retry as the streaming function will not know you are retrying
+                    if streaming,
+                       (error is AWSErrorType || error is AWSRawError) {
+                        promise.fail(error)
+                        return
+                    }
                     // If I get a retry wait time for this error then attempt to retry request
                     if case .retry(let retryTime) = self.retryPolicy.getRetryWaitTime(error: error, attempt: attempt) {
                         logger.debug("Retrying request", metadata: [

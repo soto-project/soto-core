@@ -610,7 +610,8 @@ extension AWSClient {
                     // if streaming and the error returned is an AWS error fail immediately. Do not attempt
                     // to retry as the streaming function will not know you are retrying
                     if streaming,
-                       (error is AWSErrorType || error is AWSRawError) {
+                       error is AWSErrorType || error is AWSRawError
+                    {
                         promise.fail(error)
                         return
                     }

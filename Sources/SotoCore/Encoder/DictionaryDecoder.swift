@@ -1032,14 +1032,13 @@ extension __DictionaryDecoder: SingleValueDecodingContainer {
 // MARK: - Concrete Value Representations
 
 extension __DictionaryDecoder {
-    
     @inline(__always) func unboxAsNumber(_ value: Any) -> NSNumber? {
         if let number = value as? NSNumber {
             return number
         }
         return (value as? StringFlexibleDecodable)?.asNumber()
     }
-    
+
     /// Returns the given value unboxed from a container.
     fileprivate func unbox(_ value: Any, as type: Bool.Type) throws -> Bool? {
         guard !(value is NSNull) else { return nil }
@@ -1466,19 +1465,19 @@ internal extension DecodingError {
 
 internal struct StringFlexibleDecodable {
     let value: String
-    
+
     init(_ string: String) {
         self.value = string
     }
-    
+
     func asBool() -> Bool? {
         return Bool(value)
     }
-    
+
     func asString() -> String {
         return value
     }
-    
+
     func asNumber() -> NSNumber? {
         return NumberFormatter().number(from: value)
     }

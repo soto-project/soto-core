@@ -71,7 +71,7 @@ class AWSResponseTests: XCTestCase {
                 "string2": "23",
                 "double": "3.14",
                 "integer": "901",
-                "bool": "false"
+                "bool": "false",
             ]
         )
 

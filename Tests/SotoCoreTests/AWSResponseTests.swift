@@ -49,6 +49,44 @@ class AWSResponseTests: XCTestCase {
         XCTAssertEqual(jsonResult?.h, "test-header")
     }
 
+    func testHeaderResponseTypeDecoding() {
+        struct Output: AWSDecodableShape {
+            static let _encoding = [
+                AWSMemberEncoding(label: "string", location: .header(locationName: "string")),
+                AWSMemberEncoding(label: "string2", location: .header(locationName: "string2")),
+                AWSMemberEncoding(label: "double", location: .header(locationName: "double")),
+                AWSMemberEncoding(label: "integer", location: .header(locationName: "integer")),
+                AWSMemberEncoding(label: "bool", location: .header(locationName: "bool")),
+            ]
+            let string: String
+            let string2: String
+            let double: Double
+            let integer: Int
+            let bool: Bool
+        }
+        let response = AWSHTTPResponseImpl(
+            status: .ok,
+            headers: [
+                "string": "test-header",
+                "string2": "23",
+                "double": "3.14",
+                "integer": "901",
+                "bool": "false"
+            ]
+        )
+
+        // JSON
+        var awsJSONResponse: AWSResponse?
+        var jsonResult: Output?
+        XCTAssertNoThrow(awsJSONResponse = try AWSResponse(from: response, serviceProtocol: .restjson, raw: false))
+        XCTAssertNoThrow(jsonResult = try awsJSONResponse?.generateOutputShape(operation: "Test"))
+        XCTAssertEqual(jsonResult?.string, "test-header")
+        XCTAssertEqual(jsonResult?.string2, "23")
+        XCTAssertEqual(jsonResult?.double, 3.14)
+        XCTAssertEqual(jsonResult?.integer, 901)
+        XCTAssertEqual(jsonResult?.bool, false)
+    }
+
     func testStatusCodeResponseDecoding() {
         struct Output: AWSDecodableShape {
             static let _encoding = [AWSMemberEncoding(label: "status", location: .statusCode)]
@@ -370,7 +408,7 @@ class AWSResponseTests: XCTestCase {
         let headers: HTTPHeaders
         let body: ByteBuffer?
 
-        init(status: HTTPResponseStatus, headers: HTTPHeaders, body: ByteBuffer?) {
+        init(status: HTTPResponseStatus, headers: HTTPHeaders, body: ByteBuffer? = nil) {
             self.status = status
             self.headers = headers
             self.body = body

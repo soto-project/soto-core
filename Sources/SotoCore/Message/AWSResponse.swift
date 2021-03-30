@@ -169,13 +169,7 @@ public struct AWSResponse {
                     outputDict[headerParams[index].key] = value
                     continue
                 }
-                if let number = Double(stringValue) {
-                    outputDict[headerParams[index].key] = number.truncatingRemainder(dividingBy: 1) == 0 ? Int(number) : number
-                } else if let boolean = Bool(stringValue) {
-                    outputDict[headerParams[index].key] = boolean
-                } else {
-                    outputDict[headerParams[index].key] = stringValue
-                }
+                outputDict[headerParams[index].key] = StringFlexibleDecodable(stringValue)
             }
         }
         // add status code to output dictionary

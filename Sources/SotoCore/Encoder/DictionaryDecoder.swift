@@ -22,6 +22,7 @@ import struct Foundation.URL
 
 import class Foundation.NSNull
 import class Foundation.NSNumber
+import class Foundation.NumberFormatter
 
 //===----------------------------------------------------------------------===//
 // Dictionary Decoders
@@ -1031,6 +1032,14 @@ extension __DictionaryDecoder: SingleValueDecodingContainer {
 // MARK: - Concrete Value Representations
 
 extension __DictionaryDecoder {
+    
+    @inline(__always) func unboxAsNumber(_ value: Any) -> NSNumber? {
+        if let number = value as? NSNumber {
+            return number
+        }
+        return (value as? StringFlexibleDecodable)?.asNumber()
+    }
+    
     /// Returns the given value unboxed from a container.
     fileprivate func unbox(_ value: Any, as type: Bool.Type) throws -> Bool? {
         guard !(value is NSNull) else { return nil }
@@ -1038,14 +1047,16 @@ extension __DictionaryDecoder {
         if let bool = value as? Bool {
             return bool
         }
-
+        if let bool = (value as? StringFlexibleDecodable)?.asBool() {
+            return bool
+        }
         throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
     }
 
     fileprivate func unbox(_ value: Any, as type: Int.Type) throws -> Int? {
         guard !(value is NSNull) else { return nil }
 
-        guard let number = value as? NSNumber else {
+        guard let number = unboxAsNumber(value) else {
             throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
         }
 
@@ -1060,7 +1071,7 @@ extension __DictionaryDecoder {
     fileprivate func unbox(_ value: Any, as type: Int8.Type) throws -> Int8? {
         guard !(value is NSNull) else { return nil }
 
-        guard let number = value as? NSNumber else {
+        guard let number = unboxAsNumber(value) else {
             throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
         }
 
@@ -1075,7 +1086,7 @@ extension __DictionaryDecoder {
     fileprivate func unbox(_ value: Any, as type: Int16.Type) throws -> Int16? {
         guard !(value is NSNull) else { return nil }
 
-        guard let number = value as? NSNumber else {
+        guard let number = unboxAsNumber(value) else {
             throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
         }
 
@@ -1090,7 +1101,7 @@ extension __DictionaryDecoder {
     fileprivate func unbox(_ value: Any, as type: Int32.Type) throws -> Int32? {
         guard !(value is NSNull) else { return nil }
 
-        guard let number = value as? NSNumber else {
+        guard let number = unboxAsNumber(value) else {
             throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
         }
 
@@ -1105,7 +1116,7 @@ extension __DictionaryDecoder {
     fileprivate func unbox(_ value: Any, as type: Int64.Type) throws -> Int64? {
         guard !(value is NSNull) else { return nil }
 
-        guard let number = value as? NSNumber else {
+        guard let number = unboxAsNumber(value) else {
             throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
         }
 
@@ -1120,7 +1131,7 @@ extension __DictionaryDecoder {
     fileprivate func unbox(_ value: Any, as type: UInt.Type) throws -> UInt? {
         guard !(value is NSNull) else { return nil }
 
-        guard let number = value as? NSNumber else {
+        guard let number = unboxAsNumber(value) else {
             throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
         }
 
@@ -1135,7 +1146,7 @@ extension __DictionaryDecoder {
     fileprivate func unbox(_ value: Any, as type: UInt8.Type) throws -> UInt8? {
         guard !(value is NSNull) else { return nil }
 
-        guard let number = value as? NSNumber else {
+        guard let number = unboxAsNumber(value) else {
             throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
         }
 
@@ -1150,7 +1161,7 @@ extension __DictionaryDecoder {
     fileprivate func unbox(_ value: Any, as type: UInt16.Type) throws -> UInt16? {
         guard !(value is NSNull) else { return nil }
 
-        guard let number = value as? NSNumber else {
+        guard let number = unboxAsNumber(value) else {
             throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
         }
 
@@ -1165,7 +1176,7 @@ extension __DictionaryDecoder {
     fileprivate func unbox(_ value: Any, as type: UInt32.Type) throws -> UInt32? {
         guard !(value is NSNull) else { return nil }
 
-        guard let number = value as? NSNumber else {
+        guard let number = unboxAsNumber(value) else {
             throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
         }
 
@@ -1180,7 +1191,7 @@ extension __DictionaryDecoder {
     fileprivate func unbox(_ value: Any, as type: UInt64.Type) throws -> UInt64? {
         guard !(value is NSNull) else { return nil }
 
-        guard let number = value as? NSNumber else {
+        guard let number = unboxAsNumber(value) else {
             throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
         }
 
@@ -1195,7 +1206,7 @@ extension __DictionaryDecoder {
     fileprivate func unbox(_ value: Any, as type: Float.Type) throws -> Float? {
         guard !(value is NSNull) else { return nil }
 
-        if let number = value as? NSNumber {
+        if let number = unboxAsNumber(value) {
             // We are willing to return a Float by losing precision:
             // * If the original value was integral,
             //   * and the integral value was > Float.greatestFiniteMagnitude, we will fail
@@ -1242,7 +1253,7 @@ extension __DictionaryDecoder {
     fileprivate func unbox(_ value: Any, as type: Double.Type) throws -> Double? {
         guard !(value is NSNull) else { return nil }
 
-        if let number = value as? NSNumber {
+        if let number = unboxAsNumber(value) {
             // We are always willing to return the number as a Double:
             // * If the original value was integral, it is guaranteed to fit in a Double; we are willing to lose precision past 2^53 if you encoded a UInt64 but requested a Double
             // * If it was a Float or Double, you will get back the precise value
@@ -1278,11 +1289,13 @@ extension __DictionaryDecoder {
     fileprivate func unbox(_ value: Any, as type: String.Type) throws -> String? {
         guard !(value is NSNull) else { return nil }
 
-        guard let string = value as? String else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
+        if let string = value as? String {
+            return string
         }
-
-        return string
+        if let string = (value as? StringFlexibleDecodable)?.asString() {
+            return string
+        }
+        throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
     }
 
     fileprivate func unbox(_ value: Any, as type: Date.Type) throws -> Date? {
@@ -1448,5 +1461,25 @@ internal extension DecodingError {
         } else {
             return "\(type(of: value))"
         }
+    }
+}
+
+internal struct StringFlexibleDecodable {
+    let value: String
+    
+    init(_ string: String) {
+        self.value = string
+    }
+    
+    func asBool() -> Bool? {
+        return Bool(value)
+    }
+    
+    func asString() -> String {
+        return value
+    }
+    
+    func asNumber() -> NSNumber? {
+        return NumberFormatter().number(from: value)
     }
 }

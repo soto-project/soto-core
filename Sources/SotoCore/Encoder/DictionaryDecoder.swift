@@ -1036,7 +1036,7 @@ extension __DictionaryDecoder {
         if let number = value as? NSNumber {
             return number
         }
-        return (value as? StringFlexibleDecodable)?.asNumber()
+        return (value as? HTTPHeaderDecodable)?.asNumber()
     }
 
     /// Returns the given value unboxed from a container.
@@ -1046,7 +1046,7 @@ extension __DictionaryDecoder {
         if let bool = value as? Bool {
             return bool
         }
-        if let bool = (value as? StringFlexibleDecodable)?.asBool() {
+        if let bool = (value as? HTTPHeaderDecodable)?.asBool() {
             return bool
         }
         throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
@@ -1291,7 +1291,7 @@ extension __DictionaryDecoder {
         if let string = value as? String {
             return string
         }
-        if let string = (value as? StringFlexibleDecodable)?.asString() {
+        if let string = (value as? HTTPHeaderDecodable)?.asString() {
             return string
         }
         throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
@@ -1463,7 +1463,8 @@ internal extension DecodingError {
     }
 }
 
-internal struct StringFlexibleDecodable {
+/// Used to decode HTTP header values which could be either number, boolean or string
+internal struct HTTPHeaderDecodable {
     let value: String
 
     init(_ string: String) {

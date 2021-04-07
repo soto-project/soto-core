@@ -169,7 +169,7 @@ public struct AWSResponse {
                     outputDict[headerParams[index].key] = value
                     continue
                 }
-                outputDict[headerParams[index].key] = StringFlexibleDecodable(stringValue)
+                outputDict[headerParams[index].key] = HTTPHeaderDecodable(stringValue)
             }
         }
         // add status code to output dictionary

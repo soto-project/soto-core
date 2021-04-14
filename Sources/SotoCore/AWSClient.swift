@@ -223,11 +223,17 @@ public final class AWSClient {
     public struct Options {
         /// log level used for request logging
         let requestLogLevel: Logger.Level
+        /// log level used for error logging
+        let errorLogLevel: Logger.Level
 
         /// Initialize AWSClient.Options
         /// - Parameter requestLogLevel:Log level used for request logging
-        public init(requestLogLevel: Logger.Level = .info) {
+        public init(
+            requestLogLevel: Logger.Level = .debug,
+            errorLogLevel: Logger.Level = .info
+        ) {
             self.requestLogLevel = requestLogLevel
+            self.errorLogLevel = errorLogLevel
         }
     }
 }
@@ -617,7 +623,7 @@ extension AWSClient {
                     }
                     // If I get a retry wait time for this error then attempt to retry request
                     if case .retry(let retryTime) = self.retryPolicy.getRetryWaitTime(error: error, attempt: attempt) {
-                        logger.debug("Retrying request", metadata: [
+                        logger.trace("Retrying request", metadata: [
                             "aws-retry-time": "\(Double(retryTime.nanoseconds) / 1_000_000_000)",
                         ])
                         // schedule task for retrying AWS request
@@ -677,7 +683,7 @@ extension AWSClient {
             // AWSErrorTypes have already been logged
             if error as? AWSErrorType == nil {
                 // log error message
-                logger.error("AWSClient error", metadata: [
+                logger.log(level: self.options.errorLogLevel, "AWSClient error", metadata: [
                     "aws-error-message": "\(error)",
                 ])
             }

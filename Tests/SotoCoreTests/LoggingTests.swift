@@ -84,7 +84,7 @@ class LoggingTests: XCTestCase {
 
         XCTAssertNoThrow(_ = try response.wait())
         let requestEntry = try XCTUnwrap(logCollection.filter(message: "AWS Request").first)
-        XCTAssertEqual(requestEntry.level, .info)
+        XCTAssertEqual(requestEntry.level, .debug)
         XCTAssertEqual(requestEntry.metadata["aws-operation"], "TestOperation")
         XCTAssertEqual(requestEntry.metadata["aws-service"], "test-service")
         let responseEntry = try XCTUnwrap(logCollection.filter(message: "AWS Response").first)
@@ -151,7 +151,7 @@ class LoggingTests: XCTestCase {
 
         XCTAssertNoThrow(_ = try response.wait())
         XCTAssertEqual(logCollection.filter(metadata: "aws-retry-time").first?.message, "Retrying request")
-        XCTAssertEqual(logCollection.filter(metadata: "aws-retry-time").first?.level, .debug)
+        XCTAssertEqual(logCollection.filter(metadata: "aws-retry-time").first?.level, .trace)
     }
 
     func testNoCredentialProvider() {

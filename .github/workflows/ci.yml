@@ -31,7 +31,9 @@ jobs:
           -ignore-filename-regex="\/Tests\/" \
           -instr-profile=.build/debug/codecov/default.profdata > info.lcov  
     - name: Upload to codecov.io
-      run: bash <(curl -s https://codecov.io/bash) -J 'soto-core' -t ${{secrets.CODECOV_TOKEN}}
+      uses: codecov/codecov-action@v1
+      with:
+        file: info.lcov
 
   ios:
     runs-on: macOS-latest

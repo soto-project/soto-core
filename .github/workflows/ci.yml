@@ -53,8 +53,8 @@ jobs:
       matrix:
         tag: 
           - swift:5.1
-          - swift:5.2
           - swift:5.3
+          - swift:5.4
     container:
       image: ${{ matrix.tag }}
     steps:

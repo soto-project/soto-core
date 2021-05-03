@@ -173,7 +173,7 @@ public final class AWSClient {
                 self.httpClient.shutdown(queue: queue) { error in
                     if let error = error {
                         self.clientLogger.log(level: self.options.errorLogLevel, "Error shutting down HTTP client", metadata: [
-                            "aws-error": "\(error)"
+                            "aws-error": "\(error)",
                         ])
                     }
                     callback(error)
@@ -571,7 +571,7 @@ extension AWSClient {
         // if we can create an AWSResponse and create an error from it return that
         if let awsResponse = try? AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol)
             .applyMiddlewares(serviceConfig.middlewares + middlewares, config: serviceConfig),
-           let error = awsResponse.generateError(serviceConfig: serviceConfig, logLevel: options.errorLogLevel, logger: logger)
+            let error = awsResponse.generateError(serviceConfig: serviceConfig, logLevel: options.errorLogLevel, logger: logger)
         {
             return error
         } else {

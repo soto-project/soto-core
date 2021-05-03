@@ -1357,7 +1357,7 @@ extension __DictionaryDecoder {
         return try unbox_(value, as: type) as? T
     }
 
-    fileprivate func unbox_(_ value: Any, as type: Decodable.Type) throws -> Any? {
+    private func unbox_(_ value: Any, as type: Decodable.Type) throws -> Any? {
         if type == Data.self {
             return try self.unbox(value, as: Data.self)
         } else if type == Date.self {

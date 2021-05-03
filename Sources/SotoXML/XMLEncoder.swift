@@ -468,20 +468,20 @@ extension _XMLEncoder: SingleValueEncodingContainer {
 
 extension _XMLEncoder {
     /// Returns the given value boxed in a container appropriate for pushing onto the container stack.
-    fileprivate func box(_ value: Bool) -> String { return value.description }
-    fileprivate func box(_ value: Int) -> String { return value.description }
-    fileprivate func box(_ value: Int8) -> String { return value.description }
-    fileprivate func box(_ value: Int16) -> String { return value.description }
-    fileprivate func box(_ value: Int32) -> String { return value.description }
-    fileprivate func box(_ value: Int64) -> String { return value.description }
-    fileprivate func box(_ value: UInt) -> String { return value.description }
-    fileprivate func box(_ value: UInt8) -> String { return value.description }
-    fileprivate func box(_ value: UInt16) -> String { return value.description }
-    fileprivate func box(_ value: UInt32) -> String { return value.description }
-    fileprivate func box(_ value: UInt64) -> String { return value.description }
-    fileprivate func box(_ value: String) -> String { return value }
+    private func box(_ value: Bool) -> String { return value.description }
+    private func box(_ value: Int) -> String { return value.description }
+    private func box(_ value: Int8) -> String { return value.description }
+    private func box(_ value: Int16) -> String { return value.description }
+    private func box(_ value: Int32) -> String { return value.description }
+    private func box(_ value: Int64) -> String { return value.description }
+    private func box(_ value: UInt) -> String { return value.description }
+    private func box(_ value: UInt8) -> String { return value.description }
+    private func box(_ value: UInt16) -> String { return value.description }
+    private func box(_ value: UInt32) -> String { return value.description }
+    private func box(_ value: UInt64) -> String { return value.description }
+    private func box(_ value: String) -> String { return value }
 
-    fileprivate func box(_ float: Float) throws -> String {
+    private func box(_ float: Float) throws -> String {
         guard !float.isInfinite, !float.isNaN else {
             guard case .convertToString(
                 positiveInfinity: let posInfString,
@@ -504,7 +504,7 @@ extension _XMLEncoder {
         return float.description
     }
 
-    fileprivate func box(_ double: Double) throws -> String {
+    private func box(_ double: Double) throws -> String {
         guard !double.isInfinite, !double.isNaN else {
             guard case .convertToString(
                 positiveInfinity: let posInfString,

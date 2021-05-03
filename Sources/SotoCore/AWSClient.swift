@@ -86,7 +86,8 @@ public final class AWSClient {
         self.credentialProvider = credentialProviderFactory.createProvider(context: .init(
             httpClient: httpClient,
             eventLoop: httpClient.eventLoopGroup.next(),
-            logger: clientLogger
+            logger: clientLogger,
+            options: options
         ))
 
         self.middlewares = middlewares

@@ -183,14 +183,14 @@ struct InstanceMetaDataClient: MetaDataClient {
     func getMetaData(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<InstanceMetaData> {
         return getToken(on: eventLoop, logger: logger)
             .map { token in
-                logger.info("Found IMDSv2 token")
+                logger.trace("Found IMDSv2 token")
                 return HTTPHeaders([(Self.TokenHeaderName, token)])
             }
             .flatMapErrorThrowing { _ in
                 // If we didn't find a session key then assume we are running IMDSv1.
                 // (we could be running from a Docker container and the hop count for the PUT
                 // request is still set to 1)
-                logger.info("Did not find IMDSv2 token, use IMDSv1")
+                logger.trace("Did not find IMDSv2 token, use IMDSv1")
                 return HTTPHeaders()
             }
             .flatMap { (headers) -> EventLoopFuture<(AWSHTTPResponse, HTTPHeaders)> in

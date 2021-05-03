@@ -171,8 +171,8 @@ public final class AWSClient {
             case .createNew, .createNewWithEventLoopGroup:
                 self.httpClient.shutdown(queue: queue) { error in
                     if let error = error {
-                        self.clientLogger.error("Error shutting down HTTP client", metadata: [
-                            "aws-error": "\(error)",
+                        self.clientLogger.log(level: self.options.errorLogLevel, "Error shutting down HTTP client", metadata: [
+                            "aws-error": "\(error)"
                         ])
                     }
                     callback(error)
@@ -230,7 +230,7 @@ public final class AWSClient {
         /// - Parameter requestLogLevel:Log level used for request logging
         public init(
             requestLogLevel: Logger.Level = .debug,
-            errorLogLevel: Logger.Level = .info
+            errorLogLevel: Logger.Level = .debug
         ) {
             self.requestLogLevel = requestLogLevel
             self.errorLogLevel = errorLogLevel
@@ -570,7 +570,7 @@ extension AWSClient {
         // if we can create an AWSResponse and create an error from it return that
         if let awsResponse = try? AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol)
             .applyMiddlewares(serviceConfig.middlewares + middlewares, config: serviceConfig),
-            let error = awsResponse.generateError(serviceConfig: serviceConfig, logger: logger)
+           let error = awsResponse.generateError(serviceConfig: serviceConfig, logLevel: options.errorLogLevel, logger: logger)
         {
             return error
         } else {

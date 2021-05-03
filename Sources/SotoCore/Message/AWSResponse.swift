@@ -181,7 +181,7 @@ public struct AWSResponse {
     }
 
     /// extract error code and message from AWSResponse
-    func generateError(serviceConfig: AWSServiceConfig, logger: Logger) -> Error? {
+    func generateError(serviceConfig: AWSServiceConfig, logLevel: Logger.Level = .info, logger: Logger) -> Error? {
         var apiError: APIError?
         switch serviceConfig.serviceProtocol {
         case .restjson:
@@ -225,7 +225,7 @@ public struct AWSResponse {
                 code = String(code[code.index(index, offsetBy: 1)...])
             }
 
-            logger.error("AWS Error", metadata: [
+            logger.log(level: logLevel, "AWS Error", metadata: [
                 "aws-error-code": .string(code),
                 "aws-error-message": .string(errorMessage.message),
             ])

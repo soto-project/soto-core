@@ -48,6 +48,8 @@ public struct CredentialProviderFactory {
         public let eventLoop: EventLoop
         /// The `Logger` attached to the AWSClient
         public let logger: Logger
+        /// AWSClient options
+        public let options: AWSClient.Options
     }
 
     private let cb: (Context) -> CredentialProvider

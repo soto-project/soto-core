@@ -47,9 +47,10 @@ class RuntimeSelectorCredentialProvider: CredentialProviderSelector {
             provider.getCredential(on: context.eventLoop, logger: context.logger).whenComplete { result in
                 switch result {
                 case .success:
-                    context.logger.info("Select credential provider", metadata: ["aws-credential-provider": .string("\(provider)")])
+                    context.logger.debug("Select credential provider", metadata: ["aws-credential-provider": .string("\(provider)")])
                     self.startupPromise.succeed(provider)
                 case .failure:
+                    context.logger.log(level: context.options.errorLogLevel, "Select credential provider failed")
                     _setupInternalProvider(index + 1)
                 }
             }

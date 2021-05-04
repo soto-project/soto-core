@@ -100,6 +100,7 @@ class LoggingTests: XCTestCase {
         defer { XCTAssertNoThrow(try server.stop()) }
         let client = AWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
+            options: .init(requestLogLevel: .debug, errorLogLevel: .info),
             httpClientProvider: .createNew,
             logger: logger
         )
@@ -117,7 +118,7 @@ class LoggingTests: XCTestCase {
 
         XCTAssertThrowsError(_ = try response.wait())
         XCTAssertEqual(logCollection.filter(metadata: "aws-error-code", with: "AccessDenied").first?.message, "AWS Error")
-        XCTAssertEqual(logCollection.filter(metadata: "aws-error-code", with: "AccessDenied").first?.level, .error)
+        XCTAssertEqual(logCollection.filter(metadata: "aws-error-code", with: "AccessDenied").first?.level, .info)
     }
 
     func testRetryRequest() {

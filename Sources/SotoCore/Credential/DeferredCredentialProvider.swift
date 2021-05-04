@@ -49,7 +49,7 @@ public class DeferredCredentialProvider: CredentialProvider {
             .flatMapErrorThrowing { _ in throw CredentialProviderError.noProvider }
             .map { credential in
                 self.credential = credential
-                context.logger.info("AWS credentials ready", metadata: ["aws-credential-provider": .string("\(self)")])
+                context.logger.debug("AWS credentials ready", metadata: ["aws-credential-provider": .string("\(self)")])
                 return credential
             }
             .cascade(to: self.startupPromise)

@@ -197,6 +197,9 @@ extension AWSRequest {
                 // only include the body if there are members that are output in the body.
                 if memberVariablesCount > 0 {
                     body = .json(try input.encodeAsJSON(byteBufferAllocator: configuration.byteBufferAllocator))
+                } else if httpMethod == .PUT || httpMethod == .POST {
+                    // PUT and POST requests require a body even if it is empty. This is not the case with XML
+                    body = .json(configuration.byteBufferAllocator.buffer(string: "{}"))
                 }
             }
 

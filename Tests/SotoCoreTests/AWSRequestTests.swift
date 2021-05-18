@@ -53,7 +53,6 @@ class AWSRequestTests: XCTestCase {
         var awsRequest: AWSRequest?
         XCTAssertNoThrow(awsRequest = try AWSRequest(operation: "Keyword", path: "/", httpMethod: .POST, input: request, configuration: config))
         XCTAssertEqual(awsRequest?.httpHeaders["repeat"].first, "Repeat")
-        XCTAssertTrue(try XCTUnwrap(awsRequest).body.asPayload(byteBufferAllocator: ByteBufferAllocator()).isEmpty)
     }
 
     func testCreateAwsRequestWithKeywordInQuery() {
@@ -69,7 +68,6 @@ class AWSRequestTests: XCTestCase {
         var awsRequest: AWSRequest?
         XCTAssertNoThrow(awsRequest = try AWSRequest(operation: "Keyword", path: "/", httpMethod: .POST, input: request, configuration: config))
         XCTAssertEqual(awsRequest?.url, URL(string: "https://s3.ca-central-1.amazonaws.com/?self=KeywordRequest")!)
-        XCTAssertEqual(try XCTUnwrap(awsRequest).body.asByteBuffer(byteBufferAllocator: ByteBufferAllocator()), nil)
     }
 
     func testCreateNIORequest() {
@@ -351,5 +349,15 @@ class AWSRequestTests: XCTestCase {
         var request: AWSRequest?
         XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))
         XCTAssertEqual(request?.url, URL(string: "https://test.com/?date=Sun%2C%2026%20Apr%201970%2017%3A46%3A40%20GMT")!)
+    }
+
+    /// JSON POST request require a body even if there is no data to POST
+    func testEmptyJsonObject() {
+        struct Input: AWSEncodableShape {}
+        let input = Input()
+        let config = createServiceConfig(serviceProtocol: .json(version: "1.0"), endpoint: "https://test.com")
+        var request: AWSRequest?
+        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .POST, input: input, configuration: config))
+        XCTAssertEqual(request?.body.asString(), "{}")
     }
 }

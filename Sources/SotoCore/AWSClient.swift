@@ -466,14 +466,28 @@ extension AWSClient {
         let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName, service: config.service)
         // get credentials
         let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop, logger: logger)
-            .flatMapThrowing { credential -> AWSHTTPRequest in
+            .flatMap { credential -> EventLoopFuture<AWSHTTPRequest> in
                 // construct signer
                 let signer = AWSSigner(credentials: credential, name: config.signingName, region: config.region.rawValue)
                 // create request and sign with signer
-                let awsRequest = try createRequest()
-                return try awsRequest
-                    .applyMiddlewares(config.middlewares + self.middlewares, config: config)
-                    .createHTTPRequest(signer: signer, byteBufferAllocator: config.byteBufferAllocator)
+                if let threadPool = self.options.threadPool {
+                    return threadPool.runIfActive(eventLoop: eventLoop) {
+                        let awsRequest = try createRequest()
+                        return try awsRequest
+                            .applyMiddlewares(config.middlewares + self.middlewares, config: config)
+                            .createHTTPRequest(signer: signer, byteBufferAllocator: config.byteBufferAllocator)
+                    }
+                } else {
+                    do {
+                        let awsRequest = try createRequest()
+                        let request = try awsRequest
+                            .applyMiddlewares(config.middlewares + self.middlewares, config: config)
+                            .createHTTPRequest(signer: signer, byteBufferAllocator: config.byteBufferAllocator)
+                        return eventLoop.makeSucceededFuture(request)
+                    } catch {
+                        return eventLoop.makeFailedFuture(error)
+                    }
+                }
             }.flatMap { request -> EventLoopFuture<Output> in
                 // send request to AWS and process result
                 let streaming: Bool

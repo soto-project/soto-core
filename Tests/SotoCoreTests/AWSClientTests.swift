@@ -269,14 +269,15 @@ class AWSClientTests: XCTestCase {
     func testRequestS3Streaming() {
         let threadPool = NIOThreadPool(numberOfThreads: 2)
         threadPool.start()
-        defer { XCTAssertNoThrow(try threadPool.syncShutdownGracefully())}
+        defer { XCTAssertNoThrow(try threadPool.syncShutdownGracefully()) }
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
         let config = createServiceConfig(service: "s3", endpoint: awsServer.address)
         let client = createAWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
             options: .init(threadPool: threadPool),
-            httpClientProvider: .shared(httpClient))
+            httpClientProvider: .shared(httpClient)
+        )
         defer {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
@@ -304,7 +305,7 @@ class AWSClientTests: XCTestCase {
 
         let threadPool = NIOThreadPool(numberOfThreads: 2)
         threadPool.start()
-        defer { XCTAssertNoThrow(try threadPool.syncShutdownGracefully())}
+        defer { XCTAssertNoThrow(try threadPool.syncShutdownGracefully()) }
 
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)

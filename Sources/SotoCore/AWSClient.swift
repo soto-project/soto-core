@@ -226,15 +226,19 @@ public final class AWSClient {
         let requestLogLevel: Logger.Level
         /// log level used for error logging
         let errorLogLevel: Logger.Level
+        /// thread pool
+        let threadPool: NIOThreadPool?
 
         /// Initialize AWSClient.Options
         /// - Parameter requestLogLevel:Log level used for request logging
         public init(
             requestLogLevel: Logger.Level = .debug,
-            errorLogLevel: Logger.Level = .debug
+            errorLogLevel: Logger.Level = .debug,
+            threadPool: NIOThreadPool? = nil
         ) {
             self.requestLogLevel = requestLogLevel
             self.errorLogLevel = errorLogLevel
+            self.threadPool = threadPool
         }
     }
 }

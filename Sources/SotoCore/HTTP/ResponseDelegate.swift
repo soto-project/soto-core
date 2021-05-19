@@ -31,9 +31,6 @@ class AWSHTTPClientResponseDelegate: HTTPClientResponseDelegate {
     let host: String
     let stream: (ByteBuffer, EventLoop) -> EventLoopFuture<Void>
     var state: State
-    // temporary stored future while AHC still doesn't sync to futures returned from `didReceiveBodyPart`
-    // See https://github.com/swift-server/async-http-client/issues/274
-    var bodyPartFuture: EventLoopFuture<Void>?
 
     init(host: String, stream: @escaping (ByteBuffer, EventLoop) -> EventLoopFuture<Void>) {
         self.host = host
@@ -62,7 +59,6 @@ class AWSHTTPClientResponseDelegate: HTTPClientResponseDelegate {
         case .head(let head):
             if (200..<300).contains(head.status.code) {
                 let futureResult = self.stream(part, task.eventLoop)
-                self.bodyPartFuture = futureResult
                 return futureResult
             }
             self.state = .head(head)

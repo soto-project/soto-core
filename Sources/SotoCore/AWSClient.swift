@@ -194,6 +194,7 @@ public final class AWSClient {
             case invalidURL
             case tooMuchData
             case notEnoughData
+            case waiterFailed
         }
 
         let error: Error
@@ -206,6 +207,8 @@ public final class AWSClient {
         public static var tooMuchData: ClientError { .init(error: .tooMuchData) }
         /// Not enough data has been supplied for the Request
         public static var notEnoughData: ClientError { .init(error: .notEnoughData) }
+        /// Not enough data has been supplied for the Request
+        public static var waiterFailed: ClientError { .init(error: .waiterFailed) }
     }
 
     /// Specifies how `HTTPClient` will be created and establishes lifecycle ownership.
@@ -658,6 +661,8 @@ extension AWSClient.ClientError: CustomStringConvertible {
             return "You have supplied too much data for the Request."
         case .notEnoughData:
             return "You have not supplied enough data for the Request."
+        case .waiterFailed:
+            return "Waiter failed"
         }
     }
 }

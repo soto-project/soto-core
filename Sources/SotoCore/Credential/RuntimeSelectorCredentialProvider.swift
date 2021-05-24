@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Logging
+import Baggage
 import NIO
 import NIOConcurrencyHelpers
 import SotoSignerV4
@@ -44,7 +44,7 @@ class RuntimeSelectorCredentialProvider: CredentialProviderSelector {
             }
             let providerFactory = providers[index]
             let provider = providerFactory.createProvider(context: context)
-            provider.getCredential(on: context.eventLoop, logger: context.logger).whenComplete { result in
+            provider.getCredential(on: context.eventLoop, context: DefaultLoggingContext.TODO(logger: context.logger)).whenComplete { result in
                 switch result {
                 case .success:
                     context.logger.debug("Select credential provider", metadata: ["aws-credential-provider": .string("\(provider)")])

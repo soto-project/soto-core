@@ -11,6 +11,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 //===----------------------------------------------------------------------===//
+import Baggage
 import Foundation
 
 struct STSAssumeRoleRequest: AWSEncodableShape {
@@ -124,8 +125,8 @@ struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
         )
     }
 
-    func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
-        self.assumeRole(self.request, logger: logger, on: eventLoop)
+    func getCredential(on eventLoop: EventLoop, context: LoggingContext) -> EventLoopFuture<Credential> {
+        self.assumeRole(self.request, context: context, on: eventLoop)
             .flatMapThrowing { response in
                 guard let credentials = response.credentials else {
                     throw CredentialProviderError.noProvider
@@ -134,7 +135,7 @@ struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
             }
     }
 
-    func assumeRole(_ input: STSAssumeRoleRequest, logger: Logger, on eventLoop: EventLoop?) -> EventLoopFuture<STSAssumeRoleResponse> {
-        return self.client.execute(operation: "AssumeRole", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger, on: eventLoop)
+    func assumeRole(_ input: STSAssumeRoleRequest, context: LoggingContext, on eventLoop: EventLoop?) -> EventLoopFuture<STSAssumeRoleResponse> {
+        return self.client.execute(operation: "AssumeRole", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, context: context, on: eventLoop)
     }
 }

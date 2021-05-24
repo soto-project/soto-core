@@ -296,7 +296,7 @@ enum ConfigFileLoader {
         // For this reason we get the expanded filePath on Linux from libc.
         // Since `wordexp` and `wordfree` are not available on iOS we stay
         // with NSString on Darwin.
-        return filePath.withCString { (ptr) -> String in
+        return filePath.withCString { ptr -> String in
             var wexp = wordexp_t()
             guard wordexp(ptr, &wexp, 0) == 0, let we_wordv = wexp.we_wordv else {
                 return filePath

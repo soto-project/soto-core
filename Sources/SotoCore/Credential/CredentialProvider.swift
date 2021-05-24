@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Logging
+import Baggage
 import NIO
 import NIOConcurrencyHelpers
 import SotoSignerV4
@@ -23,7 +23,7 @@ public protocol CredentialProvider: CustomStringConvertible {
     /// - Parameters:
     ///   - eventLoop: EventLoop to run on
     ///   - logger: Logger to use
-    func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential>
+    func getCredential(on eventLoop: EventLoop, context: LoggingContext) -> EventLoopFuture<Credential>
 
     /// Shutdown credential provider
     /// - Parameter eventLoop: EventLoop to use when shutiting down

@@ -16,44 +16,53 @@ import Dispatch
 import Foundation
 import NIO
 
+// MARK: Waiters
+
 extension AWSClient {
+    /// Waiter state
     public enum WaiterState {
         case success
         case retry
         case failure
     }
 
+    /// A waiter is a client side abstraction used to poll a resource until a desired state is reached
     public struct Waiter<Input, Output> {
+        /// An acceptor checks the result of a call and can change the waiter state based on that result
         public struct Acceptor {
-            public init(state: AWSClient.WaiterState, matcher: AWSMatcher) {
+            public init(state: AWSClient.WaiterState, matcher: AWSWaiterMatcher) {
                 self.state = state
                 self.matcher = matcher
             }
             
             let state: WaiterState
-            let matcher: AWSMatcher
+            let matcher: AWSWaiterMatcher
         }
-        
+
+        /// Initialize an waiter
+        /// - Parameters:
+        ///   - acceptors: List of acceptors
+        ///   - minDelayTime: minimum amount of time to wait between API calls
+        ///   - maxDelayTime: maximum amount of time to wait between API calls
+        ///   - command: API call
         public init(
             acceptors: [AWSClient.Waiter<Input, Output>.Acceptor],
             minDelayTime: TimeAmount = .seconds(2),
             maxDelayTime: TimeAmount = .seconds(120),
-            maxRetryAttempts: Int,
             command: @escaping (Input, Logger, EventLoop?
         ) -> EventLoopFuture<Output>) {
             self.acceptors = acceptors
             self.minDelayTime = minDelayTime
             self.maxDelayTime = maxDelayTime
-            self.maxRetryAttempts = maxRetryAttempts
             self.command = command
         }
         
         let acceptors: [Acceptor]
         let minDelayTime: TimeAmount
         let maxDelayTime: TimeAmount
-        let maxRetryAttempts: Int
         let command: (Input, Logger, EventLoop?) -> EventLoopFuture<Output>
-                
+
+        /// calculate delay until next API call
         func calculateRetryWaitTime(attempt: Int, remainingTime: TimeAmount) -> TimeAmount {
             let minDelay: Double = Double(self.minDelayTime.nanoseconds) / 1_000_000_000
             let maxDelay: Double = Double(self.maxDelayTime.nanoseconds) / 1_000_000_000
@@ -74,10 +83,18 @@ extension AWSClient {
         }
     }
 
+    /// Return EventLoopFuture that will by fulfilled once waiter is done
+    /// - Parameters:
+    ///   - input: Input parameters
+    ///   - waiter: Waiter to wait on
+    ///   - maxWaitTime: Maximum amount of time to wait
+    ///   - logger: Logger used to provide output
+    ///   - eventLoop: EventLoop to run API calls on
+    /// - Returns: EventLoopFuture that will be fulfilled once waiter has completed
     public func wait<Input, Output>(
         _ input: Input,
         waiter: Waiter<Input, Output>,
-        maxWaitTime: TimeAmount,
+        maxWaitTime: TimeAmount = .seconds(120),
         logger: Logger = AWSClient.loggingDisabled,
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Void> {
@@ -95,8 +112,17 @@ extension AWSClient {
                             break
                         }
                     }
-                    print(state)
-                    switch state {
+                    // if state has not been set then set it based on return of API call
+                    let solidState: WaiterState
+                    if let state = state {
+                        solidState = state
+                    } else if case .failure = result {
+                        solidState = .failure
+                    } else {
+                        solidState = .retry
+                    }
+                    // based on state succeed, fail promise or retry
+                    switch solidState {
                     case .success:
                         promise.succeed(())
                     case .failure:
@@ -107,13 +133,9 @@ extension AWSClient {
                         }
                     case .retry:
                         let wait = waiter.calculateRetryWaitTime(attempt: number, remainingTime: deadline - .now())
-                        logger.info("Wait \(wait.nanoseconds / 1_000_000)ms")
-                        eventLoop.scheduleTask(in: wait) { attempt(number: number + 1) }
-                    case .none:
-                        if case .failure(let error) = result {
-                            promise.fail(error)
+                        if wait < .seconds(0) {
+                            promise.fail(ClientError.waiterTimeout)
                         } else {
-                            let wait = waiter.calculateRetryWaitTime(attempt: number, remainingTime: deadline - .now())
                             logger.info("Wait \(wait.nanoseconds / 1_000_000)ms")
                             eventLoop.scheduleTask(in: wait) { attempt(number: number + 1) }
                         }

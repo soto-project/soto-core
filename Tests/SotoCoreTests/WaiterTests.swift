@@ -51,8 +51,10 @@ class WaiterTests: XCTestCase {
                 self.status = booleanLiteral
             }
         }
+
         let array: [Element]
     }
+
     func arrayOperation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<ArrayOutput> {
         Self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: Self.config, input: input, logger: logger, on: eventLoop)
     }

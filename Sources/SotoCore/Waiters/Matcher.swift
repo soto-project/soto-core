@@ -56,7 +56,7 @@ public struct AWSAnyPathMatcher<Object, Element, Value: Equatable>: AWSWaiterMat
             guard let array = (output as? Object)?[keyPath: self.arrayPath] else {
                 return false
             }
-            return array.first { $0[keyPath: elementPath] == expected} != nil
+            return array.first { $0[keyPath: elementPath] == expected } != nil
         case .failure:
             return false
         }
@@ -81,7 +81,7 @@ public struct AWSAllPathMatcher<Object, Element, Value: Equatable>: AWSWaiterMat
             guard let array = (output as? Object)?[keyPath: self.arrayPath] else {
                 return false
             }
-            return array.first { $0[keyPath: elementPath] != expected} == nil
+            return array.first { $0[keyPath: elementPath] != expected } == nil
         case .failure:
             return false
         }

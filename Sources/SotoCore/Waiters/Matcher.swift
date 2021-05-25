@@ -50,9 +50,9 @@ public struct AWSSuccessMatcher: AWSWaiterMatcher {
 }
 
 public struct AWSErrorStatusMatcher: AWSWaiterMatcher {
-    let expectedStatus: HTTPResponseStatus
+    let expectedStatus: Int
 
-    public init(_ status: HTTPResponseStatus) {
+    public init(_ status: Int) {
         self.expectedStatus = status
     }
 
@@ -61,7 +61,11 @@ public struct AWSErrorStatusMatcher: AWSWaiterMatcher {
         case .success:
             return false
         case.failure(let error):
-            return (error as? AWSErrorType)?.context?.responseCode == expectedStatus
+            if let code = (error as? AWSErrorType)?.context?.responseCode.code {
+                return code == self.expectedStatus
+            } else {
+                return false
+            }
         }
     }
 }

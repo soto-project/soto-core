@@ -38,6 +38,56 @@ public struct AWSPathMatcher<Object, Value: Equatable>: AWSWaiterMatcher {
     }
 }
 
+public struct AWSAnyPathMatcher<Object, Element, Value: Equatable>: AWSWaiterMatcher {
+    let arrayPath: KeyPath<Object, [Element]>
+    let elementPath: KeyPath<Element, Value>
+    let expected: Value
+
+    public init(arrayPath: KeyPath<Object, [Element]>, elementPath: KeyPath<Element, Value>, expected: Value) {
+        self.arrayPath = arrayPath
+        self.elementPath = elementPath
+        self.expected = expected
+    }
+
+    public func match(result: Result<Any, Error>) -> Bool {
+        switch result {
+        case .success(let output):
+            // get array
+            guard let array = (output as? Object)?[keyPath: self.arrayPath] else {
+                return false
+            }
+            return array.first { $0[keyPath: elementPath] == expected} != nil
+        case .failure:
+            return false
+        }
+    }
+}
+
+public struct AWSAllPathMatcher<Object, Element, Value: Equatable>: AWSWaiterMatcher {
+    let arrayPath: KeyPath<Object, [Element]>
+    let elementPath: KeyPath<Element, Value>
+    let expected: Value
+
+    public init(arrayPath: KeyPath<Object, [Element]>, elementPath: KeyPath<Element, Value>, expected: Value) {
+        self.arrayPath = arrayPath
+        self.elementPath = elementPath
+        self.expected = expected
+    }
+
+    public func match(result: Result<Any, Error>) -> Bool {
+        switch result {
+        case .success(let output):
+            // get array
+            guard let array = (output as? Object)?[keyPath: self.arrayPath] else {
+                return false
+            }
+            return array.first { $0[keyPath: elementPath] != expected} == nil
+        case .failure:
+            return false
+        }
+    }
+}
+
 public struct AWSSuccessMatcher: AWSWaiterMatcher {
     public func match(result: Result<Any, Error>) -> Bool {
         switch result {

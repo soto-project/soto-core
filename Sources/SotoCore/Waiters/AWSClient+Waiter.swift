@@ -12,36 +12,80 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Dispatch
+import Foundation
 import NIO
 
 extension AWSClient {
-    enum WaiterState {
+    public enum WaiterState {
         case success
         case retry
         case failure
     }
 
-    struct Waiter<Input, Output> {
-        struct Acceptor {
+    public struct Waiter<Input, Output> {
+        public struct Acceptor {
+            public init(state: AWSClient.WaiterState, matcher: AWSMatcher) {
+                self.state = state
+                self.matcher = matcher
+            }
+            
             let state: WaiterState
             let matcher: AWSMatcher
         }
+        
+        public init(
+            acceptors: [AWSClient.Waiter<Input, Output>.Acceptor],
+            minDelayTime: TimeAmount = .seconds(2),
+            maxDelayTime: TimeAmount = .seconds(120),
+            maxRetryAttempts: Int,
+            command: @escaping (Input, Logger, EventLoop?
+        ) -> EventLoopFuture<Output>) {
+            self.acceptors = acceptors
+            self.minDelayTime = minDelayTime
+            self.maxDelayTime = maxDelayTime
+            self.maxRetryAttempts = maxRetryAttempts
+            self.command = command
+        }
+        
         let acceptors: [Acceptor]
+        let minDelayTime: TimeAmount
+        let maxDelayTime: TimeAmount
         let maxRetryAttempts: Int
         let command: (Input, Logger, EventLoop?) -> EventLoopFuture<Output>
+                
+        func calculateRetryWaitTime(attempt: Int, remainingTime: TimeAmount) -> TimeAmount {
+            let minDelay: Double = Double(self.minDelayTime.nanoseconds) / 1_000_000_000
+            let maxDelay: Double = Double(self.maxDelayTime.nanoseconds) / 1_000_000_000
+            let attemptCeiling = (log(maxDelay / minDelay) / log(2)) + 1
+
+            let calculatedMaxDelay: Double
+            if Double(attempt) > attemptCeiling {
+                calculatedMaxDelay = maxDelay
+            } else {
+                calculatedMaxDelay = minDelay * Double(1<<(attempt-1))
+            }
+            let delay = Double.random(in: minDelay...calculatedMaxDelay)
+            let timeDelay = TimeAmount.nanoseconds(Int64(delay * 1_000_000_000))
+            if remainingTime - timeDelay < minDelayTime {
+                return remainingTime - minDelayTime
+            }
+            return timeDelay
+        }
     }
 
-    func wait<Input, Output>(
+    public func wait<Input, Output>(
         _ input: Input,
         waiter: Waiter<Input, Output>,
         maxWaitTime: TimeAmount,
         logger: Logger = AWSClient.loggingDisabled,
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Void> {
+        let deadline: NIODeadline = .now() + maxWaitTime
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let promise = eventLoop.makePromise(of: Void.self)
 
-        func attempt() {
+        func attempt(number: Int) {
             waiter.command(input, logger, eventLoop)
                 .whenComplete { result in
                     var state: WaiterState? = nil
@@ -62,17 +106,22 @@ extension AWSClient {
                             promise.fail(ClientError.waiterFailed)
                         }
                     case .retry:
-                        eventLoop.scheduleTask(in: .seconds(1)) { attempt() }
+                        let wait = waiter.calculateRetryWaitTime(attempt: number, remainingTime: deadline - .now())
+                        logger.info("Wait \(wait.nanoseconds / 1_000_000)ms")
+                        eventLoop.scheduleTask(in: wait) { attempt(number: number + 1) }
                     case .none:
                         if case .failure(let error) = result {
                             promise.fail(error)
                         } else {
-                            eventLoop.scheduleTask(in: .seconds(1)) { attempt() }
+                            let wait = waiter.calculateRetryWaitTime(attempt: number, remainingTime: deadline - .now())
+                            logger.info("Wait \(wait.nanoseconds / 1_000_000)ms")
+                            eventLoop.scheduleTask(in: wait) { attempt(number: number + 1) }
                         }
                     }
                 }
         }
-        attempt()
+        attempt(number: 1)
         return promise.futureResult
     }
+
 }

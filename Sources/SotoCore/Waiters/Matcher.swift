@@ -14,15 +14,20 @@
 
 import NIO
 
-protocol AWSMatcher {
+public protocol AWSMatcher {
     func match(result: Result<Any, Error>) -> Bool
 }
 
-struct AWSOutputMatcher<Value: Equatable>: AWSMatcher {
+public struct AWSOutputMatcher<Value: Equatable>: AWSMatcher {
     let path: AnyKeyPath
     let expected: Value
 
-    func match(result: Result<Any, Error>) -> Bool {
+    public init(path: AnyKeyPath, expected: Value) {
+        self.path = path
+        self.expected = expected
+    }
+    
+    public func match(result: Result<Any, Error>) -> Bool {
         switch result {
         case .success(let output):
             return (output[keyPath: path] as? Value) == expected
@@ -32,8 +37,8 @@ struct AWSOutputMatcher<Value: Equatable>: AWSMatcher {
     }
 }
 
-struct AWSSuccessMatcher: AWSMatcher {
-    func match(result: Result<Any, Error>) -> Bool {
+public struct AWSSuccessMatcher: AWSMatcher {
+    public func match(result: Result<Any, Error>) -> Bool {
         switch result {
         case .success:
             return true
@@ -43,10 +48,14 @@ struct AWSSuccessMatcher: AWSMatcher {
     }
 }
 
-struct AWSErrorMatcher: AWSMatcher {
+public struct AWSErrorMatcher: AWSMatcher {
     let expected: AWSErrorType
 
-    func match(result: Result<Any, Error>) -> Bool {
+    public init(_ expected: AWSErrorType) {
+        self.expected = expected
+    }
+    
+    public func match(result: Result<Any, Error>) -> Bool {
         switch result {
         case .success:
             return false

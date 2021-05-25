@@ -14,7 +14,7 @@
 
 import AsyncHTTPClient
 import NIO
-@testable import SotoCore
+import SotoCore
 import SotoTestUtils
 import XCTest
 

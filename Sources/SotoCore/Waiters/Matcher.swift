@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import NIO
+import NIOHTTP1
 
 public protocol AWSWaiterMatcher {
     func match(result: Result<Any, Error>) -> Bool
@@ -44,6 +45,23 @@ public struct AWSSuccessMatcher: AWSWaiterMatcher {
             return true
         case.failure:
             return false
+        }
+    }
+}
+
+public struct AWSErrorStatusMatcher: AWSWaiterMatcher {
+    let expectedStatus: HTTPResponseStatus
+
+    public init(_ status: HTTPResponseStatus) {
+        self.expectedStatus = status
+    }
+
+    public func match(result: Result<Any, Error>) -> Bool {
+        switch result {
+        case .success:
+            return false
+        case.failure(let error):
+            return (error as? AWSErrorType)?.context?.responseCode == expectedStatus
         }
     }
 }

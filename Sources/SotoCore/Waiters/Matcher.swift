@@ -18,11 +18,11 @@ public protocol AWSWaiterMatcher {
     func match(result: Result<Any, Error>) -> Bool
 }
 
-public struct AWSOutputMatcher<Value: Equatable>: AWSWaiterMatcher {
-    let path: AnyKeyPath
+public struct AWSPathMatcher<Object, Value: Equatable>: AWSWaiterMatcher {
+    let path: KeyPath<Object, Value>
     let expected: Value
 
-    public init(path: AnyKeyPath, expected: Value) {
+    public init(path: KeyPath<Object, Value>, expected: Value) {
         self.path = path
         self.expected = expected
     }
@@ -30,7 +30,7 @@ public struct AWSOutputMatcher<Value: Equatable>: AWSWaiterMatcher {
     public func match(result: Result<Any, Error>) -> Bool {
         switch result {
         case .success(let output):
-            return (output[keyPath: path] as? Value) == expected
+            return (output as? Object)?[keyPath: path] == expected
         case.failure:
             return false
         }

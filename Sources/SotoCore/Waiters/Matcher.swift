@@ -27,12 +27,12 @@ public struct AWSPathMatcher<Object, Value: Equatable>: AWSWaiterMatcher {
         self.path = path
         self.expected = expected
     }
-    
+
     public func match(result: Result<Any, Error>) -> Bool {
         switch result {
         case .success(let output):
-            return (output as? Object)?[keyPath: path] == expected
-        case.failure:
+            return (output as? Object)?[keyPath: self.path] == self.expected
+        case .failure:
             return false
         }
     }
@@ -43,7 +43,7 @@ public struct AWSSuccessMatcher: AWSWaiterMatcher {
         switch result {
         case .success:
             return true
-        case.failure:
+        case .failure:
             return false
         }
     }
@@ -60,7 +60,7 @@ public struct AWSErrorStatusMatcher: AWSWaiterMatcher {
         switch result {
         case .success:
             return false
-        case.failure(let error):
+        case .failure(let error):
             if let code = (error as? AWSErrorType)?.context?.responseCode.code {
                 return code == self.expectedStatus
             } else {
@@ -76,13 +76,13 @@ public struct AWSErrorCodeMatcher: AWSWaiterMatcher {
     public init(_ code: String) {
         self.expectedCode = code
     }
-    
+
     public func match(result: Result<Any, Error>) -> Bool {
         switch result {
         case .success:
             return false
-        case.failure(let error):
-            return (error as? AWSErrorType)?.errorCode == expectedCode
+        case .failure(let error):
+            return (error as? AWSErrorType)?.errorCode == self.expectedCode
         }
     }
 }

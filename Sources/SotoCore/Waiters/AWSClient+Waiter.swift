@@ -34,7 +34,7 @@ extension AWSClient {
                 self.state = state
                 self.matcher = matcher
             }
-            
+
             let state: WaiterState
             let matcher: AWSWaiterMatcher
         }
@@ -49,14 +49,18 @@ extension AWSClient {
             acceptors: [AWSClient.Waiter<Input, Output>.Acceptor],
             minDelayTime: TimeAmount = .seconds(2),
             maxDelayTime: TimeAmount = .seconds(120),
-            command: @escaping (Input, Logger, EventLoop?
-        ) -> EventLoopFuture<Output>) {
+            command: @escaping (
+                Input,
+                Logger,
+                EventLoop?
+            ) -> EventLoopFuture<Output>
+        ) {
             self.acceptors = acceptors
             self.minDelayTime = minDelayTime
             self.maxDelayTime = maxDelayTime
             self.command = command
         }
-        
+
         let acceptors: [Acceptor]
         let minDelayTime: TimeAmount
         let maxDelayTime: TimeAmount
@@ -64,20 +68,20 @@ extension AWSClient {
 
         /// calculate delay until next API call
         func calculateRetryWaitTime(attempt: Int, remainingTime: TimeAmount) -> TimeAmount {
-            let minDelay: Double = Double(self.minDelayTime.nanoseconds) / 1_000_000_000
-            let maxDelay: Double = Double(self.maxDelayTime.nanoseconds) / 1_000_000_000
+            let minDelay = Double(self.minDelayTime.nanoseconds) / 1_000_000_000
+            let maxDelay = Double(self.maxDelayTime.nanoseconds) / 1_000_000_000
             let attemptCeiling = (log(maxDelay / minDelay) / log(2)) + 1
 
             let calculatedMaxDelay: Double
             if Double(attempt) > attemptCeiling {
                 calculatedMaxDelay = maxDelay
             } else {
-                calculatedMaxDelay = minDelay * Double(1<<(attempt-1))
+                calculatedMaxDelay = minDelay * Double(1 << (attempt - 1))
             }
             let delay = Double.random(in: minDelay...calculatedMaxDelay)
             let timeDelay = TimeAmount.nanoseconds(Int64(delay * 1_000_000_000))
-            if remainingTime - timeDelay < minDelayTime {
-                return remainingTime - minDelayTime
+            if remainingTime - timeDelay < self.minDelayTime {
+                return remainingTime - self.minDelayTime
             }
             return timeDelay
         }
@@ -105,7 +109,7 @@ extension AWSClient {
         func attempt(number: Int) {
             waiter.command(input, logger, eventLoop)
                 .whenComplete { result in
-                    var state: WaiterState? = nil
+                    var state: WaiterState?
                     for acceptor in waiter.acceptors {
                         if acceptor.matcher.match(result: result.map { $0 }) {
                             state = acceptor.state
@@ -145,5 +149,4 @@ extension AWSClient {
         attempt(number: 1)
         return promise.futureResult
     }
-
 }

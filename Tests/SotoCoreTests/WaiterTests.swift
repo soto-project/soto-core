@@ -96,7 +96,7 @@ class WaiterTests: XCTestCase {
     func testErrorWaiter() {
         let waiter = AWSClient.Waiter(
             acceptors: [
-                .init(state: .retry, matcher: AWSErrorMatcher(AWSClientError.accessDenied)),
+                .init(state: .retry, matcher: AWSErrorCodeMatcher("AccessDenied")),
                 .init(state: .success, matcher: AWSPathMatcher(path: \Output.i, expected: 3))
             ],
             minDelayTime: .seconds(2),

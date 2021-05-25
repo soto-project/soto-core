@@ -47,7 +47,7 @@ class WaiterTests: XCTestCase {
     func testBasicWaiter() {
         let waiter = AWSClient.Waiter(
             acceptors: [
-                .init(state: .success, matcher: AWSOutputMatcher(path: \Output.i, expected: 3))
+                .init(state: .success, matcher: AWSPathMatcher(path: \Output.i, expected: 3))
             ],
             minDelayTime: .seconds(2),
             maxDelayTime: .seconds(4),
@@ -68,7 +68,7 @@ class WaiterTests: XCTestCase {
     func testTimeoutWaiter() {
         let waiter = AWSClient.Waiter(
             acceptors: [
-                .init(state: .success, matcher: AWSOutputMatcher(path: \Output.i, expected: 3))
+                .init(state: .success, matcher: AWSPathMatcher(path: \Output.i, expected: 3))
             ],
             minDelayTime: .seconds(2),
             maxDelayTime: .seconds(4),
@@ -97,7 +97,7 @@ class WaiterTests: XCTestCase {
         let waiter = AWSClient.Waiter(
             acceptors: [
                 .init(state: .retry, matcher: AWSErrorMatcher(AWSClientError.accessDenied)),
-                .init(state: .success, matcher: AWSOutputMatcher(path: \Output.i, expected: 3))
+                .init(state: .success, matcher: AWSPathMatcher(path: \Output.i, expected: 3))
             ],
             minDelayTime: .seconds(2),
             maxDelayTime: .seconds(4),

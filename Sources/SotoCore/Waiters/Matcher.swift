@@ -48,11 +48,11 @@ public struct AWSSuccessMatcher: AWSWaiterMatcher {
     }
 }
 
-public struct AWSErrorMatcher: AWSWaiterMatcher {
-    let expected: AWSErrorType
+public struct AWSErrorCodeMatcher: AWSWaiterMatcher {
+    let expectedCode: String
 
-    public init(_ expected: AWSErrorType) {
-        self.expected = expected
+    public init(_ code: String) {
+        self.expectedCode = code
     }
     
     public func match(result: Result<Any, Error>) -> Bool {
@@ -60,7 +60,7 @@ public struct AWSErrorMatcher: AWSWaiterMatcher {
         case .success:
             return false
         case.failure(let error):
-            return (error as? AWSErrorType)?.errorCode == expected.errorCode
+            return (error as? AWSErrorType)?.errorCode == expectedCode
         }
     }
 }

@@ -463,15 +463,17 @@ extension AWSClient {
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Output> {
         var operationSpan: Span?
-        if config.service == "dynamodb" {
-            let span = InstrumentationSystem.tracer.startSpan("DynamoDB.\(operationName)", context: context, ofKind: .client)
+        if let serviceDetails = context.baggage[SotoServiceBaggageKey.self] {
+            let span = InstrumentationSystem.tracer.startSpan("\(serviceDetails.serviceName).\(operationName)", context: context, ofKind: .client)
             span.attributes.rpc.system = "aws-api"
-            span.attributes.rpc.service = "DynamoDB"
+            span.attributes.rpc.service = serviceDetails.serviceName
             span.attributes.rpc.method = operationName
-            span.attributes.db.system = "dynamodb"
-            span.attributes["aws.service"] = "DynamoDB"
+            if let databaseSystem = serviceDetails.databaseSystem {
+                span.attributes.db.system = databaseSystem
+            }
+            span.attributes["aws.service"] = serviceDetails.serviceName
             span.attributes["aws.operation"] = operationName
-            span.attributes["aws.table_name"] = "services-stores"
+            span.attributes.merge(serviceDetails.serviceAttributes)
             operationSpan = span
         }
         var context = context

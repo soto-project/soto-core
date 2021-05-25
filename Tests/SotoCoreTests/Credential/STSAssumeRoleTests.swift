@@ -51,7 +51,7 @@ class STSAssumeRoleTests: XCTestCase {
             return .result(response)
         })
         var result: Credential?
-        XCTAssertNoThrow(result = try client.credentialProvider.getCredential(on: client.eventLoopGroup.next(), logger: TestEnvironment.logger).wait())
+        XCTAssertNoThrow(result = try client.credentialProvider.getCredential(on: client.eventLoopGroup.next(), context: TestEnvironment.loggingContext).wait())
         let stsCredentials = result as? STSCredentials
         XCTAssertEqual(stsCredentials?.accessKeyId, credentials.accessKeyId)
         XCTAssertEqual(stsCredentials?.secretAccessKey, credentials.secretAccessKey)

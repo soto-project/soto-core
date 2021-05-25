@@ -46,8 +46,8 @@ public struct CredentialProviderFactory {
         public let httpClient: AWSHTTPClient
         /// The `EventLoop` that the `CredentialProvider` should use for credential refreshs
         public let eventLoop: EventLoop
-        /// The `Logger` attached to the AWSClient
-        public let logger: Logger
+        /// The `LoggingContext` attached to the AWSClient
+        public let context: LoggingContext
         /// AWSClient options
         public let options: AWSClient.Options
     }

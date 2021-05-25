@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Baggage
 import Foundation
-import Logging
 import SotoCore
 
 @propertyWrapper public struct EnvironmentVariable<Value: LosslessStringConvertible> {
@@ -114,5 +114,9 @@ public enum TestEnvironment {
             }
         }
         return AWSClient.loggingDisabled
+    }()
+
+    public static var loggingContext: LoggingContext = {
+        return DefaultLoggingContext(logger: Self.logger, baggage: .topLevel)
     }()
 }

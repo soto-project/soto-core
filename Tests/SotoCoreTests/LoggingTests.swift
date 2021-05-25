@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Logging
+import Baggage
 import NIOConcurrencyHelpers
 @testable import SotoCore
 import SotoTestUtils
@@ -35,8 +35,9 @@ class LoggingTests: XCTestCase {
             endpoint: server.address
         )
 
-        let response = client.execute(operation: "test1", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
-        let response2 = client.execute(operation: "test2", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
+        let context = DefaultLoggingContext.topLevel(logger: logger)
+        let response = client.execute(operation: "test1", path: "/", httpMethod: .GET, serviceConfig: config, context: context)
+        let response2 = client.execute(operation: "test2", path: "/", httpMethod: .GET, serviceConfig: config, context: context)
 
         var count = 0
         XCTAssertNoThrow(try server.processRaw { _ in
@@ -76,7 +77,8 @@ class LoggingTests: XCTestCase {
             endpoint: server.address
         )
 
-        let response = client.execute(operation: "TestOperation", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
+        let context = DefaultLoggingContext.topLevel(logger: logger)
+        let response = client.execute(operation: "TestOperation", path: "/", httpMethod: .GET, serviceConfig: config, context: context)
 
         XCTAssertNoThrow(try server.processRaw { _ in
             return .result(.ok, continueProcessing: false)
@@ -110,7 +112,8 @@ class LoggingTests: XCTestCase {
             endpoint: server.address
         )
 
-        let response = client.execute(operation: "test", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
+        let context = DefaultLoggingContext.topLevel(logger: logger)
+        let response = client.execute(operation: "test", path: "/", httpMethod: .GET, serviceConfig: config, context: context)
 
         XCTAssertNoThrow(try server.processRaw { _ in
             return .error(.accessDenied, continueProcessing: false)
@@ -137,7 +140,8 @@ class LoggingTests: XCTestCase {
             endpoint: server.address
         )
 
-        let response = client.execute(operation: "test1", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
+        let context = DefaultLoggingContext.topLevel(logger: logger)
+        let response = client.execute(operation: "test1", path: "/", httpMethod: .GET, serviceConfig: config, context: context)
 
         var count = 0
         XCTAssertNoThrow(try server.processRaw { _ in
@@ -161,12 +165,13 @@ class LoggingTests: XCTestCase {
         let client = createAWSClient(credentialProvider: .selector(.custom { _ in return NullCredentialProvider() }))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let serviceConfig = createServiceConfig()
+        let context = DefaultLoggingContext.topLevel(logger: logger)
         XCTAssertThrowsError(try client.execute(
             operation: "Test",
             path: "/",
             httpMethod: .GET,
             serviceConfig: serviceConfig,
-            logger: logger
+            context: context
         ).wait())
         XCTAssertNotNil(logCollection.filter(metadata: "aws-error-message", with: "No credential provider found").first)
     }
@@ -190,7 +195,8 @@ class LoggingTests: XCTestCase {
             endpoint: server.address
         )
 
-        let response = client.execute(operation: "TestOperation", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
+        let context = DefaultLoggingContext.topLevel(logger: logger)
+        let response = client.execute(operation: "TestOperation", path: "/", httpMethod: .GET, serviceConfig: config, context: context)
 
         XCTAssertNoThrow(try server.processRaw { _ in
             return .result(.ok, continueProcessing: false)
@@ -223,7 +229,8 @@ class LoggingTests: XCTestCase {
             endpoint: server.address
         )
 
-        let response: EventLoopFuture<Output> = client.execute(operation: "TestOperation", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
+        let context = DefaultLoggingContext.topLevel(logger: logger)
+        let response: EventLoopFuture<Output> = client.execute(operation: "TestOperation", path: "/", httpMethod: .GET, serviceConfig: config, context: context)
 
         XCTAssertNoThrow(try server.processRaw { _ in
             let output = Output(s: "TestOutputString")

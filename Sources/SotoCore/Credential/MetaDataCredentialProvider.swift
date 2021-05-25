@@ -119,8 +119,7 @@ struct ECSMetaDataClient: MetaDataClient {
 
     private func request(url: String, timeout: TimeInterval, on eventLoop: EventLoop, context: LoggingContext) -> EventLoopFuture<AWSHTTPResponse> {
         let request = AWSHTTPRequest(url: URL(string: url)!, method: .GET, headers: [:], body: .empty)
-        #warning("TODO: Trace HTTPClient")
-        return httpClient.execute(request: request, timeout: TimeAmount.seconds(2), on: eventLoop, logger: context.logger)
+        return httpClient.execute(request: request, timeout: TimeAmount.seconds(2), on: eventLoop, context: context)
     }
 }
 
@@ -259,7 +258,6 @@ struct InstanceMetaDataClient: MetaDataClient {
         context: LoggingContext
     ) -> EventLoopFuture<AWSHTTPResponse> {
         let request = AWSHTTPRequest(url: url, method: method, headers: headers, body: .empty)
-        #warning("TODO: Trace HTTPClient")
-        return httpClient.execute(request: request, timeout: timeout, on: eventLoop, logger: context.logger)
+        return httpClient.execute(request: request, timeout: timeout, on: eventLoop, context: context)
     }
 }

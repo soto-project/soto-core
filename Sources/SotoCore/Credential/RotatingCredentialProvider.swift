@@ -33,7 +33,7 @@ public final class RotatingCredentialProvider: CredentialProvider {
     public init(context: CredentialProviderFactory.Context, provider: CredentialProvider, remainingTokenLifetimeForUse: TimeInterval? = nil) {
         self.provider = provider
         self.remainingTokenLifetimeForUse = remainingTokenLifetimeForUse ?? 3 * 60
-        _ = refreshCredentials(on: context.eventLoop, context: DefaultLoggingContext.TODO(logger: context.logger))
+        _ = refreshCredentials(on: context.eventLoop, context: context.context)
     }
 
     /// Shutdown credential provider

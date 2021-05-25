@@ -90,7 +90,7 @@ public final class AWSClient {
         self.credentialProvider = credentialProviderFactory.createProvider(context: .init(
             httpClient: httpClient,
             eventLoop: httpClient.eventLoopGroup.next(),
-            logger: clientLogger,
+            context: DefaultLoggingContext.TODO(logger: clientLogger),
             options: options
         ))
 
@@ -278,7 +278,7 @@ extension AWSClient {
                 )
             },
             execute: { request, eventLoop, logger in
-                return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger)
+                return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, context: context)
             },
             processResponse: { _ in
                 return
@@ -317,7 +317,7 @@ extension AWSClient {
                 )
             },
             execute: { request, eventLoop, logger in
-                return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger)
+                return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, context: context)
             },
             processResponse: { _ in
                 return
@@ -356,7 +356,7 @@ extension AWSClient {
                 )
             },
             execute: { request, eventLoop, logger in
-                return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger)
+                return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, context: context)
             },
             processResponse: { response in
                 return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
@@ -398,7 +398,7 @@ extension AWSClient {
                 )
             },
             execute: { request, eventLoop, logger in
-                return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger)
+                return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, context: context)
             },
             processResponse: { response in
                 return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
@@ -441,7 +441,7 @@ extension AWSClient {
                 )
             },
             execute: { request, eventLoop, logger in
-                return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger, stream: stream)
+                return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, context: context, stream: stream)
             },
             processResponse: { response in
                 return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
@@ -472,13 +472,15 @@ extension AWSClient {
             span.attributes["aws.service"] = "DynamoDB"
             span.attributes["aws.operation"] = operationName
             span.attributes["aws.table_name"] = "services-stores"
-            span.attributes["cloud.region"] = config.region.rawValue
-            span.attributes["cloud.provider"] = config.region.rawValue
-            let peerURLComponents = URLComponents(string: config.endpoint)
-            span.attributes.net.peer.ip = peerURLComponents?.host
-            span.attributes.net.peer.port = peerURLComponents?.port
             operationSpan = span
         }
+        var context = context
+        context.baggage = operationSpan?.baggage ?? context.baggage
+        operationSpan?.attributes["cloud.region"] = config.region.rawValue
+        operationSpan?.attributes["cloud.provider"] = config.region.rawValue
+        let peerURLComponents = URLComponents(string: config.endpoint)
+        operationSpan?.attributes.net.peer.ip = peerURLComponents?.host
+        operationSpan?.attributes.net.peer.port = peerURLComponents?.port
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let logger = context.logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName, service: config.service)
         // get credentials
@@ -503,13 +505,17 @@ extension AWSClient {
                 return self.invoke(
                     with: config,
                     eventLoop: eventLoop,
-                    logger: logger,
+                    context: context,
                     request: { eventLoop in execute(request, eventLoop, logger) },
                     processResponse: processResponse,
                     streaming: streaming
                 )
             }
-        return recordRequest(future, service: config.service, operation: operationName, logger: logger).always { _ in
+        return recordRequest(future, service: config.service, operation: operationName, context: context).always { result in
+            if case .failure(let error) = result {
+                operationSpan?.recordError(error)
+                operationSpan?.setStatus(SpanStatus(code: .error))
+            }
             operationSpan?.end()
         }
     }
@@ -590,11 +596,11 @@ extension AWSClient {
     }
 
     /// Create error from HTTPResponse. This is only called if we received an unsuccessful http status code.
-    internal func createError(for response: AWSHTTPResponse, serviceConfig: AWSServiceConfig, logger: Logger) -> Error {
+    internal func createError(for response: AWSHTTPResponse, serviceConfig: AWSServiceConfig, context: LoggingContext) -> Error {
         // if we can create an AWSResponse and create an error from it return that
         if let awsResponse = try? AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol)
             .applyMiddlewares(serviceConfig.middlewares + middlewares, config: serviceConfig),
-            let error = awsResponse.generateError(serviceConfig: serviceConfig, logLevel: options.errorLogLevel, logger: logger)
+            let error = awsResponse.generateError(serviceConfig: serviceConfig, logLevel: options.errorLogLevel, context: context)
         {
             return error
         } else {
@@ -618,7 +624,7 @@ extension AWSClient {
     private func invoke<Output>(
         with serviceConfig: AWSServiceConfig,
         eventLoop: EventLoop,
-        logger: Logger,
+        context: LoggingContext,
         request: @escaping (EventLoop) -> EventLoopFuture<AWSHTTPResponse>,
         processResponse: @escaping (AWSHTTPResponse) throws -> Output,
         streaming: Bool
@@ -631,7 +637,7 @@ extension AWSClient {
                 .flatMapThrowing { response throws -> Void in
                     // if it returns an HTTP status code outside 2xx then throw an error
                     guard (200..<300).contains(response.status.code) else {
-                        throw self.createError(for: response, serviceConfig: serviceConfig, logger: logger)
+                        throw self.createError(for: response, serviceConfig: serviceConfig, context: context)
                     }
                     let output = try processResponse(response)
                     promise.succeed(output)
@@ -647,7 +653,7 @@ extension AWSClient {
                     }
                     // If I get a retry wait time for this error then attempt to retry request
                     if case .retry(let retryTime) = self.retryPolicy.getRetryWaitTime(error: error, attempt: attempt) {
-                        logger.trace("Retrying request", metadata: [
+                        context.logger.trace("Retrying request", metadata: [
                             "aws-retry-time": "\(Double(retryTime.nanoseconds) / 1_000_000_000)",
                         ])
                         // schedule task for retrying AWS request
@@ -687,15 +693,15 @@ extension AWSClient.ClientError: CustomStringConvertible {
 
 extension AWSClient {
     /// Record request in swift-metrics, and swift-log
-    func recordRequest<Output>(_ future: EventLoopFuture<Output>, service: String, operation: String, logger: Logger) -> EventLoopFuture<Output> {
+    func recordRequest<Output>(_ future: EventLoopFuture<Output>, service: String, operation: String, context: LoggingContext) -> EventLoopFuture<Output> {
         let dimensions: [(String, String)] = [("aws-service", service), ("aws-operation", operation)]
         let startTime = DispatchTime.now().uptimeNanoseconds
 
         Counter(label: "aws_requests_total", dimensions: dimensions).increment()
-        logger.log(level: self.options.requestLogLevel, "AWS Request")
+        context.logger.log(level: self.options.requestLogLevel, "AWS Request")
 
         return future.map { response in
-            logger.trace("AWS Response")
+            context.logger.trace("AWS Response")
             Metrics.Timer(
                 label: "aws_request_duration",
                 dimensions: dimensions,
@@ -707,7 +713,7 @@ extension AWSClient {
             // AWSErrorTypes have already been logged
             if error as? AWSErrorType == nil {
                 // log error message
-                logger.log(level: self.options.errorLogLevel, "AWSClient error", metadata: [
+                context.logger.log(level: self.options.errorLogLevel, "AWSClient error", metadata: [
                     "aws-error-message": "\(error)",
                 ])
             }

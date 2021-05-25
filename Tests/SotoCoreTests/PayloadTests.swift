@@ -40,7 +40,7 @@ class PayloadTests: XCTestCase {
                 httpMethod: .POST,
                 serviceConfig: config,
                 input: input,
-                logger: TestEnvironment.logger
+                context: TestEnvironment.loggingContext
             )
 
             try awsServer.processRaw { request in
@@ -87,7 +87,7 @@ class PayloadTests: XCTestCase {
                 path: "/",
                 httpMethod: .POST,
                 serviceConfig: config,
-                logger: TestEnvironment.logger
+                context: TestEnvironment.loggingContext
             )
 
             try awsServer.processRaw { _ in

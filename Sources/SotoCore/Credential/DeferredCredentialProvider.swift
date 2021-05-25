@@ -45,11 +45,11 @@ public class DeferredCredentialProvider: CredentialProvider {
     public init(context: CredentialProviderFactory.Context, provider: CredentialProvider) {
         self.startupPromise = context.eventLoop.makePromise(of: Credential.self)
         self.provider = provider
-        provider.getCredential(on: context.eventLoop, context: DefaultLoggingContext.TODO(logger: context.logger))
+        provider.getCredential(on: context.eventLoop, context: context.context)
             .flatMapErrorThrowing { _ in throw CredentialProviderError.noProvider }
             .map { credential in
                 self.credential = credential
-                context.logger.debug("AWS credentials ready", metadata: ["aws-credential-provider": .string("\(self)")])
+                context.context.logger.debug("AWS credentials ready", metadata: ["aws-credential-provider": .string("\(self)")])
                 return credential
             }
             .cascade(to: self.startupPromise)

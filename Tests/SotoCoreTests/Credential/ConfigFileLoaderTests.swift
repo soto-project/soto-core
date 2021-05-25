@@ -27,7 +27,7 @@ class ConfigFileLoadersTests: XCTestCase {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         let eventLoop = eventLoopGroup.next()
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoop))
-        return (.init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger, options: .init()), eventLoopGroup, httpClient)
+        return (.init(httpClient: httpClient, eventLoop: eventLoop, context: TestEnvironment.loggingContext, options: .init()), eventLoopGroup, httpClient)
     }
 
     func save(content: String, prefix: String) throws -> String {
@@ -114,7 +114,7 @@ class ConfigFileLoadersTests: XCTestCase {
 
         switch sharedCredentials {
         case .assumeRole(let aRoleArn, let aSessionName, let region, let sourceCredentialProvider):
-            let credentials = try sourceCredentialProvider.createProvider(context: context).getCredential(on: context.eventLoop, logger: context.logger).wait()
+            let credentials = try sourceCredentialProvider.createProvider(context: context).getCredential(on: context.eventLoop, context: context.context).wait()
             XCTAssertEqual(credentials.accessKeyId, accessKey)
             XCTAssertEqual(credentials.secretAccessKey, secretKey)
             XCTAssertEqual(aRoleArn, roleArn)

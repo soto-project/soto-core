@@ -65,7 +65,7 @@ public struct AWSAnyPathMatcher<Object, Group: Collection, Value: Equatable>: AW
         case .success(let output):
             // get array
             let array: Group?
-            switch arrayPath {
+            switch self.arrayPath {
             case .nonOptional(let keyPath):
                 array = (output as? Object)?[keyPath: keyPath]
             case .optional(let keyPath):
@@ -104,7 +104,7 @@ public struct AWSAllPathMatcher<Object, Group: Collection, Value: Equatable>: AW
         case .success(let output):
             // get array
             let array: Group?
-            switch arrayPath {
+            switch self.arrayPath {
             case .nonOptional(let keyPath):
                 array = (output as? Object)?[keyPath: keyPath]
             case .optional(let keyPath):

@@ -71,10 +71,11 @@ public struct AWSAnyPathMatcher<Object, Group: Collection, Value: Equatable>: AW
             case .optional(let keyPath):
                 array = (output as? Object)?[keyPath: keyPath]
             }
-            guard let array = array else {
+            if let array = array {
+                return array.first { $0[keyPath: elementPath] == expected } != nil
+            } else {
                 return false
             }
-            return array.first { $0[keyPath: elementPath] == expected } != nil
         case .failure:
             return false
         }
@@ -109,10 +110,11 @@ public struct AWSAllPathMatcher<Object, Group: Collection, Value: Equatable>: AW
             case .optional(let keyPath):
                 array = (output as? Object)?[keyPath: keyPath]
             }
-            guard let array = array else {
+            if let array = array {
+                return array.first { $0[keyPath: elementPath] != expected } == nil
+            } else {
                 return false
             }
-            return array.first { $0[keyPath: elementPath] != expected } == nil
         case .failure:
             return false
         }

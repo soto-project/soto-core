@@ -38,12 +38,12 @@ public struct AWSPathMatcher<Object, Value: Equatable>: AWSWaiterMatcher {
     }
 }
 
-public struct AWSAnyPathMatcher<Object, Element, Value: Equatable>: AWSWaiterMatcher {
-    let arrayPath: KeyPath<Object, [Element]>
-    let elementPath: KeyPath<Element, Value>
+public struct AWSAnyPathMatcher<Object, Group: Collection, Value: Equatable>: AWSWaiterMatcher {
+    let arrayPath: KeyPath<Object, Group>
+    let elementPath: KeyPath<Group.Element, Value>
     let expected: Value
 
-    public init(arrayPath: KeyPath<Object, [Element]>, elementPath: KeyPath<Element, Value>, expected: Value) {
+    public init(arrayPath: KeyPath<Object, Group>, elementPath: KeyPath<Group.Element, Value>, expected: Value) {
         self.arrayPath = arrayPath
         self.elementPath = elementPath
         self.expected = expected
@@ -63,12 +63,12 @@ public struct AWSAnyPathMatcher<Object, Element, Value: Equatable>: AWSWaiterMat
     }
 }
 
-public struct AWSAllPathMatcher<Object, Element, Value: Equatable>: AWSWaiterMatcher {
-    let arrayPath: KeyPath<Object, [Element]>
-    let elementPath: KeyPath<Element, Value>
+public struct AWSAllPathMatcher<Object, Group: Collection, Value: Equatable>: AWSWaiterMatcher {
+    let arrayPath: KeyPath<Object, Group>
+    let elementPath: KeyPath<Group.Element, Value>
     let expected: Value
 
-    public init(arrayPath: KeyPath<Object, [Element]>, elementPath: KeyPath<Element, Value>, expected: Value) {
+    public init(arrayPath: KeyPath<Object, Group>, elementPath: KeyPath<Group.Element, Value>, expected: Value) {
         self.arrayPath = arrayPath
         self.elementPath = elementPath
         self.expected = expected

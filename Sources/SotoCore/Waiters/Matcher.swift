@@ -38,13 +38,24 @@ public struct AWSPathMatcher<Object, Value: Equatable>: AWSWaiterMatcher {
     }
 }
 
+enum OptionaKeyPath<Object, Value> {
+    case nonOptional(KeyPath<Object, Value>)
+    case optional(KeyPath<Object, Value?>)
+}
+
 public struct AWSAnyPathMatcher<Object, Group: Collection, Value: Equatable>: AWSWaiterMatcher {
-    let arrayPath: KeyPath<Object, Group>
+    let arrayPath: OptionaKeyPath<Object, Group>
     let elementPath: KeyPath<Group.Element, Value>
     let expected: Value
 
     public init(arrayPath: KeyPath<Object, Group>, elementPath: KeyPath<Group.Element, Value>, expected: Value) {
-        self.arrayPath = arrayPath
+        self.arrayPath = .nonOptional(arrayPath)
+        self.elementPath = elementPath
+        self.expected = expected
+    }
+
+    public init(arrayPath: KeyPath<Object, Group?>, elementPath: KeyPath<Group.Element, Value>, expected: Value) {
+        self.arrayPath = .optional(arrayPath)
         self.elementPath = elementPath
         self.expected = expected
     }
@@ -53,7 +64,14 @@ public struct AWSAnyPathMatcher<Object, Group: Collection, Value: Equatable>: AW
         switch result {
         case .success(let output):
             // get array
-            guard let array = (output as? Object)?[keyPath: self.arrayPath] else {
+            let array: Group?
+            switch arrayPath {
+            case .nonOptional(let keyPath):
+                array = (output as? Object)?[keyPath: keyPath]
+            case .optional(let keyPath):
+                array = (output as? Object)?[keyPath: keyPath]
+            }
+            guard let array = array else {
                 return false
             }
             return array.first { $0[keyPath: elementPath] == expected } != nil
@@ -64,12 +82,18 @@ public struct AWSAnyPathMatcher<Object, Group: Collection, Value: Equatable>: AW
 }
 
 public struct AWSAllPathMatcher<Object, Group: Collection, Value: Equatable>: AWSWaiterMatcher {
-    let arrayPath: KeyPath<Object, Group>
+    let arrayPath: OptionaKeyPath<Object, Group>
     let elementPath: KeyPath<Group.Element, Value>
     let expected: Value
 
     public init(arrayPath: KeyPath<Object, Group>, elementPath: KeyPath<Group.Element, Value>, expected: Value) {
-        self.arrayPath = arrayPath
+        self.arrayPath = .nonOptional(arrayPath)
+        self.elementPath = elementPath
+        self.expected = expected
+    }
+
+    public init(arrayPath: KeyPath<Object, Group?>, elementPath: KeyPath<Group.Element, Value>, expected: Value) {
+        self.arrayPath = .optional(arrayPath)
         self.elementPath = elementPath
         self.expected = expected
     }
@@ -78,7 +102,14 @@ public struct AWSAllPathMatcher<Object, Group: Collection, Value: Equatable>: AW
         switch result {
         case .success(let output):
             // get array
-            guard let array = (output as? Object)?[keyPath: self.arrayPath] else {
+            let array: Group?
+            switch arrayPath {
+            case .nonOptional(let keyPath):
+                array = (output as? Object)?[keyPath: keyPath]
+            case .optional(let keyPath):
+                array = (output as? Object)?[keyPath: keyPath]
+            }
+            guard let array = array else {
                 return false
             }
             return array.first { $0[keyPath: elementPath] != expected } == nil

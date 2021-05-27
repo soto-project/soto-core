@@ -144,12 +144,16 @@ public struct AWSErrorStatusMatcher: AWSWaiterMatcher {
         switch result {
         case .success:
             return false
-        case .failure(let error):
-            if let code = (error as? AWSErrorType)?.context?.responseCode.code {
+        case .failure(let error as AWSErrorType):
+            if let code = error.context?.responseCode.code {
                 return code == self.expectedStatus
             } else {
                 return false
             }
+        case .failure(let error as AWSRawError):
+            return error.context.responseCode.code == self.expectedStatus
+        case .failure:
+            return false
         }
     }
 }

@@ -66,7 +66,8 @@ extension AWSClient {
         let maxDelayTime: TimeAmount
         let command: (Input, Logger, EventLoop?) -> EventLoopFuture<Output>
 
-        /// calculate delay until next API call
+        /// calculate delay until next API call. This calculation comes from the AWS Smithy documentation
+        /// https://awslabs.github.io/smithy/1.0/spec/waiters.html#waiter-retries
         func calculateRetryWaitTime(attempt: Int, remainingTime: TimeAmount) -> TimeAmount {
             let minDelay = Double(self.minDelayTime.nanoseconds) / 1_000_000_000
             let maxDelay = Double(self.maxDelayTime.nanoseconds) / 1_000_000_000
@@ -87,7 +88,9 @@ extension AWSClient {
         }
     }
 
-    /// Return EventLoopFuture that will by fulfilled once waiter is done
+    /// Return EventLoopFuture that will by fulfilled once waiter polling returns a success state
+    /// or will return an error if the polling returns an error or timesout
+    ///
     /// - Parameters:
     ///   - input: Input parameters
     ///   - waiter: Waiter to wait on
@@ -95,7 +98,7 @@ extension AWSClient {
     ///   - logger: Logger used to provide output
     ///   - eventLoop: EventLoop to run API calls on
     /// - Returns: EventLoopFuture that will be fulfilled once waiter has completed
-    public func wait<Input, Output>(
+    public func waitUntil<Input, Output>(
         _ input: Input,
         waiter: Waiter<Input, Output>,
         maxWaitTime: TimeAmount = .seconds(120),

@@ -122,6 +122,7 @@ public struct AWSAllPathMatcher<Object, Group: Collection, Value: Equatable>: AW
 }
 
 public struct AWSSuccessMatcher: AWSWaiterMatcher {
+    public init() {}
     public func match(result: Result<Any, Error>) -> Bool {
         switch result {
         case .success:

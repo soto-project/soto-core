@@ -101,10 +101,11 @@ extension AWSClient {
     public func waitUntil<Input, Output>(
         _ input: Input,
         waiter: Waiter<Input, Output>,
-        maxWaitTime: TimeAmount = .seconds(120),
+        maxWaitTime: TimeAmount? = nil,
         logger: Logger = AWSClient.loggingDisabled,
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Void> {
+        let maxWaitTime = maxWaitTime ?? .seconds(120)
         let deadline: NIODeadline = .now() + maxWaitTime
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let promise = eventLoop.makePromise(of: Void.self)

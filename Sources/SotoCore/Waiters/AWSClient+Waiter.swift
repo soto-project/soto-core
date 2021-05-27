@@ -105,7 +105,7 @@ extension AWSClient {
         logger: Logger = AWSClient.loggingDisabled,
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Void> {
-        let maxWaitTime = maxWaitTime ?? .seconds(120)
+        let maxWaitTime = maxWaitTime ?? waiter.maxDelayTime
         let deadline: NIODeadline = .now() + maxWaitTime
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let promise = eventLoop.makePromise(of: Void.self)
@@ -144,7 +144,7 @@ extension AWSClient {
                         if wait < .seconds(0) {
                             promise.fail(ClientError.waiterTimeout)
                         } else {
-                            logger.info("Wait \(wait.nanoseconds / 1_000_000)ms")
+                            logger.trace("Wait \(wait.nanoseconds / 1_000_000)ms")
                             eventLoop.scheduleTask(in: wait) { attempt(number: number + 1) }
                         }
                     }

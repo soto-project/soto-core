@@ -80,7 +80,6 @@ class WaiterTests: XCTestCase {
                 .init(state: .success, matcher: AWSPathMatcher(path: \Output.i, expected: 3)),
             ],
             minDelayTime: .seconds(2),
-            maxDelayTime: .seconds(4),
             command: self.operation
         )
         let input = Input()
@@ -101,7 +100,6 @@ class WaiterTests: XCTestCase {
                 .init(state: .success, matcher: AWSAnyPathMatcher(arrayPath: \ArrayOutput.array, elementPath: \ArrayOutput.Element.status, expected: true)),
             ],
             minDelayTime: .seconds(2),
-            maxDelayTime: .seconds(4),
             command: self.arrayOperation
         )
         let input = Input()
@@ -126,7 +124,6 @@ class WaiterTests: XCTestCase {
                 .init(state: .success, matcher: AWSAnyPathMatcher(arrayPath: \OptionalArrayOutput.array, elementPath: \OptionalArrayOutput.Element.status, expected: true)),
             ],
             minDelayTime: .seconds(2),
-            maxDelayTime: .seconds(4),
             command: self.optionalArrayOperation
         )
         let input = Input()
@@ -151,7 +148,6 @@ class WaiterTests: XCTestCase {
                 .init(state: .success, matcher: AWSAllPathMatcher(arrayPath: \ArrayOutput.array, elementPath: \ArrayOutput.Element.status, expected: true)),
             ],
             minDelayTime: .seconds(2),
-            maxDelayTime: .seconds(4),
             command: self.arrayOperation
         )
         let input = Input()
@@ -176,7 +172,6 @@ class WaiterTests: XCTestCase {
                 .init(state: .success, matcher: AWSAllPathMatcher(arrayPath: \OptionalArrayOutput.array, elementPath: \OptionalArrayOutput.Element.status, expected: true)),
             ],
             minDelayTime: .seconds(2),
-            maxDelayTime: .seconds(4),
             command: self.optionalArrayOperation
         )
         let input = Input()
@@ -230,7 +225,6 @@ class WaiterTests: XCTestCase {
                 .init(state: .success, matcher: AWSPathMatcher(path: \Output.i, expected: 3)),
             ],
             minDelayTime: .seconds(2),
-            maxDelayTime: .seconds(4),
             command: self.operation
         )
         let input = Input()
@@ -256,7 +250,6 @@ class WaiterTests: XCTestCase {
                 .init(state: .success, matcher: AWSPathMatcher(path: \Output.i, expected: 3)),
             ],
             minDelayTime: .seconds(2),
-            maxDelayTime: .seconds(4),
             command: self.operation
         )
         let input = Input()

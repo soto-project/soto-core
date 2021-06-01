@@ -50,6 +50,9 @@ class WaiterTests: XCTestCase {
             init(booleanLiteral: Bool) {
                 self.status = booleanLiteral
             }
+            init(_ status: Bool) {
+                self.status = status
+            }
         }
 
         let array: [Element]
@@ -72,6 +75,26 @@ class WaiterTests: XCTestCase {
 
     func optionalArrayOperation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<OptionalArrayOutput> {
         Self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: Self.config, input: input, logger: logger, on: eventLoop)
+    }
+
+    func testJMESPathWaiter() {
+        let waiter = AWSClient.Waiter(
+            acceptors: [
+                .init(state: .success, matcher: try! JMESPathMatcher("array[*].status", expected: [true,true,true])),
+            ],
+            minDelayTime: .seconds(2),
+            command: self.arrayOperation
+        )
+        let input = Input()
+        let response = Self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+
+        var i = 0
+        XCTAssertNoThrow(try Self.awsServer.process { (_: Input) -> AWSTestServer.Result<ArrayOutput> in
+            i += 1
+            return .result(ArrayOutput(array: [.init(i >= 3), .init(i >= 2), .init(i >= 1)]), continueProcessing: i < 3)
+        })
+
+        XCTAssertNoThrow(try response.wait())
     }
 
     func testPathWaiter() {

@@ -29,6 +29,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio-ssl.git", .upToNextMajor(from: "2.7.2")),
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/swift-server/async-http-client.git", .upToNextMajor(from: "1.3.0")),
+        .package(url: "https://github.com/adam-fowler/jmespath.swift.git", .upToNextMajor(from: "0.2.0")),
     ],
     targets: [
         .target(name: "SotoCore", dependencies: [
@@ -43,6 +44,7 @@ let package = Package(
             .product(name: "NIOSSL", package: "swift-nio-ssl"),
             .product(name: "NIOTransportServices", package: "swift-nio-transport-services"),
             .product(name: "NIOFoundationCompat", package: "swift-nio"),
+            .product(name: "JMESPath", package: "jmespath.swift")
         ]),
         .target(name: "SotoCrypto", dependencies: []),
         .target(name: "SotoSignerV4", dependencies: [

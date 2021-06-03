@@ -97,6 +97,54 @@ class WaiterTests: XCTestCase {
         XCTAssertNoThrow(try response.wait())
     }
 
+    func testJMESAnyPathWaiter() {
+        let waiter = AWSClient.Waiter(
+            acceptors: [
+                .init(state: .success, matcher: try! JMESAnyPathMatcher("array[*].status", expected: true)),
+            ],
+            minDelayTime: .seconds(2),
+            command: self.arrayOperation
+        )
+        let input = Input()
+        let response = Self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+
+        var i = 0
+        XCTAssertNoThrow(try Self.awsServer.process { (_: Input) -> AWSTestServer.Result<ArrayOutput> in
+            i += 1
+            if i < 2 {
+                return .result(ArrayOutput(array: [false, false, false]), continueProcessing: true)
+            } else {
+                return .result(ArrayOutput(array: [false, true, false]), continueProcessing: false)
+            }
+        })
+
+        XCTAssertNoThrow(try response.wait())
+    }
+
+    func testJMESAllPathWaiter() {
+        let waiter = AWSClient.Waiter(
+            acceptors: [
+                .init(state: .success, matcher: try! JMESAllPathMatcher("array[*].status", expected: true)),
+            ],
+            minDelayTime: .seconds(2),
+            command: self.arrayOperation
+        )
+        let input = Input()
+        let response = Self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+
+        var i = 0
+        XCTAssertNoThrow(try Self.awsServer.process { (_: Input) -> AWSTestServer.Result<ArrayOutput> in
+            i += 1
+            if i < 2 {
+                return .result(ArrayOutput(array: [false, true, false]), continueProcessing: true)
+            } else {
+                return .result(ArrayOutput(array: [true, true, true]), continueProcessing: false)
+            }
+        })
+
+        XCTAssertNoThrow(try response.wait())
+    }
+
     func testPathWaiter() {
         let waiter = AWSClient.Waiter(
             acceptors: [

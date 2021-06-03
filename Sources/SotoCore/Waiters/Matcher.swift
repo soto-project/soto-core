@@ -33,8 +33,62 @@ public struct JMESPathMatcher<Value: Equatable>: AWSWaiterMatcher {
         switch result {
         case .success(let output):
             do {
-                let result = try expression.search(output, as: Value.self)
+                let result = try expression.search(object: output, as: Value.self)
                 return result == expected
+            } catch {
+                return false
+            }
+        case .failure:
+            return false
+        }
+    }
+}
+
+public struct JMESAnyPathMatcher<Value: Equatable>: AWSWaiterMatcher {
+    let expression: Expression
+    let expected: Value
+
+    public init(_ path: String, expected: Value) throws {
+        self.expression = try Expression.compile(path)
+        self.expected = expected
+    }
+
+    public func match(result: Result<Any, Error>) -> Bool {
+        switch result {
+        case .success(let output):
+            do {
+                if let result = try expression.search(object: output, as: [Value].self) {
+                    return result.first { $0 == expected } != nil
+                } else {
+                    return false
+                }
+            } catch {
+                return false
+            }
+        case .failure:
+            return false
+        }
+    }
+}
+
+public struct JMESAllPathMatcher<Value: Equatable>: AWSWaiterMatcher {
+    let expression: Expression
+    let expected: Value
+
+    public init(_ path: String, expected: Value) throws {
+        self.expression = try Expression.compile(path)
+        self.expected = expected
+    }
+
+    public func match(result: Result<Any, Error>) -> Bool {
+        switch result {
+        case .success(let output):
+            do {
+                if let result = try expression.search(object: output, as: [Value].self) {
+                    return result.first { $0 != expected } == nil
+                } else {
+                    return false
+                }
             } catch {
                 return false
             }

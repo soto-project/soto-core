@@ -97,6 +97,71 @@ class WaiterTests: XCTestCase {
         XCTAssertNoThrow(try response.wait())
     }
 
+    func testJMESPathWaiterWithString() {
+        struct StringOutput: AWSDecodableShape & Encodable {
+            let s: String
+        }
+        func operation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<StringOutput> {
+            Self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: Self.config, input: input, logger: logger, on: eventLoop)
+        }
+        let waiter = AWSClient.Waiter(
+            acceptors: [
+                .init(state: .success, matcher: try! JMESPathMatcher("s", expected: "yes")),
+            ],
+            minDelayTime: .seconds(2),
+            command: operation
+        )
+        let input = Input()
+        let response = Self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+
+        var i = 0
+        XCTAssertNoThrow(try Self.awsServer.process { (_: Input) -> AWSTestServer.Result<StringOutput> in
+            i += 1
+            if i < 2 {
+                return .result(.init(s: "no"), continueProcessing: true)
+            } else {
+                return .result(.init(s: "yes"), continueProcessing: false)
+            }
+        })
+
+        XCTAssertNoThrow(try response.wait())
+    }
+
+    func testJMESPathWaiterWithEnum() {
+        enum YesNo: String, AWSDecodableShape & Encodable & CustomStringConvertible {
+            case yes = "YES"
+            case no = "NO"
+            var description: String { return self.rawValue }
+        }
+        struct EnumOutput: AWSDecodableShape & Encodable {
+            let e: YesNo
+        }
+        func operation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<EnumOutput> {
+            Self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: Self.config, input: input, logger: logger, on: eventLoop)
+        }
+        let waiter = AWSClient.Waiter(
+            acceptors: [
+                .init(state: .success, matcher: try! JMESPathMatcher("e", expected: "YES")),
+            ],
+            minDelayTime: .seconds(2),
+            command: operation
+        )
+        let input = Input()
+        let response = Self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+
+        var i = 0
+        XCTAssertNoThrow(try Self.awsServer.process { (_: Input) -> AWSTestServer.Result<EnumOutput> in
+            i += 1
+            if i < 2 {
+                return .result(.init(e: .no), continueProcessing: true)
+            } else {
+                return .result(.init(e: .yes), continueProcessing: false)
+            }
+        })
+
+        XCTAssertNoThrow(try response.wait())
+    }
+
     func testJMESAnyPathWaiter() {
         let waiter = AWSClient.Waiter(
             acceptors: [

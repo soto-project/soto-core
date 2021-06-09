@@ -37,7 +37,11 @@ public protocol CustomDecoder: CustomCoder {
 }
 
 /// Property wrapper that applies a custom encoder and decoder to its wrapped value
-@propertyWrapper public struct CustomCoding<Coder: CustomCoder> {
+@propertyWrapper public struct CustomCoding<Coder: CustomCoder>: CustomReflectable {
+    public var customMirror: Mirror {
+        return Mirror(reflecting: wrappedValue)
+    }
+
     var value: Coder.CodableValue
 
     public init(wrappedValue value: Coder.CodableValue) {
@@ -65,7 +69,11 @@ extension CustomCoding: Encodable where Coder: CustomEncoder {
 }
 
 /// Property wrapper that applies a custom encoder and decoder to its wrapped optional value
-@propertyWrapper public struct OptionalCustomCoding<Coder: CustomCoder> {
+@propertyWrapper public struct OptionalCustomCoding<Coder: CustomCoder>: CustomReflectable {
+    public var customMirror: Mirror {
+        return Mirror(reflecting: wrappedValue)
+    }
+
     var value: Coder.CodableValue?
 
     public init(wrappedValue value: Coder.CodableValue?) {

@@ -151,17 +151,20 @@ public final class AWSServiceConfig {
 
     /// Service config parameters you can patch
     public struct Patch {
+        let region: Region?
         let middlewares: [AWSServiceMiddleware]
         let timeout: TimeAmount?
         let byteBufferAllocator: ByteBufferAllocator?
         let options: Options?
 
         init(
+            region: Region? = nil,
             middlewares: [AWSServiceMiddleware] = [],
             timeout: TimeAmount? = nil,
             byteBufferAllocator: ByteBufferAllocator? = nil,
             options: AWSServiceConfig.Options? = nil
         ) {
+            self.region = region
             self.middlewares = middlewares
             self.timeout = timeout
             self.byteBufferAllocator = byteBufferAllocator
@@ -193,13 +196,24 @@ public final class AWSServiceConfig {
         service: AWSServiceConfig,
         with patch: Patch
     ) {
-        self.region = service.region
+        if let region = patch.region {
+            self.region = region
+            self.endpoint = Self.getEndpoint(
+                endpoint: service.providedEndpoint,
+                region: region,
+                service: service.service,
+                serviceEndpoints: service.serviceEndpoints,
+                partitionEndpoints: service.partitionEndpoints
+            )
+        } else {
+            self.region = service.region
+            self.endpoint = service.endpoint
+        }
         self.amzTarget = service.amzTarget
         self.service = service.service
         self.signingName = service.signingName
         self.serviceProtocol = service.serviceProtocol
         self.apiVersion = service.apiVersion
-        self.endpoint = service.endpoint
         self.providedEndpoint = service.providedEndpoint
         self.serviceEndpoints = service.serviceEndpoints
         self.partitionEndpoints = service.partitionEndpoints

@@ -116,7 +116,7 @@ public final class AWSServiceConfig {
         )
     }
 
-    static private func getEndpoint(
+    private static func getEndpoint(
         endpoint: String?,
         region: Region,
         service: String,
@@ -140,7 +140,7 @@ public final class AWSServiceConfig {
             return "https://\(serviceHost)"
         }
     }
-    
+
     /// Return new version of serviceConfig with a modified parameters
     /// - Parameters:
     ///   - patch: parameters to patch service config

@@ -85,6 +85,31 @@ extension AWSService {
         options: AWSServiceConfig.Options? = nil
     ) -> Self {
         return Self(from: self, patch: .init(
+            region: region,
+            middlewares: middlewares,
+            timeout: timeout,
+            byteBufferAllocator: byteBufferAllocator,
+            options: options
+        ))
+    }
+
+    /// Return new version of Service with edited parameters
+    /// - Parameters:
+    ///   - region: Server region
+    ///   - middlewares: Additional middleware to add
+    ///   - timeout: Time out value for HTTP requests
+    ///   - byteBufferAllocator: byte buffer allocator used throughout AWSClient
+    ///   - options: options used by client when processing requests
+    /// - Returns: New version of the service
+    public func with(
+        region: Region,
+        middlewares: [AWSServiceMiddleware] = [],
+        timeout: TimeAmount? = nil,
+        byteBufferAllocator: ByteBufferAllocator? = nil,
+        options: AWSServiceConfig.Options? = nil
+    ) -> Self {
+        return Self(from: self, patch: .init(
+            region: region,
             middlewares: middlewares,
             timeout: timeout,
             byteBufferAllocator: byteBufferAllocator,

@@ -40,6 +40,10 @@ public final class AWSServiceConfig {
     public let byteBufferAllocator: ByteBufferAllocator
     /// options
     public let options: Options
+    /// values used to create endpoint
+    private let providedEndpoint: String?
+    private let serviceEndpoints: [String: String]
+    private let partitionEndpoints: [AWSPartition: (endpoint: String, region: Region)]
 
     /// Create a ServiceConfig object
     ///
@@ -99,21 +103,41 @@ public final class AWSServiceConfig {
         self.byteBufferAllocator = byteBufferAllocator
         self.options = options
 
+        self.providedEndpoint = endpoint
+        self.serviceEndpoints = serviceEndpoints
+        self.partitionEndpoints = partitionEndpoints
+
+        self.endpoint = Self.getEndpoint(
+            endpoint: endpoint,
+            region: self.region,
+            service: service,
+            serviceEndpoints: serviceEndpoints,
+            partitionEndpoints: partitionEndpoints
+        )
+    }
+
+    private static func getEndpoint(
+        endpoint: String?,
+        region: Region,
+        service: String,
+        serviceEndpoints: [String: String],
+        partitionEndpoints: [AWSPartition: (endpoint: String, region: Region)]
+    ) -> String {
         // work out endpoint, if provided use that otherwise
         if let endpoint = endpoint {
-            self.endpoint = endpoint
+            return endpoint
         } else {
             let serviceHost: String
-            if let serviceEndpoint = serviceEndpoints[self.region.rawValue] {
+            if let serviceEndpoint = serviceEndpoints[region.rawValue] {
                 serviceHost = serviceEndpoint
-            } else if let partitionEndpoint = partitionEndpoints[partition],
+            } else if let partitionEndpoint = partitionEndpoints[region.partition],
                       let globalEndpoint = serviceEndpoints[partitionEndpoint.endpoint]
             {
                 serviceHost = globalEndpoint
             } else {
-                serviceHost = "\(service).\(self.region.rawValue).\(partition.dnsSuffix)"
+                serviceHost = "\(service).\(region.rawValue).\(region.partition.dnsSuffix)"
             }
-            self.endpoint = "https://\(serviceHost)"
+            return "https://\(serviceHost)"
         }
     }
 
@@ -122,35 +146,25 @@ public final class AWSServiceConfig {
     ///   - patch: parameters to patch service config
     /// - Returns: New AWSServiceConfig
     public func with(patch: Patch) -> AWSServiceConfig {
-        return AWSServiceConfig(
-            region: self.region,
-            amzTarget: self.amzTarget,
-            service: self.service,
-            signingName: self.signingName,
-            serviceProtocol: self.serviceProtocol,
-            apiVersion: self.apiVersion,
-            endpoint: self.endpoint,
-            errorType: self.errorType,
-            middlewares: self.middlewares + patch.middlewares,
-            timeout: patch.timeout ?? self.timeout,
-            byteBufferAllocator: patch.byteBufferAllocator ?? self.byteBufferAllocator,
-            options: patch.options ?? self.options
-        )
+        return AWSServiceConfig(service: self, with: patch)
     }
 
     /// Service config parameters you can patch
     public struct Patch {
+        let region: Region?
         let middlewares: [AWSServiceMiddleware]
         let timeout: TimeAmount?
         let byteBufferAllocator: ByteBufferAllocator?
         let options: Options?
 
         init(
+            region: Region? = nil,
             middlewares: [AWSServiceMiddleware] = [],
             timeout: TimeAmount? = nil,
             byteBufferAllocator: ByteBufferAllocator? = nil,
             options: AWSServiceConfig.Options? = nil
         ) {
+            self.region = region
             self.middlewares = middlewares
             self.timeout = timeout
             self.byteBufferAllocator = byteBufferAllocator
@@ -179,30 +193,34 @@ public final class AWSServiceConfig {
     }
 
     private init(
-        region: Region,
-        amzTarget: String?,
-        service: String,
-        signingName: String,
-        serviceProtocol: ServiceProtocol,
-        apiVersion: String,
-        endpoint: String,
-        errorType: AWSErrorType.Type?,
-        middlewares: [AWSServiceMiddleware],
-        timeout: TimeAmount,
-        byteBufferAllocator: ByteBufferAllocator,
-        options: Options
+        service: AWSServiceConfig,
+        with patch: Patch
     ) {
-        self.region = region
-        self.amzTarget = amzTarget
-        self.service = service
-        self.signingName = signingName
-        self.serviceProtocol = serviceProtocol
-        self.apiVersion = apiVersion
-        self.endpoint = endpoint
-        self.errorType = errorType
-        self.middlewares = middlewares
-        self.timeout = timeout
-        self.byteBufferAllocator = byteBufferAllocator
-        self.options = options
+        if let region = patch.region {
+            self.region = region
+            self.endpoint = Self.getEndpoint(
+                endpoint: service.providedEndpoint,
+                region: region,
+                service: service.service,
+                serviceEndpoints: service.serviceEndpoints,
+                partitionEndpoints: service.partitionEndpoints
+            )
+        } else {
+            self.region = service.region
+            self.endpoint = service.endpoint
+        }
+        self.amzTarget = service.amzTarget
+        self.service = service.service
+        self.signingName = service.signingName
+        self.serviceProtocol = service.serviceProtocol
+        self.apiVersion = service.apiVersion
+        self.providedEndpoint = service.providedEndpoint
+        self.serviceEndpoints = service.serviceEndpoints
+        self.partitionEndpoints = service.partitionEndpoints
+        self.errorType = service.errorType
+        self.middlewares = service.middlewares + patch.middlewares
+        self.timeout = patch.timeout ?? service.timeout
+        self.byteBufferAllocator = patch.byteBufferAllocator ?? service.byteBufferAllocator
+        self.options = patch.options ?? service.options
     }
 }

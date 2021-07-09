@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 // This code takes inspiration from https://github.com/GottaGetSwifty/CodableWrappers
+import JMESPath
 
 /// base protocol for encoder/decoder objects
 public protocol CustomCoder {
@@ -37,11 +38,7 @@ public protocol CustomDecoder: CustomCoder {
 }
 
 /// Property wrapper that applies a custom encoder and decoder to its wrapped value
-@propertyWrapper public struct CustomCoding<Coder: CustomCoder>: CustomReflectable {
-    public var customMirror: Mirror {
-        return Mirror(reflecting: wrappedValue)
-    }
-
+@propertyWrapper public struct CustomCoding<Coder: CustomCoder> {
     var value: Coder.CodableValue
 
     public init(wrappedValue value: Coder.CodableValue) {
@@ -68,12 +65,15 @@ extension CustomCoding: Encodable where Coder: CustomEncoder {
     }
 }
 
-/// Property wrapper that applies a custom encoder and decoder to its wrapped optional value
-@propertyWrapper public struct OptionalCustomCoding<Coder: CustomCoder>: CustomReflectable {
-    public var customMirror: Mirror {
-        return Mirror(reflecting: wrappedValue)
+/// extend CustomCoding property wrapper so JMESPath works correctly with it
+extension CustomCoding: JMESPropertyWrapper {
+    public var anyValue: Any {
+        return self.value
     }
+}
 
+/// Property wrapper that applies a custom encoder and decoder to its wrapped optional value
+@propertyWrapper public struct OptionalCustomCoding<Coder: CustomCoder> {
     var value: Coder.CodableValue?
 
     public init(wrappedValue value: Coder.CodableValue?) {
@@ -101,6 +101,12 @@ extension OptionalCustomCoding: Encodable where Coder: CustomEncoder {
     }
 }
 
+/// extend OptionalCustomCoding property wrapper so JMESPath works correctly with it
+extension OptionalCustomCoding: JMESPropertyWrapper {
+    public var anyValue: Any {
+        return self.value as Any
+    }
+}
 /// Protocol for a PropertyWrapper to properly handle CustomCoding when the wrappedValue is Optional
 public protocol OptionalCustomCodingWrapper {
     associatedtype WrappedType

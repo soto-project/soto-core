@@ -21,11 +21,11 @@ public protocol AWSWaiterMatcher {
 }
 
 public struct JMESPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatcher {
-    let expression: Expression
+    let expression: JMESExpression
     let expected: String
 
     public init(_ path: String, expected: Value) throws {
-        self.expression = try Expression.compile(path)
+        self.expression = try JMESExpression.compile(path)
         self.expected = expected.description
     }
 
@@ -48,11 +48,11 @@ public struct JMESPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatcher 
 }
 
 public struct JMESAnyPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatcher {
-    let expression: Expression
+    let expression: JMESExpression
     let expected: String
 
     public init(_ path: String, expected: Value) throws {
-        self.expression = try Expression.compile(path)
+        self.expression = try JMESExpression.compile(path)
         self.expected = expected.description
     }
 
@@ -75,11 +75,11 @@ public struct JMESAnyPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatch
 }
 
 public struct JMESAllPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatcher {
-    let expression: Expression
+    let expression: JMESExpression
     let expected: String
 
     public init(_ path: String, expected: Value) throws {
-        self.expression = try Expression.compile(path)
+        self.expression = try JMESExpression.compile(path)
         self.expected = expected.description
     }
 
@@ -93,108 +93,6 @@ public struct JMESAllPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatch
                     return false
                 }
             } catch {
-                return false
-            }
-        case .failure:
-            return false
-        }
-    }
-}
-
-public struct AWSPathMatcher<Object, Value: Equatable>: AWSWaiterMatcher {
-    let path: KeyPath<Object, Value>
-    let expected: Value
-
-    public init(path: KeyPath<Object, Value>, expected: Value) {
-        self.path = path
-        self.expected = expected
-    }
-
-    public func match(result: Result<Any, Error>) -> Bool {
-        switch result {
-        case .success(let output):
-            return (output as? Object)?[keyPath: self.path] == self.expected
-        case .failure:
-            return false
-        }
-    }
-}
-
-enum OptionaKeyPath<Object, Value> {
-    case nonOptional(KeyPath<Object, Value>)
-    case optional(KeyPath<Object, Value?>)
-}
-
-public struct AWSAnyPathMatcher<Object, Group: Collection, Value: Equatable>: AWSWaiterMatcher {
-    let arrayPath: OptionaKeyPath<Object, Group>
-    let elementPath: KeyPath<Group.Element, Value>
-    let expected: Value
-
-    public init(arrayPath: KeyPath<Object, Group>, elementPath: KeyPath<Group.Element, Value>, expected: Value) {
-        self.arrayPath = .nonOptional(arrayPath)
-        self.elementPath = elementPath
-        self.expected = expected
-    }
-
-    public init(arrayPath: KeyPath<Object, Group?>, elementPath: KeyPath<Group.Element, Value>, expected: Value) {
-        self.arrayPath = .optional(arrayPath)
-        self.elementPath = elementPath
-        self.expected = expected
-    }
-
-    public func match(result: Result<Any, Error>) -> Bool {
-        switch result {
-        case .success(let output):
-            // get array
-            let array: Group?
-            switch self.arrayPath {
-            case .nonOptional(let keyPath):
-                array = (output as? Object)?[keyPath: keyPath]
-            case .optional(let keyPath):
-                array = (output as? Object)?[keyPath: keyPath]
-            }
-            if let array = array {
-                return array.first { $0[keyPath: elementPath] == expected } != nil
-            } else {
-                return false
-            }
-        case .failure:
-            return false
-        }
-    }
-}
-
-public struct AWSAllPathMatcher<Object, Group: Collection, Value: Equatable>: AWSWaiterMatcher {
-    let arrayPath: OptionaKeyPath<Object, Group>
-    let elementPath: KeyPath<Group.Element, Value>
-    let expected: Value
-
-    public init(arrayPath: KeyPath<Object, Group>, elementPath: KeyPath<Group.Element, Value>, expected: Value) {
-        self.arrayPath = .nonOptional(arrayPath)
-        self.elementPath = elementPath
-        self.expected = expected
-    }
-
-    public init(arrayPath: KeyPath<Object, Group?>, elementPath: KeyPath<Group.Element, Value>, expected: Value) {
-        self.arrayPath = .optional(arrayPath)
-        self.elementPath = elementPath
-        self.expected = expected
-    }
-
-    public func match(result: Result<Any, Error>) -> Bool {
-        switch result {
-        case .success(let output):
-            // get array
-            let array: Group?
-            switch self.arrayPath {
-            case .nonOptional(let keyPath):
-                array = (output as? Object)?[keyPath: keyPath]
-            case .optional(let keyPath):
-                array = (output as? Object)?[keyPath: keyPath]
-            }
-            if let array = array {
-                return array.first { $0[keyPath: elementPath] != expected } == nil
-            } else {
                 return false
             }
         case .failure:

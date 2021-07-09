@@ -107,6 +107,7 @@ extension OptionalCustomCoding: JMESPropertyWrapper {
         return self.value as Any
     }
 }
+
 /// Protocol for a PropertyWrapper to properly handle CustomCoding when the wrappedValue is Optional
 public protocol OptionalCustomCodingWrapper {
     associatedtype WrappedType

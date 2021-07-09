@@ -34,7 +34,7 @@ public struct JMESPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatcher 
         case .success(let output):
             do {
                 if let result = try expression.search(object: output) as? CustomStringConvertible {
-                    return expected == result.description
+                    return self.expected == result.description
                 } else {
                     return false
                 }

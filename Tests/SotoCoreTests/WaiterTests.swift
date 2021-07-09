@@ -50,6 +50,7 @@ class WaiterTests: XCTestCase {
             init(booleanLiteral: Bool) {
                 self.status = booleanLiteral
             }
+
             init(_ status: Bool) {
                 self.status = status
             }
@@ -80,7 +81,7 @@ class WaiterTests: XCTestCase {
     func testJMESPathWaiter() {
         let waiter = AWSClient.Waiter(
             acceptors: [
-                .init(state: .success, matcher: try! JMESPathMatcher("array[*].status", expected: [true,true,true])),
+                .init(state: .success, matcher: try! JMESPathMatcher("array[*].status", expected: [true, true, true])),
             ],
             minDelayTime: .seconds(2),
             command: self.arrayOperation
@@ -227,7 +228,7 @@ class WaiterTests: XCTestCase {
 
         let waiter = AWSClient.Waiter(
             acceptors: [
-                .init(state: .success, matcher: try! JMESPathMatcher("array[*]", expected: [true,true,true])),
+                .init(state: .success, matcher: try! JMESPathMatcher("array[*]", expected: [true, true, true])),
             ],
             minDelayTime: .seconds(2),
             command: arrayOperation

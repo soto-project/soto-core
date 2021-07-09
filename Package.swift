@@ -44,7 +44,7 @@ let package = Package(
             .product(name: "NIOSSL", package: "swift-nio-ssl"),
             .product(name: "NIOTransportServices", package: "swift-nio-transport-services"),
             .product(name: "NIOFoundationCompat", package: "swift-nio"),
-            .product(name: "JMESPath", package: "jmespath.swift")
+            .product(name: "JMESPath", package: "jmespath.swift"),
         ]),
         .target(name: "SotoCrypto", dependencies: []),
         .target(name: "SotoSignerV4", dependencies: [

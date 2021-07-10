@@ -29,7 +29,7 @@ jobs:
         xcrun llvm-cov export -format "lcov" \
           .build/debug/soto-corePackageTests.xctest/Contents/MacOs/soto-corePackageTests \
           -ignore-filename-regex="\/Tests\/" \
-          -instr-profile=.build/debug/codecov/default.profdata > info.lcov  
+          -instr-profile=.build/debug/codecov/default.profdata > info.lcov
     - name: Upload to codecov.io
       uses: codecov/codecov-action@v1
       with:
@@ -51,8 +51,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        tag: 
-          - swift:5.1
+        tag:
+          - swift:5.2
           - swift:5.3
           - swift:5.4
     container:

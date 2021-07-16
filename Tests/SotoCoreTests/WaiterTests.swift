@@ -19,17 +19,17 @@ import SotoTestUtils
 import XCTest
 
 class WaiterTests: XCTestCase {
-    static var awsServer: AWSTestServer!
-    static var config: AWSServiceConfig!
-    static var client: AWSClient!
+    var awsServer: AWSTestServer!
+    var config: AWSServiceConfig!
+    var client: AWSClient!
 
-    override class func setUp() {
-        Self.awsServer = AWSTestServer(serviceProtocol: .json)
-        Self.config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: self.awsServer.address)
-        Self.client = createAWSClient(credentialProvider: .empty, middlewares: [AWSLoggingMiddleware()])
+    override func setUp() {
+        self.awsServer = AWSTestServer(serviceProtocol: .json)
+        self.config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: self.awsServer.address)
+        self.client = createAWSClient(credentialProvider: .empty, middlewares: [AWSLoggingMiddleware()])
     }
 
-    override class func tearDown() {
+    override func tearDown() {
         XCTAssertNoThrow(try self.client.syncShutdown())
         XCTAssertNoThrow(try self.awsServer.stop())
     }
@@ -41,7 +41,7 @@ class WaiterTests: XCTestCase {
     }
 
     func operation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<Output> {
-        Self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: Self.config, input: input, logger: logger, on: eventLoop)
+        self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger, on: eventLoop)
     }
 
     struct ArrayOutput: AWSDecodableShape & Encodable {
@@ -60,7 +60,7 @@ class WaiterTests: XCTestCase {
     }
 
     func arrayOperation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<ArrayOutput> {
-        Self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: Self.config, input: input, logger: logger, on: eventLoop)
+        self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger, on: eventLoop)
     }
 
     struct OptionalArrayOutput: AWSDecodableShape & Encodable {
@@ -75,7 +75,7 @@ class WaiterTests: XCTestCase {
     }
 
     func optionalArrayOperation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<OptionalArrayOutput> {
-        Self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: Self.config, input: input, logger: logger, on: eventLoop)
+        self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger, on: eventLoop)
     }
 
     func testJMESPathWaiter() {
@@ -87,10 +87,10 @@ class WaiterTests: XCTestCase {
             command: self.arrayOperation
         )
         let input = Input()
-        let response = Self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+        let response = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
-        XCTAssertNoThrow(try Self.awsServer.process { (_: Input) -> AWSTestServer.Result<ArrayOutput> in
+        XCTAssertNoThrow(try self.awsServer.process { (_: Input) -> AWSTestServer.Result<ArrayOutput> in
             i += 1
             return .result(ArrayOutput(array: [.init(i >= 3), .init(i >= 2), .init(i >= 1)]), continueProcessing: i < 3)
         })
@@ -103,7 +103,7 @@ class WaiterTests: XCTestCase {
             let s: String
         }
         func operation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<StringOutput> {
-            Self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: Self.config, input: input, logger: logger, on: eventLoop)
+            self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger, on: eventLoop)
         }
         let waiter = AWSClient.Waiter(
             acceptors: [
@@ -113,10 +113,10 @@ class WaiterTests: XCTestCase {
             command: operation
         )
         let input = Input()
-        let response = Self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+        let response = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
-        XCTAssertNoThrow(try Self.awsServer.process { (_: Input) -> AWSTestServer.Result<StringOutput> in
+        XCTAssertNoThrow(try self.awsServer.process { (_: Input) -> AWSTestServer.Result<StringOutput> in
             i += 1
             if i < 2 {
                 return .result(.init(s: "no"), continueProcessing: true)
@@ -138,7 +138,7 @@ class WaiterTests: XCTestCase {
             let e: YesNo
         }
         func operation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<EnumOutput> {
-            Self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: Self.config, input: input, logger: logger, on: eventLoop)
+            self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger, on: eventLoop)
         }
         let waiter = AWSClient.Waiter(
             acceptors: [
@@ -148,10 +148,10 @@ class WaiterTests: XCTestCase {
             command: operation
         )
         let input = Input()
-        let response = Self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+        let response = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
-        XCTAssertNoThrow(try Self.awsServer.process { (_: Input) -> AWSTestServer.Result<EnumOutput> in
+        XCTAssertNoThrow(try self.awsServer.process { (_: Input) -> AWSTestServer.Result<EnumOutput> in
             i += 1
             if i < 2 {
                 return .result(.init(e: .no), continueProcessing: true)
@@ -172,10 +172,10 @@ class WaiterTests: XCTestCase {
             command: self.arrayOperation
         )
         let input = Input()
-        let response = Self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+        let response = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
-        XCTAssertNoThrow(try Self.awsServer.process { (_: Input) -> AWSTestServer.Result<ArrayOutput> in
+        XCTAssertNoThrow(try self.awsServer.process { (_: Input) -> AWSTestServer.Result<ArrayOutput> in
             i += 1
             if i < 2 {
                 return .result(ArrayOutput(array: [false, false, false]), continueProcessing: true)
@@ -196,10 +196,10 @@ class WaiterTests: XCTestCase {
             command: self.arrayOperation
         )
         let input = Input()
-        let response = Self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+        let response = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
-        XCTAssertNoThrow(try Self.awsServer.process { (_: Input) -> AWSTestServer.Result<ArrayOutput> in
+        XCTAssertNoThrow(try self.awsServer.process { (_: Input) -> AWSTestServer.Result<ArrayOutput> in
             i += 1
             if i < 2 {
                 return .result(ArrayOutput(array: [false, true, false]), continueProcessing: true)
@@ -223,7 +223,7 @@ class WaiterTests: XCTestCase {
         let config = createServiceConfig(serviceProtocol: .restxml, endpoint: awsServer.address)
 
         func arrayOperation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<ArrayOutput> {
-            Self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: logger, on: eventLoop)
+            self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: logger, on: eventLoop)
         }
 
         let waiter = AWSClient.Waiter(
@@ -234,7 +234,7 @@ class WaiterTests: XCTestCase {
             command: arrayOperation
         )
         let input = Input(test: "Input")
-        let response = Self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+        let response = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
         XCTAssertNoThrow(try awsServer.process { (_: Input) -> AWSTestServer.Result<ArrayOutput> in
@@ -255,10 +255,10 @@ class WaiterTests: XCTestCase {
             command: self.operation
         )
         let input = Input()
-        let response = Self.client.waitUntil(input, waiter: waiter, maxWaitTime: .seconds(4), logger: TestEnvironment.logger)
+        let response = self.client.waitUntil(input, waiter: waiter, maxWaitTime: .seconds(4), logger: TestEnvironment.logger)
 
         var i = 0
-        XCTAssertNoThrow(try Self.awsServer.process { (_: Input) -> AWSTestServer.Result<Output> in
+        XCTAssertNoThrow(try self.awsServer.process { (_: Input) -> AWSTestServer.Result<Output> in
             i += 1
             return .result(Output(i: i), continueProcessing: i < 2)
         })
@@ -283,10 +283,10 @@ class WaiterTests: XCTestCase {
             command: self.operation
         )
         let input = Input()
-        let response = Self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+        let response = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
-        XCTAssertNoThrow(try Self.awsServer.process { (_: Input) -> AWSTestServer.Result<Output> in
+        XCTAssertNoThrow(try self.awsServer.process { (_: Input) -> AWSTestServer.Result<Output> in
             i += 1
             if i < 3 {
                 return .error(.accessDenied, continueProcessing: true)
@@ -308,10 +308,10 @@ class WaiterTests: XCTestCase {
             command: self.operation
         )
         let input = Input()
-        let response = Self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+        let response = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
-        XCTAssertNoThrow(try Self.awsServer.process { (_: Input) -> AWSTestServer.Result<Output> in
+        XCTAssertNoThrow(try self.awsServer.process { (_: Input) -> AWSTestServer.Result<Output> in
             i += 1
             if i < 3 {
                 return .error(.notFound, continueProcessing: true)

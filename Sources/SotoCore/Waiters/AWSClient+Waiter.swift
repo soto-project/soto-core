@@ -66,7 +66,7 @@ extension AWSClient {
         let maxDelayTime: TimeAmount
         let command: (Input, Logger, EventLoop?) -> EventLoopFuture<Output>
 
-        /// calculate delay until next API call. This calculation comes from the AWS Smithy documentation
+        /// Calculate delay until next API call. This calculation comes from the AWS Smithy documentation
         /// https://awslabs.github.io/smithy/1.0/spec/waiters.html#waiter-retries
         func calculateRetryWaitTime(attempt: Int, remainingTime: TimeAmount) -> TimeAmount {
             let minDelay = Double(self.minDelayTime.nanoseconds) / 1_000_000_000
@@ -88,8 +88,8 @@ extension AWSClient {
         }
     }
 
-    /// Return EventLoopFuture that will by fulfilled once waiter polling returns a success state
-    /// or will return an error if the polling returns an error or timesout
+    /// Returns an `EventLoopFuture` that will by fulfilled once waiter polling returns a success state
+    /// or returns an error if the polling returns an error or timesout
     ///
     /// - Parameters:
     ///   - input: Input parameters
@@ -113,24 +113,24 @@ extension AWSClient {
         func attempt(number: Int) {
             waiter.command(input, logger, eventLoop)
                 .whenComplete { result in
-                    var state: WaiterState?
+                    var acceptorState: WaiterState?
                     for acceptor in waiter.acceptors {
                         if acceptor.matcher.match(result: result.map { $0 }) {
-                            state = acceptor.state
+                            acceptorState = acceptor.state
                             break
                         }
                     }
                     // if state has not been set then set it based on return of API call
-                    let solidState: WaiterState
-                    if let state = state {
-                        solidState = state
+                    let waiterState: WaiterState
+                    if let state = acceptorState {
+                        waiterState = state
                     } else if case .failure = result {
-                        solidState = .failure
+                        waiterState = .failure
                     } else {
-                        solidState = .retry
+                        waiterState = .retry
                     }
                     // based on state succeed, fail promise or retry
-                    switch solidState {
+                    switch waiterState {
                     case .success:
                         promise.succeed(())
                     case .failure:

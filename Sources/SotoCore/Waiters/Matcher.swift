@@ -18,12 +18,12 @@ import NIOHTTP1
 
 /// Protocol for matchers used in waiters.
 ///
-/// A matcher returns whether returned value from API call matches a certain state
+/// A matcher returns whether the returned value from an AWS API call matches a certain state
 public protocol AWSWaiterMatcher {
     func match(result: Result<Any, Error>) -> Bool
 }
 
-/// Match whether value indicated by JMESPath matches an expected value
+/// Match whether the value indicated by JMESPath matches an expected value
 public struct JMESPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatcher {
     let expression: JMESExpression
     let expected: String
@@ -37,8 +37,8 @@ public struct JMESPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatcher 
         switch result {
         case .success(let output):
             do {
-                if let result = try expression.search(object: output) as? CustomStringConvertible {
-                    return self.expected == result.description
+                if let searchResult = try expression.search(object: output, as: CustomStringConvertible.self) {
+                    return self.expected == searchResult.description
                 } else {
                     return false
                 }
@@ -65,8 +65,8 @@ public struct JMESAnyPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatch
         switch result {
         case .success(let output):
             do {
-                if let result = try expression.search(object: output, as: [Any].self) {
-                    return result.first { expected == ($0 as? CustomStringConvertible)?.description } != nil
+                if let searchResult = try expression.search(object: output, as: [CustomStringConvertible].self) {
+                    return searchResult.first { expected == $0.description } != nil
                 } else {
                     return false
                 }
@@ -93,8 +93,8 @@ public struct JMESAllPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatch
         switch result {
         case .success(let output):
             do {
-                if let result = try expression.search(object: output, as: [Any].self) {
-                    return result.first { expected != ($0 as? CustomStringConvertible)?.description } == nil
+                if let searchResult = try expression.search(object: output, as: [CustomStringConvertible].self) {
+                    return searchResult.first { expected != $0.description } == nil
                 } else {
                     return false
                 }
@@ -107,7 +107,7 @@ public struct JMESAllPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatch
     }
 }
 
-/// Match whether a call was successful
+/// Match whether an AWS API call was successful
 public struct AWSSuccessMatcher: AWSWaiterMatcher {
     public init() {}
     public func match(result: Result<Any, Error>) -> Bool {
@@ -120,7 +120,7 @@ public struct AWSSuccessMatcher: AWSWaiterMatcher {
     }
 }
 
-/// Match whether a call return a specific HTTP response code
+/// Match whether an AWS API call returns a specific HTTP response code
 public struct AWSErrorStatusMatcher: AWSWaiterMatcher {
     let expectedStatus: Int
 
@@ -146,7 +146,7 @@ public struct AWSErrorStatusMatcher: AWSWaiterMatcher {
     }
 }
 
-/// Match whether a call returned a specific error code
+/// Match whether an AWS API call returns a specific error code
 public struct AWSErrorCodeMatcher: AWSWaiterMatcher {
     let expectedCode: String
 

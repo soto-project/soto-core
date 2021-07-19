@@ -21,16 +21,11 @@ import struct Foundation.UUID
 public protocol AWSShape {
     /// The array of members serialization helpers
     static var _encoding: [AWSMemberEncoding] { get }
-    static var _hostPrefix: String? { get }
 }
 
 extension AWSShape {
     public static var _encoding: [AWSMemberEncoding] {
         return []
-    }
-
-    public static var _hostPrefix: String? {
-        nil
     }
 
     /// return member with provided name

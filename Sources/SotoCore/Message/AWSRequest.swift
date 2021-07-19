@@ -120,11 +120,12 @@ extension AWSRequest {
         path: String,
         httpMethod: HTTPMethod,
         input: Input,
+        hostPrefix: String? = nil,
         configuration: AWSServiceConfig
     ) throws {
         var headers = HTTPHeaders()
         var path = path
-        var hostPrefix = Input._hostPrefix
+        var hostPrefix = hostPrefix
         var body: Body = .empty
         var queryParams: [(key: String, value: Any)] = []
 

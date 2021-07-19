@@ -363,20 +363,24 @@ class AWSRequestTests: XCTestCase {
 
     /// Test host prefix
     func testHostPrefix() {
-        struct Input: AWSEncodableShape {
-            static let _hostPrefix: String? = "foo."
-        }
+        struct Input: AWSEncodableShape {}
         let input = Input()
         let config = createServiceConfig(serviceProtocol: .json(version: "1.0"), endpoint: "https://test.com")
         var request: AWSRequest?
-        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .POST, input: input, configuration: config))
+        XCTAssertNoThrow(request = try AWSRequest(
+            operation: "Test",
+            path: "/",
+            httpMethod: .POST,
+            input: input,
+            hostPrefix: "foo.",
+            configuration: config
+        ))
         XCTAssertEqual(request?.url.absoluteString, "https://foo.test.com/")
     }
 
     /// Test host prefix
     func testHostPrefixLabel() {
         struct Input: AWSEncodableShape {
-            static let _hostPrefix: String? = "{AccountId}."
             static let _encoding: [AWSMemberEncoding] = [
                 .init(label: "accountId", location: .uri(locationName: "AccountId")),
             ]
@@ -385,7 +389,14 @@ class AWSRequestTests: XCTestCase {
         let input = Input(accountId: "12345678")
         let config = createServiceConfig(serviceProtocol: .json(version: "1.0"), endpoint: "https://test.com")
         var request: AWSRequest?
-        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .POST, input: input, configuration: config))
+        XCTAssertNoThrow(request = try AWSRequest(
+            operation: "Test",
+            path: "/",
+            httpMethod: .POST,
+            input: input,
+            hostPrefix: "{AccountId}.",
+            configuration: config
+        ))
         XCTAssertEqual(request?.url.absoluteString, "https://12345678.test.com/")
     }
 }

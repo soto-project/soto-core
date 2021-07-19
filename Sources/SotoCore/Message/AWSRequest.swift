@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the Soto project authors
+// Copyright (c) 2017-2021 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -124,6 +124,7 @@ extension AWSRequest {
     ) throws {
         var headers = HTTPHeaders()
         var path = path
+        var hostPrefix = Input._hostPrefix
         var body: Body = .empty
         var queryParams: [(key: String, value: Any)] = []
 
@@ -169,7 +170,8 @@ extension AWSRequest {
                     path = path
                         .replacingOccurrences(of: "{\(location)}", with: Self.urlEncodePathComponent(String(describing: value)))
                         .replacingOccurrences(of: "{\(location)+}", with: Self.urlEncodePath(String(describing: value)))
-
+                    hostPrefix = hostPrefix?
+                        .replacingOccurrences(of: "{\(location)}", with: Self.urlEncodePathComponent(String(describing: value)))
                 default:
                     memberVariablesCount += 1
                 }
@@ -244,6 +246,10 @@ extension AWSRequest {
 
         guard var urlComponents = URLComponents(string: "\(configuration.endpoint)\(path)") else {
             throw AWSClient.ClientError.invalidURL
+        }
+
+        if let hostPrefix = hostPrefix, let host = urlComponents.host {
+            urlComponents.host = hostPrefix + host
         }
 
         // add queries from the parsed path to the query params list

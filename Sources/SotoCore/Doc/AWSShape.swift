@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the Soto project authors
+// Copyright (c) 2017-2021 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -21,11 +21,16 @@ import struct Foundation.UUID
 public protocol AWSShape {
     /// The array of members serialization helpers
     static var _encoding: [AWSMemberEncoding] { get }
+    static var _hostPrefix: String? { get }
 }
 
 extension AWSShape {
     public static var _encoding: [AWSMemberEncoding] {
         return []
+    }
+
+    public static var _hostPrefix: String? {
+        nil
     }
 
     /// return member with provided name

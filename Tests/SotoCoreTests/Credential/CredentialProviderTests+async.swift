@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the Soto project authors
+// Copyright (c) 2017-2021 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5) && $AsyncAwait
+#if compiler(>=5.5)
 
 import _NIOConcurrency
 import NIO
@@ -20,7 +20,7 @@ import SotoCore
 import SotoTestUtils
 import XCTest
 
-@available(macOS 9999, iOS 9999, watchOS 9999, tvOS 9999, *)
+@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
 class AsyncCredentialProviderTests: XCTestCase {
     func testAsyncCredentialProvider() {
         struct TestAsyncProvider: AsyncCredentialProvider {
@@ -44,4 +44,4 @@ class AsyncCredentialProviderTests: XCTestCase {
     }
 }
 
-#endif // compiler(>=5.5) && $AsyncAwait
+#endif // compiler(>=5.5)

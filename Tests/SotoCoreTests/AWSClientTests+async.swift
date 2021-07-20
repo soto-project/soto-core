@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the Soto project authors
+// Copyright (c) 2017-2021 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5) && $AsyncAwait
+#if compiler(>=5.5)
 
 import _Concurrency
 import AsyncHTTPClient
@@ -27,28 +27,28 @@ import SotoTestUtils
 import SotoXML
 import XCTest
 
-@available(macOS 9999, iOS 9999, watchOS 9999, tvOS 9999, *)
+@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
 class AWSClientAsyncTests: XCTestCase {
-    func testClientNoInputNoOutput() {
+    func testClientNoInputNoOutput() async throws {
         let awsServer = AWSTestServer(serviceProtocol: .json)
         defer { XCTAssertNoThrow(try awsServer.stop()) }
-        XCTRunAsyncAndBlock {
-            let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
-            let client = createAWSClient(credentialProvider: .empty, middlewares: [AWSLoggingMiddleware()])
-            defer { XCTAssertNoThrow(try client.syncShutdown()) }
+//        XCTRunAsyncAndBlock {
+        let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
+        let client = createAWSClient(credentialProvider: .empty, middlewares: [AWSLoggingMiddleware()])
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
 
-            try await withThrowingTaskGroup(of: Bool.self) { group in
-                group.async {
-                    try await client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, logger: TestEnvironment.logger)
-                    return true
-                }
-                try awsServer.processRaw { _ in
-                    let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
-                    return .result(response)
-                }
-                _ = try await group.next()
+        try await withThrowingTaskGroup(of: Bool.self) { group in
+            group.async {
+                try await client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, logger: TestEnvironment.logger)
+                return true
             }
+            try awsServer.processRaw { _ in
+                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
+                return .result(response)
+            }
+            _ = try await group.next()
         }
+//        }
     }
 
     func testClientWithInputNoOutput() {
@@ -122,4 +122,4 @@ class AWSClientAsyncTests: XCTestCase {
     }
 }
 
-#endif // compiler(>=5.5) && $AsyncAwait
+#endif // compiler(>=5.5)

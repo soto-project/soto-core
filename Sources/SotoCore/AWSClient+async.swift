@@ -40,6 +40,7 @@ extension AWSClient {
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         input: Input,
+        hostPrefix: String? = nil,
         logger: Logger = AWSClient.loggingDisabled,
         on eventLoop: EventLoop? = nil
     ) async throws {
@@ -51,6 +52,7 @@ extension AWSClient {
                     path: path,
                     httpMethod: httpMethod,
                     input: input,
+                    hostPrefix: hostPrefix,
                     configuration: serviceConfig
                 )
             },
@@ -160,6 +162,7 @@ extension AWSClient {
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         input: Input,
+        hostPrefix: String? = nil,
         logger: Logger = AWSClient.loggingDisabled,
         on eventLoop: EventLoop? = nil
     ) async throws -> Output {
@@ -171,6 +174,7 @@ extension AWSClient {
                     path: path,
                     httpMethod: httpMethod,
                     input: input,
+                    hostPrefix: hostPrefix,
                     configuration: serviceConfig
                 )
             },
@@ -202,6 +206,7 @@ extension AWSClient {
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         input: Input,
+        hostPrefix: String? = nil,
         logger: Logger = AWSClient.loggingDisabled,
         on eventLoop: EventLoop? = nil,
         stream: @escaping AWSHTTPClient.ResponseStream
@@ -214,6 +219,7 @@ extension AWSClient {
                     path: path,
                     httpMethod: httpMethod,
                     input: input,
+                    hostPrefix: hostPrefix,
                     configuration: serviceConfig
                 )
             },

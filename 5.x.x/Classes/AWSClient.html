@@ -17,7 +17,7 @@
     <a title="AWSClient Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> Docs</a> (65% documented)</p>
+        <p><a href="../index.html"> Docs</a> (64% documented)</p>
         <p class="header-right"><a href="https://github.com/soto-project/soto-core"><img src="../img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="../search.json">
@@ -50,6 +50,12 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/AWSClient/Options.html">– Options</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AWSClient/WaiterState.html">– WaiterState</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AWSClient/Waiter.html">– Waiter</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/AWSServiceConfig.html">AWSServiceConfig</a>
@@ -157,6 +163,9 @@
                 <a href="../Protocols/AWSShapeWithPayload.html">AWSShapeWithPayload</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Protocols/AWSWaiterMatcher.html">AWSWaiterMatcher</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Protocols/ArrayCoderProperties.html">ArrayCoderProperties</a>
               </li>
               <li class="nav-group-task">
@@ -192,7 +201,13 @@
                 <a href="../Structs/AWSClientError.html">AWSClientError</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Structs/AWSErrorCodeMatcher.html">AWSErrorCodeMatcher</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Structs/AWSErrorContext.html">AWSErrorContext</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/AWSErrorStatusMatcher.html">AWSErrorStatusMatcher</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/AWSHTTPRequest.html">AWSHTTPRequest</a>
@@ -234,6 +249,9 @@
                 <a href="../Structs/AWSShapePayloadOptions.html">AWSShapePayloadOptions</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Structs/AWSSuccessMatcher.html">AWSSuccessMatcher</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Structs/ArrayCoder.html">ArrayCoder</a>
               </li>
               <li class="nav-group-task">
@@ -256,6 +274,15 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/ISO8601DateCoder.html">ISO8601DateCoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/JMESAllPathMatcher.html">JMESAllPathMatcher</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/JMESAnyPathMatcher.html">JMESAnyPathMatcher</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/JMESPathMatcher.html">JMESPathMatcher</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/NullCredentialProvider.html">NullCredentialProvider</a>
@@ -909,6 +936,19 @@ uses, we have to use a <code>DispatchQueue</code> to run some of this work on.</
                     </section>
                   </div>
                 </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Pagination"></a>
+                <a name="//apple_ref/swift/Section/Pagination" class="dashAnchor"></a>
+                <div class="section-name-container">
+                  <a class="section-name-link" href="#/Pagination"></a>
+                  <h3 class="section-name"><p>Pagination</p>
+</h3>
+                </div>
+              </div>
+              <ul>
                 <li class="item">
                   <div>
                     <code>
@@ -1985,9 +2025,9 @@ the next block. This function loads each block and calls a closure with each blo
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input6logger2on3NIO15EventLoopFutureCyytGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0Cx7Logging6LoggerVAL0oP0_pSgtAA17AWSEncodableShapeRzlF"></a>
-                    <a name="//apple_ref/swift/Method/execute(operation:path:httpMethod:serviceConfig:input:logger:on:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input6logger2on3NIO15EventLoopFutureCyytGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0Cx7Logging6LoggerVAL0oP0_pSgtAA17AWSEncodableShapeRzlF">execute(operation:<wbr>path:<wbr>httpMethod:<wbr>serviceConfig:<wbr>input:<wbr>logger:<wbr>on:<wbr>)</a>
+                    <a name="/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input10hostPrefix6logger2on3NIO15EventLoopFutureCyytGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0CxSSSg7Logging6LoggerVAM0qR0_pSgtAA17AWSEncodableShapeRzlF"></a>
+                    <a name="//apple_ref/swift/Method/execute(operation:path:httpMethod:serviceConfig:input:hostPrefix:logger:on:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input10hostPrefix6logger2on3NIO15EventLoopFutureCyytGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0CxSSSg7Logging6LoggerVAM0qR0_pSgtAA17AWSEncodableShapeRzlF">execute(operation:<wbr>path:<wbr>httpMethod:<wbr>serviceConfig:<wbr>input:<wbr>hostPrefix:<wbr>logger:<wbr>on:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2008,6 +2048,7 @@ the next block. This function loads each block and calls a closure with each blo
     <span class="nv">httpMethod</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span>
     <span class="nv">serviceConfig</span><span class="p">:</span> <span class="kt"><a href="../Classes/AWSServiceConfig.html">AWSServiceConfig</a></span><span class="p">,</span>
     <span class="nv">input</span><span class="p">:</span> <span class="kt">Input</span><span class="p">,</span>
+    <span class="nv">hostPrefix</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
     <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
     <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Void</span><span class="o">&gt;</span></code></pre>
@@ -2313,9 +2354,9 @@ the next block. This function loads each block and calls a closure with each blo
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input6logger2on3NIO15EventLoopFutureCyxGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0Cq_7Logging6LoggerVAL0oP0_pSgtAA17AWSDecodableShapeRzAA012AWSEncodableX0R_r0_lF"></a>
-                    <a name="//apple_ref/swift/Method/execute(operation:path:httpMethod:serviceConfig:input:logger:on:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input6logger2on3NIO15EventLoopFutureCyxGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0Cq_7Logging6LoggerVAL0oP0_pSgtAA17AWSDecodableShapeRzAA012AWSEncodableX0R_r0_lF">execute(operation:<wbr>path:<wbr>httpMethod:<wbr>serviceConfig:<wbr>input:<wbr>logger:<wbr>on:<wbr>)</a>
+                    <a name="/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input10hostPrefix6logger2on3NIO15EventLoopFutureCyxGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0Cq_SSSg7Logging6LoggerVAM0qR0_pSgtAA17AWSDecodableShapeRzAA012AWSEncodableZ0R_r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/execute(operation:path:httpMethod:serviceConfig:input:hostPrefix:logger:on:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input10hostPrefix6logger2on3NIO15EventLoopFutureCyxGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0Cq_SSSg7Logging6LoggerVAM0qR0_pSgtAA17AWSDecodableShapeRzAA012AWSEncodableZ0R_r0_lF">execute(operation:<wbr>path:<wbr>httpMethod:<wbr>serviceConfig:<wbr>input:<wbr>hostPrefix:<wbr>logger:<wbr>on:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2336,6 +2377,7 @@ the next block. This function loads each block and calls a closure with each blo
     <span class="nv">httpMethod</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span>
     <span class="nv">serviceConfig</span><span class="p">:</span> <span class="kt"><a href="../Classes/AWSServiceConfig.html">AWSServiceConfig</a></span><span class="p">,</span>
     <span class="nv">input</span><span class="p">:</span> <span class="kt">Input</span><span class="p">,</span>
+    <span class="nv">hostPrefix</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
     <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
     <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span></code></pre>
@@ -2431,9 +2473,9 @@ the next block. This function loads each block and calls a closure with each blo
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input6logger2on6stream3NIO15EventLoopFutureCyxGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0Cq_7Logging6LoggerVAM0pQ0_pSgAOyytGAM10ByteBufferV_AmY_ptctAA17AWSDecodableShapeRzAA17AWSEncodableShapeR_r0_lF"></a>
-                    <a name="//apple_ref/swift/Method/execute(operation:path:httpMethod:serviceConfig:input:logger:on:stream:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input6logger2on6stream3NIO15EventLoopFutureCyxGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0Cq_7Logging6LoggerVAM0pQ0_pSgAOyytGAM10ByteBufferV_AmY_ptctAA17AWSDecodableShapeRzAA17AWSEncodableShapeR_r0_lF">execute(operation:<wbr>path:<wbr>httpMethod:<wbr>serviceConfig:<wbr>input:<wbr>logger:<wbr>on:<wbr>stream:<wbr>)</a>
+                    <a name="/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input10hostPrefix6logger2on6stream3NIO15EventLoopFutureCyxGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0Cq_SSSg7Logging6LoggerVAN0rS0_pSgAPyytGAN10ByteBufferV_ANA__ptctAA17AWSDecodableShapeRzAA17AWSEncodableShapeR_r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/execute(operation:path:httpMethod:serviceConfig:input:hostPrefix:logger:on:stream:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input10hostPrefix6logger2on6stream3NIO15EventLoopFutureCyxGSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0Cq_SSSg7Logging6LoggerVAN0rS0_pSgAPyytGAN10ByteBufferV_ANA__ptctAA17AWSDecodableShapeRzAA17AWSEncodableShapeR_r0_lF">execute(operation:<wbr>path:<wbr>httpMethod:<wbr>serviceConfig:<wbr>input:<wbr>hostPrefix:<wbr>logger:<wbr>on:<wbr>stream:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2454,6 +2496,7 @@ the next block. This function loads each block and calls a closure with each blo
     <span class="nv">httpMethod</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span>
     <span class="nv">serviceConfig</span><span class="p">:</span> <span class="kt"><a href="../Classes/AWSServiceConfig.html">AWSServiceConfig</a></span><span class="p">,</span>
     <span class="nv">input</span><span class="p">:</span> <span class="kt">Input</span><span class="p">,</span>
+    <span class="nv">hostPrefix</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
     <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
     <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
     <span class="nv">stream</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Protocols/AWSHTTPClient.html">AWSHTTPClient</a></span><span class="o">.</span><span class="kt">ResponseStream</span>
@@ -2777,6 +2820,180 @@ the next block. This function loads each block and calls a closure with each blo
                       <div>
                         <h4>Return Value</h4>
                         <p>A set of signed headers that include the original headers supplied</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Waiters"></a>
+                <a name="//apple_ref/swift/Section/Waiters" class="dashAnchor"></a>
+                <div class="section-name-container">
+                  <a class="section-name-link" href="#/Waiters"></a>
+                  <h3 class="section-name"><p>Waiters</p>
+</h3>
+                </div>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore9AWSClientC11WaiterStateO"></a>
+                    <a name="//apple_ref/swift/Enum/WaiterState" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC11WaiterStateO">WaiterState</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Waiter state</p>
+
+                        <a href="../Classes/AWSClient/WaiterState.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">WaiterState</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore9AWSClientC6WaiterV"></a>
+                    <a name="//apple_ref/swift/Struct/Waiter" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC6WaiterV">Waiter</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A waiter is a client side abstraction used to poll a resource until a desired state is reached</p>
+
+                        <a href="../Classes/AWSClient/Waiter.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">Waiter</span><span class="o">&lt;</span><span class="kt">Input</span><span class="p">,</span> <span class="kt">Output</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore9AWSClientC9waitUntil_6waiter11maxWaitTime6logger2on3NIO15EventLoopFutureCyytGx_AC6WaiterVy_xq_GAI0I6AmountVSg7Logging6LoggerVAI0mN0_pSgtr0_lF"></a>
+                    <a name="//apple_ref/swift/Method/waitUntil(_:waiter:maxWaitTime:logger:on:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC9waitUntil_6waiter11maxWaitTime6logger2on3NIO15EventLoopFutureCyytGx_AC6WaiterVy_xq_GAI0I6AmountVSg7Logging6LoggerVAI0mN0_pSgtr0_lF">waitUntil(_:<wbr>waiter:<wbr>maxWaitTime:<wbr>logger:<wbr>on:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns an <code>EventLoopFuture</code> that will by fulfilled once waiter polling returns a success state
+or returns an error if the polling returns an error or timesout</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">waitUntil</span><span class="o">&lt;</span><span class="kt">Input</span><span class="p">,</span> <span class="kt">Output</span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="n">_</span> <span class="nv">input</span><span class="p">:</span> <span class="kt">Input</span><span class="p">,</span>
+    <span class="nv">waiter</span><span class="p">:</span> <span class="kt"><a href="../Classes/AWSClient/Waiter.html">Waiter</a></span><span class="o">&lt;</span><span class="kt">Input</span><span class="p">,</span> <span class="kt">Output</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="nv">maxWaitTime</span><span class="p">:</span> <span class="kt">TimeAmount</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+    <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
+    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Void</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>input</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Input parameters</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>waiter</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Waiter to wait on</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>maxWaitTime</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Maximum amount of time to wait</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>logger</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Logger used to provide output</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>eventLoop</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>EventLoop to run API calls on</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>EventLoopFuture that will be fulfilled once waiter has completed</p>
                       </div>
                     </section>
                   </div>

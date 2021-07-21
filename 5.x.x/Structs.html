@@ -17,7 +17,7 @@
     <a title="Structures  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html"> Docs</a> (65% documented)</p>
+        <p><a href="index.html"> Docs</a> (64% documented)</p>
         <p class="header-right"><a href="https://github.com/soto-project/soto-core"><img src="img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="search.json">
@@ -50,6 +50,12 @@
               </li>
               <li class="nav-group-task">
                 <a href="Classes/AWSClient/Options.html">– Options</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/AWSClient/WaiterState.html">– WaiterState</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/AWSClient/Waiter.html">– Waiter</a>
               </li>
               <li class="nav-group-task">
                 <a href="Classes/AWSServiceConfig.html">AWSServiceConfig</a>
@@ -157,6 +163,9 @@
                 <a href="Protocols/AWSShapeWithPayload.html">AWSShapeWithPayload</a>
               </li>
               <li class="nav-group-task">
+                <a href="Protocols/AWSWaiterMatcher.html">AWSWaiterMatcher</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="Protocols/ArrayCoderProperties.html">ArrayCoderProperties</a>
               </li>
               <li class="nav-group-task">
@@ -192,7 +201,13 @@
                 <a href="Structs/AWSClientError.html">AWSClientError</a>
               </li>
               <li class="nav-group-task">
+                <a href="Structs/AWSErrorCodeMatcher.html">AWSErrorCodeMatcher</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="Structs/AWSErrorContext.html">AWSErrorContext</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/AWSErrorStatusMatcher.html">AWSErrorStatusMatcher</a>
               </li>
               <li class="nav-group-task">
                 <a href="Structs/AWSHTTPRequest.html">AWSHTTPRequest</a>
@@ -234,6 +249,9 @@
                 <a href="Structs/AWSShapePayloadOptions.html">AWSShapePayloadOptions</a>
               </li>
               <li class="nav-group-task">
+                <a href="Structs/AWSSuccessMatcher.html">AWSSuccessMatcher</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="Structs/ArrayCoder.html">ArrayCoder</a>
               </li>
               <li class="nav-group-task">
@@ -256,6 +274,15 @@
               </li>
               <li class="nav-group-task">
                 <a href="Structs/ISO8601DateCoder.html">ISO8601DateCoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/JMESAllPathMatcher.html">JMESAllPathMatcher</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/JMESAnyPathMatcher.html">JMESAnyPathMatcher</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/JMESPathMatcher.html">JMESPathMatcher</a>
               </li>
               <li class="nav-group-task">
                 <a href="Structs/NullCredentialProvider.html">NullCredentialProvider</a>
@@ -589,6 +616,7 @@ A response payload only comes in the form of a ByteBuffer</p>
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@propertyWrapper</span>
 <span class="kd">public</span> <span class="kd">struct</span> <span class="kt">CustomCoding</span><span class="o">&lt;</span><span class="kt">Coder</span><span class="o">&gt;</span> <span class="k">where</span> <span class="kt">Coder</span> <span class="p">:</span> <span class="kt"><a href="Protocols/CustomCoder.html">CustomCoder</a></span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">CustomCoding</span><span class="p">:</span> <span class="kt">JMESPropertyWrapper</span></code></pre>
 <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">CustomCoding</span><span class="p">:</span> <span class="kt">Decodable</span> <span class="k">where</span> <span class="kt">Coder</span><span class="p">:</span> <span class="kt"><a href="Protocols/CustomDecoder.html">CustomDecoder</a></span></code></pre>
 <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">CustomCoding</span><span class="p">:</span> <span class="kt">Encodable</span> <span class="k">where</span> <span class="kt">Coder</span><span class="p">:</span> <span class="kt"><a href="Protocols/CustomEncoder.html">CustomEncoder</a></span></code></pre>
 
@@ -620,6 +648,7 @@ A response payload only comes in the form of a ByteBuffer</p>
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@propertyWrapper</span>
 <span class="kd">public</span> <span class="kd">struct</span> <span class="kt">OptionalCustomCoding</span><span class="o">&lt;</span><span class="kt">Coder</span><span class="o">&gt;</span> <span class="k">where</span> <span class="kt">Coder</span> <span class="p">:</span> <span class="kt"><a href="Protocols/CustomCoder.html">CustomCoder</a></span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">OptionalCustomCoding</span><span class="p">:</span> <span class="kt">JMESPropertyWrapper</span></code></pre>
 <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">OptionalCustomCoding</span><span class="p">:</span> <span class="kt"><a href="Protocols/OptionalCustomCodingWrapper.html">OptionalCustomCodingWrapper</a></span></code></pre>
 <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">OptionalCustomCoding</span><span class="p">:</span> <span class="kt">Decodable</span> <span class="k">where</span> <span class="kt">Coder</span><span class="p">:</span> <span class="kt"><a href="Protocols/CustomDecoder.html">CustomDecoder</a></span></code></pre>
 <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">OptionalCustomCoding</span><span class="p">:</span> <span class="kt">Encodable</span> <span class="k">where</span> <span class="kt">Coder</span><span class="p">:</span> <span class="kt"><a href="Protocols/CustomEncoder.html">CustomEncoder</a></span></code></pre>
@@ -1189,6 +1218,174 @@ A response payload only comes in the form of a ByteBuffer</p>
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">RetryPolicyFactory</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore15JMESPathMatcherV"></a>
+                    <a name="//apple_ref/swift/Struct/JMESPathMatcher" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore15JMESPathMatcherV">JMESPathMatcher</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Match whether the value indicated by JMESPath matches an expected value</p>
+
+                        <a href="Structs/JMESPathMatcher.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">JMESPathMatcher</span><span class="o">&lt;</span><span class="kt">Value</span><span class="o">&gt;</span> <span class="p">:</span> <span class="kt"><a href="Protocols/AWSWaiterMatcher.html">AWSWaiterMatcher</a></span> <span class="k">where</span> <span class="kt">Value</span> <span class="p">:</span> <span class="kt">CustomStringConvertible</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore18JMESAnyPathMatcherV"></a>
+                    <a name="//apple_ref/swift/Struct/JMESAnyPathMatcher" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore18JMESAnyPathMatcherV">JMESAnyPathMatcher</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Match whether any of the values indicated by JMESPath matches an expected value</p>
+
+                        <a href="Structs/JMESAnyPathMatcher.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">JMESAnyPathMatcher</span><span class="o">&lt;</span><span class="kt">Value</span><span class="o">&gt;</span> <span class="p">:</span> <span class="kt"><a href="Protocols/AWSWaiterMatcher.html">AWSWaiterMatcher</a></span> <span class="k">where</span> <span class="kt">Value</span> <span class="p">:</span> <span class="kt">CustomStringConvertible</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore18JMESAllPathMatcherV"></a>
+                    <a name="//apple_ref/swift/Struct/JMESAllPathMatcher" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore18JMESAllPathMatcherV">JMESAllPathMatcher</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Match whether all of the values indicated by JMESPath matches an expected value</p>
+
+                        <a href="Structs/JMESAllPathMatcher.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">JMESAllPathMatcher</span><span class="o">&lt;</span><span class="kt">Value</span><span class="o">&gt;</span> <span class="p">:</span> <span class="kt"><a href="Protocols/AWSWaiterMatcher.html">AWSWaiterMatcher</a></span> <span class="k">where</span> <span class="kt">Value</span> <span class="p">:</span> <span class="kt">CustomStringConvertible</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore17AWSSuccessMatcherV"></a>
+                    <a name="//apple_ref/swift/Struct/AWSSuccessMatcher" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore17AWSSuccessMatcherV">AWSSuccessMatcher</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Match whether an AWS API call was successful</p>
+
+                        <a href="Structs/AWSSuccessMatcher.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">AWSSuccessMatcher</span> <span class="p">:</span> <span class="kt"><a href="Protocols/AWSWaiterMatcher.html">AWSWaiterMatcher</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore21AWSErrorStatusMatcherV"></a>
+                    <a name="//apple_ref/swift/Struct/AWSErrorStatusMatcher" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore21AWSErrorStatusMatcherV">AWSErrorStatusMatcher</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Match whether an AWS API call returns a specific HTTP response code</p>
+
+                        <a href="Structs/AWSErrorStatusMatcher.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">AWSErrorStatusMatcher</span> <span class="p">:</span> <span class="kt"><a href="Protocols/AWSWaiterMatcher.html">AWSWaiterMatcher</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore19AWSErrorCodeMatcherV"></a>
+                    <a name="//apple_ref/swift/Struct/AWSErrorCodeMatcher" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore19AWSErrorCodeMatcherV">AWSErrorCodeMatcher</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Match whether an AWS API call returns a specific error code</p>
+
+                        <a href="Structs/AWSErrorCodeMatcher.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">AWSErrorCodeMatcher</span> <span class="p">:</span> <span class="kt"><a href="Protocols/AWSWaiterMatcher.html">AWSWaiterMatcher</a></span></code></pre>
 
                         </div>
                       </div>

@@ -17,7 +17,7 @@
     <a title="ClientError Structure Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../../index.html"> Docs</a> (65% documented)</p>
+        <p><a href="../../index.html"> Docs</a> (64% documented)</p>
         <p class="header-right"><a href="https://github.com/soto-project/soto-core"><img src="../../img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="../../search.json">
@@ -50,6 +50,12 @@
               </li>
               <li class="nav-group-task">
                 <a href="../../Classes/AWSClient/Options.html">– Options</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Classes/AWSClient/WaiterState.html">– WaiterState</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Classes/AWSClient/Waiter.html">– Waiter</a>
               </li>
               <li class="nav-group-task">
                 <a href="../../Classes/AWSServiceConfig.html">AWSServiceConfig</a>
@@ -157,6 +163,9 @@
                 <a href="../../Protocols/AWSShapeWithPayload.html">AWSShapeWithPayload</a>
               </li>
               <li class="nav-group-task">
+                <a href="../../Protocols/AWSWaiterMatcher.html">AWSWaiterMatcher</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../../Protocols/ArrayCoderProperties.html">ArrayCoderProperties</a>
               </li>
               <li class="nav-group-task">
@@ -192,7 +201,13 @@
                 <a href="../../Structs/AWSClientError.html">AWSClientError</a>
               </li>
               <li class="nav-group-task">
+                <a href="../../Structs/AWSErrorCodeMatcher.html">AWSErrorCodeMatcher</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../../Structs/AWSErrorContext.html">AWSErrorContext</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Structs/AWSErrorStatusMatcher.html">AWSErrorStatusMatcher</a>
               </li>
               <li class="nav-group-task">
                 <a href="../../Structs/AWSHTTPRequest.html">AWSHTTPRequest</a>
@@ -234,6 +249,9 @@
                 <a href="../../Structs/AWSShapePayloadOptions.html">AWSShapePayloadOptions</a>
               </li>
               <li class="nav-group-task">
+                <a href="../../Structs/AWSSuccessMatcher.html">AWSSuccessMatcher</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../../Structs/ArrayCoder.html">ArrayCoder</a>
               </li>
               <li class="nav-group-task">
@@ -256,6 +274,15 @@
               </li>
               <li class="nav-group-task">
                 <a href="../../Structs/ISO8601DateCoder.html">ISO8601DateCoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Structs/JMESAllPathMatcher.html">JMESAllPathMatcher</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Structs/JMESAnyPathMatcher.html">JMESAnyPathMatcher</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../../Structs/JMESPathMatcher.html">JMESPathMatcher</a>
               </li>
               <li class="nav-group-task">
                 <a href="../../Structs/NullCredentialProvider.html">NullCredentialProvider</a>
@@ -419,6 +446,60 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">var</span> <span class="nv">notEnoughData</span><span class="p">:</span> <span class="kt">ClientError</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore9AWSClientC11ClientErrorV12waiterFailedAEvpZ"></a>
+                    <a name="//apple_ref/swift/Variable/waiterFailed" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC11ClientErrorV12waiterFailedAEvpZ">waiterFailed</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Waiter failed, but without an error. ie a successful api call was an error</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">var</span> <span class="nv">waiterFailed</span><span class="p">:</span> <span class="kt">ClientError</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore9AWSClientC11ClientErrorV13waiterTimeoutAEvpZ"></a>
+                    <a name="//apple_ref/swift/Variable/waiterTimeout" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC11ClientErrorV13waiterTimeoutAEvpZ">waiterTimeout</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Waiter failed to complete in time alloted</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">var</span> <span class="nv">waiterTimeout</span><span class="p">:</span> <span class="kt">ClientError</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>

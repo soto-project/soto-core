@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>StreamReaderResult Enumeration Reference</title>
+    <title>JMESAllPathMatcher Structure Reference</title>
     <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
     <meta charset='utf-8'>
@@ -13,8 +13,8 @@
     <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/swift/Enum/StreamReaderResult" class="dashAnchor"></a>
-    <a title="StreamReaderResult Enumeration Reference"></a>
+    <a name="//apple_ref/swift/Struct/JMESAllPathMatcher" class="dashAnchor"></a>
+    <a title="JMESAllPathMatcher Structure Reference"></a>
     <header>
       <div class="content-wrapper">
         <p><a href="../index.html"> Docs</a> (64% documented)</p>
@@ -30,7 +30,7 @@
       <p id="breadcrumbs">
         <a href="../index.html"> Reference</a>
         <img id="carat" src="../img/carat.png" />
-        StreamReaderResult Enumeration Reference
+        JMESAllPathMatcher Structure Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -329,15 +329,15 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>StreamReaderResult</h1>
+            <h1>JMESAllPathMatcher</h1>
               <div class="declaration">
                 <div class="language">
                   
-                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">StreamReaderResult</span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">JMESAllPathMatcher</span><span class="o">&lt;</span><span class="kt">Value</span><span class="o">&gt;</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/AWSWaiterMatcher.html">AWSWaiterMatcher</a></span> <span class="k">where</span> <span class="kt">Value</span> <span class="p">:</span> <span class="kt">CustomStringConvertible</span></code></pre>
 
                 </div>
               </div>
-            <p>Streaming result</p>
+            <p>Match whether all of the values indicated by JMESPath matches an expected value</p>
 
           </section>
           <section class="section task-group-section">
@@ -346,9 +346,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore18StreamReaderResultO10byteBufferyAC3NIO04ByteG0VcACmF"></a>
-                    <a name="//apple_ref/swift/Element/byteBuffer(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore18StreamReaderResultO10byteBufferyAC3NIO04ByteG0VcACmF">byteBuffer(_:<wbr>)</a>
+                    <a name="/s:8SotoCore18JMESAllPathMatcherV_8expectedACyxGSS_xtKcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(_:expected:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore18JMESAllPathMatcherV_8expectedACyxGSS_xtKcfc">init(_:<wbr>expected:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -363,7 +363,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">byteBuffer</span><span class="p">(</span><span class="kt">ByteBuffer</span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="n">_</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">expected</span><span class="p">:</span> <span class="kt">Value</span><span class="p">)</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
@@ -373,9 +373,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore18StreamReaderResultO3endyA2CmF"></a>
-                    <a name="//apple_ref/swift/Element/end" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore18StreamReaderResultO3endyA2CmF">end</a>
+                    <a name="/s:8SotoCore18JMESAllPathMatcherV5match6resultSbs6ResultOyyps5Error_pG_tF"></a>
+                    <a name="//apple_ref/swift/Method/match(result:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore18JMESAllPathMatcherV5match6resultSbs6ResultOyyps5Error_pG_tF">match(result:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -390,7 +390,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">end</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">match</span><span class="p">(</span><span class="nv">result</span><span class="p">:</span> <span class="kt">Result</span><span class="o">&lt;</span><span class="kt">Any</span><span class="p">,</span> <span class="kt">Error</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
 
                         </div>
                       </div>

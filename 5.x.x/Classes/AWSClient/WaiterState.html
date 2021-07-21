@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>NonConformingFloatDecodingStrategy Enumeration Reference</title>
+    <title>WaiterState Enumeration Reference</title>
     <link rel="stylesheet" type="text/css" href="../../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../../css/highlight.css" />
     <meta charset='utf-8'>
@@ -13,8 +13,8 @@
     <script src="../../js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/swift/Enum/NonConformingFloatDecodingStrategy" class="dashAnchor"></a>
-    <a title="NonConformingFloatDecodingStrategy Enumeration Reference"></a>
+    <a name="//apple_ref/swift/Enum/WaiterState" class="dashAnchor"></a>
+    <a title="WaiterState Enumeration Reference"></a>
     <header>
       <div class="content-wrapper">
         <p><a href="../../index.html"> Docs</a> (64% documented)</p>
@@ -30,7 +30,7 @@
       <p id="breadcrumbs">
         <a href="../../index.html"> Reference</a>
         <img id="carat" src="../../img/carat.png" />
-        NonConformingFloatDecodingStrategy Enumeration Reference
+        WaiterState Enumeration Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -329,15 +329,15 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>NonConformingFloatDecodingStrategy</h1>
+            <h1>WaiterState</h1>
               <div class="declaration">
                 <div class="language">
                   
-                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">NonConformingFloatDecodingStrategy</span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">WaiterState</span></code></pre>
 
                 </div>
               </div>
-            <p>The strategy to use for non-JSON-conforming floating-point values (IEEE 754 infinity and NaN).</p>
+            <p>Waiter state</p>
 
           </section>
           <section class="section task-group-section">
@@ -346,9 +346,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore17DictionaryDecoderC34NonConformingFloatDecodingStrategyO5throwyA2EmF"></a>
-                    <a name="//apple_ref/swift/Element/throw" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore17DictionaryDecoderC34NonConformingFloatDecodingStrategyO5throwyA2EmF">throw</a>
+                    <a name="/s:8SotoCore9AWSClientC11WaiterStateO7successyA2EmF"></a>
+                    <a name="//apple_ref/swift/Element/success" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC11WaiterStateO7successyA2EmF">success</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -356,14 +356,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Throw upon encountering non-conforming values. This is the default strategy.</p>
+                        <p>Undocumented</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">case</span> <span class="err">`</span><span class="k">throw</span><span class="err">`</span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">success</span></code></pre>
 
                         </div>
                       </div>
@@ -373,9 +373,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore17DictionaryDecoderC34NonConformingFloatDecodingStrategyO17convertFromStringyAESS_S2StcAEmF"></a>
-                    <a name="//apple_ref/swift/Element/convertFromString(positiveInfinity:negativeInfinity:nan:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore17DictionaryDecoderC34NonConformingFloatDecodingStrategyO17convertFromStringyAESS_S2StcAEmF">convertFromString(positiveInfinity:<wbr>negativeInfinity:<wbr>nan:<wbr>)</a>
+                    <a name="/s:8SotoCore9AWSClientC11WaiterStateO5retryyA2EmF"></a>
+                    <a name="//apple_ref/swift/Element/retry" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC11WaiterStateO5retryyA2EmF">retry</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -383,14 +383,41 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Decode the values from the given representation strings.</p>
+                        <p>Undocumented</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">convertFromString</span><span class="p">(</span><span class="nv">positiveInfinity</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">negativeInfinity</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">nan</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">retry</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore9AWSClientC11WaiterStateO7failureyA2EmF"></a>
+                    <a name="//apple_ref/swift/Element/failure" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC11WaiterStateO7failureyA2EmF">failure</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">failure</span></code></pre>
 
                         </div>
                       </div>

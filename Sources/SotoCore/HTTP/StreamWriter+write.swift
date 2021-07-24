@@ -53,7 +53,7 @@ extension AsyncHTTPClient.HTTPClient.Body.StreamWriter {
 
                     // write all the chunks but the last.
                     byteBuffers.dropLast().forEach {
-                        _ = self.write(.byteBuffer($0))
+                        _ = self.write(IOData.byteBuffer($0))
                     }
                     if let lastBuffer = byteBuffers.last {
                         // store EventLoopFuture of last byteBuffer

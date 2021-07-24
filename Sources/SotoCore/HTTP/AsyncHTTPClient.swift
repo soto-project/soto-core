@@ -37,6 +37,13 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
             requestBody = .stream(length: reader.contentSize) { writer in
                 return writer.write(reader: reader, on: eventLoop)
             }
+        case .streamWriter(let streamWriter):
+            requestHeaders = streamWriter.updateHeaders(headers: requestHeaders)
+            requestBody = .stream(length: streamWriter.length) { writer in
+                streamWriter.setParentWriter(writer)
+                return streamWriter.finishedPromise.futureResult
+            }
+
         case .empty:
             requestBody = nil
         }

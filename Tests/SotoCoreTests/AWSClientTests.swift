@@ -266,6 +266,53 @@ class AWSClientTests: XCTestCase {
         XCTAssertNoThrow(try self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 18 * 1024, blockSize: 47 * 1024))
     }
 
+    func testRequestStreamWriter(config: AWSServiceConfig, client: AWSClient, server: AWSTestServer, bufferSize: Int, blockSize: Int) throws {
+        struct Input: AWSEncodableShape & AWSShapeWithPayload {
+            static var _payloadPath: String = "payload"
+            static var _payloadOptions: AWSShapePayloadOptions = [.allowStreaming, .raw]
+            let payload: AWSPayload
+            private enum CodingKeys: CodingKey {}
+        }
+        let data = createRandomBuffer(45, 9182, size: bufferSize)
+        var byteBuffer = ByteBufferAllocator().buffer(capacity: data.count)
+        byteBuffer.writeBytes(data)
+
+        let stream = ChunkedStreamWriter(length: bufferSize, eventLoop: client.eventLoopGroup.next())
+        let input = Input(payload: .streamWriter(stream))
+        let response = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: TestEnvironment.logger)
+        while byteBuffer.readableBytes > 0 {
+            let size = min(blockSize, byteBuffer.readableBytes)
+            let buffer = byteBuffer.readSlice(length: size)!
+            stream.write(.byteBuffer(buffer))
+        }
+        stream.write(.end)
+        
+        try? server.processRaw { request in
+            let bytes = request.body.getBytes(at: 0, length: request.body.readableBytes)
+            XCTAssertEqual(bytes, data)
+            let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
+            return .result(response)
+        }
+
+        try response.wait()
+    }
+
+    func testRequestStreamWriter() {
+        let awsServer = AWSTestServer(serviceProtocol: .json)
+        let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+        let config = createServiceConfig(endpoint: awsServer.address)
+        let client = createAWSClient(credentialProvider: .empty, httpClientProvider: .shared(httpClient))
+        defer {
+            XCTAssertNoThrow(try awsServer.stop())
+            XCTAssertNoThrow(try client.syncShutdown())
+            XCTAssertNoThrow(try httpClient.syncShutdown())
+        }
+
+        XCTAssertNoThrow(try self.testRequestStreamWriter(config: config, client: client, server: awsServer, bufferSize: 128 * 1024, blockSize: 16 * 1024))
+        XCTAssertNoThrow(try self.testRequestStreamWriter(config: config, client: client, server: awsServer, bufferSize: 128 * 1024, blockSize: 17 * 1024))
+        XCTAssertNoThrow(try self.testRequestStreamWriter(config: config, client: client, server: awsServer, bufferSize: 18 * 1024, blockSize: 47 * 1024))
+    }
+
     func testRequestS3Streaming() {
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)

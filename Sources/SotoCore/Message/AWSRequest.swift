@@ -72,6 +72,8 @@ public struct AWSRequest {
             } else {
                 bodyDataForSigning = .unsignedPayload
             }
+        case .streamWriter(_):
+            bodyDataForSigning = .unsignedPayload
         case .empty:
             bodyDataForSigning = nil
         }

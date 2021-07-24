@@ -23,6 +23,7 @@ public struct AWSPayload {
     enum Payload {
         case byteBuffer(ByteBuffer)
         case stream(StreamReader)
+        case streamWriter(StreamWriter)
         case empty
     }
 
@@ -41,6 +42,10 @@ public struct AWSPayload {
         stream: @escaping (EventLoop) -> EventLoopFuture<StreamReaderResult>
     ) -> Self {
         return AWSPayload(payload: .stream(ChunkedStreamReader(size: size, read: stream, byteBufferAllocator: byteBufferAllocator)))
+    }
+
+    public static func streamWriter(_ writer: ChunkedStreamWriter) -> Self {
+        return AWSPayload(payload: .streamWriter(writer))
     }
 
     /// construct an empty payload
@@ -141,6 +146,8 @@ public struct AWSPayload {
             return byteBuffer.readableBytes
         case .stream(let reader):
             return reader.size
+        case .streamWriter(let writer):
+            return writer.length
         case .empty:
             return 0
         }
@@ -181,7 +188,7 @@ public struct AWSPayload {
         switch payload {
         case .byteBuffer(let buffer):
             return buffer.readableBytes == 0
-        case .stream:
+        case .stream, .streamWriter:
             return false
         case .empty:
             return true

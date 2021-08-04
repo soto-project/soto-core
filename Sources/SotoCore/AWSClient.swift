@@ -436,7 +436,7 @@ extension AWSClient {
         serviceConfig: AWSServiceConfig,
         input: Input,
         hostPrefix: String? = nil,
-        context: LoggingContext
+        context: LoggingContext,
         on eventLoop: EventLoop? = nil,
         stream: @escaping AWSHTTPClient.ResponseStream
     ) -> EventLoopFuture<Output> {
@@ -552,7 +552,7 @@ extension AWSClient {
         serviceConfig: AWSServiceConfig,
         context: LoggingContext
     ) -> EventLoopFuture<URL> {
-//        let logger = context.logger.attachingRequestId(Self.globalRequestID.add(1), operation: "signURL", service: serviceConfig.service)
+        //        let logger = context.logger.attachingRequestId(Self.globalRequestID.add(1), operation: "signURL", service: serviceConfig.service)
         return createSigner(serviceConfig: serviceConfig, context: context).flatMapThrowing { signer in
             guard let cleanURL = signer.processURL(url: url) else {
                 throw AWSClient.ClientError.invalidURL
@@ -579,7 +579,7 @@ extension AWSClient {
         serviceConfig: AWSServiceConfig,
         context: LoggingContext
     ) -> EventLoopFuture<HTTPHeaders> {
-//        let logger = context.logger.attachingRequestId(Self.globalRequestID.add(1), operation: "signHeaders", service: serviceConfig.service)
+        //        let logger = context.logger.attachingRequestId(Self.globalRequestID.add(1), operation: "signHeaders", service: serviceConfig.service)
         return createSigner(serviceConfig: serviceConfig, context: context).flatMapThrowing { signer in
             guard let cleanURL = signer.processURL(url: url) else {
                 throw AWSClient.ClientError.invalidURL
@@ -614,7 +614,7 @@ extension AWSClient {
         // if we can create an AWSResponse and create an error from it return that
         if let awsResponse = try? AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol)
             .applyMiddlewares(serviceConfig.middlewares + middlewares, config: serviceConfig),
-            let error = awsResponse.generateError(serviceConfig: serviceConfig, logLevel: options.errorLogLevel, context: context)
+           let error = awsResponse.generateError(serviceConfig: serviceConfig, logLevel: options.errorLogLevel, context: context)
         {
             return error
         } else {

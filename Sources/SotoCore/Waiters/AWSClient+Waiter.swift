@@ -15,6 +15,7 @@
 import Dispatch
 import Foundation
 import NIO
+import Baggage
 
 // MARK: Waiters
 
@@ -51,7 +52,7 @@ extension AWSClient {
             maxDelayTime: TimeAmount = .seconds(120),
             command: @escaping (
                 Input,
-                Logger,
+                LoggingContext,
                 EventLoop?
             ) -> EventLoopFuture<Output>
         ) {
@@ -64,7 +65,7 @@ extension AWSClient {
         let acceptors: [Acceptor]
         let minDelayTime: TimeAmount
         let maxDelayTime: TimeAmount
-        let command: (Input, Logger, EventLoop?) -> EventLoopFuture<Output>
+        let command: (Input, LoggingContext, EventLoop?) -> EventLoopFuture<Output>
 
         /// Calculate delay until next API call. This calculation comes from the AWS Smithy documentation
         /// https://awslabs.github.io/smithy/1.0/spec/waiters.html#waiter-retries
@@ -102,7 +103,7 @@ extension AWSClient {
         _ input: Input,
         waiter: Waiter<Input, Output>,
         maxWaitTime: TimeAmount? = nil,
-        logger: Logger = AWSClient.loggingDisabled,
+        context: LoggingContext,
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Void> {
         let maxWaitTime = maxWaitTime ?? waiter.maxDelayTime
@@ -111,7 +112,7 @@ extension AWSClient {
         let promise = eventLoop.makePromise(of: Void.self)
 
         func attempt(number: Int) {
-            waiter.command(input, logger, eventLoop)
+            waiter.command(input, context, eventLoop)
                 .whenComplete { result in
                     var acceptorState: WaiterState?
                     for acceptor in waiter.acceptors {
@@ -144,7 +145,7 @@ extension AWSClient {
                         if wait < .seconds(0) {
                             promise.fail(ClientError.waiterTimeout)
                         } else {
-                            logger.trace("Wait \(wait.nanoseconds / 1_000_000)ms")
+                            context.logger.trace("Wait \(wait.nanoseconds / 1_000_000)ms")
                             eventLoop.scheduleTask(in: wait) { attempt(number: number + 1) }
                         }
                     }

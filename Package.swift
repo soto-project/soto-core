@@ -25,7 +25,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/apple/swift-log.git", from: "1.4.0"),
         .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0"..<"3.0.0"),
-         .package(url: "https://github.com/apple/swift-nio.git", from: "2.16.1"),
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.16.1"),
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.7.2"),
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", from: "1.0.0"),
         .package(url: "https://github.com/slashmo/async-http-client.git", .branch("feature/tracing")),
@@ -67,9 +67,9 @@ let package = Package(
         .target(name: "CSotoExpat", dependencies: []),
         .target(name: "INIParser", dependencies: []),
 
-        .testTarget(name: "SotoCryptoTests", dependencies: [
-            .byName(name: "SotoCrypto"),
-        ]),
+            .testTarget(name: "SotoCryptoTests", dependencies: [
+                .byName(name: "SotoCrypto"),
+            ]),
         .testTarget(name: "SotoCoreTests", dependencies: [
             .byName(name: "SotoCore"),
             .byName(name: "SotoTestUtils"),

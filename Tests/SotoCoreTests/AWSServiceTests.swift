@@ -85,7 +85,7 @@ class AWSServiceTests: XCTestCase {
         let serviceConfig = createServiceConfig()
         let service = TestService(client: client, config: serviceConfig)
         let url = URL(string: "https://test.amazonaws.com?test2=true&space=sp%20ace&percent=addi+tion")!
-        let signedURL = try service.signURL(url: url, httpMethod: .GET, expires: .minutes(15)).wait()
+        let signedURL = try service.signURL(url: url, httpMethod: .GET, expires: .minutes(15), context: TestEnvironment.loggingContext).wait()
         // remove signed query params
         let query = try XCTUnwrap(signedURL.query)
         let queryItems = query
@@ -108,7 +108,8 @@ class AWSServiceTests: XCTestCase {
             url: url,
             httpMethod: .GET,
             headers: ["Content-Type": "application/json"],
-            body: .string("Test payload")
+            body: .string("Test payload"),
+            context: TestEnvironment.loggingContext
         ).wait()
         // remove signed query params
         XCTAssertNotNil(headers["Authorization"].first)

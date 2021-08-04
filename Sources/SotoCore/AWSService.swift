@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Baggage
 import struct Foundation.URL
 import NIO
 
@@ -47,9 +48,9 @@ extension AWSService {
         httpMethod: HTTPMethod,
         headers: HTTPHeaders = HTTPHeaders(),
         expires: TimeAmount,
-        logger: Logger = AWSClient.loggingDisabled
+        context: LoggingContext
     ) -> EventLoopFuture<URL> {
-        return self.client.signURL(url: url, httpMethod: httpMethod, headers: headers, expires: expires, serviceConfig: self.config, logger: logger)
+        return self.client.signURL(url: url, httpMethod: httpMethod, headers: headers, expires: expires, serviceConfig: self.config, context: context)
     }
 
     /// Generate signed headers
@@ -66,9 +67,9 @@ extension AWSService {
         httpMethod: HTTPMethod,
         headers: HTTPHeaders = HTTPHeaders(),
         body: AWSPayload = .empty,
-        logger: Logger = AWSClient.loggingDisabled
+        context: LoggingContext
     ) -> EventLoopFuture<HTTPHeaders> {
-        return self.client.signHeaders(url: url, httpMethod: httpMethod, headers: headers, body: body, serviceConfig: self.config, logger: logger)
+        return self.client.signHeaders(url: url, httpMethod: httpMethod, headers: headers, body: body, serviceConfig: self.config, context: context)
     }
 
     /// Return new version of Service with edited parameters

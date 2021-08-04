@@ -27,7 +27,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         let eventLoop = eventLoopGroup.next()
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoop))
-        return (.init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger, options: .init()), eventLoopGroup, httpClient)
+        return (.init(httpClient: httpClient, eventLoop: eventLoop, context: TestEnvironment.loggingContext, options: .init()), eventLoopGroup, httpClient)
     }
 
     func testCredentialProviderStatic() {
@@ -89,10 +89,10 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
         let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
 
-        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger, options: .init()))
+        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, context: TestEnvironment.loggingContext, options: .init()))
 
         var credential: Credential?
-        XCTAssertNoThrow(credential = try provider.getCredential(on: eventLoop, logger: TestEnvironment.logger).wait())
+        XCTAssertNoThrow(credential = try provider.getCredential(on: eventLoop, context: TestEnvironment.loggingContext).wait())
         XCTAssertEqual(credential?.accessKeyId, "AWSACCESSKEYID")
         XCTAssertEqual(credential?.secretAccessKey, "AWSSECRETACCESSKEY")
     }
@@ -118,10 +118,10 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
         let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
 
-        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger, options: .init()))
+        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, context: TestEnvironment.loggingContext, options: .init()))
 
         var credential: Credential?
-        XCTAssertNoThrow(credential = try provider.getCredential(on: eventLoop, logger: TestEnvironment.logger).wait())
+        XCTAssertNoThrow(credential = try provider.getCredential(on: eventLoop, context: TestEnvironment.loggingContext).wait())
         XCTAssertEqual(credential?.accessKeyId, "TESTPROFILE-AWSACCESSKEYID")
         XCTAssertEqual(credential?.secretAccessKey, "TESTPROFILE-AWSSECRETACCESSKEY")
     }
@@ -137,9 +137,9 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
         let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
 
-        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger, options: .init()))
+        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, context: TestEnvironment.loggingContext, options: .init()))
 
-        XCTAssertThrowsError(_ = try provider.getCredential(on: eventLoop, logger: TestEnvironment.logger).wait()) { error in
+        XCTAssertThrowsError(_ = try provider.getCredential(on: eventLoop, context: TestEnvironment.loggingContext).wait()) { error in
             print("\(error)")
             XCTAssertEqual(error as? CredentialProviderError, .noProvider)
         }
@@ -182,7 +182,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
 
         switch sharedCredentials {
         case .assumeRole(let aRoleArn, _, _, let sourceCredentialProvider):
-            let credentials = try sourceCredentialProvider.createProvider(context: context).getCredential(on: context.eventLoop, logger: context.logger).wait()
+            let credentials = try sourceCredentialProvider.createProvider(context: context).getCredential(on: context.eventLoop, context: context.context).wait()
             XCTAssertEqual(credentials.accessKeyId, accessKey)
             XCTAssertEqual(credentials.secretAccessKey, secretKey)
             XCTAssertEqual(aRoleArn, roleArn)
@@ -241,7 +241,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
 
         // Here we use `.custom` provider factory, since we need to inject the testServer endpoint
-        let client = createAWSClient(credentialProvider: .custom { (context) -> CredentialProvider in
+        let client = createAWSClient(credentialProvider: .custom { context -> CredentialProvider in
             ConfigFileCredentialProvider(
                 credentialsFilePath: credentialsFilePath,
                 configFilePath: configFilePath,
@@ -255,7 +255,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         // Retrieve credentials
         let futureCredentials = client.credentialProvider.getCredential(
             on: client.eventLoopGroup.next(),
-            logger: TestEnvironment.logger
+            context: TestEnvironment.loggingContext
         )
         try testServer.processRaw { _ in
             let output = STSAssumeRoleResponse(credentials: stsCredentials)

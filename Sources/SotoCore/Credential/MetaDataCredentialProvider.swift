@@ -20,7 +20,7 @@ import struct Foundation.TimeInterval
 import struct Foundation.TimeZone
 import struct Foundation.URL
 
-import Logging
+import Baggage
 import NIO
 import NIOConcurrencyHelpers
 import NIOHTTP1
@@ -30,12 +30,12 @@ import SotoSignerV4
 protocol MetaDataClient: CredentialProvider {
     associatedtype MetaData: ExpiringCredential & Decodable
 
-    func getMetaData(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<MetaData>
+    func getMetaData(on eventLoop: EventLoop, context: LoggingContext) -> EventLoopFuture<MetaData>
 }
 
 extension MetaDataClient {
-    func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
-        self.getMetaData(on: eventLoop, logger: logger).map { metaData in
+    func getCredential(on eventLoop: EventLoop, context: LoggingContext) -> EventLoopFuture<Credential> {
+        self.getMetaData(on: eventLoop, context: context).map { metaData in
             metaData
         }
     }
@@ -107,8 +107,8 @@ struct ECSMetaDataClient: MetaDataClient {
         self.endpointURL = "\(host)\(relativeURL)"
     }
 
-    func getMetaData(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<ECSMetaData> {
-        return request(url: endpointURL, timeout: 2, on: eventLoop, logger: logger)
+    func getMetaData(on eventLoop: EventLoop, context: LoggingContext) -> EventLoopFuture<ECSMetaData> {
+        return request(url: endpointURL, timeout: 2, on: eventLoop, context: context)
             .flatMapThrowing { response in
                 guard let body = response.body else {
                     throw MetaDataClientError.missingMetaData
@@ -117,9 +117,9 @@ struct ECSMetaDataClient: MetaDataClient {
             }
     }
 
-    private func request(url: String, timeout: TimeInterval, on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<AWSHTTPResponse> {
+    private func request(url: String, timeout: TimeInterval, on eventLoop: EventLoop, context: LoggingContext) -> EventLoopFuture<AWSHTTPResponse> {
         let request = AWSHTTPRequest(url: URL(string: url)!, method: .GET, headers: [:], body: .empty)
-        return httpClient.execute(request: request, timeout: TimeAmount.seconds(2), on: eventLoop, logger: logger)
+        return httpClient.execute(request: request, timeout: TimeAmount.seconds(2), on: eventLoop, context: context)
     }
 }
 
@@ -180,30 +180,30 @@ struct InstanceMetaDataClient: MetaDataClient {
         self.host = host
     }
 
-    func getMetaData(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<InstanceMetaData> {
-        return getToken(on: eventLoop, logger: logger)
+    func getMetaData(on eventLoop: EventLoop, context: LoggingContext) -> EventLoopFuture<InstanceMetaData> {
+        return getToken(on: eventLoop, context: context)
             .map { token in
-                logger.trace("Found IMDSv2 token")
+                context.logger.trace("Found IMDSv2 token")
                 return HTTPHeaders([(Self.TokenHeaderName, token)])
             }
             .flatMapErrorThrowing { _ in
                 // If we didn't find a session key then assume we are running IMDSv1.
                 // (we could be running from a Docker container and the hop count for the PUT
                 // request is still set to 1)
-                logger.trace("Did not find IMDSv2 token, use IMDSv1")
+                context.logger.trace("Did not find IMDSv2 token, use IMDSv1")
                 return HTTPHeaders()
             }
-            .flatMap { (headers) -> EventLoopFuture<(AWSHTTPResponse, HTTPHeaders)> in
+            .flatMap { headers -> EventLoopFuture<(AWSHTTPResponse, HTTPHeaders)> in
                 // next we need to request the rolename
                 self.request(
                     url: self.credentialURL,
                     method: .GET,
                     headers: headers,
                     on: eventLoop,
-                    logger: logger
+                    context: context
                 ).map { ($0, headers) }
             }
-            .flatMapThrowing { (response, headers) -> (String, HTTPHeaders) in
+            .flatMapThrowing { response, headers -> (String, HTTPHeaders) in
                 // the rolename is in the body
                 guard response.status == .ok else {
                     throw MetaDataClientError.unexpectedTokenResponseStatus(status: response.status)
@@ -215,10 +215,10 @@ struct InstanceMetaDataClient: MetaDataClient {
 
                 return (roleName, headers)
             }
-            .flatMap { (roleName, headers) -> EventLoopFuture<AWSHTTPResponse> in
+            .flatMap { roleName, headers -> EventLoopFuture<AWSHTTPResponse> in
                 // request credentials with the rolename
                 let url = self.credentialURL.appendingPathComponent(roleName)
-                return self.request(url: url, headers: headers, on: eventLoop, logger: logger)
+                return self.request(url: url, headers: headers, on: eventLoop, context: context)
             }
             .flatMapThrowing { response in
                 // decode the repsonse payload into the metadata object
@@ -230,13 +230,13 @@ struct InstanceMetaDataClient: MetaDataClient {
             }
     }
 
-    func getToken(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<String> {
+    func getToken(on eventLoop: EventLoop, context: LoggingContext) -> EventLoopFuture<String> {
         return request(
             url: self.tokenURL,
             method: .PUT,
             headers: HTTPHeaders([Self.TokenTimeToLiveHeader]), timeout: .seconds(2),
             on: eventLoop,
-            logger: logger
+            context: context
         ).flatMapThrowing { response in
             guard response.status == .ok else {
                 throw MetaDataClientError.unexpectedTokenResponseStatus(status: response.status)
@@ -255,9 +255,9 @@ struct InstanceMetaDataClient: MetaDataClient {
         headers: HTTPHeaders = .init(),
         timeout: TimeAmount = .seconds(2),
         on eventLoop: EventLoop,
-        logger: Logger
+        context: LoggingContext
     ) -> EventLoopFuture<AWSHTTPResponse> {
         let request = AWSHTTPRequest(url: url, method: method, headers: headers, body: .empty)
-        return httpClient.execute(request: request, timeout: timeout, on: eventLoop, logger: logger)
+        return httpClient.execute(request: request, timeout: timeout, on: eventLoop, context: context)
     }
 }

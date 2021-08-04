@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Baggage
 import struct Foundation.TimeInterval
-import Logging
 import NIO
 import NIOConcurrencyHelpers
 import SotoSignerV4
@@ -33,7 +33,7 @@ public final class RotatingCredentialProvider: CredentialProvider {
     public init(context: CredentialProviderFactory.Context, provider: CredentialProvider, remainingTokenLifetimeForUse: TimeInterval? = nil) {
         self.provider = provider
         self.remainingTokenLifetimeForUse = remainingTokenLifetimeForUse ?? 3 * 60
-        _ = refreshCredentials(on: context.eventLoop, logger: context.logger)
+        _ = refreshCredentials(on: context.eventLoop, context: context.context)
     }
 
     /// Shutdown credential provider
@@ -46,18 +46,18 @@ public final class RotatingCredentialProvider: CredentialProvider {
         }
     }
 
-    public func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
+    public func getCredential(on eventLoop: EventLoop, context: LoggingContext) -> EventLoopFuture<Credential> {
         self.lock.lock()
         let cred = credential
         self.lock.unlock()
 
         switch cred {
         case .none:
-            return self.refreshCredentials(on: eventLoop, logger: logger)
+            return self.refreshCredentials(on: eventLoop, context: context)
         case .some(let cred as ExpiringCredential):
             if cred.isExpiring(within: remainingTokenLifetimeForUse) {
                 // the credentials are expiring... let's refresh
-                return self.refreshCredentials(on: eventLoop, logger: logger)
+                return self.refreshCredentials(on: eventLoop, context: context)
             }
 
             return eventLoop.makeSucceededFuture(cred)
@@ -67,7 +67,7 @@ public final class RotatingCredentialProvider: CredentialProvider {
         }
     }
 
-    private func refreshCredentials(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
+    private func refreshCredentials(on eventLoop: EventLoop, context: LoggingContext) -> EventLoopFuture<Credential> {
         self.lock.lock()
         defer { self.lock.unlock() }
 
@@ -81,15 +81,15 @@ public final class RotatingCredentialProvider: CredentialProvider {
             return future
         }
 
-        logger.debug("Refeshing AWS credentials", metadata: ["aws-credential-provider": .string("\(self)")])
+        context.logger.debug("Refeshing AWS credentials", metadata: ["aws-credential-provider": .string("\(self)")])
 
-        credentialFuture = self.provider.getCredential(on: eventLoop, logger: logger)
-            .map { (credential) -> (Credential) in
+        credentialFuture = self.provider.getCredential(on: eventLoop, context: context)
+            .map { credential -> (Credential) in
                 // update the internal credential locked
                 self.lock.withLock {
                     self.credentialFuture = nil
                     self.credential = credential
-                    logger.debug("AWS credentials ready", metadata: ["aws-credential-provider": .string("\(self)")])
+                    context.logger.debug("AWS credentials ready", metadata: ["aws-credential-provider": .string("\(self)")])
                 }
                 return credential
             }

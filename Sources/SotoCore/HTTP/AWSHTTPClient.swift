@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Baggage
 import Foundation
-import Logging
 import NIO
 import NIOHTTP1
 
@@ -48,10 +48,10 @@ public protocol AWSHTTPClient {
     typealias ResponseStream = (ByteBuffer, EventLoop) -> EventLoopFuture<Void>
 
     /// Execute HTTP request and return a future holding a HTTP Response
-    func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<AWSHTTPResponse>
+    func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop, context: LoggingContext) -> EventLoopFuture<AWSHTTPResponse>
 
     /// Execute an HTTP request with a streamed response
-    func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop, logger: Logger, stream: @escaping ResponseStream) -> EventLoopFuture<AWSHTTPResponse>
+    func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop, context: LoggingContext, stream: @escaping ResponseStream) -> EventLoopFuture<AWSHTTPResponse>
 
     /// This should be called before an HTTP Client can be de-initialised
     func shutdown(queue: DispatchQueue, _ callback: @escaping (Error?) -> Void)
@@ -62,7 +62,7 @@ public protocol AWSHTTPClient {
 
 extension AWSHTTPClient {
     /// Execute an HTTP request with a streamed response
-    public func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop, logger: Logger, stream: @escaping ResponseStream) -> EventLoopFuture<AWSHTTPResponse> {
+    public func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop, context: LoggingContext, stream: @escaping ResponseStream) -> EventLoopFuture<AWSHTTPResponse> {
         preconditionFailure("\(type(of: self)) does not support response streaming")
     }
 }

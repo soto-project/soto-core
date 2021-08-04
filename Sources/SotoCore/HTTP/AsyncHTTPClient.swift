@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Baggage
 import AsyncHTTPClient
-import Logging
 import NIO
 import NIOHTTP1
 
@@ -25,7 +25,7 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
     ///   - timeout: If execution is idle for longer than timeout then throw error
     ///   - eventLoop: eventLoop to run request on
     /// - Returns: EventLoopFuture that will be fulfilled with request response
-    public func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<AWSHTTPResponse> {
+    public func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop, context: LoggingContext) -> EventLoopFuture<AWSHTTPResponse> {
         let requestBody: AsyncHTTPClient.HTTPClient.Body?
         var requestHeaders = request.headers
 
@@ -51,14 +51,14 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
                 request: asyncRequest,
                 eventLoop: .delegate(on: eventLoop),
                 deadline: .now() + timeout,
-                logger: logger
+                context: context
             ).map { $0 }
         } catch {
             return eventLoopGroup.next().makeFailedFuture(error)
         }
     }
 
-    public func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop, logger: Logger, stream: @escaping ResponseStream) -> EventLoopFuture<AWSHTTPResponse> {
+    public func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop, context: LoggingContext, stream: @escaping ResponseStream) -> EventLoopFuture<AWSHTTPResponse> {
         let requestBody: AsyncHTTPClient.HTTPClient.Body?
         if case .byteBuffer(let body) = request.body.payload {
             requestBody = .byteBuffer(body)
@@ -77,8 +77,8 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
                 request: asyncRequest,
                 delegate: delegate,
                 eventLoop: .delegate(on: eventLoop),
-                deadline: .now() + timeout,
-                logger: logger
+                context: context,
+                deadline: .now() + timeout
             ).futureResult
         } catch {
             return eventLoopGroup.next().makeFailedFuture(error)

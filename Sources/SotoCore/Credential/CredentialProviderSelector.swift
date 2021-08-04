@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Logging
+import Baggage
 import NIO
 import NIOConcurrencyHelpers
 import SotoSignerV4
@@ -59,13 +59,13 @@ extension CredentialProviderSelector {
         }.hop(to: eventLoop)
     }
 
-    func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
+    func getCredential(on eventLoop: EventLoop, context: LoggingContext) -> EventLoopFuture<Credential> {
         if let provider = internalProvider {
-            return provider.getCredential(on: eventLoop, logger: logger)
+            return provider.getCredential(on: eventLoop, context: context)
         }
 
         return self.startupPromise.futureResult.hop(to: eventLoop).flatMap { provider in
-            return provider.getCredential(on: eventLoop, logger: logger)
+            return provider.getCredential(on: eventLoop, context: context)
         }
     }
 }

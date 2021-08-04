@@ -252,7 +252,7 @@ class AWSResponseTests: XCTestCase {
 
         var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .json(version: "1.1"), raw: false))
-        let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? ServiceErrorType
+        let error = awsResponse?.generateError(serviceConfig: service, context: TestEnvironment.loggingContext) as? ServiceErrorType
         XCTAssertEqual(error, ServiceErrorType.resourceNotFoundException)
         XCTAssertEqual(error?.message, "Donald Where's Your Troosers?")
         XCTAssertEqual(error?.context?.responseCode, .notFound)
@@ -268,7 +268,7 @@ class AWSResponseTests: XCTestCase {
 
         var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .json(version: "1.1"), raw: false))
-        let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? ServiceErrorType
+        let error = awsResponse?.generateError(serviceConfig: service, context: TestEnvironment.loggingContext) as? ServiceErrorType
         XCTAssertEqual(error, ServiceErrorType.resourceNotFoundException)
         XCTAssertEqual(error?.message, "Donald Where's Your Troosers?")
         XCTAssertEqual(error?.context?.responseCode, .notFound)
@@ -285,7 +285,7 @@ class AWSResponseTests: XCTestCase {
 
         var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .restjson, raw: false))
-        let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? ServiceErrorType
+        let error = awsResponse?.generateError(serviceConfig: service, context: TestEnvironment.loggingContext) as? ServiceErrorType
         XCTAssertEqual(error, ServiceErrorType.resourceNotFoundException)
         XCTAssertEqual(error?.message, "Donald Where's Your Troosers?")
         XCTAssertEqual(error?.context?.responseCode, .notFound)
@@ -303,7 +303,7 @@ class AWSResponseTests: XCTestCase {
 
         var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .restjson, raw: false))
-        let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? ServiceErrorType
+        let error = awsResponse?.generateError(serviceConfig: service, context: TestEnvironment.loggingContext) as? ServiceErrorType
         XCTAssertEqual(error, ServiceErrorType.resourceNotFoundException)
         XCTAssertEqual(error?.message, "Donald Where's Your Troosers?")
         XCTAssertEqual(error?.context?.responseCode, .notFound)
@@ -319,7 +319,7 @@ class AWSResponseTests: XCTestCase {
 
         var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml, raw: false))
-        let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? ServiceErrorType
+        let error = awsResponse?.generateError(serviceConfig: service, context: TestEnvironment.loggingContext) as? ServiceErrorType
         XCTAssertEqual(error, ServiceErrorType.noSuchKey)
         XCTAssertEqual(error?.message, "It doesn't exist")
         XCTAssertEqual(error?.context?.responseCode, .notFound)
@@ -336,7 +336,7 @@ class AWSResponseTests: XCTestCase {
 
         var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .query, raw: false))
-        let error = awsResponse?.generateError(serviceConfig: queryService, logger: TestEnvironment.logger) as? ServiceErrorType
+        let error = awsResponse?.generateError(serviceConfig: queryService, context: TestEnvironment.loggingContext) as? ServiceErrorType
         XCTAssertEqual(error, ServiceErrorType.messageRejected)
         XCTAssertEqual(error?.message, "Don't like it")
         XCTAssertEqual(error?.context?.responseCode, .notFound)
@@ -353,7 +353,7 @@ class AWSResponseTests: XCTestCase {
 
         var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .ec2, raw: false))
-        let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? AWSResponseError
+        let error = awsResponse?.generateError(serviceConfig: service, context: TestEnvironment.loggingContext) as? AWSResponseError
         XCTAssertEqual(error?.errorCode, "NoSuchKey")
         XCTAssertEqual(error?.message, "It doesn't exist")
         XCTAssertEqual(error?.context?.responseCode, .notFound)
@@ -370,7 +370,7 @@ class AWSResponseTests: XCTestCase {
 
         var awsResponse: AWSResponse?
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .ec2, raw: false))
-        let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? AWSResponseError
+        let error = awsResponse?.generateError(serviceConfig: service, context: TestEnvironment.loggingContext) as? AWSResponseError
         XCTAssertEqual(error?.context?.additionalFields["fault"], "client")
     }
 

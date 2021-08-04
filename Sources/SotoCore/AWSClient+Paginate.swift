@@ -37,16 +37,16 @@ extension AWSClient {
     ///   - inputKey: The name of token in the request object to continue pagination
     ///   - outputKey: The name of token in the response object to continue pagination
     ///   - eventLoop: EventLoop to run this process on
-    ///   - logger: Logger used for logging
+    ///   - context: LoggingContext used for instrumentation
     ///   - onPage: closure called with each block of entries. It combines an accumulating result with the contents of response from the call to AWS. This combined result is then returned
     ///         along with a boolean indicating if the paginate operation should continue.
     public func paginate<Input: AWSPaginateToken, Output: AWSShape, Result>(
         input: Input,
         initialValue: Result,
-        command: @escaping (Input, Logger, EventLoop?) -> EventLoopFuture<Output>,
+        command: @escaping (Input, LoggingContext, EventLoop?) -> EventLoopFuture<Output>,
         inputKey: KeyPath<Input, Input.Token?>,
         outputKey: KeyPath<Output, Input.Token?>,
-        logger: Logger = AWSClient.loggingDisabled,
+        context: LoggingContext,
         on eventLoop: EventLoop? = nil,
         onPage: @escaping (Result, Output, EventLoop) -> EventLoopFuture<(Bool, Result)>
     ) -> EventLoopFuture<Result> where Input.Token: Equatable {
@@ -54,7 +54,7 @@ extension AWSClient {
         let promise = eventLoop.makePromise(of: Result.self)
 
         func paginatePart(input: Input, currentValue: Result) {
-            let responseFuture = command(input, logger, eventLoop)
+            let responseFuture = command(input, context, eventLoop)
                 .flatMap { response in
                     return onPage(currentValue, response, eventLoop)
                         .map { continuePaginate, result -> Void in
@@ -88,18 +88,18 @@ extension AWSClient {
     ///   - inputKey: The name of token in the request object to continue pagination
     ///   - outputKey: The name of token in the response object to continue pagination
     ///   - eventLoop: EventLoop to run this process on
-    ///   - logger: Logger used for logging
+    ///   - context: LoggingContext used for instrumentation
     ///   - onPage: closure called with each block of entries. Returns boolean indicating whether we should continue.
     public func paginate<Input: AWSPaginateToken, Output: AWSShape>(
         input: Input,
-        command: @escaping (Input, Logger, EventLoop?) -> EventLoopFuture<Output>,
+        command: @escaping (Input, LoggingContext, EventLoop?) -> EventLoopFuture<Output>,
         inputKey: KeyPath<Input, Input.Token?>,
         outputKey: KeyPath<Output, Input.Token?>,
-        logger: Logger = AWSClient.loggingDisabled,
+        context: LoggingContext,
         on eventLoop: EventLoop? = nil,
         onPage: @escaping (Output, EventLoop) -> EventLoopFuture<Bool>
     ) -> EventLoopFuture<Void> where Input.Token: Equatable {
-        self.paginate(input: input, initialValue: (), command: command, inputKey: inputKey, outputKey: outputKey, logger: logger, on: eventLoop) { _, output, eventLoop in
+        self.paginate(input: input, initialValue: (), command: command, inputKey: inputKey, outputKey: outputKey, context: context, on: eventLoop) { _, output, eventLoop in
             return onPage(output, eventLoop).map { rt in (rt, ()) }
         }
     }
@@ -115,15 +115,15 @@ extension AWSClient {
     ///   - command: Command to be paginated
     ///   - tokenKey: The name of token in the response object to continue pagination
     ///   - eventLoop: EventLoop to run this process on
-    ///   - logger: Logger used for logging
+    ///   - context: LoggingContext used for instrumentation
     ///   - onPage: closure called with each block of entries. It combines an accumulating result with the contents of response from the call to AWS. This combined result is then returned
     ///         along with a boolean indicating if the paginate operation should continue.
     public func paginate<Input: AWSPaginateToken, Output: AWSShape, Result>(
         input: Input,
         initialValue: Result,
-        command: @escaping (Input, Logger, EventLoop?) -> EventLoopFuture<Output>,
+        command: @escaping (Input, LoggingContext, EventLoop?) -> EventLoopFuture<Output>,
         tokenKey: KeyPath<Output, Input.Token?>,
-        logger: Logger = AWSClient.loggingDisabled,
+        context: LoggingContext,
         on eventLoop: EventLoop? = nil,
         onPage: @escaping (Result, Output, EventLoop) -> EventLoopFuture<(Bool, Result)>
     ) -> EventLoopFuture<Result> {
@@ -131,7 +131,7 @@ extension AWSClient {
         let promise = eventLoop.makePromise(of: Result.self)
 
         func paginatePart(input: Input, currentValue: Result) {
-            let responseFuture = command(input, logger, eventLoop)
+            let responseFuture = command(input, context, eventLoop)
                 .flatMap { response in
                     return onPage(currentValue, response, eventLoop)
                         .map { continuePaginate, result -> Void in
@@ -162,17 +162,17 @@ extension AWSClient {
     ///   - command: Command to be paginated
     ///   - tokenKey: The name of token in the response object to continue pagination
     ///   - eventLoop: EventLoop to run this process on
-    ///   - logger: Logger used for logging
+    ///   - context: LoggingContext used for instrumentation
     ///   - onPage: closure called with each block of entries. Returns boolean indicating whether we should continue.
     public func paginate<Input: AWSPaginateToken, Output: AWSShape>(
         input: Input,
-        command: @escaping (Input, Logger, EventLoop?) -> EventLoopFuture<Output>,
+        command: @escaping (Input, LoggingContext, EventLoop?) -> EventLoopFuture<Output>,
         tokenKey: KeyPath<Output, Input.Token?>,
-        logger: Logger = AWSClient.loggingDisabled,
+        context: LoggingContext,
         on eventLoop: EventLoop? = nil,
         onPage: @escaping (Output, EventLoop) -> EventLoopFuture<Bool>
     ) -> EventLoopFuture<Void> {
-        self.paginate(input: input, initialValue: (), command: command, tokenKey: tokenKey, logger: logger, on: eventLoop) { _, output, eventLoop in
+        self.paginate(input: input, initialValue: (), command: command, tokenKey: tokenKey, context: context, on: eventLoop) { _, output, eventLoop in
             return onPage(output, eventLoop).map { rt in (rt, ()) }
         }
     }
@@ -195,10 +195,10 @@ extension AWSClient {
     public func paginate<Input: AWSPaginateToken, Output: AWSShape, Result>(
         input: Input,
         initialValue: Result,
-        command: @escaping (Input, Logger, EventLoop?) -> EventLoopFuture<Output>,
+        command: @escaping (Input, LoggingContext, EventLoop?) -> EventLoopFuture<Output>,
         tokenKey: KeyPath<Output, Input.Token?>,
         moreResultsKey: KeyPath<Output, Bool?>,
-        logger: Logger = AWSClient.loggingDisabled,
+        context: LoggingContext,
         on eventLoop: EventLoop? = nil,
         onPage: @escaping (Result, Output, EventLoop) -> EventLoopFuture<(Bool, Result)>
     ) -> EventLoopFuture<Result> {
@@ -206,7 +206,7 @@ extension AWSClient {
         let promise = eventLoop.makePromise(of: Result.self)
 
         func paginatePart(input: Input, currentValue: Result) {
-            let responseFuture = command(input, logger, eventLoop)
+            let responseFuture = command(input, context, eventLoop)
                 .flatMap { response in
                     return onPage(currentValue, response, eventLoop)
                         .map { continuePaginate, result -> Void in
@@ -243,14 +243,14 @@ extension AWSClient {
     ///   - onPage: closure called with each block of entries. Returns boolean indicating whether we should continue.
     public func paginate<Input: AWSPaginateToken, Output: AWSShape>(
         input: Input,
-        command: @escaping (Input, Logger, EventLoop?) -> EventLoopFuture<Output>,
+        command: @escaping (Input, LoggingContext, EventLoop?) -> EventLoopFuture<Output>,
         tokenKey: KeyPath<Output, Input.Token?>,
         moreResultsKey: KeyPath<Output, Bool?>,
-        logger: Logger = AWSClient.loggingDisabled,
+        context: LoggingContext,
         on eventLoop: EventLoop? = nil,
         onPage: @escaping (Output, EventLoop) -> EventLoopFuture<Bool>
     ) -> EventLoopFuture<Void> {
-        self.paginate(input: input, initialValue: (), command: command, tokenKey: tokenKey, moreResultsKey: moreResultsKey, logger: logger, on: eventLoop) { _, output, eventLoop in
+        self.paginate(input: input, initialValue: (), command: command, tokenKey: tokenKey, moreResultsKey: moreResultsKey, context: context, on: eventLoop) { _, output, eventLoop in
             return onPage(output, eventLoop).map { rt in (rt, ()) }
         }
     }
@@ -274,10 +274,10 @@ extension AWSClient {
     public func paginate<Input: AWSPaginateToken, Output: AWSShape, Result>(
         input: Input,
         initialValue: Result,
-        command: @escaping (Input, Logger, EventLoop?) -> EventLoopFuture<Output>,
+        command: @escaping (Input, LoggingContext, EventLoop?) -> EventLoopFuture<Output>,
         tokenKey: KeyPath<Output, Input.Token?>,
         moreResultsKey: KeyPath<Output, Bool>,
-        logger: Logger = AWSClient.loggingDisabled,
+        context: LoggingContext,
         on eventLoop: EventLoop? = nil,
         onPage: @escaping (Result, Output, EventLoop) -> EventLoopFuture<(Bool, Result)>
     ) -> EventLoopFuture<Result> {
@@ -285,7 +285,7 @@ extension AWSClient {
         let promise = eventLoop.makePromise(of: Result.self)
 
         func paginatePart(input: Input, currentValue: Result) {
-            let responseFuture = command(input, logger, eventLoop)
+            let responseFuture = command(input, context, eventLoop)
                 .flatMap { response in
                     return onPage(currentValue, response, eventLoop)
                         .map { continuePaginate, result -> Void in
@@ -323,14 +323,14 @@ extension AWSClient {
     @available(*, deprecated, message: "Deprecated this version of paginate in favour of version that includes the inputKey")
     public func paginate<Input: AWSPaginateToken, Output: AWSShape>(
         input: Input,
-        command: @escaping (Input, Logger, EventLoop?) -> EventLoopFuture<Output>,
+        command: @escaping (Input, LoggingContext, EventLoop?) -> EventLoopFuture<Output>,
         tokenKey: KeyPath<Output, Input.Token?>,
         moreResultsKey: KeyPath<Output, Bool>,
-        logger: Logger = AWSClient.loggingDisabled,
+        context: LoggingContext,
         on eventLoop: EventLoop? = nil,
         onPage: @escaping (Output, EventLoop) -> EventLoopFuture<Bool>
     ) -> EventLoopFuture<Void> {
-        self.paginate(input: input, initialValue: (), command: command, tokenKey: tokenKey, moreResultsKey: moreResultsKey, logger: logger, on: eventLoop) { _, output, eventLoop in
+        self.paginate(input: input, initialValue: (), command: command, tokenKey: tokenKey, moreResultsKey: moreResultsKey, context: context, on: eventLoop) { _, output, eventLoop in
             return onPage(output, eventLoop).map { rt in (rt, ()) }
         }
     }

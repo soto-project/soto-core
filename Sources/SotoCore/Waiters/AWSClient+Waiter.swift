@@ -12,10 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Baggage
 import Dispatch
 import Foundation
 import NIO
-import Baggage
 
 // MARK: Waiters
 

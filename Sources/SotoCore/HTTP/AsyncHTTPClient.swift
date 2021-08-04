@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Baggage
 import AsyncHTTPClient
+import Baggage
 import NIO
 import NIOHTTP1
 

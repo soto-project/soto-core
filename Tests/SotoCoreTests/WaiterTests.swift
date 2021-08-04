@@ -13,11 +13,11 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+import Baggage
 import NIO
 import SotoCore
 import SotoTestUtils
 import XCTest
-import Baggage
 
 class WaiterTests: XCTestCase {
     var awsServer: AWSTestServer!

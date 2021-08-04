@@ -285,7 +285,7 @@ extension AWSClient {
                     configuration: serviceConfig
                 )
             },
-            execute: { request, eventLoop, logger in
+            execute: { request, eventLoop, context in
                 return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, context: context)
             },
             processResponse: { _ in
@@ -324,7 +324,7 @@ extension AWSClient {
                     configuration: serviceConfig
                 )
             },
-            execute: { request, eventLoop, logger in
+            execute: { request, eventLoop, context in
                 return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, context: context)
             },
             processResponse: { _ in
@@ -363,7 +363,7 @@ extension AWSClient {
                     configuration: serviceConfig
                 )
             },
-            execute: { request, eventLoop, logger in
+            execute: { request, eventLoop, context in
                 return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, context: context)
             },
             processResponse: { response in
@@ -407,7 +407,7 @@ extension AWSClient {
                     configuration: serviceConfig
                 )
             },
-            execute: { request, eventLoop, logger in
+            execute: { request, eventLoop, context in
                 return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, context: context)
             },
             processResponse: { response in
@@ -452,7 +452,7 @@ extension AWSClient {
                     configuration: serviceConfig
                 )
             },
-            execute: { request, eventLoop, logger in
+            execute: { request, eventLoop, context in
                 return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, context: context, stream: stream)
             },
             processResponse: { response in
@@ -615,7 +615,7 @@ extension AWSClient {
         // if we can create an AWSResponse and create an error from it return that
         if let awsResponse = try? AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol)
             .applyMiddlewares(serviceConfig.middlewares + middlewares, config: serviceConfig),
-           let error = awsResponse.generateError(serviceConfig: serviceConfig, logLevel: options.errorLogLevel, context: context)
+            let error = awsResponse.generateError(serviceConfig: serviceConfig, logLevel: options.errorLogLevel, context: context)
         {
             return error
         } else {

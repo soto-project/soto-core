@@ -66,10 +66,9 @@ let package = Package(
         ]),
         .target(name: "CSotoExpat", dependencies: []),
         .target(name: "INIParser", dependencies: []),
-
-            .testTarget(name: "SotoCryptoTests", dependencies: [
-                .byName(name: "SotoCrypto"),
-            ]),
+        .testTarget(name: "SotoCryptoTests", dependencies: [
+            .byName(name: "SotoCrypto"),
+        ]),
         .testTarget(name: "SotoCoreTests", dependencies: [
             .byName(name: "SotoCore"),
             .byName(name: "SotoTestUtils"),

@@ -468,7 +468,7 @@ extension AWSClient {
     internal func execute<Output>(
         operation operationName: String,
         createRequest: @escaping () throws -> AWSRequest,
-        execute: @escaping (AWSHTTPRequest, EventLoop, Logger) -> EventLoopFuture<AWSHTTPResponse>,
+        execute: @escaping (AWSHTTPRequest, EventLoop, LoggingContext) -> EventLoopFuture<AWSHTTPResponse>,
         processResponse: @escaping (AWSHTTPResponse) throws -> Output,
         config: AWSServiceConfig,
         context: LoggingContext,
@@ -497,6 +497,7 @@ extension AWSClient {
         operationSpan?.attributes.net.peer.port = peerURLComponents?.port
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         let logger = context.logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName, service: config.service)
+        context.logger = logger
         // get credentials
         let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop, context: context)
             .flatMapThrowing { credential -> AWSHTTPRequest in
@@ -520,7 +521,7 @@ extension AWSClient {
                     with: config,
                     eventLoop: eventLoop,
                     context: context,
-                    request: { eventLoop in execute(request, eventLoop, logger) },
+                    request: { eventLoop in execute(request, eventLoop, context) },
                     processResponse: processResponse,
                     streaming: streaming
                 )

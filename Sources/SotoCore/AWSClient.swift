@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the Soto project authors
+// Copyright (c) 2017-2021 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -198,6 +198,8 @@ public final class AWSClient {
             case invalidURL
             case tooMuchData
             case notEnoughData
+            case waiterFailed
+            case waiterTimeout
         }
 
         let error: Error
@@ -210,6 +212,10 @@ public final class AWSClient {
         public static var tooMuchData: ClientError { .init(error: .tooMuchData) }
         /// Not enough data has been supplied for the Request
         public static var notEnoughData: ClientError { .init(error: .notEnoughData) }
+        /// Waiter failed, but without an error. ie a successful api call was an error
+        public static var waiterFailed: ClientError { .init(error: .waiterFailed) }
+        /// Waiter failed to complete in time alloted
+        public static var waiterTimeout: ClientError { .init(error: .waiterTimeout) }
     }
 
     /// Specifies how `HTTPClient` will be created and establishes lifecycle ownership.
@@ -263,6 +269,7 @@ extension AWSClient {
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         input: Input,
+        hostPrefix: String? = nil,
         context: LoggingContext,
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Void> {
@@ -274,6 +281,7 @@ extension AWSClient {
                     path: path,
                     httpMethod: httpMethod,
                     input: input,
+                    hostPrefix: hostPrefix,
                     configuration: serviceConfig
                 )
             },
@@ -383,6 +391,7 @@ extension AWSClient {
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         input: Input,
+        hostPrefix: String? = nil,
         context: LoggingContext,
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Output> {
@@ -394,6 +403,7 @@ extension AWSClient {
                     path: path,
                     httpMethod: httpMethod,
                     input: input,
+                    hostPrefix: hostPrefix,
                     configuration: serviceConfig
                 )
             },
@@ -425,7 +435,8 @@ extension AWSClient {
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         input: Input,
-        context: LoggingContext,
+        hostPrefix: String? = nil,
+        context: LoggingContext
         on eventLoop: EventLoop? = nil,
         stream: @escaping AWSHTTPClient.ResponseStream
     ) -> EventLoopFuture<Output> {
@@ -437,6 +448,7 @@ extension AWSClient {
                     path: path,
                     httpMethod: httpMethod,
                     input: input,
+                    hostPrefix: hostPrefix,
                     configuration: serviceConfig
                 )
             },
@@ -689,6 +701,10 @@ extension AWSClient.ClientError: CustomStringConvertible {
             return "You have supplied too much data for the Request."
         case .notEnoughData:
             return "You have not supplied enough data for the Request."
+        case .waiterFailed:
+            return "Waiter failed"
+        case .waiterTimeout:
+            return "Waiter failed to complete in time allocated"
         }
     }
 }

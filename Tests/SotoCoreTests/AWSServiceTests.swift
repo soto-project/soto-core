@@ -35,7 +35,7 @@ class AWSServiceTests: XCTestCase {
     }
 
     func testRegion() {
-        let client = createAWSClient()
+        let client = createAWSClient(credentialProvider: .empty)
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let serviceConfig = createServiceConfig(region: .apnortheast2)
         let service = TestService(client: client, config: serviceConfig)
@@ -43,7 +43,7 @@ class AWSServiceTests: XCTestCase {
     }
 
     func testEndpoint() {
-        let client = createAWSClient()
+        let client = createAWSClient(credentialProvider: .empty)
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let serviceConfig = createServiceConfig(endpoint: "https://my-endpoint.com")
         let service = TestService(client: client, config: serviceConfig)
@@ -51,7 +51,7 @@ class AWSServiceTests: XCTestCase {
     }
 
     func testWith() {
-        let client = createAWSClient()
+        let client = createAWSClient(credentialProvider: .empty)
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let serviceConfig = createServiceConfig()
         let service = TestService(client: client, config: serviceConfig)
@@ -62,12 +62,21 @@ class AWSServiceTests: XCTestCase {
 
     func testWithMiddleware() {
         struct TestMiddleware: AWSServiceMiddleware {}
-        let client = createAWSClient()
+        let client = createAWSClient(credentialProvider: .empty)
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let serviceConfig = createServiceConfig()
         let service = TestService(client: client, config: serviceConfig)
         let service2 = service.with(middlewares: [TestMiddleware()])
         XCTAssertNotNil(service2.config.middlewares.first { type(of: $0) == TestMiddleware.self })
+    }
+
+    func testWithRegion() {
+        let client = createAWSClient(credentialProvider: .empty)
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
+        let service = TestService(client: client, config: createServiceConfig(region: .apnortheast2))
+        let service2 = TestService(client: client, config: createServiceConfig(region: .useast1)).with(region: .apnortheast2)
+        XCTAssertEqual(service.region, service2.region)
+        XCTAssertEqual(service.endpoint, service2.endpoint)
     }
 
     func testSignURL() throws {

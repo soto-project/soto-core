@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 // This code takes inspiration from https://github.com/GottaGetSwifty/CodableWrappers
+import JMESPath
 
 /// base protocol for encoder/decoder objects
 public protocol CustomCoder {
@@ -64,6 +65,13 @@ extension CustomCoding: Encodable where Coder: CustomEncoder {
     }
 }
 
+/// extend CustomCoding property wrapper so JMESPath works correctly with it
+extension CustomCoding: JMESPropertyWrapper {
+    public var anyValue: Any {
+        return self.value
+    }
+}
+
 /// Property wrapper that applies a custom encoder and decoder to its wrapped optional value
 @propertyWrapper public struct OptionalCustomCoding<Coder: CustomCoder> {
     var value: Coder.CodableValue?
@@ -90,6 +98,13 @@ extension OptionalCustomCoding: Encodable where Coder: CustomEncoder {
     public func encode(to encoder: Encoder) throws {
         guard let value = self.value else { return }
         try Coder.encode(value: value, to: encoder)
+    }
+}
+
+/// extend OptionalCustomCoding property wrapper so JMESPath works correctly with it
+extension OptionalCustomCoding: JMESPropertyWrapper {
+    public var anyValue: Any {
+        return self.value as Any
     }
 }
 

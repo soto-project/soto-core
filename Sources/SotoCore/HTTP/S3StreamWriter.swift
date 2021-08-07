@@ -52,7 +52,7 @@ class S3StreamWriter: StreamWriterProtocol {
         self.eventLoop = eventLoop
         self.writerPromise = eventLoop.makePromise()
         self.finishedPromise = eventLoop.makePromise()
-        
+
         self.signer = signer
         self.signingData = seedSigningData
         // have separate buffers so we aren't allocating 128k
@@ -78,35 +78,35 @@ class S3StreamWriter: StreamWriterProtocol {
             let bytesRequired = Self.bufferSize - self.workingBuffer.readableBytes
             guard var slice = buffer.readSlice(length: bytesRequired) else {
                 self.workingBuffer.writeBuffer(&buffer)
-                return eventLoop.makeSucceededVoidFuture()
+                return self.eventLoop.makeSucceededVoidFuture()
             }
             self.workingBuffer.writeBuffer(&slice)
-            var writeResult = writeSignedBuffer(self.workingBuffer, to: writer)
+            var writeResult = self.writeSignedBuffer(self.workingBuffer, to: writer)
             self.workingBuffer.clear()
-            
+
             while var slice = buffer.readSlice(length: Self.bufferSize) {
                 self.workingBuffer.writeBuffer(&slice)
-                writeResult = writeSignedBuffer(self.workingBuffer, to: writer)
+                writeResult = self.writeSignedBuffer(self.workingBuffer, to: writer)
                 self.workingBuffer.clear()
             }
-            
+
             self.workingBuffer.writeBuffer(&buffer)
             return writeResult
         case .end:
             // if working buffer still has data write it out
             if self.workingBuffer.readableBytes > 0 {
-                _ = writeSignedBuffer(self.workingBuffer, to: writer)
+                _ = self.writeSignedBuffer(self.workingBuffer, to: writer)
                 self.workingBuffer.clear()
             }
             // write empty buffer
-            _ = writeSignedBuffer(self.workingBuffer, to: writer)
-            
+            _ = self.writeSignedBuffer(self.workingBuffer, to: writer)
+
             self.finishedPromise.succeed(())
             // write end
             return writer.write(result, on: self.eventLoop)
         }
     }
-    
+
     func writeSignedBuffer(_ buffer: ByteBuffer, to writer: ChildStreamWriter) -> EventLoopFuture<Void> {
         // sign header etc
         assert(buffer.readableBytes <= Self.bufferSize)
@@ -114,12 +114,12 @@ class S3StreamWriter: StreamWriterProtocol {
         let header = "\(String(buffer.readableBytes, radix: 16));chunk-signature=\(self.signingData.signature)\r\n"
         self.headerBuffer.clear()
         self.headerBuffer.writeString(header)
-        
+
         self.bytesWritten += self.headerBuffer.readableBytes + buffer.readableBytes + self.tailBuffer.readableBytes
-        
+
         writer.write(.byteBuffer(self.headerBuffer), on: self.eventLoop)
         writer.write(.byteBuffer(buffer), on: self.eventLoop)
-        return writer.write(.byteBuffer(tailBuffer), on: self.eventLoop)
+        return writer.write(.byteBuffer(self.tailBuffer), on: self.eventLoop)
     }
 
     /// Calculate content size for aws chunked data.

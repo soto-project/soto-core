@@ -308,7 +308,7 @@ class AWSClientTests: XCTestCase {
             stream.write(.byteBuffer(buffer))
         }
         stream.write(.end)
-        
+
         try? server.processRaw { request in
             let bytes = request.body.getBytes(at: 0, length: request.body.readableBytes)
             XCTAssertEqual(bytes, data)

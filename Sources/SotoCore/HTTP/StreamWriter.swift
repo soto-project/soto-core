@@ -65,8 +65,9 @@ extension StreamWriterProtocol {
     /// - Parameter result: ByteBuffer or `.end`
     /// - Returns: Returns when EventLoopFuture for when value has been written
     @discardableResult public func write(_ result: StreamWriterResult) -> EventLoopFuture<Void> {
-        return write(result, on: eventLoop)
+        return self.write(result, on: eventLoop).cascadeFailure(to: finishedPromise)
     }
+
     /// Default implementation of updateHeaders returns the same headers back
     func updateHeaders(headers: HTTPHeaders) -> HTTPHeaders { return headers }
     /// Default implementation of `length` returns nil
@@ -114,10 +115,10 @@ public class AWSStreamWriter: StreamWriterProtocol {
     func write(_ result: StreamWriterResult, to writer: ChildStreamWriter) -> EventLoopFuture<Void> {
         switch result {
         case .byteBuffer(let buffer):
-            return writer.write(.byteBuffer(buffer), on: eventLoop).hop(to: eventLoop)
+            return writer.write(.byteBuffer(buffer), on: self.eventLoop).hop(to: self.eventLoop)
         case .end:
             self.finishedPromise.succeed(())
-            return writer.write(result, on: eventLoop).hop(to: eventLoop)
+            return writer.write(result, on: self.eventLoop).hop(to: self.eventLoop)
         }
     }
 }

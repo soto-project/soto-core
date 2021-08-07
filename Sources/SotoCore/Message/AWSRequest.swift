@@ -83,7 +83,7 @@ public struct AWSRequest {
                     length: writer.length!,
                     signer: signer,
                     seedSigningData: seedSigningData,
-                    byteBufferAllocator: ByteBufferAllocator(),
+                    byteBufferAllocator: byteBufferAllocator,
                     eventLoop: writer.eventLoop
                 )
                 writer.setChildWriter(s3Writer)

@@ -357,7 +357,7 @@ class AWSClientTests: XCTestCase {
         XCTAssertNoThrow(try self.testRequestStreamWriter(config: config, client: client, server: awsServer, bufferSize: 65552, blockSize: 65552))
     }
 
-    func testRequestStreamingWithPayload(_ payload: AWSPayload) throws {
+    func testRequestStreamingWithPayload(_ payload: AWSPayload, eventLoopGroupProvider: HTTPClient.EventLoopGroupProvider = .createNew) throws {
         struct Input: AWSEncodableShape & AWSShapeWithPayload {
             static var _payloadPath: String = "payload"
             static var _payloadOptions: AWSShapePayloadOptions = [.allowStreaming]
@@ -407,6 +407,36 @@ class AWSClientTests: XCTestCase {
         }
         XCTAssertThrowsError(try self.testRequestStreamingWithPayload(payload)) { error in
             guard let error = error as? AWSClient.ClientError, error == .notEnoughData else {
+                XCTFail()
+                return
+            }
+        }
+    }
+
+    func testRequestStreamWriterTooMuchData() {
+        let elg = MultiThreadedEventLoopGroup(numberOfThreads: 4)
+        defer { XCTAssertNoThrow(try elg.syncShutdownGracefully()) }
+        // set up stream of 8 bytes but supply more than that
+        let stream = ChunkedStreamWriter(length: 8, eventLoop: elg.next())
+        stream.write(.byteBuffer(ByteBufferAllocator().buffer(string: "String longer than 8 bytes")))
+        stream.write(.end)
+        XCTAssertThrowsError(try self.testRequestStreamingWithPayload(.streamWriter(stream), eventLoopGroupProvider: .shared(elg))) { error in
+            guard let error = error as? HTTPClientError, error == .bodyLengthMismatch else {
+                XCTFail()
+                return
+            }
+        }
+    }
+
+    func testRequestStreamWriterNotEnoughData() {
+        let elg = MultiThreadedEventLoopGroup(numberOfThreads: 4)
+        defer { XCTAssertNoThrow(try elg.syncShutdownGracefully()) }
+        // set up stream of 8 bytes but supply more than that
+        let stream = ChunkedStreamWriter(length: 400, eventLoop: elg.next())
+        stream.write(.byteBuffer(ByteBufferAllocator().buffer(string: "String shorter than 400 bytes")))
+        stream.write(.end)
+        XCTAssertThrowsError(try self.testRequestStreamingWithPayload(.streamWriter(stream), eventLoopGroupProvider: .shared(elg))) { error in
+            guard let error = error as? HTTPClientError, error == .bodyLengthMismatch else {
                 XCTFail()
                 return
             }

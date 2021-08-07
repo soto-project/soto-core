@@ -101,7 +101,6 @@ class S3StreamWriter: StreamWriter {
             // write empty buffer
             _ = writeSignedBuffer(self.workingBuffer, to: writer)
             
-            assert(self.bytesWritten == self.length)
             self.finishedPromise.succeed(())
             // write end
             return writer.write(result, on: self.eventLoop)

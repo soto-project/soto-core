@@ -299,7 +299,7 @@ class AWSClientTests: XCTestCase {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: data.count)
         byteBuffer.writeBytes(data)
 
-        let stream = ChunkedStreamWriter(length: bufferSize, eventLoop: client.eventLoopGroup.next())
+        let stream = AWSStreamWriter(length: bufferSize, eventLoop: client.eventLoopGroup.next())
         let input = Input(payload: .streamWriter(stream))
         let response = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: TestEnvironment.logger)
         while byteBuffer.readableBytes > 0 {
@@ -417,7 +417,7 @@ class AWSClientTests: XCTestCase {
         let elg = MultiThreadedEventLoopGroup(numberOfThreads: 4)
         defer { XCTAssertNoThrow(try elg.syncShutdownGracefully()) }
         // set up stream of 8 bytes but supply more than that
-        let stream = ChunkedStreamWriter(length: 8, eventLoop: elg.next())
+        let stream = AWSStreamWriter(length: 8, eventLoop: elg.next())
         stream.write(.byteBuffer(ByteBufferAllocator().buffer(string: "String longer than 8 bytes")))
         stream.write(.end)
         XCTAssertThrowsError(try self.testRequestStreamingWithPayload(.streamWriter(stream), eventLoopGroupProvider: .shared(elg))) { error in
@@ -432,7 +432,7 @@ class AWSClientTests: XCTestCase {
         let elg = MultiThreadedEventLoopGroup(numberOfThreads: 4)
         defer { XCTAssertNoThrow(try elg.syncShutdownGracefully()) }
         // set up stream of 8 bytes but supply more than that
-        let stream = ChunkedStreamWriter(length: 400, eventLoop: elg.next())
+        let stream = AWSStreamWriter(length: 400, eventLoop: elg.next())
         stream.write(.byteBuffer(ByteBufferAllocator().buffer(string: "String shorter than 400 bytes")))
         stream.write(.end)
         XCTAssertThrowsError(try self.testRequestStreamingWithPayload(.streamWriter(stream), eventLoopGroupProvider: .shared(elg))) { error in

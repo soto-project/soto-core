@@ -23,7 +23,7 @@ public struct AWSPayload {
     enum Payload {
         case byteBuffer(ByteBuffer)
         case stream(StreamReader)
-        case streamWriter(StreamWriter)
+        case streamWriter(StreamWriterProtocol)
         case empty
     }
 
@@ -44,7 +44,7 @@ public struct AWSPayload {
         return AWSPayload(payload: .stream(ChunkedStreamReader(size: size, read: stream, byteBufferAllocator: byteBufferAllocator)))
     }
 
-    public static func streamWriter(_ writer: ChunkedStreamWriter) -> Self {
+    public static func streamWriter(_ writer: AWSStreamWriter) -> Self {
         return AWSPayload(payload: .streamWriter(writer))
     }
 
@@ -140,7 +140,7 @@ public struct AWSPayload {
     }
 
     /// construct a payload from a stream reader object.
-    internal static func streamWriter(_ writer: StreamWriter) -> Self {
+    internal static func streamWriter(_ writer: StreamWriterProtocol) -> Self {
         return AWSPayload(payload: .streamWriter(writer))
     }
 

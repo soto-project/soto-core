@@ -15,7 +15,7 @@
 import NIO
 import SotoSignerV4
 
-class S3StreamWriter: StreamWriter {
+class S3StreamWriter: StreamWriterProtocol {
     /// Working buffer size
     static let bufferSize: Int = 64 * 1024
     static let bufferSizeInHex = String(bufferSize, radix: 16)

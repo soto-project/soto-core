@@ -139,6 +139,11 @@ public struct AWSPayload {
         return AWSPayload(payload: .stream(reader))
     }
 
+    /// construct a payload from a stream reader object.
+    internal static func streamWriter(_ writer: StreamWriter) -> Self {
+        return AWSPayload(payload: .streamWriter(writer))
+    }
+
     /// Return the size of the payload. If the payload is a stream it is always possible to return a size
     public var size: Int? {
         switch payload {

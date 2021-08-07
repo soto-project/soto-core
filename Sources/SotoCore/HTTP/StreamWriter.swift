@@ -97,7 +97,7 @@ public class ChunkedStreamWriter: StreamWriter {
             return writer.write(.byteBuffer(buffer), on: eventLoop).hop(to: eventLoop)
         case .end:
             self.finishedPromise.succeed(())
-            return eventLoop.makeSucceededVoidFuture()
+            return writer.write(result, on: eventLoop).hop(to: eventLoop)
         }
     }
 }

@@ -72,8 +72,25 @@ public struct AWSRequest {
             } else {
                 bodyDataForSigning = .unsignedPayload
             }
-        case .streamWriter(_):
-            bodyDataForSigning = .unsignedPayload
+        case .streamWriter(let writer):
+            if signer.name == "s3" {
+                assert(writer.length != nil, "S3 stream requires size")
+                var headers = httpHeaders
+                // need to add this header here as it needs to be included in the signed headers
+                headers.add(name: "x-amz-decoded-content-length", value: writer.length!.description)
+                let (signedHeaders, seedSigningData) = signer.startSigningChunks(url: url, method: httpMethod, headers: headers, date: Date())
+                let s3Writer = S3StreamWriter(
+                    length: writer.length!,
+                    signer: signer,
+                    seedSigningData: seedSigningData,
+                    byteBufferAllocator: ByteBufferAllocator(),
+                    eventLoop: writer.eventLoop
+                )
+                writer.setChildWriter(s3Writer)
+                return AWSHTTPRequest(url: url, method: httpMethod, headers: signedHeaders, body: .streamWriter(s3Writer))
+            } else {
+                bodyDataForSigning = .unsignedPayload
+            }
         case .empty:
             bodyDataForSigning = nil
         }

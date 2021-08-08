@@ -61,13 +61,6 @@ protocol StreamWriterProtocol: ChildStreamWriter {
 }
 
 extension StreamWriterProtocol {
-    /// Write to stream writer
-    /// - Parameter result: ByteBuffer or `.end`
-    /// - Returns: Returns when EventLoopFuture for when value has been written
-    @discardableResult public func write(_ result: StreamWriterResult) -> EventLoopFuture<Void> {
-        return self.write(result, on: eventLoop).cascadeFailure(to: finishedPromise)
-    }
-
     /// Default implementation of updateHeaders returns the same headers back
     func updateHeaders(headers: HTTPHeaders) -> HTTPHeaders { return headers }
     /// Default implementation of `length` returns nil
@@ -80,7 +73,7 @@ extension StreamWriterProtocol {
     /// Write value to StreamWriter
     @discardableResult func write(_ result: StreamWriterResult, on eventLoop: EventLoop) -> EventLoopFuture<Void> {
         return writerPromise.futureResult.flatMap { writer in
-            write(result, to: writer)
+            self.write(result, to: writer)
         }
     }
 }
@@ -94,11 +87,20 @@ public class AWSStreamWriter: StreamWriterProtocol {
     let writerPromise: EventLoopPromise<ChildStreamWriter>
     let finishedPromise: EventLoopPromise<Void>
 
-    init(length: Int? = nil, eventLoop: EventLoop) {
+    public init(length: Int? = nil, eventLoop: EventLoop) {
         self.length = length
         self.eventLoop = eventLoop
         self.writerPromise = eventLoop.makePromise()
         self.finishedPromise = eventLoop.makePromise()
+    }
+
+    /// Write to stream writer
+    /// - Parameter result: ByteBuffer or `.end`
+    /// - Returns: Returns when EventLoopFuture for when value has been written
+    @discardableResult public func write(_ result: StreamWriterResult) -> EventLoopFuture<Void> {
+        let futureResult = self.write(result, on: self.eventLoop)
+        futureResult.cascadeFailure(to: self.finishedPromise)
+        return futureResult
     }
 
     /// Update headers. Add "Transfer-encoding" header if we don't have a steam size

@@ -67,18 +67,15 @@ final class WaiterAsyncTests: XCTestCase {
         )
         let input = Input()
         XCTRunAsyncAndBlock {
-            try await withThrowingTaskGroup(of: Bool.self) { group in
-                group.async {
-                    try await self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
-                    return true
-                }
-                var i = 0
-                try self.awsServer.process { (_: Input) -> AWSTestServer.Result<ArrayOutput> in
-                    i += 1
-                    return .result(ArrayOutput(array: [.init(i >= 3), .init(i >= 2), .init(i >= 1)]), continueProcessing: i < 3)
-                }
-                _ = try await group.next()
+            async let asyncWait: Void = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+
+            var i = 0
+            try self.awsServer.process { (_: Input) -> AWSTestServer.Result<ArrayOutput> in
+                i += 1
+                return .result(ArrayOutput(array: [.init(i >= 3), .init(i >= 2), .init(i >= 1)]), continueProcessing: i < 3)
             }
+
+            try await asyncWait
         }
     }
 }

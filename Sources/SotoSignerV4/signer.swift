@@ -73,18 +73,26 @@ public struct AWSSigner {
     }
 
     /// Generate signed headers, for a HTTP request
-    public func signHeaders(url: URL, method: HTTPMethod = .GET, headers: HTTPHeaders = HTTPHeaders(), body: BodyData? = nil, date: Date = Date()) -> HTTPHeaders {
+    public func signHeaders(
+        url: URL,
+        method: HTTPMethod = .GET,
+        headers: HTTPHeaders = HTTPHeaders(),
+        body: BodyData? = nil,
+        omitSecurityToken: Bool = false,
+        date: Date = Date()
+    ) -> HTTPHeaders {
         let bodyHash = AWSSigner.hashedPayload(body)
         let dateString = AWSSigner.timestamp(date)
         var headers = headers
         // add date, host, sha256 and if available security token headers
-        headers.replaceOrAdd(name: "X-Amz-Date", value: dateString)
         headers.replaceOrAdd(name: "host", value: Self.hostname(from: url))
+        headers.replaceOrAdd(name: "x-amz-date", value: dateString)
         headers.replaceOrAdd(name: "x-amz-content-sha256", value: bodyHash)
-        if let sessionToken = credentials.sessionToken {
-            headers.replaceOrAdd(name: "x-amz-security-token", value: sessionToken)
+        if !omitSecurityToken {
+            if let sessionToken = credentials.sessionToken {
+                headers.replaceOrAdd(name: "x-amz-security-token", value: sessionToken)
+            }
         }
-
         // construct signing data. Do this after adding the headers as it uses data from the headers
         let signingData = AWSSigner.SigningData(url: url, method: method, headers: headers, body: body, bodyHash: bodyHash, date: dateString, signer: self)
 
@@ -95,7 +103,13 @@ public struct AWSSigner {
             "Signature=\(signature(signingData: signingData))"
 
         // add Authorization header
-        headers.replaceOrAdd(name: "Authorization", value: authorization)
+        headers.replaceOrAdd(name: "authorization", value: authorization)
+        // now we have signed the request we can add the security token if required
+        if omitSecurityToken {
+            if let sessionToken = credentials.sessionToken {
+                headers.replaceOrAdd(name: "x-amz-security-token", value: sessionToken)
+            }
+        }
 
         return headers
     }
@@ -154,8 +168,8 @@ public struct AWSSigner {
         let dateString = AWSSigner.timestamp(date)
         var headers = headers
         // add date, host, sha256 and if available security token headers
-        headers.add(name: "X-Amz-Date", value: dateString)
         headers.add(name: "host", value: Self.hostname(from: url))
+        headers.add(name: "x-amz-date", value: dateString)
         headers.add(name: "x-amz-content-sha256", value: bodyHash)
         if let sessionToken = credentials.sessionToken {
             headers.add(name: "x-amz-security-token", value: sessionToken)
@@ -176,7 +190,7 @@ public struct AWSSigner {
             "Signature=\(signature)"
 
         // add Authorization header
-        headers.add(name: "Authorization", value: authorization)
+        headers.add(name: "authorization", value: authorization)
 
         return (headers: headers, signingData: chunkedSigningData)
     }

@@ -118,7 +118,7 @@ public struct AWSSigner {
         body: BodyData? = nil,
         expires: TimeAmount,
         omitSecurityToken: Bool = false,
-         date: Date = Date()
+        date: Date = Date()
     ) -> URL {
         var headers = headers
         headers.replaceOrAdd(name: "host", value: Self.hostname(from: url))

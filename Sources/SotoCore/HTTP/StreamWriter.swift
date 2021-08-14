@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the Soto project authors
+// Copyright (c) 2017-2021 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -103,13 +103,13 @@ public class AWSStreamWriter: StreamWriterProtocol {
         return futureResult
     }
 
-    /// Update headers. Add "Transfer-encoding" header if we don't have a steam size
+    /// Update headers. Add "transfer-encoding" header if we don't have a steam size
     /// - Parameter headers: headers to update
     func updateHeaders(headers: HTTPHeaders) -> HTTPHeaders {
         var headers = headers
         // add "Transfer-Encoding" header if streaming with unknown size
         if self.length == nil {
-            headers.add(name: "Transfer-Encoding", value: "chunked")
+            headers.add(name: "transfer-encoding", value: "chunked")
         }
         return headers
     }

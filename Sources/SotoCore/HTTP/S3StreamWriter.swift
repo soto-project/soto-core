@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the Soto project authors
+// Copyright (c) 2017-2021 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -63,12 +63,12 @@ class S3StreamWriter: StreamWriterProtocol {
         self.tailBuffer.writeString("\r\n")
     }
 
-    /// Update HTTP headers. Add "Content-encoding" header. The "x-amz-decoded-content-length" header is added earlier in AWSRequest when
+    /// Update HTTP headers. Add "content-encoding" header. The "x-amz-decoded-content-length" header is added earlier in AWSRequest when
     /// initiating the signing process
     /// - Parameter headers: headers to update
     func updateHeaders(headers: HTTPHeaders) -> HTTPHeaders {
         var headers = headers
-        headers.add(name: "Content-Encoding", value: "aws-chunked")
+        headers.add(name: "content-encoding", value: "aws-chunked")
         return headers
     }
 

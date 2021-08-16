@@ -49,10 +49,13 @@ let package = Package(
         .target(name: "SotoCrypto", dependencies: []),
         .target(name: "SotoSignerV4", dependencies: [
             .byName(name: "SotoCrypto"),
+            .product(name: "NIO", package: "swift-nio"),
             .product(name: "NIOHTTP1", package: "swift-nio"),
         ]),
         .target(name: "SotoTestUtils", dependencies: [
             .byName(name: "SotoCore"),
+            .byName(name: "SotoXML"),
+            .product(name: "Logging", package: "swift-log"),
             .product(name: "NIO", package: "swift-nio"),
             .product(name: "NIOHTTP1", package: "swift-nio"),
             .product(name: "NIOFoundationCompat", package: "swift-nio"),

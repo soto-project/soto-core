@@ -33,7 +33,7 @@ public protocol AsyncCredentialProvider: CredentialProvider {
 extension AsyncCredentialProvider {
     public func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
         let promise = eventLoop.makePromise(of: Credential.self)
-        promise.completeWithAsync { try await getCredential(on: eventLoop, logger: logger) }
+        promise.completeWithTask { try await getCredential(on: eventLoop, logger: logger) }
         return promise.futureResult
     }
 }

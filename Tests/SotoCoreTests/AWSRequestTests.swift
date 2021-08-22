@@ -264,6 +264,20 @@ class AWSRequestTests: XCTestCase {
         XCTAssertEqual(element.xmlString, "<Input xmlns=\"https://test.amazonaws.com/doc/2020-03-11/\"><number>5</number></Input>")
     }
 
+    func testServiceXMLNamespace() {
+        struct Input: AWSEncodableShape {
+            let number: Int
+        }
+        let input = Input(number: 5)
+        let xmlConfig = createServiceConfig(serviceProtocol: .restxml, xmlNamespace: "https://test.amazonaws.com/doc/2020-03-11/")
+        var request: AWSRequest?
+        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: xmlConfig))
+        guard case .xml(let element) = request?.body else {
+            return XCTFail("Shouldn't get here")
+        }
+        XCTAssertEqual(element.xmlString, "<Input xmlns=\"https://test.amazonaws.com/doc/2020-03-11/\"><number>5</number></Input>")
+    }
+
     func testCreateWithPayloadAndXMLNamespace() {
         struct Payload: AWSEncodableShape {
             public static let _xmlNamespace: String? = "https://test.amazonaws.com/doc/2020-03-11/"

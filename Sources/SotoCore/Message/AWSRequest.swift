@@ -220,7 +220,7 @@ extension AWSRequest {
                         if let encoding = Input.getEncoding(for: payload), case .body(let locationName) = encoding.location {
                             rootName = locationName
                         }
-                        body = .xml(try shape.encodeAsXML(rootName: rootName))
+                        body = .xml(try shape.encodeAsXML(rootName: rootName, namespace: configuration.xmlNamespace))
                     default:
                         preconditionFailure("Cannot add this as a payload")
                     }
@@ -230,7 +230,7 @@ extension AWSRequest {
             } else {
                 // only include the body if there are members that are output in the body.
                 if memberVariablesCount > 0 {
-                    body = .xml(try input.encodeAsXML())
+                    body = .xml(try input.encodeAsXML(namespace: configuration.xmlNamespace))
                 }
             }
 

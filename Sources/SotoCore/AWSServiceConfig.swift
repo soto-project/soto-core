@@ -32,6 +32,8 @@ public final class AWSServiceConfig {
     public let endpoint: String
     /// An array of the possible error types returned by the service
     public let errorType: AWSErrorType.Type?
+    /// XML namespace to be applied to all request objects
+    public let xmlNamespace: String?
     /// Middleware code specific to the service used to edit requests before they sent and responses before they are decoded
     public let middlewares: [AWSServiceMiddleware]
     /// timeout value for HTTP requests
@@ -58,7 +60,8 @@ public final class AWSServiceConfig {
     ///   - endpoint: Custom endpoint URL to use instead of standard AWS servers
     ///   - serviceEndpoints: Dictionary of endpoints to URLs
     ///   - partitionEndpoints: Default endpoint to use, if no region endpoint is supplied
-    ///   - possibleErrorTypes: Array of possible error types that the client can throw
+    ///   - errorType: Array of possible error types that the client can throw
+    ///   - xmlNamespace: XML Namespace to be applied to request objects
     ///   - middlewares: Array of middlewares to apply to requests and responses
     ///   - timeout: Time out value for HTTP requests
     ///   - byteBufferAllocator: byte buffer allocator used throughout AWSClient
@@ -75,6 +78,7 @@ public final class AWSServiceConfig {
         serviceEndpoints: [String: String] = [:],
         partitionEndpoints: [AWSPartition: (endpoint: String, region: Region)] = [:],
         errorType: AWSErrorType.Type? = nil,
+        xmlNamespace: String? = nil,
         middlewares: [AWSServiceMiddleware] = [],
         timeout: TimeAmount? = nil,
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
@@ -98,6 +102,7 @@ public final class AWSServiceConfig {
         self.amzTarget = amzTarget
         self.serviceProtocol = serviceProtocol
         self.errorType = errorType
+        self.xmlNamespace = xmlNamespace
         self.middlewares = middlewares
         self.timeout = timeout ?? .seconds(20)
         self.byteBufferAllocator = byteBufferAllocator
@@ -225,6 +230,7 @@ public final class AWSServiceConfig {
         self.serviceEndpoints = service.serviceEndpoints
         self.partitionEndpoints = service.partitionEndpoints
         self.errorType = service.errorType
+        self.xmlNamespace = service.xmlNamespace
         self.middlewares = service.middlewares + patch.middlewares
         self.timeout = patch.timeout ?? service.timeout
         self.byteBufferAllocator = patch.byteBufferAllocator ?? service.byteBufferAllocator

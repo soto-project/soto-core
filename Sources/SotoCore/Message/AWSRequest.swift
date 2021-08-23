@@ -13,11 +13,13 @@
 //===----------------------------------------------------------------------===//
 
 import struct Foundation.CharacterSet
+import struct Foundation.Data
 import struct Foundation.Date
 import struct Foundation.URL
 import struct Foundation.URLComponents
 import NIOCore
 import NIOHTTP1
+import SotoCrypto
 import SotoSignerV4
 
 /// Object encapsulating all the information needed to generate a raw HTTP request to AWS
@@ -280,6 +282,14 @@ extension AWSRequest {
             throw AWSClient.ClientError.invalidURL
         }
 
+        /// MD5 checksum
+        if Input._options.contains(.md5ChecksumRequired),
+           let buffer = body.asByteBuffer(byteBufferAllocator: configuration.byteBufferAllocator),
+           headers["content-md5"].first == nil,
+           let md5 = Self.calculateMD5(buffer) {
+            headers.add(name: "content-md5", value: md5)
+        }
+        
         self.region = configuration.region
         self.url = url
         self.serviceProtocol = configuration.serviceProtocol
@@ -333,6 +343,14 @@ extension AWSRequest {
         guard case .stream(let reader) = payload.payload else { return }
         precondition(input._options.contains(.allowStreaming), "\(operation) does not allow streaming of data")
         precondition(reader.size != nil || input._options.contains(.allowChunkedStreaming), "\(operation) does not allow chunked streaming of data. Please supply a data size.")
+    }
+    
+    private static func calculateMD5(_ byteBuffer: ByteBuffer) -> String? {
+        // if request has a body, calculate the MD5 for that body
+        let byteBufferView = byteBuffer.readableBytesView
+        return byteBufferView.withContiguousStorageIfAvailable({ bytes in
+            return Data(Insecure.MD5.hash(data: bytes)).base64EncodedString()
+        })
     }
 }
 

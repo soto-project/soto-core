@@ -204,6 +204,8 @@ public struct AWSShapeOptions: OptionSet {
     public static let allowChunkedStreaming = AWSShapeOptions(rawValue: 1 << 1)
     /// Payload is raw data
     public static let rawPayload = AWSShapeOptions(rawValue: 1 << 2)
+    /// Calculate MD5 of body is required
+    public static let md5ChecksumRequired = AWSShapeOptions(rawValue: 1 << 3)
 }
 
 /// Root AWSShape which include a payload

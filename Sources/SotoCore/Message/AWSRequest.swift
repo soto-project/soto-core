@@ -331,8 +331,8 @@ extension AWSRequest {
     /// verify  streaming is allowed for this operation
     internal static func verifyStream(operation: String, payload: AWSPayload, input: AWSShapeWithPayload.Type) {
         guard case .stream(let reader) = payload.payload else { return }
-        precondition(input._payloadOptions.contains(.allowStreaming), "\(operation) does not allow streaming of data")
-        precondition(reader.size != nil || input._payloadOptions.contains(.allowChunkedStreaming), "\(operation) does not allow chunked streaming of data. Please supply a data size.")
+        precondition(input._options.contains(.allowStreaming), "\(operation) does not allow streaming of data")
+        precondition(reader.size != nil || input._options.contains(.allowChunkedStreaming), "\(operation) does not allow chunked streaming of data. Please supply a data size.")
     }
 }
 

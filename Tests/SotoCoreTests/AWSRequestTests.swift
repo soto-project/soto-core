@@ -456,4 +456,19 @@ class AWSRequestTests: XCTestCase {
         XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))
         XCTAssertEqual(request?.httpHeaders["Content-MD5"].first, "Set already")
     }
+
+    func testHeaderPrefix() {
+        struct Input: AWSEncodableShape {
+            static let _encoding: [AWSMemberEncoding] = [
+                .init(label: "content", location: .headerPrefix(prefix: "x-aws-metadata-")),
+            ]
+            let content: [String: String]
+        }
+        let input = Input(content: ["one": "first", "two": "second"])
+        let config = createServiceConfig(region: .useast2, service: "myservice")
+        var request: AWSRequest?
+        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))
+        XCTAssertEqual(request?.httpHeaders["x-aws-metadata-one"].first, "first")
+        XCTAssertEqual(request?.httpHeaders["x-aws-metadata-two"].first, "second")
+    }
 }

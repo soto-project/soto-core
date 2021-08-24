@@ -374,6 +374,53 @@ class AWSResponseTests: XCTestCase {
         XCTAssertEqual(error?.context?.additionalFields["fault"], "client")
     }
 
+    func testHeaderPrefixFromDictionary() {
+        struct Output: AWSDecodableShape {
+            static let _encoding: [AWSMemberEncoding] = [
+                .init(label: "content", location: .headerPrefix(prefix: "prefix-")),
+            ]
+            let content: [String: String]
+            private enum CodingKeys: String, CodingKey {
+                case content = "prefix-"
+            }
+        }
+        let response = AWSHTTPResponseImpl(
+            status: .ok,
+            headers: ["prefix-one": "first", "prefix-two": "second"]
+        )
+        var awsResponse: AWSResponse?
+        var output: Output?
+        XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml))
+        XCTAssertNoThrow(output = try awsResponse?.generateOutputShape(operation: "Test"))
+        XCTAssertEqual(output?.content["one"], "first")
+        XCTAssertEqual(output?.content["two"], "second")
+    }
+
+    func testHeaderPrefixFromXML() {
+        struct Output: AWSDecodableShape {
+            static let _encoding: [AWSMemberEncoding] = [
+                .init(label: "content", location: .headerPrefix(prefix: "prefix-")),
+            ]
+            let content: [String: String]
+            let body: String
+            private enum CodingKeys: String, CodingKey {
+                case body
+                case content = "prefix-"
+            }
+        }
+        let response = AWSHTTPResponseImpl(
+            status: .ok,
+            headers: ["prefix-one": "first", "prefix-two": "second"],
+            bodyData: Data("<Output><body>Hello</body></Output>".utf8)
+        )
+        var awsResponse: AWSResponse?
+        var output: Output?
+        XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml))
+        XCTAssertNoThrow(output = try awsResponse?.generateOutputShape(operation: "Test"))
+        XCTAssertEqual(output?.content["one"], "first")
+        XCTAssertEqual(output?.content["two"], "second")
+    }
+
     // MARK: Miscellaneous tests
 
     func testProcessHAL() {

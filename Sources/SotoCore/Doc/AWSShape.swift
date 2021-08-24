@@ -30,7 +30,7 @@ extension AWSShape {
     }
 
     public static var _options: AWSShapeOptions { .init() }
-    
+
     /// return member with provided name
     public static func getEncoding(for: String) -> AWSMemberEncoding? {
         return _encoding.first { $0.label == `for` }
@@ -42,6 +42,18 @@ extension AWSShape {
         for member in _encoding {
             guard let location = member.location else { continue }
             if case .header(let name) = location {
+                params[name] = member.label
+            }
+        }
+        return params
+    }
+
+    /// return list of member variables serialized in the headers with a prefix
+    static var headerPrefixParams: [String: String] {
+        var params: [String: String] = [:]
+        for member in _encoding {
+            guard let location = member.location else { continue }
+            if case .headerPrefix(let name) = location {
                 params[name] = member.label
             }
         }

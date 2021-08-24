@@ -432,13 +432,13 @@ class AWSRequestTests: XCTestCase {
     func testMD5Checksum() {
         struct Input: AWSEncodableShape {
             static let _options: AWSShapeOptions = .md5ChecksumRequired
-            let q: [String: Int]
+            let q: [String]
         }
-        let input = Input(q: ["one": 1, "two": 2])
+        let input = Input(q: ["one", "two", "three", "four"])
         let config = createServiceConfig(region: .useast2, service: "myservice")
         var request: AWSRequest?
         XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))
-        XCTAssertEqual(request?.httpHeaders["Content-MD5"].first, "TrOJRaZGSdR6p5yTPZ/CDg==")
+        XCTAssertEqual(request?.httpHeaders["Content-MD5"].first, "3W1MVcXgkODdv+m6VeZqdQ==")
     }
 
     func testMD5ChecksumSetAlready() {

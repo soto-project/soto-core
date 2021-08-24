@@ -24,7 +24,7 @@ public struct AWSResponse {
     /// response status
     public let status: HTTPResponseStatus
     /// response headers
-    public var headers: [String: Any]
+    public var headers: HTTPHeaders
     /// response body
     public var body: Body
 
@@ -37,12 +37,12 @@ public struct AWSResponse {
         self.status = response.status
 
         // headers
-        var responseHeaders: [String: String] = [:]
+        /*var responseHeaders: [String: String] = [:]
         for (key, value) in response.headers {
             // use lowercase for all headers
             responseHeaders[key.lowercased()] = value
-        }
-        self.headers = responseHeaders
+        }*/
+        self.headers = response.headers
 
         // body
         guard let body = response.body,
@@ -176,12 +176,7 @@ public struct AWSResponse {
         for (key, value) in self.headers {
             let headerParams = Output.headerParams
             if let index = headerParams.firstIndex(where: { $0.key.lowercased() == key.lowercased() }) {
-                // check we can convert to a String. If not just put value straight into output dictionary
-                if let stringValue = value as? String {
-                    dictionary[headerParams[index].key] = HTTPHeaderDecodable(stringValue)
-                } else {
-                    dictionary[headerParams[index].key] = value
-                }
+                dictionary[headerParams[index].key] = HTTPHeaderDecodable(value)
             }
         }
         for param in Output.headerPrefixParams {
@@ -189,11 +184,7 @@ public struct AWSResponse {
             for (key, value) in self.headers {
                 guard key.lowercased().hasPrefix(param.key.lowercased()) else { continue }
                 let shortKey = String(key.dropFirst(param.key.count))
-                if let stringValue = value as? String {
-                    valuesDict[shortKey] = HTTPHeaderDecodable(stringValue)
-                } else {
-                    valuesDict[shortKey] = value
-                }
+                valuesDict[shortKey] = HTTPHeaderDecodable(value)
             }
             if valuesDict.count > 0 {
                 dictionary[param.key] = valuesDict
@@ -208,8 +199,7 @@ public struct AWSResponse {
         for (key, value) in self.headers {
             let headerParams = Output.headerParams
             if let index = headerParams.firstIndex(where: { $0.key.lowercased() == key.lowercased() }) {
-                guard let stringValue = value as? String else { continue }
-                let node = XML.Element(name: headerParams[index].key, stringValue: stringValue)
+                let node = XML.Element(name: headerParams[index].key, stringValue: value)
                 rootElement.addChild(node)
             }
         }
@@ -217,9 +207,8 @@ public struct AWSResponse {
             let parentNode = XML.Element(name: param.key)
             rootElement.addChild(parentNode)
             for (key, value) in self.headers {
-                guard let stringValue = value as? String else { continue }
                 guard key.hasPrefix(param.key) else { continue }
-                let entryNode = XML.Element(name: String(key.dropFirst(param.key.count)), stringValue: stringValue)
+                let entryNode = XML.Element(name: String(key.dropFirst(param.key.count)), stringValue: value)
                 parentNode.addChild(entryNode)
             }
         }
@@ -233,7 +222,7 @@ public struct AWSResponse {
             guard case .json(let data) = self.body else { break }
             apiError = try? JSONDecoder().decode(RESTJSONError.self, from: data)
             if apiError?.code == nil {
-                apiError?.code = self.headers["x-amzn-errortype"] as? String
+                apiError?.code = self.headers["x-amzn-errortype"].first
             }
 
         case .json:
@@ -278,7 +267,7 @@ public struct AWSResponse {
             let context = AWSErrorContext(
                 message: errorMessage.message,
                 responseCode: self.status,
-                headers: .init(headers.map { ($0.key, String(describing: $0.value)) }),
+                headers: self.headers,
                 additionalFields: errorMessage.additionalFields
             )
 

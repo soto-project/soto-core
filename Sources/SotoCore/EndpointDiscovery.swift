@@ -98,11 +98,13 @@ public class EndpointStorage {
 public struct EndpointDiscovery {
     let storage: EndpointStorage
     let discover: (Logger, EventLoop) -> EventLoopFuture<AWSEndpoints>
+    let isRequired: Bool
     var endpoint: String? { storage.endpoint }
     
-    public init(storage: EndpointStorage, discover: @escaping (Logger, EventLoop) -> EventLoopFuture<AWSEndpoints>) {
+    public init(storage: EndpointStorage, discover: @escaping (Logger, EventLoop) -> EventLoopFuture<AWSEndpoints>, required: Bool) {
         self.storage = storage
         self.discover = discover
+        self.isRequired = required
     }
     
     /// Will endpoint expire within a certain time

@@ -49,10 +49,7 @@ class EndpointDiscoveryTests: XCTestCase {
             self.getEndpointsCalledCount = 0
         }
         
-        struct TestRequest: AWSEncodableShape {
-            static let _options: AWSShapeOptions = [.endpointDiscovery]
-        }
-        struct GetEndpointsRequest: AWSEncodableShape {}
+        struct TestRequest: AWSEncodableShape { }
         
         public func getEndpoints(logger: Logger, on eventLoop: EventLoop) -> EventLoopFuture<AWSEndpoints> {
             self.getEndpointsCalledCount += 1
@@ -68,7 +65,7 @@ class EndpointDiscoveryTests: XCTestCase {
                 httpMethod: .GET,
                 serviceConfig: self.config,
                 input: input,
-                endpointDiscovery: .init(storage: self.endpointStorage, discover: getEndpoints),
+                endpointDiscovery: .init(storage: self.endpointStorage, discover: getEndpoints, required: true),
                 logger: logger,
                 on: eventLoop
             )
@@ -87,7 +84,7 @@ class EndpointDiscoveryTests: XCTestCase {
                 path: "/test",
                 httpMethod: .GET,
                 serviceConfig: self.config,
-                endpointDiscovery: .init(storage: self.endpointStorage, discover: getEndpointsDontCache),
+                endpointDiscovery: .init(storage: self.endpointStorage, discover: getEndpointsDontCache, required: true),
                 logger: logger,
                 on: eventLoop
             )

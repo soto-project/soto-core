@@ -26,7 +26,7 @@ extension AWSClient {
     ///     - eventLoop: Optional EventLoop to run everything on
     /// - returns:
     ///     Future containing output object that completes when response is received
-    public func execute(
+    @discardableResult public func execute(
         operation operationName: String,
         path: String,
         httpMethod: HTTPMethod,
@@ -36,28 +36,21 @@ extension AWSClient {
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Void> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
-        // get endpoint
-        if endpointDiscovery.isExpiring(within: 5*60) {
-            return endpointDiscovery.getEndpoint(logger: logger, on: eventLoop).flatMap { endpoint in
+        return execute(
+            execute: { endpoint in
                 return self.execute(
                     operation: operationName,
                     path: path,
                     httpMethod: httpMethod,
-                    serviceConfig: serviceConfig.with(patch: .init(endpoint: endpoint)),
+                    serviceConfig: endpoint.map{ serviceConfig.with(patch: .init(endpoint: $0)) } ?? serviceConfig,
                     logger: logger,
                     on: eventLoop
                 )
-            }
-        } else {
-            return self.execute(
-                operation: operationName,
-                path: path,
-                httpMethod: httpMethod,
-                serviceConfig: serviceConfig.with(patch: .init(endpoint: endpointDiscovery.endpoint)),
-                logger: logger,
-                on: eventLoop
-            )
-        }
+            },
+            endpointDiscovery: endpointDiscovery,
+            eventLoop: eventLoop,
+            logger: logger
+        )
     }
 
     /// Execute a request with an input object and return a future with the output object generated from the response
@@ -85,32 +78,23 @@ extension AWSClient {
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Void> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
-        // get endpoint
-        if endpointDiscovery.isExpiring(within: 5*60) {
-            return endpointDiscovery.getEndpoint(logger: logger, on: eventLoop).flatMap { endpoint in
+        return execute(
+            execute: { endpoint in
                 return self.execute(
                     operation: operationName,
                     path: path,
                     httpMethod: httpMethod,
-                    serviceConfig: serviceConfig.with(patch: .init(endpoint: endpoint)),
+                    serviceConfig: endpoint.map{ serviceConfig.with(patch: .init(endpoint: $0)) } ?? serviceConfig,
                     input: input,
                     hostPrefix: hostPrefix,
                     logger: logger,
                     on: eventLoop
                 )
-            }
-        } else {
-            return self.execute(
-                operation: operationName,
-                path: path,
-                httpMethod: httpMethod,
-                serviceConfig: serviceConfig.with(patch: .init(endpoint: endpointDiscovery.endpoint)),
-                input: input,
-                hostPrefix: hostPrefix,
-                logger: logger,
-                on: eventLoop
-            )
-        }
+            },
+            endpointDiscovery: endpointDiscovery,
+            eventLoop: eventLoop,
+            logger: logger
+        )
     }
     
     /// Execute an empty request and return a future with the output object generated from the response
@@ -124,7 +108,7 @@ extension AWSClient {
     ///     - eventLoop: Optional EventLoop to run everything on
     /// - returns:
     ///     Future containing output object that completes when response is received
-    public func execute<Output: AWSDecodableShape>(
+    @discardableResult public func execute<Output: AWSDecodableShape>(
         operation operationName: String,
         path: String,
         httpMethod: HTTPMethod,
@@ -134,28 +118,21 @@ extension AWSClient {
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
-        // get endpoint
-        if endpointDiscovery.isExpiring(within: 5*60) {
-            return endpointDiscovery.getEndpoint(logger: logger, on: eventLoop).flatMap { endpoint in
+        return execute(
+            execute: { endpoint in
                 return self.execute(
                     operation: operationName,
                     path: path,
                     httpMethod: httpMethod,
-                    serviceConfig: serviceConfig.with(patch: .init(endpoint: endpoint)),
+                    serviceConfig: endpoint.map{ serviceConfig.with(patch: .init(endpoint: $0)) } ?? serviceConfig,
                     logger: logger,
                     on: eventLoop
                 )
-            }
-        } else {
-            return self.execute(
-                operation: operationName,
-                path: path,
-                httpMethod: httpMethod,
-                serviceConfig: serviceConfig.with(patch: .init(endpoint: endpointDiscovery.endpoint)),
-                logger: logger,
-                on: eventLoop
-            )
-        }
+            },
+            endpointDiscovery: endpointDiscovery,
+            eventLoop: eventLoop,
+            logger: logger
+        )
     }
 
     /// Execute a request with an input object and return a future with the output object generated from the response
@@ -183,31 +160,52 @@ extension AWSClient {
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
-        // get endpoint
-        if endpointDiscovery.isExpiring(within: 5*60) {
-            return endpointDiscovery.getEndpoint(logger: logger, on: eventLoop).flatMap { endpoint in
+        return execute(
+            execute: { endpoint in
                 return self.execute(
                     operation: operationName,
                     path: path,
                     httpMethod: httpMethod,
-                    serviceConfig: serviceConfig.with(patch: .init(endpoint: endpoint)),
+                    serviceConfig: endpoint.map{ serviceConfig.with(patch: .init(endpoint: $0)) } ?? serviceConfig,
                     input: input,
                     hostPrefix: hostPrefix,
                     logger: logger,
                     on: eventLoop
                 )
+            },
+            endpointDiscovery: endpointDiscovery,
+            eventLoop: eventLoop,
+            logger: logger
+        )
+    }
+    
+    fileprivate func execute<Output>(
+        execute: @escaping (String?) -> EventLoopFuture<Output>,
+        endpointDiscovery: EndpointDiscovery,
+        eventLoop: EventLoop,
+        logger: Logger
+    ) -> EventLoopFuture<Output> {
+        // get endpoint
+        if endpointDiscovery.isExpiring(within: 3*60) {
+            let endPointFuture = endpointDiscovery.getEndpoint(logger: logger, on: eventLoop)
+            logger.trace("Request endpoint")
+            endPointFuture.whenComplete { result in
+                switch result {
+                case .failure(let error):
+                    logger.debug("Error requesting endpoint", metadata: ["aws-error-message": "\(error)"])
+                case .success(let endpoint):
+                    logger.trace("Received endpoint \(endpoint)")
+                }
+            }
+            if endpointDiscovery.isRequired {
+                return endPointFuture.flatMap { endpoint in
+                    return execute(endpoint)
+                }
+            } else {
+                return execute(nil)
             }
         } else {
-            return self.execute(
-                operation: operationName,
-                path: path,
-                httpMethod: httpMethod,
-                serviceConfig: serviceConfig.with(patch: .init(endpoint: endpointDiscovery.endpoint)),
-                input: input,
-                hostPrefix: hostPrefix,
-                logger: logger,
-                on: eventLoop
-            )
+            return execute(endpointDiscovery.endpoint)
         }
     }
 }

@@ -82,7 +82,7 @@ public struct AWSSigner {
     ) -> HTTPHeaders {
         return signHeaders(url: url, method: method, headers: headers, body: body, omitSecurityToken: false, date: date)
     }
-    
+
     /// Generate signed headers, for a HTTP request
     public func signHeaders(
         url: URL,

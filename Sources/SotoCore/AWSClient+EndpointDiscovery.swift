@@ -36,17 +36,18 @@ extension AWSClient {
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Void> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
-        return execute(
+        return self.execute(
             execute: { endpoint in
                 return self.execute(
                     operation: operationName,
                     path: path,
                     httpMethod: httpMethod,
-                    serviceConfig: endpoint.map{ serviceConfig.with(patch: .init(endpoint: $0)) } ?? serviceConfig,
+                    serviceConfig: endpoint.map { serviceConfig.with(patch: .init(endpoint: $0)) } ?? serviceConfig,
                     logger: logger,
                     on: eventLoop
                 )
             },
+            isDisabled: serviceConfig.options.contains(.disableEndpointDiscovery),
             endpointDiscovery: endpointDiscovery,
             eventLoop: eventLoop,
             logger: logger
@@ -78,25 +79,26 @@ extension AWSClient {
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Void> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
-        return execute(
+        return self.execute(
             execute: { endpoint in
                 return self.execute(
                     operation: operationName,
                     path: path,
                     httpMethod: httpMethod,
-                    serviceConfig: endpoint.map{ serviceConfig.with(patch: .init(endpoint: $0)) } ?? serviceConfig,
+                    serviceConfig: endpoint.map { serviceConfig.with(patch: .init(endpoint: $0)) } ?? serviceConfig,
                     input: input,
                     hostPrefix: hostPrefix,
                     logger: logger,
                     on: eventLoop
                 )
             },
+            isDisabled: serviceConfig.options.contains(.disableEndpointDiscovery),
             endpointDiscovery: endpointDiscovery,
             eventLoop: eventLoop,
             logger: logger
         )
     }
-    
+
     /// Execute an empty request and return a future with the output object generated from the response
     /// - parameters:
     ///     - operationName: Name of the AWS operation
@@ -118,17 +120,18 @@ extension AWSClient {
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
-        return execute(
+        return self.execute(
             execute: { endpoint in
                 return self.execute(
                     operation: operationName,
                     path: path,
                     httpMethod: httpMethod,
-                    serviceConfig: endpoint.map{ serviceConfig.with(patch: .init(endpoint: $0)) } ?? serviceConfig,
+                    serviceConfig: endpoint.map { serviceConfig.with(patch: .init(endpoint: $0)) } ?? serviceConfig,
                     logger: logger,
                     on: eventLoop
                 )
             },
+            isDisabled: serviceConfig.options.contains(.disableEndpointDiscovery),
             endpointDiscovery: endpointDiscovery,
             eventLoop: eventLoop,
             logger: logger
@@ -160,25 +163,26 @@ extension AWSClient {
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
-        return execute(
+        return self.execute(
             execute: { endpoint in
                 return self.execute(
                     operation: operationName,
                     path: path,
                     httpMethod: httpMethod,
-                    serviceConfig: endpoint.map{ serviceConfig.with(patch: .init(endpoint: $0)) } ?? serviceConfig,
+                    serviceConfig: endpoint.map { serviceConfig.with(patch: .init(endpoint: $0)) } ?? serviceConfig,
                     input: input,
                     hostPrefix: hostPrefix,
                     logger: logger,
                     on: eventLoop
                 )
             },
+            isDisabled: serviceConfig.options.contains(.disableEndpointDiscovery),
             endpointDiscovery: endpointDiscovery,
             eventLoop: eventLoop,
             logger: logger
         )
     }
-    
+
     /// Execute a request with an input object and return a future with the output object generated from the response
     /// - parameters:
     ///     - operationName: Name of the AWS operation
@@ -202,13 +206,13 @@ extension AWSClient {
         stream: @escaping AWSHTTPClient.ResponseStream
     ) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
-        return execute(
+        return self.execute(
             execute: { endpoint in
                 return self.execute(
                     operation: operationName,
                     path: path,
                     httpMethod: httpMethod,
-                    serviceConfig: endpoint.map{ serviceConfig.with(patch: .init(endpoint: $0)) } ?? serviceConfig,
+                    serviceConfig: endpoint.map { serviceConfig.with(patch: .init(endpoint: $0)) } ?? serviceConfig,
                     input: input,
                     hostPrefix: hostPrefix,
                     logger: logger,
@@ -216,20 +220,23 @@ extension AWSClient {
                     stream: stream
                 )
             },
+            isDisabled: serviceConfig.options.contains(.disableEndpointDiscovery),
             endpointDiscovery: endpointDiscovery,
             eventLoop: eventLoop,
             logger: logger
         )
     }
 
-    fileprivate func execute<Output>(
+    private func execute<Output>(
         execute: @escaping (String?) -> EventLoopFuture<Output>,
+        isDisabled: Bool,
         endpointDiscovery: EndpointDiscovery,
         eventLoop: EventLoop,
         logger: Logger
     ) -> EventLoopFuture<Output> {
+        guard !isDisabled else { return execute(nil) }
         // get endpoint
-        if endpointDiscovery.isExpiring(within: 3*60) {
+        if endpointDiscovery.isExpiring(within: 3 * 60) {
             let endPointFuture = endpointDiscovery.getEndpoint(logger: logger, on: eventLoop)
             logger.trace("Request endpoint")
             endPointFuture.whenComplete { result in

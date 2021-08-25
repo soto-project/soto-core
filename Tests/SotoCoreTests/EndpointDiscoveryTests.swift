@@ -17,47 +17,46 @@ import SotoTestUtils
 import XCTest
 
 class EndpointDiscoveryTests: XCTestCase {
-    
     class Service: AWSService {
-        
         let client: AWSClient
         let config: AWSServiceConfig
         let endpointStorage: EndpointStorage
         let endpointToDiscover: String
         var getEndpointsCalledCount: Int
-        
+
         required init(from: EndpointDiscoveryTests.Service, patch: AWSServiceConfig.Patch) {
             self.client = from.client
             self.config = from.config.with(patch: patch)
-            self.endpointStorage = from.endpointStorage
-            self.endpointToDiscover =  from.endpointToDiscover
+            self.endpointStorage = EndpointStorage(endpoint: self.config.endpoint)
+            self.endpointToDiscover = from.endpointToDiscover
             self.getEndpointsCalledCount = from.getEndpointsCalledCount
         }
-        
+
         /// init
-        init(client: AWSClient, endpoint: String) {
+        init(client: AWSClient, endpoint: String? = nil, endpointToDiscover: String = "") {
             self.client = client
             self.config = .init(
                 region: .euwest1,
                 partition: .aws,
                 service: "Test",
                 serviceProtocol: .restjson,
-                apiVersion: "2021-08-08"
+                apiVersion: "2021-08-08",
+                endpoint: endpoint
             )
             self.endpointStorage = EndpointStorage(endpoint: self.config.endpoint)
-            self.endpointToDiscover = endpoint
+            self.endpointToDiscover = endpointToDiscover
             self.getEndpointsCalledCount = 0
         }
-        
-        struct TestRequest: AWSEncodableShape { }
-        
+
+        struct TestRequest: AWSEncodableShape {}
+
         public func getEndpoints(logger: Logger, on eventLoop: EventLoop) -> EventLoopFuture<AWSEndpoints> {
             self.getEndpointsCalledCount += 1
             return eventLoop.scheduleTask(in: .milliseconds(200)) {
                 return AWSEndpoints(endpoints: [.init(address: self.endpointToDiscover, cachePeriodInMinutes: 60)])
             }.futureResult
         }
-        
+
         @discardableResult public func test(_ input: TestRequest, logger: Logger = AWSClient.loggingDisabled, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Void> {
             return self.client.execute(
                 operation: "Test",
@@ -65,32 +64,32 @@ class EndpointDiscoveryTests: XCTestCase {
                 httpMethod: .GET,
                 serviceConfig: self.config,
                 input: input,
-                endpointDiscovery: .init(storage: self.endpointStorage, discover: getEndpoints, required: true),
+                endpointDiscovery: .init(storage: self.endpointStorage, discover: self.getEndpoints, required: true),
                 logger: logger,
                 on: eventLoop
             )
         }
-        
+
         public func getEndpointsDontCache(logger: Logger, on eventLoop: EventLoop) -> EventLoopFuture<AWSEndpoints> {
             self.getEndpointsCalledCount += 1
             return eventLoop.scheduleTask(in: .milliseconds(200)) {
                 return AWSEndpoints(endpoints: [.init(address: self.endpointToDiscover, cachePeriodInMinutes: 0)])
             }.futureResult
         }
-        
+
         @discardableResult public func testDontCache(logger: Logger = AWSClient.loggingDisabled, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Void> {
             return self.client.execute(
                 operation: "Test",
                 path: "/test",
                 httpMethod: .GET,
                 serviceConfig: self.config,
-                endpointDiscovery: .init(storage: self.endpointStorage, discover: getEndpointsDontCache, required: true),
+                endpointDiscovery: .init(storage: self.endpointStorage, discover: self.getEndpointsDontCache, required: true),
                 logger: logger,
                 on: eventLoop
             )
         }
     }
-    
+
     func testCachingEndpointDiscovery() throws {
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let client = AWSClient(httpClientProvider: .createNew)
@@ -98,7 +97,7 @@ class EndpointDiscoveryTests: XCTestCase {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
         }
-        let service = Service(client: client, endpoint: awsServer.address)
+        let service = Service(client: client, endpointToDiscover: awsServer.address)
         let response = service.test(.init()).flatMap { _ in
             service.test(.init())
         }
@@ -117,7 +116,7 @@ class EndpointDiscoveryTests: XCTestCase {
         try response.wait()
         XCTAssertEqual(service.getEndpointsCalledCount, 1)
     }
-    
+
     func testConcurrentEndpointDiscovery() throws {
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let client = AWSClient(httpClientProvider: .createNew)
@@ -125,7 +124,7 @@ class EndpointDiscoveryTests: XCTestCase {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
         }
-        let service = Service(client: client, endpoint: awsServer.address)
+        let service = Service(client: client, endpointToDiscover: awsServer.address)
         let response1 = service.test(.init())
         let response2 = service.test(.init())
 
@@ -143,7 +142,7 @@ class EndpointDiscoveryTests: XCTestCase {
         _ = try response1.and(response2).wait()
         XCTAssertEqual(service.getEndpointsCalledCount, 1)
     }
-    
+
     func testDontCacheEndpoint() throws {
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let client = AWSClient(httpClientProvider: .createNew)
@@ -151,7 +150,7 @@ class EndpointDiscoveryTests: XCTestCase {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
         }
-        let service = Service(client: client, endpoint: awsServer.address)
+        let service = Service(client: client, endpointToDiscover: awsServer.address)
         let response = service.testDontCache().flatMap { _ in
             service.testDontCache()
         }
@@ -169,5 +168,24 @@ class EndpointDiscoveryTests: XCTestCase {
 
         try response.wait()
         XCTAssertEqual(service.getEndpointsCalledCount, 2)
+    }
+
+    func testDisableEndpointDiscovery() throws {
+        let awsServer = AWSTestServer(serviceProtocol: .json)
+        let client = AWSClient(httpClientProvider: .createNew)
+        defer {
+            XCTAssertNoThrow(try client.syncShutdown())
+            XCTAssertNoThrow(try awsServer.stop())
+        }
+        let service = Service(client: client, endpoint: awsServer.address).with(options: .disableEndpointDiscovery)
+        let response = service.test(.init())
+
+        try awsServer.processRaw { _ in
+            let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
+            return .result(response, continueProcessing: false)
+        }
+
+        try response.wait()
+        XCTAssertEqual(service.getEndpointsCalledCount, 0)
     }
 }

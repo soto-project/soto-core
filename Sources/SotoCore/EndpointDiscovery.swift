@@ -24,6 +24,7 @@ public struct AWSEndpoints {
             self.address = address
             self.cachePeriodInMinutes = cachePeriodInMinutes
         }
+
         /// An endpoint address.
         let address: String
         /// The TTL for the endpoint, in minutes.
@@ -33,7 +34,7 @@ public struct AWSEndpoints {
     public init(endpoints: [Endpoint]) {
         self.endpoints = endpoints
     }
-    
+
     let endpoints: [Endpoint]
 }
 
@@ -47,7 +48,7 @@ public class EndpointStorage {
     var promise: EventLoopPromise<String>?
     /// Lock access to class
     var lock = Lock()
-    
+
     /// Initialize endpoint storage
     /// - Parameter endpoint: Initial endpoint to use
     public init(endpoint: String) {
@@ -61,7 +62,7 @@ public class EndpointStorage {
             return self.expiration.timeIntervalSinceNow < interval
         }
     }
-    
+
     /// Get Endpoint from supplied closure, or wait on promise for Endpoint
     /// - Parameters:
     ///   - discover: Closure used to discover endpoint
@@ -102,13 +103,13 @@ public struct EndpointDiscovery {
     let discover: (Logger, EventLoop) -> EventLoopFuture<AWSEndpoints>
     let isRequired: Bool
     var endpoint: String? { storage.endpoint }
-    
+
     public init(storage: EndpointStorage, discover: @escaping (Logger, EventLoop) -> EventLoopFuture<AWSEndpoints>, required: Bool) {
         self.storage = storage
         self.discover = discover
         self.isRequired = required
     }
-    
+
     /// Will endpoint expire within a certain time
     public func isExpiring(within interval: TimeInterval) -> Bool {
         return self.storage.expiration.timeIntervalSinceNow < interval

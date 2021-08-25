@@ -44,7 +44,7 @@ public final class AWSServiceConfig {
     private let providedEndpoint: String?
     private let serviceEndpoints: [String: String]
     private let partitionEndpoints: [AWSPartition: (endpoint: String, region: Region)]
-    
+
     /// Create a ServiceConfig object
     ///
     /// - Parameters:
@@ -177,6 +177,7 @@ public final class AWSServiceConfig {
 
     /// Options used by client when processing requests
     public struct Options: OptionSet {
+        public typealias RawValue = Int
         public let rawValue: Int
 
         public init(rawValue: RawValue) {
@@ -193,6 +194,9 @@ public final class AWSServiceConfig {
 
         /// Use S3 transfer accelerated endpoint. You need to enable transfer acceleration on the bucket for this to work
         public static let s3UseTransferAcceleratedEndpoint = Options(rawValue: 1 << 2)
+
+        /// Disable endpoint discovery for services
+        public static let disableEndpointDiscovery = Options(rawValue: 1 << 3)
     }
 
     private init(

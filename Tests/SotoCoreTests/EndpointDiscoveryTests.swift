@@ -44,7 +44,7 @@ class EndpointDiscoveryTests: XCTestCase {
                 serviceProtocol: .restjson,
                 apiVersion: "2021-08-08"
             )
-            self.endpointStorage = EndpointStorage()
+            self.endpointStorage = EndpointStorage(endpoint: self.config.endpoint)
             self.endpointToDiscover = endpoint
             self.getEndpointsCalledCount = 0
         }

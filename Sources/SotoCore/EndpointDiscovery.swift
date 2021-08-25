@@ -40,7 +40,7 @@ public struct AWSEndpoints {
 /// Class for storing Endpoint details
 public class EndpointStorage {
     /// endpoint url
-    public var endpoint: String = ""
+    public var endpoint: String
     /// when endpoint expires
     var expiration: Date
     /// promise for endpoint discovery process
@@ -49,8 +49,10 @@ public class EndpointStorage {
     var lock = Lock()
     
     /// Initialize endpoint storage
-    public init() {
+    /// - Parameter endpoint: Initial endpoint to use
+    public init(endpoint: String) {
         self.expiration = Date.distantPast
+        self.endpoint = endpoint
     }
 
     /// Will endpoint expire within a certain time

@@ -179,6 +179,49 @@ extension AWSClient {
         )
     }
     
+    /// Execute a request with an input object and return a future with the output object generated from the response
+    /// - parameters:
+    ///     - operationName: Name of the AWS operation
+    ///     - path: path to append to endpoint URL
+    ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - input: Input object
+    ///     - config: AWS service configuration used in request creation and signing
+    ///     - context: additional context for call
+    /// - returns:
+    ///     Future containing output object that completes when response is received
+    public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(
+        operation operationName: String,
+        path: String,
+        httpMethod: HTTPMethod,
+        serviceConfig: AWSServiceConfig,
+        input: Input,
+        hostPrefix: String? = nil,
+        endpointDiscovery: EndpointDiscovery,
+        logger: Logger = AWSClient.loggingDisabled,
+        on eventLoop: EventLoop? = nil,
+        stream: @escaping AWSHTTPClient.ResponseStream
+    ) -> EventLoopFuture<Output> {
+        let eventLoop = eventLoop ?? eventLoopGroup.next()
+        return execute(
+            execute: { endpoint in
+                return self.execute(
+                    operation: operationName,
+                    path: path,
+                    httpMethod: httpMethod,
+                    serviceConfig: endpoint.map{ serviceConfig.with(patch: .init(endpoint: $0)) } ?? serviceConfig,
+                    input: input,
+                    hostPrefix: hostPrefix,
+                    logger: logger,
+                    on: eventLoop,
+                    stream: stream
+                )
+            },
+            endpointDiscovery: endpointDiscovery,
+            eventLoop: eventLoop,
+            logger: logger
+        )
+    }
+
     fileprivate func execute<Output>(
         execute: @escaping (String?) -> EventLoopFuture<Output>,
         endpointDiscovery: EndpointDiscovery,

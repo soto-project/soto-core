@@ -44,7 +44,7 @@ public final class AWSServiceConfig {
     private let providedEndpoint: String?
     private let serviceEndpoints: [String: String]
     private let partitionEndpoints: [AWSPartition: (endpoint: String, region: Region)]
-
+    
     /// Create a ServiceConfig object
     ///
     /// - Parameters:
@@ -152,6 +152,7 @@ public final class AWSServiceConfig {
     /// Service config parameters you can patch
     public struct Patch {
         let region: Region?
+        let endpoint: String?
         let middlewares: [AWSServiceMiddleware]
         let timeout: TimeAmount?
         let byteBufferAllocator: ByteBufferAllocator?
@@ -159,12 +160,14 @@ public final class AWSServiceConfig {
 
         init(
             region: Region? = nil,
+            endpoint: String? = nil,
             middlewares: [AWSServiceMiddleware] = [],
             timeout: TimeAmount? = nil,
             byteBufferAllocator: ByteBufferAllocator? = nil,
             options: AWSServiceConfig.Options? = nil
         ) {
             self.region = region
+            self.endpoint = endpoint
             self.middlewares = middlewares
             self.timeout = timeout
             self.byteBufferAllocator = byteBufferAllocator
@@ -198,7 +201,7 @@ public final class AWSServiceConfig {
     ) {
         if let region = patch.region {
             self.region = region
-            self.endpoint = Self.getEndpoint(
+            self.endpoint = patch.endpoint ?? Self.getEndpoint(
                 endpoint: service.providedEndpoint,
                 region: region,
                 service: service.service,
@@ -207,7 +210,7 @@ public final class AWSServiceConfig {
             )
         } else {
             self.region = service.region
-            self.endpoint = service.endpoint
+            self.endpoint = patch.endpoint ?? service.endpoint
         }
         self.amzTarget = service.amzTarget
         self.service = service.service

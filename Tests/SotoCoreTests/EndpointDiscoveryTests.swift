@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import NIO
 import SotoCore
 import SotoTestUtils
 import XCTest
@@ -91,19 +92,20 @@ class EndpointDiscoveryTests: XCTestCase {
     }
 
     func testCachingEndpointDiscovery() throws {
-        let awsServer = AWSTestServer(serviceProtocol: .json)
-        let client = AWSClient(httpClientProvider: .createNew)
+        let awsServer = AWSTestServer(serviceProtocol: .restjson)
+        let client = AWSClient(credentialProvider: .empty, httpClientProvider: .createNew)
         defer {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
         }
-        let service = Service(client: client, endpointToDiscover: awsServer.address)
-        let response = service.test(.init()).flatMap { _ in
-            service.test(.init())
+        let service = Service(client: client, endpointToDiscover: awsServer.address).with(middlewares: TestEnvironment.middlewares)
+        let response = service.test(.init(), logger: TestEnvironment.logger).flatMap { _ in
+            service.test(.init(), logger: TestEnvironment.logger)
         }
 
         var count = 0
-        try awsServer.processRaw { _ in
+        try awsServer.processRaw { request in
+            TestEnvironment.logger.info("\(request)")
             let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
             count += 1
             if count > 1 {
@@ -119,17 +121,18 @@ class EndpointDiscoveryTests: XCTestCase {
 
     func testConcurrentEndpointDiscovery() throws {
         let awsServer = AWSTestServer(serviceProtocol: .json)
-        let client = AWSClient(httpClientProvider: .createNew)
+        let client = AWSClient(credentialProvider: .empty, httpClientProvider: .createNew)
         defer {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
         }
-        let service = Service(client: client, endpointToDiscover: awsServer.address)
-        let response1 = service.test(.init())
-        let response2 = service.test(.init())
+        let service = Service(client: client, endpointToDiscover: awsServer.address).with(middlewares: TestEnvironment.middlewares)
+        let response1 = service.test(.init(), logger: TestEnvironment.logger)
+        let response2 = service.test(.init(), logger: TestEnvironment.logger)
 
         var count = 0
-        try awsServer.processRaw { _ in
+        try awsServer.processRaw { request in
+            TestEnvironment.logger.info("\(request)")
             let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
             count += 1
             if count > 1 {
@@ -145,18 +148,19 @@ class EndpointDiscoveryTests: XCTestCase {
 
     func testDontCacheEndpoint() throws {
         let awsServer = AWSTestServer(serviceProtocol: .json)
-        let client = AWSClient(httpClientProvider: .createNew)
+        let client = AWSClient(credentialProvider: .empty, httpClientProvider: .createNew)
         defer {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
         }
-        let service = Service(client: client, endpointToDiscover: awsServer.address)
-        let response = service.testDontCache().flatMap { _ in
-            service.testDontCache()
+        let service = Service(client: client, endpointToDiscover: awsServer.address).with(middlewares: TestEnvironment.middlewares)
+        let response = service.testDontCache(logger: TestEnvironment.logger).flatMap { _ in
+            service.testDontCache(logger: TestEnvironment.logger)
         }
 
         var count = 0
-        try awsServer.processRaw { _ in
+        try awsServer.processRaw { request in
+            TestEnvironment.logger.info("\(request)")
             let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
             count += 1
             if count > 1 {
@@ -172,15 +176,17 @@ class EndpointDiscoveryTests: XCTestCase {
 
     func testDisableEndpointDiscovery() throws {
         let awsServer = AWSTestServer(serviceProtocol: .json)
-        let client = AWSClient(httpClientProvider: .createNew)
+        let client = AWSClient(credentialProvider: .empty, httpClientProvider: .createNew)
         defer {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
         }
-        let service = Service(client: client, endpoint: awsServer.address).with(options: .disableEndpointDiscovery)
-        let response = service.test(.init())
+        let service = Service(client: client, endpoint: awsServer.address)
+            .with(middlewares: TestEnvironment.middlewares, options: .disableEndpointDiscovery)
+        let response = service.test(.init(), logger: TestEnvironment.logger)
 
-        try awsServer.processRaw { _ in
+        try awsServer.processRaw { request in
+            TestEnvironment.logger.info("\(request)")
             let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
             return .result(response, continueProcessing: false)
         }

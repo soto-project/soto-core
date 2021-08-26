@@ -81,7 +81,8 @@ public class EndpointStorage {
         guard let promise = self.promise else {
             let promise = eventLoop.makePromise(of: String.self)
             let futureResult = discover(logger, eventLoop).map { response -> String in
-                let endpoint = response.endpoints[0]
+                let index = Int.random(in: 0..<response.endpoints.count)
+                let endpoint = response.endpoints[index]
                 self.lock.withLockVoid {
                     self.endpoint = endpoint.address
                     self.expiration = Date(timeIntervalSinceNow: TimeInterval(endpoint.cachePeriodInMinutes * 60))

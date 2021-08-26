@@ -195,8 +195,8 @@ public final class AWSServiceConfig {
         /// Use S3 transfer accelerated endpoint. You need to enable transfer acceleration on the bucket for this to work
         public static let s3UseTransferAcceleratedEndpoint = Options(rawValue: 1 << 2)
 
-        /// Disable endpoint discovery for services
-        public static let disableEndpointDiscovery = Options(rawValue: 1 << 3)
+        /// Enable endpoint discovery for services where it isn't required
+        public static let enableEndpointDiscovery = Options(rawValue: 1 << 3)
     }
 
     private init(

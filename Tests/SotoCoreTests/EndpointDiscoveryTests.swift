@@ -89,6 +89,19 @@ class EndpointDiscoveryTests: XCTestCase {
                 on: eventLoop
             )
         }
+
+        @discardableResult public func testNotRequired(_ input: TestRequest, logger: Logger = AWSClient.loggingDisabled, on eventLoop: EventLoop? = nil) -> EventLoopFuture<Void> {
+            return self.client.execute(
+                operation: "Test",
+                path: "/test",
+                httpMethod: .GET,
+                serviceConfig: self.config,
+                input: input,
+                endpointDiscovery: .init(storage: self.endpointStorage, discover: self.getEndpoints, required: false),
+                logger: logger,
+                on: eventLoop
+            )
+        }
     }
 
     func testCachingEndpointDiscovery() throws {
@@ -182,8 +195,8 @@ class EndpointDiscoveryTests: XCTestCase {
             XCTAssertNoThrow(try awsServer.stop())
         }
         let service = Service(client: client, endpoint: awsServer.address)
-            .with(middlewares: TestEnvironment.middlewares, options: .disableEndpointDiscovery)
-        let response = service.test(.init(), logger: TestEnvironment.logger)
+            .with(middlewares: TestEnvironment.middlewares)
+        let response = service.testNotRequired(.init(), logger: TestEnvironment.logger)
 
         try awsServer.processRaw { request in
             TestEnvironment.logger.info("\(request)")

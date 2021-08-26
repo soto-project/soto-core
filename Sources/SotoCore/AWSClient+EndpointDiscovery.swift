@@ -47,7 +47,7 @@ extension AWSClient {
                     on: eventLoop
                 )
             },
-            isDisabled: serviceConfig.options.contains(.disableEndpointDiscovery),
+            isEnabled: serviceConfig.options.contains(.enableEndpointDiscovery),
             endpointDiscovery: endpointDiscovery,
             eventLoop: eventLoop,
             logger: logger
@@ -92,7 +92,7 @@ extension AWSClient {
                     on: eventLoop
                 )
             },
-            isDisabled: serviceConfig.options.contains(.disableEndpointDiscovery),
+            isEnabled: serviceConfig.options.contains(.enableEndpointDiscovery),
             endpointDiscovery: endpointDiscovery,
             eventLoop: eventLoop,
             logger: logger
@@ -131,7 +131,7 @@ extension AWSClient {
                     on: eventLoop
                 )
             },
-            isDisabled: serviceConfig.options.contains(.disableEndpointDiscovery),
+            isEnabled: serviceConfig.options.contains(.enableEndpointDiscovery),
             endpointDiscovery: endpointDiscovery,
             eventLoop: eventLoop,
             logger: logger
@@ -176,7 +176,7 @@ extension AWSClient {
                     on: eventLoop
                 )
             },
-            isDisabled: serviceConfig.options.contains(.disableEndpointDiscovery),
+            isEnabled: serviceConfig.options.contains(.enableEndpointDiscovery),
             endpointDiscovery: endpointDiscovery,
             eventLoop: eventLoop,
             logger: logger
@@ -220,7 +220,7 @@ extension AWSClient {
                     stream: stream
                 )
             },
-            isDisabled: serviceConfig.options.contains(.disableEndpointDiscovery),
+            isEnabled: serviceConfig.options.contains(.enableEndpointDiscovery),
             endpointDiscovery: endpointDiscovery,
             eventLoop: eventLoop,
             logger: logger
@@ -229,12 +229,12 @@ extension AWSClient {
 
     private func execute<Output>(
         execute: @escaping (String?) -> EventLoopFuture<Output>,
-        isDisabled: Bool,
+        isEnabled: Bool,
         endpointDiscovery: EndpointDiscovery,
         eventLoop: EventLoop,
         logger: Logger
     ) -> EventLoopFuture<Output> {
-        guard !isDisabled else { return execute(nil) }
+        guard isEnabled || endpointDiscovery.isRequired else { return execute(nil) }
         // get endpoint
         if endpointDiscovery.isExpiring(within: 3 * 60) {
             let endPointFuture = endpointDiscovery.getEndpoint(logger: logger, on: eventLoop)

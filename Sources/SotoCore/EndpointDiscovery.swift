@@ -57,7 +57,7 @@ public class EndpointStorage {
     }
 
     /// Will endpoint expire within a certain time
-    public func isExpiring(within interval: TimeInterval) -> Bool {
+    func isExpiring(within interval: TimeInterval) -> Bool {
         lock.withLock {
             return self.expiration.timeIntervalSinceNow < interval
         }
@@ -69,7 +69,7 @@ public class EndpointStorage {
     ///   - logger: Logger
     ///   - eventLoop: EventLoop to run process on
     /// - Returns: EventLoopFuture holding the endpoint
-    public func getEndpoint(
+    func getEndpoint(
         discover: @escaping (Logger, EventLoop) -> EventLoopFuture<AWSEndpoints>,
         logger: Logger,
         on eventLoop: EventLoop
@@ -112,11 +112,11 @@ public struct EndpointDiscovery {
     }
 
     /// Will endpoint expire within a certain time
-    public func isExpiring(within interval: TimeInterval) -> Bool {
+    func isExpiring(within interval: TimeInterval) -> Bool {
         return self.storage.expiration.timeIntervalSinceNow < interval
     }
 
-    public func getEndpoint(logger: Logger, on eventLoop: EventLoop) -> EventLoopFuture<String> {
+    func getEndpoint(logger: Logger, on eventLoop: EventLoop) -> EventLoopFuture<String> {
         return self.storage.getEndpoint(discover: self.discover, logger: logger, on: eventLoop)
     }
 }

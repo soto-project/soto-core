@@ -152,6 +152,7 @@ public final class AWSServiceConfig {
     /// Service config parameters you can patch
     public struct Patch {
         let region: Region?
+        let endpoint: String?
         let middlewares: [AWSServiceMiddleware]
         let timeout: TimeAmount?
         let byteBufferAllocator: ByteBufferAllocator?
@@ -159,12 +160,14 @@ public final class AWSServiceConfig {
 
         init(
             region: Region? = nil,
+            endpoint: String? = nil,
             middlewares: [AWSServiceMiddleware] = [],
             timeout: TimeAmount? = nil,
             byteBufferAllocator: ByteBufferAllocator? = nil,
             options: AWSServiceConfig.Options? = nil
         ) {
             self.region = region
+            self.endpoint = endpoint
             self.middlewares = middlewares
             self.timeout = timeout
             self.byteBufferAllocator = byteBufferAllocator
@@ -174,6 +177,7 @@ public final class AWSServiceConfig {
 
     /// Options used by client when processing requests
     public struct Options: OptionSet {
+        public typealias RawValue = Int
         public let rawValue: Int
 
         public init(rawValue: RawValue) {
@@ -190,6 +194,9 @@ public final class AWSServiceConfig {
 
         /// Use S3 transfer accelerated endpoint. You need to enable transfer acceleration on the bucket for this to work
         public static let s3UseTransferAcceleratedEndpoint = Options(rawValue: 1 << 2)
+
+        /// Enable endpoint discovery for services where it isn't required
+        public static let enableEndpointDiscovery = Options(rawValue: 1 << 3)
     }
 
     private init(
@@ -198,7 +205,7 @@ public final class AWSServiceConfig {
     ) {
         if let region = patch.region {
             self.region = region
-            self.endpoint = Self.getEndpoint(
+            self.endpoint = patch.endpoint ?? Self.getEndpoint(
                 endpoint: service.providedEndpoint,
                 region: region,
                 service: service.service,
@@ -207,7 +214,7 @@ public final class AWSServiceConfig {
             )
         } else {
             self.region = service.region
-            self.endpoint = service.endpoint
+            self.endpoint = patch.endpoint ?? service.endpoint
         }
         self.amzTarget = service.amzTarget
         self.service = service.service

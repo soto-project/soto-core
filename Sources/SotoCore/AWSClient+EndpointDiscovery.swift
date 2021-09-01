@@ -31,7 +31,7 @@ extension AWSClient {
         path: String,
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
-        endpointDiscovery: EndpointDiscovery,
+        endpointDiscovery: AWSEndpointDiscovery,
         logger: Logger = AWSClient.loggingDisabled,
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Void> {
@@ -74,7 +74,7 @@ extension AWSClient {
         serviceConfig: AWSServiceConfig,
         input: Input,
         hostPrefix: String? = nil,
-        endpointDiscovery: EndpointDiscovery,
+        endpointDiscovery: AWSEndpointDiscovery,
         logger: Logger = AWSClient.loggingDisabled,
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Void> {
@@ -115,7 +115,7 @@ extension AWSClient {
         path: String,
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
-        endpointDiscovery: EndpointDiscovery,
+        endpointDiscovery: AWSEndpointDiscovery,
         logger: Logger = AWSClient.loggingDisabled,
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Output> {
@@ -158,7 +158,7 @@ extension AWSClient {
         serviceConfig: AWSServiceConfig,
         input: Input,
         hostPrefix: String? = nil,
-        endpointDiscovery: EndpointDiscovery,
+        endpointDiscovery: AWSEndpointDiscovery,
         logger: Logger = AWSClient.loggingDisabled,
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Output> {
@@ -200,7 +200,7 @@ extension AWSClient {
         serviceConfig: AWSServiceConfig,
         input: Input,
         hostPrefix: String? = nil,
-        endpointDiscovery: EndpointDiscovery,
+        endpointDiscovery: AWSEndpointDiscovery,
         logger: Logger = AWSClient.loggingDisabled,
         on eventLoop: EventLoop? = nil,
         stream: @escaping AWSHTTPClient.ResponseStream
@@ -230,7 +230,7 @@ extension AWSClient {
     private func execute<Output>(
         execute: @escaping (String?) -> EventLoopFuture<Output>,
         isEnabled: Bool,
-        endpointDiscovery: EndpointDiscovery,
+        endpointDiscovery: AWSEndpointDiscovery,
         eventLoop: EventLoop,
         logger: Logger
     ) -> EventLoopFuture<Output> {

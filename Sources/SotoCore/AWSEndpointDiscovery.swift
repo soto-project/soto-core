@@ -39,7 +39,7 @@ public struct AWSEndpoints {
 }
 
 /// Class for storing Endpoint details
-public class EndpointStorage {
+public class AWSEndpointStorage {
     /// endpoint url
     public var endpoint: String
     /// when endpoint expires
@@ -99,13 +99,13 @@ public class EndpointStorage {
 }
 
 /// Helper object holding endpoint storage and closure used to discover endpoint
-public struct EndpointDiscovery {
-    let storage: EndpointStorage
+public struct AWSEndpointDiscovery {
+    let storage: AWSEndpointStorage
     let discover: (Logger, EventLoop) -> EventLoopFuture<AWSEndpoints>
     let isRequired: Bool
     var endpoint: String? { storage.endpoint }
 
-    public init(storage: EndpointStorage, discover: @escaping (Logger, EventLoop) -> EventLoopFuture<AWSEndpoints>, required: Bool) {
+    public init(storage: AWSEndpointStorage, discover: @escaping (Logger, EventLoop) -> EventLoopFuture<AWSEndpoints>, required: Bool) {
         self.storage = storage
         self.discover = discover
         self.isRequired = required

@@ -21,14 +21,14 @@ class EndpointDiscoveryTests: XCTestCase {
     class Service: AWSService {
         let client: AWSClient
         let config: AWSServiceConfig
-        let endpointStorage: EndpointStorage
+        let endpointStorage: AWSEndpointStorage
         let endpointToDiscover: String
         var getEndpointsCalledCount: Int
 
         required init(from: EndpointDiscoveryTests.Service, patch: AWSServiceConfig.Patch) {
             self.client = from.client
             self.config = from.config.with(patch: patch)
-            self.endpointStorage = EndpointStorage(endpoint: self.config.endpoint)
+            self.endpointStorage = AWSEndpointStorage(endpoint: self.config.endpoint)
             self.endpointToDiscover = from.endpointToDiscover
             self.getEndpointsCalledCount = from.getEndpointsCalledCount
         }
@@ -44,7 +44,7 @@ class EndpointDiscoveryTests: XCTestCase {
                 apiVersion: "2021-08-08",
                 endpoint: endpoint
             )
-            self.endpointStorage = EndpointStorage(endpoint: self.config.endpoint)
+            self.endpointStorage = AWSEndpointStorage(endpoint: self.config.endpoint)
             self.endpointToDiscover = endpointToDiscover
             self.getEndpointsCalledCount = 0
         }

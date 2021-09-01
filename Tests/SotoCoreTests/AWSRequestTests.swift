@@ -399,7 +399,7 @@ class AWSRequestTests: XCTestCase {
         ))
         XCTAssertEqual(request?.url.absoluteString, "https://12345678.test.com/")
     }
-    
+
     func testBodyIsEmpty() {
         var body: Body = .empty
         XCTAssertTrue(body.isEmpty)

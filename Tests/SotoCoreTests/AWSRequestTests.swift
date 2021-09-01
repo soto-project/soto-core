@@ -399,4 +399,19 @@ class AWSRequestTests: XCTestCase {
         ))
         XCTAssertEqual(request?.url.absoluteString, "https://12345678.test.com/")
     }
+    
+    func testBodyIsEmpty() {
+        var body: Body = .empty
+        XCTAssertTrue(body.isEmpty)
+        body = .json(ByteBufferAllocator().buffer(string: "{}"))
+        XCTAssertFalse(body.isEmpty)
+        body = .raw(.string("hello"))
+        XCTAssertFalse(body.isEmpty)
+        body = .raw(.byteBuffer(ByteBufferAllocator().buffer(capacity: 0)))
+        XCTAssertTrue(body.isEmpty)
+        body = .text("hello")
+        XCTAssertFalse(body.isEmpty)
+        body = .xml(.init(name: "test"))
+        XCTAssertFalse(body.isEmpty)
+    }
 }

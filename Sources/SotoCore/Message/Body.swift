@@ -97,4 +97,27 @@ extension Body {
         }
         return false
     }
+
+    public var isEmpty: Bool {
+        switch self {
+        case .text(let text):
+            return text.count == 0
+
+        case .raw(let payload):
+            if let buffer = payload.asByteBuffer() {
+                return buffer.readableBytes == 0
+            } else {
+                return false
+            }
+
+        case .json(let buffer):
+            return buffer.readableBytes == 0
+
+        case .xml:
+            return false
+
+        case .empty:
+            return true
+        }
+    }
 }

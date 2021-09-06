@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>HTTPClientProvider Enumeration Reference</title>
+    <title>Endpoint Structure Reference</title>
     <link rel="stylesheet" type="text/css" href="../../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../../css/highlight.css" />
     <meta charset='utf-8'>
@@ -13,8 +13,8 @@
     <script src="../../js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/swift/Enum/HTTPClientProvider" class="dashAnchor"></a>
-    <a title="HTTPClientProvider Enumeration Reference"></a>
+    <a name="//apple_ref/swift/Struct/Endpoint" class="dashAnchor"></a>
+    <a title="Endpoint Structure Reference"></a>
     <header>
       <div class="content-wrapper">
         <p><a href="../../index.html"> Docs</a> (64% documented)</p>
@@ -30,7 +30,7 @@
       <p id="breadcrumbs">
         <a href="../../index.html"> Reference</a>
         <img id="carat" src="../../img/carat.png" />
-        HTTPClientProvider Enumeration Reference
+        Endpoint Structure Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -341,15 +341,15 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>HTTPClientProvider</h1>
+            <h1>Endpoint</h1>
               <div class="declaration">
                 <div class="language">
                   
-                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">HTTPClientProvider</span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">Endpoint</span></code></pre>
 
                 </div>
               </div>
-            <p>Specifies how <code>HTTPClient</code> will be created and establishes lifecycle ownership.</p>
+            <p>Undocumented</p>
 
           </section>
           <section class="section task-group-section">
@@ -358,9 +358,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore9AWSClientC18HTTPClientProviderO6sharedyAeA13AWSHTTPClient_pcAEmF"></a>
-                    <a name="//apple_ref/swift/Element/shared(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore9AWSClientC18HTTPClientProviderO6sharedyAeA13AWSHTTPClient_pcAEmF">shared(_:<wbr>)</a>
+                    <a name="/s:8SotoCore12AWSEndpointsV8EndpointV7address20cachePeriodInMinutesAESS_s5Int64Vtcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(address:cachePeriodInMinutes:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore12AWSEndpointsV8EndpointV7address20cachePeriodInMinutesAESS_s5Int64Vtcfc">init(address:<wbr>cachePeriodInMinutes:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -368,70 +368,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>HTTP Client will be provided by the user. Owner of this group is responsible for its lifecycle. Any HTTPClient that conforms to
-<code><a href="../../Protocols/AWSHTTPClient.html">AWSHTTPClient</a></code> can be specified here including AsyncHTTPClient</p>
+                        <p>Undocumented</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">shared</span><span class="p">(</span><span class="kt"><a href="../../Protocols/AWSHTTPClient.html">AWSHTTPClient</a></span><span class="p">)</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:8SotoCore9AWSClientC18HTTPClientProviderO27createNewWithEventLoopGroupyAE7NIOCore0ijK0_pcAEmF"></a>
-                    <a name="//apple_ref/swift/Element/createNewWithEventLoopGroup(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore9AWSClientC18HTTPClientProviderO27createNewWithEventLoopGroupyAE7NIOCore0ijK0_pcAEmF">createNewWithEventLoopGroup(_:<wbr>)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>HTTP Client will be created by the client using provided EventLoopGroup. When <code>shutdown</code> is called, created <code>HTTPClient</code>
-will be shut down as well.</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">case</span> <span class="nf">createNewWithEventLoopGroup</span><span class="p">(</span><span class="kt">EventLoopGroup</span><span class="p">)</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:8SotoCore9AWSClientC18HTTPClientProviderO9createNewyA2EmF"></a>
-                    <a name="//apple_ref/swift/Element/createNew" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore9AWSClientC18HTTPClientProviderO9createNewyA2EmF">createNew</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>HTTP Client will be created by the client. When <code>shutdown</code> is called, created <code>HTTPClient</code> will be shut down as well.</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">createNew</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">address</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">cachePeriodInMinutes</span><span class="p">:</span> <span class="kt">Int64</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>RotatingCredentialProvider Class Reference</title>
+    <title>AWSEndpoints Structure Reference</title>
     <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
     <meta charset='utf-8'>
@@ -13,8 +13,8 @@
     <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/swift/Class/RotatingCredentialProvider" class="dashAnchor"></a>
-    <a title="RotatingCredentialProvider Class Reference"></a>
+    <a name="//apple_ref/swift/Struct/AWSEndpoints" class="dashAnchor"></a>
+    <a title="AWSEndpoints Structure Reference"></a>
     <header>
       <div class="content-wrapper">
         <p><a href="../index.html"> Docs</a> (64% documented)</p>
@@ -30,7 +30,7 @@
       <p id="breadcrumbs">
         <a href="../index.html"> Reference</a>
         <img id="carat" src="../img/carat.png" />
-        RotatingCredentialProvider Class Reference
+        AWSEndpoints Structure Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -341,19 +341,15 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>RotatingCredentialProvider</h1>
+            <h1>AWSEndpoints</h1>
               <div class="declaration">
                 <div class="language">
                   
-                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">RotatingCredentialProvider</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/CredentialProvider.html">CredentialProvider</a></span></code></pre>
-<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">RotatingCredentialProvider</span><span class="p">:</span> <span class="kt">CustomStringConvertible</span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">AWSEndpoints</span></code></pre>
 
                 </div>
               </div>
-            <p>Used for wrapping another credential provider whose <code>getCredential</code> method returns an <code><a href="../Protocols/ExpiringCredential.html">ExpiringCredential</a></code>.
-If no credential is available, or the current credentials are going to expire in the near future  the wrapped credential provider
-<code>getCredential</code> is called. If current credentials have not expired they are returned otherwise we wait on new
-credentials being provided.</p>
+            <p>Endpoint list</p>
 
           </section>
           <section class="section task-group-section">
@@ -362,9 +358,37 @@ credentials being provided.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore26RotatingCredentialProviderC8providerAA0dE0_pvp"></a>
-                    <a name="//apple_ref/swift/Property/provider" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore26RotatingCredentialProviderC8providerAA0dE0_pvp">provider</a>
+                    <a name="/s:8SotoCore12AWSEndpointsV8EndpointV"></a>
+                    <a name="//apple_ref/swift/Struct/Endpoint" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore12AWSEndpointsV8EndpointV">Endpoint</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                        <a href="../Structs/AWSEndpoints/Endpoint.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">Endpoint</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore12AWSEndpointsV9endpointsACSayAC8EndpointVG_tcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(endpoints:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore12AWSEndpointsV9endpointsACSayAC8EndpointVG_tcfc">init(endpoints:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -379,113 +403,7 @@ credentials being provided.</p>
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">provider</span><span class="p">:</span> <span class="kt"><a href="../Protocols/CredentialProvider.html">CredentialProvider</a></span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:8SotoCore26RotatingCredentialProviderC7context8provider28remainingTokenLifetimeForUseAcA0dE7FactoryV7ContextV_AA0dE0_pSdSgtcfc"></a>
-                    <a name="//apple_ref/swift/Method/init(context:provider:remainingTokenLifetimeForUse:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore26RotatingCredentialProviderC7context8provider28remainingTokenLifetimeForUseAcA0dE7FactoryV7ContextV_AA0dE0_pSdSgtcfc">init(context:<wbr>provider:<wbr>remainingTokenLifetimeForUse:<wbr>)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Undocumented</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Structs/CredentialProviderFactory.html">CredentialProviderFactory</a></span><span class="o">.</span><span class="kt">Context</span><span class="p">,</span> <span class="nv">provider</span><span class="p">:</span> <span class="kt"><a href="../Protocols/CredentialProvider.html">CredentialProvider</a></span><span class="p">,</span> <span class="nv">remainingTokenLifetimeForUse</span><span class="p">:</span> <span class="kt">TimeInterval</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:8SotoCore26RotatingCredentialProviderC8shutdown2on7NIOCore15EventLoopFutureCyytGAF0iJ0_p_tF"></a>
-                    <a name="//apple_ref/swift/Method/shutdown(on:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore26RotatingCredentialProviderC8shutdown2on7NIOCore15EventLoopFutureCyytGAF0iJ0_p_tF">shutdown(on:<wbr>)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Shutdown credential provider</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">shutdown</span><span class="p">(</span><span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Void</span><span class="o">&gt;</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:8SotoCore18CredentialProviderP03getC02on6logger7NIOCore15EventLoopFutureCy0A8SignerV40C0_pGAG0iJ0_p_7Logging6LoggerVtF"></a>
-                    <a name="//apple_ref/swift/Method/getCredential(on:logger:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore18CredentialProviderP03getC02on6logger7NIOCore15EventLoopFutureCy0A8SignerV40C0_pGAG0iJ0_p_7Logging6LoggerVtF">getCredential(on:<wbr>logger:<wbr>)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">getCredential</span><span class="p">(</span><span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">,</span> <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Credential</span><span class="o">&gt;</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:s23CustomStringConvertibleP11descriptionSSvp"></a>
-                    <a name="//apple_ref/swift/Property/description" class="dashAnchor"></a>
-                    <a class="token" href="#/s:s23CustomStringConvertibleP11descriptionSSvp">description</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">description</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">endpoints</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Structs/AWSEndpoints/Endpoint.html">Endpoint</a></span><span class="p">])</span></code></pre>
 
                         </div>
                       </div>

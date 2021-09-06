@@ -15,6 +15,34 @@
       "warning": "undocumented"
     },
     {
+      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/AWSEndpointDiscovery.swift",
+      "line": 22,
+      "symbol": "AWSEndpoints.Endpoint",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/AWSEndpointDiscovery.swift",
+      "line": 23,
+      "symbol": "AWSEndpoints.Endpoint.init(address:cachePeriodInMinutes:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/AWSEndpointDiscovery.swift",
+      "line": 34,
+      "symbol": "AWSEndpoints.init(endpoints:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/AWSEndpointDiscovery.swift",
+      "line": 108,
+      "symbol": "AWSEndpointDiscovery.init(storage:discover:required:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Credential/ConfigFileLoader.swift",
       "line": 25,
       "symbol": "ConfigFile",
@@ -1187,6 +1215,13 @@
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Message/AWSRequest.swift",
       "line": 31,
       "symbol": "AWSRequest.body",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Message/Body.swift",
+      "line": 101,
+      "symbol": "Body.isEmpty",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },

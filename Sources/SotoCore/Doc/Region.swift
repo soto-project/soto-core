@@ -30,7 +30,7 @@ public struct Region: RawRepresentable, Equatable {
     public static var apnortheast1: Region { .init(rawValue: "ap-northeast-1") }
     // Asia Pacific (Seoul)
     public static var apnortheast2: Region { .init(rawValue: "ap-northeast-2") }
-    // Asia Pacific (Osaka Local)
+    // Asia Pacific (Osaka)
     public static var apnortheast3: Region { .init(rawValue: "ap-northeast-3") }
     // Asia Pacific (Mumbai)
     public static var apsouth1: Region { .init(rawValue: "ap-south-1") }

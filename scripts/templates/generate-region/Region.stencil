@@ -30,8 +30,8 @@ public struct Region: RawRepresentable, Equatable {
     public static func other(_ name: String) -> Region { .init(rawValue: name) }
 }
 
-extension Region {
-    public var partition: AWSPartition {
+public extension Region {
+    var partition: AWSPartition {
         switch self {
 {%for region in regions %}
         case .{{region.enum}}: return .{{region.partition}}
@@ -74,8 +74,8 @@ public struct AWSPartition: RawRepresentable, Equatable, Hashable {
 {%endfor %}
 }
 
-extension AWSPartition {
-    public var dnsSuffix: String {
+public extension AWSPartition {
+    var dnsSuffix: String {
         switch self.partition {
 {%for partition in partitions %}
         case .{{partition.name}}: return "{{partition.dnsSuffix}}"
@@ -83,13 +83,12 @@ extension AWSPartition {
         }
     }
 }
-    
+
 // allows to create a Region from a String
 // it will only create a Region if the provided
 // region name is valid.
-extension Region {
-    
-    public init?(awsRegionName: String) {
+public extension Region {
+    init?(awsRegionName: String) {
         self.init(rawValue: awsRegionName)
         switch self {
 {%for region in regions %}
@@ -103,7 +102,7 @@ extension Region {
              .{{region.enum}}:
 {%endif %}
 {%endfor %}
-             return
+            return
         default:
             return nil
         }

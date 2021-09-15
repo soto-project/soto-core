@@ -491,7 +491,7 @@ extension AWSClient {
         var context = context
         context.baggage = operationSpan?.baggage ?? context.baggage
         operationSpan?.attributes["cloud.region"] = config.region.rawValue
-        operationSpan?.attributes["cloud.provider"] = config.region.rawValue
+        operationSpan?.attributes["cloud.provider"] = "aws"
         let peerURLComponents = URLComponents(string: config.endpoint)
         operationSpan?.attributes.net.peer.ip = peerURLComponents?.host
         operationSpan?.attributes.net.peer.port = peerURLComponents?.port

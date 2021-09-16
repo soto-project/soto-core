@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Logging
-import NIO
+import NIOCore
 
 // MARK: Pagination
 

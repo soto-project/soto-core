@@ -13,7 +13,9 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
-import NIO
+import Foundation
+import NIOCore
+import NIOPosix // Needed for NIOConnectionError
 import NIOHTTP1
 
 /// Creates a RetryPolicy for AWSClient to use

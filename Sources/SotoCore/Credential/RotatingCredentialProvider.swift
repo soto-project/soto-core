@@ -14,7 +14,7 @@
 
 import struct Foundation.TimeInterval
 import Logging
-import NIO
+import NIOCore
 import NIOConcurrencyHelpers
 import SotoSignerV4
 

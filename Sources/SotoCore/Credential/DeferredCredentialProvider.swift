@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Logging
-import NIO
+import NIOCore
 import NIOConcurrencyHelpers
 
 /// Used for wrapping another credential provider whose `getCredential` method doesn't return instantly and

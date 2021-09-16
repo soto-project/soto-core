@@ -14,10 +14,11 @@
 
 import AsyncHTTPClient
 import Logging
-import NIO
+import NIOCore
 import NIOConcurrencyHelpers
 import NIOFoundationCompat
 import NIOHTTP1
+import NIOPosix
 @testable import SotoCore
 import SotoTestUtils
 import SotoXML

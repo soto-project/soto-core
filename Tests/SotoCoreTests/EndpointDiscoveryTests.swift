@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIO
+import NIOCore
 import SotoCore
 import SotoTestUtils
 import XCTest

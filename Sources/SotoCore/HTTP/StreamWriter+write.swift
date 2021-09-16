@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
-import NIO
+import NIOCore
 
 extension AsyncHTTPClient.HTTPClient.Body.StreamWriter {
     /// write stream to StreamWriter

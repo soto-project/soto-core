@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import class Foundation.JSONSerialization
-import NIO
+import NIOCore
 
 // AWS HAL services I know of are APIGateway, Pinpoint, Greengrass
 extension AWSResponse {

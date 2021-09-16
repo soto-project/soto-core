@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIO
+import NIOCore
 
 extension AWSClient {
     /// Execute an empty request and return a future with the output object generated from the response

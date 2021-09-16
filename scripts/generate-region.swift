@@ -15,7 +15,7 @@
 
 import AsyncHTTPClient // swift-server/async-http-client
 import Foundation
-import NIO // apple/swift-nio
+import NIOCore // apple/swift-nio
 import NIOFoundationCompat
 import Stencil // soto-project/Stencil
 

@@ -14,7 +14,8 @@
 
 import AsyncHTTPClient
 import struct Foundation.UUID
-import NIO
+import NIOCore
+import NIOPosix
 @testable import SotoCore
 import SotoTestUtils
 import SotoXML

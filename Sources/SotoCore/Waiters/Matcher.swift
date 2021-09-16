@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import JMESPath
-import NIO
+import NIOCore
 import NIOHTTP1
 
 /// Protocol for matchers used in waiters.

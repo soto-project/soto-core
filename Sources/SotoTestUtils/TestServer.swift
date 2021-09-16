@@ -12,9 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIO
+import NIOCore
 import NIOFoundationCompat
 import NIOHTTP1
+import NIOPosix
 import NIOTestUtils
 import SotoCore
 import SotoXML

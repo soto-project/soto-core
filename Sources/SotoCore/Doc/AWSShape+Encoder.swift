@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import class Foundation.JSONEncoder
-import NIO
+import NIOCore
 import SotoXML
 
 internal extension AWSEncodableShape {

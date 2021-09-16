@@ -18,7 +18,7 @@ import struct Foundation.URL
 import struct Foundation.URLQueryItem
 import Logging
 import Metrics
-import NIO
+import NIOCore
 import NIOConcurrencyHelpers
 import NIOHTTP1
 import NIOTransportServices

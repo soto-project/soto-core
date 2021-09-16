@@ -17,12 +17,12 @@
 
 @_exported import struct Logging.Logger
 
-@_exported import struct NIO.ByteBuffer
-@_exported import struct NIO.ByteBufferAllocator
-@_exported import protocol NIO.EventLoop
-@_exported import class NIO.EventLoopFuture
-@_exported import protocol NIO.EventLoopGroup
-@_exported import struct NIO.TimeAmount
+@_exported import struct NIOCore.ByteBuffer
+@_exported import struct NIOCore.ByteBufferAllocator
+@_exported import protocol NIOCore.EventLoop
+@_exported import class NIOCore.EventLoopFuture
+@_exported import protocol NIOCore.EventLoopGroup
+@_exported import struct NIOCore.TimeAmount
 
 @_exported import struct NIOHTTP1.HTTPHeaders
 @_exported import enum NIOHTTP1.HTTPMethod

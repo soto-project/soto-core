@@ -14,9 +14,9 @@
 
 import AsyncHTTPClient
 import Logging
+import NIOConcurrencyHelpers
 import NIOCore
 import NIOPosix
-import NIOConcurrencyHelpers
 @testable import SotoCore
 import SotoTestUtils
 import XCTest

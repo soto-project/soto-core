@@ -13,8 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 import Logging
-import NIOCore
 import NIOConcurrencyHelpers
+import NIOCore
 import SotoSignerV4
 
 /// Protocol providing future holding a credential

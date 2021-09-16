@@ -14,8 +14,8 @@
 
 import struct Foundation.Date
 import struct Foundation.TimeInterval
-import NIOCore
 import NIOConcurrencyHelpers
+import NIOCore
 
 /// Endpoint list
 public struct AWSEndpoints {

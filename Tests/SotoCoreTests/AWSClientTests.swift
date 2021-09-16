@@ -14,8 +14,8 @@
 
 import AsyncHTTPClient
 import Logging
-import NIOCore
 import NIOConcurrencyHelpers
+import NIOCore
 import NIOFoundationCompat
 import NIOHTTP1
 import NIOPosix

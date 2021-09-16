@@ -14,8 +14,8 @@
 
 import struct Foundation.Data
 import NIOCore
-import NIOPosix
 import NIOFoundationCompat
+import NIOPosix
 
 /// Holds a request or response payload. A request payload can be in the form of either a ByteBuffer or a stream function that will supply ByteBuffers to the HTTP client.
 /// A response payload only comes in the form of a ByteBuffer

@@ -13,8 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 import Logging
-import NIOCore
 import NIOConcurrencyHelpers
+import NIOCore
 import SotoSignerV4
 
 /// get credentials from a list of possible credential providers. Goes through list of providers from start to end

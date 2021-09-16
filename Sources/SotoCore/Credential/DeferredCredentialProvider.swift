@@ -13,8 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 import Logging
-import NIOCore
 import NIOConcurrencyHelpers
+import NIOCore
 
 /// Used for wrapping another credential provider whose `getCredential` method doesn't return instantly and
 /// is only needed to be called once. After the wrapped `CredentialProvider` has generated a credential this is

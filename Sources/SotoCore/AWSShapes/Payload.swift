@@ -41,7 +41,7 @@ public struct AWSPayload {
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         stream: @escaping (EventLoop) -> EventLoopFuture<StreamReaderResult>
     ) -> Self {
-        return AWSPayload(payload: .stream(ChunkedStreamReader(size: size, read: stream, byteBufferAllocator: byteBufferAllocator)))
+        return AWSPayload(payload: .stream(ChunkedStreamReader(size: size, read: stream)))
     }
 
     /// construct an empty payload
@@ -127,7 +127,7 @@ public struct AWSPayload {
             }
         }
 
-        return AWSPayload(payload: .stream(ChunkedStreamReader(size: size.map { Int($0) }, read: stream, byteBufferAllocator: byteBufferAllocator)))
+        return AWSPayload(payload: .stream(ChunkedStreamReader(size: size.map { Int($0) }, read: stream)))
     }
 
     /// construct a payload from a stream reader object.

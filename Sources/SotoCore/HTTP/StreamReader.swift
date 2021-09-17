@@ -29,8 +29,6 @@ protocol StreamReader {
     var contentSize: Int? { get }
     /// function providing data to be streamed
     var read: (EventLoop) -> EventLoopFuture<StreamReaderResult> { get }
-    /// bytebuffer allocator
-    var byteBufferAllocator: ByteBufferAllocator { get }
 
     /// Update headers for this kind of streamed data
     /// - Parameter headers: headers to update
@@ -75,6 +73,4 @@ struct ChunkedStreamReader: StreamReader {
     let size: Int?
     /// function providing data to be streamed
     let read: (EventLoop) -> EventLoopFuture<StreamReaderResult>
-    /// bytebuffer allocator
-    var byteBufferAllocator: ByteBufferAllocator
 }

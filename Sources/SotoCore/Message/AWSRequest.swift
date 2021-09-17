@@ -64,7 +64,7 @@ public struct AWSRequest {
                     size: reader.size!,
                     seedSigningData: seedSigningData,
                     signer: signer,
-                    byteBufferAllocator: reader.byteBufferAllocator,
+                    byteBufferAllocator: byteBufferAllocator,
                     read: reader.read
                 )
                 let payload = AWSPayload.streamReader(s3Reader)

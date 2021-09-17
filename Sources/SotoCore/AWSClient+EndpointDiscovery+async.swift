@@ -14,10 +14,9 @@
 
 #if compiler(>=5.5)
 
-import _Concurrency
 import _NIOConcurrency
 import Logging
-import NIO
+import NIOCore
 
 @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
 extension AWSClient {

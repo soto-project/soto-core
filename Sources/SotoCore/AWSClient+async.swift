@@ -14,7 +14,6 @@
 
 #if compiler(>=5.5)
 
-import _Concurrency
 import _NIOConcurrency
 import Dispatch
 import Foundation

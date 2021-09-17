@@ -14,7 +14,6 @@
 
 #if compiler(>=5.5)
 
-import _Concurrency
 @testable import SotoCore
 import SotoTestUtils
 import XCTest

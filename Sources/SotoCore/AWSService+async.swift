@@ -14,9 +14,8 @@
 
 #if compiler(>=5.5)
 
-import _Concurrency
 import struct Foundation.URL
-import NIO
+import NIOCore
 
 /// Protocol for services objects. Contains a client to communicate with AWS and config for defining how to communicate
 @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)

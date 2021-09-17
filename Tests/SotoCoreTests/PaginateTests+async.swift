@@ -14,7 +14,6 @@
 
 #if compiler(>=5.5)
 
-import _Concurrency
 import AsyncHTTPClient
 import NIO
 @testable import SotoCore

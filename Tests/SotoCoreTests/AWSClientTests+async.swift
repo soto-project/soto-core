@@ -130,23 +130,25 @@ class AWSClientAsyncTests: XCTestCase {
             cont.finish()
         }
         let input = Input(payload: .asyncSequence(stream, size: bufferSize))
-        let response = client.execute(
-            operation: "test",
-            path: "/",
-            httpMethod: .POST,
-            serviceConfig: config,
-            input: input,
-            logger: TestEnvironment.logger
-        )
+        XCTRunAsyncAndBlock {
+            async let response: () = client.execute(
+                operation: "test",
+                path: "/",
+                httpMethod: .POST,
+                serviceConfig: config,
+                input: input,
+                logger: TestEnvironment.logger
+            )
 
-        try? server.processRaw { request in
-            let bytes = request.body.getBytes(at: 0, length: request.body.readableBytes)
-            XCTAssertEqual(bytes, data)
-            let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
-            return .result(response)
+            try? server.processRaw { request in
+                let bytes = request.body.getBytes(at: 0, length: request.body.readableBytes)
+                XCTAssertEqual(bytes, data)
+                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
+                return .result(response)
+            }
+
+            _ = try await response
         }
-
-        try response.wait()
     }
 
     func testRequestStreaming() {

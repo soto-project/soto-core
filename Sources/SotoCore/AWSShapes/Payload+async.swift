@@ -20,12 +20,8 @@ import NIOCore
 extension AWSPayload {
     /// Construct a stream payload from a `NIOFileHandle`
     /// - Parameters:
-    ///   - fileHandle: NIO file handle
-    ///   - offset: optional offset into file. If not set it will use the current position in the file
-    ///   - size: size of block to load from file
-    ///   - fileIO: NonBlockingFileIO object
-    ///   - byteBufferAllocator: ByteBufferAllocator used during request upload
-    ///   - callback: Progress callback called during upload
+    ///   - seq: AsyncSequence providing ByteBuffers
+    ///   - size: total size of sequence in bytes
     public static func asyncSequence<AsyncSeq: AsyncSequence>(_ seq: AsyncSeq, size: Int?) -> Self where AsyncSeq.Element == ByteBuffer {
         func stream(_ eventLoop: EventLoop) -> EventLoopFuture<StreamReaderResult> {
             let promise = eventLoop.makePromise(of: StreamReaderResult.self)

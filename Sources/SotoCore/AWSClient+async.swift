@@ -268,6 +268,7 @@ extension AWSClient {
             default:
                 streaming = false
             }
+            try Task.checkCancellation()
             let response = try await self.invoke(
                 with: config,
                 eventLoop: eventLoop,

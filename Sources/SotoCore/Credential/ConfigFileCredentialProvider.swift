@@ -13,8 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 import Logging
-import NIO
 import NIOConcurrencyHelpers
+import NIOCore
 import SotoSignerV4
 
 class ConfigFileCredentialProvider: CredentialProviderSelector {

@@ -15,7 +15,8 @@
 import struct Foundation.UUID
 import INIParser
 import Logging
-import NIO
+import NIOCore
+import NIOPosix
 #if os(Linux)
 import Glibc
 #else

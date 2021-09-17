@@ -18,8 +18,8 @@ import struct Foundation.URL
 import struct Foundation.URLQueryItem
 import Logging
 import Metrics
-import NIO
 import NIOConcurrencyHelpers
+import NIOCore
 import NIOHTTP1
 import NIOTransportServices
 import SotoSignerV4

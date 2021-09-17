@@ -13,8 +13,10 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
-import NIO
+import Foundation
+import NIOCore
 import NIOHTTP1
+import NIOPosix // Needed for NIOConnectionError
 
 /// Creates a RetryPolicy for AWSClient to use
 public struct RetryPolicyFactory {

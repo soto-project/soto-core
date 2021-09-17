@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Logging
-import NIO
+import NIOCore
 import SotoSignerV4
 
 /// Credential provider that always fails

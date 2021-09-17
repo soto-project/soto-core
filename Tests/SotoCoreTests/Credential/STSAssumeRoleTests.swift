@@ -13,7 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
-import NIO
+import NIOCore
+import NIOPosix
 @testable import SotoCore
 import SotoTestUtils
 import SotoXML

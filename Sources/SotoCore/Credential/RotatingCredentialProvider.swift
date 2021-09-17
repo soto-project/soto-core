@@ -14,8 +14,8 @@
 
 import struct Foundation.TimeInterval
 import Logging
-import NIO
 import NIOConcurrencyHelpers
+import NIOCore
 import SotoSignerV4
 
 /// Used for wrapping another credential provider whose `getCredential` method returns an `ExpiringCredential`.

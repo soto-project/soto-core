@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-@_exported import struct NIO.ByteBuffer
-@_exported import struct NIO.ByteBufferAllocator
-@_exported import struct NIO.TimeAmount
+@_exported import struct NIOCore.ByteBuffer
+@_exported import struct NIOCore.ByteBufferAllocator
+@_exported import struct NIOCore.TimeAmount
 
 @_exported import NIOHTTP1

@@ -14,7 +14,7 @@
 
 import AsyncHTTPClient
 import Foundation
-import NIO
+import NIOCore
 import NIOHTTP1
 
 /// HTTP client delegate capturing the body parts received from AsyncHTTPClient.

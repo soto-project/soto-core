@@ -14,7 +14,7 @@
 
 import Foundation
 import Logging
-import NIO
+import NIOCore
 import NIOHTTP1
 
 /// HTTP Request

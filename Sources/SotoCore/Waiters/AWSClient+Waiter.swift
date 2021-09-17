@@ -14,7 +14,7 @@
 
 import Dispatch
 import Foundation
-import NIO
+import NIOCore
 
 // MARK: Waiters
 

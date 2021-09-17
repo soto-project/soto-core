@@ -13,8 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 import Logging
-import NIO
 import NIOConcurrencyHelpers
+import NIOCore
 import SotoSignerV4
 
 /// Protocol for CredentialProvider that uses an internal CredentialProvider

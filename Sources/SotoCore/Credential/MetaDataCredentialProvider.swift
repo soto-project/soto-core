@@ -21,8 +21,8 @@ import struct Foundation.TimeZone
 import struct Foundation.URL
 
 import Logging
-import NIO
 import NIOConcurrencyHelpers
+import NIOCore
 import NIOHTTP1
 import SotoSignerV4
 

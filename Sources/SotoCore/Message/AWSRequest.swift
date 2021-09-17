@@ -16,7 +16,7 @@ import struct Foundation.CharacterSet
 import struct Foundation.Date
 import struct Foundation.URL
 import struct Foundation.URLComponents
-import NIO
+import NIOCore
 import NIOHTTP1
 import SotoSignerV4
 

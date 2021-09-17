@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIO
+import NIOCore
 
 /// Configuration class defining an AWS service
 public final class AWSServiceConfig {

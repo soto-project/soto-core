@@ -53,7 +53,7 @@ class TimeStampTests: XCTestCase {
         let a = A(date: Date(timeIntervalSince1970: 23_984_978_378))
         var request: AWSRequest?
         XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", httpMethod: .GET, input: a, configuration: createServiceConfig()))
-        #if os(Linux)
+        #if os(Linux) && compiler(>=5.5)
         XCTAssertEqual(request?.body.asString(), "{\"date\":23984978378.0}")
         #else
         XCTAssertEqual(request?.body.asString(), "{\"date\":23984978378}")

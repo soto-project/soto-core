@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5)
+#if compiler(>=5.5) && canImport(_Concurrency)
 
 @testable import SotoCore
 import SotoTestUtils
@@ -77,4 +77,4 @@ final class AWSServiceAsyncTests: XCTestCase {
     }
 }
 
-#endif // compiler(>=5.5)
+#endif // compiler(>=5.5) && canImport(_Concurrency)

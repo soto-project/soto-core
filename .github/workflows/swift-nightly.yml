@@ -1,0 +1,23 @@
+name: Swift nightly build
+
+on:
+  schedule:
+    - cron: '0 1 * * *'
+  workflow_dispatch:
+  
+env:
+  AWS_ENABLE_LOGGING : "true"
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        tag: ['nightly-bionic', 'nightly-focal', 'nightly-centos8', 'nightly-amazonlinux2']
+    container:
+      image: swiftlang/swift:${{ matrix.tag }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Test
+      run: swift test --enable-test-discovery

@@ -14,9 +14,8 @@
 
 #if compiler(>=5.5) && canImport(_Concurrency)
 
-import NIOCore
 import Logging
-import NIO
+import NIOCore
 import SotoSignerV4
 
 /// Async Protocol for providing credentials

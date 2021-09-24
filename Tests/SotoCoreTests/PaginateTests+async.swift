@@ -15,7 +15,8 @@
 #if compiler(>=5.5) && canImport(_Concurrency)
 
 import AsyncHTTPClient
-import NIO
+import NIOCore
+import NIOPosix
 @testable import SotoCore
 import SotoTestUtils
 import XCTest

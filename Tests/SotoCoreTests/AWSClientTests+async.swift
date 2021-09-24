@@ -17,10 +17,11 @@
 import AsyncHTTPClient
 import Dispatch
 import Logging
-import NIO
 import NIOConcurrencyHelpers
+import NIOCore
 import NIOFoundationCompat
 import NIOHTTP1
+import NIOPosix
 @testable import SotoCore
 import SotoTestUtils
 import SotoXML

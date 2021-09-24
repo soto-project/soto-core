@@ -14,11 +14,11 @@
 
 #if compiler(>=5.5) && canImport(_Concurrency)
 
-import NIOCore
 import Dispatch
 import Foundation
 import Logging
 import Metrics
+import NIOCore
 import SotoSignerV4
 
 @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)

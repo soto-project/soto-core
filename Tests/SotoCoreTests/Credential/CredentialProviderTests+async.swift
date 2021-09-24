@@ -14,8 +14,7 @@
 
 #if compiler(>=5.5) && canImport(_Concurrency)
 
-import _NIOConcurrency
-import NIO
+import NIOCore
 import SotoCore
 import SotoTestUtils
 import XCTest

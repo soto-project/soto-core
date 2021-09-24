@@ -14,7 +14,7 @@
 
 #if compiler(>=5.5) && canImport(_Concurrency)
 
-import _NIOConcurrency
+import NIOCore
 import Logging
 import NIO
 import SotoSignerV4

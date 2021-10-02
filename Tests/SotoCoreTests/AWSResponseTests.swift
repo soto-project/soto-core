@@ -262,7 +262,7 @@ class AWSResponseTests: XCTestCase {
         let response = AWSHTTPResponseImpl(
             status: .notFound,
             headers: HTTPHeaders(),
-            bodyData: #"{"__type":"ResourceNotFoundException", "Message": "Donald Where's Your Troosers?", "fault": "client"}"#.data(using: .utf8)!
+            bodyData: #"{"__type":"ResourceNotFoundException", "Message": "Donald Where's Your Troosers?", "fault": "client","CancellationReasons":1}"#.data(using: .utf8)!
         )
         let service = createServiceConfig(serviceProtocol: .json(version: "1.1"), errorType: ServiceErrorType.self)
 

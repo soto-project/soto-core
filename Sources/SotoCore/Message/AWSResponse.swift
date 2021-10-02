@@ -271,7 +271,9 @@ public struct AWSResponse {
             var additionalFields: [String: String] = [:]
             for key in container.allKeys {
                 guard key.stringValue != "Code", key.stringValue != "Message" else { continue }
-                additionalFields[key.stringValue] = try container.decodeIfPresent(String.self, forKey: key)
+                do {
+                    additionalFields[key.stringValue] = try container.decodeIfPresent(String.self, forKey: key)
+                } catch {}
             }
             self.additionalFields = additionalFields
         }
@@ -292,7 +294,9 @@ public struct AWSResponse {
             var additionalFields: [String: String] = [:]
             for key in container.allKeys {
                 guard key.stringValue != "__type", key.stringValue != "message", key.stringValue != "Message" else { continue }
-                additionalFields[key.stringValue] = try container.decodeIfPresent(String.self, forKey: key)
+                do {
+                    additionalFields[key.stringValue] = try container.decodeIfPresent(String.self, forKey: key)
+                } catch {}
             }
             self.additionalFields = additionalFields
         }
@@ -313,7 +317,9 @@ public struct AWSResponse {
             var additionalFields: [String: String] = [:]
             for key in container.allKeys {
                 guard key.stringValue != "code", key.stringValue != "message", key.stringValue != "Message" else { continue }
-                additionalFields[key.stringValue] = try container.decodeIfPresent(String.self, forKey: key)
+                do {
+                    additionalFields[key.stringValue] = try container.decodeIfPresent(String.self, forKey: key)
+                } catch {}
             }
             self.additionalFields = additionalFields
         }

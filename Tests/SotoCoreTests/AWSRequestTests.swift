@@ -428,7 +428,7 @@ class AWSRequestTests: XCTestCase {
         body = .xml(.init(name: "test"))
         XCTAssertFalse(body.isEmpty)
     }
-    
+
     func testMD5Checksum() {
         struct Input: AWSEncodableShape {
             static let _options: AWSShapeOptions = .md5ChecksumRequired

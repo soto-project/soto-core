@@ -37,11 +37,6 @@ public struct AWSResponse {
         self.status = response.status
 
         // headers
-        /*var responseHeaders: [String: String] = [:]
-        for (key, value) in response.headers {
-            // use lowercase for all headers
-            responseHeaders[key.lowercased()] = value
-        }*/
         self.headers = response.headers
 
         // body

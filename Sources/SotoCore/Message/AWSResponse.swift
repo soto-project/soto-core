@@ -24,7 +24,7 @@ public struct AWSResponse {
     /// response status
     public let status: HTTPResponseStatus
     /// response headers
-    public var headers: [String: Any]
+    public var headers: HTTPHeaders
     /// response body
     public var body: Body
 
@@ -37,12 +37,7 @@ public struct AWSResponse {
         self.status = response.status
 
         // headers
-        var responseHeaders: [String: String] = [:]
-        for (key, value) in response.headers {
-            // use lowercase for all headers
-            responseHeaders[key.lowercased()] = value
-        }
-        self.headers = responseHeaders
+        self.headers = response.headers
 
         // body
         guard let body = response.body,
@@ -121,7 +116,8 @@ public struct AWSResponse {
             }
         case .xml(let node):
             var outputNode = node
-            // if payload path is set then the decode will expect the payload to decode to the relevant member variable. Most CloudFront responses have this.
+            // if payload path is set then the decode will expect the payload to decode to the relevant member variable.
+            // Most CloudFront responses have this.
             if let payloadKey = payloadKey {
                 // set output node name
                 outputNode.name = payloadKey
@@ -129,20 +125,17 @@ public struct AWSResponse {
                 let parentNode = XML.Element(name: "Container")
                 parentNode.addChild(outputNode)
                 outputNode = parentNode
-            } else if let child = node.children(of: .element)?.first as? XML.Element, node.name == operation + "Response", child.name == operation + "Result" {
+            } else if let child = node.children(of: .element)?.first as? XML.Element,
+                      node.name == operation + "Response",
+                      child.name == operation + "Result"
+            {
                 outputNode = child
             }
 
-            // add header values to xmlnode as children nodes, so they can be decoded into the response object
-            for (key, value) in self.headers {
-                let headerParams = Output.headerParams
-                if let index = headerParams.firstIndex(where: { $0.key.lowercased() == key.lowercased() }) {
-                    guard let stringValue = value as? String else { continue }
-                    let node = XML.Element(name: headerParams[index].key, stringValue: stringValue)
-                    outputNode.addChild(node)
-                }
-            }
-            // add status code to output dictionary
+            // add headers to XML
+            addHeadersToXML(rootElement: outputNode, output: Output.self)
+
+            // add status code to XML
             if let statusCodeParam = Output.statusCodeParam {
                 let node = XML.Element(name: statusCodeParam, stringValue: "\(self.status.code)")
                 outputNode.addChild(node)
@@ -160,24 +153,60 @@ public struct AWSResponse {
             decoder.dateDecodingStrategy = .formatted(HTTPHeaderDateCoder.dateFormatters.first!)
         }
 
-        // add header values to output dictionary, so they can be decoded into the response object
-        for (key, value) in self.headers {
-            let headerParams = Output.headerParams
-            if let index = headerParams.firstIndex(where: { $0.key.lowercased() == key.lowercased() }) {
-                // check we can convert to a String. If not just put value straight into output dictionary
-                guard let stringValue = value as? String else {
-                    outputDict[headerParams[index].key] = value
-                    continue
-                }
-                outputDict[headerParams[index].key] = HTTPHeaderDecodable(stringValue)
-            }
-        }
+        // add headers to output dictionary
+        outputDict = addHeadersToDictionary(dictionary: outputDict, output: Output.self)
+
         // add status code to output dictionary
         if let statusCodeParam = Output.statusCodeParam {
             outputDict[statusCodeParam] = self.status.code
         }
 
         return try decoder.decode(Output.self, from: outputDict)
+    }
+
+    /// Add headers required by Output type found in the response into dictionary to be decoded by Dictionary decoder
+    private func addHeadersToDictionary<Output: AWSDecodableShape>(dictionary: [String: Any], output: Output.Type) -> [String: Any] {
+        var dictionary = dictionary
+        // add header values to output dictionary, so they can be decoded into the response object
+        for (key, value) in self.headers {
+            let headerParams = Output.headerParams
+            if let index = headerParams.firstIndex(where: { $0.key.lowercased() == key.lowercased() }) {
+                dictionary[headerParams[index].key] = HTTPHeaderDecodable(value)
+            }
+        }
+        for param in Output.headerPrefixParams {
+            var valuesDict: [String: Any] = [:]
+            for (key, value) in self.headers {
+                guard key.lowercased().hasPrefix(param.key.lowercased()) else { continue }
+                let shortKey = String(key.dropFirst(param.key.count))
+                valuesDict[shortKey] = HTTPHeaderDecodable(value)
+            }
+            if valuesDict.count > 0 {
+                dictionary[param.key] = valuesDict
+            }
+        }
+        return dictionary
+    }
+
+    /// Add headers required by Output type found in the response into xml to be decoded by xml decoder
+    private func addHeadersToXML<Output: AWSDecodableShape>(rootElement: XML.Element, output: Output.Type) {
+        // add header values to xmlnode as children nodes, so they can be decoded into the response object
+        for (key, value) in self.headers {
+            let headerParams = Output.headerParams
+            if let index = headerParams.firstIndex(where: { $0.key.lowercased() == key.lowercased() }) {
+                let node = XML.Element(name: headerParams[index].key, stringValue: value)
+                rootElement.addChild(node)
+            }
+        }
+        for param in Output.headerPrefixParams {
+            let parentNode = XML.Element(name: param.key)
+            rootElement.addChild(parentNode)
+            for (key, value) in self.headers {
+                guard key.hasPrefix(param.key) else { continue }
+                let entryNode = XML.Element(name: String(key.dropFirst(param.key.count)), stringValue: value)
+                parentNode.addChild(entryNode)
+            }
+        }
     }
 
     /// extract error code and message from AWSResponse
@@ -188,7 +217,7 @@ public struct AWSResponse {
             guard case .json(let data) = self.body else { break }
             apiError = try? JSONDecoder().decode(RESTJSONError.self, from: data)
             if apiError?.code == nil {
-                apiError?.code = self.headers["x-amzn-errortype"] as? String
+                apiError?.code = self.headers["x-amzn-errortype"].first
             }
 
         case .json:
@@ -233,7 +262,7 @@ public struct AWSResponse {
             let context = AWSErrorContext(
                 message: errorMessage.message,
                 responseCode: self.status,
-                headers: .init(headers.map { ($0.key, String(describing: $0.value)) }),
+                headers: self.headers,
                 additionalFields: errorMessage.additionalFields
             )
 

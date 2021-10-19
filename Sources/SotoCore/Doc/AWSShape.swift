@@ -21,12 +21,15 @@ import struct Foundation.UUID
 public protocol AWSShape {
     /// The array of members serialization helpers
     static var _encoding: [AWSMemberEncoding] { get }
+    static var _options: AWSShapeOptions { get }
 }
 
 extension AWSShape {
     public static var _encoding: [AWSMemberEncoding] {
         return []
     }
+
+    public static var _options: AWSShapeOptions { .init() }
 
     /// return member with provided name
     public static func getEncoding(for: String) -> AWSMemberEncoding? {
@@ -39,6 +42,18 @@ extension AWSShape {
         for member in _encoding {
             guard let location = member.location else { continue }
             if case .header(let name) = location {
+                params[name] = member.label
+            }
+        }
+        return params
+    }
+
+    /// return list of member variables serialized in the headers with a prefix
+    static var headerPrefixParams: [String: String] {
+        var params: [String: String] = [:]
+        for member in _encoding {
+            guard let location = member.location else { continue }
+            if case .headerPrefix(let name) = location {
                 params[name] = member.label
             }
         }
@@ -187,8 +202,8 @@ public extension AWSEncodableShape {
 /// AWSShape that can be decoded
 public protocol AWSDecodableShape: AWSShape & Decodable {}
 
-/// AWSShapeWithPayload options.
-public struct AWSShapePayloadOptions: OptionSet {
+/// AWSShape options.
+public struct AWSShapeOptions: OptionSet {
     public var rawValue: Int
 
     public init(rawValue: Int) {
@@ -196,20 +211,17 @@ public struct AWSShapePayloadOptions: OptionSet {
     }
 
     /// Payload can be streamed
-    public static let allowStreaming = AWSShapePayloadOptions(rawValue: 1 << 0)
+    public static let allowStreaming = AWSShapeOptions(rawValue: 1 << 0)
     /// Payload can be streamed using Transfer-Encoding: chunked
-    public static let allowChunkedStreaming = AWSShapePayloadOptions(rawValue: 1 << 1)
+    public static let allowChunkedStreaming = AWSShapeOptions(rawValue: 1 << 1)
     /// Payload is raw data
-    public static let raw = AWSShapePayloadOptions(rawValue: 1 << 2)
+    public static let rawPayload = AWSShapeOptions(rawValue: 1 << 2)
+    /// Calculate MD5 of body is required
+    public static let md5ChecksumRequired = AWSShapeOptions(rawValue: 1 << 3)
 }
 
 /// Root AWSShape which include a payload
-public protocol AWSShapeWithPayload {
+public protocol AWSShapeWithPayload: AWSShape {
     /// The path to the object that is included in the request body
     static var _payloadPath: String { get }
-    static var _payloadOptions: AWSShapePayloadOptions { get }
-}
-
-extension AWSShapeWithPayload {
-    public static var _payloadOptions: AWSShapePayloadOptions { return [] }
 }

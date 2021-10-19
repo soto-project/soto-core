@@ -264,6 +264,20 @@ class AWSRequestTests: XCTestCase {
         XCTAssertEqual(element.xmlString, "<Input xmlns=\"https://test.amazonaws.com/doc/2020-03-11/\"><number>5</number></Input>")
     }
 
+    func testServiceXMLNamespace() {
+        struct Input: AWSEncodableShape {
+            let number: Int
+        }
+        let input = Input(number: 5)
+        let xmlConfig = createServiceConfig(serviceProtocol: .restxml, xmlNamespace: "https://test.amazonaws.com/doc/2020-03-11/")
+        var request: AWSRequest?
+        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: xmlConfig))
+        guard case .xml(let element) = request?.body else {
+            return XCTFail("Shouldn't get here")
+        }
+        XCTAssertEqual(element.xmlString, "<Input xmlns=\"https://test.amazonaws.com/doc/2020-03-11/\"><number>5</number></Input>")
+    }
+
     func testCreateWithPayloadAndXMLNamespace() {
         struct Payload: AWSEncodableShape {
             public static let _xmlNamespace: String? = "https://test.amazonaws.com/doc/2020-03-11/"
@@ -413,5 +427,48 @@ class AWSRequestTests: XCTestCase {
         XCTAssertFalse(body.isEmpty)
         body = .xml(.init(name: "test"))
         XCTAssertFalse(body.isEmpty)
+    }
+
+    func testMD5Checksum() {
+        struct Input: AWSEncodableShape {
+            static let _options: AWSShapeOptions = .md5ChecksumRequired
+            let q: [String]
+        }
+        let input = Input(q: ["one", "two", "three", "four"])
+        let config = createServiceConfig(region: .useast2, service: "myservice")
+        var request: AWSRequest?
+        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))
+        XCTAssertEqual(request?.httpHeaders["Content-MD5"].first, "3W1MVcXgkODdv+m6VeZqdQ==")
+    }
+
+    func testMD5ChecksumSetAlready() {
+        struct Input: AWSEncodableShape {
+            static let _options: AWSShapeOptions = .md5ChecksumRequired
+            static let _encoding: [AWSMemberEncoding] = [
+                .init(label: "checksum", location: .header(locationName: "Content-MD5")),
+            ]
+            let checksum: String?
+            let q: [String: Int]
+        }
+        let input = Input(checksum: "Set already", q: ["one": 1, "two": 2])
+        let config = createServiceConfig(region: .useast2, service: "myservice")
+        var request: AWSRequest?
+        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))
+        XCTAssertEqual(request?.httpHeaders["Content-MD5"].first, "Set already")
+    }
+
+    func testHeaderPrefix() {
+        struct Input: AWSEncodableShape {
+            static let _encoding: [AWSMemberEncoding] = [
+                .init(label: "content", location: .headerPrefix(prefix: "x-aws-metadata-")),
+            ]
+            let content: [String: String]
+        }
+        let input = Input(content: ["one": "first", "two": "second"])
+        let config = createServiceConfig(region: .useast2, service: "myservice")
+        var request: AWSRequest?
+        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))
+        XCTAssertEqual(request?.httpHeaders["x-aws-metadata-one"].first, "first")
+        XCTAssertEqual(request?.httpHeaders["x-aws-metadata-two"].first, "second")
     }
 }

@@ -20,7 +20,7 @@ extension AWSResponse {
     /// return if body is hypertext application language
     var isHypertextApplicationLanguage: Bool {
         guard case .json = self.body,
-              let contentType = self.headers["content-type"] as? String,
+              let contentType = self.headers["content-type"].first,
               contentType.contains("hal+json")
         else {
             return false

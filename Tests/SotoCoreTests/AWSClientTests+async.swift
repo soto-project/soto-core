@@ -114,7 +114,7 @@ class AWSClientAsyncTests: XCTestCase {
     func testRequestStreaming(config: AWSServiceConfig, client: AWSClient, server: AWSTestServer, bufferSize: Int, blockSize: Int) throws {
         struct Input: AWSEncodableShape & AWSShapeWithPayload {
             static var _payloadPath: String = "payload"
-            static var _payloadOptions: AWSShapePayloadOptions = [.allowStreaming, .raw]
+            static var _options: AWSShapeOptions = [.allowStreaming, .rawPayload]
             let payload: AWSPayload
             private enum CodingKeys: CodingKey {}
         }

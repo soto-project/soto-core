@@ -19,6 +19,7 @@ public struct AWSMemberEncoding {
         case uri(locationName: String)
         case querystring(locationName: String)
         case header(locationName: String)
+        case headerPrefix(prefix: String)
         case statusCode
         case body(locationName: String)
     }

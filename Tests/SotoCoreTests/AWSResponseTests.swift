@@ -162,7 +162,7 @@ class AWSResponseTests: XCTestCase {
     func testValidateXMLRawPayloadResponse() {
         class Output: AWSDecodableShape, AWSShapeWithPayload {
             static let _payloadPath: String = "body"
-            static let _payloadOptions: AWSShapePayloadOptions = .raw
+            static let _options: AWSShapeOptions = .rawPayload
             let body: AWSPayload
         }
         let response = AWSHTTPResponseImpl(
@@ -221,7 +221,7 @@ class AWSResponseTests: XCTestCase {
     func testValidateJSONRawPayloadResponse() {
         struct Output: AWSDecodableShape, AWSShapeWithPayload {
             static let _payloadPath: String = "body"
-            static let _payloadOptions: AWSShapePayloadOptions = .raw
+            static let _options: AWSShapeOptions = .rawPayload
             public static var _encoding = [
                 AWSMemberEncoding(label: "contentType", location: .header(locationName: "content-type")),
             ]
@@ -372,6 +372,53 @@ class AWSResponseTests: XCTestCase {
         XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .ec2, raw: false))
         let error = awsResponse?.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? AWSResponseError
         XCTAssertEqual(error?.context?.additionalFields["fault"], "client")
+    }
+
+    func testHeaderPrefixFromDictionary() {
+        struct Output: AWSDecodableShape {
+            static let _encoding: [AWSMemberEncoding] = [
+                .init(label: "content", location: .headerPrefix(prefix: "prefix-")),
+            ]
+            let content: [String: String]
+            private enum CodingKeys: String, CodingKey {
+                case content = "prefix-"
+            }
+        }
+        let response = AWSHTTPResponseImpl(
+            status: .ok,
+            headers: ["prefix-one": "first", "prefix-two": "second"]
+        )
+        var awsResponse: AWSResponse?
+        var output: Output?
+        XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml))
+        XCTAssertNoThrow(output = try awsResponse?.generateOutputShape(operation: "Test"))
+        XCTAssertEqual(output?.content["one"], "first")
+        XCTAssertEqual(output?.content["two"], "second")
+    }
+
+    func testHeaderPrefixFromXML() {
+        struct Output: AWSDecodableShape {
+            static let _encoding: [AWSMemberEncoding] = [
+                .init(label: "content", location: .headerPrefix(prefix: "prefix-")),
+            ]
+            let content: [String: String]
+            let body: String
+            private enum CodingKeys: String, CodingKey {
+                case body
+                case content = "prefix-"
+            }
+        }
+        let response = AWSHTTPResponseImpl(
+            status: .ok,
+            headers: ["prefix-one": "first", "prefix-two": "second"],
+            bodyData: Data("<Output><body>Hello</body></Output>".utf8)
+        )
+        var awsResponse: AWSResponse?
+        var output: Output?
+        XCTAssertNoThrow(awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml))
+        XCTAssertNoThrow(output = try awsResponse?.generateOutputShape(operation: "Test"))
+        XCTAssertEqual(output?.content["one"], "first")
+        XCTAssertEqual(output?.content["two"], "second")
     }
 
     // MARK: Miscellaneous tests

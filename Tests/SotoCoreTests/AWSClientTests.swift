@@ -221,7 +221,7 @@ class AWSClientTests: XCTestCase {
     func testRequestStreaming(config: AWSServiceConfig, client: AWSClient, server: AWSTestServer, bufferSize: Int, blockSize: Int) throws {
         struct Input: AWSEncodableShape & AWSShapeWithPayload {
             static var _payloadPath: String = "payload"
-            static var _payloadOptions: AWSShapePayloadOptions = [.allowStreaming, .raw]
+            static var _options: AWSShapeOptions = [.allowStreaming, .rawPayload]
             let payload: AWSPayload
             private enum CodingKeys: CodingKey {}
         }
@@ -292,7 +292,7 @@ class AWSClientTests: XCTestCase {
     func testRequestStreamingWithPayload(_ payload: AWSPayload) throws {
         struct Input: AWSEncodableShape & AWSShapeWithPayload {
             static var _payloadPath: String = "payload"
-            static var _payloadOptions: AWSShapePayloadOptions = [.allowStreaming]
+            static var _options: AWSShapeOptions = [.allowStreaming]
             let payload: AWSPayload
             private enum CodingKeys: CodingKey {}
         }
@@ -348,7 +348,7 @@ class AWSClientTests: XCTestCase {
     func testRequestStreamingFile() {
         struct Input: AWSEncodableShape & AWSShapeWithPayload {
             static var _payloadPath: String = "payload"
-            static var _payloadOptions: AWSShapePayloadOptions = [.allowStreaming]
+            static var _options: AWSShapeOptions = [.allowStreaming]
             let payload: AWSPayload
             private enum CodingKeys: CodingKey {}
         }
@@ -403,7 +403,7 @@ class AWSClientTests: XCTestCase {
     func testRequestChunkedStreaming() {
         struct Input: AWSEncodableShape & AWSShapeWithPayload {
             static var _payloadPath: String = "payload"
-            static var _payloadOptions: AWSShapePayloadOptions = [.allowStreaming, .allowChunkedStreaming, .raw]
+            static var _options: AWSShapeOptions = [.allowStreaming, .allowChunkedStreaming, .rawPayload]
             let payload: AWSPayload
             private enum CodingKeys: CodingKey {}
         }
@@ -647,7 +647,7 @@ class AWSClientTests: XCTestCase {
         }
         struct Input: AWSEncodableShape & AWSShapeWithPayload {
             static var _payloadPath: String = "payload"
-            static var _payloadOptions: AWSShapePayloadOptions = [.allowStreaming, .allowChunkedStreaming, .raw]
+            static var _options: AWSShapeOptions = [.allowStreaming, .allowChunkedStreaming, .rawPayload]
             let payload: AWSPayload
             private enum CodingKeys: CodingKey {}
         }

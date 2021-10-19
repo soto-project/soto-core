@@ -13,11 +13,13 @@
 //===----------------------------------------------------------------------===//
 
 import struct Foundation.CharacterSet
+import struct Foundation.Data
 import struct Foundation.Date
 import struct Foundation.URL
 import struct Foundation.URLComponents
 import NIOCore
 import NIOHTTP1
+import SotoCrypto
 import SotoSignerV4
 
 /// Object encapsulating all the information needed to generate a raw HTTP request to AWS
@@ -149,10 +151,13 @@ extension AWSRequest {
                     switch value {
                     case let string as AWSRequestEncodableString:
                         string.encoded.map { headers.replaceOrAdd(name: location, value: $0) }
-                    case let dictionary as AWSRequestEncodableDictionary:
-                        dictionary.encoded.forEach { headers.replaceOrAdd(name: "\(location)\($0.key)", value: $0.value) }
                     default:
                         headers.replaceOrAdd(name: location, value: "\(value)")
+                    }
+
+                case .headerPrefix(let prefix):
+                    if let dictionary = value as? AWSRequestEncodableDictionary {
+                        dictionary.encoded.forEach { headers.replaceOrAdd(name: "\(prefix)\($0.key)", value: $0.value) }
                     }
 
                 case .querystring(let location):
@@ -220,7 +225,7 @@ extension AWSRequest {
                         if let encoding = Input.getEncoding(for: payload), case .body(let locationName) = encoding.location {
                             rootName = locationName
                         }
-                        body = .xml(try shape.encodeAsXML(rootName: rootName))
+                        body = .xml(try shape.encodeAsXML(rootName: rootName, namespace: configuration.xmlNamespace))
                     default:
                         preconditionFailure("Cannot add this as a payload")
                     }
@@ -230,7 +235,7 @@ extension AWSRequest {
             } else {
                 // only include the body if there are members that are output in the body.
                 if memberVariablesCount > 0 {
-                    body = .xml(try input.encodeAsXML())
+                    body = .xml(try input.encodeAsXML(namespace: configuration.xmlNamespace))
                 }
             }
 
@@ -278,6 +283,15 @@ extension AWSRequest {
 
         guard let url = urlComponents.url else {
             throw AWSClient.ClientError.invalidURL
+        }
+
+        /// MD5 checksum
+        if Input._options.contains(.md5ChecksumRequired),
+           let buffer = body.asByteBuffer(byteBufferAllocator: configuration.byteBufferAllocator),
+           headers["content-md5"].first == nil,
+           let md5 = Self.calculateMD5(buffer)
+        {
+            headers.add(name: "content-md5", value: md5)
         }
 
         self.region = configuration.region
@@ -331,8 +345,16 @@ extension AWSRequest {
     /// verify  streaming is allowed for this operation
     internal static func verifyStream(operation: String, payload: AWSPayload, input: AWSShapeWithPayload.Type) {
         guard case .stream(let reader) = payload.payload else { return }
-        precondition(input._payloadOptions.contains(.allowStreaming), "\(operation) does not allow streaming of data")
-        precondition(reader.size != nil || input._payloadOptions.contains(.allowChunkedStreaming), "\(operation) does not allow chunked streaming of data. Please supply a data size.")
+        precondition(input._options.contains(.allowStreaming), "\(operation) does not allow streaming of data")
+        precondition(reader.size != nil || input._options.contains(.allowChunkedStreaming), "\(operation) does not allow chunked streaming of data. Please supply a data size.")
+    }
+
+    private static func calculateMD5(_ byteBuffer: ByteBuffer) -> String? {
+        // if request has a body, calculate the MD5 for that body
+        let byteBufferView = byteBuffer.readableBytesView
+        return byteBufferView.withContiguousStorageIfAvailable { bytes in
+            return Data(Insecure.MD5.hash(data: bytes)).base64EncodedString()
+        }
     }
 }
 

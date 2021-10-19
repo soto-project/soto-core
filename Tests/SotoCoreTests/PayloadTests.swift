@@ -72,7 +72,7 @@ class PayloadTests: XCTestCase {
     func testResponsePayload() {
         struct Output: AWSDecodableShape, AWSShapeWithPayload {
             static let _payloadPath: String = "payload"
-            static let _payloadOptions: AWSShapePayloadOptions = .raw
+            static let _options: AWSShapeOptions = .rawPayload
             let payload: AWSPayload
         }
         do {

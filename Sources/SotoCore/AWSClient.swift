@@ -481,7 +481,7 @@ extension AWSClient {
                 let awsRequest = try createRequest()
                 return try awsRequest
                     .applyMiddlewares(config.middlewares + self.middlewares, config: config)
-                    .createHTTPRequest(signer: signer, byteBufferAllocator: config.byteBufferAllocator)
+                    .createHTTPRequest(signer: signer, serviceConfig: config)
             }.flatMap { request -> EventLoopFuture<Output> in
                 // send request to AWS and process result
                 let streaming: Bool

@@ -197,6 +197,9 @@ public final class AWSServiceConfig {
 
         /// Enable endpoint discovery for services where it isn't required
         public static let enableEndpointDiscovery = Options(rawValue: 1 << 3)
+
+        /// Disable S3 siogned chunked uploads
+        public static let s3DisableChunkedUploads = Options(rawValue: 1 << 4)
     }
 
     private init(

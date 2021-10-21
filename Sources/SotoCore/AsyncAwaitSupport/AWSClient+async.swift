@@ -259,7 +259,7 @@ extension AWSClient {
             // create request and sign with signer
             let awsRequest = try createRequest()
                 .applyMiddlewares(config.middlewares + self.middlewares, config: config)
-                .createHTTPRequest(signer: signer, byteBufferAllocator: config.byteBufferAllocator)
+                .createHTTPRequest(signer: signer, serviceConfig: config)
             // send request to AWS and process result
             let streaming: Bool
             switch awsRequest.body.payload {

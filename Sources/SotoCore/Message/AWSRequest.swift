@@ -54,7 +54,7 @@ public struct AWSRequest {
         case .byteBuffer(let buffer):
             bodyDataForSigning = .byteBuffer(buffer)
         case .stream(let reader):
-            if signer.name == "s3" && !serviceConfig.options.contains(.s3DisableChunkedUploads) {
+            if signer.name == "s3", !serviceConfig.options.contains(.s3DisableChunkedUploads) {
                 assert(reader.size != nil, "S3 stream requires size")
                 var headers = httpHeaders
                 // need to add this header here as it needs to be included in the signed headers

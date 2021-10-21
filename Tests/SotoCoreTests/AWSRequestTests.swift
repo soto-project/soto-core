@@ -407,7 +407,7 @@ class AWSRequestTests: XCTestCase {
             public static let _payloadPath: String = "payload"
             let payload: AWSPayload
             let member: String
-            
+
             private enum CodingKeys: String, CodingKey {
                 case member
             }

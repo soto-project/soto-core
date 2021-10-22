@@ -63,7 +63,8 @@ public func createServiceConfig(
     partitionEndpoints: [AWSPartition: (endpoint: String, region: Region)] = [:],
     errorType: AWSErrorType.Type? = nil,
     middlewares: [AWSServiceMiddleware] = [],
-    timeout: TimeAmount? = nil
+    timeout: TimeAmount? = nil,
+    options: AWSServiceConfig.Options = []
 ) -> AWSServiceConfig {
     AWSServiceConfig(
         region: region,
@@ -78,7 +79,8 @@ public func createServiceConfig(
         partitionEndpoints: partitionEndpoints,
         errorType: errorType,
         middlewares: middlewares,
-        timeout: timeout
+        timeout: timeout,
+        options: options
     )
 }
 

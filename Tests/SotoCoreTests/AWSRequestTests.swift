@@ -91,7 +91,7 @@ class AWSRequestTests: XCTestCase {
             region: config.region.rawValue
         )
 
-        let signedRequest = awsRequest?.createHTTPRequest(signer: signer, byteBufferAllocator: ByteBufferAllocator())
+        let signedRequest = awsRequest?.createHTTPRequest(signer: signer, serviceConfig: config)
         XCTAssertNotNil(signedRequest)
         XCTAssertEqual(signedRequest?.method, HTTPMethod.POST)
         XCTAssertEqual(signedRequest?.headers["Host"].first, "kinesis.us-east-1.amazonaws.com")
@@ -117,7 +117,7 @@ class AWSRequestTests: XCTestCase {
             region: config.region.rawValue
         )
 
-        let request = awsRequest?.createHTTPRequest(signer: signer, byteBufferAllocator: ByteBufferAllocator())
+        let request = awsRequest?.createHTTPRequest(signer: signer, serviceConfig: config)
         XCTAssertNil(request?.headers["Authorization"].first)
     }
 
@@ -142,7 +142,7 @@ class AWSRequestTests: XCTestCase {
                 configuration: config
             ))
 
-            let request = awsRequest?.createHTTPRequest(signer: signer, byteBufferAllocator: ByteBufferAllocator())
+            let request = awsRequest?.createHTTPRequest(signer: signer, serviceConfig: config)
             XCTAssertNotNil(request?.headers["Authorization"].first)
         }
     }
@@ -400,6 +400,36 @@ class AWSRequestTests: XCTestCase {
         XCTAssertEqual(request?.url.absoluteString, "https://12345678.test.com/")
     }
 
+    /// Test disable S3 chunked upload flag works
+    func testDisableS3ChunkedUpload() throws {
+        struct Input: AWSEncodableShape & AWSShapeWithPayload {
+            public static let _payloadOptions: AWSShapePayloadOptions = [.raw, .allowStreaming]
+            public static let _payloadPath: String = "payload"
+            let payload: AWSPayload
+            let member: String
+
+            private enum CodingKeys: String, CodingKey {
+                case member
+            }
+        }
+        let config = createServiceConfig(service: "s3", signingName: "s3", serviceProtocol: .restxml, options: .s3DisableChunkedUploads)
+        let signer = AWSSigner(
+            credentials: StaticCredential(accessKeyId: "foo", secretAccessKey: "bar"),
+            name: config.signingName,
+            region: config.region.rawValue
+        )
+        let stream: AWSPayload = .stream(size: 32, byteBufferAllocator: config.byteBufferAllocator) { eventLoop in
+            return eventLoop.makeSucceededFuture(.byteBuffer(config.byteBufferAllocator.buffer(string: "This is a test")))
+        }
+        let input = Input(payload: stream, member: "test")
+        var optionalAWSRequest: AWSRequest?
+        XCTAssertNoThrow(optionalAWSRequest = try AWSRequest(operation: "Test", path: "/", httpMethod: .POST, input: input, configuration: config))
+        let awsRequest = try XCTUnwrap(optionalAWSRequest)
+        let request = awsRequest.toHTTPRequestWithSignedHeader(signer: signer, serviceConfig: config)
+        XCTAssertNil(request.headers["x-amz-decoded-content-length"].first)
+    }
+
+    /// Test `Body.isEmpty`
     func testBodyIsEmpty() {
         var body: Body = .empty
         XCTAssertTrue(body.isEmpty)

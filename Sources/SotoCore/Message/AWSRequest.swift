@@ -32,13 +32,13 @@ public struct AWSRequest {
 
     /// Create HTTP Client request from AWSRequest.
     /// If the signer's credentials are available the request will be signed. Otherwise defaults to an unsigned request
-    func createHTTPRequest(signer: AWSSigner, byteBufferAllocator: ByteBufferAllocator) -> AWSHTTPRequest {
+    func createHTTPRequest(signer: AWSSigner, serviceConfig: AWSServiceConfig) -> AWSHTTPRequest {
         // if credentials are empty don't sign request
         if signer.credentials.isEmpty() {
-            return self.toHTTPRequest(byteBufferAllocator: byteBufferAllocator)
+            return self.toHTTPRequest(byteBufferAllocator: serviceConfig.byteBufferAllocator)
         }
 
-        return self.toHTTPRequestWithSignedHeader(signer: signer, byteBufferAllocator: byteBufferAllocator)
+        return self.toHTTPRequestWithSignedHeader(signer: signer, serviceConfig: serviceConfig)
     }
 
     /// Create HTTP Client request from AWSRequest
@@ -47,14 +47,14 @@ public struct AWSRequest {
     }
 
     /// Create HTTP Client request with signed headers from AWSRequest
-    func toHTTPRequestWithSignedHeader(signer: AWSSigner, byteBufferAllocator: ByteBufferAllocator) -> AWSHTTPRequest {
-        let payload = self.body.asPayload(byteBufferAllocator: byteBufferAllocator)
+    func toHTTPRequestWithSignedHeader(signer: AWSSigner, serviceConfig: AWSServiceConfig) -> AWSHTTPRequest {
+        let payload = self.body.asPayload(byteBufferAllocator: serviceConfig.byteBufferAllocator)
         let bodyDataForSigning: AWSSigner.BodyData?
         switch payload.payload {
         case .byteBuffer(let buffer):
             bodyDataForSigning = .byteBuffer(buffer)
         case .stream(let reader):
-            if signer.name == "s3" {
+            if signer.name == "s3", !serviceConfig.options.contains(.s3DisableChunkedUploads) {
                 assert(reader.size != nil, "S3 stream requires size")
                 var headers = httpHeaders
                 // need to add this header here as it needs to be included in the signed headers
@@ -64,7 +64,7 @@ public struct AWSRequest {
                     size: reader.size!,
                     seedSigningData: seedSigningData,
                     signer: signer,
-                    byteBufferAllocator: byteBufferAllocator,
+                    byteBufferAllocator: serviceConfig.byteBufferAllocator,
                     read: reader.read
                 )
                 let payload = AWSPayload.streamReader(s3Reader)

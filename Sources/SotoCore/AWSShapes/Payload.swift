@@ -38,7 +38,6 @@ public struct AWSPayload {
     /// don't supply a size the stream function will be called repeatedly until you supply an empty `ByteBuffer`
     public static func stream(
         size: Int? = nil,
-        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         stream: @escaping (EventLoop) -> EventLoopFuture<StreamReaderResult>
     ) -> Self {
         return AWSPayload(payload: .stream(ChunkedStreamReader(size: size, read: stream)))

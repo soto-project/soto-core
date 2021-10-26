@@ -720,7 +720,7 @@ class AWSClientTests: XCTestCase {
     func testStreamingResponse() {
         struct Input: AWSEncodableShape {}
         struct Output: AWSDecodableShape & Encodable {
-            static let _encoding = [AWSMemberEncoding(label: "test", location: .header(locationName: "test"))]
+            static let _encoding = [AWSMemberEncoding(label: "test", location: .header("test"))]
             let test: String
         }
         let data = createRandomBuffer(45, 109, size: 128 * 1024)
@@ -772,7 +772,7 @@ class AWSClientTests: XCTestCase {
     func testStreamingDelegateFinished() {
         struct Input: AWSEncodableShape {}
         struct Output: AWSDecodableShape & Encodable {
-            static let _encoding = [AWSMemberEncoding(label: "test", location: .header(locationName: "test"))]
+            static let _encoding = [AWSMemberEncoding(label: "test", location: .header("test"))]
             let test: String
         }
         let bufferSize = 200 * 1024

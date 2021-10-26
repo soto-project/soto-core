@@ -16,6 +16,7 @@
 public struct AWSMemberEncoding {
     /// Location of AWSMemberEncoding.
     public enum Location {
+        case hostname(locationName: String)
         case uri(locationName: String)
         case querystring(locationName: String)
         case header(locationName: String)

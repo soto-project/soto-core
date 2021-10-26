@@ -176,8 +176,11 @@ extension AWSRequest {
                     path = path
                         .replacingOccurrences(of: "{\(location)}", with: Self.urlEncodePathComponent(String(describing: value)))
                         .replacingOccurrences(of: "{\(location)+}", with: Self.urlEncodePath(String(describing: value)))
+
+                case .hostname(let location):
                     hostPrefix = hostPrefix?
                         .replacingOccurrences(of: "{\(location)}", with: Self.urlEncodePathComponent(String(describing: value)))
+
                 default:
                     memberVariablesCount += 1
                 }

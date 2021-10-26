@@ -396,7 +396,7 @@ class AWSRequestTests: XCTestCase {
     func testHostPrefixLabel() {
         struct Input: AWSEncodableShape {
             static let _encoding: [AWSMemberEncoding] = [
-                .init(label: "accountId", location: .uri(locationName: "AccountId")),
+                .init(label: "accountId", location: .hostname(locationName: "AccountId")),
             ]
             let accountId: String
         }

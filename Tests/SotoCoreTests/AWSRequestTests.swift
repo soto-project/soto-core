@@ -417,7 +417,7 @@ class AWSRequestTests: XCTestCase {
     /// Test disable S3 chunked upload flag works
     func testDisableS3ChunkedUpload() throws {
         struct Input: AWSEncodableShape & AWSShapeWithPayload {
-            public static let _payloadOptions: AWSShapePayloadOptions = [.raw, .allowStreaming]
+            public static let _options: AWSShapeOptions = [.rawPayload, .allowStreaming]
             public static let _payloadPath: String = "payload"
             let payload: AWSPayload
             let member: String
@@ -432,7 +432,7 @@ class AWSRequestTests: XCTestCase {
             name: config.signingName,
             region: config.region.rawValue
         )
-        let stream: AWSPayload = .stream(size: 32, byteBufferAllocator: config.byteBufferAllocator) { eventLoop in
+        let stream: AWSPayload = .stream(size: 32) { eventLoop in
             return eventLoop.makeSucceededFuture(.byteBuffer(config.byteBufferAllocator.buffer(string: "This is a test")))
         }
         let input = Input(payload: stream, member: "test")

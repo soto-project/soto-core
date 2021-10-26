@@ -22,7 +22,7 @@ import XCTest
 class AWSResponseTests: XCTestCase {
     func testHeaderResponseDecoding() {
         struct Output: AWSDecodableShape {
-            static let _encoding = [AWSMemberEncoding(label: "h", location: .header(locationName: "header-member"))]
+            static let _encoding = [AWSMemberEncoding(label: "h", location: .header("header-member"))]
             let h: String
             private enum CodingKeys: String, CodingKey {
                 case h = "header-member"
@@ -52,11 +52,11 @@ class AWSResponseTests: XCTestCase {
     func testHeaderResponseTypeDecoding() {
         struct Output: AWSDecodableShape {
             static let _encoding = [
-                AWSMemberEncoding(label: "string", location: .header(locationName: "string")),
-                AWSMemberEncoding(label: "string2", location: .header(locationName: "string2")),
-                AWSMemberEncoding(label: "double", location: .header(locationName: "double")),
-                AWSMemberEncoding(label: "integer", location: .header(locationName: "integer")),
-                AWSMemberEncoding(label: "bool", location: .header(locationName: "bool")),
+                AWSMemberEncoding(label: "string", location: .header("string")),
+                AWSMemberEncoding(label: "string2", location: .header("string2")),
+                AWSMemberEncoding(label: "double", location: .header("double")),
+                AWSMemberEncoding(label: "integer", location: .header("integer")),
+                AWSMemberEncoding(label: "bool", location: .header("bool")),
             ]
             let string: String
             let string2: String
@@ -135,7 +135,7 @@ class AWSResponseTests: XCTestCase {
 
     func testValidateXMLCodablePayloadResponse() {
         class Output: AWSDecodableShape & AWSShapeWithPayload {
-            static let _encoding = [AWSMemberEncoding(label: "contentType", location: .header(locationName: "content-type"))]
+            static let _encoding = [AWSMemberEncoding(label: "contentType", location: .header("content-type"))]
             static let _payloadPath: String = "name"
             let name: String
             let contentType: String
@@ -223,7 +223,7 @@ class AWSResponseTests: XCTestCase {
             static let _payloadPath: String = "body"
             static let _options: AWSShapeOptions = .rawPayload
             public static var _encoding = [
-                AWSMemberEncoding(label: "contentType", location: .header(locationName: "content-type")),
+                AWSMemberEncoding(label: "contentType", location: .header("content-type")),
             ]
             let body: AWSPayload
         }
@@ -377,7 +377,7 @@ class AWSResponseTests: XCTestCase {
     func testHeaderPrefixFromDictionary() {
         struct Output: AWSDecodableShape {
             static let _encoding: [AWSMemberEncoding] = [
-                .init(label: "content", location: .headerPrefix(prefix: "prefix-")),
+                .init(label: "content", location: .headerPrefix("prefix-")),
             ]
             let content: [String: String]
             private enum CodingKeys: String, CodingKey {
@@ -399,7 +399,7 @@ class AWSResponseTests: XCTestCase {
     func testHeaderPrefixFromXML() {
         struct Output: AWSDecodableShape {
             static let _encoding: [AWSMemberEncoding] = [
-                .init(label: "content", location: .headerPrefix(prefix: "prefix-")),
+                .init(label: "content", location: .headerPrefix("prefix-")),
             ]
             let content: [String: String]
             let body: String

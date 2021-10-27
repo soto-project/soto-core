@@ -503,6 +503,16 @@ extension AWSClient {
         return recordRequest(future, service: config.service, operation: operationName, logger: logger)
     }
 
+    /// Get credential used by client
+    /// - Parameters:
+    ///   - eventLoop: optional eventLoop to run operation on
+    ///   - logger: optional logger to use
+    /// - Returns: Credential
+    public func getCredential(on eventLoop: EventLoop? = nil, logger: Logger = AWSClient.loggingDisabled) -> EventLoopFuture<Credential> {
+        let eventLoop = eventLoop ?? self.eventLoopGroup.next()
+        return self.credentialProvider.getCredential(on: eventLoop, logger: logger)
+    }
+
     /// Generate a signed URL
     /// - parameters:
     ///     - url : URL to sign

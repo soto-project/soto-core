@@ -297,6 +297,20 @@ extension AWSClient {
         }
     }
 
+    /// Get credential used by client
+    /// - Parameters:
+    ///   - eventLoop: optional eventLoop to run operation on
+    ///   - logger: optional logger to use
+    /// - Returns: Credential
+    public func getCredential(on eventLoop: EventLoop? = nil, logger: Logger = AWSClient.loggingDisabled) async throws -> Credential {
+        let eventLoop = eventLoop ?? self.eventLoopGroup.next()
+        if let asyncCredentialProvider = self.credentialProvider as? AsyncCredentialProvider {
+            return try await asyncCredentialProvider.getCredential(on: eventLoop, logger: logger)
+        } else {
+            return try await self.credentialProvider.getCredential(on: eventLoop, logger: logger).get()
+        }
+    }
+
     /// Generate a signed URL
     /// - parameters:
     ///     - url : URL to sign

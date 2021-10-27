@@ -35,7 +35,7 @@ class AWSClientAsyncTests: XCTestCase {
                 return StaticCredential(accessKeyId: "key", secretAccessKey: "secret")
             }
         }
-        let client = createAWSClient(credentialProvider: .custom{ _ in MyCredentialProvider() })
+        let client = createAWSClient(credentialProvider: .custom { _ in MyCredentialProvider() })
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         XCTRunAsyncAndBlock {
             let credentialForSignature = try await client.getCredential(on: client.eventLoopGroup.next(), logger: TestEnvironment.logger)

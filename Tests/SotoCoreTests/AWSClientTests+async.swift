@@ -29,6 +29,21 @@ import XCTest
 
 @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
 class AWSClientAsyncTests: XCTestCase {
+    func testGetCredential() {
+        struct MyCredentialProvider: AsyncCredentialProvider {
+            func getCredential(on eventLoop: EventLoop, logger: Logger) async throws -> Credential {
+                return StaticCredential(accessKeyId: "key", secretAccessKey: "secret")
+            }
+        }
+        let client = createAWSClient(credentialProvider: .custom { _ in MyCredentialProvider() })
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
+        XCTRunAsyncAndBlock {
+            let credentialForSignature = try await client.getCredential(on: client.eventLoopGroup.next(), logger: TestEnvironment.logger)
+            XCTAssertEqual(credentialForSignature.accessKeyId, "key")
+            XCTAssertEqual(credentialForSignature.secretAccessKey, "secret")
+        }
+    }
+
     func testClientNoInputNoOutput() {
         let awsServer = AWSTestServer(serviceProtocol: .json)
         defer { XCTAssertNoThrow(try awsServer.stop()) }

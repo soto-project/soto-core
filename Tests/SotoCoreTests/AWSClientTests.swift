@@ -32,7 +32,7 @@ class AWSClientTests: XCTestCase {
         }
 
         do {
-            let credentialForSignature = try client.credentialProvider.getCredential(on: client.eventLoopGroup.next(), logger: TestEnvironment.logger).wait()
+            let credentialForSignature = try client.getCredential(on: client.eventLoopGroup.next(), logger: TestEnvironment.logger).wait()
             XCTAssertEqual(credentialForSignature.accessKeyId, "key")
             XCTAssertEqual(credentialForSignature.secretAccessKey, "secret")
         } catch {
@@ -48,7 +48,7 @@ class AWSClientTests: XCTestCase {
         }
 
         do {
-            let credentials = try client.credentialProvider.getCredential(on: client.eventLoopGroup.next(), logger: TestEnvironment.logger).wait()
+            let credentials = try client.getCredential(on: client.eventLoopGroup.next(), logger: TestEnvironment.logger).wait()
             print(credentials)
         } catch let error as CredentialProviderError where error == .noProvider {
             // credentials request should fail. One possible error is a connectTimerout

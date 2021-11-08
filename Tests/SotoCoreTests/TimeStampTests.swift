@@ -100,7 +100,7 @@ class TimeStampTests: XCTestCase {
     func testDecodeHeader() {
         do {
             struct A: AWSDecodableShape {
-                static let _encoding = [AWSMemberEncoding(label: "date", location: .header(locationName: "Date"))]
+                static let _encoding = [AWSMemberEncoding(label: "date", location: .header("Date"))]
                 let date: Date
                 private enum CodingKeys: String, CodingKey {
                     case date = "Date"

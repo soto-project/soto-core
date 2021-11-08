@@ -44,7 +44,7 @@ class AWSRequestTests: XCTestCase {
     func testCreateAwsRequestWithKeywordInHeader() {
         struct KeywordRequest: AWSEncodableShape {
             static var _encoding: [AWSMemberEncoding] = [
-                AWSMemberEncoding(label: "repeat", location: .header(locationName: "repeat")),
+                AWSMemberEncoding(label: "repeat", location: .header("repeat")),
             ]
             let `repeat`: String
         }
@@ -58,7 +58,7 @@ class AWSRequestTests: XCTestCase {
     func testCreateAwsRequestWithKeywordInQuery() {
         struct KeywordRequest: AWSEncodableShape {
             static var _encoding: [AWSMemberEncoding] = [
-                AWSMemberEncoding(label: "self", location: .querystring(locationName: "self")),
+                AWSMemberEncoding(label: "self", location: .querystring("self")),
             ]
             let `self`: String
         }
@@ -190,7 +190,7 @@ class AWSRequestTests: XCTestCase {
 
     func testHeaderEncoding() {
         struct Input: AWSEncodableShape {
-            static let _encoding = [AWSMemberEncoding(label: "h", location: .header(locationName: "header-member"))]
+            static let _encoding = [AWSMemberEncoding(label: "h", location: .header("header-member"))]
             let h: String
         }
         let input = Input(h: "TestHeader")
@@ -202,7 +202,7 @@ class AWSRequestTests: XCTestCase {
 
     func testQueryEncoding() {
         struct Input: AWSEncodableShape {
-            static let _encoding = [AWSMemberEncoding(label: "q", location: .querystring(locationName: "query"))]
+            static let _encoding = [AWSMemberEncoding(label: "q", location: .querystring("query"))]
             let q: String
         }
         let input = Input(q: "=3+5897^sdfjh&")
@@ -214,7 +214,7 @@ class AWSRequestTests: XCTestCase {
 
     func testQueryEncodedArray() {
         struct Input: AWSEncodableShape {
-            static let _encoding = [AWSMemberEncoding(label: "q", location: .querystring(locationName: "query"))]
+            static let _encoding = [AWSMemberEncoding(label: "q", location: .querystring("query"))]
             let q: [String]
         }
         let input = Input(q: ["=3+5897^sdfjh&", "test"])
@@ -227,7 +227,7 @@ class AWSRequestTests: XCTestCase {
 
     func testQueryEncodedDictionary() {
         struct Input: AWSEncodableShape {
-            static let _encoding = [AWSMemberEncoding(label: "q", location: .querystring(locationName: "query"))]
+            static let _encoding = [AWSMemberEncoding(label: "q", location: .querystring("query"))]
             let q: [String: Int]
         }
         let input = Input(q: ["one": 1, "two": 2])
@@ -239,7 +239,7 @@ class AWSRequestTests: XCTestCase {
 
     func testURIEncoding() {
         struct Input: AWSEncodableShape {
-            static let _encoding = [AWSMemberEncoding(label: "u", location: .uri(locationName: "key"))]
+            static let _encoding = [AWSMemberEncoding(label: "u", location: .uri("key"))]
             let u: String
         }
         let input = Input(u: "MyKey")
@@ -323,7 +323,7 @@ class AWSRequestTests: XCTestCase {
 
     func testPercentEncodePath() {
         struct Input: AWSEncodableShape {
-            static let _encoding: [AWSMemberEncoding] = [.init(label: "path", location: .uri(locationName: "path"))]
+            static let _encoding: [AWSMemberEncoding] = [.init(label: "path", location: .uri("path"))]
             let path: String
         }
         let input = Input(path: "Test me/once+")
@@ -337,7 +337,7 @@ class AWSRequestTests: XCTestCase {
 
     func testSortedArrayQuery() {
         struct Input: AWSEncodableShape {
-            static let _encoding: [AWSMemberEncoding] = [.init(label: "items", location: .querystring(locationName: "item"))]
+            static let _encoding: [AWSMemberEncoding] = [.init(label: "items", location: .querystring("item"))]
             let items: [String]
         }
         let input = Input(items: ["orange", "apple"])
@@ -350,8 +350,8 @@ class AWSRequestTests: XCTestCase {
     func testCustomEncoderInQuery() {
         struct Input: AWSEncodableShape {
             static let _encoding: [AWSMemberEncoding] = [
-                .init(label: "_date", location: .querystring(locationName: "date")),
-                .init(label: "_values", location: .querystring(locationName: "values")),
+                .init(label: "_date", location: .querystring("date")),
+                .init(label: "_values", location: .querystring("values")),
             ]
             @OptionalCustomCoding<HTTPHeaderDateCoder>
             var date: Date?
@@ -396,7 +396,7 @@ class AWSRequestTests: XCTestCase {
     func testHostPrefixLabel() {
         struct Input: AWSEncodableShape {
             static let _encoding: [AWSMemberEncoding] = [
-                .init(label: "accountId", location: .uri(locationName: "AccountId")),
+                .init(label: "accountId", location: .hostname("AccountId")),
             ]
             let accountId: String
         }
@@ -475,7 +475,7 @@ class AWSRequestTests: XCTestCase {
         struct Input: AWSEncodableShape {
             static let _options: AWSShapeOptions = .md5ChecksumRequired
             static let _encoding: [AWSMemberEncoding] = [
-                .init(label: "checksum", location: .header(locationName: "Content-MD5")),
+                .init(label: "checksum", location: .header("Content-MD5")),
             ]
             let checksum: String?
             let q: [String: Int]
@@ -490,7 +490,7 @@ class AWSRequestTests: XCTestCase {
     func testHeaderPrefix() {
         struct Input: AWSEncodableShape {
             static let _encoding: [AWSMemberEncoding] = [
-                .init(label: "content", location: .headerPrefix(prefix: "x-aws-metadata-")),
+                .init(label: "content", location: .headerPrefix("x-aws-metadata-")),
             ]
             let content: [String: String]
         }

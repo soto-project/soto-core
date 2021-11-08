@@ -27,7 +27,7 @@ extension AsyncHTTPClient.HTTPClient.Body.StreamWriter {
             // get byte buffer from closure, write to StreamWriter, if there are still bytes to write then call
             // _writeToStreamWriter again.
             reader.streamChunks(on: eventLoop)
-                .map { (byteBuffers) -> Void in
+                .map { byteBuffers -> Void in
                     // if no amount was set and no byte buffers are supppied then this is assumed to mean
                     // there will be no more data
                     if amountLeft == nil, byteBuffers.count == 0 {

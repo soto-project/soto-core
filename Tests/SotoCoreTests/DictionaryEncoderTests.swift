@@ -73,7 +73,7 @@ class DictionaryEncoderTests: XCTestCase {
             let b: String
         }
         let dictionary: [String: Any] = ["a": 4, "b": "Hello"]
-        testDecode(type: Test.self, dictionary: dictionary) {
+        self.testDecode(type: Test.self, dictionary: dictionary) {
             XCTAssertEqual($0.a, 4)
             XCTAssertEqual($0.b, "Hello")
         }
@@ -96,7 +96,7 @@ class DictionaryEncoderTests: XCTestCase {
             let double: Double
         }
         let dictionary: [String: Any] = ["bool": true, "int": 0, "int8": 1, "int16": 2, "int32": -3, "int64": 4, "uint": 10, "uint8": 11, "uint16": 12, "uint32": 13, "uint64": 14, "float": 1.25, "double": 0.23]
-        testDecode(type: Test.self, dictionary: dictionary) {
+        self.testDecode(type: Test.self, dictionary: dictionary) {
             XCTAssertEqual($0.bool, true)
             XCTAssertEqual($0.int, 0)
             XCTAssertEqual($0.int8, 1)
@@ -122,7 +122,7 @@ class DictionaryEncoderTests: XCTestCase {
             let t: Test2
         }
         let dictionary: [String: Any] = ["t": ["a": 4, "b": "Hello"]]
-        testDecode(type: Test.self, dictionary: dictionary) {
+        self.testDecode(type: Test.self, dictionary: dictionary) {
             XCTAssertEqual($0.t.a, 4)
             XCTAssertEqual($0.t.b, "Hello")
         }
@@ -138,7 +138,7 @@ class DictionaryEncoderTests: XCTestCase {
             let a: TestEnum
         }
         let dictionary: [String: Any] = ["a": "First"]
-        testDecode(type: Test.self, dictionary: dictionary) {
+        self.testDecode(type: Test.self, dictionary: dictionary) {
             XCTAssertEqual($0.a, .first)
         }
     }
@@ -148,7 +148,7 @@ class DictionaryEncoderTests: XCTestCase {
             let a: [Int]
         }
         let dictionary: [String: Any] = ["a": [1, 2, 3, 4, 5]]
-        testDecode(type: Test.self, dictionary: dictionary) {
+        self.testDecode(type: Test.self, dictionary: dictionary) {
             XCTAssertEqual($0.a, [1, 2, 3, 4, 5])
         }
     }
@@ -161,7 +161,7 @@ class DictionaryEncoderTests: XCTestCase {
             let a: [Test2]
         }
         let dictionary: [String: Any] = ["a": [["b": "hello"], ["b": "goodbye"]]]
-        testDecode(type: Test.self, dictionary: dictionary) {
+        self.testDecode(type: Test.self, dictionary: dictionary) {
             XCTAssertEqual($0.a[0].b, "hello")
             XCTAssertEqual($0.a[1].b, "goodbye")
         }
@@ -172,7 +172,7 @@ class DictionaryEncoderTests: XCTestCase {
             let a: [String: Int]
         }
         let dictionary: [String: Any] = ["a": ["key": 45]]
-        testDecode(type: Test.self, dictionary: dictionary) {
+        self.testDecode(type: Test.self, dictionary: dictionary) {
             XCTAssertEqual($0.a["key"], 45)
         }
     }
@@ -188,7 +188,7 @@ class DictionaryEncoderTests: XCTestCase {
         }
         // at the moment dictionaries with enums return an array.
         let dictionary: [String: Any] = ["a": ["First", 45]]
-        testDecode(type: Test.self, dictionary: dictionary) {
+        self.testDecode(type: Test.self, dictionary: dictionary) {
             XCTAssertEqual($0.a[.first], 45)
         }
     }
@@ -232,7 +232,7 @@ class DictionaryEncoderTests: XCTestCase {
             let b: Int
         }
         let dictionary: [String: Any] = ["b": 1]
-        testDecodeErrors(type: Test.self, dictionary: dictionary)
+        self.testDecodeErrors(type: Test.self, dictionary: dictionary)
     }
 
     func testInvalidValueDecodeErrors() {
@@ -240,7 +240,7 @@ class DictionaryEncoderTests: XCTestCase {
             let a: Int
         }
         let dictionary: [String: Any] = ["b": "test"]
-        testDecodeErrors(type: Test.self, dictionary: dictionary)
+        self.testDecodeErrors(type: Test.self, dictionary: dictionary)
     }
 
     func testNestedContainer() {
@@ -269,7 +269,7 @@ class DictionaryEncoderTests: XCTestCase {
         }
 
         let dictionary: [String: Any] = ["age": 25, "name": ["firstname": "John", "surname": "Smith"]]
-        testDecode(type: Test.self, dictionary: dictionary) {
+        self.testDecode(type: Test.self, dictionary: dictionary) {
             XCTAssertEqual($0.age, 25)
             XCTAssertEqual($0.firstname, "John")
             XCTAssertEqual($0.surname, "Smith")
@@ -297,7 +297,7 @@ class DictionaryEncoderTests: XCTestCase {
         }
 
         let dictionary: [String: Any] = ["B": "Test", "Super": ["a": 648]]
-        testDecode(type: Test.self, dictionary: dictionary) {
+        self.testDecode(type: Test.self, dictionary: dictionary) {
             XCTAssertEqual($0.b, "Test")
             XCTAssertEqual($0.a, 648)
         }

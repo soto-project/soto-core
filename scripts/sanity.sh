@@ -14,11 +14,12 @@
 ##===----------------------------------------------------------------------===##
 
 SWIFT_VERSION=5.2
+SWIFTFORMAT_VERSION=0.48.17
 
 set -eu
 here="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-which swiftformat > /dev/null 2>&1 || (echo "swiftformat not installed. You can install it using 'brew install swiftformat'" ; exit -1)
+which swiftformat > /dev/null 2>&1 || (echo "swiftformat not installed. You can install it using 'mint install swiftformat'" ; exit -1)
 
 function replace_acceptable_years() {
     # this needs to replace all acceptable forms with 'YEARS'
@@ -28,8 +29,8 @@ function replace_acceptable_years() {
 printf "=> Checking format... "
 FIRST_OUT="$(git status --porcelain)"
 if [[ -n "${CI-""}" ]]; then
-  printf "(using v$(mint run NickLockwood/SwiftFormat@0.47.13 --version)) "
-  mint run NickLockwood/SwiftFormat@0.47.13 . > /dev/null 2>&1
+  printf "(using v$(mint run NickLockwood/SwiftFormat@$SWIFTFORMAT_VERSION --version)) "
+  mint run NickLockwood/SwiftFormat@$SWIFTFORMAT_VERSION . > /dev/null 2>&1
 else
   printf "(using v$(swiftformat --version)) "
   swiftformat . > /dev/null 2>&1

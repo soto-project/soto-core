@@ -70,6 +70,8 @@ public struct Region: RawRepresentable, Equatable {
     public static var usgovwest1: Region { .init(rawValue: "us-gov-west-1") }
     // US ISO East
     public static var usisoeast1: Region { .init(rawValue: "us-iso-east-1") }
+    // US ISO WEST
+    public static var usisowest1: Region { .init(rawValue: "us-iso-west-1") }
     // US ISOB East (Ohio)
     public static var usisobeast1: Region { .init(rawValue: "us-isob-east-1") }
     // US West (N. California)
@@ -107,6 +109,7 @@ public extension Region {
         case .usgoveast1: return .awsusgov
         case .usgovwest1: return .awsusgov
         case .usisoeast1: return .awsiso
+        case .usisowest1: return .awsiso
         case .usisobeast1: return .awsisob
         case .uswest1: return .aws
         case .uswest2: return .aws
@@ -199,6 +202,7 @@ public extension Region {
              .usgoveast1,
              .usgovwest1,
              .usisoeast1,
+             .usisowest1,
              .usisobeast1,
              .uswest1,
              .uswest2:

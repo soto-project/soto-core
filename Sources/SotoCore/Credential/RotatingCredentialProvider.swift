@@ -84,7 +84,7 @@ public final class RotatingCredentialProvider: CredentialProvider {
         logger.debug("Refeshing AWS credentials", metadata: ["aws-credential-provider": .string("\(self)")])
 
         credentialFuture = self.provider.getCredential(on: eventLoop, logger: logger)
-            .map { (credential) -> (Credential) in
+            .map { credential -> (Credential) in
                 // update the internal credential locked
                 self.lock.withLock {
                     self.credentialFuture = nil

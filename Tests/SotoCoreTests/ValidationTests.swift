@@ -46,11 +46,11 @@ class ValidationTests: XCTestCase {
             }
         }
         let a1 = A(size: 23)
-        testValidationSuccess(a1)
+        self.testValidationSuccess(a1)
         let a2 = A(size: 0)
-        testValidationFail(a2)
+        self.testValidationFail(a2)
         let a3 = A(size: 1000)
-        testValidationFail(a3)
+        self.testValidationFail(a3)
     }
 
     func testFloatingPointMinMaxValidation() {
@@ -63,11 +63,11 @@ class ValidationTests: XCTestCase {
             }
         }
         let a1 = A(size: 23)
-        testValidationSuccess(a1)
+        self.testValidationSuccess(a1)
         let a2 = A(size: 0)
-        testValidationFail(a2)
+        self.testValidationFail(a2)
         let a3 = A(size: 1000)
-        testValidationFail(a3)
+        self.testValidationFail(a3)
     }
 
     func testStringLengthMinMaxValidation() {
@@ -80,11 +80,11 @@ class ValidationTests: XCTestCase {
             }
         }
         let a1 = A(string: "hello")
-        testValidationSuccess(a1)
+        self.testValidationSuccess(a1)
         let a2 = A(string: "This string is so long it will fail")
-        testValidationFail(a2)
+        self.testValidationFail(a2)
         let a3 = A(string: "a")
-        testValidationFail(a3)
+        self.testValidationFail(a3)
     }
 
     func testArrayLengthMinMaxValidation() {
@@ -97,11 +97,11 @@ class ValidationTests: XCTestCase {
             }
         }
         let a1 = A(numbers: [1, 2])
-        testValidationSuccess(a1)
+        self.testValidationSuccess(a1)
         let a2 = A(numbers: [1, 2, 3, 4, 5])
-        testValidationFail(a2)
+        self.testValidationFail(a2)
         let a3 = A(numbers: [1])
-        testValidationFail(a3)
+        self.testValidationFail(a3)
     }
 
     func testStringPatternValidation() {
@@ -113,11 +113,11 @@ class ValidationTests: XCTestCase {
             }
         }
         let a1 = A(string: "abc")
-        testValidationSuccess(a1)
+        self.testValidationSuccess(a1)
         let a2 = A(string: "abcd")
-        testValidationFail(a2)
+        self.testValidationFail(a2)
         let a3 = A(string: "a-c")
-        testValidationFail(a3)
+        self.testValidationFail(a3)
     }
 
     func testStringPattern2Validation() {
@@ -129,13 +129,13 @@ class ValidationTests: XCTestCase {
             }
         }
         let a1 = A(path: "/hello/test/")
-        testValidationSuccess(a1)
+        self.testValidationSuccess(a1)
         let a2 = A(path: "hello/test")
-        testValidationFail(a2)
+        self.testValidationFail(a2)
         let a3 = A(path: "hello\\test")
-        testValidationFail(a3)
+        self.testValidationFail(a3)
         // this shouldn't really work but I had to limit it to finding a match, not the whole string matching. MediaConvert seems to assume that is it finding a match
         let a4 = A(path: "/%hello/test/")
-        testValidationSuccess(a4)
+        self.testValidationSuccess(a4)
     }
 }

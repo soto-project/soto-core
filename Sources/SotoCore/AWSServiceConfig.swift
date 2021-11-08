@@ -60,7 +60,7 @@ public final class AWSServiceConfig {
     ///   - endpoint: Custom endpoint URL to use instead of standard AWS servers
     ///   - serviceEndpoints: Dictionary of endpoints to URLs
     ///   - partitionEndpoints: Default endpoint to use, if no region endpoint is supplied
-    ///   - errorType: Array of possible error types that the client can throw
+    ///   - errorType: Error type that the client can throw
     ///   - xmlNamespace: XML Namespace to be applied to request objects
     ///   - middlewares: Array of middlewares to apply to requests and responses
     ///   - timeout: Time out value for HTTP requests
@@ -203,7 +203,7 @@ public final class AWSServiceConfig {
         /// Enable endpoint discovery for services where it isn't required
         public static let enableEndpointDiscovery = Options(rawValue: 1 << 3)
 
-        /// Disable S3 siogned chunked uploads
+        /// Disable S3 signed chunked uploads
         public static let s3DisableChunkedUploads = Options(rawValue: 1 << 4)
     }
 

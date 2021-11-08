@@ -521,83 +521,90 @@
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/Region.swift",
       "line": 74,
-      "symbol": "Region.usisobeast1",
+      "symbol": "Region.usisowest1",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/Region.swift",
       "line": 76,
-      "symbol": "Region.uswest1",
+      "symbol": "Region.usisobeast1",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/Region.swift",
       "line": 78,
-      "symbol": "Region.uswest2",
+      "symbol": "Region.uswest1",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/Region.swift",
       "line": 80,
+      "symbol": "Region.uswest2",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/Region.swift",
+      "line": 82,
       "symbol": "Region.other(_:)",
       "symbol_kind": "source.lang.swift.decl.function.method.static",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/Region.swift",
-      "line": 84,
+      "line": 86,
       "symbol": "Region.partition",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/Region.swift",
-      "line": 148,
+      "line": 151,
       "symbol": "AWSPartition.aws",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/Region.swift",
-      "line": 150,
+      "line": 153,
       "symbol": "AWSPartition.awscn",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/Region.swift",
-      "line": 152,
+      "line": 155,
       "symbol": "AWSPartition.awsusgov",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/Region.swift",
-      "line": 154,
+      "line": 157,
       "symbol": "AWSPartition.awsiso",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/Region.swift",
-      "line": 156,
+      "line": 159,
       "symbol": "AWSPartition.awsisob",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/Region.swift",
-      "line": 160,
+      "line": 163,
       "symbol": "AWSPartition.dnsSuffix",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/runner/work/soto-core/soto-core/Sources/SotoCore/Doc/Region.swift",
-      "line": 175,
+      "line": 178,
       "symbol": "Region.init(awsRegionName:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"

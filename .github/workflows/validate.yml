@@ -1,10 +1,10 @@
-name: Sanity Check
+name: Validity Check
 
 on:
   pull_request:
 
 jobs:
-  sanity-check:
+  validate:
     runs-on: macOS-latest
     steps:
     - name: Checkout
@@ -16,4 +16,4 @@ jobs:
         brew install mint
         mint install nicklockwood/swiftformat@0.48.17 --no-link
     - name: run script
-      run: ./scripts/sanity.sh
+      run: ./scripts/validate.sh

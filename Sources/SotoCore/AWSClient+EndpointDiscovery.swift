@@ -203,7 +203,7 @@ extension AWSClient {
         endpointDiscovery: AWSEndpointDiscovery,
         logger: Logger = AWSClient.loggingDisabled,
         on eventLoop: EventLoop? = nil,
-        stream: @escaping AWSHTTPClient.ResponseStream
+        stream: @escaping AWSResponseStream
     ) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         return self.execute(

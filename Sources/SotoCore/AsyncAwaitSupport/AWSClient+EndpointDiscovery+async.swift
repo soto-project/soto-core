@@ -207,7 +207,7 @@ extension AWSClient {
         endpointDiscovery: AWSEndpointDiscovery,
         logger: Logger = AWSClient.loggingDisabled,
         on eventLoop: EventLoop? = nil,
-        stream: @escaping AWSHTTPClient.ResponseStream
+        stream: @escaping AWSResponseStream
     ) async throws -> Output {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
         return try await self.execute(

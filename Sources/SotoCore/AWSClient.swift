@@ -41,7 +41,7 @@ public final class AWSClient {
     /// Middleware code to be applied to requests and responses
     public let middlewares: [AWSServiceMiddleware]
     /// HTTP client used by AWSClient
-    public let httpClient: AWSHTTPClient
+    public let httpClient: HTTPClient
     /// Keeps a record of how we obtained the HTTP client
     let httpClientProvider: HTTPClientProvider
     /// EventLoopGroup used by AWSClient
@@ -218,7 +218,7 @@ public final class AWSClient {
     public enum HTTPClientProvider {
         /// HTTP Client will be provided by the user. Owner of this group is responsible for its lifecycle. Any HTTPClient that conforms to
         /// `AWSHTTPClient` can be specified here including AsyncHTTPClient
-        case shared(AWSHTTPClient)
+        case shared(HTTPClient)
         /// HTTP Client will be created by the client using provided EventLoopGroup. When `shutdown` is called, created `HTTPClient`
         /// will be shut down as well.
         case createNewWithEventLoopGroup(EventLoopGroup)
@@ -434,7 +434,7 @@ extension AWSClient {
         hostPrefix: String? = nil,
         logger: Logger = AWSClient.loggingDisabled,
         on eventLoop: EventLoop? = nil,
-        stream: @escaping AWSHTTPClient.ResponseStream
+        stream: @escaping AWSResponseStream
     ) -> EventLoopFuture<Output> {
         return execute(
             operation: operationName,

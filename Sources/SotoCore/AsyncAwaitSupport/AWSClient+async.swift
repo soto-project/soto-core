@@ -208,7 +208,7 @@ extension AWSClient {
         hostPrefix: String? = nil,
         logger: Logger = AWSClient.loggingDisabled,
         on eventLoop: EventLoop? = nil,
-        stream: @escaping AWSHTTPClient.ResponseStream
+        stream: @escaping AWSResponseStream
     ) async throws -> Output {
         return try await self.execute(
             operation: operationName,

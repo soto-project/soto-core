@@ -95,8 +95,6 @@ extension StandardRetryPolicy {
             return .dontRetry
         case let httpClientError as HTTPClientError where httpClientError == .remoteConnectionClosed:
             return .retry(wait: calculateRetryWaitTime(attempt: attempt))
-        case is NIOConnectionError:
-            return .retry(wait: calculateRetryWaitTime(attempt: attempt))
         default:
             return .dontRetry
         }

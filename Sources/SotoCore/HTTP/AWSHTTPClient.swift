@@ -17,14 +17,17 @@ import Logging
 import NIOCore
 import NIOHTTP1
 
-/// HTTP Request
-public struct AWSHTTPRequest {
-    public let url: URL
-    public let method: HTTPMethod
-    public let headers: HTTPHeaders
-    public let body: AWSPayload
+/// Function that streamed response chunks are sent ot
+public typealias AWSResponseStream = (ByteBuffer, EventLoop) -> EventLoopFuture<Void>
 
-    public init(url: URL, method: HTTPMethod, headers: HTTPHeaders = [:], body: AWSPayload = .empty) {
+/// HTTP Request
+struct AWSHTTPRequest {
+    let url: URL
+    let method: HTTPMethod
+    let headers: HTTPHeaders
+    let body: AWSPayload
+
+    init(url: URL, method: HTTPMethod, headers: HTTPHeaders = [:], body: AWSPayload = .empty) {
         self.url = url
         self.method = method
         self.headers = headers
@@ -33,7 +36,7 @@ public struct AWSHTTPRequest {
 }
 
 /// HTTP Response
-public protocol AWSHTTPResponse {
+protocol AWSHTTPResponse {
     /// HTTP response status
     var status: HTTPResponseStatus { get }
     /// HTTP response headers
@@ -43,15 +46,12 @@ public protocol AWSHTTPResponse {
 }
 
 /// Protocol defining requirements for a HTTPClient
-public protocol AWSHTTPClient {
-    /// Function that streamed response chunks are sent ot
-    typealias ResponseStream = (ByteBuffer, EventLoop) -> EventLoopFuture<Void>
-
+protocol AWSHTTPClient {
     /// Execute HTTP request and return a future holding a HTTP Response
     func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<AWSHTTPResponse>
 
     /// Execute an HTTP request with a streamed response
-    func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop, logger: Logger, stream: @escaping ResponseStream) -> EventLoopFuture<AWSHTTPResponse>
+    func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop, logger: Logger, stream: @escaping AWSResponseStream) -> EventLoopFuture<AWSHTTPResponse>
 
     /// This should be called before an HTTP Client can be de-initialised
     func shutdown(queue: DispatchQueue, _ callback: @escaping (Error?) -> Void)
@@ -62,7 +62,7 @@ public protocol AWSHTTPClient {
 
 extension AWSHTTPClient {
     /// Execute an HTTP request with a streamed response
-    public func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop, logger: Logger, stream: @escaping ResponseStream) -> EventLoopFuture<AWSHTTPResponse> {
+    func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop, logger: Logger, stream: @escaping AWSResponseStream) -> EventLoopFuture<AWSHTTPResponse> {
         preconditionFailure("\(type(of: self)) does not support response streaming")
     }
 }

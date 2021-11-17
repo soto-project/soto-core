@@ -11,6 +11,8 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 //===----------------------------------------------------------------------===//
+
+import AsyncHTTPClient
 import Foundation
 
 struct STSAssumeRoleRequest: AWSEncodableShape {
@@ -108,7 +110,7 @@ struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
         request: STSAssumeRoleRequest,
         credentialProvider: CredentialProviderFactory,
         region: Region,
-        httpClient: AWSHTTPClient,
+        httpClient: HTTPClient,
         endpoint: String? = nil
     ) {
         self.client = AWSClient(credentialProvider: credentialProvider, httpClientProvider: .shared(httpClient))

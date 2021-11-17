@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import AsyncHTTPClient
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
@@ -43,7 +44,7 @@ public struct CredentialProviderFactory {
     /// The initialization context for a `ContextProvider`
     public struct Context {
         /// The `AWSClient`s internal `HTTPClient`
-        public let httpClient: AWSHTTPClient
+        public let httpClient: HTTPClient
         /// The `EventLoop` that the `CredentialProvider` should use for credential refreshs
         public let eventLoop: EventLoop
         /// The `Logger` attached to the AWSClient

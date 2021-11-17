@@ -29,8 +29,8 @@ struct RequestThrowMiddleware: AWSServiceMiddleware {
 
 struct HeaderShape: AWSEncodableShape {
     static let _encoding: [AWSMemberEncoding] = [
-        .init(label: "a", location: .header(locationName: "A")),
-        .init(label: "b", location: .header(locationName: "B")),
+        .init(label: "a", location: .header("A")),
+        .init(label: "b", location: .header("B")),
     ]
     let a: String
     let b: Int
@@ -38,8 +38,8 @@ struct HeaderShape: AWSEncodableShape {
 
 struct QueryShape: AWSEncodableShape {
     static let _encoding: [AWSMemberEncoding] = [
-        .init(label: "a", location: .querystring(locationName: "A")),
-        .init(label: "b", location: .querystring(locationName: "B")),
+        .init(label: "a", location: .querystring("A")),
+        .init(label: "b", location: .querystring("B")),
     ]
     let a: String
     let b: Int

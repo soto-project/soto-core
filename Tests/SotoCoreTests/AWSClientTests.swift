@@ -577,7 +577,7 @@ class AWSClientTests: XCTestCase {
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let serverAddress = awsServer.address
-            XCTAssertNoThrow(try awsServer.stop())
+            defer { XCTAssertNoThrow(try awsServer.stop()) }
             let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
             defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
             let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
@@ -593,8 +593,18 @@ class AWSClientTests: XCTestCase {
                 logger: TestEnvironment.logger
             )
 
+            var count = 0
+            try awsServer.processRaw { _ in
+                count += 1
+                if count < 4 {
+                    return .error(.serviceUnavailable, continueProcessing: true)
+                } else {
+                    return .error(.serviceUnavailable, continueProcessing: false)
+                }
+            }
+
             try response.wait()
-        } catch is NIOConnectionError {
+        } catch let error as AWSServerError where error == .serviceUnavailable {
             XCTAssertEqual(retryPolicy.attempt, TestRetryPolicy.maxRetries)
         } catch {
             XCTFail("Unexpected error: \(error)")

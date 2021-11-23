@@ -310,7 +310,7 @@ extension AWSRequest {
 
     /// Add headers standard to all requests "content-type" and "user-agent"
     private mutating func addStandardHeaders() {
-        httpHeaders.replaceOrAdd(name: "user-agent", value: "Soto/5.0")
+        httpHeaders.replaceOrAdd(name: "user-agent", value: "Soto/6.0")
         guard httpHeaders["content-type"].first == nil else {
             return
         }

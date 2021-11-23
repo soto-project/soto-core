@@ -121,7 +121,7 @@ class AWSClientTests: XCTestCase {
         XCTAssertEqual(httpHeaders?["content-type"].first, "application/x-amz-json-1.1")
         XCTAssertNotNil(httpHeaders?["authorization"].first)
         XCTAssertNotNil(httpHeaders?["x-amz-date"].first)
-        XCTAssertEqual(httpHeaders?["user-agent"].first, "Soto/5.0")
+        XCTAssertEqual(httpHeaders?["user-agent"].first, "Soto/6.0")
         XCTAssertEqual(httpHeaders?["host"].first, "localhost:\(awsServer.serverPort)")
     }
 

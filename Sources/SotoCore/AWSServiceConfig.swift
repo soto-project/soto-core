@@ -205,6 +205,9 @@ public final class AWSServiceConfig {
 
         /// Disable S3 signed chunked uploads
         public static let s3DisableChunkedUploads = Options(rawValue: 1 << 4)
+
+        /// calculate MD5 for requests with content-md5 header
+        public static let calculateMD5 = Options(rawValue: 1 << 5)
     }
 
     private init(

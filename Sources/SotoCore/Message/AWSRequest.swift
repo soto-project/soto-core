@@ -289,7 +289,9 @@ extension AWSRequest {
         }
 
         /// MD5 checksum
-        if Input._options.contains(.md5ChecksumRequired),
+        let checksumRequired = Input._options.contains(.md5ChecksumRequired) ||
+            (Input._options.contains(.md5ChecksumHeader) && configuration.options.contains(.calculateMD5))
+        if checksumRequired,
            let buffer = body.asByteBuffer(byteBufferAllocator: configuration.byteBufferAllocator),
            headers["content-md5"].first == nil,
            let md5 = Self.calculateMD5(buffer)

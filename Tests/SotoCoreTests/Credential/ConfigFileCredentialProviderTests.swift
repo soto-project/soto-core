@@ -78,7 +78,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         aws_access_key_id = AWSACCESSKEYID
         aws_secret_access_key = AWSSECRETACCESSKEY
         """
-        let filename = "credentials"
+        let filename = #function
         let filenameURL = URL(fileURLWithPath: filename)
         XCTAssertNoThrow(try Data(credentials.utf8).write(to: filenameURL))
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: filenameURL)) }
@@ -107,7 +107,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         Environment.set("test-profile", for: "AWS_PROFILE")
         defer { Environment.unset(name: "AWS_PROFILE") }
 
-        let filename = "credentials"
+        let filename = #function
         let filenameURL = URL(fileURLWithPath: filename)
         XCTAssertNoThrow(try Data(credentials.utf8).write(to: filenameURL))
         defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: filenameURL)) }
@@ -128,7 +128,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
     }
 
     func testConfigFileNotAvailable() {
-        let filename = "credentials_not_existing"
+        let filename = #function
         let filenameURL = URL(fileURLWithPath: filename)
 
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
@@ -163,7 +163,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
             Environment.unset(name: accessKey)
             Environment.unset(name: secretKey)
         }
-        let filename = "credentials"
+        let filename = #function
         let filenameURL = URL(fileURLWithPath: filename)
         XCTAssertNoThrow(try Data(credentialsFile.utf8).write(to: filenameURL))
         let (context, eventLoopGroup, httpClient) = makeContext()

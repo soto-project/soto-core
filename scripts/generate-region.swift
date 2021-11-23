@@ -75,7 +75,7 @@ func loadEndpoints(url: String) throws -> Endpoints? {
 }
 
 print("Loading Endpoints")
-guard let endpoints = try loadEndpoints(url: "https://raw.githubusercontent.com/aws/aws-sdk-go/master/models/endpoints/endpoints.json") else { exit(-1) }
+guard let endpoints = try loadEndpoints(url: "https://raw.githubusercontent.com/aws/aws-sdk-go-v2/master/codegen/smithy-aws-go-codegen/src/main/resources/software/amazon/smithy/aws/go/codegen/endpoints.json") else { exit(-1) }
 
 var regionDescs: [RegionDesc] = []
 var partitions: [Partition] = endpoints.partitions.map {

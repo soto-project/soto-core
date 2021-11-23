@@ -218,6 +218,8 @@ public struct AWSShapeOptions: OptionSet {
     public static let rawPayload = AWSShapeOptions(rawValue: 1 << 2)
     /// Calculate MD5 of body is required
     public static let md5ChecksumRequired = AWSShapeOptions(rawValue: 1 << 3)
+    /// Request includes a MD5 checksum
+    public static let md5ChecksumHeader = AWSShapeOptions(rawValue: 1 << 4)
 }
 
 /// Root AWSShape which include a payload

@@ -116,10 +116,7 @@
                 <a href="../Extensions/AsyncHTTPClient.html">AsyncHTTPClient</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Extensions/AsyncHTTPClient/HTTPClient.html">– HTTPClient</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Extensions/AsyncHTTPClient/HTTPClient.html">– HTTPClient</a>
+                <a href="../Extensions/AsyncHTTPClient.html#/HTTPClient">– HTTPClient</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Extensions/KeyedDecodingContainer.html">KeyedDecodingContainer</a>
@@ -143,12 +140,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Protocols/AWSErrorType.html">AWSErrorType</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Protocols/AWSHTTPClient.html">AWSHTTPClient</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Protocols/AWSHTTPResponse.html">AWSHTTPResponse</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Protocols/AWSPaginateToken.html">AWSPaginateToken</a>
@@ -222,9 +213,6 @@
                 <a href="../Structs/AWSErrorStatusMatcher.html">AWSErrorStatusMatcher</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Structs/AWSHTTPRequest.html">AWSHTTPRequest</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Structs/AWSLoggingMiddleware.html">AWSLoggingMiddleware</a>
               </li>
               <li class="nav-group-task">
@@ -258,7 +246,7 @@
                 <a href="../Structs/AWSServerError.html">AWSServerError</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Structs/AWSShapePayloadOptions.html">AWSShapePayloadOptions</a>
+                <a href="../Structs/AWSShapeOptions.html">AWSShapeOptions</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/AWSSuccessMatcher.html">AWSSuccessMatcher</a>
@@ -328,6 +316,9 @@
           <li class="nav-group-name">
             <a href="../Typealiases.html">Type Aliases</a>
             <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:8SotoCore17AWSResponseStreama">AWSResponseStream</a>
+              </li>
               <li class="nav-group-task">
                 <a href="../Typealiases.html#/s:8SotoCore18StandardArrayCodera">StandardArrayCoder</a>
               </li>
@@ -450,9 +441,9 @@ which is then decoded to generate a <code><a href="../Protocols/AWSShape.html">A
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore9AWSClientC10httpClientAA13AWSHTTPClient_pvp"></a>
+                    <a name="/s:8SotoCore9AWSClientC10httpClient15AsyncHTTPClient0G0Cvp"></a>
                     <a name="//apple_ref/swift/Property/httpClient" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore9AWSClientC10httpClientAA13AWSHTTPClient_pvp">httpClient</a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC10httpClient15AsyncHTTPClient0G0Cvp">httpClient</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -467,7 +458,7 @@ which is then decoded to generate a <code><a href="../Protocols/AWSShape.html">A
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">httpClient</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSHTTPClient.html">AWSHTTPClient</a></span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">httpClient</span><span class="p">:</span> <span class="kt">HTTPClient</span></code></pre>
 
                         </div>
                       </div>
@@ -1553,7 +1544,7 @@ uses, we have to use a <code>DispatchQueue</code> to run some of this work on.</
     <span class="nv">endpointDiscovery</span><span class="p">:</span> <span class="kt"><a href="../Structs/AWSEndpointDiscovery.html">AWSEndpointDiscovery</a></span><span class="p">,</span>
     <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
     <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
-    <span class="nv">stream</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Protocols/AWSHTTPClient.html">AWSHTTPClient</a></span><span class="o">.</span><span class="kt">ResponseStream</span>
+    <span class="nv">stream</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Typealiases.html#/s:8SotoCore17AWSResponseStreama">AWSResponseStream</a></span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span></code></pre>
 
                         </div>
@@ -3207,7 +3198,7 @@ the next block. This function loads each block and calls a closure with each blo
     <span class="nv">hostPrefix</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
     <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
     <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
-    <span class="nv">stream</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Protocols/AWSHTTPClient.html">AWSHTTPClient</a></span><span class="o">.</span><span class="kt">ResponseStream</span>
+    <span class="nv">stream</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Typealiases.html#/s:8SotoCore17AWSResponseStreama">AWSResponseStream</a></span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span></code></pre>
 
                         </div>

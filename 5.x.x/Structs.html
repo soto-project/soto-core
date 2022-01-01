@@ -116,7 +116,10 @@
                 <a href="Extensions/AsyncHTTPClient.html">AsyncHTTPClient</a>
               </li>
               <li class="nav-group-task">
-                <a href="Extensions/AsyncHTTPClient.html#/HTTPClient">– HTTPClient</a>
+                <a href="Extensions/AsyncHTTPClient/HTTPClient.html">– HTTPClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/AsyncHTTPClient/HTTPClient.html">– HTTPClient</a>
               </li>
               <li class="nav-group-task">
                 <a href="Extensions/KeyedDecodingContainer.html">KeyedDecodingContainer</a>
@@ -140,6 +143,12 @@
               </li>
               <li class="nav-group-task">
                 <a href="Protocols/AWSErrorType.html">AWSErrorType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/AWSHTTPClient.html">AWSHTTPClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/AWSHTTPResponse.html">AWSHTTPResponse</a>
               </li>
               <li class="nav-group-task">
                 <a href="Protocols/AWSPaginateToken.html">AWSPaginateToken</a>
@@ -213,6 +222,9 @@
                 <a href="Structs/AWSErrorStatusMatcher.html">AWSErrorStatusMatcher</a>
               </li>
               <li class="nav-group-task">
+                <a href="Structs/AWSHTTPRequest.html">AWSHTTPRequest</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="Structs/AWSLoggingMiddleware.html">AWSLoggingMiddleware</a>
               </li>
               <li class="nav-group-task">
@@ -246,7 +258,7 @@
                 <a href="Structs/AWSServerError.html">AWSServerError</a>
               </li>
               <li class="nav-group-task">
-                <a href="Structs/AWSShapeOptions.html">AWSShapeOptions</a>
+                <a href="Structs/AWSShapePayloadOptions.html">AWSShapePayloadOptions</a>
               </li>
               <li class="nav-group-task">
                 <a href="Structs/AWSSuccessMatcher.html">AWSSuccessMatcher</a>
@@ -316,9 +328,6 @@
           <li class="nav-group-name">
             <a href="Typealiases.html">Type Aliases</a>
             <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="Typealiases.html#/s:8SotoCore17AWSResponseStreama">AWSResponseStream</a>
-              </li>
               <li class="nav-group-task">
                 <a href="Typealiases.html#/s:8SotoCore18StandardArrayCodera">StandardArrayCoder</a>
               </li>
@@ -569,9 +578,9 @@ A response payload only comes in the form of a ByteBuffer</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore15AWSShapeOptionsV"></a>
-                    <a name="//apple_ref/swift/Struct/AWSShapeOptions" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore15AWSShapeOptionsV">AWSShapeOptions</a>
+                    <a name="/s:8SotoCore22AWSShapePayloadOptionsV"></a>
+                    <a name="//apple_ref/swift/Struct/AWSShapePayloadOptions" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore22AWSShapePayloadOptionsV">AWSShapePayloadOptions</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -579,15 +588,15 @@ A response payload only comes in the form of a ByteBuffer</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>AWSShape options.</p>
+                        <p>AWSShapeWithPayload options.</p>
 
-                        <a href="Structs/AWSShapeOptions.html" class="slightly-smaller">See more</a>
+                        <a href="Structs/AWSShapePayloadOptions.html" class="slightly-smaller">See more</a>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">AWSShapeOptions</span> <span class="p">:</span> <span class="kt">OptionSet</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">AWSShapePayloadOptions</span> <span class="p">:</span> <span class="kt">OptionSet</span></code></pre>
 
                         </div>
                       </div>
@@ -1109,6 +1118,34 @@ A response payload only comes in the form of a ByteBuffer</p>
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">AWSServerError</span> <span class="p">:</span> <span class="kt"><a href="Protocols/AWSErrorType.html">AWSErrorType</a></span></code></pre>
 <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">AWSServerError</span><span class="p">:</span> <span class="kt">Equatable</span></code></pre>
 <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">AWSServerError</span><span class="p">:</span> <span class="kt">CustomStringConvertible</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore14AWSHTTPRequestV"></a>
+                    <a name="//apple_ref/swift/Struct/AWSHTTPRequest" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore14AWSHTTPRequestV">AWSHTTPRequest</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>HTTP Request</p>
+
+                        <a href="Structs/AWSHTTPRequest.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">AWSHTTPRequest</span></code></pre>
 
                         </div>
                       </div>

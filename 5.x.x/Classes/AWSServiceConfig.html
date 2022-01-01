@@ -116,7 +116,10 @@
                 <a href="../Extensions/AsyncHTTPClient.html">AsyncHTTPClient</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Extensions/AsyncHTTPClient.html#/HTTPClient">– HTTPClient</a>
+                <a href="../Extensions/AsyncHTTPClient/HTTPClient.html">– HTTPClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/AsyncHTTPClient/HTTPClient.html">– HTTPClient</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Extensions/KeyedDecodingContainer.html">KeyedDecodingContainer</a>
@@ -140,6 +143,12 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Protocols/AWSErrorType.html">AWSErrorType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSHTTPClient.html">AWSHTTPClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSHTTPResponse.html">AWSHTTPResponse</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Protocols/AWSPaginateToken.html">AWSPaginateToken</a>
@@ -213,6 +222,9 @@
                 <a href="../Structs/AWSErrorStatusMatcher.html">AWSErrorStatusMatcher</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Structs/AWSHTTPRequest.html">AWSHTTPRequest</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Structs/AWSLoggingMiddleware.html">AWSLoggingMiddleware</a>
               </li>
               <li class="nav-group-task">
@@ -246,7 +258,7 @@
                 <a href="../Structs/AWSServerError.html">AWSServerError</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Structs/AWSShapeOptions.html">AWSShapeOptions</a>
+                <a href="../Structs/AWSShapePayloadOptions.html">AWSShapePayloadOptions</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/AWSSuccessMatcher.html">AWSSuccessMatcher</a>
@@ -316,9 +328,6 @@
           <li class="nav-group-name">
             <a href="../Typealiases.html">Type Aliases</a>
             <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="../Typealiases.html#/s:8SotoCore17AWSResponseStreama">AWSResponseStream</a>
-              </li>
               <li class="nav-group-task">
                 <a href="../Typealiases.html#/s:8SotoCore18StandardArrayCodera">StandardArrayCoder</a>
               </li>
@@ -565,33 +574,6 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore16AWSServiceConfigC12xmlNamespaceSSSgvp"></a>
-                    <a name="//apple_ref/swift/Property/xmlNamespace" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore16AWSServiceConfigC12xmlNamespaceSSSgvp">xmlNamespace</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>XML namespace to be applied to all request objects</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">xmlNamespace</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
                     <a name="/s:8SotoCore16AWSServiceConfigC11middlewaresSayAA0C10Middleware_pGvp"></a>
                     <a name="//apple_ref/swift/Property/middlewares" class="dashAnchor"></a>
                     <a class="token" href="#/s:8SotoCore16AWSServiceConfigC11middlewaresSayAA0C10Middleware_pGvp">middlewares</a>
@@ -700,9 +682,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore16AWSServiceConfigC6region9partition9amzTarget7service11signingName0I8Protocol10apiVersion8endpoint0I9Endpoints0fP09errorType12xmlNamespace11middlewares7timeout19byteBufferAllocator7optionsAcA6RegionVSg_AA12AWSPartitionVSSSgSSAyA07ServiceL0OSSAYSDyS2SGSDyAXSSAK_AuDtGAA08AWSErrorR0_pXpSgAYSayAA0C10Middleware_pG7NIOCore10TimeAmountVSgA6_04BytexY0VAC7OptionsVtcfc"></a>
-                    <a name="//apple_ref/swift/Method/init(region:partition:amzTarget:service:signingName:serviceProtocol:apiVersion:endpoint:serviceEndpoints:partitionEndpoints:errorType:xmlNamespace:middlewares:timeout:byteBufferAllocator:options:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore16AWSServiceConfigC6region9partition9amzTarget7service11signingName0I8Protocol10apiVersion8endpoint0I9Endpoints0fP09errorType12xmlNamespace11middlewares7timeout19byteBufferAllocator7optionsAcA6RegionVSg_AA12AWSPartitionVSSSgSSAyA07ServiceL0OSSAYSDyS2SGSDyAXSSAK_AuDtGAA08AWSErrorR0_pXpSgAYSayAA0C10Middleware_pG7NIOCore10TimeAmountVSgA6_04BytexY0VAC7OptionsVtcfc">init(region:<wbr>partition:<wbr>amzTarget:<wbr>service:<wbr>signingName:<wbr>serviceProtocol:<wbr>apiVersion:<wbr>endpoint:<wbr>serviceEndpoints:<wbr>partitionEndpoints:<wbr>errorType:<wbr>xmlNamespace:<wbr>middlewares:<wbr>timeout:<wbr>byteBufferAllocator:<wbr>options:<wbr>)</a>
+                    <a name="/s:8SotoCore16AWSServiceConfigC6region9partition9amzTarget7service11signingName0I8Protocol10apiVersion8endpoint0I9Endpoints0fP09errorType11middlewares7timeout19byteBufferAllocator7optionsAcA6RegionVSg_AA12AWSPartitionVSSSgSSAxA07ServiceL0OSSAXSDyS2SGSDyAWSSAK_AtDtGAA08AWSErrorR0_pXpSgSayAA0C10Middleware_pG7NIOCore10TimeAmountVSgA5_04BytevW0VAC7OptionsVtcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(region:partition:amzTarget:service:signingName:serviceProtocol:apiVersion:endpoint:serviceEndpoints:partitionEndpoints:errorType:middlewares:timeout:byteBufferAllocator:options:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore16AWSServiceConfigC6region9partition9amzTarget7service11signingName0I8Protocol10apiVersion8endpoint0I9Endpoints0fP09errorType11middlewares7timeout19byteBufferAllocator7optionsAcA6RegionVSg_AA12AWSPartitionVSSSgSSAxA07ServiceL0OSSAXSDyS2SGSDyAWSSAK_AtDtGAA08AWSErrorR0_pXpSgSayAA0C10Middleware_pG7NIOCore10TimeAmountVSgA5_04BytevW0VAC7OptionsVtcfc">init(region:<wbr>partition:<wbr>amzTarget:<wbr>service:<wbr>signingName:<wbr>serviceProtocol:<wbr>apiVersion:<wbr>endpoint:<wbr>serviceEndpoints:<wbr>partitionEndpoints:<wbr>errorType:<wbr>middlewares:<wbr>timeout:<wbr>byteBufferAllocator:<wbr>options:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -729,7 +711,6 @@
     <span class="nv">serviceEndpoints</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">:</span> <span class="kt">String</span><span class="p">]</span> <span class="o">=</span> <span class="p">[:],</span>
     <span class="nv">partitionEndpoints</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Structs/AWSPartition.html">AWSPartition</a></span><span class="p">:</span> <span class="p">(</span><span class="nv">endpoint</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">region</span><span class="p">:</span> <span class="kt"><a href="../Structs/Region.html">Region</a></span><span class="p">)]</span> <span class="o">=</span> <span class="p">[:],</span>
     <span class="nv">errorType</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSErrorType.html">AWSErrorType</a></span><span class="o">.</span><span class="k">Type</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
-    <span class="nv">xmlNamespace</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
     <span class="nv">middlewares</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Protocols/AWSServiceMiddleware.html">AWSServiceMiddleware</a></span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
     <span class="nv">timeout</span><span class="p">:</span> <span class="kt">TimeAmount</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
     <span class="nv">byteBufferAllocator</span><span class="p">:</span> <span class="kt">ByteBufferAllocator</span> <span class="o">=</span> <span class="kt">ByteBufferAllocator</span><span class="p">(),</span>
@@ -865,24 +846,12 @@
                             <tr>
                               <td>
                                 <code>
-                                <em>errorType</em>
+                                <em>possibleErrorTypes</em>
                                 </code>
                               </td>
                               <td>
                                 <div>
-                                  <p>Error type that the client can throw</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>xmlNamespace</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>XML Namespace to be applied to request objects</p>
+                                  <p>Array of possible error types that the client can throw</p>
                                 </div>
                               </td>
                             </tr>

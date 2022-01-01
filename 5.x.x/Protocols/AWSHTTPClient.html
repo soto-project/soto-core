@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>AWSSuccessMatcher Structure Reference</title>
+    <title>AWSHTTPClient Protocol Reference</title>
     <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
     <meta charset='utf-8'>
@@ -13,8 +13,8 @@
     <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/swift/Struct/AWSSuccessMatcher" class="dashAnchor"></a>
-    <a title="AWSSuccessMatcher Structure Reference"></a>
+    <a name="//apple_ref/swift/Protocol/AWSHTTPClient" class="dashAnchor"></a>
+    <a title="AWSHTTPClient Protocol Reference"></a>
     <header>
       <div class="content-wrapper">
         <p><a href="../index.html"> Docs</a> (64% documented)</p>
@@ -30,7 +30,7 @@
       <p id="breadcrumbs">
         <a href="../index.html"> Reference</a>
         <img id="carat" src="../img/carat.png" alt=""/>
-        AWSSuccessMatcher Structure Reference
+        AWSHTTPClient Protocol Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -341,15 +341,15 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>AWSSuccessMatcher</h1>
+            <h1>AWSHTTPClient</h1>
               <div class="declaration">
                 <div class="language">
                   
-                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">AWSSuccessMatcher</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/AWSWaiterMatcher.html">AWSWaiterMatcher</a></span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">protocol</span> <span class="kt">AWSHTTPClient</span></code></pre>
 
                 </div>
               </div>
-            <p>Match whether an AWS API call was successful</p>
+            <p>Protocol defining requirements for a HTTPClient</p>
 
           </section>
           <section class="section task-group-section">
@@ -358,9 +358,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore17AWSSuccessMatcherVACycfc"></a>
-                    <a name="//apple_ref/swift/Method/init()" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore17AWSSuccessMatcherVACycfc">init()</a>
+                    <a name="/s:8SotoCore13AWSHTTPClientP14ResponseStreama"></a>
+                    <a name="//apple_ref/swift/Alias/ResponseStream" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore13AWSHTTPClientP14ResponseStreama">ResponseStream</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -368,14 +368,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Function that streamed response chunks are sent ot</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">()</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">typealias</span> <span class="kt">ResponseStream</span> <span class="o">=</span> <span class="p">(</span><span class="kt">ByteBuffer</span><span class="p">,</span> <span class="kt">EventLoop</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Void</span><span class="o">&gt;</span></code></pre>
 
                         </div>
                       </div>
@@ -385,9 +385,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore17AWSSuccessMatcherV5match6resultSbs6ResultOyyps5Error_pG_tF"></a>
-                    <a name="//apple_ref/swift/Method/match(result:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore17AWSSuccessMatcherV5match6resultSbs6ResultOyyps5Error_pG_tF">match(result:<wbr>)</a>
+                    <a name="/s:8SotoCore13AWSHTTPClientP7execute7request7timeout2on6logger7NIOCore15EventLoopFutureCyAA15AWSHTTPResponse_pGAA14AWSHTTPRequestV_AI10TimeAmountVAI0jK0_p7Logging6LoggerVtF"></a>
+                    <a name="//apple_ref/swift/Method/execute(request:timeout:on:logger:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore13AWSHTTPClientP7execute7request7timeout2on6logger7NIOCore15EventLoopFutureCyAA15AWSHTTPResponse_pGAA14AWSHTTPRequestV_AI10TimeAmountVAI0jK0_p7Logging6LoggerVtF">execute(request:<wbr>timeout:<wbr>on:<wbr>logger:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -395,14 +395,103 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Execute HTTP request and return a future holding a HTTP Response</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">match</span><span class="p">(</span><span class="nv">result</span><span class="p">:</span> <span class="kt">Result</span><span class="o">&lt;</span><span class="kt">Any</span><span class="p">,</span> <span class="kt">Error</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">execute</span><span class="p">(</span><span class="nv">request</span><span class="p">:</span> <span class="kt"><a href="../Structs/AWSHTTPRequest.html">AWSHTTPRequest</a></span><span class="p">,</span> <span class="nv">timeout</span><span class="p">:</span> <span class="kt">TimeAmount</span><span class="p">,</span> <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">,</span> <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt"><a href="../Protocols/AWSHTTPResponse.html">AWSHTTPResponse</a></span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore13AWSHTTPClientP7execute7request7timeout2on6logger6stream7NIOCore15EventLoopFutureCyAA15AWSHTTPResponse_pGAA14AWSHTTPRequestV_AJ10TimeAmountVAJ0kL0_p7Logging6LoggerVALyytGAJ10ByteBufferV_AjS_ptctF"></a>
+                    <a name="//apple_ref/swift/Method/execute(request:timeout:on:logger:stream:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore13AWSHTTPClientP7execute7request7timeout2on6logger6stream7NIOCore15EventLoopFutureCyAA15AWSHTTPResponse_pGAA14AWSHTTPRequestV_AJ10TimeAmountVAJ0kL0_p7Logging6LoggerVALyytGAJ10ByteBufferV_AjS_ptctF">execute(request:<wbr>timeout:<wbr>on:<wbr>logger:<wbr>stream:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Default implementation
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Execute an HTTP request with a streamed response</p>
+
+                      </div>
+                      <h4>Default Implementation</h4>
+                      <div class="default_impl abstract">
+                        <p>Execute an HTTP request with a streamed response</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">execute</span><span class="p">(</span><span class="nv">request</span><span class="p">:</span> <span class="kt"><a href="../Structs/AWSHTTPRequest.html">AWSHTTPRequest</a></span><span class="p">,</span> <span class="nv">timeout</span><span class="p">:</span> <span class="kt">TimeAmount</span><span class="p">,</span> <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">,</span> <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span><span class="p">,</span> <span class="nv">stream</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Protocols/AWSHTTPClient.html#/s:8SotoCore13AWSHTTPClientP14ResponseStreama">ResponseStream</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt"><a href="../Protocols/AWSHTTPResponse.html">AWSHTTPResponse</a></span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore13AWSHTTPClientP8shutdown5queue_ySo012OS_dispatch_E0C_ys5Error_pSgctF"></a>
+                    <a name="//apple_ref/swift/Method/shutdown(queue:_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore13AWSHTTPClientP8shutdown5queue_ySo012OS_dispatch_E0C_ys5Error_pSgctF">shutdown(queue:<wbr>_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>This should be called before an HTTP Client can be de-initialised</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">shutdown</span><span class="p">(</span><span class="nv">queue</span><span class="p">:</span> <span class="kt">DispatchQueue</span><span class="p">,</span> <span class="n">_</span> <span class="nv">callback</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Error</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore13AWSHTTPClientP14eventLoopGroup7NIOCore05EventeF0_pvp"></a>
+                    <a name="//apple_ref/swift/Property/eventLoopGroup" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore13AWSHTTPClientP14eventLoopGroup7NIOCore05EventeF0_pvp">eventLoopGroup</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Event loop group used by client</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">eventLoopGroup</span><span class="p">:</span> <span class="kt">EventLoopGroup</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>

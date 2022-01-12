@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5) && canImport(_Concurrency)
+#if compiler(>=5.5.2) && canImport(_Concurrency)
 
 import Foundation
 import Logging
@@ -34,4 +34,4 @@ public func XCTRunAsyncAndBlock(_ closure: @escaping () async throws -> Void) {
     dg.wait()
 }
 
-#endif // compiler(>=5.5) && canImport(_Concurrency)
+#endif // compiler(>=5.5.2) && canImport(_Concurrency)

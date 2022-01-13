@@ -116,7 +116,10 @@
                 <a href="Extensions/AsyncHTTPClient.html">AsyncHTTPClient</a>
               </li>
               <li class="nav-group-task">
-                <a href="Extensions/AsyncHTTPClient.html#/HTTPClient">– HTTPClient</a>
+                <a href="Extensions/AsyncHTTPClient/HTTPClient.html">– HTTPClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/AsyncHTTPClient/HTTPClient.html">– HTTPClient</a>
               </li>
               <li class="nav-group-task">
                 <a href="Extensions/KeyedDecodingContainer.html">KeyedDecodingContainer</a>
@@ -140,6 +143,12 @@
               </li>
               <li class="nav-group-task">
                 <a href="Protocols/AWSErrorType.html">AWSErrorType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/AWSHTTPClient.html">AWSHTTPClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/AWSHTTPResponse.html">AWSHTTPResponse</a>
               </li>
               <li class="nav-group-task">
                 <a href="Protocols/AWSPaginateToken.html">AWSPaginateToken</a>
@@ -213,6 +222,9 @@
                 <a href="Structs/AWSErrorStatusMatcher.html">AWSErrorStatusMatcher</a>
               </li>
               <li class="nav-group-task">
+                <a href="Structs/AWSHTTPRequest.html">AWSHTTPRequest</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="Structs/AWSLoggingMiddleware.html">AWSLoggingMiddleware</a>
               </li>
               <li class="nav-group-task">
@@ -246,7 +258,7 @@
                 <a href="Structs/AWSServerError.html">AWSServerError</a>
               </li>
               <li class="nav-group-task">
-                <a href="Structs/AWSShapeOptions.html">AWSShapeOptions</a>
+                <a href="Structs/AWSShapePayloadOptions.html">AWSShapePayloadOptions</a>
               </li>
               <li class="nav-group-task">
                 <a href="Structs/AWSSuccessMatcher.html">AWSSuccessMatcher</a>
@@ -316,9 +328,6 @@
           <li class="nav-group-name">
             <a href="Typealiases.html">Type Aliases</a>
             <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="Typealiases.html#/s:8SotoCore17AWSResponseStreama">AWSResponseStream</a>
-              </li>
               <li class="nav-group-task">
                 <a href="Typealiases.html#/s:8SotoCore18StandardArrayCodera">StandardArrayCoder</a>
               </li>
@@ -396,33 +405,6 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">StandardDictionaryCoder</span><span class="o">&lt;</span><span class="kt">Key</span><span class="p">,</span> <span class="kt">Value</span><span class="o">&gt;</span> <span class="o">=</span> <span class="kt"><a href="Structs/DictionaryCoder.html">DictionaryCoder</a></span><span class="o">&lt;</span><span class="kt"><a href="Structs/StandardDictionaryCoderProperties.html">StandardDictionaryCoderProperties</a></span><span class="p">,</span> <span class="kt">Key</span><span class="p">,</span> <span class="kt">Value</span><span class="o">&gt;</span> <span class="k">where</span> <span class="kt">Key</span> <span class="p">:</span> <span class="kt">Decodable</span><span class="p">,</span> <span class="kt">Key</span> <span class="p">:</span> <span class="kt">Encodable</span><span class="p">,</span> <span class="kt">Key</span> <span class="p">:</span> <span class="kt">Hashable</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:8SotoCore17AWSResponseStreama"></a>
-                    <a name="//apple_ref/swift/Alias/AWSResponseStream" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore17AWSResponseStreama">AWSResponseStream</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Function that streamed response chunks are sent ot</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">AWSResponseStream</span> <span class="o">=</span> <span class="p">(</span><span class="kt">ByteBuffer</span><span class="p">,</span> <span class="kt">EventLoop</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Void</span><span class="o">&gt;</span></code></pre>
 
                         </div>
                       </div>

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>DataDecodingStrategy Enumeration Reference</title>
+    <title>HTTPClient Extension Reference</title>
     <link rel="stylesheet" type="text/css" href="../../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../../css/highlight.css" />
     <meta charset='utf-8'>
@@ -13,8 +13,8 @@
     <script src="../../js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/swift/Enum/DataDecodingStrategy" class="dashAnchor"></a>
-    <a title="DataDecodingStrategy Enumeration Reference"></a>
+    <a name="//apple_ref/swift/Extension/HTTPClient" class="dashAnchor"></a>
+    <a title="HTTPClient Extension Reference"></a>
     <header>
       <div class="content-wrapper">
         <p><a href="../../index.html"> Docs</a> (64% documented)</p>
@@ -30,7 +30,7 @@
       <p id="breadcrumbs">
         <a href="../../index.html"> Reference</a>
         <img id="carat" src="../../img/carat.png" alt=""/>
-        DataDecodingStrategy Enumeration Reference
+        HTTPClient Extension Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -341,16 +341,8 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>DataDecodingStrategy</h1>
-              <div class="declaration">
-                <div class="language">
-                  
-                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">DataDecodingStrategy</span></code></pre>
-
-                </div>
-              </div>
-            <p>The strategy to use for decoding <code>Data</code> values.</p>
-
+            <h1>HTTPClient</h1>
+            
           </section>
           <section class="section task-group-section">
             <div class="task-group">
@@ -358,9 +350,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore17DictionaryDecoderC20DataDecodingStrategyO6base64yA2EmF"></a>
-                    <a name="//apple_ref/swift/Element/base64" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore17DictionaryDecoderC20DataDecodingStrategyO6base64yA2EmF">base64</a>
+                    <a name="/s:15AsyncHTTPClient0B0C8ResponseV"></a>
+                    <a name="//apple_ref/swift/Extension/Response" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AsyncHTTPClient0B0C8ResponseV">Response</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -368,41 +360,13 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Decode the <code>Data</code> from a Base64-encoded string.</p>
-
+                        
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">base64</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:8SotoCore17DictionaryDecoderC20DataDecodingStrategyO3rawyA2EmF"></a>
-                    <a name="//apple_ref/swift/Element/raw" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore17DictionaryDecoderC20DataDecodingStrategyO3rawyA2EmF">raw</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Don&rsquo;t decode. This is the default strategy.</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">raw</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">AsyncHTTPClient</span><span class="o">.</span><span class="kt">HTTPClient</span><span class="o">.</span><span class="kt">Response</span><span class="p">:</span> <span class="kt"><a href="../../Protocols/AWSHTTPResponse.html">AWSHTTPResponse</a></span></code></pre>
 
                         </div>
                       </div>

@@ -12,7 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if compiler(>=5.6) && canImport(_Concurrency)
+@_predatesConcurrency import Logging
+#else
 import Logging
+#endif
 import NIOHTTP1
 
 /// Context object sent to `AWSServiceMiddleware` `chain` functions
@@ -21,7 +25,7 @@ public struct AWSMiddlewareContext {
 }
 
 /// Middleware protocol. Gives ability to process requests before they are sent to AWS and process responses before they are converted into output shapes
-public protocol AWSServiceMiddleware {
+public protocol AWSServiceMiddleware: SotoSendable {
     /// Process AWSRequest before it is converted to a HTTPClient Request to be sent to AWS
     func chain(request: AWSRequest, context: AWSMiddlewareContext) throws -> AWSRequest
 
@@ -42,10 +46,15 @@ public extension AWSServiceMiddleware {
 
 /// Middleware struct that outputs the contents of requests being sent to AWS and the bodies of the responses received
 public struct AWSLoggingMiddleware: AWSServiceMiddleware {
+    #if compiler(>=5.6) && canImport(_Concurrency)
+    public typealias LoggingFunction = @Sendable (String) -> Void
+    #else
+    public typealias LoggingFunction = (String) -> Void
+    #endif
     /// initialize AWSLoggingMiddleware
     /// - parameters:
     ///     - log: Function to call with logging output
-    public init(log: @escaping (String) -> Void = { print($0) }) {
+    public init(log: @escaping LoggingFunction = { print($0) }) {
         self.log = { log($0()) }
     }
 
@@ -109,6 +118,9 @@ public struct AWSLoggingMiddleware: AWSServiceMiddleware {
         )
         return response
     }
-
+    #if compiler(>=5.6) && canImport(_Concurrency)
+    let log: @Sendable (@autoclosure () -> String) -> Void
+    #else
     let log: (@autoclosure () -> String) -> Void
+    #endif
 }

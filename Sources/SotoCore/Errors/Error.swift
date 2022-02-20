@@ -12,7 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if compiler(>=5.6) && canImport(_Concurrency)
+@_predatesConcurrency import NIOHTTP1
+#else
 import NIOHTTP1
+#endif
 
 /// Standard Error type returned by Soto. Initialized with error code and message. Must provide an implementation of var description : String
 public protocol AWSErrorType: Error, CustomStringConvertible {
@@ -35,7 +39,7 @@ extension AWSErrorType {
 }
 
 /// Additional information about error
-public struct AWSErrorContext {
+public struct AWSErrorContext: SotoSendable {
     public let message: String
     public let responseCode: HTTPResponseStatus
     public let headers: HTTPHeaders

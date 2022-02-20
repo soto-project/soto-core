@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-public enum ServiceProtocol {
+public enum ServiceProtocol: SotoSendable {
     case json(version: String)
     case restjson
     case restxml

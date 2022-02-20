@@ -12,10 +12,14 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if compiler(>=5.6) && canImport(_Concurrency)
+@_predatesConcurrency import NIOCore
+#else
 import NIOCore
+#endif
 
 /// Configuration class defining an AWS service
-public final class AWSServiceConfig {
+public final class AWSServiceConfig: SotoSendable {
     /// Region where service is running
     public let region: Region
     /// The destination service of the request. Added as a header value, along with the operation name
@@ -181,7 +185,7 @@ public final class AWSServiceConfig {
     }
 
     /// Options used by client when processing requests
-    public struct Options: OptionSet {
+    public struct Options: OptionSet, SotoSendable {
         public typealias RawValue = Int
         public let rawValue: Int
 

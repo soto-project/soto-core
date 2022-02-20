@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 #if compiler(>=5.6) && canImport(_Concurrency)
-typealias SotoSendable = Sendable
+public typealias SotoSendable = Sendable
 #else
-typealias SotoSendable = Any
+public typealias SotoSendable = Any
 #endif

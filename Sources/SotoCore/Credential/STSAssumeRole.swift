@@ -13,7 +13,12 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
-import Foundation
+#if compiler(>=5.6)
+@preconcurrency import struct Foundation.Date
+#else
+import struct Foundation.Date
+#endif
+import struct Foundation.TimeInterval
 
 struct STSAssumeRoleRequest: AWSEncodableShape {
     /// The Amazon Resource Name (ARN) of the role to assume.

@@ -46,7 +46,7 @@ protocol AWSHTTPResponse {
 }
 
 /// Protocol defining requirements for a HTTPClient
-protocol AWSHTTPClient {
+protocol AWSHTTPClient: SotoSendable {
     /// Execute HTTP request and return a future holding a HTTP Response
     func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<AWSHTTPResponse>
 

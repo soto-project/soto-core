@@ -100,3 +100,9 @@ final class ConfigFileCredentialProvider: CredentialProviderSelector {
         }
     }
 }
+
+#if compiler(>=5.6)
+// can use @unchecked Sendable here as `_internalProvider`` is accessed via `internalProvider` which
+// protects access with a `Lock`
+extension ConfigFileCredentialProvider: @unchecked Sendable {}
+#endif

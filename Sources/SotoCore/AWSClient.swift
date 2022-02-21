@@ -12,21 +12,20 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Dispatch
-import struct Foundation.URL
-import struct Foundation.URLQueryItem
-import Metrics
 #if compiler(>=5.6)
-@preconcurrency import AsyncHTTPClient
 @preconcurrency import Logging
 @preconcurrency import NIOConcurrencyHelpers
 @preconcurrency import NIOCore
 #else
-import AsyncHTTPClient
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
 #endif
+import AsyncHTTPClient
+import Dispatch
+import struct Foundation.URL
+import struct Foundation.URLQueryItem
+import Metrics
 import NIOHTTP1
 import NIOTransportServices
 import SotoSignerV4

@@ -19,7 +19,7 @@ import SotoSignerV4
 
 /// Protocol for CredentialProvider that uses an internal CredentialProvider
 ///
-/// When conforming to this protocol once you ahve the internal provider it should be supplying to
+/// When conforming to this protocol once you have the internal provider it should be supplying to
 /// the startupPromise and you should set `internalProvider` when the setupPromise
 /// result is available.
 /// ```

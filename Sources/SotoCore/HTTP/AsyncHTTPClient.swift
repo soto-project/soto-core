@@ -87,3 +87,8 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
 }
 
 extension AsyncHTTPClient.HTTPClient.Response: AWSHTTPResponse {}
+
+#if compiler(>=5.6)
+// retroactive conformance
+extension AsyncHTTPClient.HTTPClient: @unchecked Sendable {}
+#endif

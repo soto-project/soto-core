@@ -34,8 +34,8 @@ public class DeferredCredentialProvider: CredentialProvider {
         }
     }
 
-    private var provider: CredentialProvider
-    private var startupPromise: EventLoopPromise<Credential>
+    private let provider: CredentialProvider
+    private let startupPromise: EventLoopPromise<Credential>
     private var internalCredential: Credential?
 
     /// Create `DeferredCredentialProvider`.
@@ -79,3 +79,9 @@ public class DeferredCredentialProvider: CredentialProvider {
 extension DeferredCredentialProvider: CustomStringConvertible {
     public var description: String { return "\(type(of: self))(\(self.provider.description))" }
 }
+
+#if compiler(>=5.6)
+// can use @unchecked Sendable here as `internalCredential` is accessed via `credential` which
+// protects access with a `Lock`
+extension DeferredCredentialProvider: @unchecked Sendable {}
+#endif

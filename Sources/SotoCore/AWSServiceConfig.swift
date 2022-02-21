@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 #if compiler(>=5.6) && canImport(_Concurrency)
-@_predatesConcurrency import NIOCore
+@preconcurrency import NIOCore
 #else
 import NIOCore
 #endif

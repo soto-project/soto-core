@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 #if compiler(>=5.6) && canImport(_Concurrency)
-@_predatesConcurrency import Logging
+@preconcurrency import Logging
 #else
 import Logging
 #endif

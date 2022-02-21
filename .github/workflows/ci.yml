@@ -9,6 +9,7 @@ on:
     - main
   release:
     types: [published]
+  workflow_dispatch:
 
 env:
   ENABLE_TIMING_TESTS: "false"

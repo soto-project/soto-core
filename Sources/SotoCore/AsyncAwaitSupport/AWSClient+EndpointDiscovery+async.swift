@@ -14,7 +14,7 @@
 
 #if compiler(>=5.5.2) && canImport(_Concurrency)
 
-#if compiler(>=5.6) && canImport(_Concurrency)
+#if compiler(>=5.6)
 @preconcurrency import Logging
 @preconcurrency import NIOCore
 #else

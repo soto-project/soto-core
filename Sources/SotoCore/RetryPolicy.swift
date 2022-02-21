@@ -14,7 +14,11 @@
 
 import AsyncHTTPClient
 import Foundation
+#if compiler(>=5.6)
+@preconcurrency import NIOCore
+#else
 import NIOCore
+#endif
 import NIOHTTP1
 import NIOPosix // Needed for NIOConnectionError
 
@@ -50,7 +54,7 @@ public enum RetryStatus {
 }
 
 /// Protocol for Retry strategy. Has function returning amount of time before the next retry after an HTTP error
-public protocol RetryPolicy {
+public protocol RetryPolicy: SotoSendable {
     /// Returns whether we should retry and how long we should wait before retrying
     /// - Parameters:
     ///   - error: Error returned by HTTP client

@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.6) && canImport(_Concurrency)
+#if compiler(>=5.6)
 @preconcurrency import NIOHTTP1
 #else
 import NIOHTTP1

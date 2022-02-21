@@ -12,14 +12,21 @@
 //
 //===----------------------------------------------------------------------===//
 
-import AsyncHTTPClient
 import Dispatch
 import struct Foundation.URL
 import struct Foundation.URLQueryItem
-import Logging
 import Metrics
+#if compiler(>=5.6)
+@preconcurrency import AsyncHTTPClient
+@preconcurrency import Logging
+@preconcurrency import NIOConcurrencyHelpers
+@preconcurrency import NIOCore
+#else
+import AsyncHTTPClient
+import Logging
 import NIOConcurrencyHelpers
 import NIOCore
+#endif
 import NIOHTTP1
 import NIOTransportServices
 import SotoSignerV4
@@ -28,7 +35,7 @@ import SotoXML
 /// This is the workhorse of SotoCore. You provide it with a `AWSShape` Input object, it converts it to `AWSRequest` which is then converted
 /// to a raw `HTTPClient` Request. This is then sent to AWS. When the response from AWS is received if it is successful it is converted to a `AWSResponse`
 /// which is then decoded to generate a `AWSShape` Output object. If it is not successful then `AWSClient` will throw an `AWSErrorType`.
-public final class AWSClient {
+public final class AWSClient: SotoSendable {
     // MARK: Member variables
 
     /// Default logger that logs nothing
@@ -215,7 +222,7 @@ public final class AWSClient {
     }
 
     /// Specifies how `HTTPClient` will be created and establishes lifecycle ownership.
-    public enum HTTPClientProvider {
+    public enum HTTPClientProvider: SotoSendable {
         /// HTTP Client will be provided by the user. Owner of this group is responsible for its lifecycle. Any HTTPClient that conforms to
         /// `AWSHTTPClient` can be specified here including AsyncHTTPClient
         case shared(HTTPClient)
@@ -227,7 +234,7 @@ public final class AWSClient {
     }
 
     /// Additional options
-    public struct Options {
+    public struct Options: SotoSendable {
         /// log level used for request logging
         let requestLogLevel: Logger.Level
         /// log level used for error logging

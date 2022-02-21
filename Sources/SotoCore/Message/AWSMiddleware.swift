@@ -12,11 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.6) && canImport(_Concurrency)
-@preconcurrency import Logging
-#else
 import Logging
-#endif
 import NIOHTTP1
 
 /// Context object sent to `AWSServiceMiddleware` `chain` functions
@@ -46,7 +42,7 @@ public extension AWSServiceMiddleware {
 
 /// Middleware struct that outputs the contents of requests being sent to AWS and the bodies of the responses received
 public struct AWSLoggingMiddleware: AWSServiceMiddleware {
-    #if compiler(>=5.6) && canImport(_Concurrency)
+    #if compiler(>=5.6)
     public typealias LoggingFunction = @Sendable (String) -> Void
     #else
     public typealias LoggingFunction = (String) -> Void
@@ -118,7 +114,7 @@ public struct AWSLoggingMiddleware: AWSServiceMiddleware {
         )
         return response
     }
-    #if compiler(>=5.6) && canImport(_Concurrency)
+    #if compiler(>=5.6)
     let log: @Sendable (@autoclosure () -> String) -> Void
     #else
     let log: (@autoclosure () -> String) -> Void

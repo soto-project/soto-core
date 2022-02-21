@@ -12,10 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.6) && canImport(_Concurrency)
+#if compiler(>=5.6)
 @preconcurrency import NIOCore
 #else
-import NIOCore
+import NIOCore 
 #endif
 
 /// Configuration class defining an AWS service

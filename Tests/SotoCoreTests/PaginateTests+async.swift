@@ -162,77 +162,71 @@ final class PaginateAsyncTests: XCTestCase {
         return .result(output, continueProcessing: continueProcessing)
     }
 
-    func testAsyncIntegerTokenPaginate() throws {
-        XCTRunAsyncAndBlock {
-            // paginate input
-            let input = CounterInput(inputToken: nil, pageSize: 4)
-            let arraySize = 23
+    func testAsyncIntegerTokenPaginate() async throws {
+        // paginate input
+        let input = CounterInput(inputToken: nil, pageSize: 4)
+        let arraySize = 23
 
-            let finalArray = try await withThrowingTaskGroup(of: [Int].self) { group -> [Int] in
-                group.addTask {
-                    return try await self.asyncCounterPaginator(input).reduce([]) { return $0 + $1.array }
-                }
-                try self.awsServer.process { (input: CounterInput) throws -> AWSTestServer.Result<CounterOutput> in
-                    // send part of array of numbers based on input startIndex and pageSize
-                    let startIndex = input.inputToken ?? 0
-                    let endIndex = min(startIndex + input.pageSize, arraySize)
-                    var array: [Int] = []
-                    for i in startIndex..<endIndex {
-                        array.append(i)
-                    }
-                    let continueProcessing = (endIndex != arraySize)
-                    let output = CounterOutput(array: array, outputToken: endIndex != arraySize ? endIndex : nil)
-                    return .result(output, continueProcessing: continueProcessing)
-                }
-                return try await group.next()!
+        let finalArray = try await withThrowingTaskGroup(of: [Int].self) { group -> [Int] in
+            group.addTask {
+                return try await self.asyncCounterPaginator(input).reduce([]) { return $0 + $1.array }
             }
+            try self.awsServer.process { (input: CounterInput) throws -> AWSTestServer.Result<CounterOutput> in
+                // send part of array of numbers based on input startIndex and pageSize
+                let startIndex = input.inputToken ?? 0
+                let endIndex = min(startIndex + input.pageSize, arraySize)
+                var array: [Int] = []
+                for i in startIndex..<endIndex {
+                    array.append(i)
+                }
+                let continueProcessing = (endIndex != arraySize)
+                let output = CounterOutput(array: array, outputToken: endIndex != arraySize ? endIndex : nil)
+                return .result(output, continueProcessing: continueProcessing)
+            }
+            return try await group.next()!
+        }
 
-            // verify contents of array
-            XCTAssertEqual(finalArray.count, arraySize)
-            for i in 0..<finalArray.count {
-                XCTAssertEqual(finalArray[i], i)
-            }
+        // verify contents of array
+        XCTAssertEqual(finalArray.count, arraySize)
+        for i in 0..<finalArray.count {
+            XCTAssertEqual(finalArray[i], i)
         }
     }
 
-    func testAsyncStringTokenReducePaginate() throws {
-        XCTRunAsyncAndBlock {
-            // paginate input
-            let input = StringListInput(inputToken: nil, pageSize: 5)
-            let finalArray = try await withThrowingTaskGroup(of: [String].self) { group -> [String] in
+    func testAsyncStringTokenReducePaginate() async throws {
+        // paginate input
+        let input = StringListInput(inputToken: nil, pageSize: 5)
+        let finalArray = try await withThrowingTaskGroup(of: [String].self) { group -> [String] in
+            group.addTask {
+                let paginator = self.asyncStringListPaginator(input)
+                return try await paginator.reduce([]) { $0 + $1.array }
+            }
+            try self.awsServer.process(self.stringListServerProcess)
+            return try await group.next()!
+        }
+        // verify contents of array
+        XCTAssertEqual(finalArray.count, self.stringList.count)
+        for i in 0..<finalArray.count {
+            XCTAssertEqual(finalArray[i], self.stringList[i])
+        }
+    }
+
+    func testAsyncPaginateError() async throws {
+        // paginate input
+        let input = StringListInput(inputToken: nil, pageSize: 5)
+        do {
+            _ = try await withThrowingTaskGroup(of: [String].self) { group -> [String] in
                 group.addTask {
                     let paginator = self.asyncStringListPaginator(input)
                     return try await paginator.reduce([]) { $0 + $1.array }
                 }
-                try self.awsServer.process(self.stringListServerProcess)
+                try self.awsServer.process { (_: StringListInput) -> AWSTestServer.Result<StringListOutput> in
+                    return .error(.badRequest)
+                }
                 return try await group.next()!
             }
-            // verify contents of array
-            XCTAssertEqual(finalArray.count, self.stringList.count)
-            for i in 0..<finalArray.count {
-                XCTAssertEqual(finalArray[i], self.stringList[i])
-            }
-        }
-    }
-
-    func testAsyncPaginateError() throws {
-        XCTRunAsyncAndBlock {
-            // paginate input
-            let input = StringListInput(inputToken: nil, pageSize: 5)
-            do {
-                _ = try await withThrowingTaskGroup(of: [String].self) { group -> [String] in
-                    group.addTask {
-                        let paginator = self.asyncStringListPaginator(input)
-                        return try await paginator.reduce([]) { $0 + $1.array }
-                    }
-                    try self.awsServer.process { (_: StringListInput) -> AWSTestServer.Result<StringListOutput> in
-                        return .error(.badRequest)
-                    }
-                    return try await group.next()!
-                }
-            } catch {
-                XCTAssertEqual((error as? AWSResponseError)?.errorCode, "BadRequest")
-            }
+        } catch {
+            XCTAssertEqual((error as? AWSResponseError)?.errorCode, "BadRequest")
         }
     }
 }

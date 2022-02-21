@@ -107,7 +107,7 @@ class EndpointDiscoveryAsyncTests: XCTestCase {
         }
     }
 
-    func testCachingEndpointDiscovery() throws {
+    func testCachingEndpointDiscovery() async throws {
         let awsServer = AWSTestServer(serviceProtocol: .restjson)
         let client = AWSClient(credentialProvider: .empty, httpClientProvider: .createNew)
         defer {
@@ -116,26 +116,24 @@ class EndpointDiscoveryAsyncTests: XCTestCase {
         }
         let service = Service(client: client, endpointToDiscover: awsServer.address).with(middlewares: TestEnvironment.middlewares)
 
-        XCTRunAsyncAndBlock {
-            async let response1: () = service.test(.init(), logger: TestEnvironment.logger)
-            try awsServer.processRaw { request in
-                TestEnvironment.logger.info("\(request)")
-                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
-                return .result(response, continueProcessing: false)
-            }
-            try await response1
-            async let response2: () = service.test(.init(), logger: TestEnvironment.logger)
-            try awsServer.processRaw { request in
-                TestEnvironment.logger.info("\(request)")
-                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
-                return .result(response, continueProcessing: false)
-            }
-            try await response2
-            XCTAssertEqual(service.getEndpointsCalledCount, 1)
+        async let response1: () = service.test(.init(), logger: TestEnvironment.logger)
+        try awsServer.processRaw { request in
+            TestEnvironment.logger.info("\(request)")
+            let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
+            return .result(response, continueProcessing: false)
         }
+        try await response1
+        async let response2: () = service.test(.init(), logger: TestEnvironment.logger)
+        try awsServer.processRaw { request in
+            TestEnvironment.logger.info("\(request)")
+            let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
+            return .result(response, continueProcessing: false)
+        }
+        try await response2
+        XCTAssertEqual(service.getEndpointsCalledCount, 1)
     }
 
-    func testConcurrentEndpointDiscovery() throws {
+    func testConcurrentEndpointDiscovery() async throws {
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let client = AWSClient(credentialProvider: .empty, httpClientProvider: .createNew)
         defer {
@@ -144,29 +142,27 @@ class EndpointDiscoveryAsyncTests: XCTestCase {
         }
         let service = Service(client: client, endpointToDiscover: awsServer.address).with(middlewares: TestEnvironment.middlewares)
 
-        XCTRunAsyncAndBlock {
-            async let response1: () = service.test(.init(), logger: TestEnvironment.logger)
-            async let response2: () = service.test(.init(), logger: TestEnvironment.logger)
+        async let response1: () = service.test(.init(), logger: TestEnvironment.logger)
+        async let response2: () = service.test(.init(), logger: TestEnvironment.logger)
 
-            var count = 0
-            try awsServer.processRaw { request in
-                TestEnvironment.logger.info("\(request)")
-                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
-                count += 1
-                if count > 1 {
-                    return .result(response, continueProcessing: false)
-                } else {
-                    return .result(response, continueProcessing: true)
-                }
+        var count = 0
+        try awsServer.processRaw { request in
+            TestEnvironment.logger.info("\(request)")
+            let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
+            count += 1
+            if count > 1 {
+                return .result(response, continueProcessing: false)
+            } else {
+                return .result(response, continueProcessing: true)
             }
-
-            try await response1
-            try await response2
-            XCTAssertEqual(service.getEndpointsCalledCount, 1)
         }
+
+        try await response1
+        try await response2
+        XCTAssertEqual(service.getEndpointsCalledCount, 1)
     }
 
-    func testDontCacheEndpoint() throws {
+    func testDontCacheEndpoint() async throws {
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let client = AWSClient(credentialProvider: .empty, httpClientProvider: .createNew)
         defer {
@@ -174,26 +170,25 @@ class EndpointDiscoveryAsyncTests: XCTestCase {
             XCTAssertNoThrow(try awsServer.stop())
         }
         let service = Service(client: client, endpointToDiscover: awsServer.address).with(middlewares: TestEnvironment.middlewares)
-        XCTRunAsyncAndBlock {
-            async let response1: () = service.testDontCache(logger: TestEnvironment.logger)
-            try awsServer.processRaw { request in
-                TestEnvironment.logger.info("\(request)")
-                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
-                return .result(response, continueProcessing: false)
-            }
-            try await response1
-            async let response2: () = service.testDontCache(logger: TestEnvironment.logger)
-            try awsServer.processRaw { request in
-                TestEnvironment.logger.info("\(request)")
-                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
-                return .result(response, continueProcessing: false)
-            }
-            try await response2
-            XCTAssertEqual(service.getEndpointsCalledCount, 2)
+
+        async let response1: () = service.testDontCache(logger: TestEnvironment.logger)
+        try awsServer.processRaw { request in
+            TestEnvironment.logger.info("\(request)")
+            let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
+            return .result(response, continueProcessing: false)
         }
+        try await response1
+        async let response2: () = service.testDontCache(logger: TestEnvironment.logger)
+        try awsServer.processRaw { request in
+            TestEnvironment.logger.info("\(request)")
+            let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
+            return .result(response, continueProcessing: false)
+        }
+        try await response2
+        XCTAssertEqual(service.getEndpointsCalledCount, 2)
     }
 
-    func testDisableEndpointDiscovery() throws {
+    func testDisableEndpointDiscovery() async throws {
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let client = AWSClient(credentialProvider: .empty, httpClientProvider: .createNew)
         defer {
@@ -203,18 +198,16 @@ class EndpointDiscoveryAsyncTests: XCTestCase {
         let service = Service(client: client, endpoint: awsServer.address)
             .with(middlewares: TestEnvironment.middlewares)
 
-        XCTRunAsyncAndBlock {
-            async let response: () = service.testNotRequired(.init(), logger: TestEnvironment.logger)
+        async let response: () = service.testNotRequired(.init(), logger: TestEnvironment.logger)
 
-            try awsServer.processRaw { request in
-                TestEnvironment.logger.info("\(request)")
-                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
-                return .result(response, continueProcessing: false)
-            }
-
-            try await response
-            XCTAssertEqual(service.getEndpointsCalledCount, 0)
+        try awsServer.processRaw { request in
+            TestEnvironment.logger.info("\(request)")
+            let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
+            return .result(response, continueProcessing: false)
         }
+
+        try await response
+        XCTAssertEqual(service.getEndpointsCalledCount, 0)
     }
 }
 

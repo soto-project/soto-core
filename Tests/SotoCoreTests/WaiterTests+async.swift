@@ -56,7 +56,7 @@ final class WaiterAsyncTests: XCTestCase {
         self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger, on: eventLoop)
     }
 
-    func testJMESPathWaiter() {
+    func testJMESPathWaiter() async throws {
         let waiter = AWSClient.Waiter(
             acceptors: [
                 .init(state: .success, matcher: try! JMESPathMatcher("array[*].status", expected: [true, true, true])),
@@ -65,17 +65,15 @@ final class WaiterAsyncTests: XCTestCase {
             command: self.arrayOperation
         )
         let input = Input()
-        XCTRunAsyncAndBlock {
-            async let asyncWait: Void = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+        async let asyncWait: Void = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
-            var i = 0
-            try self.awsServer.process { (_: Input) -> AWSTestServer.Result<ArrayOutput> in
-                i += 1
-                return .result(ArrayOutput(array: [.init(i >= 3), .init(i >= 2), .init(i >= 1)]), continueProcessing: i < 3)
-            }
-
-            try await asyncWait
+        var i = 0
+        try self.awsServer.process { (_: Input) -> AWSTestServer.Result<ArrayOutput> in
+            i += 1
+            return .result(ArrayOutput(array: [.init(i >= 3), .init(i >= 2), .init(i >= 1)]), continueProcessing: i < 3)
         }
+
+        try await asyncWait
     }
 }
 

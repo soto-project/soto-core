@@ -12,23 +12,30 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIOCore
 import NIOHTTP1
+#if compiler(>=5.6)
+@preconcurrency import NIOCore
+#else
+import NIOCore
+#endif
 
 /// Streaming result
-public enum StreamReaderResult {
+public enum StreamReaderResult: SotoSendable {
     case byteBuffer(ByteBuffer)
     case end
 }
 
+/// stream reading function
+public typealias StreamReadFunction = (EventLoop) -> EventLoopFuture<StreamReaderResult>
+
 /// Protocol for objects that supply streamed data to HTTPClient.Body.StreamWriter
-protocol StreamReader {
+protocol StreamReader: SotoSendable {
     /// size of data to be streamed
     var size: Int? { get }
     /// total size of data to be streamed plus any chunk headers
     var contentSize: Int? { get }
     /// function providing data to be streamed
-    var read: (EventLoop) -> EventLoopFuture<StreamReaderResult> { get }
+    var read: StreamReadFunction { get }
 
     /// Update headers for this kind of streamed data
     /// - Parameter headers: headers to update
@@ -72,5 +79,11 @@ struct ChunkedStreamReader: StreamReader {
     /// size of data to be streamed
     let size: Int?
     /// function providing data to be streamed
-    let read: (EventLoop) -> EventLoopFuture<StreamReaderResult>
+    let read: StreamReadFunction
 }
+
+#if compiler(>=5.6)
+// read function is reason ChunkedStreamReader is not Sendable. We can guarantee this is never called
+// concurrently
+extension ChunkedStreamReader: @unchecked Sendable {}
+#endif

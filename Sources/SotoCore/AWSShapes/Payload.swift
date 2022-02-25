@@ -13,15 +13,19 @@
 //===----------------------------------------------------------------------===//
 
 import struct Foundation.Data
-import NIOCore
 import NIOFoundationCompat
 import NIOPosix
+#if compiler(>=5.6)
+@preconcurrency import NIOCore
+#else
+import NIOCore
+#endif
 
 /// Holds a request or response payload. A request payload can be in the form of either a ByteBuffer or a stream function that will supply ByteBuffers to the HTTP client.
 /// A response payload only comes in the form of a ByteBuffer
-public struct AWSPayload {
+public struct AWSPayload: SotoSendable {
     /// Internal enum
-    enum Payload {
+    enum Payload: SotoSendable {
         case byteBuffer(ByteBuffer)
         case stream(StreamReader)
         case empty
@@ -38,7 +42,7 @@ public struct AWSPayload {
     /// don't supply a size the stream function will be called repeatedly until you supply an empty `ByteBuffer`
     public static func stream(
         size: Int? = nil,
-        stream: @escaping (EventLoop) -> EventLoopFuture<StreamReaderResult>
+        stream: @escaping StreamReadFunction
     ) -> Self {
         return AWSPayload(payload: .stream(ChunkedStreamReader(size: size, read: stream)))
     }
@@ -82,7 +86,7 @@ public struct AWSPayload {
         let blockSize = S3ChunkedStreamReader.bufferSize
         var leftToRead = size
         var readSoFar: Int = 0
-        func stream(_ eventLoop: EventLoop) -> EventLoopFuture<StreamReaderResult> {
+        let stream: StreamReadFunction = { eventLoop in
             // calculate how much data is left to read, if a file size was indicated
             var downloadSize = blockSize
             if let leftToRead2 = leftToRead {

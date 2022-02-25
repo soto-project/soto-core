@@ -19,7 +19,7 @@ import SotoTestUtils
 import XCTest
 
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-final class WaiterAsyncTests: XCTestCase {
+final class WaiterAsyncTests: XCTestCase, @unchecked Sendable {
     var awsServer: AWSTestServer!
     var config: AWSServiceConfig!
     var client: AWSClient!

@@ -21,7 +21,7 @@ import SotoTestUtils
 import XCTest
 
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-class EndpointDiscoveryAsyncTests: XCTestCase {
+final class EndpointDiscoveryAsyncTests: XCTestCase, @unchecked Sendable {
     final class Service: AWSService {
         let client: AWSClient
         let config: AWSServiceConfig

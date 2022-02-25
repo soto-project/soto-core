@@ -15,6 +15,7 @@
 import struct Foundation.Date
 import struct Foundation.TimeInterval
 import NIOConcurrencyHelpers
+import Logging
 import NIOCore
 
 /// Endpoint list
@@ -99,12 +100,8 @@ public class AWSEndpointStorage {
 }
 
 /// Helper object holding endpoint storage and closure used to discover endpoint
-public struct AWSEndpointDiscovery: SotoSendable {
-    #if compiler(>=5.6)
-    public typealias DiscoverFunction = @Sendable (Logger, EventLoop) -> EventLoopFuture<AWSEndpoints>
-    #else
+public struct AWSEndpointDiscovery {
     public typealias DiscoverFunction = (Logger, EventLoop) -> EventLoopFuture<AWSEndpoints>
-    #endif
 
     let storage: AWSEndpointStorage
     let discover: DiscoverFunction
@@ -131,4 +128,8 @@ public struct AWSEndpointDiscovery: SotoSendable {
 // can be set to Sendable as the contents are only set internally and they are
 // protected by a lock
 extension AWSEndpointStorage: @unchecked Sendable {}
+// I could require the discover function in AWSEndpointDiscovery to be Sendable, but it just
+// generates pain elsewhere where I have to then import NIOCore and Logger with @preconcurrency
+// which is a pain
+extension AWSEndpointDiscovery: @unchecked Sendable {}
 #endif

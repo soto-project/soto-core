@@ -70,7 +70,7 @@ public class AWSEndpointStorage {
     ///   - eventLoop: EventLoop to run process on
     /// - Returns: EventLoopFuture holding the endpoint
     func getEndpoint(
-        discover: @escaping (Logger, EventLoop) -> EventLoopFuture<AWSEndpoints>,
+        discover: @escaping AWSEndpointDiscovery.DiscoverFunction,
         logger: Logger,
         on eventLoop: EventLoop
     ) -> EventLoopFuture<String> {
@@ -99,13 +99,19 @@ public class AWSEndpointStorage {
 }
 
 /// Helper object holding endpoint storage and closure used to discover endpoint
-public struct AWSEndpointDiscovery {
-    let storage: AWSEndpointStorage
-    let discover: (Logger, EventLoop) -> EventLoopFuture<AWSEndpoints>
-    let isRequired: Bool
-    var endpoint: String? { storage.endpoint }
+public struct AWSEndpointDiscovery: SotoSendable {
+    #if compiler(>=5.6)
+    public typealias DiscoverFunction = @Sendable (Logger, EventLoop) -> EventLoopFuture<AWSEndpoints>
+    #else
+    public typealias DiscoverFunction = (Logger, EventLoop) -> EventLoopFuture<AWSEndpoints>
+    #endif
 
-    public init(storage: AWSEndpointStorage, discover: @escaping (Logger, EventLoop) -> EventLoopFuture<AWSEndpoints>, required: Bool) {
+    let storage: AWSEndpointStorage
+    let discover: DiscoverFunction
+    let isRequired: Bool
+    internal var endpoint: String? { storage.endpoint }
+
+    public init(storage: AWSEndpointStorage, discover: @escaping DiscoverFunction, required: Bool) {
         self.storage = storage
         self.discover = discover
         self.isRequired = required
@@ -120,3 +126,9 @@ public struct AWSEndpointDiscovery {
         return self.storage.getEndpoint(discover: self.discover, logger: logger, on: eventLoop)
     }
 }
+
+#if compiler(>=5.6)
+// can be set to Sendable as the contents are only set internally and they are
+// protected by a lock
+extension AWSEndpointStorage: @unchecked Sendable {}
+#endif

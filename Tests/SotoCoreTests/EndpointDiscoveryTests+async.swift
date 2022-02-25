@@ -22,7 +22,7 @@ import XCTest
 
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 class EndpointDiscoveryAsyncTests: XCTestCase {
-    class Service: AWSService {
+    final class Service: AWSService {
         let client: AWSClient
         let config: AWSServiceConfig
         let endpointStorage: AWSEndpointStorage

@@ -12,12 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct Foundation.Date
-import class Foundation.DateFormatter
-import struct Foundation.Locale
-import struct Foundation.TimeZone
+import Foundation
 
 // MARK: TimeStamp Coders
+
+#if compiler(>=5.6)
+extension Date: @unchecked Sendable {}
+#endif
 
 /// Protocol for time stamp coders that use a DateFormatter. Use this to enforce the timestamp format we require, or to set the timestamp format output
 protocol DateFormatCoder: CustomDecoder, CustomEncoder where CodableValue == Date {

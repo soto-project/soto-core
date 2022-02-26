@@ -36,17 +36,17 @@ jobs:
       with:
         file: info.lcov
 
-#  ios:
-#    runs-on: macOS-latest
-#    steps:
-#    - name: Checkout
-#      uses: actions/checkout@v1
-#      with:
-#        fetch-depth: 1
-#    - name: Xcodebuild
-#        xcodebuild -scheme soto-core-Package -quiet -destination 'platform=iOS Simulator,name=iPhone 11'
-#      run: |
-#        xcodebuild test -scheme soto-core-Package -destination 'platform=iOS Simulator,name=iPhone 11'
+  #ios:
+  #  runs-on: macOS-latest
+  #  steps:
+  #  - name: Checkout
+  #    uses: actions/checkout@v1
+  #    with:
+  #      fetch-depth: 1
+  #  - name: Xcodebuild
+  #    run: |
+  #      xcodebuild -scheme soto-core-Package -quiet -destination 'platform=iOS Simulator,name=iPhone 11'
+  #      xcodebuild test -scheme soto-core-Package -destination 'platform=iOS Simulator,name=iPhone 11'
 
   linux:
     runs-on: ubuntu-latest

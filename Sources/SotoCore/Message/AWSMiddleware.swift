@@ -114,6 +114,7 @@ public struct AWSLoggingMiddleware: AWSServiceMiddleware {
         )
         return response
     }
+
     #if compiler(>=5.6)
     let log: @Sendable (@autoclosure () -> String) -> Void
     #else

@@ -14,8 +14,8 @@
 
 import struct Foundation.Date
 import struct Foundation.TimeInterval
-import NIOConcurrencyHelpers
 import Logging
+import NIOConcurrencyHelpers
 import NIOCore
 
 /// Endpoint list

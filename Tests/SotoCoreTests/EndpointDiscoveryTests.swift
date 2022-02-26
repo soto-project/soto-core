@@ -16,10 +16,14 @@ import NIOConcurrencyHelpers
 import NIOCore
 import SotoCore
 import SotoTestUtils
+#if compiler(>=5.6)
+@preconcurrency import XCTest
+#else
 import XCTest
+#endif
 
 class EndpointDiscoveryTests: XCTestCase {
-    class Service: AWSService {
+    final class Service: AWSService {
         let client: AWSClient
         let config: AWSServiceConfig
         let endpointStorage: AWSEndpointStorage
@@ -35,7 +39,7 @@ class EndpointDiscoveryTests: XCTestCase {
         }
 
         /// init
-        init(client: AWSClient, endpoint: String? = nil, endpointToDiscover: String = "") {
+        init(client: AWSClient, endpoint: String? = nil, endpointToDiscover: String = "", expectedCallCount: Int) {
             self.client = client
             self.config = .init(
                 region: .euwest1,
@@ -111,7 +115,7 @@ class EndpointDiscoveryTests: XCTestCase {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
         }
-        let service = Service(client: client, endpointToDiscover: awsServer.address).with(middlewares: TestEnvironment.middlewares)
+        let service = Service(client: client, endpointToDiscover: awsServer.address, expectedCallCount: 1).with(middlewares: TestEnvironment.middlewares)
         let response = service.test(.init(), logger: TestEnvironment.logger).flatMap { _ in
             service.test(.init(), logger: TestEnvironment.logger)
         }
@@ -139,7 +143,7 @@ class EndpointDiscoveryTests: XCTestCase {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
         }
-        let service = Service(client: client, endpointToDiscover: awsServer.address).with(middlewares: TestEnvironment.middlewares)
+        let service = Service(client: client, endpointToDiscover: awsServer.address, expectedCallCount: 1).with(middlewares: TestEnvironment.middlewares)
         let response1 = service.test(.init(), logger: TestEnvironment.logger)
         let response2 = service.test(.init(), logger: TestEnvironment.logger)
 
@@ -166,7 +170,7 @@ class EndpointDiscoveryTests: XCTestCase {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
         }
-        let service = Service(client: client, endpointToDiscover: awsServer.address).with(middlewares: TestEnvironment.middlewares)
+        let service = Service(client: client, endpointToDiscover: awsServer.address, expectedCallCount: 2).with(middlewares: TestEnvironment.middlewares)
         let response = service.testDontCache(logger: TestEnvironment.logger).flatMap { _ in
             service.testDontCache(logger: TestEnvironment.logger)
         }
@@ -194,7 +198,7 @@ class EndpointDiscoveryTests: XCTestCase {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
         }
-        let service = Service(client: client, endpoint: awsServer.address)
+        let service = Service(client: client, endpoint: awsServer.address, expectedCallCount: 0)
             .with(middlewares: TestEnvironment.middlewares)
         let response = service.testNotRequired(.init(), logger: TestEnvironment.logger)
 

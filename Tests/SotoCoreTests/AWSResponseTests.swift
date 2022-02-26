@@ -198,7 +198,7 @@ class AWSResponseTests: XCTestCase {
     }
 
     func testValidateJSONCodablePayloadResponse() {
-        class Output2: AWSDecodableShape {
+        struct Output2: AWSDecodableShape {
             let name: String
         }
         struct Output: AWSDecodableShape & AWSShapeWithPayload {

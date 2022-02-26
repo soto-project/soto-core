@@ -18,6 +18,10 @@ import NIOHTTP1
 import SotoSignerV4
 import SotoTestUtils
 import XCTest
+#if compiler(>=5.6)
+@preconcurrency import Foundation
+#endif
+
 
 class AWSRequestTests: XCTestCase {
     struct E: AWSEncodableShape & Decodable {

@@ -19,19 +19,31 @@ import NIOCore
 import NIOPosix
 @testable import SotoCore
 import SotoTestUtils
+#if compiler(>=5.6)
+@preconcurrency import XCTest
+#else
 import XCTest
+#endif
 
 class RotatingCredentialProviderTests: XCTestCase {
-    class MetaDataTestClient: CredentialProvider {
-        let callback: (EventLoop) -> EventLoopFuture<ExpiringCredential>
+    final class MetaDataTestClient: CredentialProvider {
+        #if compiler(>=5.6)
+        typealias TestCallback = @Sendable (EventLoop) -> EventLoopFuture<ExpiringCredential>
+        #else
+        typealias TestCallback = (EventLoop) -> EventLoopFuture<ExpiringCredential>
+        #endif
+        let callback: TestCallback
+        let expectation: XCTestExpectation
 
-        init(_ callback: @escaping (EventLoop) -> EventLoopFuture<ExpiringCredential>) {
+        init(expectation: XCTestExpectation, _ callback: @escaping TestCallback) {
             self.callback = callback
+            self.expectation = expectation
         }
 
         func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
             eventLoop.flatSubmit {
-                self.callback(eventLoop).map { $0 }
+                self.expectation.fulfill()
+                return self.callback(eventLoop).map { $0 }
             }
         }
     }
@@ -104,8 +116,11 @@ class RotatingCredentialProviderTests: XCTestCase {
 
         var resultFutures = [EventLoopFuture<Void>]()
         var setupFutures = [EventLoopFuture<Void>]()
-        let fulFillCount = NIOAtomic<Int>.makeAtomic(value: 0)
+        // let fulFillCount = NIOAtomic<Int>.makeAtomic(value: 0)
         let iterations = 10000
+        let expectation2 = XCTestExpectation(description: "Hit Count")
+        expectation2.expectedFulfillmentCount = iterations
+        expectation2.assertForOverFulfill = true
         for _ in 0..<iterations {
             let loop = group.next()
             let setupPromise = loop.makePromise(of: Void.self)
@@ -123,7 +138,8 @@ class RotatingCredentialProviderTests: XCTestCase {
                     XCTAssertEqual(returned.sessionToken, cred.sessionToken)
                     XCTAssertEqual((returned as? TestExpiringCredential)?.expiration, cred.expiration)
                     XCTAssert(loop.inEventLoop)
-                    fulFillCount.add(1)
+                    expectation2.fulfill()
+                    // fulFillCount.add(1)
                 }
             }
             resultFutures.append(future)

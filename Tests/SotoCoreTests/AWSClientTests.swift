@@ -23,11 +23,11 @@ import NIOPosix
 import SotoTestUtils
 import SotoXML
 #if compiler(>=5.6)
-@preconcurrency import XCTest
 @preconcurrency import Foundation
+@preconcurrency import XCTest
 #else
-import XCTest
 import Foundation
+import XCTest
 #endif
 
 class AWSClientTests: XCTestCase {

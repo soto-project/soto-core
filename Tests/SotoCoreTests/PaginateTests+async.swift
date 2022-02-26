@@ -231,4 +231,8 @@ final class PaginateAsyncTests: XCTestCase {
     }
 }
 
+#if compiler(>=5.6)
+extension PaginateAsyncTests: @unchecked Sendable {}
+#endif
+
 #endif // compiler(>=5.5.2) && canImport(_Concurrency)

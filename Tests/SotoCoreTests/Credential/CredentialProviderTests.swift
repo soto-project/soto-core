@@ -19,7 +19,11 @@ import NIOCore
 import NIOPosix
 @testable import SotoCore
 import SotoTestUtils
+#if compiler(>=5.6)
+@preconcurrency import XCTest
+#else
 import XCTest
+#endif
 
 final class CredentialProviderTests: XCTestCase {
     func testCredentialProvider() {
@@ -37,13 +41,16 @@ final class CredentialProviderTests: XCTestCase {
     // make sure getCredential in client CredentialProvider doesnt get called more than once
     func testDeferredCredentialProvider() {
         final class MyCredentialProvider: CredentialProvider {
-            var alreadyCalled = NIOAtomic<Bool>.makeAtomic(value: false)
+            let expectation = XCTestExpectation(description: "Credential provider called")
+
+            init() {
+                self.expectation.expectedFulfillmentCount = 1
+                self.expectation.assertForOverFulfill = true
+            }
+
             func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
-                if self.alreadyCalled.compareAndExchange(expected: false, desired: true) {
-                    return eventLoop.makeSucceededFuture(StaticCredential(accessKeyId: "ACCESSKEYID", secretAccessKey: "SECRETACCESSKET"))
-                } else {
-                    return eventLoop.makeFailedFuture(CredentialProviderError.noProvider)
-                }
+                self.expectation.fulfill()
+                return eventLoop.makeSucceededFuture(StaticCredential(accessKeyId: "ACCESSKEYID", secretAccessKey: "SECRETACCESSKET"))
             }
         }
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
@@ -52,9 +59,11 @@ final class CredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
         let eventLoop = eventLoopGroup.next()
         let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger, options: .init())
-        let deferredProvider = DeferredCredentialProvider(context: context, provider: MyCredentialProvider())
+        let myCredentialProvider = MyCredentialProvider()
+        let deferredProvider = DeferredCredentialProvider(context: context, provider: myCredentialProvider)
         XCTAssertNoThrow(_ = try deferredProvider.getCredential(on: eventLoop, logger: TestEnvironment.logger).wait())
         XCTAssertNoThrow(_ = try deferredProvider.getCredential(on: eventLoop, logger: TestEnvironment.logger).wait())
+        wait(for: [myCredentialProvider.expectation], timeout: 5.0)
     }
 
     func testConfigFileSuccess() {
@@ -104,38 +113,30 @@ final class CredentialProviderTests: XCTestCase {
 
     func testCredentialSelectorShutdown() {
         final class TestCredentialProvider: CredentialProvider {
-            var active = NIOAtomic<Bool>.makeAtomic(value: true)
+            let expectation = XCTestExpectation(description: "Has Shutdown")
+            init() {
+                self.expectation.expectedFulfillmentCount = 1
+            }
 
             func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
                 return eventLoop.makeSucceededFuture(StaticCredential(accessKeyId: "", secretAccessKey: ""))
             }
 
             func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
-                self.active.store(false)
+                self.expectation.fulfill()
                 return eventLoop.makeSucceededFuture(())
             }
-
-            deinit {
-                XCTAssertEqual(active.load(), false)
-            }
         }
-        final class CredentialProviderOwner: CredentialProviderSelector {
-            /// promise to find a credential provider
-            let startupPromise: EventLoopPromise<CredentialProvider>
-            let lock = Lock()
-            var _internalProvider: CredentialProvider?
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
+        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
+        let eventLoop = eventLoopGroup.next()
+        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger, options: .init())
+        let testCredentialProvider = TestCredentialProvider()
+        let deferredProvider = DeferredCredentialProvider(context: context, provider: testCredentialProvider)
+        XCTAssertNoThrow(try deferredProvider.shutdown(on: eventLoopGroup.next()).wait())
 
-            init(eventLoop: EventLoop) {
-                self.startupPromise = eventLoop.makePromise(of: CredentialProvider.self)
-                self.startupPromise.futureResult.whenSuccess { result in
-                    self.internalProvider = result
-                }
-                self.startupPromise.succeed(TestCredentialProvider())
-            }
-        }
-        let elg = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { XCTAssertNoThrow(try elg.syncShutdownGracefully()) }
-        let provider = CredentialProviderOwner(eventLoop: elg.next())
-        XCTAssertNoThrow(try provider.shutdown(on: elg.next()).wait())
+        wait(for: [testCredentialProvider.expectation], timeout: 5.0)
     }
 }

@@ -14,11 +14,14 @@
 
 #if compiler(>=5.5.2) && canImport(_Concurrency)
 
-import NIOConcurrencyHelpers
 import NIOCore
 import SotoCore
 import SotoTestUtils
+#if compiler(>=5.6)
+@preconcurrency import XCTest
+#else
 import XCTest
+#endif
 
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 final class EndpointDiscoveryAsyncTests: XCTestCase, @unchecked Sendable {
@@ -27,18 +30,20 @@ final class EndpointDiscoveryAsyncTests: XCTestCase, @unchecked Sendable {
         let config: AWSServiceConfig
         let endpointStorage: AWSEndpointStorage
         let endpointToDiscover: String
-        var getEndpointsCalledCount = NIOAtomic.makeAtomic(value: 0)
+        let expectation: XCTestExpectation
+        let expectedCallCount: Int
 
         required init(from: EndpointDiscoveryAsyncTests.Service, patch: AWSServiceConfig.Patch) {
             self.client = from.client
             self.config = from.config.with(patch: patch)
             self.endpointStorage = AWSEndpointStorage(endpoint: self.config.endpoint)
             self.endpointToDiscover = from.endpointToDiscover
-            self.getEndpointsCalledCount.store(from.getEndpointsCalledCount.load())
+            self.expectation = from.expectation
+            self.expectedCallCount = from.expectedCallCount
         }
 
         /// init
-        init(client: AWSClient, endpoint: String? = nil, endpointToDiscover: String = "") {
+        init(client: AWSClient, endpoint: String? = nil, endpointToDiscover: String = "", expectedCallCount: Int) {
             self.client = client
             self.config = .init(
                 region: .euwest1,
@@ -50,12 +55,22 @@ final class EndpointDiscoveryAsyncTests: XCTestCase, @unchecked Sendable {
             )
             self.endpointStorage = AWSEndpointStorage(endpoint: self.config.endpoint)
             self.endpointToDiscover = endpointToDiscover
+            self.expectation = XCTestExpectation(description: "Call count")
+            if expectedCallCount > 0 {
+                self.expectation.expectedFulfillmentCount = expectedCallCount
+                self.expectation.assertForOverFulfill = true;
+            }
+            self.expectedCallCount = expectedCallCount
         }
 
         struct TestRequest: AWSEncodableShape {}
 
         public func getEndpoints(logger: Logger, on eventLoop: EventLoop) -> EventLoopFuture<AWSEndpoints> {
-            self.getEndpointsCalledCount.add(1)
+            if self.expectedCallCount > 0 {
+                self.expectation.fulfill()
+            } else {
+                XCTFail("Did not expect getEndpoints to be called")
+            }
             return eventLoop.scheduleTask(in: .milliseconds(200)) {
                 return AWSEndpoints(endpoints: [.init(address: self.endpointToDiscover, cachePeriodInMinutes: 60)])
             }.futureResult
@@ -75,7 +90,11 @@ final class EndpointDiscoveryAsyncTests: XCTestCase, @unchecked Sendable {
         }
 
         public func getEndpointsDontCache(logger: Logger, on eventLoop: EventLoop) -> EventLoopFuture<AWSEndpoints> {
-            self.getEndpointsCalledCount.add(1)
+            if self.expectedCallCount > 0 {
+                self.expectation.fulfill()
+            } else {
+                XCTFail("Did not expect getEndpoints to be called")
+            }
             return eventLoop.scheduleTask(in: .milliseconds(200)) {
                 return AWSEndpoints(endpoints: [.init(address: self.endpointToDiscover, cachePeriodInMinutes: 0)])
             }.futureResult
@@ -114,7 +133,7 @@ final class EndpointDiscoveryAsyncTests: XCTestCase, @unchecked Sendable {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
         }
-        let service = Service(client: client, endpointToDiscover: awsServer.address).with(middlewares: TestEnvironment.middlewares)
+        let service = Service(client: client, endpointToDiscover: awsServer.address, expectedCallCount: 1).with(middlewares: TestEnvironment.middlewares)
 
         async let response1: () = service.test(.init(), logger: TestEnvironment.logger)
         try awsServer.processRaw { request in
@@ -130,7 +149,7 @@ final class EndpointDiscoveryAsyncTests: XCTestCase, @unchecked Sendable {
             return .result(response, continueProcessing: false)
         }
         try await response2
-        XCTAssertEqual(service.getEndpointsCalledCount.load(), 1)
+        wait(for: [service.expectation], timeout: 5.0);
     }
 
     func testConcurrentEndpointDiscovery() async throws {
@@ -140,7 +159,7 @@ final class EndpointDiscoveryAsyncTests: XCTestCase, @unchecked Sendable {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
         }
-        let service = Service(client: client, endpointToDiscover: awsServer.address).with(middlewares: TestEnvironment.middlewares)
+        let service = Service(client: client, endpointToDiscover: awsServer.address, expectedCallCount: 1).with(middlewares: TestEnvironment.middlewares)
 
         async let response1: () = service.test(.init(), logger: TestEnvironment.logger)
         async let response2: () = service.test(.init(), logger: TestEnvironment.logger)
@@ -159,7 +178,7 @@ final class EndpointDiscoveryAsyncTests: XCTestCase, @unchecked Sendable {
 
         try await response1
         try await response2
-        XCTAssertEqual(service.getEndpointsCalledCount.load(), 1)
+        wait(for: [service.expectation], timeout: 5.0);
     }
 
     func testDontCacheEndpoint() async throws {
@@ -169,7 +188,7 @@ final class EndpointDiscoveryAsyncTests: XCTestCase, @unchecked Sendable {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
         }
-        let service = Service(client: client, endpointToDiscover: awsServer.address).with(middlewares: TestEnvironment.middlewares)
+        let service = Service(client: client, endpointToDiscover: awsServer.address, expectedCallCount: 2).with(middlewares: TestEnvironment.middlewares)
 
         async let response1: () = service.testDontCache(logger: TestEnvironment.logger)
         try awsServer.processRaw { request in
@@ -185,7 +204,7 @@ final class EndpointDiscoveryAsyncTests: XCTestCase, @unchecked Sendable {
             return .result(response, continueProcessing: false)
         }
         try await response2
-        XCTAssertEqual(service.getEndpointsCalledCount.load(), 2)
+        wait(for: [service.expectation], timeout: 5.0);
     }
 
     func testDisableEndpointDiscovery() async throws {
@@ -195,7 +214,7 @@ final class EndpointDiscoveryAsyncTests: XCTestCase, @unchecked Sendable {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
         }
-        let service = Service(client: client, endpoint: awsServer.address)
+        let service = Service(client: client, endpoint: awsServer.address, expectedCallCount: 0)
             .with(middlewares: TestEnvironment.middlewares)
 
         async let response: () = service.testNotRequired(.init(), logger: TestEnvironment.logger)
@@ -207,7 +226,6 @@ final class EndpointDiscoveryAsyncTests: XCTestCase, @unchecked Sendable {
         }
 
         try await response
-        XCTAssertEqual(service.getEndpointsCalledCount.load(), 0)
     }
 }
 

@@ -22,7 +22,13 @@ import NIOPosix
 @testable import SotoCore
 import SotoTestUtils
 import SotoXML
+#if compiler(>=5.6)
+@preconcurrency import XCTest
+@preconcurrency import Foundation
+#else
 import XCTest
+import Foundation
+#endif
 
 class AWSClientTests: XCTestCase {
     func testGetCredential() {

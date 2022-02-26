@@ -20,16 +20,16 @@ import NIOCore
 
 extension AWSClient {
     /// Waiter state
-    public enum WaiterState {
+    public enum WaiterState: SotoSendable {
         case success
         case retry
         case failure
     }
 
     /// A waiter is a client side abstraction used to poll a resource until a desired state is reached
-    public struct Waiter<Input, Output> {
+    public struct Waiter<Input: SotoSendable, Output: SotoSendable> {
         /// An acceptor checks the result of a call and can change the waiter state based on that result
-        public struct Acceptor {
+        public struct Acceptor: SotoSendable {
             public init(state: AWSClient.WaiterState, matcher: AWSWaiterMatcher) {
                 self.state = state
                 self.matcher = matcher
@@ -38,6 +38,8 @@ extension AWSClient {
             let state: WaiterState
             let matcher: AWSWaiterMatcher
         }
+
+        public typealias WaiterCommand = (Input, Logger, EventLoop?) -> EventLoopFuture<Output>
 
         /// Initialize an waiter
         /// - Parameters:
@@ -49,11 +51,7 @@ extension AWSClient {
             acceptors: [AWSClient.Waiter<Input, Output>.Acceptor],
             minDelayTime: TimeAmount = .seconds(2),
             maxDelayTime: TimeAmount = .seconds(120),
-            command: @escaping (
-                Input,
-                Logger,
-                EventLoop?
-            ) -> EventLoopFuture<Output>
+            command: @escaping WaiterCommand
         ) {
             self.acceptors = acceptors
             self.minDelayTime = minDelayTime
@@ -64,7 +62,7 @@ extension AWSClient {
         let acceptors: [Acceptor]
         let minDelayTime: TimeAmount
         let maxDelayTime: TimeAmount
-        let command: (Input, Logger, EventLoop?) -> EventLoopFuture<Output>
+        let command: WaiterCommand
 
         /// Calculate delay until next API call. This calculation comes from the AWS Smithy documentation
         /// https://awslabs.github.io/smithy/1.0/spec/waiters.html#waiter-retries
@@ -154,3 +152,7 @@ extension AWSClient {
         return promise.futureResult
     }
 }
+
+#if compiler(>=5.6)
+extension AWSClient.Waiter: @unchecked Sendable {}
+#endif

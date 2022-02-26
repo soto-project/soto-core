@@ -15,6 +15,9 @@
 @testable import SotoCore
 import SotoTestUtils
 import XCTest
+#if compiler(>=5.6)
+@preconcurrency import Foundation
+#endif
 
 class QueryEncoderTests: XCTestCase {
     @EnvironmentVariable("ENABLE_TIMING_TESTS", default: true) static var enableTimingTests: Bool

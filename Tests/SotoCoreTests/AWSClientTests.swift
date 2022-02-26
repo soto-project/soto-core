@@ -14,7 +14,6 @@
 
 import AsyncHTTPClient
 import Logging
-import NIOConcurrencyHelpers
 import NIOCore
 import NIOFoundationCompat
 import NIOHTTP1
@@ -22,6 +21,7 @@ import NIOPosix
 @testable import SotoCore
 import SotoTestUtils
 import SotoXML
+import XCTest
 #if compiler(>=5.6)
 @preconcurrency import Foundation
 @preconcurrency import XCTest

@@ -58,7 +58,7 @@ final class EndpointDiscoveryAsyncTests: XCTestCase, @unchecked Sendable {
             self.expectation = XCTestExpectation(description: "Call count")
             if expectedCallCount > 0 {
                 self.expectation.expectedFulfillmentCount = expectedCallCount
-                self.expectation.assertForOverFulfill = true;
+                self.expectation.assertForOverFulfill = true
             }
             self.expectedCallCount = expectedCallCount
         }
@@ -149,7 +149,7 @@ final class EndpointDiscoveryAsyncTests: XCTestCase, @unchecked Sendable {
             return .result(response, continueProcessing: false)
         }
         try await response2
-        wait(for: [service.expectation], timeout: 5.0);
+        wait(for: [service.expectation], timeout: 5.0)
     }
 
     func testConcurrentEndpointDiscovery() async throws {
@@ -178,7 +178,7 @@ final class EndpointDiscoveryAsyncTests: XCTestCase, @unchecked Sendable {
 
         try await response1
         try await response2
-        wait(for: [service.expectation], timeout: 5.0);
+        wait(for: [service.expectation], timeout: 5.0)
     }
 
     func testDontCacheEndpoint() async throws {
@@ -204,7 +204,7 @@ final class EndpointDiscoveryAsyncTests: XCTestCase, @unchecked Sendable {
             return .result(response, continueProcessing: false)
         }
         try await response2
-        wait(for: [service.expectation], timeout: 5.0);
+        wait(for: [service.expectation], timeout: 5.0)
     }
 
     func testDisableEndpointDiscovery() async throws {

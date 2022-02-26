@@ -22,7 +22,6 @@ import XCTest
 @preconcurrency import Foundation
 #endif
 
-
 class AWSRequestTests: XCTestCase {
     struct E: AWSEncodableShape & Decodable {
         let Member = ["memberKey": "memberValue", "memberKey2": "memberValue2"]

@@ -57,6 +57,9 @@ final class WaiterAsyncTests: XCTestCase, @unchecked Sendable {
     }
 
     func testJMESPathWaiter() async throws {
+        #if os(iOS) // iOS async tests are failing in GitHub CI at the moment
+        guard ProcessInfo.processInfo.environment["CI"] == nil else { return }
+        #endif
         let waiter = AWSClient.Waiter(
             acceptors: [
                 .init(state: .success, matcher: try! JMESPathMatcher("array[*].status", expected: [true, true, true])),

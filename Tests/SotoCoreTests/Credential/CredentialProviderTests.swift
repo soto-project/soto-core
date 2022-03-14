@@ -111,7 +111,7 @@ final class CredentialProviderTests: XCTestCase {
             }
 
             func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
-                active.store(false)
+                self.active.store(false)
                 return eventLoop.makeSucceededFuture(())
             }
 

@@ -28,7 +28,7 @@ import SotoXML
 import XCTest
 
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-class AWSClientAsyncTests: XCTestCase {
+final class AWSClientAsyncTests: XCTestCase {
     func testGetCredential() async throws {
         struct MyCredentialProvider: AsyncCredentialProvider {
             func getCredential(on eventLoop: EventLoop, logger: Logger) async throws -> Credential {

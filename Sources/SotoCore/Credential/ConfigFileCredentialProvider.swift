@@ -17,7 +17,7 @@ import NIOConcurrencyHelpers
 import NIOCore
 import SotoSignerV4
 
-class ConfigFileCredentialProvider: CredentialProviderSelector {
+final class ConfigFileCredentialProvider: CredentialProviderSelector {
     /// promise to find a credential provider
     let startupPromise: EventLoopPromise<CredentialProvider>
     /// lock for access to _internalProvider.

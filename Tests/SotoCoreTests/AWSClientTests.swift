@@ -559,16 +559,14 @@ class AWSClientTests: XCTestCase {
     }
 
     func testCustomRetryPolicy() {
-        class TestRetryPolicy: RetryPolicy {
+        final class TestRetryPolicy: RetryPolicy {
             static let maxRetries: Int = 3
-            var attempt: Int
+            var attempt = NIOAtomic.makeAtomic(value: 0)
 
-            init() {
-                self.attempt = 0
-            }
+            init() {}
 
             func getRetryWaitTime(error: Error, attempt: Int) -> RetryStatus? {
-                self.attempt = attempt
+                self.attempt.store(attempt)
                 if attempt < Self.maxRetries { return .retry(wait: .milliseconds(100)) }
                 return .dontRetry
             }
@@ -605,7 +603,7 @@ class AWSClientTests: XCTestCase {
 
             try response.wait()
         } catch let error as AWSServerError where error == .serviceUnavailable {
-            XCTAssertEqual(retryPolicy.attempt, TestRetryPolicy.maxRetries)
+            XCTAssertEqual(retryPolicy.attempt.load(), TestRetryPolicy.maxRetries)
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
@@ -649,7 +647,7 @@ class AWSClientTests: XCTestCase {
 
     /// verify we are not calling the Retry handler when streaming a request
     func testDontRetryStreamingRequests() {
-        class TestRetryPolicy: RetryPolicy {
+        final class TestRetryPolicy: RetryPolicy {
             func getRetryWaitTime(error: Error, attempt: Int) -> RetryStatus? {
                 XCTFail("This should not be called as streaming has disabled retries")
                 return .dontRetry

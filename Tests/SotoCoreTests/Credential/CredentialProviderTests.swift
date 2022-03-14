@@ -21,7 +21,7 @@ import NIOPosix
 import SotoTestUtils
 import XCTest
 
-class CredentialProviderTests: XCTestCase {
+final class CredentialProviderTests: XCTestCase {
     func testCredentialProvider() {
         let cred = StaticCredential(accessKeyId: "abc", secretAccessKey: "123", sessionToken: "xyz")
 
@@ -36,11 +36,10 @@ class CredentialProviderTests: XCTestCase {
 
     // make sure getCredential in client CredentialProvider doesnt get called more than once
     func testDeferredCredentialProvider() {
-        class MyCredentialProvider: CredentialProvider {
-            var alreadyCalled = false
+        final class MyCredentialProvider: CredentialProvider {
+            var alreadyCalled = NIOAtomic<Bool>.makeAtomic(value: false)
             func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
-                if self.alreadyCalled == false {
-                    self.alreadyCalled = true
+                if self.alreadyCalled.compareAndExchange(expected: false, desired: true) {
                     return eventLoop.makeSucceededFuture(StaticCredential(accessKeyId: "ACCESSKEYID", secretAccessKey: "SECRETACCESSKET"))
                 } else {
                     return eventLoop.makeFailedFuture(CredentialProviderError.noProvider)
@@ -104,23 +103,23 @@ class CredentialProviderTests: XCTestCase {
     }
 
     func testCredentialSelectorShutdown() {
-        class TestCredentialProvider: CredentialProvider {
-            var active = true
+        final class TestCredentialProvider: CredentialProvider {
+            var active = NIOAtomic<Bool>.makeAtomic(value: true)
 
             func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
                 return eventLoop.makeSucceededFuture(StaticCredential(accessKeyId: "", secretAccessKey: ""))
             }
 
             func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
-                self.active = false
+                self.active.store(false)
                 return eventLoop.makeSucceededFuture(())
             }
 
             deinit {
-                XCTAssertEqual(active, false)
+                XCTAssertEqual(active.load(), false)
             }
         }
-        class CredentialProviderOwner: CredentialProviderSelector {
+        final class CredentialProviderOwner: CredentialProviderSelector {
             /// promise to find a credential provider
             let startupPromise: EventLoopPromise<CredentialProvider>
             let lock = Lock()

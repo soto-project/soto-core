@@ -18,7 +18,7 @@ import SotoSignerV4
 
 /// S3 Chunked signed streamer. See https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-streaming.html
 /// for more details.
-class S3ChunkedStreamReader: StreamReader {
+final class S3ChunkedStreamReader: StreamReader {
     /// Working buffer size
     static let bufferSize: Int = 64 * 1024
     static let bufferSizeInHex = String(bufferSize, radix: 16)

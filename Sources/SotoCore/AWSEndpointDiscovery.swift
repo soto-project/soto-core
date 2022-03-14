@@ -41,13 +41,13 @@ public struct AWSEndpoints {
 /// Class for storing Endpoint details
 public class AWSEndpointStorage {
     /// endpoint url
-    public var endpoint: String
+    internal private(set) var endpoint: String
     /// when endpoint expires
-    var expiration: Date
+    internal private(set) var expiration: Date
     /// promise for endpoint discovery process
-    var promise: EventLoopPromise<String>?
+    private var promise: EventLoopPromise<String>?
     /// Lock access to class
-    var lock = Lock()
+    private let lock = Lock()
 
     /// Initialize endpoint storage
     /// - Parameter endpoint: Initial endpoint to use

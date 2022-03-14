@@ -116,7 +116,7 @@ class AWSResponseTests: XCTestCase {
     // MARK: XML tests
 
     func testValidateXMLResponse() {
-        class Output: AWSDecodableShape {
+        struct Output: AWSDecodableShape {
             let name: String
         }
         let responseBody = "<Output><name>hello</name></Output>"
@@ -134,7 +134,7 @@ class AWSResponseTests: XCTestCase {
     }
 
     func testValidateXMLCodablePayloadResponse() {
-        class Output: AWSDecodableShape & AWSShapeWithPayload {
+        struct Output: AWSDecodableShape & AWSShapeWithPayload {
             static let _encoding = [AWSMemberEncoding(label: "contentType", location: .header("content-type"))]
             static let _payloadPath: String = "name"
             let name: String
@@ -160,7 +160,7 @@ class AWSResponseTests: XCTestCase {
     }
 
     func testValidateXMLRawPayloadResponse() {
-        class Output: AWSDecodableShape, AWSShapeWithPayload {
+        struct Output: AWSDecodableShape, AWSShapeWithPayload {
             static let _payloadPath: String = "body"
             static let _options: AWSShapeOptions = .rawPayload
             let body: AWSPayload
@@ -181,7 +181,7 @@ class AWSResponseTests: XCTestCase {
     // MARK: JSON tests
 
     func testValidateJSONResponse() {
-        class Output: AWSDecodableShape {
+        struct Output: AWSDecodableShape {
             let name: String
         }
         let response = AWSHTTPResponseImpl(

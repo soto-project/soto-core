@@ -14,6 +14,7 @@
 
 #if compiler(>=5.5.2) && canImport(_Concurrency)
 
+import NIOConcurrencyHelpers
 import NIOCore
 import SotoCore
 import SotoTestUtils
@@ -26,14 +27,14 @@ class EndpointDiscoveryAsyncTests: XCTestCase {
         let config: AWSServiceConfig
         let endpointStorage: AWSEndpointStorage
         let endpointToDiscover: String
-        var getEndpointsCalledCount: Int
+        var getEndpointsCalledCount = NIOAtomic.makeAtomic(value: 0)
 
         required init(from: EndpointDiscoveryAsyncTests.Service, patch: AWSServiceConfig.Patch) {
             self.client = from.client
             self.config = from.config.with(patch: patch)
             self.endpointStorage = AWSEndpointStorage(endpoint: self.config.endpoint)
             self.endpointToDiscover = from.endpointToDiscover
-            self.getEndpointsCalledCount = from.getEndpointsCalledCount
+            self.getEndpointsCalledCount.store(from.getEndpointsCalledCount.load())
         }
 
         /// init
@@ -49,13 +50,12 @@ class EndpointDiscoveryAsyncTests: XCTestCase {
             )
             self.endpointStorage = AWSEndpointStorage(endpoint: self.config.endpoint)
             self.endpointToDiscover = endpointToDiscover
-            self.getEndpointsCalledCount = 0
         }
 
         struct TestRequest: AWSEncodableShape {}
 
         public func getEndpoints(logger: Logger, on eventLoop: EventLoop) -> EventLoopFuture<AWSEndpoints> {
-            self.getEndpointsCalledCount += 1
+            self.getEndpointsCalledCount.add(1)
             return eventLoop.scheduleTask(in: .milliseconds(200)) {
                 return AWSEndpoints(endpoints: [.init(address: self.endpointToDiscover, cachePeriodInMinutes: 60)])
             }.futureResult
@@ -75,7 +75,7 @@ class EndpointDiscoveryAsyncTests: XCTestCase {
         }
 
         public func getEndpointsDontCache(logger: Logger, on eventLoop: EventLoop) -> EventLoopFuture<AWSEndpoints> {
-            self.getEndpointsCalledCount += 1
+            self.getEndpointsCalledCount.add(1)
             return eventLoop.scheduleTask(in: .milliseconds(200)) {
                 return AWSEndpoints(endpoints: [.init(address: self.endpointToDiscover, cachePeriodInMinutes: 0)])
             }.futureResult
@@ -130,7 +130,7 @@ class EndpointDiscoveryAsyncTests: XCTestCase {
             return .result(response, continueProcessing: false)
         }
         try await response2
-        XCTAssertEqual(service.getEndpointsCalledCount, 1)
+        XCTAssertEqual(service.getEndpointsCalledCount.load(), 1)
     }
 
     func testConcurrentEndpointDiscovery() async throws {
@@ -159,7 +159,7 @@ class EndpointDiscoveryAsyncTests: XCTestCase {
 
         try await response1
         try await response2
-        XCTAssertEqual(service.getEndpointsCalledCount, 1)
+        XCTAssertEqual(service.getEndpointsCalledCount.load(), 1)
     }
 
     func testDontCacheEndpoint() async throws {
@@ -185,7 +185,7 @@ class EndpointDiscoveryAsyncTests: XCTestCase {
             return .result(response, continueProcessing: false)
         }
         try await response2
-        XCTAssertEqual(service.getEndpointsCalledCount, 2)
+        XCTAssertEqual(service.getEndpointsCalledCount.load(), 2)
     }
 
     func testDisableEndpointDiscovery() async throws {
@@ -207,7 +207,7 @@ class EndpointDiscoveryAsyncTests: XCTestCase {
         }
 
         try await response
-        XCTAssertEqual(service.getEndpointsCalledCount, 0)
+        XCTAssertEqual(service.getEndpointsCalledCount.load(), 0)
     }
 }
 

@@ -50,9 +50,9 @@ class RotatingCredentialProviderTests: XCTestCase {
             expiration: Date(timeIntervalSinceNow: 24 * 60 * 60)
         )
 
-        var hitCount = 0
+        let hitCount = NIOAtomic.makeAtomic(value: 0)
         let client = MetaDataTestClient {
-            hitCount += 1
+            hitCount.add(1)
             return $0.makeSucceededFuture(cred)
         }
         let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, logger: Logger(label: "soto"), options: .init())
@@ -75,7 +75,7 @@ class RotatingCredentialProviderTests: XCTestCase {
         XCTAssertEqual((returned as? TestExpiringCredential)?.expiration, cred.expiration)
 
         // ensure callback was only hit once
-        XCTAssertEqual(hitCount, 1)
+        XCTAssertEqual(hitCount.load(), 1)
     }
 
     func testGetCredentialHighlyConcurrent() {
@@ -94,9 +94,9 @@ class RotatingCredentialProviderTests: XCTestCase {
 
         let promise = loop.makePromise(of: ExpiringCredential.self)
 
-        var hitCount = 0
+        let hitCount = NIOAtomic.makeAtomic(value: 0)
         let client = MetaDataTestClient { _ in
-            hitCount += 1
+            hitCount.add(1)
             return promise.futureResult
         }
         let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, logger: TestEnvironment.logger, options: .init())
@@ -137,7 +137,7 @@ class RotatingCredentialProviderTests: XCTestCase {
         XCTAssertNoThrow(try EventLoopFuture.whenAllSucceed(resultFutures, on: group.next()).wait())
 
         // ensure callback was only hit once
-        XCTAssertEqual(hitCount, 1)
+        XCTAssertEqual(hitCount.load(), 1)
         // ensure all waiting futures where fulfilled
         XCTAssertEqual(fulFillCount.load(), iterations)
     }
@@ -149,9 +149,9 @@ class RotatingCredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
         let loop = group.next()
 
-        var hitCount = 0
+        let hitCount = NIOAtomic.makeAtomic(value: 0)
         let client = MetaDataTestClient { eventLoop in
-            hitCount += 1
+            hitCount.add(1)
             let cred = TestExpiringCredential(
                 accessKeyId: "abc123",
                 secretAccessKey: "abc123",
@@ -163,15 +163,15 @@ class RotatingCredentialProviderTests: XCTestCase {
         let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, logger: TestEnvironment.logger, options: .init())
         let provider = RotatingCredentialProvider(context: context, provider: client)
         XCTAssertNoThrow(_ = try provider.getCredential(on: loop, logger: TestEnvironment.logger).wait())
-        hitCount = 0
+        hitCount.store(0)
 
         let iterations = 100
-        for _ in 0..<100 {
+        for _ in 0..<iterations {
             XCTAssertNoThrow(_ = try provider.getCredential(on: loop, logger: TestEnvironment.logger).wait())
         }
 
         // ensure callback was only hit once
-        XCTAssertEqual(hitCount, iterations)
+        XCTAssertEqual(hitCount.load(), iterations)
     }
 }
 

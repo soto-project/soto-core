@@ -193,7 +193,7 @@ struct InstanceMetaDataClient: MetaDataClient {
                 logger.trace("Did not find IMDSv2 token, use IMDSv1")
                 return HTTPHeaders()
             }
-            .flatMap { (headers) -> EventLoopFuture<(AWSHTTPResponse, HTTPHeaders)> in
+            .flatMap { headers -> EventLoopFuture<(AWSHTTPResponse, HTTPHeaders)> in
                 // next we need to request the rolename
                 self.request(
                     url: self.credentialURL,
@@ -203,7 +203,7 @@ struct InstanceMetaDataClient: MetaDataClient {
                     logger: logger
                 ).map { ($0, headers) }
             }
-            .flatMapThrowing { (response, headers) -> (String, HTTPHeaders) in
+            .flatMapThrowing { response, headers -> (String, HTTPHeaders) in
                 // the rolename is in the body
                 guard response.status == .ok else {
                     throw MetaDataClientError.unexpectedTokenResponseStatus(status: response.status)
@@ -215,7 +215,7 @@ struct InstanceMetaDataClient: MetaDataClient {
 
                 return (roleName, headers)
             }
-            .flatMap { (roleName, headers) -> EventLoopFuture<AWSHTTPResponse> in
+            .flatMap { roleName, headers -> EventLoopFuture<AWSHTTPResponse> in
                 // request credentials with the rolename
                 let url = self.credentialURL.appendingPathComponent(roleName)
                 return self.request(url: url, headers: headers, on: eventLoop, logger: logger)

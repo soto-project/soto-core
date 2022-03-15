@@ -237,6 +237,13 @@ class AWSRequestTests: XCTestCase {
         XCTAssertEqual(request?.url.absoluteString, "https://myservice.us-east-2.amazonaws.com/?one=1&two=2")
     }
 
+    func testQueryProtocolEmptyRequest() {
+        let config = createServiceConfig(region: .useast2, service: "myservice", serviceProtocol: .query)
+        var request: AWSRequest?
+        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, configuration: config))
+        XCTAssertEqual(request?.body.asString(), "Action=Test&Version=01-01-2001")
+    }
+
     func testURIEncoding() {
         struct Input: AWSEncodableShape {
             static let _encoding = [AWSMemberEncoding(label: "u", location: .uri(locationName: "key"))]

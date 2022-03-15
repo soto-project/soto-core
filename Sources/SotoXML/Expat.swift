@@ -58,7 +58,7 @@ class Expat {
         let ud = unsafeBitCast(self, to: UnsafeMutableRawPointer.self)
         Soto_XML_SetUserData(parser, ud)
 
-        registerCallbacks()
+        self.registerCallbacks()
     }
 
     deinit {

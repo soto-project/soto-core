@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Waiter Structure Reference</title>
+    <title>HTTPClient Extension Reference</title>
     <link rel="stylesheet" type="text/css" href="../../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../../css/highlight.css" />
     <meta charset='utf-8'>
@@ -13,8 +13,8 @@
     <script src="../../js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/swift/Struct/Waiter" class="dashAnchor"></a>
-    <a title="Waiter Structure Reference"></a>
+    <a name="//apple_ref/swift/Extension/HTTPClient" class="dashAnchor"></a>
+    <a title="HTTPClient Extension Reference"></a>
     <header>
       <div class="content-wrapper">
         <p><a href="../../index.html"> Docs</a> (66% documented)</p>
@@ -30,7 +30,7 @@
       <p id="breadcrumbs">
         <a href="../../index.html"> Reference</a>
         <img id="carat" src="../../img/carat.png" alt=""/>
-        Waiter Structure Reference
+        HTTPClient Extension Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -347,16 +347,8 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>Waiter</h1>
-              <div class="declaration">
-                <div class="language">
-                  
-                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">Waiter</span><span class="o">&lt;</span><span class="kt">Input</span><span class="p">,</span> <span class="kt">Output</span><span class="o">&gt;</span></code></pre>
-
-                </div>
-              </div>
-            <p>A waiter is a client side abstraction used to poll a resource until a desired state is reached</p>
-
+            <h1>HTTPClient</h1>
+            
           </section>
           <section class="section task-group-section">
             <div class="task-group">
@@ -364,9 +356,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore9AWSClientC6WaiterV8AcceptorV"></a>
-                    <a name="//apple_ref/swift/Struct/Acceptor" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore9AWSClientC6WaiterV8AcceptorV">Acceptor</a>
+                    <a name="/s:15AsyncHTTPClient0B0C8ResponseV"></a>
+                    <a name="//apple_ref/swift/Extension/Response" class="dashAnchor"></a>
+                    <a class="token" href="#/s:15AsyncHTTPClient0B0C8ResponseV">Response</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -374,108 +366,15 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>An acceptor checks the result of a call and can change the waiter state based on that result</p>
-
-                        <a href="../../Classes/AWSClient/Waiter/Acceptor.html" class="slightly-smaller">See more</a>
+                        
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">Acceptor</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">AsyncHTTPClient</span><span class="o">.</span><span class="kt">HTTPClient</span><span class="o">.</span><span class="kt">Response</span><span class="p">:</span> <span class="kt"><a href="../../Protocols/AWSHTTPResponse.html">AWSHTTPResponse</a></span></code></pre>
 
                         </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:8SotoCore9AWSClientC6WaiterV9acceptors12minDelayTime03maxgH07commandAEy_xq_GSayAE8AcceptorVy_xq__GG_7NIOCore0H6AmountVAqO15EventLoopFutureCyq_Gx_7Logging6LoggerVAO0nO0_pSgtctcfc"></a>
-                    <a name="//apple_ref/swift/Method/init(acceptors:minDelayTime:maxDelayTime:command:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore9AWSClientC6WaiterV9acceptors12minDelayTime03maxgH07commandAEy_xq_GSayAE8AcceptorVy_xq__GG_7NIOCore0H6AmountVAqO15EventLoopFutureCyq_Gx_7Logging6LoggerVAO0nO0_pSgtctcfc">init(acceptors:<wbr>minDelayTime:<wbr>maxDelayTime:<wbr>command:<wbr>)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Initialize an waiter</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span>
-    <span class="nv">acceptors</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../../Classes/AWSClient.html">AWSClient</a></span><span class="o">.</span><span class="kt">Waiter</span><span class="o">&lt;</span><span class="kt">Input</span><span class="p">,</span> <span class="kt">Output</span><span class="o">&gt;.</span><span class="kt"><a href="../../Classes/AWSClient/Waiter/Acceptor.html">Acceptor</a></span><span class="p">],</span>
-    <span class="nv">minDelayTime</span><span class="p">:</span> <span class="kt">TimeAmount</span> <span class="o">=</span> <span class="o">.</span><span class="nf">seconds</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span>
-    <span class="nv">maxDelayTime</span><span class="p">:</span> <span class="kt">TimeAmount</span> <span class="o">=</span> <span class="o">.</span><span class="nf">seconds</span><span class="p">(</span><span class="mi">120</span><span class="p">),</span>
-    <span class="nv">command</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span>
-        <span class="kt">Input</span><span class="p">,</span>
-        <span class="kt">Logger</span><span class="p">,</span>
-        <span class="kt">EventLoop</span><span class="p">?</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span>
-<span class="p">)</span></code></pre>
-
-                        </div>
-                      </div>
-                      <div>
-                        <h4>Parameters</h4>
-                        <table class="graybox">
-                          <tbody>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>acceptors</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>List of acceptors</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>minDelayTime</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>minimum amount of time to wait between API calls</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>maxDelayTime</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>maximum amount of time to wait between API calls</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>command</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>API call</p>
-                                </div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
                       </div>
                     </section>
                   </div>

@@ -17,7 +17,7 @@
     <a title="AWSClient Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> Docs</a> (64% documented)</p>
+        <p><a href="../index.html"> Docs</a> (66% documented)</p>
         <p class="header-right"><a href="https://github.com/soto-project/soto-core"><img src="../img/gh.png" alt="GitHub"/>View on GitHub</a></p>
         <div class="header-right">
           <form role="search" action="../search.json">
@@ -50,6 +50,9 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/AWSClient/Options.html">– Options</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/AWSClient/PaginatorSequence.html">– PaginatorSequence</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/AWSClient/WaiterState.html">– WaiterState</a>
@@ -116,7 +119,10 @@
                 <a href="../Extensions/AsyncHTTPClient.html">AsyncHTTPClient</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Extensions/AsyncHTTPClient.html#/HTTPClient">– HTTPClient</a>
+                <a href="../Extensions/AsyncHTTPClient/HTTPClient.html">– HTTPClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/AsyncHTTPClient/HTTPClient.html">– HTTPClient</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Extensions/KeyedDecodingContainer.html">KeyedDecodingContainer</a>
@@ -142,6 +148,12 @@
                 <a href="../Protocols/AWSErrorType.html">AWSErrorType</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Protocols/AWSHTTPClient.html">AWSHTTPClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AWSHTTPResponse.html">AWSHTTPResponse</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Protocols/AWSPaginateToken.html">AWSPaginateToken</a>
               </li>
               <li class="nav-group-task">
@@ -161,6 +173,9 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Protocols/ArrayCoderProperties.html">ArrayCoderProperties</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/AsyncCredentialProvider.html">AsyncCredentialProvider</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Protocols/CredentialProvider.html">CredentialProvider</a>
@@ -213,6 +228,9 @@
                 <a href="../Structs/AWSErrorStatusMatcher.html">AWSErrorStatusMatcher</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Structs/AWSHTTPRequest.html">AWSHTTPRequest</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Structs/AWSLoggingMiddleware.html">AWSLoggingMiddleware</a>
               </li>
               <li class="nav-group-task">
@@ -246,7 +264,7 @@
                 <a href="../Structs/AWSServerError.html">AWSServerError</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Structs/AWSShapeOptions.html">AWSShapeOptions</a>
+                <a href="../Structs/AWSShapePayloadOptions.html">AWSShapePayloadOptions</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/AWSSuccessMatcher.html">AWSSuccessMatcher</a>
@@ -316,9 +334,6 @@
           <li class="nav-group-name">
             <a href="../Typealiases.html">Type Aliases</a>
             <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="../Typealiases.html#/s:8SotoCore17AWSResponseStreama">AWSResponseStream</a>
-              </li>
               <li class="nav-group-task">
                 <a href="../Typealiases.html#/s:8SotoCore18StandardArrayCodera">StandardArrayCoder</a>
               </li>
@@ -441,9 +456,9 @@ which is then decoded to generate a <code><a href="../Protocols/AWSShape.html">A
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore9AWSClientC10httpClient15AsyncHTTPClient0G0Cvp"></a>
+                    <a name="/s:8SotoCore9AWSClientC10httpClientAA13AWSHTTPClient_pvp"></a>
                     <a name="//apple_ref/swift/Property/httpClient" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore9AWSClientC10httpClient15AsyncHTTPClient0G0Cvp">httpClient</a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC10httpClientAA13AWSHTTPClient_pvp">httpClient</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -458,7 +473,7 @@ which is then decoded to generate a <code><a href="../Protocols/AWSShape.html">A
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">httpClient</span><span class="p">:</span> <span class="kt">HTTPClient</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">httpClient</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSHTTPClient.html">AWSHTTPClient</a></span></code></pre>
 
                         </div>
                       </div>
@@ -1544,7 +1559,7 @@ uses, we have to use a <code>DispatchQueue</code> to run some of this work on.</
     <span class="nv">endpointDiscovery</span><span class="p">:</span> <span class="kt"><a href="../Structs/AWSEndpointDiscovery.html">AWSEndpointDiscovery</a></span><span class="p">,</span>
     <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
     <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
-    <span class="nv">stream</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Typealiases.html#/s:8SotoCore17AWSResponseStreama">AWSResponseStream</a></span>
+    <span class="nv">stream</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Protocols/AWSHTTPClient.html">AWSHTTPClient</a></span><span class="o">.</span><span class="kt">ResponseStream</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span></code></pre>
 
                         </div>
@@ -3198,7 +3213,7 @@ the next block. This function loads each block and calls a closure with each blo
     <span class="nv">hostPrefix</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
     <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
     <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
-    <span class="nv">stream</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Typealiases.html#/s:8SotoCore17AWSResponseStreama">AWSResponseStream</a></span>
+    <span class="nv">stream</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Protocols/AWSHTTPClient.html">AWSHTTPClient</a></span><span class="o">.</span><span class="kt">ResponseStream</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span></code></pre>
 
                         </div>
@@ -3496,6 +3511,1739 @@ the next block. This function loads each block and calls a closure with each blo
     <span class="nv">serviceConfig</span><span class="p">:</span> <span class="kt"><a href="../Classes/AWSServiceConfig.html">AWSServiceConfig</a></span><span class="p">,</span>
     <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">HTTPHeaders</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>url</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>URL to sign</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>httpMethod</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>HTTP method to use (.GET, .PUT, .PUSH etc)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>httpHeaders</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Headers that are to be used with this URL.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>body</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Payload to sign as well. While it is unnecessary to provide the body for S3 other services may require it</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>serviceConfig</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>additional AWS service configuration used to sign the url</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>logger</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Logger to output to</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>A set of signed headers that include the original headers supplied</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig17endpointDiscovery6logger2onySS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0CAA011AWSEndpointL0V7Logging6LoggerV7NIOCore9EventLoop_pSgtYaKF"></a>
+                    <a name="//apple_ref/swift/Method/execute(operation:path:httpMethod:serviceConfig:endpointDiscovery:logger:on:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig17endpointDiscovery6logger2onySS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0CAA011AWSEndpointL0V7Logging6LoggerV7NIOCore9EventLoop_pSgtYaKF">execute(operation:<wbr>path:<wbr>httpMethod:<wbr>serviceConfig:<wbr>endpointDiscovery:<wbr>logger:<wbr>on:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Asynchronous
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Execute an empty request and return a future with the output object generated from the response</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">execute</span><span class="p">(</span>
+    <span class="n">operation</span> <span class="nv">operationName</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
+    <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
+    <span class="nv">httpMethod</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span>
+    <span class="nv">serviceConfig</span><span class="p">:</span> <span class="kt"><a href="../Classes/AWSServiceConfig.html">AWSServiceConfig</a></span><span class="p">,</span>
+    <span class="nv">endpointDiscovery</span><span class="p">:</span> <span class="kt"><a href="../Structs/AWSEndpointDiscovery.html">AWSEndpointDiscovery</a></span><span class="p">,</span>
+    <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
+    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span>
+<span class="p">)</span> <span class="k">async</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>operationName</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Name of the AWS operation</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>path</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>path to append to endpoint URL</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>httpMethod</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>HTTP method to use (&ldquo;GET&rdquo;, &ldquo;PUT&rdquo;, &ldquo;PUSH&rdquo; etc)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>serviceConfig</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>AWS service configuration used in request creation and signing</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>endpointDiscovery</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Endpoint discovery helper</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>logger</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Logger</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>eventLoop</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Optional EventLoop to run everything on</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Future containing output object that completes when response is received</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input10hostPrefix17endpointDiscovery6logger2onySS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0CxSSSgAA011AWSEndpointO0V7Logging6LoggerV7NIOCore9EventLoop_pSgtYaKAA17AWSEncodableShapeRzlF"></a>
+                    <a name="//apple_ref/swift/Method/execute(operation:path:httpMethod:serviceConfig:input:hostPrefix:endpointDiscovery:logger:on:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input10hostPrefix17endpointDiscovery6logger2onySS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0CxSSSgAA011AWSEndpointO0V7Logging6LoggerV7NIOCore9EventLoop_pSgtYaKAA17AWSEncodableShapeRzlF">execute(operation:<wbr>path:<wbr>httpMethod:<wbr>serviceConfig:<wbr>input:<wbr>hostPrefix:<wbr>endpointDiscovery:<wbr>logger:<wbr>on:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Asynchronous
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Execute a request with an input object and return a future with the output object generated from the response</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">execute</span><span class="o">&lt;</span><span class="kt">Input</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSEncodableShape.html">AWSEncodableShape</a></span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="n">operation</span> <span class="nv">operationName</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
+    <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
+    <span class="nv">httpMethod</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span>
+    <span class="nv">serviceConfig</span><span class="p">:</span> <span class="kt"><a href="../Classes/AWSServiceConfig.html">AWSServiceConfig</a></span><span class="p">,</span>
+    <span class="nv">input</span><span class="p">:</span> <span class="kt">Input</span><span class="p">,</span>
+    <span class="nv">hostPrefix</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+    <span class="nv">endpointDiscovery</span><span class="p">:</span> <span class="kt"><a href="../Structs/AWSEndpointDiscovery.html">AWSEndpointDiscovery</a></span><span class="p">,</span>
+    <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
+    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span>
+<span class="p">)</span> <span class="k">async</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>operationName</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Name of the AWS operation</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>path</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>path to append to endpoint URL</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>httpMethod</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>HTTP method to use (&ldquo;GET&rdquo;, &ldquo;PUT&rdquo;, &ldquo;PUSH&rdquo; etc)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>serviceConfig</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>AWS service configuration used in request creation and signing</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>input</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Input object</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>hostPrefix</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Prefix to append to host name</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>endpointDiscovery</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Endpoint discovery helper</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>logger</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Logger</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>eventLoop</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Optional EventLoop to run everything on</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Future containing output object that completes when response is received</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig17endpointDiscovery6logger2onxSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0CAA011AWSEndpointL0V7Logging6LoggerV7NIOCore9EventLoop_pSgtYaKAA17AWSDecodableShapeRzlF"></a>
+                    <a name="//apple_ref/swift/Method/execute(operation:path:httpMethod:serviceConfig:endpointDiscovery:logger:on:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig17endpointDiscovery6logger2onxSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0CAA011AWSEndpointL0V7Logging6LoggerV7NIOCore9EventLoop_pSgtYaKAA17AWSDecodableShapeRzlF">execute(operation:<wbr>path:<wbr>httpMethod:<wbr>serviceConfig:<wbr>endpointDiscovery:<wbr>logger:<wbr>on:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Asynchronous
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Execute an empty request and return a future with the output object generated from the response</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@discardableResult</span>
+<span class="kd">public</span> <span class="kd">func</span> <span class="n">execute</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols.html#/s:8SotoCore17AWSDecodableShapeP">AWSDecodableShape</a></span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="n">operation</span> <span class="nv">operationName</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
+    <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
+    <span class="nv">httpMethod</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span>
+    <span class="nv">serviceConfig</span><span class="p">:</span> <span class="kt"><a href="../Classes/AWSServiceConfig.html">AWSServiceConfig</a></span><span class="p">,</span>
+    <span class="nv">endpointDiscovery</span><span class="p">:</span> <span class="kt"><a href="../Structs/AWSEndpointDiscovery.html">AWSEndpointDiscovery</a></span><span class="p">,</span>
+    <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
+    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span>
+<span class="p">)</span> <span class="k">async</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Output</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>operationName</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Name of the AWS operation</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>path</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>path to append to endpoint URL</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>httpMethod</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>HTTP method to use (&ldquo;GET&rdquo;, &ldquo;PUT&rdquo;, &ldquo;PUSH&rdquo; etc)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>serviceConfig</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>AWS service configuration used in request creation and signing</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>endpointDiscovery</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Endpoint discovery helper</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>logger</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Logger</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>eventLoop</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Optional EventLoop to run everything on</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Future containing output object that completes when response is received</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input10hostPrefix17endpointDiscovery6logger2onxSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0Cq_SSSgAA011AWSEndpointO0V7Logging6LoggerV7NIOCore9EventLoop_pSgtYaKAA17AWSDecodableShapeRzAA17AWSEncodableShapeR_r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/execute(operation:path:httpMethod:serviceConfig:input:hostPrefix:endpointDiscovery:logger:on:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input10hostPrefix17endpointDiscovery6logger2onxSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0Cq_SSSgAA011AWSEndpointO0V7Logging6LoggerV7NIOCore9EventLoop_pSgtYaKAA17AWSDecodableShapeRzAA17AWSEncodableShapeR_r0_lF">execute(operation:<wbr>path:<wbr>httpMethod:<wbr>serviceConfig:<wbr>input:<wbr>hostPrefix:<wbr>endpointDiscovery:<wbr>logger:<wbr>on:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Asynchronous
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Execute a request with an input object and return a future with the output object generated from the response</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">execute</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols.html#/s:8SotoCore17AWSDecodableShapeP">AWSDecodableShape</a></span><span class="p">,</span> <span class="kt">Input</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSEncodableShape.html">AWSEncodableShape</a></span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="n">operation</span> <span class="nv">operationName</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
+    <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
+    <span class="nv">httpMethod</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span>
+    <span class="nv">serviceConfig</span><span class="p">:</span> <span class="kt"><a href="../Classes/AWSServiceConfig.html">AWSServiceConfig</a></span><span class="p">,</span>
+    <span class="nv">input</span><span class="p">:</span> <span class="kt">Input</span><span class="p">,</span>
+    <span class="nv">hostPrefix</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+    <span class="nv">endpointDiscovery</span><span class="p">:</span> <span class="kt"><a href="../Structs/AWSEndpointDiscovery.html">AWSEndpointDiscovery</a></span><span class="p">,</span>
+    <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
+    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span>
+<span class="p">)</span> <span class="k">async</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Output</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>operationName</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Name of the AWS operation</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>path</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>path to append to endpoint URL</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>httpMethod</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>HTTP method to use (&ldquo;GET&rdquo;, &ldquo;PUT&rdquo;, &ldquo;PUSH&rdquo; etc)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>serviceConfig</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>AWS service configuration used in request creation and signing</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>input</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Input object</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>hostPrefix</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Prefix to append to host name</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>endpointDiscovery</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Endpoint discovery helper</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>logger</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Logger</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>eventLoop</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Optional EventLoop to run everything on</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Future containing output object that completes when response is received</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input10hostPrefix17endpointDiscovery6logger2on6streamxSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0Cq_SSSgAA011AWSEndpointO0V7Logging6LoggerV7NIOCore9EventLoop_pSgAZ0Z10LoopFutureCyytGAZ10ByteBufferV_AZA__ptctYaKAA17AWSDecodableShapeRzAA17AWSEncodableShapeR_r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/execute(operation:path:httpMethod:serviceConfig:input:hostPrefix:endpointDiscovery:logger:on:stream:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input10hostPrefix17endpointDiscovery6logger2on6streamxSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0Cq_SSSgAA011AWSEndpointO0V7Logging6LoggerV7NIOCore9EventLoop_pSgAZ0Z10LoopFutureCyytGAZ10ByteBufferV_AZA__ptctYaKAA17AWSDecodableShapeRzAA17AWSEncodableShapeR_r0_lF">execute(operation:<wbr>path:<wbr>httpMethod:<wbr>serviceConfig:<wbr>input:<wbr>hostPrefix:<wbr>endpointDiscovery:<wbr>logger:<wbr>on:<wbr>stream:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Asynchronous
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Execute a request with an input object and return a future with the output object generated from the response</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">execute</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols.html#/s:8SotoCore17AWSDecodableShapeP">AWSDecodableShape</a></span><span class="p">,</span> <span class="kt">Input</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSEncodableShape.html">AWSEncodableShape</a></span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="n">operation</span> <span class="nv">operationName</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
+    <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
+    <span class="nv">httpMethod</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span>
+    <span class="nv">serviceConfig</span><span class="p">:</span> <span class="kt"><a href="../Classes/AWSServiceConfig.html">AWSServiceConfig</a></span><span class="p">,</span>
+    <span class="nv">input</span><span class="p">:</span> <span class="kt">Input</span><span class="p">,</span>
+    <span class="nv">hostPrefix</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+    <span class="nv">endpointDiscovery</span><span class="p">:</span> <span class="kt"><a href="../Structs/AWSEndpointDiscovery.html">AWSEndpointDiscovery</a></span><span class="p">,</span>
+    <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
+    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+    <span class="nv">stream</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Protocols/AWSHTTPClient.html">AWSHTTPClient</a></span><span class="o">.</span><span class="kt">ResponseStream</span>
+<span class="p">)</span> <span class="k">async</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Output</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>operationName</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Name of the AWS operation</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>path</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>path to append to endpoint URL</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>httpMethod</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>HTTP method to use (&ldquo;GET&rdquo;, &ldquo;PUT&rdquo;, &ldquo;PUSH&rdquo; etc)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>input</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Input object</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>config</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>AWS service configuration used in request creation and signing</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>additional context for call</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Future containing output object that completes when response is received</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore9AWSClientC17PaginatorSequenceV"></a>
+                    <a name="//apple_ref/swift/Struct/PaginatorSequence" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC17PaginatorSequenceV">PaginatorSequence</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Used to access paginated results.</p>
+
+                        <a href="../Classes/AWSClient/PaginatorSequence.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">PaginatorSequence</span><span class="o">&lt;</span><span class="kt">Input</span><span class="p">,</span> <span class="kt">Output</span><span class="o">&gt;</span> <span class="p">:</span> <span class="kt">AsyncSequence</span> <span class="k">where</span> <span class="kt">Input</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/AWSPaginateToken.html">AWSPaginateToken</a></span><span class="p">,</span> <span class="kt">Output</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/AWSShape.html">AWSShape</a></span><span class="p">,</span> <span class="kt">Input</span><span class="o">.</span><span class="kt">Token</span> <span class="p">:</span> <span class="kt">Equatable</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore9AWSClientC9waitUntil_6waiter11maxWaitTime6logger2onyx_AC6WaiterVy_xq_G7NIOCore0I6AmountVSg7Logging6LoggerVAL9EventLoop_pSgtYaKr0_lF"></a>
+                    <a name="//apple_ref/swift/Method/waitUntil(_:waiter:maxWaitTime:logger:on:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC9waitUntil_6waiter11maxWaitTime6logger2onyx_AC6WaiterVy_xq_G7NIOCore0I6AmountVSg7Logging6LoggerVAL9EventLoop_pSgtYaKr0_lF">waitUntil(_:<wbr>waiter:<wbr>maxWaitTime:<wbr>logger:<wbr>on:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Asynchronous
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns when waiter polling returns a success state
+or returns an error if the polling returns an error or timesout</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">waitUntil</span><span class="o">&lt;</span><span class="kt">Input</span><span class="p">,</span> <span class="kt">Output</span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="n">_</span> <span class="nv">input</span><span class="p">:</span> <span class="kt">Input</span><span class="p">,</span>
+    <span class="nv">waiter</span><span class="p">:</span> <span class="kt"><a href="../Classes/AWSClient/Waiter.html">Waiter</a></span><span class="o">&lt;</span><span class="kt">Input</span><span class="p">,</span> <span class="kt">Output</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="nv">maxWaitTime</span><span class="p">:</span> <span class="kt">TimeAmount</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+    <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
+    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span>
+<span class="p">)</span> <span class="k">async</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>input</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Input parameters</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>waiter</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Waiter to wait on</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>maxWaitTime</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Maximum amount of time to wait</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>logger</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Logger used to provide output</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>eventLoop</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>EventLoop to run API calls on</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>EventLoopFuture that will be fulfilled once waiter has completed</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input10hostPrefix6logger2onySS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0CxSSSg7Logging6LoggerV7NIOCore9EventLoop_pSgtYaKAA17AWSEncodableShapeRzlF"></a>
+                    <a name="//apple_ref/swift/Method/execute(operation:path:httpMethod:serviceConfig:input:hostPrefix:logger:on:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input10hostPrefix6logger2onySS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0CxSSSg7Logging6LoggerV7NIOCore9EventLoop_pSgtYaKAA17AWSEncodableShapeRzlF">execute(operation:<wbr>path:<wbr>httpMethod:<wbr>serviceConfig:<wbr>input:<wbr>hostPrefix:<wbr>logger:<wbr>on:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Asynchronous
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>execute a request with an input object and return a future with an empty response</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">execute</span><span class="o">&lt;</span><span class="kt">Input</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSEncodableShape.html">AWSEncodableShape</a></span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="n">operation</span> <span class="nv">operationName</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
+    <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
+    <span class="nv">httpMethod</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span>
+    <span class="nv">serviceConfig</span><span class="p">:</span> <span class="kt"><a href="../Classes/AWSServiceConfig.html">AWSServiceConfig</a></span><span class="p">,</span>
+    <span class="nv">input</span><span class="p">:</span> <span class="kt">Input</span><span class="p">,</span>
+    <span class="nv">hostPrefix</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+    <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
+    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span>
+<span class="p">)</span> <span class="k">async</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>operationName</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Name of the AWS operation</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>path</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>path to append to endpoint URL</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>httpMethod</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>HTTP method to use (&ldquo;GET&rdquo;, &ldquo;PUT&rdquo;, &ldquo;PUSH&rdquo; etc)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>input</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Input object</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>config</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>AWS service configuration used in request creation and signing</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>additional context for call</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Empty Future that completes when response is received</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig6logger2onySS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0C7Logging6LoggerV7NIOCore9EventLoop_pSgtYaKF"></a>
+                    <a name="//apple_ref/swift/Method/execute(operation:path:httpMethod:serviceConfig:logger:on:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig6logger2onySS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0C7Logging6LoggerV7NIOCore9EventLoop_pSgtYaKF">execute(operation:<wbr>path:<wbr>httpMethod:<wbr>serviceConfig:<wbr>logger:<wbr>on:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Asynchronous
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Execute an empty request and return a future with an empty response</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">execute</span><span class="p">(</span>
+    <span class="n">operation</span> <span class="nv">operationName</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
+    <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
+    <span class="nv">httpMethod</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span>
+    <span class="nv">serviceConfig</span><span class="p">:</span> <span class="kt"><a href="../Classes/AWSServiceConfig.html">AWSServiceConfig</a></span><span class="p">,</span>
+    <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
+    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span>
+<span class="p">)</span> <span class="k">async</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>operationName</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Name of the AWS operation</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>path</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>path to append to endpoint URL</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>httpMethod</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>HTTP method to use (&ldquo;GET&rdquo;, &ldquo;PUT&rdquo;, &ldquo;PUSH&rdquo; etc)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>config</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>AWS service configuration used in request creation and signing</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>additional context for call</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Empty Future that completes when response is received</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig6logger2onxSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0C7Logging6LoggerV7NIOCore9EventLoop_pSgtYaKAA17AWSDecodableShapeRzlF"></a>
+                    <a name="//apple_ref/swift/Method/execute(operation:path:httpMethod:serviceConfig:logger:on:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig6logger2onxSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0C7Logging6LoggerV7NIOCore9EventLoop_pSgtYaKAA17AWSDecodableShapeRzlF">execute(operation:<wbr>path:<wbr>httpMethod:<wbr>serviceConfig:<wbr>logger:<wbr>on:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Asynchronous
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Execute an empty request and return a future with the output object generated from the response</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">execute</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols.html#/s:8SotoCore17AWSDecodableShapeP">AWSDecodableShape</a></span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="n">operation</span> <span class="nv">operationName</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
+    <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
+    <span class="nv">httpMethod</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span>
+    <span class="nv">serviceConfig</span><span class="p">:</span> <span class="kt"><a href="../Classes/AWSServiceConfig.html">AWSServiceConfig</a></span><span class="p">,</span>
+    <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
+    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span>
+<span class="p">)</span> <span class="k">async</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Output</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>operationName</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Name of the AWS operation</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>path</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>path to append to endpoint URL</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>httpMethod</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>HTTP method to use (&ldquo;GET&rdquo;, &ldquo;PUT&rdquo;, &ldquo;PUSH&rdquo; etc)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>config</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>AWS service configuration used in request creation and signing</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>additional context for call</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Future containing output object that completes when response is received</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input10hostPrefix6logger2onxSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0Cq_SSSg7Logging6LoggerV7NIOCore9EventLoop_pSgtYaKAA17AWSDecodableShapeRzAA012AWSEncodableY0R_r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/execute(operation:path:httpMethod:serviceConfig:input:hostPrefix:logger:on:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input10hostPrefix6logger2onxSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0Cq_SSSg7Logging6LoggerV7NIOCore9EventLoop_pSgtYaKAA17AWSDecodableShapeRzAA012AWSEncodableY0R_r0_lF">execute(operation:<wbr>path:<wbr>httpMethod:<wbr>serviceConfig:<wbr>input:<wbr>hostPrefix:<wbr>logger:<wbr>on:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Asynchronous
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Execute a request with an input object and return a future with the output object generated from the response</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">execute</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols.html#/s:8SotoCore17AWSDecodableShapeP">AWSDecodableShape</a></span><span class="p">,</span> <span class="kt">Input</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSEncodableShape.html">AWSEncodableShape</a></span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="n">operation</span> <span class="nv">operationName</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
+    <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
+    <span class="nv">httpMethod</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span>
+    <span class="nv">serviceConfig</span><span class="p">:</span> <span class="kt"><a href="../Classes/AWSServiceConfig.html">AWSServiceConfig</a></span><span class="p">,</span>
+    <span class="nv">input</span><span class="p">:</span> <span class="kt">Input</span><span class="p">,</span>
+    <span class="nv">hostPrefix</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+    <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
+    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span>
+<span class="p">)</span> <span class="k">async</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Output</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>operationName</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Name of the AWS operation</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>path</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>path to append to endpoint URL</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>httpMethod</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>HTTP method to use (&ldquo;GET&rdquo;, &ldquo;PUT&rdquo;, &ldquo;PUSH&rdquo; etc)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>input</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Input object</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>config</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>AWS service configuration used in request creation and signing</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>additional context for call</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Future containing output object that completes when response is received</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input10hostPrefix6logger2on6streamxSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0Cq_SSSg7Logging6LoggerV7NIOCore9EventLoop_pSgAW0wX6FutureCyytGAW10ByteBufferV_AwX_ptctYaKAA17AWSDecodableShapeRzAA17AWSEncodableShapeR_r0_lF"></a>
+                    <a name="//apple_ref/swift/Method/execute(operation:path:httpMethod:serviceConfig:input:hostPrefix:logger:on:stream:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC7execute9operation4path10httpMethod13serviceConfig5input10hostPrefix6logger2on6streamxSS_SS8NIOHTTP110HTTPMethodOAA010AWSServiceJ0Cq_SSSg7Logging6LoggerV7NIOCore9EventLoop_pSgAW0wX6FutureCyytGAW10ByteBufferV_AwX_ptctYaKAA17AWSDecodableShapeRzAA17AWSEncodableShapeR_r0_lF">execute(operation:<wbr>path:<wbr>httpMethod:<wbr>serviceConfig:<wbr>input:<wbr>hostPrefix:<wbr>logger:<wbr>on:<wbr>stream:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Asynchronous
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Execute a request with an input object and return a future with the output object generated from the response</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">execute</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">:</span> <span class="kt"><a href="../Protocols.html#/s:8SotoCore17AWSDecodableShapeP">AWSDecodableShape</a></span><span class="p">,</span> <span class="kt">Input</span><span class="p">:</span> <span class="kt"><a href="../Protocols/AWSEncodableShape.html">AWSEncodableShape</a></span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="n">operation</span> <span class="nv">operationName</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
+    <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
+    <span class="nv">httpMethod</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span>
+    <span class="nv">serviceConfig</span><span class="p">:</span> <span class="kt"><a href="../Classes/AWSServiceConfig.html">AWSServiceConfig</a></span><span class="p">,</span>
+    <span class="nv">input</span><span class="p">:</span> <span class="kt">Input</span><span class="p">,</span>
+    <span class="nv">hostPrefix</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+    <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
+    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+    <span class="nv">stream</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Protocols/AWSHTTPClient.html">AWSHTTPClient</a></span><span class="o">.</span><span class="kt">ResponseStream</span>
+<span class="p">)</span> <span class="k">async</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Output</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>operationName</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Name of the AWS operation</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>path</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>path to append to endpoint URL</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>httpMethod</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>HTTP method to use (&ldquo;GET&rdquo;, &ldquo;PUT&rdquo;, &ldquo;PUSH&rdquo; etc)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>input</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Input object</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>config</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>AWS service configuration used in request creation and signing</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>additional context for call</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Future containing output object that completes when response is received</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore9AWSClientC13getCredential2on6logger0A8SignerV40E0_p7NIOCore9EventLoop_pSg_7Logging6LoggerVtYaKF"></a>
+                    <a name="//apple_ref/swift/Method/getCredential(on:logger:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC13getCredential2on6logger0A8SignerV40E0_p7NIOCore9EventLoop_pSg_7Logging6LoggerVtYaKF">getCredential(on:<wbr>logger:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Asynchronous
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Get credential used by client</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">getCredential</span><span class="p">(</span><span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">)</span> <span class="k">async</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Credential</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>eventLoop</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>optional eventLoop to run operation on</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>logger</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>optional logger to use</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Credential</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore9AWSClientC7signURL3url10httpMethod7headers7expires13serviceConfig6logger10Foundation0E0VAM_8NIOHTTP110HTTPMethodOAN11HTTPHeadersV7NIOCore10TimeAmountVAA010AWSServiceL0C7Logging6LoggerVtYaKF"></a>
+                    <a name="//apple_ref/swift/Method/signURL(url:httpMethod:headers:expires:serviceConfig:logger:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC7signURL3url10httpMethod7headers7expires13serviceConfig6logger10Foundation0E0VAM_8NIOHTTP110HTTPMethodOAN11HTTPHeadersV7NIOCore10TimeAmountVAA010AWSServiceL0C7Logging6LoggerVtYaKF">signURL(url:<wbr>httpMethod:<wbr>headers:<wbr>expires:<wbr>serviceConfig:<wbr>logger:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Asynchronous
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Generate a signed URL</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">signURL</span><span class="p">(</span>
+    <span class="nv">url</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span>
+    <span class="nv">httpMethod</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span>
+    <span class="nv">headers</span><span class="p">:</span> <span class="kt">HTTPHeaders</span> <span class="o">=</span> <span class="kt">HTTPHeaders</span><span class="p">(),</span>
+    <span class="nv">expires</span><span class="p">:</span> <span class="kt">TimeAmount</span><span class="p">,</span>
+    <span class="nv">serviceConfig</span><span class="p">:</span> <span class="kt"><a href="../Classes/AWSServiceConfig.html">AWSServiceConfig</a></span><span class="p">,</span>
+    <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span>
+<span class="p">)</span> <span class="k">async</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">URL</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>url</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>URL to sign</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>httpMethod</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>HTTP method to use (.GET, .PUT, .PUSH etc)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>httpHeaders</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Headers that are to be used with this URL. Be sure to include these headers when you used the returned URL</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>expires</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>How long before the signed URL expires</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>serviceConfig</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>additional AWS service configuration used to sign the url</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>logger</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Logger to output to</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>A signed URL</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore9AWSClientC11signHeaders3url10httpMethod7headers4body13serviceConfig6logger8NIOHTTP111HTTPHeadersV10Foundation3URLV_AK10HTTPMethodOAmA10AWSPayloadVAA010AWSServiceL0C7Logging6LoggerVtYaKF"></a>
+                    <a name="//apple_ref/swift/Method/signHeaders(url:httpMethod:headers:body:serviceConfig:logger:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC11signHeaders3url10httpMethod7headers4body13serviceConfig6logger8NIOHTTP111HTTPHeadersV10Foundation3URLV_AK10HTTPMethodOAmA10AWSPayloadVAA010AWSServiceL0C7Logging6LoggerVtYaKF">signHeaders(url:<wbr>httpMethod:<wbr>headers:<wbr>body:<wbr>serviceConfig:<wbr>logger:<wbr>)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Asynchronous
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Generate signed headers</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">signHeaders</span><span class="p">(</span>
+    <span class="nv">url</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span>
+    <span class="nv">httpMethod</span><span class="p">:</span> <span class="kt">HTTPMethod</span><span class="p">,</span>
+    <span class="nv">headers</span><span class="p">:</span> <span class="kt">HTTPHeaders</span> <span class="o">=</span> <span class="kt">HTTPHeaders</span><span class="p">(),</span>
+    <span class="nv">body</span><span class="p">:</span> <span class="kt"><a href="../Structs/AWSPayload.html">AWSPayload</a></span><span class="p">,</span>
+    <span class="nv">serviceConfig</span><span class="p">:</span> <span class="kt"><a href="../Classes/AWSServiceConfig.html">AWSServiceConfig</a></span><span class="p">,</span>
+    <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt">AWSClient</span><span class="o">.</span><span class="n"><a href="../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span>
+<span class="p">)</span> <span class="k">async</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">HTTPHeaders</span></code></pre>
 
                         </div>
                       </div>

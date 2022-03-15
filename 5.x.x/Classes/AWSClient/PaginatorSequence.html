@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Waiter Structure Reference</title>
+    <title>PaginatorSequence Structure Reference</title>
     <link rel="stylesheet" type="text/css" href="../../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../../css/highlight.css" />
     <meta charset='utf-8'>
@@ -13,8 +13,8 @@
     <script src="../../js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/swift/Struct/Waiter" class="dashAnchor"></a>
-    <a title="Waiter Structure Reference"></a>
+    <a name="//apple_ref/swift/Struct/PaginatorSequence" class="dashAnchor"></a>
+    <a title="PaginatorSequence Structure Reference"></a>
     <header>
       <div class="content-wrapper">
         <p><a href="../../index.html"> Docs</a> (66% documented)</p>
@@ -30,7 +30,7 @@
       <p id="breadcrumbs">
         <a href="../../index.html"> Reference</a>
         <img id="carat" src="../../img/carat.png" alt=""/>
-        Waiter Structure Reference
+        PaginatorSequence Structure Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -347,15 +347,15 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>Waiter</h1>
+            <h1>PaginatorSequence</h1>
               <div class="declaration">
                 <div class="language">
                   
-                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">Waiter</span><span class="o">&lt;</span><span class="kt">Input</span><span class="p">,</span> <span class="kt">Output</span><span class="o">&gt;</span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">PaginatorSequence</span><span class="o">&lt;</span><span class="kt">Input</span><span class="p">,</span> <span class="kt">Output</span><span class="o">&gt;</span> <span class="p">:</span> <span class="kt">AsyncSequence</span> <span class="k">where</span> <span class="kt">Input</span> <span class="p">:</span> <span class="kt"><a href="../../Protocols/AWSPaginateToken.html">AWSPaginateToken</a></span><span class="p">,</span> <span class="kt">Output</span> <span class="p">:</span> <span class="kt"><a href="../../Protocols/AWSShape.html">AWSShape</a></span><span class="p">,</span> <span class="kt">Input</span><span class="o">.</span><span class="kt">Token</span> <span class="p">:</span> <span class="kt">Equatable</span></code></pre>
 
                 </div>
               </div>
-            <p>A waiter is a client side abstraction used to poll a resource until a desired state is reached</p>
+            <p>Used to access paginated results.</p>
 
           </section>
           <section class="section task-group-section">
@@ -364,9 +364,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore9AWSClientC6WaiterV8AcceptorV"></a>
-                    <a name="//apple_ref/swift/Struct/Acceptor" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore9AWSClientC6WaiterV8AcceptorV">Acceptor</a>
+                    <a name="/s:Sci7ElementQa"></a>
+                    <a name="//apple_ref/swift/Alias/Element" class="dashAnchor"></a>
+                    <a class="token" href="#/s:Sci7ElementQa">Element</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -374,15 +374,13 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>An acceptor checks the result of a call and can change the waiter state based on that result</p>
-
-                        <a href="../../Classes/AWSClient/Waiter/Acceptor.html" class="slightly-smaller">See more</a>
+                        
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">Acceptor</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">Element</span> <span class="o">=</span> <span class="kt">Output</span></code></pre>
 
                         </div>
                       </div>
@@ -392,9 +390,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore9AWSClientC6WaiterV9acceptors12minDelayTime03maxgH07commandAEy_xq_GSayAE8AcceptorVy_xq__GG_7NIOCore0H6AmountVAqO15EventLoopFutureCyq_Gx_7Logging6LoggerVAO0nO0_pSgtctcfc"></a>
-                    <a name="//apple_ref/swift/Method/init(acceptors:minDelayTime:maxDelayTime:command:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore9AWSClientC6WaiterV9acceptors12minDelayTime03maxgH07commandAEy_xq_GSayAE8AcceptorVy_xq__GG_7NIOCore0H6AmountVAqO15EventLoopFutureCyq_Gx_7Logging6LoggerVAO0nO0_pSgtctcfc">init(acceptors:<wbr>minDelayTime:<wbr>maxDelayTime:<wbr>command:<wbr>)</a>
+                    <a name="/s:8SotoCore9AWSClientC17PaginatorSequenceV5input7command0F3Key06outputH0011moreResultsH06logger2onAEy_xq_Gx_q_x_7Logging6LoggerV7NIOCore9EventLoop_pSgtYaKcs0H4PathCyx5TokenQzSgGSgAUyq_AXGAUyq_SbSgGSgApStcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(input:command:inputKey:outputKey:moreResultsKey:logger:on:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC17PaginatorSequenceV5input7command0F3Key06outputH0011moreResultsH06logger2onAEy_xq_Gx_q_x_7Logging6LoggerV7NIOCore9EventLoop_pSgtYaKcs0H4PathCyx5TokenQzSgGSgAUyq_AXGAUyq_SbSgGSgApStcfc">init(input:<wbr>command:<wbr>inputKey:<wbr>outputKey:<wbr>moreResultsKey:<wbr>logger:<wbr>on:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -402,7 +400,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Initialize an waiter</p>
+                        <p>Initialize PaginatorSequence</p>
 
                       </div>
                       <div class="declaration">
@@ -410,14 +408,13 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span>
-    <span class="nv">acceptors</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../../Classes/AWSClient.html">AWSClient</a></span><span class="o">.</span><span class="kt">Waiter</span><span class="o">&lt;</span><span class="kt">Input</span><span class="p">,</span> <span class="kt">Output</span><span class="o">&gt;.</span><span class="kt"><a href="../../Classes/AWSClient/Waiter/Acceptor.html">Acceptor</a></span><span class="p">],</span>
-    <span class="nv">minDelayTime</span><span class="p">:</span> <span class="kt">TimeAmount</span> <span class="o">=</span> <span class="o">.</span><span class="nf">seconds</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span>
-    <span class="nv">maxDelayTime</span><span class="p">:</span> <span class="kt">TimeAmount</span> <span class="o">=</span> <span class="o">.</span><span class="nf">seconds</span><span class="p">(</span><span class="mi">120</span><span class="p">),</span>
-    <span class="nv">command</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span>
-        <span class="kt">Input</span><span class="p">,</span>
-        <span class="kt">Logger</span><span class="p">,</span>
-        <span class="kt">EventLoop</span><span class="p">?</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Output</span><span class="o">&gt;</span>
+    <span class="nv">input</span><span class="p">:</span> <span class="kt">Input</span><span class="p">,</span>
+    <span class="nv">command</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">((</span><span class="kt">Input</span><span class="p">,</span> <span class="kt">Logger</span><span class="p">,</span> <span class="kt">EventLoop</span><span class="p">?)</span> <span class="k">async</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Output</span><span class="p">),</span>
+    <span class="nv">inputKey</span><span class="p">:</span> <span class="kt">KeyPath</span><span class="o">&lt;</span><span class="kt">Input</span><span class="p">,</span> <span class="kt">Input</span><span class="o">.</span><span class="kt">Token</span><span class="p">?</span><span class="o">&gt;</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+    <span class="nv">outputKey</span><span class="p">:</span> <span class="kt">KeyPath</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">,</span> <span class="kt">Input</span><span class="o">.</span><span class="kt">Token</span><span class="p">?</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="nv">moreResultsKey</span><span class="p">:</span> <span class="kt">KeyPath</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">,</span> <span class="kt">Bool</span><span class="p">?</span><span class="o">&gt;</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
+    <span class="nv">logger</span><span class="p">:</span> <span class="kt">Logger</span> <span class="o">=</span> <span class="kt"><a href="../../Classes/AWSClient.html">AWSClient</a></span><span class="o">.</span><span class="n"><a href="../../Classes/AWSClient.html#/s:8SotoCore9AWSClientC15loggingDisabled7Logging6LoggerVvpZ">loggingDisabled</a></span><span class="p">,</span>
+    <span class="n">on</span> <span class="nv">eventLoop</span><span class="p">:</span> <span class="kt">EventLoop</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span>
 <span class="p">)</span></code></pre>
 
                         </div>
@@ -429,36 +426,12 @@
                             <tr>
                               <td>
                                 <code>
-                                <em>acceptors</em>
+                                <em>input</em>
                                 </code>
                               </td>
                               <td>
                                 <div>
-                                  <p>List of acceptors</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>minDelayTime</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>minimum amount of time to wait between API calls</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>maxDelayTime</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>maximum amount of time to wait between API calls</p>
+                                  <p>Initial Input value</p>
                                 </div>
                               </td>
                             </tr>
@@ -470,12 +443,103 @@
                               </td>
                               <td>
                                 <div>
-                                  <p>API call</p>
+                                  <p>Command to be paginated</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>tokenKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>KeyPath for Output token used to setup new Input</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>logger</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Logger</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>eventLoop</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>EventLoop to run everything on</p>
                                 </div>
                               </td>
                             </tr>
                           </tbody>
                         </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore9AWSClientC17PaginatorSequenceV13AsyncIteratorV"></a>
+                    <a name="//apple_ref/swift/Struct/AsyncIterator" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC17PaginatorSequenceV13AsyncIteratorV">AsyncIterator</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Iterator for iterating over <code><a href="../../Classes/AWSClient/PaginatorSequence.html">PaginatorSequence</a></code></p>
+
+                        <a href="../../Classes/AWSClient/PaginatorSequence/AsyncIterator.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">AsyncIterator</span> <span class="p">:</span> <span class="kt">AsyncIteratorProtocol</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8SotoCore9AWSClientC17PaginatorSequenceV17makeAsyncIteratorAE0gH0Vy_xq__GyF"></a>
+                    <a name="//apple_ref/swift/Method/makeAsyncIterator()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore9AWSClientC17PaginatorSequenceV17makeAsyncIteratorAE0gH0Vy_xq__GyF">makeAsyncIterator()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Make async iterator</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">makeAsyncIterator</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt"><a href="../../Classes/AWSClient/PaginatorSequence/AsyncIterator.html">AsyncIterator</a></span></code></pre>
+
+                        </div>
                       </div>
                     </section>
                   </div>

@@ -39,7 +39,7 @@ class QueryEncoderTests: XCTestCase {
             }
         }
         let test = Test(a: "Testing", b: 42)
-        testQuery(test, query: "A=Testing&B=42")
+        self.testQuery(test, query: "A=Testing&B=42")
     }
 
     func testContainingStructureEncode() {
@@ -60,7 +60,7 @@ class QueryEncoderTests: XCTestCase {
             }
         }
         let test = Test2(t: Test(a: 42, b: "Life"))
-        testQuery(test, query: "T.A=42&T.B=Life")
+        self.testQuery(test, query: "T.A=42&T.B=Life")
     }
 
     func testEnumEncode() {
@@ -78,7 +78,7 @@ class QueryEncoderTests: XCTestCase {
         }
         let test = Test(a: .second)
         // NB enum names don't change to rawValue (not sure how to fix)
-        testQuery(test, query: "A=second")
+        self.testQuery(test, query: "A=second")
     }
 
     func testArrayEncode() {
@@ -90,7 +90,7 @@ class QueryEncoderTests: XCTestCase {
             }
         }
         let test = Test(a: [9, 8, 7, 6])
-        testQuery(test, query: "A.1=9&A.2=8&A.3=7&A.4=6")
+        self.testQuery(test, query: "A.1=9&A.2=8&A.3=7&A.4=6")
     }
 
     func testArrayOfStructuresEncode() {
@@ -110,7 +110,7 @@ class QueryEncoderTests: XCTestCase {
             }
         }
         let test = Test(a: [Test2(b: "first"), Test2(b: "second")])
-        testQuery(test, query: "A.m.1.B=first&A.m.2.B=second")
+        self.testQuery(test, query: "A.m.1.B=first&A.m.2.B=second")
     }
 
     func testDictionaryEncode() {
@@ -122,7 +122,7 @@ class QueryEncoderTests: XCTestCase {
             }
         }
         let test = Test(a: ["first": 1])
-        testQuery(test, query: "A.entry.1.key=first&A.entry.1.value=1")
+        self.testQuery(test, query: "A.entry.1.key=first&A.entry.1.value=1")
     }
 
     func testDictionaryEnumKeyEncode() {
@@ -146,7 +146,7 @@ class QueryEncoderTests: XCTestCase {
             }
         }
         let test = Test(a: [.first: Test2(b: "1st")])
-        testQuery(test, query: "A.entry.1.key=first&A.entry.1.value.B=1st")
+        self.testQuery(test, query: "A.entry.1.key=first&A.entry.1.value.B=1st")
     }
 
     func testArrayEncodingEncode() {
@@ -155,7 +155,7 @@ class QueryEncoderTests: XCTestCase {
             @CustomCoding<ArrayCoder<ArrayItem, Int>> var a: [Int]
         }
         let test = Test(a: [9, 8, 7, 6])
-        testQuery(test, query: "a.item.1=9&a.item.2=8&a.item.3=7&a.item.4=6")
+        self.testQuery(test, query: "a.item.1=9&a.item.2=8&a.item.3=7&a.item.4=6")
     }
 
     func testDictionaryEncodingEncode() {
@@ -168,7 +168,7 @@ class QueryEncoderTests: XCTestCase {
             }
         }
         let test = Test(a: ["first": 1])
-        testQuery(test, query: "A.item.1.k=first&A.item.1.v=1")
+        self.testQuery(test, query: "A.item.1.k=first&A.item.1.v=1")
     }
 
     func testDictionaryEncodingEncode2() {
@@ -183,7 +183,7 @@ class QueryEncoderTests: XCTestCase {
             }
         }
         let test = Test(a: ["first": 1])
-        testQuery(test, query: "A.1.entry=1&A.1.name=first")
+        self.testQuery(test, query: "A.1.entry=1&A.1.name=first")
     }
 
     func testDataBlobEncode() {

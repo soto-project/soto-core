@@ -115,7 +115,7 @@ extension AWSRequest {
         case .query, .ec2:
             let params = ["Action": operationName, "Version": configuration.apiVersion]
             self.body = try .text(QueryEncoder().encode(params)!)
-        default:  
+        default:
             self.body = .empty
         }
 

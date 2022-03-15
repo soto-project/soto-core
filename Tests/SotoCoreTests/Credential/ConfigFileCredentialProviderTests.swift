@@ -242,7 +242,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
 
         // Here we use `.custom` provider factory, since we need to inject the testServer endpoint
-        let client = createAWSClient(credentialProvider: .custom { (context) -> CredentialProvider in
+        let client = createAWSClient(credentialProvider: .custom { context -> CredentialProvider in
             ConfigFileCredentialProvider(
                 credentialsFilePath: credentialsFilePath,
                 configFilePath: configFilePath,

@@ -110,7 +110,14 @@ extension AWSRequest {
         self.operation = operationName
         self.httpMethod = httpMethod
         self.httpHeaders = headers
-        self.body = .empty
+        // Query and EC2 protocols require the Action and API Version in the body
+        switch configuration.serviceProtocol {
+        case .query, .ec2:
+            let params = ["Action": operationName, "Version": configuration.apiVersion]
+            self.body = try .text(QueryEncoder().encode(params)!)
+        default:  
+            self.body = .empty
+        }
 
         addStandardHeaders()
     }

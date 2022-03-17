@@ -8,13 +8,13 @@ jobs:
   linux:
     runs-on: ubuntu-latest
     container:
-      image: swift:5.6
+      image: swift:5.6-focal
     steps:
     - name: Checkout
       uses: actions/checkout@v1
     - name: API breaking changes
       run: |
-        git switch -c _diagnose-api-breaking-changes_
-        git checkout main
-        git checkout _diagnose-api-breaking-changes_
+#        git switch -c _diagnose-api-breaking-changes_
+#        git checkout main
+#        git checkout _diagnose-api-breaking-changes_
         swift package diagnose-api-breaking-changes main

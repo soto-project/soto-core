@@ -13,7 +13,7 @@ jobs:
     - name: Install dependencies
       run: |
         apt-get update -qq
-#         apt-get install -q -y git
+        apt-get upgrade -q -y git
     - name: Checkout
       uses: actions/checkout@v3
       with:

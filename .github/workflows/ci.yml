@@ -53,10 +53,9 @@ jobs:
     strategy:
       matrix:
         tag:
-          - swift:5.2
-          - swift:5.3
           - swift:5.4
           - swift:5.5
+          - swift:5.6
     container:
       image: ${{ matrix.tag }}
     steps:
@@ -67,7 +66,7 @@ jobs:
     - name: Test
       run: |
         swift --version
-        swift test --enable-test-discovery --enable-code-coverage
+        swift test --enable-code-coverage
     - name: Convert coverage files
       run: |
         llvm-cov export -format="lcov" \

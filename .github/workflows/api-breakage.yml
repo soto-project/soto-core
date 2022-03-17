@@ -10,14 +10,8 @@ jobs:
     container:
       image: swift:5.6
     steps:
-    - name: Install dependencies
-      run: |
-        apt-get update -qq
-        apt-get upgrade -q -y git
     - name: Checkout
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
+      uses: actions/checkout@v1
     - name: API breaking changes
       run: |
         swift package diagnose-api-breaking-changes main

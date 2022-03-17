@@ -16,5 +16,4 @@ jobs:
         fetch-depth: 0
     - name: API breaking changes
       run: |
-        git fetch origin
         swift package diagnose-api-breaking-changes main

@@ -16,7 +16,8 @@ jobs:
         fetch-depth: 0
     - name: API breaking changes
       run: |
-        git fetch origin
+        git checkout main
+        get checkout ${GITHUB_REF}
         swift package diagnose-api-breaking-changes main
 #        git switch -c _diagnose-api-breaking-changes_
 #        git checkout main

@@ -47,7 +47,6 @@ extension AWSService {
         httpMethod: HTTPMethod,
         headers: HTTPHeaders = HTTPHeaders(),
         expires: TimeAmount,
-        breakingChange: Int,
         logger: Logger = AWSClient.loggingDisabled
     ) -> EventLoopFuture<URL> {
         return self.client.signURL(url: url, httpMethod: httpMethod, headers: headers, expires: expires, serviceConfig: self.config, logger: logger)

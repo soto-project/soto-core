@@ -15,9 +15,11 @@ jobs:
       with:
         fetch-depth: 0
     - name: API breaking changes
+      env:
+        GITHUB_REF: ${{ env.GITHUB_REF }}
       run: |
         git checkout main
-        get checkout ${GITHUB_REF}
+        git checkout ${GITHUB_REF}
         swift package diagnose-api-breaking-changes main
 #        git switch -c _diagnose-api-breaking-changes_
 #        git checkout main

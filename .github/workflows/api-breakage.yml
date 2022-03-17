@@ -14,7 +14,7 @@ jobs:
       uses: actions/checkout@v1
     - name: API breaking changes
       run: |
+        swift package diagnose-api-breaking-changes main
 #        git switch -c _diagnose-api-breaking-changes_
 #        git checkout main
 #        git checkout _diagnose-api-breaking-changes_
-        swift package diagnose-api-breaking-changes main

@@ -350,8 +350,7 @@ extension AWSRequest {
             case .crc32c:
                 preconditionFailure("CRC32C checksum is currently unsupported")
             case .sha1:
-                preconditionFailure("SHA1 checksum is currently unsupported")
-                //let checksum = calculateChecksum(buffer, function: Insecure.SHA1.self)
+                checksum = calculateChecksum(buffer, function: Insecure.SHA1.self)
             case .sha256:
                 checksum = calculateChecksum(buffer, function: SHA256.self)
             case .md5:

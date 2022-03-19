@@ -468,7 +468,7 @@ class AWSRequestTests: XCTestCase {
 
     func testRequiredMD5Checksum() {
         struct Input: AWSEncodableShape {
-            static let _options: AWSShapeOptions = .md5ChecksumRequired
+            static let _options: AWSShapeOptions = .checksumRequired
             let q: [String]
         }
         let input = Input(q: ["one", "two", "three", "four"])
@@ -497,7 +497,7 @@ class AWSRequestTests: XCTestCase {
 
     func testMD5ChecksumSetAlready() {
         struct Input: AWSEncodableShape {
-            static let _options: AWSShapeOptions = .md5ChecksumRequired
+            static let _options: AWSShapeOptions = .checksumRequired
             static let _encoding: [AWSMemberEncoding] = [
                 .init(label: "checksum", location: .header("Content-MD5")),
             ]
@@ -509,6 +509,22 @@ class AWSRequestTests: XCTestCase {
         var request: AWSRequest?
         XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))
         XCTAssertEqual(request?.httpHeaders["Content-MD5"].first, "Set already")
+    }
+
+    func testSHA256Checksum() {
+        struct Input: AWSEncodableShape {
+            static let _options: AWSShapeOptions = .checksumHeader
+            static let _encoding: [AWSMemberEncoding] = [
+                .init(label: "checksum", location: .header("x-amz-request-algorithm")),
+            ]
+            let q: [String]
+            let checksum: String
+        }
+        let input = Input(q: ["one", "two", "three", "four"], checksum: "SHA256")
+        let config = createServiceConfig(region: .useast2, service: "myservice")
+        var request: AWSRequest?
+        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))
+        XCTAssertNotNil(request?.httpHeaders["x-amz-checksum-sha256"].first)
     }
 
     func testHeaderPrefix() {

@@ -511,6 +511,22 @@ class AWSRequestTests: XCTestCase {
         XCTAssertEqual(request?.httpHeaders["Content-MD5"].first, "Set already")
     }
 
+    func testSHA1Checksum() {
+        struct Input: AWSEncodableShape {
+            static let _options: AWSShapeOptions = .checksumHeader
+            static let _encoding: [AWSMemberEncoding] = [
+                .init(label: "checksum", location: .header("x-amz-request-algorithm")),
+            ]
+            let q: [String]
+            let checksum: String
+        }
+        let input = Input(q: ["one", "two", "three", "four"], checksum: "SHA1")
+        let config = createServiceConfig(region: .useast2, service: "myservice")
+        var request: AWSRequest?
+        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))
+        XCTAssertEqual(request?.httpHeaders["x-amz-checksum-sha1"].first, "CV1bJ+bvcIKWngmwg+uXlZ+G0Xo=")
+    }
+
     func testSHA256Checksum() {
         struct Input: AWSEncodableShape {
             static let _options: AWSShapeOptions = .checksumHeader
@@ -524,7 +540,7 @@ class AWSRequestTests: XCTestCase {
         let config = createServiceConfig(region: .useast2, service: "myservice")
         var request: AWSRequest?
         XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))
-        XCTAssertNotNil(request?.httpHeaders["x-amz-checksum-sha256"].first)
+        XCTAssertEqual(request?.httpHeaders["x-amz-checksum-sha256"].first, "N2qnXcYzBqRsixi1/y/gOv0QCE/DDuK9N5DSlKZDi6w=")
     }
 
     func testHeaderPrefix() {

@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import CSotoCRC
 import struct Foundation.CharacterSet
 import struct Foundation.Data
 import struct Foundation.Date
@@ -343,10 +344,13 @@ extension AWSRequest {
             let checksumHeader = Self.checksumHeaders[checksumType],
             headers[checksumHeader].first == nil else { return headers }
 
-        let checksum: String?
+        var checksum: String? = nil
         switch checksumType {
             case .crc32:
-                preconditionFailure("CRC32 checksum is currently unsupported")
+                let bufferView = ByteBufferView(buffer)
+                if let crc = bufferView.withContiguousStorageIfAvailable({ soto_crc32_z(0, $0.baseAddress, $0.count) }) {
+                    checksum = String(format: "%8x", crc);
+                }
             case .crc32c:
                 preconditionFailure("CRC32C checksum is currently unsupported")
             case .sha1:

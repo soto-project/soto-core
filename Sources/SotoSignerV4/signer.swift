@@ -450,7 +450,7 @@ public extension URL {
     }
 }
 
-fileprivate extension String {
+private extension String {
     func removeSequentialWhitespace() -> String {
         return reduce(into: "") { result, character in
             if result.last?.isWhitespace != true || character.isWhitespace == false {

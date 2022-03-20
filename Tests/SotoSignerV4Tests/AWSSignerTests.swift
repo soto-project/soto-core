@@ -142,4 +142,30 @@ final class AWSSignerTests: XCTestCase {
         """
         XCTAssertEqual(request, expectedRequest)
     }
+
+    func testCanonicalRequestSequentialSpace() throws {
+        let url = URL(string: "https://test.com/test")!
+        let signer = AWSSigner(credentials: credentials, name: "sns", region: "eu-west-1")
+        let signingData = AWSSigner.SigningData(
+            url: url,
+            method: .POST,
+            headers: ["Content-Type": "application/json", "host": "localhost", "header": "my  header"],
+            body: .string("{}"),
+            date: AWSSigner.timestamp(Date(timeIntervalSince1970: 234_873)),
+            signer: signer
+        )
+        let request = signer.canonicalRequest(signingData: signingData)
+        let expectedRequest = """
+        POST
+        /test
+
+        content-type:application/json
+        header:my header
+        host:localhost
+
+        content-type;header;host
+        44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+        """
+        XCTAssertEqual(request, expectedRequest)
+    }
 }

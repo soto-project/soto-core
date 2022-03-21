@@ -515,7 +515,7 @@ class AWSRequestTests: XCTestCase {
         struct Input: AWSEncodableShape {
             static let _options: AWSShapeOptions = .checksumHeader
             static let _encoding: [AWSMemberEncoding] = [
-                .init(label: "checksum", location: .header("x-amz-request-algorithm")),
+                .init(label: "checksum", location: .header("x-amz-sdk-checksum-algorithm")),
             ]
             let q: [String]
             let checksum: String
@@ -531,7 +531,7 @@ class AWSRequestTests: XCTestCase {
         struct Input: AWSEncodableShape {
             static let _options: AWSShapeOptions = .checksumHeader
             static let _encoding: [AWSMemberEncoding] = [
-                .init(label: "checksum", location: .header("x-amz-request-algorithm")),
+                .init(label: "checksum", location: .header("x-amz-sdk-checksum-algorithm")),
             ]
             let q: [String]
             let checksum: String
@@ -540,14 +540,30 @@ class AWSRequestTests: XCTestCase {
         let config = createServiceConfig(region: .useast2, service: "myservice")
         var request: AWSRequest?
         XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))
-        XCTAssertEqual(request?.httpHeaders["x-amz-checksum-crc32"].first, "CV1bJ+bvcIKWngmwg+uXlZ+G0Xo=")
+        XCTAssertEqual(request?.httpHeaders["x-amz-checksum-crc32"].first, "biu6Pw==")
+    }
+
+    func testCRC32CChecksum() {
+        struct Input: AWSEncodableShape {
+            static let _options: AWSShapeOptions = .checksumHeader
+            static let _encoding: [AWSMemberEncoding] = [
+                .init(label: "checksum", location: .header("x-amz-sdk-checksum-algorithm")),
+            ]
+            let q: [String]
+            let checksum: String
+        }
+        let input = Input(q: ["one", "two", "three", "four"], checksum: "CRC32C")
+        let config = createServiceConfig(region: .useast2, service: "myservice")
+        var request: AWSRequest?
+        XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))
+        XCTAssertEqual(request?.httpHeaders["x-amz-checksum-crc32c"].first, "gwBeYQ==")
     }
 
     func testSHA256Checksum() {
         struct Input: AWSEncodableShape {
             static let _options: AWSShapeOptions = .checksumHeader
             static let _encoding: [AWSMemberEncoding] = [
-                .init(label: "checksum", location: .header("x-amz-request-algorithm")),
+                .init(label: "checksum", location: .header("x-amz-sdk-checksum-algorithm")),
             ]
             let q: [String]
             let checksum: String

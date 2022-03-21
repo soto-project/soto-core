@@ -330,7 +330,7 @@ extension AWSRequest {
         var headers = headers
         var checksumType: ChecksumType?
         if shapeType._options.contains(.checksumHeader) {
-            checksumType = headers["x-amz-request-algorithm"].first.map { ChecksumType(rawValue: $0) } ?? nil
+            checksumType = headers["x-amz-sdk-checksum-algorithm"].first.map { ChecksumType(rawValue: $0) } ?? nil
         }
         if checksumType == nil {
             if Input._options.contains(.checksumRequired) ||
@@ -350,12 +350,20 @@ extension AWSRequest {
         case .crc32:
             let bufferView = ByteBufferView(buffer)
             if let crc = bufferView.withContiguousStorageIfAvailable({ soto_crc32(0, $0.baseAddress, $0.count) }) {
-                checksum = String(format: "%8x", crc)
+                var crc32 = UInt32(crc).bigEndian
+                let data = withUnsafePointer(to: &crc32) { pointer in
+                    return Data(bytes: pointer, count: 4)
+                }
+                checksum = data.base64EncodedString()
             }
         case .crc32c:
             let bufferView = ByteBufferView(buffer)
             if let crc = bufferView.withContiguousStorageIfAvailable({ soto_crc32c(0, $0.baseAddress, $0.count) }) {
-                checksum = String(format: "%8x", crc)
+                var crc32 = UInt32(crc).bigEndian
+                let data = withUnsafePointer(to: &crc32) { pointer in
+                    return Data(bytes: pointer, count: 4)
+                }
+                checksum = data.base64EncodedString()
             }
         case .sha1:
             checksum = calculateChecksum(buffer, function: Insecure.SHA1.self)

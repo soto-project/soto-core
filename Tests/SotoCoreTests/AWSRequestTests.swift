@@ -521,10 +521,10 @@ class AWSRequestTests: XCTestCase {
             let checksum: String
         }
         let input = Input(q: ["one", "two", "three", "four"], checksum: "SHA1")
-        let config = createServiceConfig(region: .useast2, service: "myservice")
+        let config = createServiceConfig(region: .useast2, service: "myservice", serviceProtocol: .restxml)
         var request: AWSRequest?
         XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))
-        XCTAssertEqual(request?.httpHeaders["x-amz-checksum-sha1"].first, "CV1bJ+bvcIKWngmwg+uXlZ+G0Xo=")
+        XCTAssertEqual(request?.httpHeaders["x-amz-checksum-sha1"].first, "SJuck2AdC0YGJSnr5S/2+5uL1FA=")
     }
 
     func testCRC32Checksum() {
@@ -537,10 +537,10 @@ class AWSRequestTests: XCTestCase {
             let checksum: String
         }
         let input = Input(q: ["one", "two", "three", "four"], checksum: "CRC32")
-        let config = createServiceConfig(region: .useast2, service: "myservice")
+        let config = createServiceConfig(region: .useast2, service: "myservice", serviceProtocol: .restxml)
         var request: AWSRequest?
         XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))
-        XCTAssertEqual(request?.httpHeaders["x-amz-checksum-crc32"].first, "biu6Pw==")
+        XCTAssertEqual(request?.httpHeaders["x-amz-checksum-crc32"].first, "wvjEqA==")
     }
 
     func testCRC32CChecksum() {
@@ -553,10 +553,10 @@ class AWSRequestTests: XCTestCase {
             let checksum: String
         }
         let input = Input(q: ["one", "two", "three", "four"], checksum: "CRC32C")
-        let config = createServiceConfig(region: .useast2, service: "myservice")
+        let config = createServiceConfig(region: .useast2, service: "myservice", serviceProtocol: .restxml)
         var request: AWSRequest?
         XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))
-        XCTAssertEqual(request?.httpHeaders["x-amz-checksum-crc32c"].first, "gwBeYQ==")
+        XCTAssertEqual(request?.httpHeaders["x-amz-checksum-crc32c"].first, "JMPW1A==")
     }
 
     func testSHA256Checksum() {
@@ -569,10 +569,10 @@ class AWSRequestTests: XCTestCase {
             let checksum: String
         }
         let input = Input(q: ["one", "two", "three", "four"], checksum: "SHA256")
-        let config = createServiceConfig(region: .useast2, service: "myservice")
+        let config = createServiceConfig(region: .useast2, service: "myservice", serviceProtocol: .restxml)
         var request: AWSRequest?
         XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))
-        XCTAssertEqual(request?.httpHeaders["x-amz-checksum-sha256"].first, "N2qnXcYzBqRsixi1/y/gOv0QCE/DDuK9N5DSlKZDi6w=")
+        XCTAssertEqual(request?.httpHeaders["x-amz-checksum-sha256"].first, "HTYjCbmfsJd3Dek0xIJJk3VKfQDLtOqX3GYDOaRJjRs=")
     }
 
     func testHeaderPrefix() {
@@ -583,7 +583,7 @@ class AWSRequestTests: XCTestCase {
             let content: [String: String]
         }
         let input = Input(content: ["one": "first", "two": "second"])
-        let config = createServiceConfig(region: .useast2, service: "myservice")
+        let config = createServiceConfig(region: .useast2, service: "myservice", serviceProtocol: .restxml)
         var request: AWSRequest?
         XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))
         XCTAssertEqual(request?.httpHeaders["x-aws-metadata-one"].first, "first")

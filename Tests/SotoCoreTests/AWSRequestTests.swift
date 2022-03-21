@@ -540,7 +540,7 @@ class AWSRequestTests: XCTestCase {
         let config = createServiceConfig(region: .useast2, service: "myservice")
         var request: AWSRequest?
         XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: config))
-        XCTAssertEqual(request?.httpHeaders["x-amz-checksum-sha1"].first, "CV1bJ+bvcIKWngmwg+uXlZ+G0Xo=")
+        XCTAssertEqual(request?.httpHeaders["x-amz-checksum-crc32"].first, "CV1bJ+bvcIKWngmwg+uXlZ+G0Xo=")
     }
 
     func testSHA256Checksum() {

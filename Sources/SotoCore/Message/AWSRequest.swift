@@ -297,9 +297,9 @@ extension AWSRequest {
         }
 
         headers = Self.calculateChecksumHeader(
-            headers: headers, 
+            headers: headers,
             body: body,
-            shapeType: Input.self, 
+            shapeType: Input.self,
             configuration: configuration
         )
 
@@ -321,44 +321,48 @@ extension AWSRequest {
     ///   - shapeType: Request shape type
     ///   - configuration: Service configuration
     /// - Returns: New set of headers
-    static private func calculateChecksumHeader<Input: AWSEncodableShape>(
+    private static func calculateChecksumHeader<Input: AWSEncodableShape>(
         headers: HTTPHeaders,
         body: Body,
-        shapeType: Input.Type, 
+        shapeType: Input.Type,
         configuration: AWSServiceConfig
     ) -> HTTPHeaders {
         var headers = headers
-        var checksumType: ChecksumType? = nil
+        var checksumType: ChecksumType?
         if shapeType._options.contains(.checksumHeader) {
             checksumType = headers["x-amz-request-algorithm"].first.map { ChecksumType(rawValue: $0) } ?? nil
         }
         if checksumType == nil {
             if Input._options.contains(.checksumRequired) ||
-                (Input._options.contains(.md5ChecksumHeader) && configuration.options.contains(.calculateMD5)) {
+                (Input._options.contains(.md5ChecksumHeader) && configuration.options.contains(.calculateMD5))
+            {
                 checksumType = .md5
             }
         }
 
-        guard let checksumType = checksumType, 
-            let buffer = body.asByteBuffer(byteBufferAllocator: configuration.byteBufferAllocator),
-            let checksumHeader = Self.checksumHeaders[checksumType],
-            headers[checksumHeader].first == nil else { return headers }
+        guard let checksumType = checksumType,
+              let buffer = body.asByteBuffer(byteBufferAllocator: configuration.byteBufferAllocator),
+              let checksumHeader = Self.checksumHeaders[checksumType],
+              headers[checksumHeader].first == nil else { return headers }
 
-        var checksum: String? = nil
+        var checksum: String?
         switch checksumType {
-            case .crc32:
-                let bufferView = ByteBufferView(buffer)
-                if let crc = bufferView.withContiguousStorageIfAvailable({ soto_crc32_z(0, $0.baseAddress, $0.count) }) {
-                    checksum = String(format: "%8x", crc);
-                }
-            case .crc32c:
-                preconditionFailure("CRC32C checksum is currently unsupported")
-            case .sha1:
-                checksum = calculateChecksum(buffer, function: Insecure.SHA1.self)
-            case .sha256:
-                checksum = calculateChecksum(buffer, function: SHA256.self)
-            case .md5:
-                checksum = calculateChecksum(buffer, function: Insecure.MD5.self)
+        case .crc32:
+            let bufferView = ByteBufferView(buffer)
+            if let crc = bufferView.withContiguousStorageIfAvailable({ soto_crc32(0, $0.baseAddress, $0.count) }) {
+                checksum = String(format: "%8x", crc)
+            }
+        case .crc32c:
+            let bufferView = ByteBufferView(buffer)
+            if let crc = bufferView.withContiguousStorageIfAvailable({ soto_crc32c(0, $0.baseAddress, $0.count) }) {
+                checksum = String(format: "%8x", crc)
+            }
+        case .sha1:
+            checksum = calculateChecksum(buffer, function: Insecure.SHA1.self)
+        case .sha256:
+            checksum = calculateChecksum(buffer, function: SHA256.self)
+        case .md5:
+            checksum = calculateChecksum(buffer, function: Insecure.MD5.self)
         }
         if let checksum = checksum {
             headers.add(name: checksumHeader, value: checksum)
@@ -426,12 +430,12 @@ extension AWSRequest {
         case md5 = "MD5"
     }
 
-    static private let checksumHeaders: [ChecksumType: String] = [
+    private static let checksumHeaders: [ChecksumType: String] = [
         .crc32: "x-amz-checksum-crc32",
         .crc32c: "x-amz-checksum-crc32c",
         .sha1: "x-amz-checksum-sha1",
         .sha256: "x-amz-checksum-sha256",
-        .md5: "content-md5"
+        .md5: "content-md5",
     ]
 }
 

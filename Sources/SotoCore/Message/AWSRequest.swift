@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import CSotoCRC
+import CSotoCore
 import struct Foundation.CharacterSet
 import struct Foundation.Data
 import struct Foundation.Date

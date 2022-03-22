@@ -14,5 +14,8 @@
 
 #include "../zconf.h"
 
-unsigned long soto_crc32(unsigned long crc, const unsigned char FAR *buf, z_size_t len);
-unsigned long soto_crc32c(unsigned long crc, const unsigned char FAR *buf, z_size_t len);
+/// CRC32 calculation
+unsigned long soto_crc32(unsigned long crc, const unsigned char *buf, z_size_t len);
+
+/// CRC32C calculation. Version of CRC32 using the Castagnoli polynomial
+unsigned long soto_crc32c(unsigned long crc, const unsigned char *buf, z_size_t len);

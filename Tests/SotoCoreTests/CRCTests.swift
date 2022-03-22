@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import CSotoCRC
+import CSotoCore
 import Foundation
 import XCTest
 

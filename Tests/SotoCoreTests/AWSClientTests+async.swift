@@ -18,7 +18,11 @@ import AsyncHTTPClient
 import Dispatch
 import Logging
 import NIOConcurrencyHelpers
+#if compiler(>=5.6)
+@preconcurrency import NIOCore
+#else
 import NIOCore
+#endif
 import NIOFoundationCompat
 import NIOHTTP1
 import NIOPosix
@@ -129,6 +133,37 @@ final class AWSClientAsyncTests: XCTestCase, @unchecked Sendable {
     }
 
     func testRequestStreaming(config: AWSServiceConfig, client: AWSClient, server: AWSTestServer, bufferSize: Int, blockSize: Int) async throws {
+        actor ByteBufferStream: AsyncSequence {
+            typealias Element = ByteBuffer
+
+            var byteBuffer: ByteBuffer
+            let blockSize: Int
+
+            init(byteBuffer: ByteBuffer, blockSize: Int) {
+                self.byteBuffer = byteBuffer
+                self.blockSize = blockSize
+            }
+
+            nonisolated func makeAsyncIterator() -> AsyncIterator {
+                return AsyncIterator(stream: self)
+            }
+
+            func readSlice() -> ByteBuffer? {
+                let size = Swift.min(self.byteBuffer.readableBytes, self.blockSize)
+                if size > 0 {
+                    return self.byteBuffer.readSlice(length: size)
+                }
+                return nil
+            }
+
+            struct AsyncIterator: AsyncIteratorProtocol {
+                mutating func next() async throws -> ByteBuffer? {
+                    return await self.stream.readSlice()
+                }
+
+                let stream: ByteBufferStream
+            }
+        }
         #if os(iOS) // iOS async tests are failing in GitHub CI at the moment
         guard ProcessInfo.processInfo.environment["CI"] == nil else { return }
         #endif
@@ -141,15 +176,7 @@ final class AWSClientAsyncTests: XCTestCase, @unchecked Sendable {
         let data = createRandomBuffer(45, 9182, size: bufferSize)
         var byteBuffer = ByteBufferAllocator().buffer(capacity: data.count)
         byteBuffer.writeBytes(data)
-
-        let stream = AsyncStream<ByteBuffer>() { cont in
-            while byteBuffer.readableBytes > 0 {
-                let size = min(blockSize, byteBuffer.readableBytes)
-                let buffer = byteBuffer.readSlice(length: size)!
-                cont.yield(buffer)
-            }
-            cont.finish()
-        }
+        let stream = ByteBufferStream(byteBuffer: byteBuffer, blockSize: blockSize)
         let input = Input(payload: .asyncSequence(stream, size: bufferSize))
 
         async let response: () = client.execute(

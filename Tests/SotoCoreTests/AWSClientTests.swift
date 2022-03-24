@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+import Foundation
 import Logging
 import NIOCore
 import NIOFoundationCompat
@@ -23,11 +24,9 @@ import SotoTestUtils
 import SotoXML
 import XCTest
 #if compiler(>=5.6)
-@preconcurrency import Foundation
-@preconcurrency import XCTest
+@preconcurrency import NIOConcurrencyHelpers
 #else
-import Foundation
-import XCTest
+import NIOConcurrencyHelpers
 #endif
 
 class AWSClientTests: XCTestCase {
@@ -567,7 +566,7 @@ class AWSClientTests: XCTestCase {
     func testCustomRetryPolicy() {
         final class TestRetryPolicy: RetryPolicy {
             static let maxRetries: Int = 3
-            var attempt = NIOAtomic.makeAtomic(value: 0)
+            let attempt = NIOAtomic.makeAtomic(value: 0)
 
             init() {}
 

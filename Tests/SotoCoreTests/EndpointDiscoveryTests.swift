@@ -12,15 +12,15 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIOConcurrencyHelpers
 import NIOCore
 import SotoCore
 import SotoTestUtils
 #if compiler(>=5.6)
-@preconcurrency import XCTest
+@preconcurrency import NIOConcurrencyHelpers
 #else
-import XCTest
+import NIOConcurrencyHelpers
 #endif
+import XCTest
 
 class EndpointDiscoveryTests: XCTestCase {
     final class Service: AWSService {
@@ -28,7 +28,7 @@ class EndpointDiscoveryTests: XCTestCase {
         let config: AWSServiceConfig
         let endpointStorage: AWSEndpointStorage
         let endpointToDiscover: String
-        var getEndpointsCalledCount = NIOAtomic.makeAtomic(value: 0)
+        let getEndpointsCalledCount = NIOAtomic.makeAtomic(value: 0)
 
         required init(from: EndpointDiscoveryTests.Service, patch: AWSServiceConfig.Patch) {
             self.client = from.client

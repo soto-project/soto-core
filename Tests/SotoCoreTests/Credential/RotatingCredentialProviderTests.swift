@@ -14,7 +14,11 @@
 
 import AsyncHTTPClient
 import Logging
+#if compiler(>=5.6)
+@preconcurrency import NIOConcurrencyHelpers
+#else
 import NIOConcurrencyHelpers
+#endif
 import NIOCore
 import NIOPosix
 @testable import SotoCore

@@ -12,7 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if compiler(>=5.6)
+@preconcurrency import Logging
+#else
 import Logging
+#endif
 import NIOHTTP1
 
 /// Context object sent to `AWSServiceMiddleware` `chain` functions

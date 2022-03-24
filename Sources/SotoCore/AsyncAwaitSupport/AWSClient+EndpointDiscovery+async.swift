@@ -14,8 +14,13 @@
 
 #if compiler(>=5.5.2) && canImport(_Concurrency)
 
+#if compiler(>=5.6)
+@preconcurrency import Logging
+@preconcurrency import NIOCore
+#else
 import Logging
 import NIOCore
+#endif
 
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension AWSClient {

@@ -14,16 +14,16 @@
 
 import AsyncHTTPClient
 import Logging
-import NIOConcurrencyHelpers
 import NIOCore
 import NIOPosix
 @testable import SotoCore
 import SotoTestUtils
 #if compiler(>=5.6)
-@preconcurrency import XCTest
+@preconcurrency import NIOConcurrencyHelpers
 #else
-import XCTest
+import NIOConcurrencyHelpers
 #endif
+import XCTest
 
 final class CredentialProviderTests: XCTestCase {
     func testCredentialProvider() {
@@ -41,15 +41,12 @@ final class CredentialProviderTests: XCTestCase {
     // make sure getCredential in client CredentialProvider doesnt get called more than once
     func testDeferredCredentialProvider() {
         final class MyCredentialProvider: CredentialProvider {
-            let expectation = XCTestExpectation(description: "Credential provider called")
+            let credentialProviderCalled = NIOAtomic<Int>.makeAtomic(value: 0)
 
-            init() {
-                self.expectation.expectedFulfillmentCount = 1
-                self.expectation.assertForOverFulfill = true
-            }
+            init() {}
 
             func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
-                self.expectation.fulfill()
+                self.credentialProviderCalled.add(1)
                 return eventLoop.makeSucceededFuture(StaticCredential(accessKeyId: "ACCESSKEYID", secretAccessKey: "SECRETACCESSKET"))
             }
         }
@@ -63,7 +60,7 @@ final class CredentialProviderTests: XCTestCase {
         let deferredProvider = DeferredCredentialProvider(context: context, provider: myCredentialProvider)
         XCTAssertNoThrow(_ = try deferredProvider.getCredential(on: eventLoop, logger: TestEnvironment.logger).wait())
         XCTAssertNoThrow(_ = try deferredProvider.getCredential(on: eventLoop, logger: TestEnvironment.logger).wait())
-        wait(for: [myCredentialProvider.expectation], timeout: 5.0)
+        XCTAssertEqual(myCredentialProvider.credentialProviderCalled.load(), 1)
     }
 
     func testConfigFileSuccess() {
@@ -113,17 +110,15 @@ final class CredentialProviderTests: XCTestCase {
 
     func testCredentialSelectorShutdown() {
         final class TestCredentialProvider: CredentialProvider {
-            let expectation = XCTestExpectation(description: "Has Shutdown")
-            init() {
-                self.expectation.expectedFulfillmentCount = 1
-            }
+            let hasShutdown = NIOAtomic<Bool>.makeAtomic(value: false)
+            init() {}
 
             func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
                 return eventLoop.makeSucceededFuture(StaticCredential(accessKeyId: "", secretAccessKey: ""))
             }
 
             func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
-                self.expectation.fulfill()
+                self.hasShutdown.store(true)
                 return eventLoop.makeSucceededFuture(())
             }
         }
@@ -137,6 +132,6 @@ final class CredentialProviderTests: XCTestCase {
         let deferredProvider = DeferredCredentialProvider(context: context, provider: testCredentialProvider)
         XCTAssertNoThrow(try deferredProvider.shutdown(on: eventLoopGroup.next()).wait())
 
-        wait(for: [testCredentialProvider.expectation], timeout: 5.0)
+        XCTAssertEqual(testCredentialProvider.hasShutdown.load(), true)
     }
 }

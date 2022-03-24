@@ -14,8 +14,10 @@
 
 #if compiler(>=5.6)
 @preconcurrency import struct Foundation.Date
+@preconcurrency import NIOHTTP1
 #else
 import struct Foundation.Date
+import NIOHTTP1
 #endif
 import class Foundation.DateFormatter
 import class Foundation.JSONDecoder
@@ -27,7 +29,6 @@ import struct Foundation.URL
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
-import NIOHTTP1
 import SotoSignerV4
 
 /// protocol to get Credentials from the Client. With this the AWSClient requests the credentials for request signing from ecs and ec2.

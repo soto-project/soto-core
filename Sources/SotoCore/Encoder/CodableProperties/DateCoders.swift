@@ -12,11 +12,17 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if compiler(>=5.6)
+@preconcurrency import Foundation
+#else
 import Foundation
+#endif
 
 // MARK: TimeStamp Coders
 
 #if compiler(>=5.6)
+// @preconcurrency import doesn't work where a Sendable conformance is required by a protocol.
+// See https://bugs.swift.org/browse/SR-15936
 extension Date: @unchecked Sendable {}
 #endif
 

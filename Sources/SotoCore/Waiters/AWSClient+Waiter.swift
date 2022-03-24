@@ -154,5 +154,9 @@ extension AWSClient {
 }
 
 #if compiler(>=5.6)
+// I could require the Waiter.command to be Sendable, but it just generates
+// pain elsewhere where I have to mark all the API functions to be @Sendable
+// which then requires multiple versions of those function if I am going to
+// support backwards compatiblity
 extension AWSClient.Waiter: @unchecked Sendable {}
 #endif

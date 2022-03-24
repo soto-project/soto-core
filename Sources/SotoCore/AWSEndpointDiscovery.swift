@@ -129,7 +129,8 @@ public struct AWSEndpointDiscovery {
 // protected by a lock
 extension AWSEndpointStorage: @unchecked Sendable {}
 // I could require the discover function in AWSEndpointDiscovery to be Sendable, but it just
-// generates pain elsewhere where I have to then import NIOCore and Logger with @preconcurrency
-// which is a pain
+// generates pain elsewhere where I have to mark all the endpoint functions to be @Sendable
+// which then requires multiple versions of that function if I am going to support backwards
+// compatiblity
 extension AWSEndpointDiscovery: @unchecked Sendable {}
 #endif

@@ -12,7 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import CSotoCore
 import struct Foundation.CharacterSet
 import struct Foundation.Data
 import struct Foundation.Date
@@ -349,22 +348,20 @@ extension AWSRequest {
         switch checksumType {
         case .crc32:
             let bufferView = ByteBufferView(buffer)
-            if let crc = bufferView.withContiguousStorageIfAvailable({ soto_crc32(0, $0.baseAddress, $0.count) }) {
-                var crc32 = UInt32(crc).bigEndian
-                let data = withUnsafePointer(to: &crc32) { pointer in
-                    return Data(bytes: pointer, count: 4)
-                }
-                checksum = data.base64EncodedString()
+            let crc = soto_crc32(0, bytes: bufferView)
+            var crc32 = UInt32(crc).bigEndian
+            let data = withUnsafePointer(to: &crc32) { pointer in
+                return Data(bytes: pointer, count: 4)
             }
+            checksum = data.base64EncodedString()
         case .crc32c:
             let bufferView = ByteBufferView(buffer)
-            if let crc = bufferView.withContiguousStorageIfAvailable({ soto_crc32c(0, $0.baseAddress, $0.count) }) {
-                var crc32 = UInt32(crc).bigEndian
-                let data = withUnsafePointer(to: &crc32) { pointer in
-                    return Data(bytes: pointer, count: 4)
-                }
-                checksum = data.base64EncodedString()
+            let crc = soto_crc32c(0, bytes: bufferView)
+            var crc32 = UInt32(crc).bigEndian
+            let data = withUnsafePointer(to: &crc32) { pointer in
+                return Data(bytes: pointer, count: 4)
             }
+            checksum = data.base64EncodedString()
         case .sha1:
             checksum = calculateChecksum(buffer, function: Insecure.SHA1.self)
         case .sha256:

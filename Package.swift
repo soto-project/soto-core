@@ -37,7 +37,6 @@ let package = Package(
             dependencies: [
                 .byName(name: "SotoSignerV4"),
                 .byName(name: "SotoXML"),
-                .byName(name: "CSotoCore"),
                 .byName(name: "INIParser"),
                 .product(name: "Logging", package: "swift-log"),
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
@@ -51,7 +50,6 @@ let package = Package(
                 .product(name: "JMESPath", package: "jmespath.swift"),
             ]
         ),
-        .target(name: "CSotoCore", dependencies: []),
         .target(name: "SotoCrypto", dependencies: []),
         .target(name: "SotoSignerV4", dependencies: [
             .byName(name: "SotoCrypto"),

@@ -32,11 +32,3 @@ This product contains a copy of libexpat
     * https://github.com/libexpat/libexpat/blob/master/expat/COPYING
   * HOMEPAGE:
     * https://libexpat.github.io/
-
-This product contains a copy of the crc32 code from zlib. Changes include adding
-a version of crc32c  
-
-  * LICENSE:
-    * https://github.com/madler/zlib/blob/master/README
-  * HOMEPAGE:
-    * https://github.com/madler/zlib

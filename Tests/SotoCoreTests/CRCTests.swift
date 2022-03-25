@@ -12,24 +12,25 @@
 //
 //===----------------------------------------------------------------------===//
 
-import CSotoCore
 import Foundation
+import SotoCore
+import SotoTestUtils
 import XCTest
 
 final class CRCTests: XCTestCase {
     func testCRC32() {
-        XCTAssertEqual(soto_crc32(0, "", 0), 0)
-        XCTAssertEqual(soto_crc32(0, "a", 1), 0xE8B7_BE43)
-        XCTAssertEqual(soto_crc32(0, "abc", 3), 0x3524_41C2)
-        XCTAssertEqual(soto_crc32(0, "message digest", 14), 0x2015_9D7F)
-        XCTAssertEqual(soto_crc32(0, "abcdefghijklmnopqrstuvwxyz", 26), 0x4C27_50BD)
+        XCTAssertEqual(soto_crc32(0, bytes: "".utf8), 0)
+        XCTAssertEqual(soto_crc32(0, bytes: "a".utf8), 0xE8B7_BE43)
+        XCTAssertEqual(soto_crc32(0, bytes: "abc".utf8), 0x3524_41C2)
+        XCTAssertEqual(soto_crc32(0, bytes: "message digest".utf8), 0x2015_9D7F)
+        XCTAssertEqual(soto_crc32(0, bytes: "abcdefghijklmnopqrstuvwxyz".utf8), 0x4C27_50BD)
     }
 
     func testCRC32C() {
-        XCTAssertEqual(soto_crc32c(0, "", 0), 0)
-        XCTAssertEqual(soto_crc32c(0, "a", 1), 0xC1D0_4330)
-        XCTAssertEqual(soto_crc32c(0, "foo", 3), 0xCFC4_AE1D)
-        XCTAssertEqual(soto_crc32c(0, "hello world", 11), 0xC994_65AA)
-        XCTAssertEqual(soto_crc32c(0, [UInt8](repeating: 0, count: 32), 32), 0x8A91_36AA)
+        XCTAssertEqual(soto_crc32c(0, bytes: "".utf8), 0)
+        XCTAssertEqual(soto_crc32c(0, bytes: "a".utf8), 0xC1D0_4330)
+        XCTAssertEqual(soto_crc32c(0, bytes: "foo".utf8), 0xCFC4_AE1D)
+        XCTAssertEqual(soto_crc32c(0, bytes: "hello world".utf8), 0xC994_65AA)
+        XCTAssertEqual(soto_crc32c(0, bytes: [UInt8](repeating: 0, count: 32)), 0x8A91_36AA)
     }
 }

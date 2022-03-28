@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Type Aliases  Reference</title>
+    <title>Functions  Reference</title>
     <link rel="stylesheet" type="text/css" href="css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="css/highlight.css" />
     <meta charset='utf-8'>
@@ -13,8 +13,8 @@
     <script src="js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/swift/Section/Type Aliases" class="dashAnchor"></a>
-    <a title="Type Aliases  Reference"></a>
+    <a name="//apple_ref/swift/Section/Functions" class="dashAnchor"></a>
+    <a title="Functions  Reference"></a>
     <header>
       <div class="content-wrapper">
         <p><a href="index.html"> Docs</a> (66% documented)</p>
@@ -30,7 +30,7 @@
       <p id="breadcrumbs">
         <a href="index.html"> Reference</a>
         <img id="carat" src="img/carat.png" alt=""/>
-        Type Aliases  Reference
+        Functions  Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -352,28 +352,19 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>Type Aliases</h1>
-            <p>The following type aliases are available globally.</p>
+            <h1>Functions</h1>
+            <p>The following functions are available globally.</p>
 
           </section>
           <section class="section task-group-section">
             <div class="task-group">
-              <div class="task-name-container">
-                <a name="/Collection%20Coders"></a>
-                <a name="//apple_ref/swift/Section/Collection Coders" class="dashAnchor"></a>
-                <div class="section-name-container">
-                  <a class="section-name-link" href="#/Collection%20Coders"></a>
-                  <h3 class="section-name"><span>Collection Coders</span>
-</h3>
-                </div>
-              </div>
               <ul>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore18StandardArrayCodera"></a>
-                    <a name="//apple_ref/swift/Alias/StandardArrayCoder" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore18StandardArrayCodera">StandardArrayCoder</a>
+                    <a name="/s:8SotoCore10soto_crc32_5bytess6UInt32VAE_xtSlRzs5UInt8V7ElementRtzlF"></a>
+                    <a name="//apple_ref/swift/Function/soto_crc32(_:bytes:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore10soto_crc32_5bytess6UInt32VAE_xtSlRzs5UInt8V7ElementRtzlF">soto_crc32(_:<wbr>bytes:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -381,16 +372,51 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Calculate CRC32 checksum</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">StandardArrayCoder</span><span class="o">&lt;</span><span class="kt">Element</span><span class="o">&gt;</span> <span class="o">=</span> <span class="kt"><a href="Structs/ArrayCoder.html">ArrayCoder</a></span><span class="o">&lt;</span><span class="kt"><a href="Structs/StandardArrayCoderProperties.html">StandardArrayCoderProperties</a></span><span class="p">,</span> <span class="kt">Element</span><span class="o">&gt;</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">soto_crc32</span><span class="o">&lt;</span><span class="kt">Buffer</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">crc</span><span class="p">:</span> <span class="kt"><a href="Typealiases.html#/s:8SotoCore5CRC32a">CRC32</a></span><span class="p">,</span> <span class="nv">bytes</span><span class="p">:</span> <span class="kt">Buffer</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="Typealiases.html#/s:8SotoCore5CRC32a">CRC32</a></span> <span class="k">where</span> <span class="kt">Buffer</span> <span class="p">:</span> <span class="kt">Collection</span><span class="p">,</span> <span class="kt">Buffer</span><span class="o">.</span><span class="kt">Element</span> <span class="o">==</span> <span class="kt">UInt8</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>crc</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>base crc</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>bytes</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>buffer to calculate CRC32 for</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>crc32 checksum</p>
                       </div>
                     </section>
                   </div>
@@ -398,9 +424,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore23StandardDictionaryCodera"></a>
-                    <a name="//apple_ref/swift/Alias/StandardDictionaryCoder" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore23StandardDictionaryCodera">StandardDictionaryCoder</a>
+                    <a name="/s:8SotoCore11soto_crc32c_5bytess6UInt32VAE_xtSlRzs5UInt8V7ElementRtzlF"></a>
+                    <a name="//apple_ref/swift/Function/soto_crc32c(_:bytes:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore11soto_crc32c_5bytess6UInt32VAE_xtSlRzs5UInt8V7ElementRtzlF">soto_crc32c(_:<wbr>bytes:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -408,70 +434,54 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Calculate CRC32C checksum</p>
+
+<p>CRC32C uses the same calculation as CRC32 but uses the Castagnoli polynomial (0x1EDC6F41 / 0x82F63B78)
+for generating the lookup table</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">StandardDictionaryCoder</span><span class="o">&lt;</span><span class="kt">Key</span><span class="p">,</span> <span class="kt">Value</span><span class="o">&gt;</span> <span class="o">=</span> <span class="kt"><a href="Structs/DictionaryCoder.html">DictionaryCoder</a></span><span class="o">&lt;</span><span class="kt"><a href="Structs/StandardDictionaryCoderProperties.html">StandardDictionaryCoderProperties</a></span><span class="p">,</span> <span class="kt">Key</span><span class="p">,</span> <span class="kt">Value</span><span class="o">&gt;</span> <span class="k">where</span> <span class="kt">Key</span> <span class="p">:</span> <span class="kt">Decodable</span><span class="p">,</span> <span class="kt">Key</span> <span class="p">:</span> <span class="kt">Encodable</span><span class="p">,</span> <span class="kt">Key</span> <span class="p">:</span> <span class="kt">Hashable</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">soto_crc32c</span><span class="o">&lt;</span><span class="kt">Buffer</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">crc</span><span class="p">:</span> <span class="kt"><a href="Typealiases.html#/s:8SotoCore5CRC32a">CRC32</a></span><span class="p">,</span> <span class="nv">bytes</span><span class="p">:</span> <span class="kt">Buffer</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="Typealiases.html#/s:8SotoCore5CRC32a">CRC32</a></span> <span class="k">where</span> <span class="kt">Buffer</span> <span class="p">:</span> <span class="kt">Collection</span><span class="p">,</span> <span class="kt">Buffer</span><span class="o">.</span><span class="kt">Element</span> <span class="o">==</span> <span class="kt">UInt8</span></code></pre>
 
                         </div>
                       </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:8SotoCore17AWSResponseStreama"></a>
-                    <a name="//apple_ref/swift/Alias/AWSResponseStream" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore17AWSResponseStreama">AWSResponseStream</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Function that streamed response chunks are sent ot</p>
-
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>crc</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>base crc</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>bytes</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>buffer to calculate CRC32 for</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">AWSResponseStream</span> <span class="o">=</span> <span class="p">(</span><span class="kt">ByteBuffer</span><span class="p">,</span> <span class="kt">EventLoop</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">EventLoopFuture</span><span class="o">&lt;</span><span class="kt">Void</span><span class="o">&gt;</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:8SotoCore5CRC32a"></a>
-                    <a name="//apple_ref/swift/Alias/CRC32" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore5CRC32a">CRC32</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Undocumented</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">CRC32</span> <span class="o">=</span> <span class="kt">UInt32</span></code></pre>
-
-                        </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>crc32c checksum</p>
                       </div>
                     </section>
                   </div>

@@ -216,10 +216,12 @@ public struct AWSShapeOptions: OptionSet {
     public static let allowChunkedStreaming = AWSShapeOptions(rawValue: 1 << 1)
     /// Payload is raw data
     public static let rawPayload = AWSShapeOptions(rawValue: 1 << 2)
-    /// Calculate MD5 of body is required
-    public static let md5ChecksumRequired = AWSShapeOptions(rawValue: 1 << 3)
+    /// Request can include a checksum header
+    public static let checksumHeader = AWSShapeOptions(rawValue: 1 << 3)
+    /// Checksum calculation of body is required
+    public static let checksumRequired = AWSShapeOptions(rawValue: 1 << 4)
     /// Request includes a MD5 checksum
-    public static let md5ChecksumHeader = AWSShapeOptions(rawValue: 1 << 4)
+    public static let md5ChecksumHeader = AWSShapeOptions(rawValue: 1 << 5)
 }
 
 /// Root AWSShape which include a payload

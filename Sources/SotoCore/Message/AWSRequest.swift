@@ -295,16 +295,12 @@ extension AWSRequest {
             throw AWSClient.ClientError.invalidURL
         }
 
-        /// MD5 checksum
-        let checksumRequired = Input._options.contains(.md5ChecksumRequired) ||
-            (Input._options.contains(.md5ChecksumHeader) && configuration.options.contains(.calculateMD5))
-        if checksumRequired,
-           let buffer = body.asByteBuffer(byteBufferAllocator: configuration.byteBufferAllocator),
-           headers["content-md5"].first == nil,
-           let md5 = Self.calculateMD5(buffer)
-        {
-            headers.add(name: "content-md5", value: md5)
-        }
+        headers = Self.calculateChecksumHeader(
+            headers: headers,
+            body: body,
+            shapeType: Input.self,
+            configuration: configuration
+        )
 
         self.region = configuration.region
         self.url = url
@@ -315,6 +311,68 @@ extension AWSRequest {
         self.body = body
 
         addStandardHeaders()
+    }
+
+    /// Calculate checksum header for request
+    /// - Parameters:
+    ///   - headers: request headers
+    ///   - body: request body
+    ///   - shapeType: Request shape type
+    ///   - configuration: Service configuration
+    /// - Returns: New set of headers
+    private static func calculateChecksumHeader<Input: AWSEncodableShape>(
+        headers: HTTPHeaders,
+        body: Body,
+        shapeType: Input.Type,
+        configuration: AWSServiceConfig
+    ) -> HTTPHeaders {
+        var headers = headers
+        var checksumType: ChecksumType?
+        if shapeType._options.contains(.checksumHeader) {
+            checksumType = headers["x-amz-sdk-checksum-algorithm"].first.map { ChecksumType(rawValue: $0) } ?? nil
+        }
+        if checksumType == nil {
+            if Input._options.contains(.checksumRequired) ||
+                (Input._options.contains(.md5ChecksumHeader) && configuration.options.contains(.calculateMD5))
+            {
+                checksumType = .md5
+            }
+        }
+
+        guard let checksumType = checksumType,
+              let buffer = body.asByteBuffer(byteBufferAllocator: configuration.byteBufferAllocator),
+              let checksumHeader = Self.checksumHeaders[checksumType],
+              headers[checksumHeader].first == nil else { return headers }
+
+        var checksum: String?
+        switch checksumType {
+        case .crc32:
+            let bufferView = ByteBufferView(buffer)
+            let crc = soto_crc32(0, bytes: bufferView)
+            var crc32 = UInt32(crc).bigEndian
+            let data = withUnsafePointer(to: &crc32) { pointer in
+                return Data(bytes: pointer, count: 4)
+            }
+            checksum = data.base64EncodedString()
+        case .crc32c:
+            let bufferView = ByteBufferView(buffer)
+            let crc = soto_crc32c(0, bytes: bufferView)
+            var crc32 = UInt32(crc).bigEndian
+            let data = withUnsafePointer(to: &crc32) { pointer in
+                return Data(bytes: pointer, count: 4)
+            }
+            checksum = data.base64EncodedString()
+        case .sha1:
+            checksum = calculateChecksum(buffer, function: Insecure.SHA1.self)
+        case .sha256:
+            checksum = calculateChecksum(buffer, function: SHA256.self)
+        case .md5:
+            checksum = calculateChecksum(buffer, function: Insecure.MD5.self)
+        }
+        if let checksum = checksum {
+            headers.add(name: checksumHeader, value: checksum)
+        }
+        return headers
     }
 
     /// Add headers standard to all requests "content-type" and "user-agent"
@@ -361,13 +419,29 @@ extension AWSRequest {
         precondition(reader.size != nil || input._options.contains(.allowChunkedStreaming), "\(operation) does not allow chunked streaming of data. Please supply a data size.")
     }
 
-    private static func calculateMD5(_ byteBuffer: ByteBuffer) -> String? {
+    private static func calculateChecksum<H: HashFunction>(_ byteBuffer: ByteBuffer, function: H.Type) -> String? {
         // if request has a body, calculate the MD5 for that body
         let byteBufferView = byteBuffer.readableBytesView
         return byteBufferView.withContiguousStorageIfAvailable { bytes in
-            return Data(Insecure.MD5.hash(data: bytes)).base64EncodedString()
+            return Data(H.hash(data: bytes)).base64EncodedString()
         }
     }
+
+    private enum ChecksumType: String {
+        case crc32 = "CRC32"
+        case crc32c = "CRC32C"
+        case sha1 = "SHA1"
+        case sha256 = "SHA256"
+        case md5 = "MD5"
+    }
+
+    private static let checksumHeaders: [ChecksumType: String] = [
+        .crc32: "x-amz-checksum-crc32",
+        .crc32c: "x-amz-checksum-crc32c",
+        .sha1: "x-amz-checksum-sha1",
+        .sha256: "x-amz-checksum-sha256",
+        .md5: "content-md5",
+    ]
 }
 
 private protocol AWSRequestEncodableArray {

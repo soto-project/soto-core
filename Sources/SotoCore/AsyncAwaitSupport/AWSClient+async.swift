@@ -23,6 +23,33 @@ import SotoSignerV4
 
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension AWSClient {
+    /// Shutdown AWSClient asynchronously.
+    ///
+    /// Before an `AWSClient` is deleted you need to call this function or the synchronous
+    /// version `syncShutdown` to do a clean shutdown of the client. It cleans up `CredentialProvider` tasks and shuts down
+    /// the HTTP client if it was created by the `AWSClient`.
+    public func shutdown() async throws {
+        guard self.isShutdown.compareAndExchange(expected: false, desired: true) else {
+            throw ClientError.alreadyShutdown
+        }
+        try await self.credentialProvider.shutdown(on: self.eventLoopGroup.any()).get()
+        // if httpClient was created by AWSClient then it is required to shutdown the httpClient.
+        switch self.httpClientProvider {
+        case .createNew, .createNewWithEventLoopGroup:
+            do {
+                try await self.httpClient.shutdown()
+            } catch {
+                self.clientLogger.log(level: self.options.errorLogLevel, "Error shutting down HTTP client", metadata: [
+                    "aws-error": "\(error)",
+                ])
+                throw error
+            }
+
+        case .shared:
+            return
+        }
+    }
+
     /// execute a request with an input object and return a future with an empty response
     /// - parameters:
     ///     - operationName: Name of the AWS operation

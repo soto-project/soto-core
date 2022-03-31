@@ -32,7 +32,9 @@ extension AWSClient {
         guard self.isShutdown.compareAndExchange(expected: false, desired: true) else {
             throw ClientError.alreadyShutdown
         }
-        try await self.credentialProvider.shutdown(on: self.eventLoopGroup.any()).get()
+        // shutdown credential provider ignoring any errors as credential provider that doesn't initialize
+        // can cause the shutdown process to fail
+        try? await self.credentialProvider.shutdown(on: self.eventLoopGroup.any()).get()
         // if httpClient was created by AWSClient then it is required to shutdown the httpClient.
         switch self.httpClientProvider {
         case .createNew, .createNewWithEventLoopGroup:

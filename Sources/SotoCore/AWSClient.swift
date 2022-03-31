@@ -53,7 +53,7 @@ public final class AWSClient {
     /// client options
     let options: Options
 
-    private let isShutdown = NIOAtomic<Bool>.makeAtomic(value: false)
+    internal let isShutdown = NIOAtomic<Bool>.makeAtomic(value: false)
 
     // MARK: Initialization
 

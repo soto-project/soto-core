@@ -174,6 +174,17 @@ final class AWSClientAsyncTests: XCTestCase {
         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128 * 1024, blockSize: 17 * 1024)
         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 18 * 1024, blockSize: 47 * 1024)
     }
+
+    func testShutdown() async throws {
+        let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+
+        let client = createAWSClient(httpClientProvider: .shared(httpClient))
+        try await client.shutdown()
+        let client2 = createAWSClient(httpClientProvider: .createNew)
+        try await client2.shutdown()
+
+        try await httpClient.shutdown()
+    }
 }
 
 #endif // compiler(>=5.5.2) && canImport(_Concurrency)

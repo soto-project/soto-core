@@ -17,7 +17,7 @@ import JMESPath
 
 /// base protocol for encoder/decoder objects
 public protocol CustomCoder {
-    associatedtype CodableValue: SotoSendable
+    associatedtype CodableValue: _SotoSendable
 }
 
 /// Protocol for object that will encode a value
@@ -38,7 +38,7 @@ public protocol CustomDecoder: CustomCoder {
 }
 
 /// Property wrapper that applies a custom encoder and decoder to its wrapped value
-@propertyWrapper public struct CustomCoding<Coder: CustomCoder>: SotoSendable {
+@propertyWrapper public struct CustomCoding<Coder: CustomCoder> {
     var value: Coder.CodableValue
 
     public init(wrappedValue value: Coder.CodableValue) {
@@ -73,7 +73,7 @@ extension CustomCoding: JMESPropertyWrapper {
 }
 
 /// Property wrapper that applies a custom encoder and decoder to its wrapped optional value
-@propertyWrapper public struct OptionalCustomCoding<Coder: CustomCoder>: SotoSendable {
+@propertyWrapper public struct OptionalCustomCoding<Coder: CustomCoder> {
     var value: Coder.CodableValue?
 
     public init(wrappedValue value: Coder.CodableValue?) {
@@ -155,3 +155,8 @@ internal struct EncodingWrapperKey: CodingKey {
         self.intValue = intValue
     }
 }
+
+#if compiler(>=5.6)
+extension CustomCoding: Sendable {}
+extension OptionalCustomCoding: Sendable {}
+#endif

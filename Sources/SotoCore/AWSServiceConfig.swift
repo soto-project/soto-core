@@ -19,7 +19,7 @@ import NIOCore
 #endif
 
 /// Configuration class defining an AWS service
-public final class AWSServiceConfig: SotoSendable {
+public final class AWSServiceConfig {
     /// Region where service is running
     public let region: Region
     /// The destination service of the request. Added as a header value, along with the operation name
@@ -185,7 +185,7 @@ public final class AWSServiceConfig: SotoSendable {
     }
 
     /// Options used by client when processing requests
-    public struct Options: OptionSet, SotoSendable {
+    public struct Options: OptionSet {
         public typealias RawValue = Int
         public let rawValue: Int
 
@@ -247,3 +247,8 @@ public final class AWSServiceConfig: SotoSendable {
         self.options = patch.options ?? service.options
     }
 }
+
+#if compiler(>=5.6)
+extension AWSServiceConfig: Sendable {}
+extension AWSServiceConfig.Options: Sendable {}
+#endif

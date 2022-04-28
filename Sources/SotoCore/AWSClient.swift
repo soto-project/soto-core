@@ -34,7 +34,7 @@ import SotoXML
 /// This is the workhorse of SotoCore. You provide it with a `AWSShape` Input object, it converts it to `AWSRequest` which is then converted
 /// to a raw `HTTPClient` Request. This is then sent to AWS. When the response from AWS is received if it is successful it is converted to a `AWSResponse`
 /// which is then decoded to generate a `AWSShape` Output object. If it is not successful then `AWSClient` will throw an `AWSErrorType`.
-public final class AWSClient: SotoSendable {
+public final class AWSClient {
     // MARK: Member variables
 
     /// Default logger that logs nothing
@@ -221,7 +221,7 @@ public final class AWSClient: SotoSendable {
     }
 
     /// Specifies how `HTTPClient` will be created and establishes lifecycle ownership.
-    public enum HTTPClientProvider: SotoSendable {
+    public enum HTTPClientProvider {
         /// HTTP Client will be provided by the user. Owner of this group is responsible for its lifecycle. Any HTTPClient that conforms to
         /// `AWSHTTPClient` can be specified here including AsyncHTTPClient
         case shared(HTTPClient)
@@ -233,7 +233,7 @@ public final class AWSClient: SotoSendable {
     }
 
     /// Additional options
-    public struct Options: SotoSendable {
+    public struct Options {
         /// log level used for request logging
         let requestLogLevel: Logger.Level
         /// log level used for error logging
@@ -734,3 +734,9 @@ extension Logger {
         return logger
     }
 }
+
+#if compiler(>=5.6)
+extension AWSClient: Sendable {}
+extension AWSClient.HTTPClientProvider: Sendable {}
+extension AWSClient.Options: Sendable {}
+#endif

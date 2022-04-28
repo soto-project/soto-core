@@ -25,7 +25,7 @@ public struct AWSMiddlewareContext {
 }
 
 /// Middleware protocol. Gives ability to process requests before they are sent to AWS and process responses before they are converted into output shapes
-public protocol AWSServiceMiddleware: SotoSendable {
+public protocol AWSServiceMiddleware: _SotoSendableProtocol {
     /// Process AWSRequest before it is converted to a HTTPClient Request to be sent to AWS
     func chain(request: AWSRequest, context: AWSMiddlewareContext) throws -> AWSRequest
 

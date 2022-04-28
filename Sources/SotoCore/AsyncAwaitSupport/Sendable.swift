@@ -13,7 +13,9 @@
 //===----------------------------------------------------------------------===//
 
 #if compiler(>=5.6)
-public typealias SotoSendable = Sendable
+public typealias _SotoSendable = Sendable
+public protocol _SotoSendableProtocol: Sendable {}
 #else
-public typealias SotoSendable = Any
+public typealias _SotoSendable = Any
+public protocol _SotoSendableProtocol {}
 #endif

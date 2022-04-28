@@ -19,7 +19,7 @@ import NIOCore
 import SotoSignerV4
 
 /// Protocol providing future holding a credential
-public protocol CredentialProvider: SotoSendable, CustomStringConvertible {
+public protocol CredentialProvider: _SotoSendableProtocol, CustomStringConvertible {
     /// Return credential
     /// - Parameters:
     ///   - eventLoop: EventLoop to run on

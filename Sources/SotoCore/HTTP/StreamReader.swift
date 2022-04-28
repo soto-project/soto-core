@@ -20,7 +20,7 @@ import NIOCore
 #endif
 
 /// Streaming result
-public enum StreamReaderResult: SotoSendable {
+public enum StreamReaderResult {
     case byteBuffer(ByteBuffer)
     case end
 }
@@ -29,7 +29,7 @@ public enum StreamReaderResult: SotoSendable {
 public typealias StreamReadFunction = (EventLoop) -> EventLoopFuture<StreamReaderResult>
 
 /// Protocol for objects that supply streamed data to HTTPClient.Body.StreamWriter
-protocol StreamReader: SotoSendable {
+protocol StreamReader: _SotoSendableProtocol {
     /// size of data to be streamed
     var size: Int? { get }
     /// total size of data to be streamed plus any chunk headers
@@ -83,6 +83,7 @@ struct ChunkedStreamReader: StreamReader {
 }
 
 #if compiler(>=5.6)
+extension StreamReaderResult: Sendable {}
 // read function is reason ChunkedStreamReader is not Sendable. We can guarantee this is never called
 // concurrently
 extension ChunkedStreamReader: @unchecked Sendable {}

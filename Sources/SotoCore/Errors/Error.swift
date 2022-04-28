@@ -39,7 +39,7 @@ extension AWSErrorType {
 }
 
 /// Additional information about error
-public struct AWSErrorContext: SotoSendable {
+public struct AWSErrorContext {
     public let message: String
     public let responseCode: HTTPResponseStatus
     public let headers: HTTPHeaders
@@ -87,3 +87,7 @@ public struct AWSRawError: Error, CustomStringConvertible {
         return "Unhandled error, code: \(self.context.responseCode)\(self.rawBody.map { ", body: \($0)" } ?? "")"
     }
 }
+
+#if compiler(>=5.6)
+extension AWSErrorContext: Sendable {}
+#endif

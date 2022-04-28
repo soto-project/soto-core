@@ -23,9 +23,9 @@ import NIOCore
 
 /// Holds a request or response payload. A request payload can be in the form of either a ByteBuffer or a stream function that will supply ByteBuffers to the HTTP client.
 /// A response payload only comes in the form of a ByteBuffer
-public struct AWSPayload: SotoSendable {
+public struct AWSPayload {
     /// Internal enum
-    enum Payload: SotoSendable {
+    enum Payload {
         case byteBuffer(ByteBuffer)
         case stream(StreamReader)
         case empty
@@ -200,3 +200,8 @@ extension AWSPayload: Decodable {
         preconditionFailure("Cannot decode an AWSPayload")
     }
 }
+
+#if compiler(>=5.6)
+extension AWSPayload: Sendable {}
+extension AWSPayload.Payload: Sendable {}
+#endif

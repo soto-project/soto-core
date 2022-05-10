@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the Soto project authors
+// Copyright (c) 2017-2022 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -14,8 +14,13 @@
 
 #if compiler(>=5.5.2) && canImport(_Concurrency)
 
+#if compiler(>=5.6)
+@preconcurrency import Logging
+@preconcurrency import NIOCore
+#else
 import Logging
 import NIOCore
+#endif
 import SotoSignerV4
 
 /// Async Protocol for providing credentials

@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the Soto project authors
+// Copyright (c) 2017-2022 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -12,19 +12,23 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIOConcurrencyHelpers
 import NIOCore
 import SotoCore
 import SotoTestUtils
+#if compiler(>=5.6)
+@preconcurrency import NIOConcurrencyHelpers
+#else
+import NIOConcurrencyHelpers
+#endif
 import XCTest
 
 class EndpointDiscoveryTests: XCTestCase {
-    class Service: AWSService {
+    final class Service: AWSService {
         let client: AWSClient
         let config: AWSServiceConfig
         let endpointStorage: AWSEndpointStorage
         let endpointToDiscover: String
-        var getEndpointsCalledCount = NIOAtomic.makeAtomic(value: 0)
+        let getEndpointsCalledCount = NIOAtomic.makeAtomic(value: 0)
 
         required init(from: EndpointDiscoveryTests.Service, patch: AWSServiceConfig.Patch) {
             self.client = from.client

@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the Soto project authors
+// Copyright (c) 2017-2022 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -19,7 +19,7 @@ import NIOHTTP1
 /// Protocol for matchers used in waiters.
 ///
 /// A matcher returns whether the returned value from an AWS API call matches a certain state
-public protocol AWSWaiterMatcher {
+public protocol AWSWaiterMatcher: _SotoSendableProtocol {
     func match(result: Result<Any, Error>) -> Bool
 }
 

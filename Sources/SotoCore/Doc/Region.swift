@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the Soto project authors
+// Copyright (c) 2017-2022 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -38,6 +38,8 @@ public struct Region: RawRepresentable, Equatable {
     public static var apsoutheast1: Region { .init(rawValue: "ap-southeast-1") }
     // Asia Pacific (Sydney)
     public static var apsoutheast2: Region { .init(rawValue: "ap-southeast-2") }
+    // Asia Pacific (Jakarta)
+    public static var apsoutheast3: Region { .init(rawValue: "ap-southeast-3") }
     // Canada (Central)
     public static var cacentral1: Region { .init(rawValue: "ca-central-1") }
     // China (Beijing)
@@ -93,6 +95,7 @@ public extension Region {
         case .apsouth1: return .aws
         case .apsoutheast1: return .aws
         case .apsoutheast2: return .aws
+        case .apsoutheast3: return .aws
         case .cacentral1: return .aws
         case .cnnorth1: return .awscn
         case .cnnorthwest1: return .awscn
@@ -186,6 +189,7 @@ public extension Region {
              .apsouth1,
              .apsoutheast1,
              .apsoutheast2,
+             .apsoutheast3,
              .cacentral1,
              .cnnorth1,
              .cnnorthwest1,
@@ -212,3 +216,8 @@ public extension Region {
         }
     }
 }
+
+#if compiler(>=5.6)
+extension Region: Sendable {}
+extension AWSPartition: Sendable {}
+#endif

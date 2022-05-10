@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the Soto project authors
+// Copyright (c) 2017-2022 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -34,8 +34,8 @@ public class DeferredCredentialProvider: CredentialProvider {
         }
     }
 
-    private var provider: CredentialProvider
-    private var startupPromise: EventLoopPromise<Credential>
+    private let provider: CredentialProvider
+    private let startupPromise: EventLoopPromise<Credential>
     private var internalCredential: Credential?
 
     /// Create `DeferredCredentialProvider`.
@@ -79,3 +79,9 @@ public class DeferredCredentialProvider: CredentialProvider {
 extension DeferredCredentialProvider: CustomStringConvertible {
     public var description: String { return "\(type(of: self))(\(self.provider.description))" }
 }
+
+#if compiler(>=5.6)
+// can use @unchecked Sendable here as `internalCredential` is accessed via `credential` which
+// protects access with a `Lock`
+extension DeferredCredentialProvider: @unchecked Sendable {}
+#endif

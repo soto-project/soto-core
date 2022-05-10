@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2021 the Soto project authors
+// Copyright (c) 2017-2022 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -12,14 +12,20 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if compiler(>=5.6)
+@preconcurrency import Logging
+@preconcurrency import NIOConcurrencyHelpers
+@preconcurrency import NIOCore
+#else
+import Logging
+import NIOConcurrencyHelpers
+import NIOCore
+#endif
 import AsyncHTTPClient
 import Dispatch
 import struct Foundation.URL
 import struct Foundation.URLQueryItem
-import Logging
 import Metrics
-import NIOConcurrencyHelpers
-import NIOCore
 import NIOHTTP1
 import NIOTransportServices
 import SotoSignerV4
@@ -728,3 +734,9 @@ extension Logger {
         return logger
     }
 }
+
+#if compiler(>=5.6)
+extension AWSClient: Sendable {}
+extension AWSClient.HTTPClientProvider: Sendable {}
+extension AWSClient.Options: Sendable {}
+#endif

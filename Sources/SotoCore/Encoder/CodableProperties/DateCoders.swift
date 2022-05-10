@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2020 the Soto project authors
+// Copyright (c) 2020-2022 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -12,12 +12,15 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct Foundation.Date
-import class Foundation.DateFormatter
-import struct Foundation.Locale
-import struct Foundation.TimeZone
+import Foundation
 
 // MARK: TimeStamp Coders
+
+#if compiler(>=5.6)
+// @preconcurrency import doesn't work where a Sendable conformance is required by a protocol.
+// See https://bugs.swift.org/browse/SR-15936
+extension Date: @unchecked Sendable {}
+#endif
 
 /// Protocol for time stamp coders that use a DateFormatter. Use this to enforce the timestamp format we require, or to set the timestamp format output
 protocol DateFormatCoder: CustomDecoder, CustomEncoder where CodableValue == Date {

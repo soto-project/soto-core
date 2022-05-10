@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2020 the Soto project authors
+// Copyright (c) 2020-2022 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -17,7 +17,7 @@ import JMESPath
 
 /// base protocol for encoder/decoder objects
 public protocol CustomCoder {
-    associatedtype CodableValue
+    associatedtype CodableValue: _SotoSendable
 }
 
 /// Protocol for object that will encode a value
@@ -155,3 +155,8 @@ internal struct EncodingWrapperKey: CodingKey {
         self.intValue = intValue
     }
 }
+
+#if compiler(>=5.6)
+extension CustomCoding: Sendable {}
+extension OptionalCustomCoding: Sendable {}
+#endif

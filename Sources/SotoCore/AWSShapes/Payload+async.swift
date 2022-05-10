@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2021 the Soto project authors
+// Copyright (c) 2017-2022 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -22,7 +22,7 @@ extension AWSPayload {
     /// - Parameters:
     ///   - seq: AsyncSequence providing ByteBuffers
     ///   - size: total size of sequence in bytes
-    public static func asyncSequence<AsyncSeq: AsyncSequence>(_ seq: AsyncSeq, size: Int?) -> Self where AsyncSeq.Element == ByteBuffer {
+    public static func asyncSequence<AsyncSeq: AsyncSequence & Sendable>(_ seq: AsyncSeq, size: Int?) -> Self where AsyncSeq.Element == ByteBuffer {
         func stream(_ eventLoop: EventLoop) -> EventLoopFuture<StreamReaderResult> {
             let promise = eventLoop.makePromise(of: StreamReaderResult.self)
             promise.completeWithTask {

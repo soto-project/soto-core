@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2020 the Soto project authors
+// Copyright (c) 2020-2022 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -16,7 +16,7 @@ import struct Foundation.URL
 import NIOCore
 
 /// Protocol for services objects. Contains a client to communicate with AWS and config for defining how to communicate
-public protocol AWSService {
+public protocol AWSService: _SotoSendableProtocol {
     /// Client used to communicate with AWS
     var client: AWSClient { get }
     /// Service context details

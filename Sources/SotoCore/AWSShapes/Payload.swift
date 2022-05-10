@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2020 the Soto project authors
+// Copyright (c) 2020-2022 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -13,9 +13,13 @@
 //===----------------------------------------------------------------------===//
 
 import struct Foundation.Data
-import NIOCore
 import NIOFoundationCompat
 import NIOPosix
+#if compiler(>=5.6)
+@preconcurrency import NIOCore
+#else
+import NIOCore
+#endif
 
 /// Holds a request or response payload. A request payload can be in the form of either a ByteBuffer or a stream function that will supply ByteBuffers to the HTTP client.
 /// A response payload only comes in the form of a ByteBuffer
@@ -38,7 +42,7 @@ public struct AWSPayload {
     /// don't supply a size the stream function will be called repeatedly until you supply an empty `ByteBuffer`
     public static func stream(
         size: Int? = nil,
-        stream: @escaping (EventLoop) -> EventLoopFuture<StreamReaderResult>
+        stream: @escaping StreamReadFunction
     ) -> Self {
         return AWSPayload(payload: .stream(ChunkedStreamReader(size: size, read: stream)))
     }
@@ -82,7 +86,7 @@ public struct AWSPayload {
         let blockSize = S3ChunkedStreamReader.bufferSize
         var leftToRead = size
         var readSoFar: Int = 0
-        func stream(_ eventLoop: EventLoop) -> EventLoopFuture<StreamReaderResult> {
+        let stream: StreamReadFunction = { eventLoop in
             // calculate how much data is left to read, if a file size was indicated
             var downloadSize = blockSize
             if let leftToRead2 = leftToRead {
@@ -196,3 +200,8 @@ extension AWSPayload: Decodable {
         preconditionFailure("Cannot decode an AWSPayload")
     }
 }
+
+#if compiler(>=5.6)
+extension AWSPayload: Sendable {}
+extension AWSPayload.Payload: Sendable {}
+#endif

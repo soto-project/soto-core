@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the Soto project authors
+// Copyright (c) 2017-2022 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -183,9 +183,9 @@ final class S3ChunkedStreamReader: StreamReader {
     /// function providing data to be streamed
     let read: (EventLoop) -> EventLoopFuture<StreamReaderResult>
     /// bytebuffer allocator
-    var byteBufferAllocator: ByteBufferAllocator
+    let byteBufferAllocator: ByteBufferAllocator
 
-    var signer: AWSSigner
+    let signer: AWSSigner
     var signingData: AWSSigner.ChunkedSigningData
     var previouslyReadBuffer: ByteBuffer?
     var headerBuffer: ByteBuffer
@@ -194,3 +194,8 @@ final class S3ChunkedStreamReader: StreamReader {
     /// bytes left to read from `read` function
     var bytesLeftToRead: Int
 }
+
+#if compiler(>=5.6)
+// All the mutable data in this class is never accessed concurrently
+extension S3ChunkedStreamReader: @unchecked Sendable {}
+#endif

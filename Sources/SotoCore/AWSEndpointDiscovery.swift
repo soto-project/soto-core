@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2021 the Soto project authors
+// Copyright (c) 2021-2022 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -14,6 +14,7 @@
 
 import struct Foundation.Date
 import struct Foundation.TimeInterval
+import Logging
 import NIOConcurrencyHelpers
 import NIOCore
 
@@ -70,7 +71,7 @@ public class AWSEndpointStorage {
     ///   - eventLoop: EventLoop to run process on
     /// - Returns: EventLoopFuture holding the endpoint
     func getEndpoint(
-        discover: @escaping (Logger, EventLoop) -> EventLoopFuture<AWSEndpoints>,
+        discover: @escaping AWSEndpointDiscovery.DiscoverFunction,
         logger: Logger,
         on eventLoop: EventLoop
     ) -> EventLoopFuture<String> {
@@ -100,12 +101,14 @@ public class AWSEndpointStorage {
 
 /// Helper object holding endpoint storage and closure used to discover endpoint
 public struct AWSEndpointDiscovery {
-    let storage: AWSEndpointStorage
-    let discover: (Logger, EventLoop) -> EventLoopFuture<AWSEndpoints>
-    let isRequired: Bool
-    var endpoint: String? { storage.endpoint }
+    public typealias DiscoverFunction = (Logger, EventLoop) -> EventLoopFuture<AWSEndpoints>
 
-    public init(storage: AWSEndpointStorage, discover: @escaping (Logger, EventLoop) -> EventLoopFuture<AWSEndpoints>, required: Bool) {
+    let storage: AWSEndpointStorage
+    let discover: DiscoverFunction
+    let isRequired: Bool
+    internal var endpoint: String? { storage.endpoint }
+
+    public init(storage: AWSEndpointStorage, discover: @escaping DiscoverFunction, required: Bool) {
         self.storage = storage
         self.discover = discover
         self.isRequired = required
@@ -120,3 +123,14 @@ public struct AWSEndpointDiscovery {
         return self.storage.getEndpoint(discover: self.discover, logger: logger, on: eventLoop)
     }
 }
+
+#if compiler(>=5.6)
+// can be set to Sendable as the contents are only set internally and they are
+// protected by a lock
+extension AWSEndpointStorage: @unchecked Sendable {}
+// I could require the discover function in AWSEndpointDiscovery to be Sendable, but it just
+// generates pain elsewhere where I have to mark all the endpoint functions to be @Sendable
+// which then requires multiple versions of that function if I am going to support backwards
+// compatiblity
+extension AWSEndpointDiscovery: @unchecked Sendable {}
+#endif

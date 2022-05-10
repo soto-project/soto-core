@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the Soto project authors
+// Copyright (c) 2017-2022 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -27,7 +27,7 @@ extension AWSClient {
     }
 
     /// A waiter is a client side abstraction used to poll a resource until a desired state is reached
-    public struct Waiter<Input, Output> {
+    public struct Waiter<Input: _SotoSendable, Output: _SotoSendable> {
         /// An acceptor checks the result of a call and can change the waiter state based on that result
         public struct Acceptor {
             public init(state: AWSClient.WaiterState, matcher: AWSWaiterMatcher) {
@@ -39,6 +39,8 @@ extension AWSClient {
             let matcher: AWSWaiterMatcher
         }
 
+        public typealias WaiterCommand = (Input, Logger, EventLoop?) -> EventLoopFuture<Output>
+
         /// Initialize an waiter
         /// - Parameters:
         ///   - acceptors: List of acceptors
@@ -49,11 +51,7 @@ extension AWSClient {
             acceptors: [AWSClient.Waiter<Input, Output>.Acceptor],
             minDelayTime: TimeAmount = .seconds(2),
             maxDelayTime: TimeAmount = .seconds(120),
-            command: @escaping (
-                Input,
-                Logger,
-                EventLoop?
-            ) -> EventLoopFuture<Output>
+            command: @escaping WaiterCommand
         ) {
             self.acceptors = acceptors
             self.minDelayTime = minDelayTime
@@ -64,7 +62,7 @@ extension AWSClient {
         let acceptors: [Acceptor]
         let minDelayTime: TimeAmount
         let maxDelayTime: TimeAmount
-        let command: (Input, Logger, EventLoop?) -> EventLoopFuture<Output>
+        let command: WaiterCommand
 
         /// Calculate delay until next API call. This calculation comes from the AWS Smithy documentation
         /// https://awslabs.github.io/smithy/1.0/spec/waiters.html#waiter-retries
@@ -154,3 +152,13 @@ extension AWSClient {
         return promise.futureResult
     }
 }
+
+#if compiler(>=5.6)
+extension AWSClient.WaiterState: Sendable {}
+extension AWSClient.Waiter.Acceptor: Sendable {}
+// I could require the Waiter.command to be Sendable, but it just generates
+// pain elsewhere where I have to mark all the API functions to be @Sendable
+// which then requires multiple versions of those function if I am going to
+// support backwards compatiblity
+extension AWSClient.Waiter: @unchecked Sendable {}
+#endif

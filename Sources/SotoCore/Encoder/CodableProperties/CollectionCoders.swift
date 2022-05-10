@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2020 the Soto project authors
+// Copyright (c) 2020-2022 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -22,7 +22,7 @@ public protocol ArrayCoderProperties {
 }
 
 /// Coder for encoding/decoding Arrays. This is extended to support encoding and decoding based on whether `Element` is `Encodable` or `Decodable`.
-public struct ArrayCoder<Properties: ArrayCoderProperties, Element>: CustomCoder {
+public struct ArrayCoder<Properties: ArrayCoderProperties, Element: _SotoSendable>: CustomCoder {
     public typealias CodableValue = [Element]
 }
 
@@ -63,7 +63,7 @@ public protocol DictionaryCoderProperties {
 }
 
 /// Coder for encoding/decoding Dictionaries. This is extended to support encoding and decoding based on whether `Key` and `Value` are `Encodable` or `Decodable`.
-public struct DictionaryCoder<Properties: DictionaryCoderProperties, Key: Hashable, Value>: CustomCoder {
+public struct DictionaryCoder<Properties: DictionaryCoderProperties, Key: Hashable & _SotoSendable, Value: _SotoSendable>: CustomCoder {
     public typealias CodableValue = [Key: Value]
 }
 

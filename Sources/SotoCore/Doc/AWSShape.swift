@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2021 the Soto project authors
+// Copyright (c) 2017-2022 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -18,7 +18,7 @@ import class Foundation.NSRegularExpression
 import struct Foundation.UUID
 
 /// Protocol for the input and output objects for all AWS service commands. They need to be Codable so they can be serialized. They also need to provide details on how their container classes are coded when serializing XML.
-public protocol AWSShape {
+public protocol AWSShape: _SotoSendableProtocol {
     /// The array of members serialization helpers
     static var _encoding: [AWSMemberEncoding] { get }
     static var _options: AWSShapeOptions { get }

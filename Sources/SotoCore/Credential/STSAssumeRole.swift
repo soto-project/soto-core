@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the Soto project authors
+// Copyright (c) 2017-2022 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -13,7 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
-import Foundation
+import struct Foundation.Date
+import struct Foundation.TimeInterval
 
 struct STSAssumeRoleRequest: AWSEncodableShape {
     /// The Amazon Resource Name (ARN) of the role to assume.

@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the Soto project authors
+// Copyright (c) 2017-2022 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -23,7 +23,7 @@ import struct Foundation.URLComponents
 import SotoCrypto
 
 /// Amazon Web Services V4 Signer
-public struct AWSSigner {
+public struct AWSSigner: _SignerSendable {
     /// security credentials for accessing AWS services
     public let credentials: Credential
     /// service signing name. In general this is the same as the service name

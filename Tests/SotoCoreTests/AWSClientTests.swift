@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the Soto project authors
+// Copyright (c) 2017-2022 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -13,8 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+import Foundation
 import Logging
-import NIOConcurrencyHelpers
 import NIOCore
 import NIOFoundationCompat
 import NIOHTTP1
@@ -23,6 +23,11 @@ import NIOPosix
 import SotoTestUtils
 import SotoXML
 import XCTest
+#if compiler(>=5.6)
+@preconcurrency import NIOConcurrencyHelpers
+#else
+import NIOConcurrencyHelpers
+#endif
 
 class AWSClientTests: XCTestCase {
     func testGetCredential() {
@@ -561,7 +566,7 @@ class AWSClientTests: XCTestCase {
     func testCustomRetryPolicy() {
         final class TestRetryPolicy: RetryPolicy {
             static let maxRetries: Int = 3
-            var attempt = NIOAtomic.makeAtomic(value: 0)
+            let attempt = NIOAtomic.makeAtomic(value: 0)
 
             init() {}
 

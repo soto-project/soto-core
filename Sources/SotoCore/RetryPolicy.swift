@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2020 the Soto project authors
+// Copyright (c) 2020-2022 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -14,7 +14,11 @@
 
 import AsyncHTTPClient
 import Foundation
+#if compiler(>=5.6)
+@preconcurrency import NIOCore
+#else
 import NIOCore
+#endif
 import NIOHTTP1
 import NIOPosix // Needed for NIOConnectionError
 
@@ -50,7 +54,7 @@ public enum RetryStatus {
 }
 
 /// Protocol for Retry strategy. Has function returning amount of time before the next retry after an HTTP error
-public protocol RetryPolicy {
+public protocol RetryPolicy: _SotoSendableProtocol {
     /// Returns whether we should retry and how long we should wait before retrying
     /// - Parameters:
     ///   - error: Error returned by HTTP client

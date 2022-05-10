@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the Soto project authors
+// Copyright (c) 2017-2022 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 #if compiler(>=5.6)
-public typealias SignerSendable = Sendable
+public typealias _SignerSendable = Sendable
 #else
-public typealias SignerSendable = Any
+public typealias _SignerSendable = Any
 #endif

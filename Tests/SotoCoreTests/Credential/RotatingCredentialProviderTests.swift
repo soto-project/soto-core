@@ -110,7 +110,6 @@ class RotatingCredentialProviderTests: XCTestCase {
 
         var resultFutures = [EventLoopFuture<Void>]()
         var setupFutures = [EventLoopFuture<Void>]()
-        // let fulFillCount = NIOAtomic<Int>.makeAtomic(value: 0)
         let iterations = 500
         for _ in 0..<iterations {
             let loop = group.next()

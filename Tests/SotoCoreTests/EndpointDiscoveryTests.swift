@@ -39,7 +39,7 @@ class EndpointDiscoveryTests: XCTestCase {
         }
 
         /// init
-        init(client: AWSClient, endpoint: String? = nil, endpointToDiscover: String = "", expectedCallCount: Int) {
+        init(client: AWSClient, endpoint: String? = nil, endpointToDiscover: String = "") {
             self.client = client
             self.config = .init(
                 region: .euwest1,
@@ -115,7 +115,7 @@ class EndpointDiscoveryTests: XCTestCase {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
         }
-        let service = Service(client: client, endpointToDiscover: awsServer.address, expectedCallCount: 1).with(middlewares: TestEnvironment.middlewares)
+        let service = Service(client: client, endpointToDiscover: awsServer.address).with(middlewares: TestEnvironment.middlewares)
         let response = service.test(.init(), logger: TestEnvironment.logger).flatMap { _ in
             service.test(.init(), logger: TestEnvironment.logger)
         }
@@ -143,7 +143,7 @@ class EndpointDiscoveryTests: XCTestCase {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
         }
-        let service = Service(client: client, endpointToDiscover: awsServer.address, expectedCallCount: 1).with(middlewares: TestEnvironment.middlewares)
+        let service = Service(client: client, endpointToDiscover: awsServer.address).with(middlewares: TestEnvironment.middlewares)
         let response1 = service.test(.init(), logger: TestEnvironment.logger)
         let response2 = service.test(.init(), logger: TestEnvironment.logger)
 
@@ -170,7 +170,7 @@ class EndpointDiscoveryTests: XCTestCase {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
         }
-        let service = Service(client: client, endpointToDiscover: awsServer.address, expectedCallCount: 2).with(middlewares: TestEnvironment.middlewares)
+        let service = Service(client: client, endpointToDiscover: awsServer.address).with(middlewares: TestEnvironment.middlewares)
         let response = service.testDontCache(logger: TestEnvironment.logger).flatMap { _ in
             service.testDontCache(logger: TestEnvironment.logger)
         }
@@ -198,7 +198,7 @@ class EndpointDiscoveryTests: XCTestCase {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
         }
-        let service = Service(client: client, endpoint: awsServer.address, expectedCallCount: 0)
+        let service = Service(client: client, endpoint: awsServer.address)
             .with(middlewares: TestEnvironment.middlewares)
         let response = service.testNotRequired(.init(), logger: TestEnvironment.logger)
 

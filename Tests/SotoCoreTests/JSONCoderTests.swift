@@ -127,6 +127,19 @@ class JSONCoderTests: XCTestCase {
         ))
     }
 
+    /// helper test function to use throughout all the decode/encode tests
+    func testEncodeDecode<T: Codable & Equatable>(object: T, expected: String) {
+        do {
+            let jsonData = try JSONEncoder().encode(object)
+            XCTAssertEqual(jsonData, Data(expected.utf8))
+            let dict = try JSONSerialization.jsonObject(with: jsonData, options: [])
+            let object2 = try DictionaryDecoder().decode(T.self, from: dict)
+            XCTAssertEqual(object, object2)
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+
     func testSerializeToDictionaryAndJSON() throws {
         var json = try self.testShapeWithDictionaries.encodeAsJSON(byteBufferAllocator: ByteBufferAllocator())
         let data = try XCTUnwrap(json.readData(length: json.readableBytes))
@@ -158,5 +171,12 @@ class JSONCoderTests: XCTestCase {
         } catch {
             XCTFail(error.localizedDescription)
         }
+    }
+
+    func testBlob() throws {
+        struct Test: Codable, Equatable {
+            let data: AWSBlob
+        }
+        self.testEncodeDecode(object: Test(data: .string("Testing")), expected: #"{"data":"VGVzdGluZw=="}"#)
     }
 }

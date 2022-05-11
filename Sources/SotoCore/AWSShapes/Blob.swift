@@ -19,7 +19,7 @@ import Foundation
 import NIOCore
 #endif
 
-public struct AWSBlob: _SotoSendable, Codable {
+public struct AWSBlob: _SotoSendable, Codable, Equatable {
     let buffer: ByteBuffer
 
     /// Initialise AWSBlob
@@ -47,6 +47,7 @@ public struct AWSBlob: _SotoSendable, Codable {
         return .init(buffer: byteBuffer)
     }
 
+    /// Codable decode
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let base64 = try container.decode(String.self)
@@ -56,6 +57,7 @@ public struct AWSBlob: _SotoSendable, Codable {
         self.buffer = byteBuffer
     }
 
+    /// Codable encode
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         let byteBufferView = self.buffer.readableBytesView

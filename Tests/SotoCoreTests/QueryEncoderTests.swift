@@ -198,6 +198,15 @@ class QueryEncoderTests: XCTestCase {
         self.testQuery(test, query: "a=VGVzdGluZw%3D%3D")
     }
 
+    func testBlobEncode() {
+        struct Test: AWSEncodableShape {
+            let a: AWSBlob
+        }
+        let data = Data("Testing".utf8)
+        let test = Test(a: .data(data))
+        self.testQuery(test, query: "a=VGVzdGluZw%3D%3D")
+    }
+
     func testEC2Encode() {
         struct Test2: AWSEncodableShape {
             let data: String

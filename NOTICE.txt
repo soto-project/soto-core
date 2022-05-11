@@ -32,3 +32,10 @@ This product contains a copy of libexpat
     * https://github.com/libexpat/libexpat/blob/master/expat/COPYING
   * HOMEPAGE:
     * https://libexpat.github.io/
+
+This product contains a copy of base64.swift from swift-extras-base64
+
+  * LICENSE (Apache License 2.0):
+    * https://github.com/swift-extras/swift-extras-base64/blob/main/LICENSE
+  * HOMEPAGE:
+    * https://github.com/swift-extras/swift-extras-base64

@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 import struct Foundation.CharacterSet
-import struct Foundation.Data
 import struct Foundation.Date
 import class Foundation.DateFormatter
 import struct Foundation.Locale
@@ -385,16 +384,9 @@ extension _QueryEncoder {
         return storage.popContainer()
     }
 
-    func box(_ data: Data) throws -> Any {
-        try encode(data.base64EncodedString())
-        return storage.popContainer()
-    }
-
     func box(_ value: Encodable) throws -> Any {
         let type = Swift.type(of: value)
-        if type == Data.self {
-            return try self.box(value as! Data)
-        } else if type == Date.self {
+        if type == Date.self {
             return try self.box(value as! Date)
         } else {
             try value.encode(to: self)

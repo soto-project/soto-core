@@ -189,16 +189,7 @@ class QueryEncoderTests: XCTestCase {
         self.testQuery(test, query: "A.1.entry=1&A.1.name=first")
     }
 
-    func testDataBlobEncode() {
-        struct Test: AWSEncodableShape {
-            let a: Data
-        }
-        let data = Data("Testing".utf8)
-        let test = Test(a: data)
-        self.testQuery(test, query: "a=VGVzdGluZw%3D%3D")
-    }
-
-    func testBlobEncode() {
+    func testBase64DataEncode() {
         struct Test: AWSEncodableShape {
             let a: AWSBase64Data
         }

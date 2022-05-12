@@ -12,8 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct Foundation.Data
-import NIOFoundationCompat
+import Foundation
 import NIOPosix
 #if compiler(>=5.6)
 @preconcurrency import NIOCore
@@ -52,8 +51,8 @@ public struct AWSPayload {
         return AWSPayload(payload: .empty)
     }
 
-    /// Construct a payload from `Data`
-    public static func data(_ data: Data, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) -> Self {
+    /// Construct a payload from a Collection of UInt8
+    public static func data<C: Collection>(_ data: C, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) -> Self where C.Element == UInt8 {
         var byteBuffer = byteBufferAllocator.buffer(capacity: data.count)
         byteBuffer.writeBytes(data)
         return AWSPayload(payload: .byteBuffer(byteBuffer))
@@ -140,7 +139,7 @@ public struct AWSPayload {
 
     /// Return the size of the payload. If the payload is a stream it is always possible to return a size
     public var size: Int? {
-        switch payload {
+        switch self.payload {
         case .byteBuffer(let byteBuffer):
             return byteBuffer.readableBytes
         case .stream(let reader):
@@ -152,7 +151,7 @@ public struct AWSPayload {
 
     /// return payload as Data
     public func asData() -> Data? {
-        switch payload {
+        switch self.payload {
         case .byteBuffer(let byteBuffer):
             return byteBuffer.getData(at: byteBuffer.readerIndex, length: byteBuffer.readableBytes, byteTransferStrategy: .noCopy)
         default:
@@ -162,7 +161,7 @@ public struct AWSPayload {
 
     /// return payload as String
     public func asString() -> String? {
-        switch payload {
+        switch self.payload {
         case .byteBuffer(let byteBuffer):
             return byteBuffer.getString(at: byteBuffer.readerIndex, length: byteBuffer.readableBytes)
         default:
@@ -172,7 +171,7 @@ public struct AWSPayload {
 
     /// return payload as ByteBuffer
     public func asByteBuffer() -> ByteBuffer? {
-        switch payload {
+        switch self.payload {
         case .byteBuffer(let byteBuffer):
             return byteBuffer
         default:
@@ -182,7 +181,7 @@ public struct AWSPayload {
 
     /// does payload consist of zero bytes
     public var isEmpty: Bool {
-        switch payload {
+        switch self.payload {
         case .byteBuffer(let buffer):
             return buffer.readableBytes == 0
         case .stream:

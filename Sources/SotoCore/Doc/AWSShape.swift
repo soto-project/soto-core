@@ -130,12 +130,12 @@ public extension AWSEncodableShape {
         guard value.count <= max else { throw Self.validationError("Length of \(parent).\(name) (\(value.count)) is greater than the maximum allowed value \(max).") }
     }
 
-    func validate(_ value: AWSBlob, name: String, parent: String, min: Int) throws {
-        guard value.buffer.readableBytes >= min else { throw Self.validationError("Length of \(parent).\(name) (\(value.buffer.readableBytes)) is less than minimum allowed value \(min).") }
+    func validate(_ value: AWSBase64Data, name: String, parent: String, min: Int) throws {
+        guard value.base64count >= min else { throw Self.validationError("Length of \(parent).\(name) (\(value.base64count)) is less than minimum allowed value \(min).") }
     }
 
-    func validate(_ value: AWSBlob, name: String, parent: String, max: Int) throws {
-        guard value.buffer.readableBytes <= max else { throw Self.validationError("Length of \(parent).\(name) (\(value.buffer.readableBytes)) is greater than the maximum allowed value \(max).") }
+    func validate(_ value: AWSBase64Data, name: String, parent: String, max: Int) throws {
+        guard value.base64count <= max else { throw Self.validationError("Length of \(parent).\(name) (\(value.base64count)) is greater than the maximum allowed value \(max).") }
     }
 
     func validate(_ value: AWSPayload, name: String, parent: String, min: Int) throws {
@@ -191,12 +191,12 @@ public extension AWSEncodableShape {
         try validate(value, name: name, parent: parent, max: max)
     }
 
-    func validate(_ value: AWSBlob?, name: String, parent: String, min: Int) throws {
+    func validate(_ value: AWSBase64Data?, name: String, parent: String, min: Int) throws {
         guard let value = value else { return }
         try validate(value, name: name, parent: parent, min: min)
     }
 
-    func validate(_ value: AWSBlob?, name: String, parent: String, max: Int) throws {
+    func validate(_ value: AWSBase64Data?, name: String, parent: String, max: Int) throws {
         guard let value = value else { return }
         try validate(value, name: name, parent: parent, max: max)
     }

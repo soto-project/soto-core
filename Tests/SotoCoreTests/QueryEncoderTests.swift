@@ -200,7 +200,7 @@ class QueryEncoderTests: XCTestCase {
 
     func testBlobEncode() {
         struct Test: AWSEncodableShape {
-            let a: AWSBlob
+            let a: AWSBase64Data
         }
         let data = Data("Testing".utf8)
         let test = Test(a: .data(data))

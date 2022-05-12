@@ -175,8 +175,8 @@ class JSONCoderTests: XCTestCase {
 
     func testBlob() throws {
         struct Test: Codable, Equatable {
-            let data: AWSBlob
+            let data: AWSBase64Data
         }
-        self.testEncodeDecode(object: Test(data: .string("Testing")), expected: #"{"data":"VGVzdGluZw=="}"#)
+        self.testEncodeDecode(object: Test(data: .data("Testing".utf8)), expected: #"{"data":"VGVzdGluZw=="}"#)
     }
 }

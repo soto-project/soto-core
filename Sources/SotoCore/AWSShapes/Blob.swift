@@ -80,8 +80,8 @@ public struct AWSBlob: _SotoSendable, Codable, Equatable {
         return self.buffer
     }
 
-    /// does blob consist of zero bytes
-    public var isEmpty: Bool {
-        return self.buffer.readableBytes == 0
+    /// length of blob data
+    public var count: Int {
+        self.buffer.readableBytes
     }
 }

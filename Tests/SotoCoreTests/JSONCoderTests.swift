@@ -173,10 +173,30 @@ class JSONCoderTests: XCTestCase {
         }
     }
 
-    func testBlob() throws {
+    func testBase64() {
         struct Test: Codable, Equatable {
             let data: AWSBase64Data
         }
         self.testEncodeDecode(object: Test(data: .data("Testing".utf8)), expected: #"{"data":"VGVzdGluZw=="}"#)
+    }
+
+    func testBase64EncodeDecode() throws {
+        struct Test: Codable, Equatable {
+            let data: AWSBase64Data
+        }
+        // self.testEncodeDecode(object: Test(data: .data("Testing".utf8)), expected: #"{"data":"VGVzdGluZw=="}"#)
+        let string = """
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod 
+        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, 
+        quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo 
+        consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse 
+        cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat 
+        non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+        """
+        let test = Test(data: .data(string.utf8))
+        let jsonData = try JSONEncoder().encode(test)
+        let dict = try JSONSerialization.jsonObject(with: jsonData, options: [])
+        let object2 = try DictionaryDecoder().decode(Test.self, from: dict)
+        XCTAssertEqual([UInt8](string.utf8), object2.data.decoded())
     }
 }

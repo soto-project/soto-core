@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Options Structure Reference</title>
+    <title>EncodingOptions Structure Reference</title>
     <link rel="stylesheet" type="text/css" href="../../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../../css/highlight.css" />
     <meta charset='utf-8'>
@@ -13,8 +13,8 @@
     <script src="../../js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/swift/Struct/Options" class="dashAnchor"></a>
-    <a title="Options Structure Reference"></a>
+    <a name="//apple_ref/swift/Struct/EncodingOptions" class="dashAnchor"></a>
+    <a title="EncodingOptions Structure Reference"></a>
     <header>
       <div class="content-wrapper">
         <p><a href="../../index.html"> Docs</a> (63% documented)</p>
@@ -30,7 +30,7 @@
       <p id="breadcrumbs">
         <a href="../../index.html"> Reference</a>
         <img id="carat" src="../../img/carat.png" alt=""/>
-        Options Structure Reference
+        EncodingOptions Structure Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -460,46 +460,20 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>Options</h1>
+            <h1>EncodingOptions</h1>
               <div class="declaration">
                 <div class="language">
                   
-                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">Options</span> <span class="p">:</span> <span class="kt">OptionSet</span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">EncodingOptions</span> <span class="p">:</span> <span class="kt">OptionSet</span></code></pre>
 
                 </div>
               </div>
-            <p>Options used by client when processing requests</p>
+            <p>Undocumented</p>
 
           </section>
           <section class="section task-group-section">
             <div class="task-group">
               <ul>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:SY8RawValueQa"></a>
-                    <a name="//apple_ref/swift/Alias/RawValue" class="dashAnchor"></a>
-                    <a class="token" href="#/s:SY8RawValueQa">RawValue</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">RawValue</span> <span class="o">=</span> <span class="kt">Int</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
                 <li class="item">
                   <div>
                     <code>
@@ -519,7 +493,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">rawValue</span><span class="p">:</span> <span class="kt">Int</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">rawValue</span><span class="p">:</span> <span class="kt">UInt</span></code></pre>
 
                         </div>
                       </div>
@@ -545,7 +519,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">rawValue</span><span class="p">:</span> <span class="kt"><a href="../../Classes/AWSServiceConfig/Options.html#/s:SY8RawValueQa">RawValue</a></span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">rawValue</span><span class="p">:</span> <span class="kt">UInt</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -555,9 +529,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore16AWSServiceConfigC7OptionsV18s3ForceVirtualHostAEvpZ"></a>
-                    <a name="//apple_ref/swift/Variable/s3ForceVirtualHost" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore16AWSServiceConfigC7OptionsV18s3ForceVirtualHostAEvpZ">s3ForceVirtualHost</a>
+                    <a name="/s:8SotoCore6Base64O15EncodingOptionsV17base64UrlAlphabetAEvpZ"></a>
+                    <a name="//apple_ref/swift/Variable/base64UrlAlphabet" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore6Base64O15EncodingOptionsV17base64UrlAlphabetAEvpZ">base64UrlAlphabet</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -565,15 +539,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>If you set a custom endpoint, s3 will choose path style addressing. With this paramteter you can force
-it to use virtual host style addressing</p>
+                        <p>Undocumented</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">let</span> <span class="nv">s3ForceVirtualHost</span><span class="p">:</span> <span class="kt"><a href="../../Classes/AWSServiceConfig.html">AWSServiceConfig</a></span><span class="o">.</span><span class="kt">Options</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">let</span> <span class="nv">base64UrlAlphabet</span><span class="p">:</span> <span class="kt"><a href="../../Enums/Base64.html">Base64</a></span><span class="o">.</span><span class="kt">EncodingOptions</span></code></pre>
 
                         </div>
                       </div>
@@ -583,9 +556,9 @@ it to use virtual host style addressing</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore16AWSServiceConfigC7OptionsV22s3UseDualStackEndpointAEvpZ"></a>
-                    <a name="//apple_ref/swift/Variable/s3UseDualStackEndpoint" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore16AWSServiceConfigC7OptionsV22s3UseDualStackEndpointAEvpZ">s3UseDualStackEndpoint</a>
+                    <a name="/s:8SotoCore6Base64O15EncodingOptionsV20omitPaddingCharacterAEvpZ"></a>
+                    <a name="//apple_ref/swift/Variable/omitPaddingCharacter" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore6Base64O15EncodingOptionsV20omitPaddingCharacterAEvpZ">omitPaddingCharacter</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -593,123 +566,14 @@ it to use virtual host style addressing</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Use a dual stack S3 endpoint. WHen you make a request to a dual-stack endpoint the bucket URL resolves
-to an IPv6 or an IPv4 address</p>
+                        <p>Undocumented</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">let</span> <span class="nv">s3UseDualStackEndpoint</span><span class="p">:</span> <span class="kt"><a href="../../Classes/AWSServiceConfig.html">AWSServiceConfig</a></span><span class="o">.</span><span class="kt">Options</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:8SotoCore16AWSServiceConfigC7OptionsV32s3UseTransferAcceleratedEndpointAEvpZ"></a>
-                    <a name="//apple_ref/swift/Variable/s3UseTransferAcceleratedEndpoint" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore16AWSServiceConfigC7OptionsV32s3UseTransferAcceleratedEndpointAEvpZ">s3UseTransferAcceleratedEndpoint</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Use S3 transfer accelerated endpoint. You need to enable transfer acceleration on the bucket for this to work</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">let</span> <span class="nv">s3UseTransferAcceleratedEndpoint</span><span class="p">:</span> <span class="kt"><a href="../../Classes/AWSServiceConfig.html">AWSServiceConfig</a></span><span class="o">.</span><span class="kt">Options</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:8SotoCore16AWSServiceConfigC7OptionsV23enableEndpointDiscoveryAEvpZ"></a>
-                    <a name="//apple_ref/swift/Variable/enableEndpointDiscovery" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore16AWSServiceConfigC7OptionsV23enableEndpointDiscoveryAEvpZ">enableEndpointDiscovery</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Enable endpoint discovery for services where it isn&rsquo;t required</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">let</span> <span class="nv">enableEndpointDiscovery</span><span class="p">:</span> <span class="kt"><a href="../../Classes/AWSServiceConfig.html">AWSServiceConfig</a></span><span class="o">.</span><span class="kt">Options</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:8SotoCore16AWSServiceConfigC7OptionsV23s3DisableChunkedUploadsAEvpZ"></a>
-                    <a name="//apple_ref/swift/Variable/s3DisableChunkedUploads" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore16AWSServiceConfigC7OptionsV23s3DisableChunkedUploadsAEvpZ">s3DisableChunkedUploads</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Disable S3 signed chunked uploads</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">let</span> <span class="nv">s3DisableChunkedUploads</span><span class="p">:</span> <span class="kt"><a href="../../Classes/AWSServiceConfig.html">AWSServiceConfig</a></span><span class="o">.</span><span class="kt">Options</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:8SotoCore16AWSServiceConfigC7OptionsV12calculateMD5AEvpZ"></a>
-                    <a name="//apple_ref/swift/Variable/calculateMD5" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore16AWSServiceConfigC7OptionsV12calculateMD5AEvpZ">calculateMD5</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>calculate MD5 for requests with content-md5 header</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">let</span> <span class="nv">calculateMD5</span><span class="p">:</span> <span class="kt"><a href="../../Classes/AWSServiceConfig.html">AWSServiceConfig</a></span><span class="o">.</span><span class="kt">Options</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">let</span> <span class="nv">omitPaddingCharacter</span><span class="p">:</span> <span class="kt"><a href="../../Enums/Base64.html">Base64</a></span><span class="o">.</span><span class="kt">EncodingOptions</span></code></pre>
 
                         </div>
                       </div>

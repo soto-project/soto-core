@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        tag: ['nightly-bionic', 'nightly-focal', 'nightly-centos8', 'nightly-amazonlinux2']
+        tag: ['nightly-bionic', 'nightly-focal', 'nightly-amazonlinux2']
     container:
       image: swiftlang/swift:${{ matrix.tag }}
     steps:

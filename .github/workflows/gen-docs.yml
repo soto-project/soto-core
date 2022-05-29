@@ -26,7 +26,7 @@ jobs:
     - name: Build
       env:
         DOCC: "docc"
-        DOCC_HTML_DIR: ${{ GITHUB_WORKSPACE }}/swift-docc-render-artifact"
+        DOCC_HTML_DIR: ${{ env.GITHUB_WORKSPACE }}/swift-docc-render-artifact"
       run: |
         ./scripts/build-docc.sh
     - name: Commit

@@ -24,9 +24,9 @@ import SotoCrypto
 
 /// Amazon Web Services V4 Signer
 public struct AWSSigner: _SignerSendable {
-    /// security credentials for accessing AWS services
+    /// Security credentials for accessing AWS services
     public let credentials: Credential
-    /// service signing name. In general this is the same as the service name
+    /// Service signing name. In general this is the same as the service name
     public let name: String
     /// AWS region you are working in
     public let region: String
@@ -42,15 +42,22 @@ public struct AWSSigner: _SignerSendable {
         self.region = region
     }
 
-    /// Enum for holding your body data
+    /// Enum for holding request payload
     public enum BodyData {
+        /// String
         case string(String)
+        /// Data
         case data(Data)
+        /// SwiftNIO ByteBuffer
         case byteBuffer(ByteBuffer)
+        /// Don't use body when signing request
         case unsignedPayload
+        /// Internally used when S3 streamed payloads
         case s3chunked
     }
 
+    /// Process URL before signing
+    ///
     /// `signURL` and `signHeaders` make assumptions about the URLs they are provided, this function cleans up a URL so it is ready
     /// to be signed by either of these functions. It sorts the query params and ensures they are properly percent encoded
     public func processURL(url: URL) -> URL? {
@@ -73,6 +80,14 @@ public struct AWSSigner: _SignerSendable {
     }
 
     /// Generate signed headers, for a HTTP request
+    /// - Parameters:
+    ///   - url: Request URL
+    ///   - method: Request HTTP method
+    ///   - headers: Request headers
+    ///   - body: Request body
+    ///   - omitSecurityToken: Should we include security token in the query parameters
+    ///   - date: Date that URL is valid from, defaults to now
+    /// - Returns: Request headers with added "authorization" header that contains request signature
     public func signHeaders(
         url: URL,
         method: HTTPMethod = .GET,
@@ -111,6 +126,15 @@ public struct AWSSigner: _SignerSendable {
     }
 
     /// Generate a signed URL, for a HTTP request
+    /// - Parameters:
+    ///   - url: Request URL
+    ///   - method: Request HTTP method
+    ///   - headers: Request headers
+    ///   - body: Request body
+    ///   - expires: How long before the signed URL expires
+    ///   - omitSecurityToken: Should we include security token in the query parameters
+    ///   - date: Date that URL is valid from, defaults to now
+    /// - Returns: Signed URL
     public func signURL(
         url: URL,
         method: HTTPMethod = .GET,
@@ -162,8 +186,10 @@ public struct AWSSigner: _SignerSendable {
         let signingKey: SymmetricKey
     }
 
-    /// Start the process of signing a s3 chunked upload. Update headers and generate first signature. See https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-streaming.html
-    ///  for more details
+    /// Start the process of signing a s3 chunked upload.
+    ///
+    /// Update headers and generate first signature. See https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-streaming.html
+    /// for more details
     /// - Parameters:
     ///   - url: url
     ///   - method: http method

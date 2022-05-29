@@ -70,8 +70,7 @@
 
 // MARK: - Extensions -
 
-public extension String {
-    @inlinable
+extension String {
     init<Buffer: Collection>(base64Encoding bytes: Buffer, options: Base64.EncodingOptions = [])
         where Buffer.Element == UInt8
     {
@@ -83,12 +82,12 @@ public extension String {
     }
 }
 
-public enum Base64 {}
+enum Base64 {}
 
 // MARK: - Encoding -
 
 extension Base64 {
-    public struct EncodingOptions: OptionSet {
+    struct EncodingOptions: OptionSet {
         public let rawValue: UInt
         public init(rawValue: UInt) { self.rawValue = rawValue }
 
@@ -220,7 +219,7 @@ extension Base64 {
     ]
 
     @inlinable
-    public static func encodeBytes<Buffer: Collection>(bytes: Buffer, options: EncodingOptions = [])
+    static func encodeBytes<Buffer: Collection>(bytes: Buffer, options: EncodingOptions = [])
         -> [UInt8] where Buffer.Element == UInt8
     {
         let newCapacity = ((bytes.count + 2) / 3) * 4
@@ -237,7 +236,7 @@ extension Base64 {
     }
 
     @inlinable
-    public static func encodeString<Buffer: Collection>(bytes: Buffer, options: EncodingOptions = [])
+    static func encodeString<Buffer: Collection>(bytes: Buffer, options: EncodingOptions = [])
         -> String where Buffer.Element == UInt8
     {
         let newCapacity = ((bytes.count + 2) / 3) * 4
@@ -339,7 +338,7 @@ extension Base64 {
 // MARK: - Decoding -
 
 extension Base64 {
-    public struct DecodingOptions: OptionSet {
+    struct DecodingOptions: OptionSet {
         public let rawValue: UInt
         public init(rawValue: UInt) { self.rawValue = rawValue }
 
@@ -347,7 +346,7 @@ extension Base64 {
         public static let omitPaddingCharacter = DecodingOptions(rawValue: UInt(1 << 1))
     }
 
-    public enum DecodingError: Error, Equatable {
+    enum DecodingError: Error, Equatable {
         case invalidLength
         case invalidCharacter(UInt8)
         case unexpectedPaddingCharacter
@@ -355,7 +354,7 @@ extension Base64 {
     }
 
     @inlinable
-    public static func decode(string encoded: String, options: DecodingOptions = []) throws -> [UInt8] {
+    static func decode(string encoded: String, options: DecodingOptions = []) throws -> [UInt8] {
         let decoded = try encoded.utf8.withContiguousStorageIfAvailable { characterPointer -> [UInt8] in
             guard characterPointer.count > 0 else {
                 return []
@@ -380,7 +379,7 @@ extension Base64 {
     }
 
     @inlinable
-    public static func decode<Buffer: Collection>(bytes: Buffer, options: DecodingOptions = []) throws -> [UInt8] where Buffer.Element == UInt8 {
+    static func decode<Buffer: Collection>(bytes: Buffer, options: DecodingOptions = []) throws -> [UInt8] where Buffer.Element == UInt8 {
         guard bytes.count > 0 else {
             return []
         }

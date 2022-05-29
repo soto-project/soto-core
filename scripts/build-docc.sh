@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-DOCC=$(xcrun --find docc)
-export DOCC_HTML_DIR="$(dirname $DOCC)/../share/docc/render"
 SG_FOLDER=.build/symbol-graphs
 SOTOCORE_SG_FOLDER=.build/soto-core-symbol-graphs
 OUTPUT_PATH=docs/soto-core
@@ -14,6 +12,12 @@ do
         s) BUILD_SYMBOLS=0;;
     esac
 done
+
+# if CI is true assume CI has setup all environment variables
+if test "$CI" != "true"; then
+    DOCC=$(xcrun --find docc)
+    export DOCC_HTML_DIR="$(dirname $DOCC)/../share/docc/render"
+fi
 
 if test "$BUILD_SYMBOLS" == 1; then
     # build symbol graphs
@@ -29,7 +33,7 @@ fi
 # Build documentation
 mkdir -p $OUTPUT_PATH
 rm -rf $OUTPUT_PATH/*
-docc convert SotoCore.docc \
+$DOCC convert SotoCore.docc \
     --transform-for-static-hosting \
     --hosting-base-path /soto-core \
     --fallback-display-name SotoCore \

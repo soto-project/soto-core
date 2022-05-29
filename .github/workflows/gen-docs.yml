@@ -12,12 +12,20 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v1
-#    - name: Install Dependencies
-#      run: |
-#        brew install sourcekitten
-#        gem install jazzy
+      uses: actions/checkout@v3
+    - name: Checkout HTML template
+      uses: actions/checkout@v3
+      with:
+        repository: apple/swift-docc-render-artifact
+        ref: swift-5.6.1-RELEASE
+    - name: Install Dependencies
+      run: |
+        brew install mint
+        mint install apple/swift-docc@main
     - name: Build
+      env:
+        DOCC: "docc"
+        DOCC_HTML_DIR: "../swift-docc-render-artifact"
       run: |
         ./scripts/build-docc.sh
     - name: Commit

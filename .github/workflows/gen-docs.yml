@@ -18,14 +18,15 @@ jobs:
       with:
         repository: apple/swift-docc-render-artifact
         ref: swift-5.6.1-RELEASE
+        path: swift-docc-render-artifact
     - name: Install Dependencies
       run: |
         brew install mint
-        mint install apple/swift-docc@main
+        mint install apple/swift-docc@swift-5.6.1-RELEASE
     - name: Build
       env:
         DOCC: "docc"
-        DOCC_HTML_DIR: "../swift-docc-render-artifact"
+        DOCC_HTML_DIR: ${{ GITHUB_WORKSPACE }}/swift-docc-render-artifact"
       run: |
         ./scripts/build-docc.sh
     - name: Commit

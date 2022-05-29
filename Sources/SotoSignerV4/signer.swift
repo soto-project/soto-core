@@ -180,7 +180,10 @@ public struct AWSSigner: _SignerSendable {
         return signedURL
     }
 
+    /// Temporary structure passed from calls to `startSigningChunks` and
+    /// subsequent calls to `signChunk`
     public struct ChunkedSigningData {
+        /// signature for streamed data
         public let signature: String
         let datetime: String
         let signingKey: SymmetricKey

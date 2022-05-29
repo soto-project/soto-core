@@ -20,7 +20,10 @@ import NIOPosix
 import NIOCore
 #endif
 
-/// Holds a request or response payload. A request payload can be in the form of either a ByteBuffer or a stream function that will supply ByteBuffers to the HTTP client.
+/// Holds a request or response payload.
+///
+/// A request payload can be in the form of either a ByteBuffer or a stream
+/// function that will supply ByteBuffers to the HTTP client.
 /// A response payload only comes in the form of a ByteBuffer
 public struct AWSPayload {
     /// Internal enum

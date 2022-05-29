@@ -31,6 +31,8 @@ import NIOTransportServices
 import SotoSignerV4
 import SotoXML
 
+/// Client managing communication with AWS services
+///
 /// This is the workhorse of SotoCore. You provide it with a `AWSShape` Input object, it converts it to `AWSRequest` which is then converted
 /// to a raw `HTTPClient` Request. This is then sent to AWS. When the response from AWS is received if it is successful it is converted to a `AWSResponse`
 /// which is then decoded to generate a `AWSShape` Output object. If it is not successful then `AWSClient` will throw an `AWSErrorType`.

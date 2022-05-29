@@ -27,7 +27,8 @@ if test "$BUILD_SYMBOLS" == 1; then
         -Xswiftc -emit-symbol-graph-dir -Xswiftc $SG_FOLDER
     # Copy SotoCore symbol graph into separate folder
     mkdir -p $SOTOCORE_SG_FOLDER
-    cp -f $SG_FOLDER/Soto* $SOTOCORE_SG_FOLDER
+    cp $SG_FOLDER/SotoCore* $SOTOCORE_SG_FOLDER
+    cp $SG_FOLDER/SotoSignerV4* $SOTOCORE_SG_FOLDER
 fi
 
 # Build documentation

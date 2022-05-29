@@ -29,7 +29,7 @@ import class Foundation.NumberFormatter
 //===----------------------------------------------------------------------===//
 
 /// `DictionaryDecoder` facilitates the decoding of Dictionaries into semantic `Decodable` types.
-public class DictionaryDecoder {
+class DictionaryDecoder {
     // MARK: Options
 
     /// The strategy to use for decoding `Date` values.

@@ -23,15 +23,13 @@ import Glibc
 import Foundation.NSString
 #endif
 
-public enum ConfigFile {
-    public static let defaultCredentialsPath = "~/.aws/credentials"
-    public static let defaultProfileConfigPath = "~/.aws/config"
-    public static let defaultProfile = "default"
-}
-
 /// Load settings from AWS credentials and profile configuration files
 /// https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
 enum ConfigFileLoader {
+    static let defaultProfileConfigPath = "~/.aws/config"
+    static let defaultProfile = "default"
+    static let defaultCredentialsPath = "~/.aws/credentials"
+
     /// Specific type of credentials loaded from disk
     enum SharedCredentials {
         case staticCredential(credential: StaticCredential)
@@ -228,7 +226,7 @@ enum ConfigFileLoader {
         // the prefix word "profile" only when configuring a named profile in the config file. Do not use the word
         // profile when creating an entry in the credentials file.
         // https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html
-        let loadedProfile = profile == ConfigFile.defaultProfile ? profile : "profile \(profile)"
+        let loadedProfile = profile == Self.defaultProfile ? profile : "profile \(profile)"
 
         // Gracefully fail if there is no configuration for the given profile
         guard let settings = parser.sections[loadedProfile] else {

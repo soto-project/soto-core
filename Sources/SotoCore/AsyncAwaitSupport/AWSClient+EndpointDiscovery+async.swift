@@ -24,7 +24,7 @@ import NIOCore
 
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension AWSClient {
-    /// Execute an empty request and return a future with the output object generated from the response
+    /// Execute an empty request
     /// - parameters:
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
@@ -33,8 +33,6 @@ extension AWSClient {
     ///     - endpointDiscovery: Endpoint discovery helper
     ///     - logger: Logger
     ///     - eventLoop: Optional EventLoop to run everything on
-    /// - returns:
-    ///     Future containing output object that completes when response is received
     public func execute(
         operation operationName: String,
         path: String,
@@ -63,7 +61,7 @@ extension AWSClient {
         )
     }
 
-    /// Execute a request with an input object and return a future with the output object generated from the response
+    /// Execute a request with an input object
     /// - parameters:
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
@@ -74,8 +72,6 @@ extension AWSClient {
     ///     - endpointDiscovery: Endpoint discovery helper
     ///     - logger: Logger
     ///     - eventLoop: Optional EventLoop to run everything on
-    /// - returns:
-    ///     Future containing output object that completes when response is received
     public func execute<Input: AWSEncodableShape>(
         operation operationName: String,
         path: String,
@@ -108,7 +104,7 @@ extension AWSClient {
         )
     }
 
-    /// Execute an empty request and return a future with the output object generated from the response
+    /// Execute an empty request and return the output object generated from the response
     /// - parameters:
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
@@ -118,7 +114,7 @@ extension AWSClient {
     ///     - logger: Logger
     ///     - eventLoop: Optional EventLoop to run everything on
     /// - returns:
-    ///     Future containing output object that completes when response is received
+    ///     Output object that completes when response is received
     @discardableResult public func execute<Output: AWSDecodableShape>(
         operation operationName: String,
         path: String,
@@ -147,7 +143,7 @@ extension AWSClient {
         )
     }
 
-    /// Execute a request with an input object and return a future with the output object generated from the response
+    /// Execute a request with an input object and return the output object generated from the response
     /// - parameters:
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
@@ -159,7 +155,7 @@ extension AWSClient {
     ///     - logger: Logger
     ///     - eventLoop: Optional EventLoop to run everything on
     /// - returns:
-    ///     Future containing output object that completes when response is received
+    ///     Output object that completes when response is received
     public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(
         operation operationName: String,
         path: String,
@@ -192,16 +188,20 @@ extension AWSClient {
         )
     }
 
-    /// Execute a request with an input object and return a future with the output object generated from the response
+    /// Execute a request with an input object and return the output object generated from the response
     /// - parameters:
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - serviceConfig: AWS service configuration used in request creation and signing
     ///     - input: Input object
-    ///     - config: AWS service configuration used in request creation and signing
-    ///     - context: additional context for call
+    ///     - hostPrefix: Prefix to append to host name
+    ///     - endpointDiscovery: Endpoint discovery helper
+    ///     - logger: Logger
+    ///     - eventLoop: Optional EventLoop to run everything on
+    ///     - stream: Closure to stream payload response into
     /// - returns:
-    ///     Future containing output object that completes when response is received
+    ///     Output object that completes when response is received
     public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(
         operation operationName: String,
         path: String,

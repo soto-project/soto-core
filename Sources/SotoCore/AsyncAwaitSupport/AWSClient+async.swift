@@ -52,16 +52,16 @@ extension AWSClient {
         }
     }
 
-    /// execute a request with an input object and return a future with an empty response
+    /// execute a request with an input object and an empty response
     /// - parameters:
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - serviceConfig: AWS Service configuration
     ///     - input: Input object
-    ///     - config: AWS service configuration used in request creation and signing
-    ///     - context: additional context for call
-    /// - returns:
-    ///     Empty Future that completes when response is received
+    ///     - hostPrefix: String to prefix host name with
+    ///     - logger: Logger to log request details to
+    ///     - eventLoop: EventLoop to run request on
     public func execute<Input: AWSEncodableShape>(
         operation operationName: String,
         path: String,
@@ -96,15 +96,14 @@ extension AWSClient {
         )
     }
 
-    /// Execute an empty request and return a future with an empty response
+    /// Execute an empty request and an empty response
     /// - parameters:
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
-    ///     - config: AWS service configuration used in request creation and signing
-    ///     - context: additional context for call
-    /// - returns:
-    ///     Empty Future that completes when response is received
+    ///     - serviceConfig: AWS Service configuration
+    ///     - logger: Logger to log request details to
+    ///     - eventLoop: EventLoop to run request on
     public func execute(
         operation operationName: String,
         path: String,
@@ -135,15 +134,16 @@ extension AWSClient {
         )
     }
 
-    /// Execute an empty request and return a future with the output object generated from the response
+    /// Execute an empty request and return the output object generated from the response
     /// - parameters:
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
-    ///     - config: AWS service configuration used in request creation and signing
-    ///     - context: additional context for call
+    ///     - serviceConfig: AWS Service configuration
+    ///     - logger: Logger to log request details to
+    ///     - eventLoop: EventLoop to run request on
     /// - returns:
-    ///     Future containing output object that completes when response is received
+    ///     Output object that completes when response is received
     public func execute<Output: AWSDecodableShape>(
         operation operationName: String,
         path: String,
@@ -174,16 +174,18 @@ extension AWSClient {
         )
     }
 
-    /// Execute a request with an input object and return a future with the output object generated from the response
+    /// Execute a request with an input object and return the output object generated from the response
     /// - parameters:
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - serviceConfig: AWS Service configuration
     ///     - input: Input object
-    ///     - config: AWS service configuration used in request creation and signing
-    ///     - context: additional context for call
+    ///     - hostPrefix: String to prefix host name with
+    ///     - logger: Logger to log request details to
+    ///     - eventLoop: EventLoop to run request on
     /// - returns:
-    ///     Future containing output object that completes when response is received
+    ///     Output object that completes when response is received
     public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(
         operation operationName: String,
         path: String,
@@ -218,16 +220,18 @@ extension AWSClient {
         )
     }
 
-    /// Execute a request with an input object and return a future with the output object generated from the response
+    /// Execute a request with an input object and return the output object generated from the response
     /// - parameters:
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - serviceConfig: AWS Service configuration
     ///     - input: Input object
-    ///     - config: AWS service configuration used in request creation and signing
-    ///     - context: additional context for call
+    ///     - hostPrefix: String to prefix host name with
+    ///     - logger: Logger to log request details to
+    ///     - eventLoop: EventLoop to run request on
     /// - returns:
-    ///     Future containing output object that completes when response is received
+    ///     Output object that completes when response is received
     public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(
         operation operationName: String,
         path: String,

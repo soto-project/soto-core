@@ -33,9 +33,9 @@ import SotoXML
 
 /// Client managing communication with AWS services
 ///
-/// This is the workhorse of SotoCore. You provide it with a `AWSShape` Input object, it converts it to `AWSRequest` which is then converted
-/// to a raw `HTTPClient` Request. This is then sent to AWS. When the response from AWS is received if it is successful it is converted to a `AWSResponse`
-/// which is then decoded to generate a `AWSShape` Output object. If it is not successful then `AWSClient` will throw an `AWSErrorType`.
+/// This is the workhorse of SotoCore. You provide it with a ``AWSShape`` Input object, it converts it to ``AWSRequest`` which is then converted
+/// to a raw `HTTPClient` Request. This is then sent to AWS. When the response from AWS is received if it is successful it is converted to a ``AWSResponse``
+/// which is then decoded to generate a ``AWSShape`` Output object. If it is not successful then `AWSClient` will throw an ``AWSErrorType``.
 public final class AWSClient {
     // MARK: Member variables
 
@@ -68,8 +68,10 @@ public final class AWSClient {
     /// Initialize an AWSClient struct
     /// - parameters:
     ///     - credentialProvider: An object that returns valid signing credentials for request signing.
-    ///     - retryPolicy: Object returning whether retries should be attempted. Possible options are NoRetry(), ExponentialRetry() or JitterRetry()
+    ///     - retryPolicy: Object returning whether retries should be attempted.
+    ///         Possible options are `.default`, `.noRetry`, `.exponential` or `.jitter`.
     ///     - middlewares: Array of middlewares to apply to requests and responses
+    ///     - options: Configuration flags
     ///     - httpClientProvider: HTTPClient to use. Use `.createNew` if you want the client to manage its own HTTPClient.
     ///     - logger: Logger used to log background AWSClient events
     public init(
@@ -110,7 +112,9 @@ public final class AWSClient {
 
     // MARK: API Calls
 
-    /// Shutdown client synchronously. Before an `AWSClient` is deleted you need to call this function or the async version `shutdown`
+    /// Shutdown client synchronously.
+    ///
+    /// Before an `AWSClient` is deleted you need to call this function or the async version `shutdown`
     /// to do a clean shutdown of the client. It cleans up `CredentialProvider` tasks and shuts down the HTTP client if it was created by
     /// the `AWSClient`.
     ///
@@ -135,7 +139,9 @@ public final class AWSClient {
         }
     }
 
-    /// Shutdown AWSClient asynchronously. Before an `AWSClient` is deleted you need to call this function or the synchronous
+    /// Shutdown AWSClient asynchronously.
+    ///
+    /// Before an `AWSClient` is deleted you need to call this function or the synchronous
     /// version `syncShutdown` to do a clean shutdown of the client. It cleans up `CredentialProvider` tasks and shuts down
     /// the HTTP client if it was created by the `AWSClient`. Given we could be destroying the `EventLoopGroup` the client
     /// uses, we have to use a `DispatchQueue` to run some of this work on.
@@ -200,13 +206,12 @@ public final class AWSClient {
 
     /// Specifies how `HTTPClient` will be created and establishes lifecycle ownership.
     public enum HTTPClientProvider {
-        /// HTTP Client will be provided by the user. Owner of this group is responsible for its lifecycle. Any HTTPClient that conforms to
-        /// `AWSHTTPClient` can be specified here including AsyncHTTPClient
+        /// Use HTTPClient provided by the user. User is responsible for the lifecycle of the HTTPClient.
         case shared(HTTPClient)
-        /// HTTP Client will be created by the client using provided EventLoopGroup. When `shutdown` is called, created `HTTPClient`
+        /// HTTPClient will be created by AWSClient using provided EventLoopGroup. When `shutdown` is called, created `HTTPClient`
         /// will be shut down as well.
         case createNewWithEventLoopGroup(EventLoopGroup)
-        /// HTTP Client will be created by the client. When `shutdown` is called, created `HTTPClient` will be shut down as well.
+        /// HTTP Client will be created by AWSClient. When `shutdown` is called, created `HTTPClient` will be shut down as well.
         case createNew
     }
 
@@ -238,9 +243,11 @@ extension AWSClient {
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - serviceConfig: AWS Service configuration
     ///     - input: Input object
-    ///     - config: AWS service configuration used in request creation and signing
-    ///     - context: additional context for call
+    ///     - hostPrefix: String to prefix host name with
+    ///     - logger: Logger to log request details to
+    ///     - eventLoop: EventLoop to run request on
     /// - returns:
     ///     Empty Future that completes when response is received
     public func execute<Input: AWSEncodableShape>(
@@ -282,8 +289,9 @@ extension AWSClient {
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
-    ///     - config: AWS service configuration used in request creation and signing
-    ///     - context: additional context for call
+    ///     - serviceConfig: AWS Service configuration
+    ///     - logger: Logger to log request details to
+    ///     - eventLoop: EventLoop to run request on
     /// - returns:
     ///     Empty Future that completes when response is received
     public func execute(
@@ -321,8 +329,9 @@ extension AWSClient {
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
-    ///     - config: AWS service configuration used in request creation and signing
-    ///     - context: additional context for call
+    ///     - serviceConfig: AWS Service configuration
+    ///     - logger: Logger to log request details to
+    ///     - eventLoop: EventLoop to run request on
     /// - returns:
     ///     Future containing output object that completes when response is received
     public func execute<Output: AWSDecodableShape>(
@@ -360,9 +369,11 @@ extension AWSClient {
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - serviceConfig: AWS Service configuration
     ///     - input: Input object
-    ///     - config: AWS service configuration used in request creation and signing
-    ///     - context: additional context for call
+    ///     - hostPrefix: String to prefix host name with
+    ///     - logger: Logger to log request details to
+    ///     - eventLoop: EventLoop to run request on
     /// - returns:
     ///     Future containing output object that completes when response is received
     public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(
@@ -399,14 +410,19 @@ extension AWSClient {
         )
     }
 
-    /// Execute a request with an input object and return a future with the output object generated from the response
+    /// Execute a request with an input object and return output object generated from the response
+    ///
+    /// This version of execute also streams the payload of the response into the provided closure
     /// - parameters:
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - serviceConfig: AWS Service configuration
     ///     - input: Input object
-    ///     - config: AWS service configuration used in request creation and signing
-    ///     - context: additional context for call
+    ///     - hostPrefix: String to prefix host name with
+    ///     - logger: Logger to log request details to
+    ///     - eventLoop: EventLoop to run request on
+    ///     - stream: Closure to stream payload response into
     /// - returns:
     ///     Future containing output object that completes when response is received
     public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(

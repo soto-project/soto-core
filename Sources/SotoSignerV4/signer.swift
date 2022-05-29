@@ -78,18 +78,7 @@ public struct AWSSigner: _SignerSendable {
         method: HTTPMethod = .GET,
         headers: HTTPHeaders = HTTPHeaders(),
         body: BodyData? = nil,
-        date: Date = Date()
-    ) -> HTTPHeaders {
-        return signHeaders(url: url, method: method, headers: headers, body: body, omitSecurityToken: false, date: date)
-    }
-
-    /// Generate signed headers, for a HTTP request
-    public func signHeaders(
-        url: URL,
-        method: HTTPMethod = .GET,
-        headers: HTTPHeaders = HTTPHeaders(),
-        body: BodyData? = nil,
-        omitSecurityToken: Bool,
+        omitSecurityToken: Bool = false,
         date: Date = Date()
     ) -> HTTPHeaders {
         let bodyHash = AWSSigner.hashedPayload(body)
@@ -128,19 +117,7 @@ public struct AWSSigner: _SignerSendable {
         headers: HTTPHeaders = HTTPHeaders(),
         body: BodyData? = nil,
         expires: TimeAmount,
-        date: Date = Date()
-    ) -> URL {
-        return signURL(url: url, method: method, headers: headers, body: body, expires: expires, omitSecurityToken: false, date: date)
-    }
-
-    /// Generate a signed URL, for a HTTP request
-    public func signURL(
-        url: URL,
-        method: HTTPMethod = .GET,
-        headers: HTTPHeaders = HTTPHeaders(),
-        body: BodyData? = nil,
-        expires: TimeAmount,
-        omitSecurityToken: Bool,
+        omitSecurityToken: Bool = false,
         date: Date = Date()
     ) -> URL {
         var headers = headers

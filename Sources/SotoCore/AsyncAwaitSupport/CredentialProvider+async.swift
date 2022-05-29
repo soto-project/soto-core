@@ -23,7 +23,7 @@ import NIOCore
 #endif
 import SotoSignerV4
 
-/// Async Protocol for providing credentials
+/// Async Protocol for providing AWS credentials
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 public protocol AsyncCredentialProvider: CredentialProvider {
     /// Return credential

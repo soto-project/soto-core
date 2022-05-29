@@ -16,6 +16,7 @@ import struct Foundation.Date
 import struct Foundation.TimeInterval
 import SotoSignerV4
 
+/// Credential provider whose credentials expire over tiem.
 public protocol ExpiringCredential: Credential {
     /// Will credential expire within a certain time
     func isExpiring(within: TimeInterval) -> Bool
@@ -28,7 +29,7 @@ public extension ExpiringCredential {
     }
 }
 
-/// Basic implementation of a struct conforming to ExpiringCredential to be used with the `RotatingCredentialProvider`
+/// Basic implementation of a struct conforming to ExpiringCredential.
 public struct RotatingCredential: ExpiringCredential {
     public init(accessKeyId: String, secretAccessKey: String, sessionToken: String?, expiration: Date) {
         self.accessKeyId = accessKeyId

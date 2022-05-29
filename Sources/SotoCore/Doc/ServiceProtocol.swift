@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+/// Communication protocol
 public enum ServiceProtocol {
     case json(version: String)
     case restjson

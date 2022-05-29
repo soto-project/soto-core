@@ -18,7 +18,7 @@ import NIOConcurrencyHelpers
 import NIOCore
 import SotoSignerV4
 
-/// Protocol providing future holding a credential
+/// Provides AWS credentials
 public protocol CredentialProvider: _SotoSendableProtocol, CustomStringConvertible {
     /// Return credential
     /// - Parameters:

@@ -16,12 +16,14 @@
 
 // ArrayCoder
 
-/// Protocol for array encoding properties. The only property required is the array element name `member`
+/// Protocol for array encoding properties.
+/// The only property required is the array element name `member`
 public protocol ArrayCoderProperties {
     static var member: String { get }
 }
 
-/// Coder for encoding/decoding Arrays. This is extended to support encoding and decoding based on whether `Element` is `Encodable` or `Decodable`.
+/// Coder for encoding/decoding Arrays.
+/// This is extended to support encoding and decoding based on whether `Element` is `Encodable` or `Decodable`.
 public struct ArrayCoder<Properties: ArrayCoderProperties, Element: _SotoSendable>: CustomCoder {
     public typealias CodableValue = [Element]
 }
@@ -55,14 +57,16 @@ extension ArrayCoder: CustomEncoder where Element: Encodable {
 
 // DictionaryCoder
 
-/// Protocol for dictionary encoding properties. The property required are the dictionary element name `entry`, the key name `key` and the value name `value`
+/// Protocol for dictionary encoding properties.
+/// The property required are the dictionary element name `entry`, the key name `key` and the value name `value`
 public protocol DictionaryCoderProperties {
     static var entry: String? { get }
     static var key: String { get }
     static var value: String { get }
 }
 
-/// Coder for encoding/decoding Dictionaries. This is extended to support encoding and decoding based on whether `Key` and `Value` are `Encodable` or `Decodable`.
+/// Coder for encoding/decoding Dictionaries.
+/// This is extended to support encoding and decoding based on whether `Key` and `Value` are `Encodable` or `Decodable`.
 public struct DictionaryCoder<Properties: DictionaryCoderProperties, Key: Hashable & _SotoSendable, Value: _SotoSendable>: CustomCoder {
     public typealias CodableValue = [Key: Value]
 }

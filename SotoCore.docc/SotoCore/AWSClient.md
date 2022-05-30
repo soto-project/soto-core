@@ -25,12 +25,16 @@ let awsClient = AWSClient(
 
 ### Credential Provider
 
-The `credentialProvider` defines how the client acquires its AWS credentials. Its default is to try the following four different methods in the order indicated. The first method that is successful will be used: 
+The `credentialProvider` defines how the client acquires its AWS credentials. You provide `AWSClient.init` with a factory function that will create the credential provider once the `AWSClient` has been initialised. This allows for the credential provider to use the `EventLoopGroup`, `Logger` and `HTTPClient` that the `AWSClient` uses. You can find factory functions for all the standard credential providers in ``CredentialProviderFactory``.
 
-- Environment variables
-- ECS container credentials
-- EC2 instance metadata 
-- The shared credential file `~/.aws/credential` 
+```swift
+let awsClient = AWSClient(
+    credentialProvider: .environment, 
+    ...
+)
+```
+
+If no credential provider is provided the default is to try environment variables, ECS container credentials, EC2 instance metadata and then the `~/.aws/credential` file in this order. The first method that is successful will be used.
 
 An alternative is to provide credentials in code. You can do this as follows
 
@@ -136,8 +140,8 @@ The AWSClient requires you shut it down manually before it is deinitialized. The
 - ``paginate(input:initialValue:command:inputKey:outputKey:logger:on:onPage:)``
 - ``paginate(input:command:tokenKey:logger:on:onPage:)``
 - ``paginate(input:initialValue:command:tokenKey:logger:on:onPage:)``
-- ``paginate(input:command:tokenKey:moreResultsKey:logger:on:onPage:)-5ujha``
-- ``paginate(input:initialValue:command:tokenKey:moreResultsKey:logger:on:onPage:)-3uxbf``
+- ``paginate(input:command:tokenKey:moreResultsKey:logger:on:onPage:)``
+- ``paginate(input:initialValue:command:tokenKey:moreResultsKey:logger:on:onPage:)``
 
 ### Waiters
 

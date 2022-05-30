@@ -124,3 +124,7 @@ SotoCore is the underlying driver for executing requests for the Soto Swift SDK 
 - ``soto_crc32(_:bytes:)``
 - ``soto_crc32c(_:bytes:)``
 - ``CRC32``
+
+## See Also
+
+- ``SotoSignerV4``

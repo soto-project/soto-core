@@ -55,3 +55,7 @@ You can find out more about the AWS signing process [here](https://docs.aws.amaz
 
 - ``Credential``
 - ``StaticCredential``
+
+## See Also
+
+- ``SotoCore``

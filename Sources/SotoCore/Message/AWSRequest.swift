@@ -24,12 +24,19 @@ import SotoSignerV4
 
 /// Object encapsulating all the information needed to generate a raw HTTP request to AWS
 public struct AWSRequest {
+    /// request AWS region
     public let region: Region
+    /// request URL
     public var url: URL
+    /// request communication protocol
     public let serviceProtocol: ServiceProtocol
+    /// AWS operation name
     public let operation: String
+    /// request HTTP method
     public let httpMethod: HTTPMethod
+    /// request headers
     public var httpHeaders: HTTPHeaders
+    /// request body
     public var body: Body
 
     /// Create HTTP Client request from AWSRequest.

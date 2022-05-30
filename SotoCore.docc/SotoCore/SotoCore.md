@@ -8,6 +8,11 @@ SotoCore is the underlying driver for executing requests for the Soto Swift SDK 
 
 ## Topics
 
+### Articles
+
+- <doc:CredentialProviders>
+- <doc:ServiceObjects>
+
 ### Client
 
 - ``AWSClient``

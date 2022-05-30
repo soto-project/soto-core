@@ -21,7 +21,16 @@ public protocol AWSService: _SotoSendableProtocol {
     var client: AWSClient { get }
     /// Service context details
     var config: AWSServiceConfig { get }
-    /// Patch initialization
+    /// Create new version of service with patch
+    ///
+    /// This is required to support ``with(region:middlewares:timeout:byteBufferAllocator:options:)``.
+    /// Standard implementation is as follows
+    /// ```swift
+    /// public init(from: MyService, patch: AWSServiceConfig.Patch) {
+    ///     self.client = from.client
+    ///     self.config = from.config.with(patch: patch)
+    /// }
+    /// ```
     init(from: Self, patch: AWSServiceConfig.Patch)
 }
 

@@ -74,7 +74,7 @@ public final class AWSClient {
         credentialProvider credentialProviderFactory: CredentialProviderFactory = .default,
         retryPolicy retryPolicyFactory: RetryPolicyFactory = .default,
         middlewares: [AWSServiceMiddleware] = [],
-        options: Options,
+        options: Options = Options(),
         httpClientProvider: HTTPClientProvider,
         logger clientLogger: Logger = AWSClient.loggingDisabled
     ) {
@@ -100,30 +100,6 @@ public final class AWSClient {
         self.retryPolicy = retryPolicyFactory.retryPolicy
         self.clientLogger = clientLogger
         self.options = options
-    }
-
-    /// Initialize an AWSClient struct
-    /// - parameters:
-    ///     - credentialProvider: An object that returns valid signing credentials for request signing.
-    ///     - retryPolicy: Object returning whether retries should be attempted. Possible options are NoRetry(), ExponentialRetry() or JitterRetry()
-    ///     - middlewares: Array of middlewares to apply to requests and responses
-    ///     - httpClientProvider: HTTPClient to use. Use `.createNew` if you want the client to manage its own HTTPClient.
-    ///     - logger: Logger used to log background AWSClient events
-    public convenience init(
-        credentialProvider credentialProviderFactory: CredentialProviderFactory = .default,
-        retryPolicy retryPolicyFactory: RetryPolicyFactory = .default,
-        middlewares: [AWSServiceMiddleware] = [],
-        httpClientProvider: HTTPClientProvider,
-        logger clientLogger: Logger = AWSClient.loggingDisabled
-    ) {
-        self.init(
-            credentialProvider: credentialProviderFactory,
-            retryPolicy: retryPolicyFactory,
-            middlewares: middlewares,
-            options: Options(),
-            httpClientProvider: httpClientProvider,
-            logger: clientLogger
-        )
     }
 
     deinit {

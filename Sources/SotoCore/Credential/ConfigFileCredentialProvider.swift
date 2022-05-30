@@ -37,7 +37,7 @@ final class ConfigFileCredentialProvider: CredentialProviderSelector {
             self.internalProvider = result
         }
 
-        let profile = profile ?? Environment["AWS_PROFILE"] ?? ConfigFile.defaultProfile
+        let profile = profile ?? Environment["AWS_PROFILE"] ?? ConfigFileLoader.defaultProfile
         Self.credentialProvider(from: credentialsFilePath, configFilePath: configFilePath, for: profile, context: context, endpoint: endpoint)
             .cascade(to: self.startupPromise)
     }

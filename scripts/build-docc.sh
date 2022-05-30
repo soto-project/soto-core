@@ -1,8 +1,20 @@
 #!/usr/bin/env bash
+set -eux
 
+TEMP_DIR="$(pwd)/temp"
+
+cleanup()
+{
+    if [ -n "$TEMP_DIR" ]; then
+        rm -rf $TEMP_DIR
+    fi
+}
+trap cleanup exit $?
+
+VERSION=6.x.x
 SG_FOLDER=.build/symbol-graphs
 SOTOCORE_SG_FOLDER=.build/soto-core-symbol-graphs
-OUTPUT_PATH=docs/soto-core
+OUTPUT_PATH=docs/soto-core/$VERSION
 
 BUILD_SYMBOLS=1
 
@@ -13,10 +25,9 @@ do
     esac
 done
 
-# if CI is true assume CI has setup all environment variables
-if test "$CI" != "true"; then
-    DOCC=$(xcrun --find docc)
-    export DOCC_HTML_DIR="$(dirname $DOCC)/../share/docc/render"
+if [ -z "${DOCC_HTML_DIR:-}" ]; then
+    git clone https://github.com/apple/swift-docc-render-artifact $TEMP_DIR/swift-docc-render-artifact
+     export DOCC_HTML_DIR="$TEMP_DIR/swift-docc-render-artifact/dist"
 fi
 
 if test "$BUILD_SYMBOLS" == 1; then
@@ -34,9 +45,9 @@ fi
 # Build documentation
 mkdir -p $OUTPUT_PATH
 rm -rf $OUTPUT_PATH/*
-$DOCC convert SotoCore.docc \
+docc convert SotoCore.docc \
     --transform-for-static-hosting \
-    --hosting-base-path /soto-core \
+    --hosting-base-path /soto-core/$VERSION \
     --fallback-display-name SotoCore \
     --fallback-bundle-identifier codes.soto.soto-core \
     --fallback-bundle-version 1 \

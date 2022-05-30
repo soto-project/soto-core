@@ -13,20 +13,16 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v3
-    - name: Checkout HTML template
-      uses: actions/checkout@v3
       with:
-        repository: apple/swift-docc-render-artifact
-        ref: swift-5.6.1-RELEASE
-        path: swift-docc-render-artifact
+        fetch-depth: 0
     - name: Install Dependencies
       run: |
         brew install mint
         mint install apple/swift-docc@swift-5.6.1-RELEASE
+        echo "$HOME/.mint/bin" >> $GITHUB_PATH
     - name: Build
       env:
-        DOCC: "docc"
-        DOCC_HTML_DIR: ${{ env.GITHUB_WORKSPACE }}/swift-docc-render-artifact"
+        DOCC: docc
       run: |
         ./scripts/build-docc.sh
     - name: Commit
@@ -39,7 +35,7 @@ jobs:
         git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
         git checkout ${REMOTE_BRANCH}
         rm -rf 6.x.x/
-        mv docs/ 6.x.x/
+        mv docs/soto-core/6.x.x/ 6.x.x/
         git add --all 6.x.x
         git status       
         

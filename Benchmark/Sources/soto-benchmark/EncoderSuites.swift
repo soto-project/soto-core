@@ -111,31 +111,6 @@ let xmlDecoderSuite = BenchmarkSuite(name: "XMLDecoder", settings: Iterations(10
     }
 }
 
-/// Suite of benchmark tests to XMLDecoder
-let dictionaryDecoderSuite = BenchmarkSuite(name: "DictionaryDecoder", settings: Iterations(10000), WarmupIterations(10)) { suite in
-
-    let json1 = #"{"b": true, "i": 362222, "f": 3.14, "d": 2.777776}"#
-    if let numbers = try? JSONSerialization.jsonObject(with: Data(json1.utf8), options: []) {
-        suite.benchmark("numbers") {
-            _ = try DictionaryDecoder().decode(Numbers.self, from: numbers)
-        }
-    }
-
-    let json2 = #"{"s": "Benchmark testing Decoder", "s2": "String version 2"}"#
-    if let strings = try? JSONSerialization.jsonObject(with: Data(json2.utf8), options: []) {
-        suite.benchmark("strings") {
-            _ = try DictionaryDecoder().decode(Strings.self, from: strings)
-        }
-    }
-
-    let json3 = #"{"a1": [23,89,28768234], "a2": ["test"]}"#
-    if let arrays = try? JSONSerialization.jsonObject(with: Data(json3.utf8), options: []) {
-        suite.benchmark("arrays") {
-            _ = try DictionaryDecoder().decode(Arrays.self, from: arrays)
-        }
-    }
-}
-
 /// Suite of benchmark tests for XMLEncoder
 let queryEncoderSuite = BenchmarkSuite(name: "QueryEncoder", settings: Iterations(10000), WarmupIterations(10)) { suite in
     encoderSuite(for: QueryEncoder(), suite: suite)

@@ -72,7 +72,7 @@ STS extends `CredentialProviderFactory` with five new `CredentialProviders`.
 - `stsSAML` for users authenticated via a SAML authentication response.
 - `stsWebIdentity` for users who have been authenticated in a mobile or web application with a web identity provider.
 - `stsWebIdentityTokenFile` for authenticating on EKS clusters. Set `AWS_WEB_IDENTITY_TOKEN_FILE`, `AWS_ROLE_ARN` and `AWS_ROLE_SESSION_NAME` environment variables.
-- `federationToken` for providing temporary credential to federated users.
+- `federationToken` for providing temporary credentials to federated users.
 - `sessionToken` for providing temporary credentials for the provided user with possible MFA authentication.
 
 See the AWS documentation on [requesting temporary security credentials](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp.html).

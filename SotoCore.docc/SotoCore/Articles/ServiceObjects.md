@@ -32,7 +32,7 @@ Some services do not have a `region` parameter in their initializer, such as IAM
 
 #### Endpoint
 
-If you want to communicate with non-AWS servers you can provide an endpoint which replaces the `amazonaws.com` web address. You may want to do this if you are using a AWS mocking service for debugging purposes for example, or you are communicating with a non-AWS service that replicates AWS functionality.
+If you want to communicate with non-AWS servers you can provide an endpoint which replaces the `amazonaws.com` web address. You may want to do this if you are using an AWS mocking service for debugging purposes for example, or you are communicating with a non-AWS service that replicates AWS functionality.
 
 #### Time out
 

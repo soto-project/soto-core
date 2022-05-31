@@ -35,7 +35,7 @@ let signedHeaders = signer.signHeaders(url: url, method: .GET, headers: headers,
 
 ### Processing requests
 
-Some requests URLs need to be processed before signing. The signer expects query parameters to be alphabetically sorted and that paths have been percent encoded. You can use `processURL` to do this work for you.
+Some request URLs need to be processed before signing. The signer expects query parameters to be alphabetically sorted and that paths have been percent encoded. You can use `processURL` to do this work for you.
 
 ```swift
 let url = URL(string: "https://my-bucket.s3.eu-west-1.awsamazon.com/file")!

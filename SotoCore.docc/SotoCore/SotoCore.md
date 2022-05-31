@@ -1,6 +1,6 @@
 # ``SotoCore``
 
-The core framework for Soto a Swift SDK for AWS
+The core framework for Soto, a Swift SDK for AWS
 
 ## Overview
 

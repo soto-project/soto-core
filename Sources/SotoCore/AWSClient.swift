@@ -211,7 +211,7 @@ public final class AWSClient {
         /// HTTPClient will be created by AWSClient using provided EventLoopGroup. When `shutdown` is called, created `HTTPClient`
         /// will be shut down as well.
         case createNewWithEventLoopGroup(EventLoopGroup)
-        /// HTTP Client will be created by AWSClient. When `shutdown` is called, created `HTTPClient` will be shut down as well.
+        /// `HTTPClient` will be created by `AWSClient`. When `shutdown` is called, created `HTTPClient` will be shut down as well.
         case createNew
     }
 

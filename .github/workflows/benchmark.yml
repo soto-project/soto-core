@@ -27,7 +27,6 @@ jobs:
       uses: swift-actions/setup-swift@v1
       with:
         swift-version: ${{ matrix.swift }}
-    steps:
     - name: Checkout
       uses: actions/checkout@v3
     - name: Benchmark

@@ -48,7 +48,7 @@ A series of flags, that can affect how requests are constructed. The only option
 
 ## AWSService
 
-All service objects conform to the `AWSService` protocol. This protocol brings along a couple of extra bits of functionality
+All service objects conform to the `AWSService` protocol. This protocol brings along a couple of extra bits of functionality.
 
 ### Presigned URLs
 

@@ -34,7 +34,7 @@ let awsClient = AWSClient(
 )
 ```
 
-If no credential provider is provided the default is to try environment variables, ECS container credentials, EC2 instance metadata and then the `~/.aws/credential` file in this order. The first method that is successful will be used.
+If no credential provider is provided the default is to try environment variables, ECS container credentials, EC2 instance metadata and then the `~/.aws/credentials` file in this order. The first method that is successful will be used.
 
 An alternative is to provide credentials in code. You can do this as follows
 

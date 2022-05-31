@@ -18,7 +18,7 @@ jobs:
     - name: Install Dependencies
       run: |
         brew install mint
-        mint install apple/swift-docc@swift-5.6.1-RELEASE
+        mint install apple/swift-docc@main
         echo "$HOME/.mint/bin" >> $GITHUB_PATH
     - name: Build
       env:

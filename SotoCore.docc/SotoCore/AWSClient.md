@@ -10,7 +10,7 @@ Client managing communication with AWS services
 
 The `AWSClient` is the core of Soto. This is the object that manages your communication with AWS. It manages credential acquisition, takes your request, encodes it, signs it, sends it to AWS and then decodes the response for you. In most situations your application should only require one `AWSClient`. Create this at startup and use it throughout.
 
-When creating an `AWSClient` you need to provide how you are going to acquire AWS credentials, what is your policy is on retrying failed requests, a list of middleware you would apply to requests to AWS and responses from AWS, client options, where you get your HTTPClient and a Logger to log any output not directly linked to a request. There are defaults for most of these parameters. The only one required is the `httpClientProvider`.
+When creating an `AWSClient` you need to provide how you are going to acquire AWS credentials, what your policy is on retrying failed requests, a list of middleware you would apply to requests to AWS and responses from AWS, client options, where you get your `HTTPClient` and a `Logger` to log any output not directly linked to a request. There are defaults for most of these parameters. The only one required is the `httpClientProvider`.
 
 ```swift
 let awsClient = AWSClient(

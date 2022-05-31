@@ -24,7 +24,7 @@ public struct AWSMiddlewareContext {
     public let options: AWSServiceConfig.Options
 }
 
-/// Middleware protocol. Gives ability to process requests before they are sent to AWS and process responses before they are converted into output shapes
+/// Middleware protocol. Process requests before they are sent to AWS and process responses before they are converted into output shapes
 public protocol AWSServiceMiddleware: _SotoSendableProtocol {
     /// Process AWSRequest before it is converted to a HTTPClient Request to be sent to AWS
     func chain(request: AWSRequest, context: AWSMiddlewareContext) throws -> AWSRequest
@@ -44,7 +44,7 @@ public extension AWSServiceMiddleware {
     }
 }
 
-/// Middleware struct that outputs the contents of requests being sent to AWS and the bodies of the responses received
+/// Middleware that outputs the contents of requests being sent to AWS and the contents of the responses received.
 public struct AWSLoggingMiddleware: AWSServiceMiddleware {
     #if compiler(>=5.6)
     public typealias LoggingFunction = @Sendable (String) -> Void

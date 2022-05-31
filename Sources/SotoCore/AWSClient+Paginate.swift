@@ -17,7 +17,7 @@ import NIOCore
 
 // MARK: Pagination
 
-/// protocol for all AWSShapes that can be paginated.
+/// Protocol for all AWSShapes that can be paginated.
 /// Adds an initialiser that does a copy but inserts a new integer based pagination token
 public protocol AWSPaginateToken: AWSShape {
     associatedtype Token
@@ -25,7 +25,9 @@ public protocol AWSPaginateToken: AWSShape {
 }
 
 extension AWSClient {
-    /// If an AWS command is returning an arbituary sized array sometimes it adds support for paginating this array
+    /// Execute request with paginated results
+    ///
+    /// If an AWS command is returning an arbitrary sized array sometimes it adds support for paginating this array
     /// ie it will return the array in blocks of a defined size, each block also includes a token which can be used to access
     /// the next block. This function loads each block and calls a closure with each block as parameter. This function returns
     /// the result of combining all of these blocks using the given closure,
@@ -78,6 +80,8 @@ extension AWSClient {
         return promise.futureResult
     }
 
+    /// Execute request with paginated results
+    ///
     /// If an AWS command is returning an arbituary sized array sometimes it adds support for paginating this array
     /// ie it will return the array in blocks of a defined size, each block also includes a token which can be used to access
     /// the next block. This function loads each block and calls a closure with each block as parameter.
@@ -104,6 +108,8 @@ extension AWSClient {
         }
     }
 
+    /// Execute request with paginated results
+    ///
     /// If an AWS command is returning an arbituary sized array sometimes it adds support for paginating this array
     /// ie it will return the array in blocks of a defined size, each block also includes a token which can be used to access
     /// the next block. This function loads each block and calls a closure with each block as parameter. This function returns
@@ -153,6 +159,8 @@ extension AWSClient {
         return promise.futureResult
     }
 
+    /// Execute request with paginated results
+    ///
     /// If an AWS command is returning an arbituary sized array sometimes it adds support for paginating this array
     /// ie it will return the array in blocks of a defined size, each block also includes a token which can be used to access
     /// the next block. This function loads each block and calls a closure with each block as parameter.
@@ -177,6 +185,8 @@ extension AWSClient {
         }
     }
 
+    /// Execute request with paginated results
+    ///
     /// If an AWS command is returning an arbituary sized array sometimes it adds support for paginating this array
     /// ie it will return the array in blocks of a defined size, each block also includes a token which can be used to access
     /// the next block. This function loads each block and calls a closure with each block as parameter. This function returns
@@ -229,6 +239,8 @@ extension AWSClient {
         return promise.futureResult
     }
 
+    /// Execute request with paginated results
+    ///
     /// If an AWS command is returning an arbituary sized array sometimes it adds support for paginating this array
     /// ie it will return the array in blocks of a defined size, each block also includes a token which can be used to access
     /// the next block. This function loads each block and calls a closure with each block as parameter.

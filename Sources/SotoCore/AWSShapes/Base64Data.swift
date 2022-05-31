@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+/// Holds request or response data that is encoded as base64 during transit
 public struct AWSBase64Data: _SotoSendable, Codable, Equatable {
     let base64String: String
 

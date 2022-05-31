@@ -15,13 +15,22 @@
 import struct Foundation.URL
 import NIOCore
 
-/// Protocol for services objects. Contains a client to communicate with AWS and config for defining how to communicate
+/// Services object protocol. Contains a client to communicate with AWS and configuration for defining how to communicate.
 public protocol AWSService: _SotoSendableProtocol {
     /// Client used to communicate with AWS
     var client: AWSClient { get }
     /// Service context details
     var config: AWSServiceConfig { get }
-    /// Patch initialization
+    /// Create new version of service with patch
+    ///
+    /// This is required to support ``with(region:middlewares:timeout:byteBufferAllocator:options:)``.
+    /// Standard implementation is as follows
+    /// ```swift
+    /// public init(from: MyService, patch: AWSServiceConfig.Patch) {
+    ///     self.client = from.client
+    ///     self.config = from.config.with(patch: patch)
+    /// }
+    /// ```
     init(from: Self, patch: AWSServiceConfig.Patch)
 }
 

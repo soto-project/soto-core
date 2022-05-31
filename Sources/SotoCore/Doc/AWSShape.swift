@@ -17,7 +17,10 @@ import var Foundation.NSNotFound
 import class Foundation.NSRegularExpression
 import struct Foundation.UUID
 
-/// Protocol for the input and output objects for all AWS service commands. They need to be Codable so they can be serialized. They also need to provide details on how their container classes are coded when serializing XML.
+/// Protocol for the input and output objects for all AWS service commands.
+///
+/// They need to be Codable so they can be serialized. They also need to provide details
+/// on how their container classes are coded when serializing XML.
 public protocol AWSShape: _SotoSendableProtocol {
     /// The array of members serialization helpers
     static var _encoding: [AWSMemberEncoding] { get }
@@ -79,7 +82,7 @@ extension AWSShape {
     }
 }
 
-/// AWSShape that can be encoded
+/// AWSShape that can be encoded into API input
 public protocol AWSEncodableShape: AWSShape & Encodable {
     /// The XML namespace for the object
     static var _xmlNamespace: String? { get }
@@ -217,7 +220,7 @@ public extension AWSEncodableShape {
     }
 }
 
-/// AWSShape that can be decoded
+/// AWSShape that can be decoded from API output
 public protocol AWSDecodableShape: AWSShape & Decodable {}
 
 /// AWSShape options.

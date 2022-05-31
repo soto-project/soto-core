@@ -18,7 +18,9 @@
 import NIOHTTP1
 #endif
 
-/// Standard Error type returned by Soto. Initialized with error code and message. Must provide an implementation of var description : String
+/// Standard Error type returned by Soto.
+///
+/// Initialized with error code and message.
 public protocol AWSErrorType: Error, CustomStringConvertible {
     /// initialize error
     init?(errorCode: String, context: AWSErrorContext)
@@ -58,7 +60,7 @@ public struct AWSErrorContext {
     }
 }
 
-/// Standard Response Error type returned by Soto. If the error code is unrecognised then this is returned
+/// Response Error type returned by Soto if the error code is unrecognised
 public struct AWSResponseError: AWSErrorType {
     public let errorCode: String
     public let context: AWSErrorContext?
@@ -73,7 +75,9 @@ public struct AWSResponseError: AWSErrorType {
     }
 }
 
-/// Unrecognised error. Used when we cannot extract an error code from the AWS response. Returns full body of error response
+/// Raw unprocessed error.
+///
+/// Used when we cannot extract an error code from the AWS response. Returns full body of error response
 public struct AWSRawError: Error, CustomStringConvertible {
     public let rawBody: String?
     public let context: AWSErrorContext

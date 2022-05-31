@@ -18,9 +18,11 @@ import NIOConcurrencyHelpers
 import NIOCore
 import SotoSignerV4
 
+/// Wrap a credential provider that returns an `ExpiringCredential`
+///
 /// Used for wrapping another credential provider whose `getCredential` method returns an `ExpiringCredential`.
 /// If no credential is available, or the current credentials are going to expire in the near future  the wrapped credential provider
-/// `getCredential` is called. If current credentials have not expired they are returned otherwise we wait on new
+/// `getCredential` is called again. If current credentials have not expired they are returned otherwise we wait on new
 /// credentials being provided.
 public final class RotatingCredentialProvider: CredentialProvider {
     let remainingTokenLifetimeForUse: TimeInterval

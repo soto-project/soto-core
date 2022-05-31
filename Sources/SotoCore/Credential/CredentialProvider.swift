@@ -18,7 +18,7 @@ import NIOConcurrencyHelpers
 import NIOCore
 import SotoSignerV4
 
-/// Protocol providing future holding a credential
+/// Provides AWS credentials
 public protocol CredentialProvider: _SotoSendableProtocol, CustomStringConvertible {
     /// Return credential
     /// - Parameters:
@@ -39,7 +39,10 @@ extension CredentialProvider {
     public var description: String { return "\(type(of: self))" }
 }
 
-/// A helper struct to defer the creation of a `CredentialProvider` until after the AWSClient has been created.
+/// Provides factory functions for `CredentialProvider`s.
+///
+/// The factory functions are only called once the `AWSClient` has been setup. This means we can supply
+/// things like a `Logger`, `EventLoop` and `HTTPClient` to the credential provider when we construct it.
 public struct CredentialProviderFactory {
     /// The initialization context for a `ContextProvider`
     public struct Context {
@@ -66,6 +69,10 @@ public struct CredentialProviderFactory {
 
 extension CredentialProviderFactory {
     /// The default CredentialProvider used to access credentials
+    ///
+    /// If running on Linux this will look for credentials in the environment,
+    /// ECS environment variables, EC2 metadata endpoint and finally the AWS config
+    /// files. On macOS is looks in the environment and then the config file.
     public static var `default`: CredentialProviderFactory {
         #if os(Linux)
         return .selector(.environment, .ecs, .ec2, .configFile())
@@ -74,19 +81,20 @@ extension CredentialProviderFactory {
         #endif
     }
 
-    /// Use this method to initialize your custom `CredentialProvider`
+    /// Create a custom `CredentialProvider`
     public static func custom(_ factory: @escaping (Context) -> CredentialProvider) -> CredentialProviderFactory {
         Self(cb: factory)
     }
 
-    /// Use this method to enforce the use of a `CredentialProvider` that uses the environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` to create the credentials.
+    /// Get `CredentialProvider` details from the environment
+    /// Looks in environment variables `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_SESSION_TOKEN`.
     public static var environment: CredentialProviderFactory {
         Self { _ -> CredentialProvider in
             return StaticCredential.fromEnvironment() ?? NullCredentialProvider()
         }
     }
 
-    /// Use this method to enforce the use of a `CredentialProvider` that uses static credentials.
+    /// Return static credentials.
     public static func `static`(accessKeyId: String, secretAccessKey: String, sessionToken: String? = nil) -> CredentialProviderFactory {
         Self { _ in
             StaticCredential(
@@ -97,7 +105,7 @@ extension CredentialProviderFactory {
         }
     }
 
-    /// Use this method to enforce the usage of the Credentials supplied via the ECS Metadata endpoint
+    /// Use credentials supplied via the ECS Metadata endpoint
     public static var ecs: CredentialProviderFactory {
         Self { context in
             if let provider = ECSMetaDataClient(httpClient: context.httpClient) {
@@ -109,7 +117,7 @@ extension CredentialProviderFactory {
         }
     }
 
-    /// Use this method to enforce the usage of the Credentials supplied via the EC2 Instance Metadata endpoint
+    /// Use credentials supplied via the EC2 Instance Metadata endpoint
     public static var ec2: CredentialProviderFactory {
         Self { context in
             let provider = InstanceMetaDataClient(httpClient: context.httpClient)
@@ -117,7 +125,10 @@ extension CredentialProviderFactory {
         }
     }
 
-    /// Use this method to load credentials from your AWS cli credentials and optional profile configuration files, normally located at `~/.aws/credentials` and `~/.aws/config`.
+    /// Use credentials loaded from your AWS config
+    ///
+    /// Uses AWS cli credentials and optional profile configuration files, normally located at
+    ///  `~/.aws/credentials` and `~/.aws/config`.
     public static func configFile(
         credentialsFilePath: String? = nil,
         configFilePath: String? = nil,
@@ -134,14 +145,17 @@ extension CredentialProviderFactory {
         }
     }
 
-    /// Enforce the use of no credentials.
+    /// Don't supply any credentials
     public static var empty: CredentialProviderFactory {
         Self { _ in
             StaticCredential(accessKeyId: "", secretAccessKey: "")
         }
     }
 
-    /// Use the list of credential providers supplied to get credentials. The first one in the list that manages to supply credentials is the one to use
+    /// Use the list of credential providers supplied to get credentials.
+    ///
+    /// When searching for credentials it will go through the list sequentially and the first credential
+    /// provider that returns valid credentials will be used.
     public static func selector(_ providers: CredentialProviderFactory...) -> CredentialProviderFactory {
         Self { context in
             if providers.count == 1 {

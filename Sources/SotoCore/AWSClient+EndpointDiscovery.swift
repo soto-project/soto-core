@@ -188,9 +188,13 @@ extension AWSClient {
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
+    ///     - serviceConfig: AWS service configuration used in request creation and signing
     ///     - input: Input object
-    ///     - config: AWS service configuration used in request creation and signing
-    ///     - context: additional context for call
+    ///     - hostPrefix: Prefix to append to host name
+    ///     - endpointDiscovery: Endpoint discovery helper
+    ///     - logger: Logger
+    ///     - eventLoop: Optional EventLoop to run everything on
+    ///     - stream: Closure to stream payload response into
     /// - returns:
     ///     Future containing output object that completes when response is received
     public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(

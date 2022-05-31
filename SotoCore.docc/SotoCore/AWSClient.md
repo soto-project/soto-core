@@ -55,7 +55,7 @@ The `retryPolicy` defines how the client reacts to a failed request. There are t
 
 ### Middleware
 
-Middleware allows you to insert your own code just as a request has been constructed or a response has been received. You can use this to edit the request/response or just to view it. SotoCore supplies one middleware — `AWSLoggingMiddleware` — which outputs your request to the console once constructed and the response received from AWS.
+Middleware allows you to insert your own code just as a request has been constructed or a response has been received. You can use this to edit the request/response or just to view it. SotoCore supplies one middleware — `AWSLoggingMiddleware` — which outputs your request to the console once constructed and the response is received from AWS.
 
 ### HTTP Client provider
 

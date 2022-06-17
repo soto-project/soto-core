@@ -416,7 +416,7 @@ extension String {
         return addingPercentEncoding(withAllowedCharacters: String.uriAllowedWithSlashCharacters) ?? self
     }
 
-    static let s3PathAllowedCharacters = CharacterSet.urlPathAllowed.subtracting(.init(charactersIn: "+@()"))
+    static let s3PathAllowedCharacters = CharacterSet.urlPathAllowed.subtracting(.init(charactersIn: "+@()&$=;:,?"))
     static let uriAllowedWithSlashCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~/")
     static let uriAllowedCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
     static let queryAllowedCharacters = CharacterSet(charactersIn: "/;+").inverted

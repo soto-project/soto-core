@@ -74,7 +74,7 @@ public struct AWSSigner: _SignerSendable {
         urlComponents.percentEncodedQuery = urlQueryString
         // S3 requires "+" encoded in the URL
         if name == "s3" {
-            urlComponents.percentEncodedPath = urlComponents.path.awsPathEncode()
+            urlComponents.percentEncodedPath = urlComponents.path.s3PathEncode()
         }
         return urlComponents.url
     }
@@ -404,8 +404,8 @@ extension String {
         return addingPercentEncoding(withAllowedCharacters: String.queryAllowedCharacters) ?? self
     }
 
-    func awsPathEncode() -> String {
-        return addingPercentEncoding(withAllowedCharacters: String.awsPathAllowedCharacters) ?? self
+    func s3PathEncode() -> String {
+        return addingPercentEncoding(withAllowedCharacters: String.s3PathAllowedCharacters) ?? self
     }
 
     func uriEncode() -> String {
@@ -416,7 +416,7 @@ extension String {
         return addingPercentEncoding(withAllowedCharacters: String.uriAllowedWithSlashCharacters) ?? self
     }
 
-    static let awsPathAllowedCharacters = CharacterSet.urlPathAllowed.subtracting(.init(charactersIn: "+"))
+    static let s3PathAllowedCharacters = CharacterSet.urlPathAllowed.subtracting(.init(charactersIn: "+@()"))
     static let uriAllowedWithSlashCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~/")
     static let uriAllowedCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
     static let queryAllowedCharacters = CharacterSet(charactersIn: "/;+").inverted

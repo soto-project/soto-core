@@ -392,7 +392,9 @@ extension AWSRequest {
             return
         }
 
-        if case .restjson = serviceProtocol, case .raw = body {
+        if case .empty = body {
+            // don't add a content-type header when there is no content
+        } else if case .restjson = serviceProtocol, case .raw = body {
             httpHeaders.replaceOrAdd(name: "content-type", value: "binary/octet-stream")
         } else {
             httpHeaders.replaceOrAdd(name: "content-type", value: serviceProtocol.contentType)

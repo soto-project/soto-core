@@ -269,16 +269,21 @@ public struct AWSSigner: _SignerSendable {
             }
 
             let headersNotToSign: Set<String> = [
-                "Authorization",
+                "authorization",
+                "content-length",
+                "content-type",
+                "expect",
+                "user-agent",
             ]
             var headersToSign: [String: String] = [:]
             var signedHeadersArray: [String] = []
             for header in headers {
-                if headersNotToSign.contains(header.name) {
+                let lowercasedHeaderName = header.name.lowercased()
+                if headersNotToSign.contains(lowercasedHeaderName) {
                     continue
                 }
-                headersToSign[header.name] = header.value
-                signedHeadersArray.append(header.name.lowercased())
+                headersToSign[lowercasedHeaderName] = header.value
+                signedHeadersArray.append(lowercasedHeaderName)
             }
             self.headersToSign = headersToSign
             self.signedHeaders = signedHeadersArray.sorted().joined(separator: ";")

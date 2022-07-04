@@ -96,6 +96,9 @@ class AWSClientTests: XCTestCase {
     }
 
     func testHeadersAreWritten() {
+        struct Input: AWSEncodableShape {
+            let content: String
+        }
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let elg = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(elg))
@@ -115,14 +118,21 @@ class AWSClientTests: XCTestCase {
         defer {
             XCTAssertNoThrow(try client.syncShutdown())
         }
-        let response: EventLoopFuture<AWSTestServer.HTTPBinResponse> = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, logger: TestEnvironment.logger)
+        let response: EventLoopFuture<AWSTestServer.HTTPBinResponse> = client.execute(
+            operation: "test",
+            path: "/",
+            httpMethod: .POST,
+            serviceConfig: config,
+            input: Input(content: "test"),
+            logger: TestEnvironment.logger
+        )
 
         XCTAssertNoThrow(try awsServer.httpBin())
         var httpBinResponse: AWSTestServer.HTTPBinResponse?
         XCTAssertNoThrow(httpBinResponse = try response.wait())
         let httpHeaders = httpBinResponse.map { HTTPHeaders($0.headers.map { ($0, $1) }) }
 
-        XCTAssertEqual(httpHeaders?["content-length"].first, "0")
+        XCTAssertEqual(httpHeaders?["content-length"].first, "18")
         XCTAssertEqual(httpHeaders?["content-type"].first, "application/x-amz-json-1.1")
         XCTAssertNotNil(httpHeaders?["authorization"].first)
         XCTAssertNotNil(httpHeaders?["x-amz-date"].first)

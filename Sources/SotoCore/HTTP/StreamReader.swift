@@ -12,12 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIOHTTP1
-#if compiler(>=5.6)
-@preconcurrency import NIOCore
-#else
 import NIOCore
-#endif
+import NIOHTTP1
 
 /// Streaming result
 public enum StreamReaderResult {

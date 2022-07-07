@@ -24,8 +24,10 @@ import SotoTestUtils
 import SotoXML
 import XCTest
 #if compiler(>=5.6)
+@preconcurrency import Atomics
 @preconcurrency import NIOConcurrencyHelpers
 #else
+import Atomics
 import NIOConcurrencyHelpers
 #endif
 
@@ -576,12 +578,12 @@ class AWSClientTests: XCTestCase {
     func testCustomRetryPolicy() {
         final class TestRetryPolicy: RetryPolicy {
             static let maxRetries: Int = 3
-            let attempt = NIOAtomic.makeAtomic(value: 0)
+            let attempt = ManagedAtomic(0)
 
             init() {}
 
             func getRetryWaitTime(error: Error, attempt: Int) -> RetryStatus? {
-                self.attempt.store(attempt)
+                self.attempt.store(attempt, ordering: .relaxed)
                 if attempt < Self.maxRetries { return .retry(wait: .milliseconds(100)) }
                 return .dontRetry
             }
@@ -618,7 +620,7 @@ class AWSClientTests: XCTestCase {
 
             try response.wait()
         } catch let error as AWSServerError where error == .serviceUnavailable {
-            XCTAssertEqual(retryPolicy.attempt.load(), TestRetryPolicy.maxRetries)
+            XCTAssertEqual(retryPolicy.attempt.load(ordering: .relaxed), TestRetryPolicy.maxRetries)
         } catch {
             XCTFail("Unexpected error: \(error)")
         }

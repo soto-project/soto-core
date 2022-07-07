@@ -13,12 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
-import NIOPosix
-#if compiler(>=5.6)
-@preconcurrency import NIOCore
-#else
 import NIOCore
-#endif
+import NIOPosix
 
 /// Holds a request or response payload.
 ///

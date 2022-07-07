@@ -19,9 +19,9 @@ import NIOPosix
 @testable import SotoCore
 import SotoTestUtils
 #if compiler(>=5.6)
-@preconcurrency import NIOConcurrencyHelpers
+@preconcurrency import Atomics
 #else
-import NIOConcurrencyHelpers
+import Atomics
 #endif
 import XCTest
 
@@ -41,12 +41,12 @@ final class CredentialProviderTests: XCTestCase {
     // make sure getCredential in client CredentialProvider doesnt get called more than once
     func testDeferredCredentialProvider() {
         final class MyCredentialProvider: CredentialProvider {
-            let credentialProviderCalled = NIOAtomic<Int>.makeAtomic(value: 0)
+            let credentialProviderCalled = ManagedAtomic(0)
 
             init() {}
 
             func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
-                self.credentialProviderCalled.add(1)
+                self.credentialProviderCalled.wrappingIncrement(ordering: .sequentiallyConsistent)
                 return eventLoop.makeSucceededFuture(StaticCredential(accessKeyId: "ACCESSKEYID", secretAccessKey: "SECRETACCESSKET"))
             }
         }
@@ -60,7 +60,7 @@ final class CredentialProviderTests: XCTestCase {
         let deferredProvider = DeferredCredentialProvider(context: context, provider: myCredentialProvider)
         XCTAssertNoThrow(_ = try deferredProvider.getCredential(on: eventLoop, logger: TestEnvironment.logger).wait())
         XCTAssertNoThrow(_ = try deferredProvider.getCredential(on: eventLoop, logger: TestEnvironment.logger).wait())
-        XCTAssertEqual(myCredentialProvider.credentialProviderCalled.load(), 1)
+        XCTAssertEqual(myCredentialProvider.credentialProviderCalled.load(ordering: .sequentiallyConsistent), 1)
     }
 
     func testConfigFileSuccess() {
@@ -110,7 +110,7 @@ final class CredentialProviderTests: XCTestCase {
 
     func testCredentialSelectorShutdown() {
         final class TestCredentialProvider: CredentialProvider {
-            let hasShutdown = NIOAtomic<Bool>.makeAtomic(value: false)
+            let hasShutdown = ManagedAtomic(false)
             init() {}
 
             func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
@@ -118,7 +118,7 @@ final class CredentialProviderTests: XCTestCase {
             }
 
             func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
-                self.hasShutdown.store(true)
+                self.hasShutdown.store(true, ordering: .sequentiallyConsistent)
                 return eventLoop.makeSucceededFuture(())
             }
         }
@@ -132,6 +132,6 @@ final class CredentialProviderTests: XCTestCase {
         let deferredProvider = DeferredCredentialProvider(context: context, provider: testCredentialProvider)
         XCTAssertNoThrow(try deferredProvider.shutdown(on: eventLoopGroup.next()).wait())
 
-        XCTAssertEqual(testCredentialProvider.hasShutdown.load(), true)
+        XCTAssertEqual(testCredentialProvider.hasShutdown.load(ordering: .sequentiallyConsistent), true)
     }
 }

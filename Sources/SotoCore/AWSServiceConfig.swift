@@ -12,11 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.6)
-@preconcurrency import NIOCore
-#else
 import NIOCore
-#endif
 
 /// Configuration class defining an AWS service
 public final class AWSServiceConfig {

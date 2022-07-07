@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2021 the Soto project authors
+// Copyright (c) 2017-2022 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -14,6 +14,7 @@
 
 #if compiler(>=5.5.2) && canImport(_Concurrency)
 
+import Atomics
 import Dispatch
 import Foundation
 import Logging
@@ -29,7 +30,7 @@ extension AWSClient {
     /// version `syncShutdown` to do a clean shutdown of the client. It cleans up `CredentialProvider` tasks and shuts down
     /// the HTTP client if it was created by the `AWSClient`.
     public func shutdown() async throws {
-        guard self.isShutdown.compareAndExchange(expected: false, desired: true) else {
+        guard self.isShutdown.compareExchange(expected: false, desired: true, ordering: .relaxed).exchanged else {
             throw ClientError.alreadyShutdown
         }
         // shutdown credential provider ignoring any errors as credential provider that doesn't initialize
@@ -278,7 +279,11 @@ extension AWSClient {
         on eventLoop: EventLoop? = nil
     ) async throws -> Output {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
-        let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName, service: config.service)
+        let logger = logger.attachingRequestId(
+            Self.globalRequestID.wrappingIncrementThenLoad(ordering: .relaxed),
+            operation: operationName,
+            service: config.service
+        )
         let dimensions: [(String, String)] = [("aws-service", config.service), ("aws-operation", operationName)]
         let startTime = DispatchTime.now().uptimeNanoseconds
 
@@ -362,7 +367,11 @@ extension AWSClient {
         serviceConfig: AWSServiceConfig,
         logger: Logger = AWSClient.loggingDisabled
     ) async throws -> URL {
-        let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: "signHeaders", service: serviceConfig.service)
+        let logger = logger.attachingRequestId(
+            Self.globalRequestID.wrappingIncrementThenLoad(ordering: .relaxed),
+            operation: "signHeaders",
+            service: serviceConfig.service
+        )
         let signer = try await self.createSigner(serviceConfig: serviceConfig, logger: logger)
         guard let cleanURL = signer.processURL(url: url) else {
             throw AWSClient.ClientError.invalidURL
@@ -388,7 +397,11 @@ extension AWSClient {
         serviceConfig: AWSServiceConfig,
         logger: Logger = AWSClient.loggingDisabled
     ) async throws -> HTTPHeaders {
-        let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: "signHeaders", service: serviceConfig.service)
+        let logger = logger.attachingRequestId(
+            Self.globalRequestID.wrappingIncrementThenLoad(ordering: .relaxed),
+            operation: "signHeaders",
+            service: serviceConfig.service
+        )
         let signer = try await self.createSigner(serviceConfig: serviceConfig, logger: logger)
         guard let cleanURL = signer.processURL(url: url) else {
             throw AWSClient.ClientError.invalidURL

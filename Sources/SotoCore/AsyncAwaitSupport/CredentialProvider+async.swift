@@ -16,11 +16,10 @@
 
 #if compiler(>=5.6)
 @preconcurrency import Logging
-@preconcurrency import NIOCore
 #else
 import Logging
-import NIOCore
 #endif
+import NIOCore
 import SotoSignerV4
 
 /// Async Protocol for providing AWS credentials

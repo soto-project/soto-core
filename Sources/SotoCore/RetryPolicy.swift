@@ -14,11 +14,7 @@
 
 import AsyncHTTPClient
 import Foundation
-#if compiler(>=5.6)
-@preconcurrency import NIOCore
-#else
 import NIOCore
-#endif
 import NIOHTTP1
 import NIOPosix // Needed for NIOConnectionError
 

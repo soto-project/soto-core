@@ -15,6 +15,7 @@
 import AsyncHTTPClient
 import Foundation
 import Logging
+import NIOConcurrencyHelpers
 import NIOCore
 import NIOFoundationCompat
 import NIOHTTP1
@@ -25,10 +26,8 @@ import SotoXML
 import XCTest
 #if compiler(>=5.6)
 @preconcurrency import Atomics
-@preconcurrency import NIOConcurrencyHelpers
 #else
 import Atomics
-import NIOConcurrencyHelpers
 #endif
 
 class AWSClientTests: XCTestCase {

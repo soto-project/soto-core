@@ -13,19 +13,19 @@
 //===----------------------------------------------------------------------===//
 
 #if compiler(>=5.6)
+@preconcurrency import Atomics
 @preconcurrency import Logging
-@preconcurrency import NIOConcurrencyHelpers
-@preconcurrency import NIOCore
 #else
+import Atomics
 import Logging
-import NIOConcurrencyHelpers
-import NIOCore
 #endif
 import AsyncHTTPClient
 import Dispatch
 import struct Foundation.URL
 import struct Foundation.URLQueryItem
 import Metrics
+import NIOConcurrencyHelpers
+import NIOCore
 import NIOHTTP1
 import NIOTransportServices
 import SotoSignerV4
@@ -42,7 +42,7 @@ public final class AWSClient {
     /// Default logger that logs nothing
     public static let loggingDisabled = Logger(label: "AWS-do-not-log", factory: { _ in SwiftLogNoOpLogHandler() })
 
-    static let globalRequestID = NIOAtomic<Int>.makeAtomic(value: 0)
+    static let globalRequestID = ManagedAtomic<Int>(0)
 
     /// AWS credentials provider
     public let credentialProvider: CredentialProvider
@@ -61,7 +61,7 @@ public final class AWSClient {
     /// client options
     let options: Options
 
-    internal let isShutdown = NIOAtomic<Bool>.makeAtomic(value: false)
+    internal let isShutdown = ManagedAtomic<Bool>(false)
 
     // MARK: Initialization
 
@@ -107,7 +107,7 @@ public final class AWSClient {
     }
 
     deinit {
-        assert(self.isShutdown.load(), "AWSClient not shut down before the deinit. Please call client.syncShutdown() when no longer needed.")
+        assert(self.isShutdown.load(ordering: .relaxed), "AWSClient not shut down before the deinit. Please call client.syncShutdown() when no longer needed.")
     }
 
     // MARK: API Calls
@@ -150,7 +150,7 @@ public final class AWSClient {
     ///   - queue: Dispatch Queue to run shutdown on
     ///   - callback: Callback called when shutdown is complete. If there was an error it will return with Error in callback
     public func shutdown(queue: DispatchQueue = .global(), _ callback: @escaping (Error?) -> Void) {
-        guard self.isShutdown.compareAndExchange(expected: false, desired: true) else {
+        guard self.isShutdown.compareExchange(expected: false, desired: true, ordering: .relaxed).exchanged else {
             callback(ClientError.alreadyShutdown)
             return
         }
@@ -471,7 +471,11 @@ extension AWSClient {
         on eventLoop: EventLoop? = nil
     ) -> EventLoopFuture<Output> {
         let eventLoop = eventLoop ?? eventLoopGroup.next()
-        let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: operationName, service: config.service)
+        let logger = logger.attachingRequestId(
+            Self.globalRequestID.wrappingIncrementThenLoad(ordering: .relaxed),
+            operation: operationName,
+            service: config.service
+        )
         // get credentials
         let future: EventLoopFuture<Output> = credentialProvider.getCredential(on: eventLoop, logger: logger)
             .flatMapThrowing { credential -> AWSHTTPRequest in
@@ -531,7 +535,11 @@ extension AWSClient {
         serviceConfig: AWSServiceConfig,
         logger: Logger = AWSClient.loggingDisabled
     ) -> EventLoopFuture<URL> {
-        let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: "signURL", service: serviceConfig.service)
+        let logger = logger.attachingRequestId(
+            Self.globalRequestID.wrappingIncrementThenLoad(ordering: .relaxed),
+            operation: "signURL",
+            service: serviceConfig.service
+        )
         return createSigner(serviceConfig: serviceConfig, logger: logger).flatMapThrowing { signer in
             guard let cleanURL = signer.processURL(url: url) else {
                 throw AWSClient.ClientError.invalidURL
@@ -558,7 +566,11 @@ extension AWSClient {
         serviceConfig: AWSServiceConfig,
         logger: Logger = AWSClient.loggingDisabled
     ) -> EventLoopFuture<HTTPHeaders> {
-        let logger = logger.attachingRequestId(Self.globalRequestID.add(1), operation: "signHeaders", service: serviceConfig.service)
+        let logger = logger.attachingRequestId(
+            Self.globalRequestID.wrappingIncrementThenLoad(ordering: .relaxed),
+            operation: "signHeaders",
+            service: serviceConfig.service
+        )
         return createSigner(serviceConfig: serviceConfig, logger: logger).flatMapThrowing { signer in
             guard let cleanURL = signer.processURL(url: url) else {
                 throw AWSClient.ClientError.invalidURL

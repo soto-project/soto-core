@@ -13,8 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+import Atomics
 import Logging
-import NIOConcurrencyHelpers
 import NIOCore
 import NIOPosix
 @testable import SotoCore
@@ -55,9 +55,9 @@ class RotatingCredentialProviderTests: XCTestCase {
             expiration: Date(timeIntervalSinceNow: 24 * 60 * 60)
         )
 
-        let count = NIOAtomic<Int>.makeAtomic(value: 0)
+        let count = ManagedAtomic(0)
         let client = MetaDataTestClient {
-            count.add(1)
+            count.wrappingIncrement(ordering: .sequentiallyConsistent)
             return $0.makeSucceededFuture(cred)
         }
         let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, logger: Logger(label: "soto"), options: .init())
@@ -80,7 +80,7 @@ class RotatingCredentialProviderTests: XCTestCase {
         XCTAssertEqual((returned as? TestExpiringCredential)?.expiration, cred.expiration)
 
         // ensure callback was only hit once
-        XCTAssertEqual(count.load(), 1)
+        XCTAssertEqual(count.load(ordering: .sequentiallyConsistent), 1)
     }
 
     func testGetCredentialHighlyConcurrent() {
@@ -99,10 +99,10 @@ class RotatingCredentialProviderTests: XCTestCase {
 
         let promise = loop.makePromise(of: ExpiringCredential.self)
 
-        let count = NIOAtomic<Int>.makeAtomic(value: 0)
-        let count2 = NIOAtomic<Int>.makeAtomic(value: 0)
+        let count = ManagedAtomic(0)
+        let count2 = ManagedAtomic(0)
         let client = MetaDataTestClient { _ in
-            count.add(1)
+            count.wrappingIncrement(ordering: .sequentiallyConsistent)
             return promise.futureResult
         }
         let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, logger: TestEnvironment.logger, options: .init())
@@ -128,7 +128,7 @@ class RotatingCredentialProviderTests: XCTestCase {
                     XCTAssertEqual(returned.sessionToken, cred.sessionToken)
                     XCTAssertEqual((returned as? TestExpiringCredential)?.expiration, cred.expiration)
                     XCTAssert(loop.inEventLoop)
-                    count2.add(1)
+                    count2.wrappingIncrement(ordering: .sequentiallyConsistent)
                 }
             }
             resultFutures.append(future)
@@ -142,8 +142,8 @@ class RotatingCredentialProviderTests: XCTestCase {
         XCTAssertNoThrow(try EventLoopFuture.whenAllSucceed(resultFutures, on: group.next()).wait())
 
         // ensure callback was only hit once
-        XCTAssertEqual(count.load(), 1)
-        XCTAssertEqual(count2.load(), iterations)
+        XCTAssertEqual(count.load(ordering: .sequentiallyConsistent), 1)
+        XCTAssertEqual(count2.load(ordering: .sequentiallyConsistent), iterations)
     }
 
     func testAlwaysGetNewTokenIfTokenLifetimeForUseIsShorterThanLifetime() {
@@ -154,9 +154,9 @@ class RotatingCredentialProviderTests: XCTestCase {
         let loop = group.next()
 
         let iterations = 50
-        let count = NIOAtomic.makeAtomic(value: 0)
+        let count = ManagedAtomic(0)
         let client = MetaDataTestClient { eventLoop in
-            count.add(1)
+            count.wrappingIncrement(ordering: .sequentiallyConsistent)
             let cred = TestExpiringCredential(
                 accessKeyId: "abc123",
                 secretAccessKey: "abc123",
@@ -171,7 +171,7 @@ class RotatingCredentialProviderTests: XCTestCase {
         for _ in 0..<iterations {
             XCTAssertNoThrow(_ = try provider.getCredential(on: loop, logger: TestEnvironment.logger).wait())
         }
-        XCTAssertEqual(count.load(), iterations)
+        XCTAssertEqual(count.load(ordering: .sequentiallyConsistent), iterations)
     }
 }
 

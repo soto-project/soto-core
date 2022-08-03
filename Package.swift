@@ -3,7 +3,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the Soto project authors
+// Copyright (c) 2017-2022 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -23,12 +23,13 @@ let package = Package(
         .library(name: "SotoSignerV4", targets: ["SotoSignerV4"]),
     ],
     dependencies: [
+        .package(url: "https://github.com/apple/swift-atomics.git", from: "1.0.2"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.4.0"),
         .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0"..<"3.0.0"),
-        .package(url: "https://github.com/apple/swift-nio.git", from: "2.36.0"),
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.41.0"),
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.7.2"),
-        .package(url: "https://github.com/apple/swift-nio-transport-services.git", from: "1.0.0"),
-        .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.9.0"),
+        .package(url: "https://github.com/apple/swift-nio-transport-services.git", from: "1.13.1"),
+        .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.11.2"),
         .package(url: "https://github.com/adam-fowler/jmespath.swift.git", from: "1.0.2"),
     ],
     targets: [
@@ -40,6 +41,7 @@ let package = Package(
                 .byName(name: "INIParser"),
                 .product(name: "Logging", package: "swift-log"),
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
+                .product(name: "Atomics", package: "swift-atomics"),
                 .product(name: "Metrics", package: "swift-metrics"),
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "NIOHTTP1", package: "swift-nio"),

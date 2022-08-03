@@ -17,12 +17,7 @@
 import AsyncHTTPClient
 import Dispatch
 import Logging
-import NIOConcurrencyHelpers
-#if compiler(>=5.6)
-@preconcurrency import NIOCore
-#else
 import NIOCore
-#endif
 import NIOFoundationCompat
 import NIOHTTP1
 import NIOPosix

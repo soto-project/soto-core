@@ -33,15 +33,6 @@ jobs:
       uses: codecov/codecov-action@v1
       with:
         file: info.lcov
-#  ios:
-#    runs-on: macOS-latest
-#    steps:
-#    - name: Checkout
-#      uses: actions/checkout@v2
-#      run: |
-#    - name: Xcodebuild
-#        xcodebuild -scheme soto-core-Package -quiet -destination 'platform=iOS Simulator,name=iPhone 12'
-#        xcodebuild test -scheme soto-core-Package -destination 'platform=iOS Simulator,name=iPhone 12'
   linux:
     runs-on: ubuntu-latest
     strategy:

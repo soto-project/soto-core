@@ -14,15 +14,14 @@
 
 #if compiler(>=5.6)
 @preconcurrency import Atomics
-@preconcurrency import Logging
 #else
 import Atomics
-import Logging
 #endif
 import AsyncHTTPClient
 import Dispatch
 import struct Foundation.URL
 import struct Foundation.URLQueryItem
+import Logging
 import Metrics
 import NIOConcurrencyHelpers
 import NIOCore

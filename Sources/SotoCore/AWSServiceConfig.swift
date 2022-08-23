@@ -208,6 +208,9 @@ public final class AWSServiceConfig {
 
         /// calculate MD5 for requests with content-md5 header
         public static let calculateMD5 = Options(rawValue: 1 << 5)
+
+        /// disable `Expect: 100-Continue`` header. Some S3 like services don't like it
+        public static let s3Disable100Continue = Options(rawValue: 1 << 6)
     }
 
     private init(

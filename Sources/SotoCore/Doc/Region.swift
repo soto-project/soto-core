@@ -58,6 +58,8 @@ public struct Region: RawRepresentable, Equatable {
     public static var euwest2: Region { .init(rawValue: "eu-west-2") }
     // Europe (Paris)
     public static var euwest3: Region { .init(rawValue: "eu-west-3") }
+    // Middle East (UAE)
+    public static var mecentral1: Region { .init(rawValue: "me-central-1") }
     // Middle East (Bahrain)
     public static var mesouth1: Region { .init(rawValue: "me-south-1") }
     // South America (Sao Paulo)
@@ -105,6 +107,7 @@ public extension Region {
         case .euwest1: return .aws
         case .euwest2: return .aws
         case .euwest3: return .aws
+        case .mecentral1: return .aws
         case .mesouth1: return .aws
         case .saeast1: return .aws
         case .useast1: return .aws
@@ -199,6 +202,7 @@ public extension Region {
              .euwest1,
              .euwest2,
              .euwest3,
+             .mecentral1,
              .mesouth1,
              .saeast1,
              .useast1,

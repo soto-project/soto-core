@@ -44,25 +44,3 @@ protocol AWSHTTPResponse {
     /// Payload of response
     var body: ByteBuffer? { get }
 }
-
-/// Protocol defining requirements for a HTTPClient
-protocol AWSHTTPClient: _SotoSendableProtocol {
-    /// Execute HTTP request and return a future holding a HTTP Response
-    func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<AWSHTTPResponse>
-
-    /// Execute an HTTP request with a streamed response
-    func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop, logger: Logger, stream: @escaping AWSResponseStream) -> EventLoopFuture<AWSHTTPResponse>
-
-    /// This should be called before an HTTP Client can be de-initialised
-    func shutdown(queue: DispatchQueue, _ callback: @escaping (Error?) -> Void)
-
-    /// Event loop group used by client
-    var eventLoopGroup: EventLoopGroup { get }
-}
-
-extension AWSHTTPClient {
-    /// Execute an HTTP request with a streamed response
-    func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop, logger: Logger, stream: @escaping AWSResponseStream) -> EventLoopFuture<AWSHTTPResponse> {
-        preconditionFailure("\(type(of: self)) does not support response streaming")
-    }
-}

@@ -17,8 +17,7 @@ import Logging
 import NIOCore
 import NIOHTTP1
 
-/// comply with AWSHTTPClient protocol
-extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
+extension AsyncHTTPClient.HTTPClient {
     /// Execute HTTP request
     /// - Parameters:
     ///   - request: HTTP request

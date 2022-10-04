@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import AsyncHTTPClient
 #if compiler(>=5.6)
 @preconcurrency import struct Foundation.Date
 #else
@@ -98,11 +99,11 @@ struct ECSMetaDataClient: MetaDataClient {
         }
     }
 
-    let httpClient: AWSHTTPClient
+    let httpClient: HTTPClient
     let endpointURL: String
     let decoder = Self.createJSONDecoder()
 
-    init?(httpClient: AWSHTTPClient, host: String = ECSMetaDataClient.Host) {
+    init?(httpClient: HTTPClient, host: String = ECSMetaDataClient.Host) {
         guard let relativeURL = Environment[Self.RelativeURIEnvironmentName] else {
             return nil
         }
@@ -175,11 +176,11 @@ struct InstanceMetaDataClient: MetaDataClient {
         return URL(string: "\(self.host)\(Self.CredentialUri)")!
     }
 
-    let httpClient: AWSHTTPClient
+    let httpClient: HTTPClient
     let host: String
     let decoder = Self.createJSONDecoder()
 
-    init(httpClient: AWSHTTPClient, host: String = InstanceMetaDataClient.Host) {
+    init(httpClient: HTTPClient, host: String = InstanceMetaDataClient.Host) {
         self.httpClient = httpClient
         self.host = host
     }

@@ -84,7 +84,7 @@ public class AWSEndpointStorage {
             let futureResult = discover(logger, eventLoop).map { response -> String in
                 let index = Int.random(in: 0..<response.endpoints.count)
                 let endpoint = response.endpoints[index]
-                self.lock.withLockVoid {
+                self.lock.withLock {
                     self.endpoint = endpoint.address
                     self.expiration = Date(timeIntervalSinceNow: TimeInterval(endpoint.cachePeriodInMinutes * 60))
                     self.promise = nil

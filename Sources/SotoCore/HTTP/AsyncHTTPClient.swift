@@ -24,7 +24,12 @@ extension AsyncHTTPClient.HTTPClient {
     ///   - timeout: If execution is idle for longer than timeout then throw error
     ///   - eventLoop: eventLoop to run request on
     /// - Returns: EventLoopFuture that will be fulfilled with request response
-    func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<AWSHTTPResponse> {
+    func execute(
+        request: AWSHTTPRequest,
+        timeout: TimeAmount,
+        on eventLoop: EventLoop,
+        logger: Logger
+    ) -> EventLoopFuture<AWSHTTPResponse> {
         let requestBody: AsyncHTTPClient.HTTPClient.Body?
         var requestHeaders = request.headers
 
@@ -57,7 +62,13 @@ extension AsyncHTTPClient.HTTPClient {
         }
     }
 
-    func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop, logger: Logger, stream: @escaping AWSResponseStream) -> EventLoopFuture<AWSHTTPResponse> {
+    func execute(
+        request: AWSHTTPRequest,
+        timeout: TimeAmount,
+        on eventLoop: EventLoop,
+        logger: Logger,
+        stream: @escaping AWSResponseStream
+    ) -> EventLoopFuture<AWSHTTPResponse> {
         let requestBody: AsyncHTTPClient.HTTPClient.Body?
         if case .byteBuffer(let body) = request.body.payload {
             requestBody = .byteBuffer(body)

@@ -48,7 +48,7 @@ public class AWSEndpointStorage {
     /// promise for endpoint discovery process
     private var promise: EventLoopPromise<String>?
     /// Lock access to class
-    private let lock = Lock()
+    private let lock = NIOLock()
 
     /// Initialize endpoint storage
     /// - Parameter endpoint: Initial endpoint to use

@@ -119,7 +119,7 @@ public final class AWSClient {
     ///
     /// - Throws: AWSClient.ClientError.alreadyShutdown: You have already shutdown the client
     public func syncShutdown() throws {
-        let errorStorageLock = Lock()
+        let errorStorageLock = NIOLock()
         var errorStorage: Error?
         let continuation = DispatchWorkItem {}
         self.shutdown(queue: DispatchQueue(label: "aws-client.shutdown")) { error in

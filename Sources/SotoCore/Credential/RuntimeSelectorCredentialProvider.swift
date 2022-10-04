@@ -23,7 +23,7 @@ import SotoSignerV4
 class RuntimeSelectorCredentialProvider: CredentialProviderSelector {
     /// promise to find a credential provider
     let startupPromise: EventLoopPromise<CredentialProvider>
-    let lock = Lock()
+    let lock = NIOLock()
     var _internalProvider: CredentialProvider?
 
     init(providers: [CredentialProviderFactory], context: CredentialProviderFactory.Context) {
@@ -62,6 +62,6 @@ class RuntimeSelectorCredentialProvider: CredentialProviderSelector {
 
 #if compiler(>=5.6)
 // can use @unchecked Sendable here as `_internalProvider`` is accessed via `internalProvider` which
-// protects access with a `Lock`
+// protects access with a `NIOLock`
 extension RuntimeSelectorCredentialProvider: @unchecked Sendable {}
 #endif

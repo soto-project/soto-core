@@ -21,7 +21,7 @@ final class ConfigFileCredentialProvider: CredentialProviderSelector {
     /// promise to find a credential provider
     let startupPromise: EventLoopPromise<CredentialProvider>
     /// lock for access to _internalProvider.
-    let lock = Lock()
+    let lock = NIOLock()
     /// internal version of internal provider. Should access this through `internalProvider`
     var _internalProvider: CredentialProvider?
 
@@ -103,6 +103,6 @@ final class ConfigFileCredentialProvider: CredentialProviderSelector {
 
 #if compiler(>=5.6)
 // can use @unchecked Sendable here as `_internalProvider`` is accessed via `internalProvider` which
-// protects access with a `Lock`
+// protects access with a `NIOLock`
 extension ConfigFileCredentialProvider: @unchecked Sendable {}
 #endif

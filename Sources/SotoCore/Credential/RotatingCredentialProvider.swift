@@ -28,7 +28,7 @@ public final class RotatingCredentialProvider: CredentialProvider {
     let remainingTokenLifetimeForUse: TimeInterval
 
     public let provider: CredentialProvider
-    private let lock = NIOConcurrencyHelpers.Lock()
+    private let lock = NIOConcurrencyHelpers.NIOLock()
     private var credential: Credential?
     private var credentialFuture: EventLoopFuture<Credential>?
 
@@ -105,6 +105,6 @@ extension RotatingCredentialProvider: CustomStringConvertible {
 }
 
 #if compiler(>=5.6)
-// can use @unchecked Sendable here as access is protected by 'Lock'
+// can use @unchecked Sendable here as access is protected by 'NIOLock'
 extension RotatingCredentialProvider: @unchecked Sendable {}
 #endif

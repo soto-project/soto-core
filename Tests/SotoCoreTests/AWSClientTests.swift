@@ -814,7 +814,7 @@ class AWSClientTests: XCTestCase {
             XCTAssertNoThrow(try awsServer.stop())
         }
         var count = 0
-        let lock = Lock()
+        let lock = NIOLock()
         let response: EventLoopFuture<Output> = client.execute(
             operation: "test",
             path: "/",

@@ -97,8 +97,3 @@ extension AsyncHTTPClient.HTTPClient {
 }
 
 extension AsyncHTTPClient.HTTPClient.Response: AWSHTTPResponse {}
-
-#if compiler(>=5.6)
-// retroactive conformance. @preconcurrency import is not enough here
-extension AsyncHTTPClient.HTTPClient: @unchecked Sendable {}
-#endif

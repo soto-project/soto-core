@@ -22,7 +22,7 @@ import NIOCore
 /// is only needed to be called once. After the wrapped `CredentialProvider` has generated a credential this is
 /// returned instead of calling the wrapped `CredentialProvider's` `getCredentials` again.
 public class DeferredCredentialProvider: CredentialProvider {
-    let lock = Lock()
+    let lock = NIOLock()
     var credential: Credential? {
         get {
             self.lock.withLock {
@@ -84,6 +84,6 @@ extension DeferredCredentialProvider: CustomStringConvertible {
 
 #if compiler(>=5.6)
 // can use @unchecked Sendable here as `internalCredential` is accessed via `credential` which
-// protects access with a `Lock`
+// protects access with a `NIOLock`
 extension DeferredCredentialProvider: @unchecked Sendable {}
 #endif

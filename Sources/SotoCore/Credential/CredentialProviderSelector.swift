@@ -34,7 +34,7 @@ import SotoSignerV4
 protocol CredentialProviderSelector: CredentialProvider, AnyObject {
     /// promise to find a credential provider
     var startupPromise: EventLoopPromise<CredentialProvider> { get }
-    var lock: Lock { get }
+    var lock: NIOLock { get }
     var _internalProvider: CredentialProvider? { get set }
 }
 

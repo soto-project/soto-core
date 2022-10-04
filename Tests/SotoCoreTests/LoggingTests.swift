@@ -251,7 +251,7 @@ struct LoggingCollector: LogHandler {
             var metadata: [String: String]
         }
 
-        private var lock = Lock()
+        private var lock = NIOLock()
         private var logs: [Entry] = []
 
         var allEntries: [Entry] { return self.lock.withLock { logs } }

@@ -63,7 +63,7 @@ The `HTTPClientProvider` defines where you get your HTTP client from. You have t
 
 - Pass `.createNew` which indicates the `AWSClient` should create its own HTTP client. This creates an instance of `HTTPClient` using [`AsyncHTTPClient`](https://github.com/swift-server/async-http.client).
 - Supply your own `EventLoopGroup` with `.createNewWithEventLoopGroup(EventLoopGroup`). This creates a new `HTTPClient` but has it use the supplied `EventLoopGroup`.
-- Supply your own HTTP client with `.shared(AWSHTTPClient)` as long as it conforms to the protocol `AWSHTTPClient`. `AsyncHTTPClient.HTTPClient` already conforms to this protocol.
+- Supply your own HTTP client with `.shared(HTTPClient)`. 
 
 There are a number of reasons you might want to provide your own client, such as:
 

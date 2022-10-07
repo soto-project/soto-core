@@ -35,23 +35,33 @@ final class AWSSignerTests: XCTestCase {
     @EnvironmentVariable("ENABLE_TIMING_TESTS", default: true) static var enableTimingTests: Bool
     let credentials: Credential = StaticCredential(accessKeyId: "MYACCESSKEY", secretAccessKey: "MYSECRETACCESSKEY")
     let credentialsWithSessionKey: Credential = StaticCredential(accessKeyId: "MYACCESSKEY", secretAccessKey: "MYSECRETACCESSKEY", sessionToken: "MYSESSIONTOKEN")
+    let awsSampleCredentials: Credential = StaticCredential(accessKeyId: "AKIAIOSFODNN7EXAMPLE", secretAccessKey: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
 
     func testSignGetHeaders() {
         let signer = AWSSigner(credentials: credentials, name: "glacier", region: "us-east-1")
         let headers = signer.signHeaders(url: URL(string: "https://glacier.us-east-1.amazonaws.com/-/vaults")!, method: .GET, headers: ["x-amz-glacier-version": "2012-06-01"], date: Date(timeIntervalSinceReferenceDate: 2_000_000))
-        XCTAssertEqual(headers["Authorization"].first, "AWS4-HMAC-SHA256 Credential=MYACCESSKEY/20010124/us-east-1/glacier/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date;x-amz-glacier-version, Signature=acfa9b03fca6b098d7b88bfd9bbdb4687f5b34e944a9c6ed9f4814c1b0b06d62")
+        XCTAssertEqual(
+            headers["Authorization"].first,
+            "AWS4-HMAC-SHA256 Credential=MYACCESSKEY/20010124/us-east-1/glacier/aws4_request,SignedHeaders=host;x-amz-content-sha256;x-amz-date;x-amz-glacier-version,Signature=acfa9b03fca6b098d7b88bfd9bbdb4687f5b34e944a9c6ed9f4814c1b0b06d62"
+        )
     }
 
     func testSignWithSlashAtEndOfPath() {
         let signer = AWSSigner(credentials: credentials, name: "sns", region: "eu-central-1")
         let headers = signer.signHeaders(url: URL(string: "https://sns.eu-central-1.amazonaws.com/topics/")!, method: .GET, date: Date(timeIntervalSinceReferenceDate: 2_000_000))
-        XCTAssertEqual(headers["Authorization"].first, "AWS4-HMAC-SHA256 Credential=MYACCESSKEY/20010124/eu-central-1/sns/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=9c04ae96a2ce8addfa7ce933bf7ddda342f42476bd8cef057d1d25f09fb059c1")
+        XCTAssertEqual(
+            headers["Authorization"].first,
+            "AWS4-HMAC-SHA256 Credential=MYACCESSKEY/20010124/eu-central-1/sns/aws4_request,SignedHeaders=host;x-amz-content-sha256;x-amz-date,Signature=9c04ae96a2ce8addfa7ce933bf7ddda342f42476bd8cef057d1d25f09fb059c1"
+        )
     }
 
     func testSignPutHeaders() {
         let signer = AWSSigner(credentials: credentials, name: "sns", region: "eu-west-1")
         let headers = signer.signHeaders(url: URL(string: "https://sns.eu-west-1.amazonaws.com/")!, method: .POST, headers: ["Content-Type": "application/x-www-form-urlencoded; charset=utf-8"], body: .string("Action=ListTopics&Version=2010-03-31"), date: Date(timeIntervalSinceReferenceDate: 200))
-        XCTAssertEqual(headers["Authorization"].first, "AWS4-HMAC-SHA256 Credential=MYACCESSKEY/20010101/eu-west-1/sns/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=2271d5b58b667169c9608edbcc5e619d1c4d2dc897d00660aba1d3909dc2189b")
+        XCTAssertEqual(
+            headers["Authorization"].first,
+            "AWS4-HMAC-SHA256 Credential=MYACCESSKEY/20010101/eu-west-1/sns/aws4_request,SignedHeaders=host;x-amz-content-sha256;x-amz-date,Signature=2271d5b58b667169c9608edbcc5e619d1c4d2dc897d00660aba1d3909dc2189b"
+        )
     }
 
     func testSignS3GetURL() {
@@ -75,7 +85,10 @@ final class AWSSignerTests: XCTestCase {
     func testSignOmitSessionToken() {
         let signer = AWSSigner(credentials: credentialsWithSessionKey, name: "glacier", region: "us-east-1")
         let headers = signer.signHeaders(url: URL(string: "https://glacier.us-east-1.amazonaws.com/-/vaults")!, method: .GET, headers: ["x-amz-glacier-version": "2012-06-01"], omitSecurityToken: true, date: Date(timeIntervalSinceReferenceDate: 2_000_000))
-        XCTAssertEqual(headers["Authorization"].first, "AWS4-HMAC-SHA256 Credential=MYACCESSKEY/20010124/us-east-1/glacier/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date;x-amz-glacier-version, Signature=acfa9b03fca6b098d7b88bfd9bbdb4687f5b34e944a9c6ed9f4814c1b0b06d62")
+        XCTAssertEqual(
+            headers["Authorization"].first,
+            "AWS4-HMAC-SHA256 Credential=MYACCESSKEY/20010124/us-east-1/glacier/aws4_request,SignedHeaders=host;x-amz-content-sha256;x-amz-date;x-amz-glacier-version,Signature=acfa9b03fca6b098d7b88bfd9bbdb4687f5b34e944a9c6ed9f4814c1b0b06d62"
+        )
     }
 
     func testProcessURL() {
@@ -165,5 +178,70 @@ final class AWSSignerTests: XCTestCase {
         44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
         """
         XCTAssertEqual(request, expectedRequest)
+    }
+
+    var awsSampleDate: Date! {
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.dateFormat = "yyyyMMdd'T'HHmmss'Z'"
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        return dateFormatter.date(from: "20130524T000000Z")
+    }
+
+    // MARK: - AWS Signer samples
+
+    // Can be found here https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html
+
+    func testAwsSampleGet() {
+        let signer = AWSSigner(credentials: awsSampleCredentials, name: "s3", region: "us-east-1")
+        let url = URL(string: "https://examplebucket.s3.amazonaws.com/test.txt")!
+        let headers: HTTPHeaders = ["range": "bytes=0-9"]
+        let signedHeaders = signer.signHeaders(
+            url: url, method: .GET, headers: headers, date: self.awsSampleDate
+        )
+        XCTAssertEqual(
+            signedHeaders["authorization"].first,
+            "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20130524/us-east-1/s3/aws4_request,SignedHeaders=host;range;x-amz-content-sha256;x-amz-date,Signature=f0e8bdb87c964420e857bd35b5d6ed310bd44f0170aba48dd91039c6036bdb41"
+        )
+    }
+
+    func testAwsSamplePut() {
+        let signer = AWSSigner(credentials: awsSampleCredentials, name: "s3", region: "us-east-1")
+        let url = URL(string: "https://examplebucket.s3.amazonaws.com/test$file.text")!
+        let headers: HTTPHeaders = [
+            "date": "Fri, 24 May 2013 00:00:00 GMT",
+            "x-amz-storage-class": "REDUCED_REDUNDANCY",
+        ]
+        let signedHeaders = signer.signHeaders(
+            url: url, method: .PUT, headers: headers, body: .string("Welcome to Amazon S3."), date: self.awsSampleDate
+        )
+        XCTAssertEqual(
+            signedHeaders["authorization"].first,
+            "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20130524/us-east-1/s3/aws4_request,SignedHeaders=date;host;x-amz-content-sha256;x-amz-date;x-amz-storage-class,Signature=98ad721746da40c64f1a55b78f14c238d841ea1380cd77a1b5971af0ece108bd"
+        )
+    }
+
+    func testAwsSampleGetBucketLifecycle() {
+        let signer = AWSSigner(credentials: awsSampleCredentials, name: "s3", region: "us-east-1")
+        let url = URL(string: "https://examplebucket.s3.amazonaws.com/?lifecycle=")!
+        let signedHeaders = signer.signHeaders(
+            url: url, method: .GET, date: self.awsSampleDate
+        )
+        XCTAssertEqual(
+            signedHeaders["authorization"].first,
+            "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20130524/us-east-1/s3/aws4_request,SignedHeaders=host;x-amz-content-sha256;x-amz-date,Signature=fea454ca298b7da1c68078a5d1bdbfbbe0d65c699e0f91ac7a200a0136783543"
+        )
+    }
+
+    func testAwsSampleListObjects() {
+        let signer = AWSSigner(credentials: awsSampleCredentials, name: "s3", region: "us-east-1")
+        let url = URL(string: "https://examplebucket.s3.amazonaws.com/?max-keys=2&prefix=J")!
+        let signedHeaders = signer.signHeaders(
+            url: url, method: .GET, date: self.awsSampleDate
+        )
+        XCTAssertEqual(
+            signedHeaders["authorization"].first,
+            "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20130524/us-east-1/s3/aws4_request,SignedHeaders=host;x-amz-content-sha256;x-amz-date,Signature=34b48302e7b5fa45bde8084f4b7868a86f0a534bc59db6670ed5711ef69dc6f7"
+        )
     }
 }

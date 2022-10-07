@@ -111,8 +111,8 @@ public struct AWSSigner: _SignerSendable {
 
         // construct authorization string
         let authorization = "AWS4-HMAC-SHA256 " +
-            "Credential=\(credentials.accessKeyId)/\(signingData.date)/\(region)/\(name)/aws4_request, " +
-            "SignedHeaders=\(signingData.signedHeaders), " +
+            "Credential=\(credentials.accessKeyId)/\(signingData.date)/\(region)/\(name)/aws4_request," +
+            "SignedHeaders=\(signingData.signedHeaders)," +
             "Signature=\(signature(signingData: signingData))"
 
         // add Authorization header
@@ -221,8 +221,8 @@ public struct AWSSigner: _SignerSendable {
 
         // construct authorization string
         let authorization = "AWS4-HMAC-SHA256 " +
-            "Credential=\(credentials.accessKeyId)/\(signingData.date)/\(region)/\(name)/aws4_request, " +
-            "SignedHeaders=\(signingData.signedHeaders), " +
+            "Credential=\(credentials.accessKeyId)/\(signingData.date)/\(region)/\(name)/aws4_request," +
+            "SignedHeaders=\(signingData.signedHeaders)," +
             "Signature=\(signature)"
 
         // add Authorization header

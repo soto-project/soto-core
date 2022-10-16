@@ -101,6 +101,8 @@ final class AWSSignerTests: XCTestCase {
         XCTAssertEqual(signer.processURL(url: url3), URL(string: "https://test.s3.amazonaws.com?test=hello%20goodbye"))
         let url4 = URL(string: "https://test.s3.amazonaws.com?test=hello&item=orange&item=apple")!
         XCTAssertEqual(signer.processURL(url: url4), URL(string: "https://test.s3.amazonaws.com?item=apple&item=orange&test=hello"))
+        let url5 = URL(string: "https://test.s3.amazonaws.com?item&item=apple")!
+        XCTAssertEqual(signer.processURL(url: url5), URL(string: "https://test.s3.amazonaws.com?item=&item=apple"))
     }
 
     func testSignS3PutWithHeaderURL() {

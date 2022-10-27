@@ -16,7 +16,7 @@ needs to be listed here.
 - Jonathan McAllister <jonny.mcallister@leagueheads.com>
 - Kyle Ishie <kyle@kyleishie.com>
 - Luis Padron <heyluispadron@gmail.com>
-- Martin Redington <mildm8nnered@users.noreply.github.com>
+- Martin Redington <mildm8nnered@gmail.com>
 - Oliver O'Neill <oliveroneill@users.noreply.github.com>
 - Roland Möller <moeller.rol@gmail.com>
 - Sébastien Stormacq <sebastien.stormacq@gmail.com>

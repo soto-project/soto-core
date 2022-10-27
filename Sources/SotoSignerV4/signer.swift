@@ -69,7 +69,7 @@ public struct AWSSigner: _SignerSendable {
                 guard let value1 = $0.value, let value2 = $1.value else { return false }
                 return value1 < value2
             }
-            .map { item in item.value.map { "\(item.name)=\($0.uriEncode())" } ?? item.name }
+            .map { item in item.value.map { "\(item.name)=\($0.uriEncode())" } ?? "\(item.name)=" }
             .joined(separator: "&")
         urlComponents.percentEncodedQuery = urlQueryString
         // S3 requires "+" encoded in the URL

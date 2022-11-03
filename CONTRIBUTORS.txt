@@ -20,6 +20,7 @@ needs to be listed here.
 - Oliver O'Neill <oliveroneill@users.noreply.github.com>
 - Roland Möller <moeller.rol@gmail.com>
 - Sébastien Stormacq <sebastien.stormacq@gmail.com>
+- Tim Condon <0xTim@users.noreply.github.com>
 - Yifei Teng <tengyifei@users.noreply.github.com>
 - Yuki Takei <yuki@miketokyo.com>
 - giginet <giginet.net@gmail.com>

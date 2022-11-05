@@ -14,7 +14,7 @@
 
 import NIOHTTP1
 
-/// Middleware that outputs the contents of requests being sent to AWS and the contents of the responses received.
+/// Middleware for editing header values sent to AWS service.
 public struct AWSEditHeadersMiddleware: AWSServiceMiddleware {
     public enum HeaderEdit {
         case add(name: String, value: String)

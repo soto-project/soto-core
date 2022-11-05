@@ -24,11 +24,11 @@ public struct AWSEditHeadersMiddleware: AWSServiceMiddleware {
 
     let edits: [HeaderEdit]
 
-    init(_ edits: [HeaderEdit]) {
+    public init(_ edits: [HeaderEdit]) {
         self.edits = edits
     }
 
-    init(_ edits: HeaderEdit...) {
+    public init(_ edits: HeaderEdit...) {
         self.init(edits)
     }
 

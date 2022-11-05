@@ -12,13 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 @testable import SotoCore
 import XCTest
-#if compiler(>=5.6)
-@preconcurrency import Foundation
-#else
-import Foundation
-#endif
 
 class DictionaryEncoderTests: XCTestCase {
     func assertEqual(_ e1: Any, _ e2: Any) {

@@ -471,8 +471,11 @@ extension AWSTestServer {
             }
         }
         var requestHeaders: [String: String] = [:]
-        for (key, value) in head.headers {
-            requestHeaders[key.description] = value
+        for (key, _) in head.headers {
+            if requestHeaders[key] == nil {
+                requestHeaders[key] = head.headers[key].joined(separator: ",")
+            }
+            // requestHeaders[key.description] = value
         }
         return Request(method: head.method, uri: head.uri, headers: requestHeaders, body: byteBuffer)
     }

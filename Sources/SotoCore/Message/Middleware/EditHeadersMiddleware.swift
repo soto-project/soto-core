@@ -16,7 +16,7 @@ import NIOHTTP1
 
 /// Middleware that outputs the contents of requests being sent to AWS and the contents of the responses received.
 public struct AWSEditHeadersMiddleware: AWSServiceMiddleware {
-    public enum HeaderEdit: Sendable {
+    public enum HeaderEdit {
         case add(name: String, value: String)
         case replace(name: String, value: String)
         case remove(name: String)
@@ -47,3 +47,8 @@ public struct AWSEditHeadersMiddleware: AWSServiceMiddleware {
         return request
     }
 }
+
+#if compiler(>=5.6)
+extension AWSEditHeadersMiddleware: Sendable {}
+extension AWSEditHeadersMiddleware.HeaderEdit: Sendable {}
+#endif

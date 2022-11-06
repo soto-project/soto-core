@@ -13,11 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
-#if compiler(>=5.6)
-@preconcurrency import struct Foundation.Date
-#else
 import struct Foundation.Date
-#endif
 import class Foundation.DateFormatter
 import class Foundation.JSONDecoder
 import struct Foundation.Locale

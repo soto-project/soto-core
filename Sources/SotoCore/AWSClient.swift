@@ -202,7 +202,7 @@ public final class AWSClient {
         public static var waiterFailed: ClientError { .init(error: .waiterFailed) }
         /// Waiter failed to complete in time alloted
         public static var waiterTimeout: ClientError { .init(error: .waiterTimeout) }
-        /// Failed to access to body while building request
+        /// Failed to access payload while building request
         public static var failedToAccessPayload: ClientError { .init(error: .failedToAccessPayload) }
     }
 

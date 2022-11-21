@@ -18,14 +18,16 @@ import SotoXML
 
 /// Middleware applied to S3 service
 ///
-/// This middleware does a number of request and response fixups for the S3 service
-/// For the request it
-/// - outputs URL's in virtual address form with bucket name prefix to host
+/// This middleware does a number of request and response fixups for the S3 service.
+///
+/// For requests it
+/// - outputs URL's in virtual address form with bucket name prefixed to host
 /// - adds support for accelerate and dual stack addresses
 /// - fixes up CreateBucket to include region as the location constraint
 /// - Adds expect: 100-continue header
-/// For the response it
-/// - Fixes up GetBucketLocation response, so it can be decoded
+///
+/// For responses it
+/// - Fixes up the GetBucketLocation response, so it can be decoded correctly
 /// - Creates error body for notFound responses to HEAD requests
 public struct S3Middleware: AWSServiceMiddleware {
     public init() {}

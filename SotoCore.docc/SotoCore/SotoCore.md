@@ -28,8 +28,11 @@ SotoCore is the underlying driver for executing requests for the Soto Swift SDK 
 ### Middleware
 
 - ``AWSServiceMiddleware``
-- ``AWSLoggingMiddleware``
 - ``AWSMiddlewareContext``
+- ``AWSLoggingMiddleware``
+- ``AWSEditHeadersMiddleware``
+- ``S3Middleware``
+- ``TreeHashMiddleware``
 
 ### Request/Response
 
@@ -124,6 +127,24 @@ SotoCore is the underlying driver for executing requests for the Soto Swift SDK 
 - ``soto_crc32(_:bytes:)``
 - ``soto_crc32c(_:bytes:)``
 - ``CRC32``
+
+### Exported (NIOCore)
+
+- ``EventLoop``
+- ``EventLoopGroup``
+- ``EventLoopFuture``
+- ``ByteBuffer``
+- ``ByteBufferAllocator``
+- ``TimeAmount``
+
+### Exported (NIOHTTP1)
+
+- ``HTTPHeaders``
+- ``HTTPMethod``
+
+### Exported (Logger)
+
+- ``Logger``
 
 ## See Also
 

@@ -185,6 +185,7 @@ public final class AWSClient {
             case notEnoughData
             case waiterFailed
             case waiterTimeout
+            case failedToAccessPayload
         }
 
         let error: Error
@@ -201,6 +202,8 @@ public final class AWSClient {
         public static var waiterFailed: ClientError { .init(error: .waiterFailed) }
         /// Waiter failed to complete in time alloted
         public static var waiterTimeout: ClientError { .init(error: .waiterTimeout) }
+        /// Failed to access to body while building request
+        public static var failedToAccessPayload: ClientError { .init(error: .failedToAccessPayload) }
     }
 
     /// Specifies how `HTTPClient` will be created and establishes lifecycle ownership.
@@ -695,6 +698,8 @@ extension AWSClient.ClientError: CustomStringConvertible {
             return "Waiter failed"
         case .waiterTimeout:
             return "Waiter failed to complete in time allocated"
+        case .failedToAccessPayload:
+            return "Failed to access payload while building request for AWS"
         }
     }
 }

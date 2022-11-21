@@ -23,8 +23,9 @@ let MEGA_BYTE = 1024 * 1024
 public struct TreeHashMiddleware: AWSServiceMiddleware {
     let treeHashHeader: String
 
-    public init(treeHashHeader: String) {
-        self.treeHashHeader = treeHashHeader
+    /// - Parameter header: name of header to place tree hash in
+    public init(header: String) {
+        self.treeHashHeader = header
     }
 
     public func chain(request: AWSRequest, context: AWSMiddlewareContext) throws -> AWSRequest {

@@ -11,6 +11,8 @@ cleanup()
 }
 trap cleanup exit $?
 
+#DOCC=$(xcrun --find docc)
+DOCC=docc
 VERSION=6.x.x
 SG_FOLDER=.build/symbol-graphs
 SOTOCORE_SG_FOLDER=.build/soto-core-symbol-graphs
@@ -45,7 +47,7 @@ fi
 # Build documentation
 mkdir -p $OUTPUT_PATH
 rm -rf $OUTPUT_PATH/*
-docc convert SotoCore.docc \
+$DOCC convert SotoCore.docc \
     --transform-for-static-hosting \
     --hosting-base-path /soto-core/$VERSION \
     --fallback-display-name SotoCore \

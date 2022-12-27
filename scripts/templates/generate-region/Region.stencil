@@ -75,11 +75,38 @@ public struct AWSPartition: RawRepresentable, Equatable, Hashable {
 }
 
 public extension AWSPartition {
-    var dnsSuffix: String {
+    func defaultEndpoint(region: Region, service: String, variant: EndpointVariantType? = nil) -> String {
         switch self.partition {
 {%for partition in partitions %}
-        case .{{partition.name}}: return "{{partition.dnsSuffix}}"
+        case .{{partition.name}}: 
+            switch variant {
+{%for variant in partition.variants %}
+            case [{{variant.variant}}]:
+                return "{{variant.hostname}}"
 {%endfor %}
+            default:
+                return "{{partition.hostname}}"
+            }
+{%endfor %}
+/*        case .aws:
+            switch variant {
+            case [.fips]:
+                return "\(service)-fips.\(region.rawValue).api.aws"
+            case [.dualstack]:
+                return "\(service).\(region.rawValue).api.aws"
+            case [.fips, .dualstack]:
+                return "\(service)-fips.\(region.rawValue).api.aws"
+            default:
+                return "\(service).\(region.rawValue).amazonaws.com"
+            }
+        case .awscn:
+            return "\(service).\(region.rawValue).amazonaws.com.cn"
+        case .awsusgov:
+            return "\(service).\(region.rawValue).amazonaws.com"
+        case .awsiso:
+            return "\(service).\(region.rawValue).c2s.ic.gov"
+        case .awsisob:
+            return "\(service).\(region.rawValue).sc2s.sgov.gov"*/
         }
     }
 }

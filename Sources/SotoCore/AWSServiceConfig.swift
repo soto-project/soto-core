@@ -140,7 +140,7 @@ public final class AWSServiceConfig {
             {
                 serviceHost = globalEndpoint
             } else {
-                serviceHost = "\(service).\(region.rawValue).\(region.partition.dnsSuffix)"
+                serviceHost = region.partition.defaultEndpoint(region: region, service: service)
             }
             return "https://\(serviceHost)"
         }
@@ -211,6 +211,13 @@ public final class AWSServiceConfig {
 
         /// disable `Expect: 100-Continue`` header. Some S3 like services don't like it
         public static let s3Disable100Continue = Options(rawValue: 1 << 6)
+
+        /// use endpoint that conforms to FIPS 140-2 standard. FIPS endpoints are not always available.
+        public static let useFipsEndpoint = Options(rawValue: 1 << 7)
+
+        /// use dual stack endpoint. When you make a request to a dual-stack endpoint the bucket URL resolves
+        /// to an IPv6 or an IPv4 address. DualStack endpoints are not always available.
+        public static let useDualStackEndpoint = Options(rawValue: 1 << 1)
     }
 
     private init(

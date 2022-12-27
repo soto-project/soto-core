@@ -25,11 +25,18 @@ struct Endpoints: Decodable {
         var service: String?
     }
 
+    struct EndpointVariant: Decodable {
+        var dnsSuffix: String?
+        var hostname: String?
+        var tags: Set<String>
+    }
+
     struct Defaults: Decodable {
         var credentialScope: CredentialScope?
-        var hostname: String?
+        var hostname: String
         var protocols: [String]?
         var signatureVersions: [String]?
+        var variants: [EndpointVariant]
     }
 
     struct RegionDesc: Decodable {
@@ -48,19 +55,28 @@ struct Endpoints: Decodable {
     var partitions: [Partition]
 }
 
-struct RegionDesc {
+struct OutputRegionDesc {
     let `enum`: String
     let name: String
     let description: String?
     let partition: String
 }
 
-struct Partition {
+struct OutputPartition {
     let name: String
     let description: String
-    let dnsSuffix: String
+    let hostname: String
+    let variants: [OutputEndpointVariant]
 }
 
+struct OutputEndpointVariant {
+    let variant: String
+    let hostname: String
+}
+
+/// Load Endpoints from URL
+/// - Parameter url: url of endpoints file
+/// - Returns: Endpoints
 func loadEndpoints(url: String) throws -> Endpoints? {
     let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
     defer {
@@ -77,18 +93,40 @@ func loadEndpoints(url: String) throws -> Endpoints? {
 print("Loading Endpoints")
 guard let endpoints = try loadEndpoints(url: "https://raw.githubusercontent.com/aws/aws-sdk-go-v2/master/codegen/smithy-aws-go-codegen/src/main/resources/software/amazon/smithy/aws/go/codegen/endpoints.json") else { exit(-1) }
 
-var regionDescs: [RegionDesc] = []
-var partitions: [Partition] = endpoints.partitions.map {
-    return Partition(
+var regionDescs: [OutputRegionDesc] = []
+var partitions: [OutputPartition] = endpoints.partitions.map {
+    let hostname = $0.defaults.hostname
+        .replacingOccurrences(of: "{service}", with: "\\(service)")
+        .replacingOccurrences(of: "{region}", with: "\\(region)")
+        .replacingOccurrences(of: "{dnsSuffix}", with: $0.dnsSuffix)
+    var variants: [OutputEndpointVariant] = []
+    for variant in $0.defaults.variants {
+        let hostname = (variant.hostname ?? $0.defaults.hostname)
+            .replacingOccurrences(of: "{service}", with: "\\(service)")
+            .replacingOccurrences(of: "{region}", with: "\\(region)")
+            .replacingOccurrences(of: "{dnsSuffix}", with: variant.dnsSuffix ?? $0.dnsSuffix)
+        switch variant.tags {
+        case ["fips"]:
+            variants.append(.init(variant: ".fips", hostname: hostname))
+        case ["dualstack"]:
+            variants.append(.init(variant: ".dualstack", hostname: hostname))
+        case ["fips", "dualstack"]:
+            variants.append(.init(variant: ".fips, .dualstack", hostname: hostname))
+        default:
+            continue
+        }
+    }
+    return OutputPartition(
         name: $0.partition.filter { return $0.isLetter || $0.isNumber },
         description: $0.partitionName,
-        dnsSuffix: $0.dnsSuffix
+        hostname: hostname,
+        variants: variants
     )
 }
 
 for partition in endpoints.partitions {
     let partitionRegionDescs = partition.regions.keys.map { region in
-        return RegionDesc(
+        return OutputRegionDesc(
             enum: region.filter { return $0.isLetter || $0.isNumber },
             name: region,
             description: partition.regions[region]?.description,

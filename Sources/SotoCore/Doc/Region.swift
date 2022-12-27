@@ -34,6 +34,8 @@ public struct Region: RawRepresentable, Equatable {
     public static var apnortheast3: Region { .init(rawValue: "ap-northeast-3") }
     // Asia Pacific (Mumbai)
     public static var apsouth1: Region { .init(rawValue: "ap-south-1") }
+    // Asia Pacific (Hyderabad)
+    public static var apsouth2: Region { .init(rawValue: "ap-south-2") }
     // Asia Pacific (Singapore)
     public static var apsoutheast1: Region { .init(rawValue: "ap-southeast-1") }
     // Asia Pacific (Sydney)
@@ -48,10 +50,14 @@ public struct Region: RawRepresentable, Equatable {
     public static var cnnorthwest1: Region { .init(rawValue: "cn-northwest-1") }
     // Europe (Frankfurt)
     public static var eucentral1: Region { .init(rawValue: "eu-central-1") }
+    // Europe (Zurich)
+    public static var eucentral2: Region { .init(rawValue: "eu-central-2") }
     // Europe (Stockholm)
     public static var eunorth1: Region { .init(rawValue: "eu-north-1") }
     // Europe (Milan)
     public static var eusouth1: Region { .init(rawValue: "eu-south-1") }
+    // Europe (Spain)
+    public static var eusouth2: Region { .init(rawValue: "eu-south-2") }
     // Europe (Ireland)
     public static var euwest1: Region { .init(rawValue: "eu-west-1") }
     // Europe (London)
@@ -62,7 +68,7 @@ public struct Region: RawRepresentable, Equatable {
     public static var mecentral1: Region { .init(rawValue: "me-central-1") }
     // Middle East (Bahrain)
     public static var mesouth1: Region { .init(rawValue: "me-south-1") }
-    // South America (Sao Paulo)
+    // South America (São Paulo)
     public static var saeast1: Region { .init(rawValue: "sa-east-1") }
     // US East (N. Virginia)
     public static var useast1: Region { .init(rawValue: "us-east-1") }
@@ -95,6 +101,7 @@ public extension Region {
         case .apnortheast2: return .aws
         case .apnortheast3: return .aws
         case .apsouth1: return .aws
+        case .apsouth2: return .aws
         case .apsoutheast1: return .aws
         case .apsoutheast2: return .aws
         case .apsoutheast3: return .aws
@@ -102,8 +109,10 @@ public extension Region {
         case .cnnorth1: return .awscn
         case .cnnorthwest1: return .awscn
         case .eucentral1: return .aws
+        case .eucentral2: return .aws
         case .eunorth1: return .aws
         case .eusouth1: return .aws
+        case .eusouth2: return .aws
         case .euwest1: return .aws
         case .euwest2: return .aws
         case .euwest3: return .aws
@@ -190,6 +199,7 @@ public extension Region {
              .apnortheast2,
              .apnortheast3,
              .apsouth1,
+             .apsouth2,
              .apsoutheast1,
              .apsoutheast2,
              .apsoutheast3,
@@ -197,8 +207,10 @@ public extension Region {
              .cnnorth1,
              .cnnorthwest1,
              .eucentral1,
+             .eucentral2,
              .eunorth1,
              .eusouth1,
+             .eusouth2,
              .euwest1,
              .euwest2,
              .euwest3,

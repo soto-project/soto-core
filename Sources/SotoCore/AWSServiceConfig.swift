@@ -242,14 +242,14 @@ public final class AWSServiceConfig {
     /// Details about endpoint variants eg fips, dualstack
     public struct EndpointVariant {
         #if compiler(>=5.6)
-        typealias EndpointCallback = @Sendable (String) -> String
+        public typealias EndpointCallback = @Sendable (String) -> String
         #else
-        typealias EndpointCallback = (String) -> String
+        public typealias EndpointCallback = (String) -> String
         #endif
         let defaultEndpoint: EndpointCallback?
         let endpoints: [String: String]
 
-        internal init(defaultEndpoint: EndpointCallback? = nil, endpoints: [String: String] = [:]) {
+        public init(defaultEndpoint: EndpointCallback? = nil, endpoints: [String: String] = [:]) {
             self.defaultEndpoint = defaultEndpoint
             self.endpoints = endpoints
         }

@@ -147,7 +147,7 @@ public final class AWSServiceConfig {
                           let endpoint = variantEndpoints.endpoints[partitionEndpoint.endpoint]
                 {
                     serviceHost = endpoint
-                } else if let host = variantEndpoints.defaultEndpointCallback?(region.rawValue, service) {
+                } else if let host = variantEndpoints.defaultEndpoint?(region.rawValue) {
                     serviceHost = host
                 } else {
                     preconditionFailure("\(options.endpointVariant) endpoint for \(service) in \(region) does not exist")
@@ -242,18 +242,23 @@ public final class AWSServiceConfig {
     /// Details about endpoint variants eg fips, dualstack
     public struct EndpointVariant {
         #if compiler(>=5.6)
-        typealias EndpointCallback = @Sendable (String, String) -> String
+        typealias EndpointCallback = @Sendable (String) -> String
         #else
-        typealias EndpointCallback = (String, String) -> String
+        typealias EndpointCallback = (String) -> String
         #endif
-        let defaultEndpointCallback: EndpointCallback? = nil
+        let defaultEndpoint: EndpointCallback?
         let endpoints: [String: String]
 
-        func getEndpoint(region: String, service: String) -> String? {
+        internal init(defaultEndpoint: EndpointCallback? = nil, endpoints: [String: String] = [:]) {
+            self.defaultEndpoint = defaultEndpoint
+            self.endpoints = endpoints
+        }
+
+        func getEndpoint(region: String) -> String? {
             if let endpoint = self.endpoints[region] {
                 return endpoint
-            } else if let endpointCallback = self.defaultEndpointCallback {
-                return endpointCallback(region, service)
+            } else if let endpointCallback = self.defaultEndpoint {
+                return endpointCallback(region)
             }
             return nil
         }

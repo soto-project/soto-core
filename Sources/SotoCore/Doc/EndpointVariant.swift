@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 /// Endpoint variant types
-public struct EndpointVariantType: OptionSet {
+public struct EndpointVariantType: OptionSet, Hashable {
     public typealias RawValue = Int
     public let rawValue: Int
 
@@ -27,9 +27,26 @@ public struct EndpointVariantType: OptionSet {
     public static let all: Self = [.fips, .dualstack]
 }
 
+extension EndpointVariantType: CustomStringConvertible {
+    public var description: String {
+        var elements: [String] = []
+        if self.contains(.fips) {
+            elements.append("FIPS")
+        }
+        if self.contains(.dualstack) {
+            elements.append("dualstack")
+        }
+        return elements.joined(separator: ", ")
+    }
+}
+
 /// extend AWSServiceConfig options to generate endpoint variant options
 extension AWSServiceConfig.Options {
     var endpointVariant: EndpointVariantType {
         .init(rawValue: self.rawValue).intersection(EndpointVariantType.all)
     }
 }
+
+#if compiler(>=5.6)
+extension EndpointVariantType: Sendable {}
+#endif

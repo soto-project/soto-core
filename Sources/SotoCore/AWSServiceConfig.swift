@@ -46,6 +46,7 @@ public final class AWSServiceConfig {
     private let providedEndpoint: String?
     private let serviceEndpoints: [String: String]
     private let partitionEndpoints: [AWSPartition: (endpoint: String, region: Region)]
+    private let variantEndpoints: [EndpointVariantType: EndpointVariant]
 
     /// Create a ServiceConfig object
     ///
@@ -77,6 +78,7 @@ public final class AWSServiceConfig {
         endpoint: String? = nil,
         serviceEndpoints: [String: String] = [:],
         partitionEndpoints: [AWSPartition: (endpoint: String, region: Region)] = [:],
+        variantEndpoints: [EndpointVariantType: EndpointVariant] = [:],
         errorType: AWSErrorType.Type? = nil,
         xmlNamespace: String? = nil,
         middlewares: [AWSServiceMiddleware] = [],
@@ -111,13 +113,16 @@ public final class AWSServiceConfig {
         self.providedEndpoint = endpoint
         self.serviceEndpoints = serviceEndpoints
         self.partitionEndpoints = partitionEndpoints
+        self.variantEndpoints = variantEndpoints
 
         self.endpoint = Self.getEndpoint(
             endpoint: endpoint,
             region: self.region,
             service: service,
+            options: options,
             serviceEndpoints: serviceEndpoints,
-            partitionEndpoints: partitionEndpoints
+            partitionEndpoints: partitionEndpoints,
+            variantEndpoints: variantEndpoints
         )
     }
 
@@ -125,15 +130,29 @@ public final class AWSServiceConfig {
         endpoint: String?,
         region: Region,
         service: String,
+        options: Options,
         serviceEndpoints: [String: String],
-        partitionEndpoints: [AWSPartition: (endpoint: String, region: Region)]
+        partitionEndpoints: [AWSPartition: (endpoint: String, region: Region)],
+        variantEndpoints: [EndpointVariantType: EndpointVariant]
     ) -> String {
         // work out endpoint, if provided use that otherwise
         if let endpoint = endpoint {
             return endpoint
         } else {
             let serviceHost: String
-            if let serviceEndpoint = serviceEndpoints[region.rawValue] {
+            if let variantEndpoints = variantEndpoints[options.endpointVariant] {
+                if let endpoint = variantEndpoints.endpoints[region.rawValue] {
+                    serviceHost = endpoint
+                } else if let partitionEndpoint = partitionEndpoints[region.partition],
+                          let endpoint = variantEndpoints.endpoints[partitionEndpoint.endpoint]
+                {
+                    serviceHost = endpoint
+                } else if let host = variantEndpoints.defaultEndpointCallback?(region.rawValue, service) {
+                    serviceHost = host
+                } else {
+                    preconditionFailure("\(options.endpointVariant) endpoint for \(service) in \(region) does not exist")
+                }
+            } else if let serviceEndpoint = serviceEndpoints[region.rawValue] {
                 serviceHost = serviceEndpoint
             } else if let partitionEndpoint = partitionEndpoints[region.partition],
                       let globalEndpoint = serviceEndpoints[partitionEndpoint.endpoint]
@@ -220,6 +239,26 @@ public final class AWSServiceConfig {
         public static let useDualStackEndpoint = Options(rawValue: 1 << 1)
     }
 
+    /// Details about endpoint variants eg fips, dualstack
+    public struct EndpointVariant {
+        #if compiler(>=5.6)
+        typealias EndpointCallback = @Sendable (String, String) -> String
+        #else
+        typealias EndpointCallback = (String, String) -> String
+        #endif
+        let defaultEndpointCallback: EndpointCallback? = nil
+        let endpoints: [String: String]
+
+        func getEndpoint(region: String, service: String) -> String? {
+            if let endpoint = self.endpoints[region] {
+                return endpoint
+            } else if let endpointCallback = self.defaultEndpointCallback {
+                return endpointCallback(region, service)
+            }
+            return nil
+        }
+    }
+
     private init(
         service: AWSServiceConfig,
         with patch: Patch
@@ -230,8 +269,10 @@ public final class AWSServiceConfig {
                 endpoint: service.providedEndpoint,
                 region: region,
                 service: service.service,
+                options: service.options,
                 serviceEndpoints: service.serviceEndpoints,
-                partitionEndpoints: service.partitionEndpoints
+                partitionEndpoints: service.partitionEndpoints,
+                variantEndpoints: service.variantEndpoints
             )
         } else {
             self.region = service.region
@@ -245,6 +286,7 @@ public final class AWSServiceConfig {
         self.providedEndpoint = service.providedEndpoint
         self.serviceEndpoints = service.serviceEndpoints
         self.partitionEndpoints = service.partitionEndpoints
+        self.variantEndpoints = service.variantEndpoints
         self.errorType = service.errorType
         self.xmlNamespace = service.xmlNamespace
         self.middlewares = service.middlewares + patch.middlewares
@@ -257,4 +299,5 @@ public final class AWSServiceConfig {
 #if compiler(>=5.6)
 extension AWSServiceConfig: Sendable {}
 extension AWSServiceConfig.Options: Sendable {}
+extension AWSServiceConfig.EndpointVariant: Sendable {}
 #endif

@@ -268,20 +268,23 @@ public final class AWSServiceConfig {
         service: AWSServiceConfig,
         with patch: Patch
     ) {
-        if let region = patch.region {
-            self.region = region
+        self.region = patch.region ?? service.region
+        self.options = patch.options ?? service.options
+
+        if let endpoint = patch.endpoint {
+            self.endpoint = endpoint
+        } else if patch.options != nil || patch.region != nil {
             self.endpoint = patch.endpoint ?? Self.getEndpoint(
                 endpoint: service.providedEndpoint,
-                region: region,
+                region: self.region,
                 service: service.service,
-                options: service.options,
+                options: self.options,
                 serviceEndpoints: service.serviceEndpoints,
                 partitionEndpoints: service.partitionEndpoints,
                 variantEndpoints: service.variantEndpoints
             )
         } else {
-            self.region = service.region
-            self.endpoint = patch.endpoint ?? service.endpoint
+            self.endpoint = service.endpoint
         }
         self.amzTarget = service.amzTarget
         self.service = service.service
@@ -297,7 +300,6 @@ public final class AWSServiceConfig {
         self.middlewares = service.middlewares + patch.middlewares
         self.timeout = patch.timeout ?? service.timeout
         self.byteBufferAllocator = patch.byteBufferAllocator ?? service.byteBufferAllocator
-        self.options = patch.options ?? service.options
     }
 }
 

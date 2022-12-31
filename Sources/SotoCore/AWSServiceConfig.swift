@@ -214,6 +214,7 @@ public final class AWSServiceConfig {
 
         /// Use a dual stack S3 endpoint. WHen you make a request to a dual-stack endpoint the bucket URL resolves
         /// to an IPv6 or an IPv4 address
+        @available(*, deprecated, message: "This case is deprecated, use .useDualStackEndpoint instead.")
         public static let s3UseDualStackEndpoint = Options(rawValue: 1 << 1)
 
         /// Use S3 transfer accelerated endpoint. You need to enable transfer acceleration on the bucket for this to work

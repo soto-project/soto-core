@@ -78,9 +78,6 @@ public struct S3Middleware: AWSServiceMiddleware {
                         let regionIndex = s3Index + 1
                         hostComponents.remove(at: regionIndex)
                     }
-                    if context.options.contains(.s3UseDualStackEndpoint) {
-                        s3 += ".dualstack"
-                    }
                     hostComponents[s3Index] = Substring(s3)
                     host = hostComponents.joined(separator: ".")
                 }

@@ -66,7 +66,6 @@ struct OutputPartition {
     let name: String
     let description: String
     let hostname: String
-    let variants: [OutputEndpointVariant]
 }
 
 struct OutputEndpointVariant {
@@ -99,28 +98,10 @@ var partitions: [OutputPartition] = endpoints.partitions.map {
         .replacingOccurrences(of: "{service}", with: "\\(service)")
         .replacingOccurrences(of: "{region}", with: "\\(region)")
         .replacingOccurrences(of: "{dnsSuffix}", with: $0.dnsSuffix)
-    var variants: [OutputEndpointVariant] = []
-    for variant in $0.defaults.variants {
-        let hostname = (variant.hostname ?? $0.defaults.hostname)
-            .replacingOccurrences(of: "{service}", with: "\\(service)")
-            .replacingOccurrences(of: "{region}", with: "\\(region)")
-            .replacingOccurrences(of: "{dnsSuffix}", with: variant.dnsSuffix ?? $0.dnsSuffix)
-        switch variant.tags {
-        case ["fips"]:
-            variants.append(.init(variant: ".fips", hostname: hostname))
-        case ["dualstack"]:
-            variants.append(.init(variant: ".dualstack", hostname: hostname))
-        case ["fips", "dualstack"]:
-            variants.append(.init(variant: ".fips, .dualstack", hostname: hostname))
-        default:
-            continue
-        }
-    }
     return OutputPartition(
         name: $0.partition.filter { return $0.isLetter || $0.isNumber },
         description: $0.partitionName,
-        hostname: hostname,
-        variants: variants
+        hostname: hostname
     )
 }
 

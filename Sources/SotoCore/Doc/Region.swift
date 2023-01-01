@@ -68,7 +68,7 @@ public struct Region: RawRepresentable, Equatable {
     public static var mecentral1: Region { .init(rawValue: "me-central-1") }
     // Middle East (Bahrain)
     public static var mesouth1: Region { .init(rawValue: "me-south-1") }
-    // South America (São Paulo)
+    // South America (Sao Paulo)
     public static var saeast1: Region { .init(rawValue: "sa-east-1") }
     // US East (N. Virginia)
     public static var useast1: Region { .init(rawValue: "us-east-1") }
@@ -175,74 +175,18 @@ public struct AWSPartition: RawRepresentable, Equatable, Hashable {
 }
 
 public extension AWSPartition {
-    func defaultEndpoint(region: Region, service: String, variant: EndpointVariantType? = nil) -> String {
+    func defaultEndpoint(region: Region, service: String) -> String {
         switch self.partition {
-        case .aws: 
-            switch variant {
-            case [.fips]:
-                return "\(service)-fips.\(region).amazonaws.com"
-            case [.fips, .dualstack]:
-                return "\(service)-fips.\(region).api.aws"
-            case [.dualstack]:
-                return "\(service).\(region).api.aws"
-            default:
-                return "\(service).\(region).amazonaws.com"
-            }
-        case .awscn: 
-            switch variant {
-            case [.fips]:
-                return "\(service)-fips.\(region).amazonaws.com.cn"
-            case [.fips, .dualstack]:
-                return "\(service)-fips.\(region).api.amazonwebservices.com.cn"
-            case [.dualstack]:
-                return "\(service).\(region).api.amazonwebservices.com.cn"
-            default:
-                return "\(service).\(region).amazonaws.com.cn"
-            }
-        case .awsusgov: 
-            switch variant {
-            case [.fips]:
-                return "\(service)-fips.\(region).amazonaws.com"
-            case [.fips, .dualstack]:
-                return "\(service)-fips.\(region).api.aws"
-            case [.dualstack]:
-                return "\(service).\(region).api.aws"
-            default:
-                return "\(service).\(region).amazonaws.com"
-            }
-        case .awsiso: 
-            switch variant {
-            case [.fips]:
-                return "\(service)-fips.\(region).c2s.ic.gov"
-            default:
-                return "\(service).\(region).c2s.ic.gov"
-            }
-        case .awsisob: 
-            switch variant {
-            case [.fips]:
-                return "\(service)-fips.\(region).sc2s.sgov.gov"
-            default:
-                return "\(service).\(region).sc2s.sgov.gov"
-            }
-/*        case .aws:
-            switch variant {
-            case [.fips]:
-                return "\(service)-fips.\(region.rawValue).api.aws"
-            case [.dualstack]:
-                return "\(service).\(region.rawValue).api.aws"
-            case [.fips, .dualstack]:
-                return "\(service)-fips.\(region.rawValue).api.aws"
-            default:
-                return "\(service).\(region.rawValue).amazonaws.com"
-            }
+        case .aws:
+            return "\(service).\(region).amazonaws.com"
         case .awscn:
-            return "\(service).\(region.rawValue).amazonaws.com.cn"
+            return "\(service).\(region).amazonaws.com.cn"
         case .awsusgov:
-            return "\(service).\(region.rawValue).amazonaws.com"
+            return "\(service).\(region).amazonaws.com"
         case .awsiso:
-            return "\(service).\(region.rawValue).c2s.ic.gov"
+            return "\(service).\(region).c2s.ic.gov"
         case .awsisob:
-            return "\(service).\(region.rawValue).sc2s.sgov.gov"*/
+            return "\(service).\(region).sc2s.sgov.gov"
         }
     }
 }

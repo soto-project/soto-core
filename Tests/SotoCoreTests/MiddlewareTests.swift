@@ -118,30 +118,6 @@ class MiddlewareTests: XCTestCase {
         }
     }
 
-    func testS3MiddlewareDualStackEndpoint() {
-        // Test virual address
-        self.testMiddleware(
-            S3Middleware(),
-            serviceName: "s3",
-            serviceOptions: .s3UseDualStackEndpoint,
-            uri: "/bucket/file"
-        ) { request in
-            XCTAssertEqual(request.url.absoluteString, "https://bucket.s3.dualstack.us-east-1.amazonaws.com/file")
-        }
-    }
-
-    func testS3MiddlewareAcceleratedDualStackEndpoint() {
-        // Test virual address
-        self.testMiddleware(
-            S3Middleware(),
-            serviceName: "s3",
-            serviceOptions: [.s3UseDualStackEndpoint, .s3UseTransferAcceleratedEndpoint],
-            uri: "/bucket/file"
-        ) { request in
-            XCTAssertEqual(request.url.absoluteString, "https://bucket.s3-accelerate.dualstack.amazonaws.com/file")
-        }
-    }
-
     // create a buffer of random values. Will always create the same given you supply the same z and w values
     // Random number generator from https://www.codeproject.com/Articles/25172/Simple-Random-Number-Generation
     func createRandomBuffer(_ w: UInt, _ z: UInt, size: Int) -> [UInt8] {

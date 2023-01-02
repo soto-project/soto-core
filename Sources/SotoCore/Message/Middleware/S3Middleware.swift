@@ -69,7 +69,7 @@ public struct S3Middleware: AWSServiceMiddleware {
             let isAmazonUrl = host.hasSuffix("amazonaws.com")
 
             var hostComponents = host.split(separator: ".")
-            if isAmazonUrl, !context.options.intersection([.s3UseDualStackEndpoint, .s3UseTransferAcceleratedEndpoint]).isEmpty {
+            if isAmazonUrl, !context.options.contains(.s3UseTransferAcceleratedEndpoint) {
                 if let s3Index = hostComponents.firstIndex(where: { $0 == "s3" }) {
                     var s3 = "s3"
                     if context.options.contains(.s3UseTransferAcceleratedEndpoint) {

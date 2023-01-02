@@ -175,18 +175,23 @@ public struct AWSPartition: RawRepresentable, Equatable, Hashable {
 }
 
 public extension AWSPartition {
+    var dnsSuffix: String {
+        switch self.partition {
+        case .aws: return "amazonaws.com"
+        case .awscn: return "amazonaws.com.cn"
+        case .awsusgov: return "amazonaws.com"
+        case .awsiso: return "c2s.ic.gov"
+        case .awsisob: return "sc2s.sgov.gov"
+        }
+    }
+
     func defaultEndpoint(region: Region, service: String) -> String {
         switch self.partition {
-        case .aws:
-            return "\(service).\(region).amazonaws.com"
-        case .awscn:
-            return "\(service).\(region).amazonaws.com.cn"
-        case .awsusgov:
-            return "\(service).\(region).amazonaws.com"
-        case .awsiso:
-            return "\(service).\(region).c2s.ic.gov"
-        case .awsisob:
-            return "\(service).\(region).sc2s.sgov.gov"
+        case .aws: return "\(service).\(region).amazonaws.com"
+        case .awscn: return "\(service).\(region).amazonaws.com.cn"
+        case .awsusgov: return "\(service).\(region).amazonaws.com"
+        case .awsiso: return "\(service).\(region).c2s.ic.gov"
+        case .awsisob: return "\(service).\(region).sc2s.sgov.gov"
         }
     }
 }

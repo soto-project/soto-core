@@ -66,6 +66,7 @@ struct OutputPartition {
     let name: String
     let description: String
     let hostname: String
+    let dnsSuffix: String
 }
 
 struct OutputEndpointVariant {
@@ -101,7 +102,8 @@ var partitions: [OutputPartition] = endpoints.partitions.map {
     return OutputPartition(
         name: $0.partition.filter { return $0.isLetter || $0.isNumber },
         description: $0.partitionName,
-        hostname: hostname
+        hostname: hostname,
+        dnsSuffix: $0.dnsSuffix
     )
 }
 

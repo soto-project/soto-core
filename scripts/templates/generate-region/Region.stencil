@@ -75,11 +75,18 @@ public struct AWSPartition: RawRepresentable, Equatable, Hashable {
 }
 
 public extension AWSPartition {
+    var dnsSuffix: String {
+        switch self.partition {
+{%for partition in partitions %}
+        case .{{partition.name}}: return "{{partition.dnsSuffix}}"
+{%endfor %}
+        }
+    }
+
     func defaultEndpoint(region: Region, service: String) -> String {
         switch self.partition {
 {%for partition in partitions %}
-        case .{{partition.name}}:
-            return "{{partition.hostname}}"
+        case .{{partition.name}}: return "{{partition.hostname}}"
 {%endfor %}
         }
     }

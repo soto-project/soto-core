@@ -50,6 +50,57 @@ class AWSServiceTests: XCTestCase {
         XCTAssertEqual(service.endpoint, "https://my-endpoint.com")
     }
 
+    func testPartitionEndpoint() {
+        let client = createAWSClient(credentialProvider: .empty)
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
+        let serviceConfig = createServiceConfig(
+            serviceEndpoints: ["aws-global": "aws-global.com"],
+            partitionEndpoints: [.aws: (endpoint: "aws-global", region: .uswest2)]
+        )
+        let service = TestService(client: client, config: serviceConfig)
+        XCTAssertEqual(service.endpoint, "https://aws-global.com")
+        XCTAssertEqual(service.region, .uswest2)
+    }
+
+    func testVariantEndpoint() {
+        let client = createAWSClient(credentialProvider: .empty)
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
+        let serviceConfig = createServiceConfig(
+            region: .cacentral1,
+            variantEndpoints: [.fips: .init(endpoints: ["ca-central-1": "my-service-fips.com"])],
+            options: .useFipsEndpoint
+        )
+        let service = TestService(client: client, config: serviceConfig)
+        XCTAssertEqual(service.endpoint, "https://my-service-fips.com")
+    }
+
+    func testVariantCallbackEndpoint() {
+        let client = createAWSClient(credentialProvider: .empty)
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
+        let serviceConfig = createServiceConfig(
+            region: .euwest3,
+            service: "my-service",
+            variantEndpoints: [.fips: .init(defaultEndpoint: { region in "my-service-fips.\(region).aws.com" })],
+            options: .useFipsEndpoint
+        )
+        let service = TestService(client: client, config: serviceConfig)
+        XCTAssertEqual(service.endpoint, "https://my-service-fips.eu-west-3.aws.com")
+    }
+
+    func testVariantPartitionEndpoint() {
+        let client = createAWSClient(credentialProvider: .empty)
+        defer { XCTAssertNoThrow(try client.syncShutdown()) }
+        let serviceConfig = createServiceConfig(
+            serviceEndpoints: ["aws-global": "aws-global.com"],
+            partitionEndpoints: [.aws: (endpoint: "aws-global", region: .uswest2)],
+            variantEndpoints: [.fips: .init(endpoints: ["aws-global": "aws-fips-global.com"])],
+            options: .useFipsEndpoint
+        )
+        let service = TestService(client: client, config: serviceConfig)
+        XCTAssertEqual(service.endpoint, "https://aws-fips-global.com")
+        XCTAssertEqual(service.region, .uswest2)
+    }
+
     func testWith() {
         let client = createAWSClient(credentialProvider: .empty)
         defer { XCTAssertNoThrow(try client.syncShutdown()) }

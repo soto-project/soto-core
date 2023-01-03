@@ -25,11 +25,18 @@ struct Endpoints: Decodable {
         var service: String?
     }
 
+    struct EndpointVariant: Decodable {
+        var dnsSuffix: String?
+        var hostname: String?
+        var tags: Set<String>
+    }
+
     struct Defaults: Decodable {
         var credentialScope: CredentialScope?
-        var hostname: String?
+        var hostname: String
         var protocols: [String]?
         var signatureVersions: [String]?
+        var variants: [EndpointVariant]
     }
 
     struct RegionDesc: Decodable {
@@ -48,19 +55,28 @@ struct Endpoints: Decodable {
     var partitions: [Partition]
 }
 
-struct RegionDesc {
+struct OutputRegionDesc {
     let `enum`: String
     let name: String
     let description: String?
     let partition: String
 }
 
-struct Partition {
+struct OutputPartition {
     let name: String
     let description: String
+    let hostname: String
     let dnsSuffix: String
 }
 
+struct OutputEndpointVariant {
+    let variant: String
+    let hostname: String
+}
+
+/// Load Endpoints from URL
+/// - Parameter url: url of endpoints file
+/// - Returns: Endpoints
 func loadEndpoints(url: String) throws -> Endpoints? {
     let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
     defer {
@@ -77,18 +93,23 @@ func loadEndpoints(url: String) throws -> Endpoints? {
 print("Loading Endpoints")
 guard let endpoints = try loadEndpoints(url: "https://raw.githubusercontent.com/aws/aws-sdk-go-v2/master/codegen/smithy-aws-go-codegen/src/main/resources/software/amazon/smithy/aws/go/codegen/endpoints.json") else { exit(-1) }
 
-var regionDescs: [RegionDesc] = []
-var partitions: [Partition] = endpoints.partitions.map {
-    return Partition(
+var regionDescs: [OutputRegionDesc] = []
+var partitions: [OutputPartition] = endpoints.partitions.map {
+    let hostname = $0.defaults.hostname
+        .replacingOccurrences(of: "{service}", with: "\\(service)")
+        .replacingOccurrences(of: "{region}", with: "\\(region)")
+        .replacingOccurrences(of: "{dnsSuffix}", with: $0.dnsSuffix)
+    return OutputPartition(
         name: $0.partition.filter { return $0.isLetter || $0.isNumber },
         description: $0.partitionName,
+        hostname: hostname,
         dnsSuffix: $0.dnsSuffix
     )
 }
 
 for partition in endpoints.partitions {
     let partitionRegionDescs = partition.regions.keys.map { region in
-        return RegionDesc(
+        return OutputRegionDesc(
             enum: region.filter { return $0.isLetter || $0.isNumber },
             name: region,
             description: partition.regions[region]?.description,

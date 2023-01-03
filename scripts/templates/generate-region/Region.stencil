@@ -82,6 +82,14 @@ public extension AWSPartition {
 {%endfor %}
         }
     }
+
+    func defaultEndpoint(region: Region, service: String) -> String {
+        switch self.partition {
+{%for partition in partitions %}
+        case .{{partition.name}}: return "{{partition.hostname}}"
+{%endfor %}
+        }
+    }
 }
 
 // allows to create a Region from a String

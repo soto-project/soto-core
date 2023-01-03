@@ -68,7 +68,7 @@ public struct Region: RawRepresentable, Equatable {
     public static var mecentral1: Region { .init(rawValue: "me-central-1") }
     // Middle East (Bahrain)
     public static var mesouth1: Region { .init(rawValue: "me-south-1") }
-    // South America (São Paulo)
+    // South America (Sao Paulo)
     public static var saeast1: Region { .init(rawValue: "sa-east-1") }
     // US East (N. Virginia)
     public static var useast1: Region { .init(rawValue: "us-east-1") }
@@ -182,6 +182,16 @@ public extension AWSPartition {
         case .awsusgov: return "amazonaws.com"
         case .awsiso: return "c2s.ic.gov"
         case .awsisob: return "sc2s.sgov.gov"
+        }
+    }
+
+    func defaultEndpoint(region: Region, service: String) -> String {
+        switch self.partition {
+        case .aws: return "\(service).\(region).amazonaws.com"
+        case .awscn: return "\(service).\(region).amazonaws.com.cn"
+        case .awsusgov: return "\(service).\(region).amazonaws.com"
+        case .awsiso: return "\(service).\(region).c2s.ic.gov"
+        case .awsisob: return "\(service).\(region).sc2s.sgov.gov"
         }
     }
 }

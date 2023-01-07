@@ -12,16 +12,16 @@
 //
 //===----------------------------------------------------------------------===//
 
-// MARK: EC2 Array Coder
-
-// EC2 requires a special case array encoder as it flattens arrays on encode, while still expecting them to have array elements
-// on decode. EC2 will use this Coder instead of the one in soto-core due to scoping rules.
-
-/// Coder for encoding/decoding Arrays. This is extended to support encoding and decoding based on whether `Element` is `Encodable` or `Decodable`.
+/// Coder for encoding/decoding Arrays for EC2 service. This is extended to support encoding and
+/// decoding based on whether `Element` is `Encodable` or `Decodable`.
+///
+/// EC2 requires a special case array encoder as it flattens arrays on encode, while still expecting
+/// them to have array elements on decode.
 public struct EC2ArrayCoder<Properties: ArrayCoderProperties, Element: _SotoSendable>: CustomCoder {
     public typealias CodableValue = [Element]
 }
 
+/// Standard EC2 Array Coder with element name "member"
 public typealias EC2StandardArrayCoder<Element> = EC2ArrayCoder<StandardArrayCoderProperties, Element>
 
 /// CodingKey used by Encoder property wrappers

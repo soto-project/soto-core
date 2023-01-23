@@ -21,7 +21,7 @@ jobs:
     runs-on: macOS-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v1
+      uses: actions/checkout@v3
       with:
         fetch-depth: 1
     - name: SPM tests
@@ -33,7 +33,7 @@ jobs:
           -ignore-filename-regex="\/Tests\/" \
           -instr-profile=.build/debug/codecov/default.profdata > info.lcov
     - name: Upload to codecov.io
-      uses: codecov/codecov-action@v1
+      uses: codecov/codecov-action@v3
       with:
         file: info.lcov
 
@@ -54,15 +54,16 @@ jobs:
     strategy:
       matrix:
         tag:
-          - swift:5.2
           - swift:5.3
           - swift:5.4
           - swift:5.5
+          - swift:5.6
+          - swift:5.7
     container:
       image: ${{ matrix.tag }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v1
+      uses: actions/checkout@v3
       with:
         fetch-depth: 1
     - name: Test
@@ -76,6 +77,6 @@ jobs:
           -ignore-filename-regex="\/Tests\/" \
           -instr-profile .build/debug/codecov/default.profdata > info.lcov
     - name: Upload to codecov.io
-      uses: codecov/codecov-action@v1
+      uses: codecov/codecov-action@v3
       with:
         file: info.lcov

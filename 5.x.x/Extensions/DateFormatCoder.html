@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>AWSErrorType Protocol Reference</title>
+    <title>DateFormatCoder Extension Reference</title>
     <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
     <meta charset='utf-8'>
@@ -13,8 +13,8 @@
     <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/swift/Protocol/AWSErrorType" class="dashAnchor"></a>
-    <a title="AWSErrorType Protocol Reference"></a>
+    <a name="//apple_ref/swift/Extension/DateFormatCoder" class="dashAnchor"></a>
+    <a title="DateFormatCoder Extension Reference"></a>
     <header>
       <div class="content-wrapper">
         <p><a href="../index.html"> Docs</a> (100% documented)</p>
@@ -30,7 +30,7 @@
       <p id="breadcrumbs">
         <a href="../index.html"> Reference</a>
         <img id="carat" src="../img/carat.png" alt=""/>
-        AWSErrorType Protocol Reference
+        DateFormatCoder Extension Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -356,16 +356,15 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>AWSErrorType</h1>
+            <h1>DateFormatCoder</h1>
               <div class="declaration">
                 <div class="language">
                   
-                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">protocol</span> <span class="kt">AWSErrorType</span> <span class="p">:</span> <span class="kt">CustomStringConvertible</span><span class="p">,</span> <span class="kt">Error</span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">DateFormatCoder</span></code></pre>
 
                 </div>
               </div>
-            <p>Standard Error type returned by Soto. Initialized with error code and message. Must provide an implementation of var description : String</p>
-
+            
           </section>
           <section class="section task-group-section">
             <div class="task-group">
@@ -373,9 +372,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore12AWSErrorTypeP9errorCode7contextxSgSS_AA0C7ContextVtcfc"></a>
-                    <a name="//apple_ref/swift/Method/init(errorCode:context:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore12AWSErrorTypeP9errorCode7contextxSgSS_AA0C7ContextVtcfc">init(errorCode:<wbr>context:<wbr>)</a>
+                    <a name="/s:8SotoCore15DateFormatCoderPAAE6decode4from10Foundation0C0Vs7Decoder_p_tKFZ"></a>
+                    <a name="//apple_ref/swift/Method/decode(from:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore15DateFormatCoderPAAE6decode4from10Foundation0C0Vs7Decoder_p_tKFZ">decode(from:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -383,14 +382,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>initialize error</p>
+                        <p>decode Date using DateFormatter</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="nf">init</span><span class="p">?(</span><span class="nv">errorCode</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Structs/AWSErrorContext.html">AWSErrorContext</a></span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">decode</span><span class="p">(</span><span class="n">from</span> <span class="nv">decoder</span><span class="p">:</span> <span class="kt">Decoder</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">CodableValue</span></code></pre>
 
                         </div>
                       </div>
@@ -400,9 +399,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore12AWSErrorTypeP9errorCodeSSvp"></a>
-                    <a name="//apple_ref/swift/Property/errorCode" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore12AWSErrorTypeP9errorCodeSSvp">errorCode</a>
+                    <a name="/s:8SotoCore15DateFormatCoderPAAE6encode5value2toy10Foundation0C0V_s7Encoder_ptKFZ"></a>
+                    <a name="//apple_ref/swift/Method/encode(value:to:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore15DateFormatCoderPAAE6encode5value2toy10Foundation0C0V_s7Encoder_ptKFZ">encode(value:<wbr>to:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -410,14 +409,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Error code return by AWS</p>
+                        <p>encode Date using DateFormatter</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">errorCode</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">encode</span><span class="p">(</span><span class="nv">value</span><span class="p">:</span> <span class="kt">CodableValue</span><span class="p">,</span> <span class="n">to</span> <span class="nv">encoder</span><span class="p">:</span> <span class="kt">Encoder</span><span class="p">)</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
@@ -427,40 +426,10 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8SotoCore12AWSErrorTypeP7contextAA0C7ContextVSgvp"></a>
-                    <a name="//apple_ref/swift/Property/context" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore12AWSErrorTypeP7contextAA0C7ContextVSgvp">context</a>
+                    <a name="/s:8SotoCore13CustomEncoderP6string4fromSSSg12CodableValueQz_tFZ"></a>
+                    <a name="//apple_ref/swift/Method/string(from:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8SotoCore13CustomEncoderP6string4fromSSSg12CodableValueQz_tFZ">string(from:<wbr>)</a>
                     </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>additional context information related to the error</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Structs/AWSErrorContext.html">AWSErrorContext</a></span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:8SotoCore12AWSErrorTypePAAE20localizedDescriptionSSvp"></a>
-                    <a name="//apple_ref/swift/Property/localizedDescription" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore12AWSErrorTypePAAE20localizedDescriptionSSvp">localizedDescription</a>
-                    </code>
-                      <span class="declaration-note">
-                        Extension method
-                      </span>
                   </div>
                   <div class="height-container">
                     <div class="pointer-container"></div>
@@ -473,36 +442,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">localizedDescription</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:8SotoCore12AWSErrorTypePAAE7messageSSSgvp"></a>
-                    <a name="//apple_ref/swift/Property/message" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8SotoCore12AWSErrorTypePAAE7messageSSSgvp">message</a>
-                    </code>
-                      <span class="declaration-note">
-                        Extension method
-                      </span>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">message</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">string</span><span class="p">(</span><span class="n">from</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">Date</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">String</span><span class="p">?</span></code></pre>
 
                         </div>
                       </div>

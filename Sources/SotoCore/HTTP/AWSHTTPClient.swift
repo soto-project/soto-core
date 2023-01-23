@@ -53,8 +53,13 @@ public protocol AWSHTTPClient {
     /// Execute an HTTP request with a streamed response
     func execute(request: AWSHTTPRequest, timeout: TimeAmount, on eventLoop: EventLoop, logger: Logger, stream: @escaping ResponseStream) -> EventLoopFuture<AWSHTTPResponse>
 
+#if compiler(>=5.6) && compiler(<5.7)
+    /// This should be called before an HTTP Client can be de-initialised
+    func shutdown(queue: DispatchQueue, _ callback: @escaping @Sendable (Error?) -> Void)
+#else
     /// This should be called before an HTTP Client can be de-initialised
     func shutdown(queue: DispatchQueue, _ callback: @escaping (Error?) -> Void)
+#endif    
 
     /// Event loop group used by client
     var eventLoopGroup: EventLoopGroup { get }

@@ -129,7 +129,9 @@ final class S3ChunkedStreamReader: StreamReader {
                 // if there are still bytes left to read then call _fillBuffer again, otherwise succeed with the
                 // contents of the working buffer
                 if self.bytesLeftToRead > 0 {
-                    _fillBuffer()
+                    eventLoop.execute {
+                        _fillBuffer()
+                    }
                 } else {
                     promise.succeed(self.workingBuffer)
                 }

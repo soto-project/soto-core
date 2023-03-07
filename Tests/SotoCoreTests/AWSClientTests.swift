@@ -305,6 +305,20 @@ class AWSClientTests: XCTestCase {
         XCTAssertNoThrow(try self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 65552, blockSize: 65552))
     }
 
+    func testRequestStreamingAvoidStackOverflow() {
+        let awsServer = AWSTestServer(serviceProtocol: .json)
+        let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+        let config = createServiceConfig(service: "s3", endpoint: awsServer.address)
+        let client = createAWSClient(credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"), httpClientProvider: .shared(httpClient))
+        defer {
+            XCTAssertNoThrow(try client.syncShutdown())
+            XCTAssertNoThrow(try awsServer.stop())
+            XCTAssertNoThrow(try httpClient.syncShutdown())
+        }
+
+        XCTAssertNoThrow(try self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 16 * 1024, blockSize: 8))
+    }
+
     func testRequestStreamingWithPayload(_ payload: AWSPayload) throws {
         struct Input: AWSEncodableShape & AWSShapeWithPayload {
             static var _payloadPath: String = "payload"

@@ -66,7 +66,7 @@ extension AsyncHTTPClient.HTTPClient.Body.StreamWriter {
                                     // should never reach here as HTTPClient throws HTTPClientError.bodyLengthMismatch
                                     promise.fail(AWSClient.ClientError.tooMuchData)
                                 } else {
-                                    _write(newAmountLeft)
+                                    _write(newAmountLeft, on: eventLoop)
                                 }
                             } else {
                                 _write(nil)
@@ -74,10 +74,18 @@ extension AsyncHTTPClient.HTTPClient.Body.StreamWriter {
                             return promise.futureResult
                         }.cascadeFailure(to: promise)
                     } else {
-                        _write(newAmountLeft)
+                        _write(newAmountLeft, on: eventLoop)
                     }
                 }.cascadeFailure(to: promise)
         }
+
+        // execute write in eventLoop. Use to avoid stack overflows
+        func _write(_ amountLeft: Int?, on eventLoop: EventLoop) {
+            eventLoop.execute {
+                _write(amountLeft)
+            }
+        }
+
         _write(reader.contentSize)
 
         return promise.futureResult

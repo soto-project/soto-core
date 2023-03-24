@@ -14,12 +14,13 @@
 
 #if compiler(>=5.5.2) && canImport(_Concurrency)
 
+import NIOCore
 import SotoCore
 import SotoTestUtils
 import XCTest
 
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-final class AsyncByteBufferTests: XCTestCase {
+final class FixedSizeByteBufferAsyncSequenceTests: XCTestCase {
     func testFixedSizeByteBufferSequence(
         bufferSize: Int,
         generatedByteBufferSizeRange: Range<Int>,

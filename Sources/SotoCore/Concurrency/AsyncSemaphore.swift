@@ -21,10 +21,12 @@ import NIOConcurrencyHelpers
 
 /// A Semaphore implementation that can be used with Swift Concurrency.
 ///
+/// Waiting on this semaphore will not stall the underlying thread
+///
 /// Much of this is inspired by the implementation from Gwendal Roué found
 /// here https://github.com/groue/Semaphore. It manages to avoid the recursive
-/// lock that that version requires by using an atomic for the value and 
-/// catching the situation where a signal is calling while in the middle of 
+/// lock that that version requires by using an atomic for the value and
+/// catching the situation where a signal is called while in the middle of
 /// a setting up a wait state.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 public final class AsyncSemaphore: @unchecked Sendable {

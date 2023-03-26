@@ -22,13 +22,16 @@ import NIOConcurrencyHelpers
 /// A Semaphore implementation that can be used with Swift Concurrency.
 ///
 /// Much of this is inspired by the implementation from Gwendal Roué found
-/// here https://github.com/groue/Semaphore
+/// here https://github.com/groue/Semaphore. It manages to avoid the recursive
+/// lock that that version requires by using an atomic for the value and 
+/// catching the situation where a signal is calling while in the middle of 
+/// a setting up a wait state.
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 public final class AsyncSemaphore: @unchecked Sendable {
     class Suspension: @unchecked Sendable {
         enum State {
             case initial
-            case suspended(CheckedContinuation<Void, Error>)
+            case suspended(UnsafeContinuation<Void, Error>)
             case cancelled
         }
 
@@ -91,16 +94,21 @@ public final class AsyncSemaphore: @unchecked Sendable {
         }
         let suspension = Suspension()
         try await withTaskCancellationHandler {
-            try await withCheckedThrowingContinuation { cont in
+            try await withUnsafeThrowingContinuation { (cont: UnsafeContinuation<Void, any Error>) in
                 self.lock.withLockVoid {
-                    if missedSignals > 0 {
+                    if case .cancelled = suspension.state {
+                        // remove missed signal if it existed, otherwise the next wait will automatically
+                        // pass
+                        if missedSignals > 0 {
+                            missedSignals -= 1
+                        }
+                        // if the state is cancelled, send cancellation error to continuation
+                        cont.resume(throwing: CancellationError())
+                    } else if missedSignals > 0 {
                         // if there is a missed signal then a `signal` between the semaphore value being
                         // decremented and reaching this point
                         missedSignals -= 1
                         cont.resume()
-                    } else if case .cancelled = suspension.state {
-                        // if the state is cancelled, send cancellation error to continuation
-                        cont.resume(throwing: CancellationError())
                     } else {
                         // set state to suspended and add to suspended array
                         suspension.state = .suspended(cont)

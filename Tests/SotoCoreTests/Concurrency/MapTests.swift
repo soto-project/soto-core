@@ -49,7 +49,7 @@ final class MapTests: XCTestCase {
         XCTAssertEqual(result, array.map { String($0) })
     }
 
-    func testConcurrentAsyncMap() async throws {
+    func testAsyncMapConcurrency() async throws {
         let count = Count(0)
         let maxCount = Count(0)
 
@@ -67,7 +67,7 @@ final class MapTests: XCTestCase {
         XCTAssertEqual(maxValue, 1)
     }
 
-    func testConcurrentConcurrentMap() async throws {
+    func testConcurrentMapConcurrency() async throws {
         let count = Count(0)
         let maxCount = Count(0)
 
@@ -82,6 +82,25 @@ final class MapTests: XCTestCase {
 
         XCTAssertEqual(result, array)
         let maxValue = await maxCount.value
+        XCTAssertGreaterThan(maxValue, 1)
+    }
+
+    func testConcurrentMapConcurrencyWithMaxTasks() async throws {
+        let count = Count(0)
+        let maxCount = Count(0)
+
+        let array = Array(0..<800)
+        let result = try await array.concurrentMap(maxConcurrentTasks: 4) { value -> Int in
+            let c = await count.add(1)
+            await maxCount.max(c)
+            try await Task.sleep(nanoseconds: UInt64.random(in: 1000..<100_000))
+            await count.add(-1)
+            return value
+        }
+
+        XCTAssertEqual(result, array)
+        let maxValue = await maxCount.value
+        XCTAssertLessThanOrEqual(maxValue, 4)
         XCTAssertGreaterThan(maxValue, 1)
     }
 

@@ -18,14 +18,14 @@ import NIOCore
 
 /// An AsyncSequence that returns fixed size ByteBuffers from an AsyncSequence of ByteBuffers
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-public struct FixedSizeByteBufferAsyncSequence<ByteBufferSequence: AsyncSequence>: AsyncSequence where ByteBufferSequence.Element == ByteBuffer {
+public struct FixedSizeByteBufferAsyncSequence<Base: AsyncSequence>: AsyncSequence where Base.Element == ByteBuffer {
     public typealias Element = ByteBuffer
 
-    public let byteBufferSequence: ByteBufferSequence
+    public let byteBufferSequence: Base
     public let chunkSize: Int
 
     public struct AsyncIterator: AsyncIteratorProtocol {
-        var iterator: ByteBufferSequence.AsyncIterator
+        var iterator: Base.AsyncIterator
         let chunkSize: Int
         var currentByteBuffer: ByteBuffer?
 

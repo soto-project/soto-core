@@ -20,7 +20,7 @@ import SotoTestUtils
 import XCTest
 
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-final class FixedSizeByteBufferAsyncSequenceTests: XCTestCase {
+final class AsyncSequenceTests: XCTestCase {
     func testFixedSizeByteBufferSequence(
         bufferSize: Int,
         generatedByteBufferSizeRange: Range<Int>,
@@ -43,30 +43,38 @@ final class FixedSizeByteBufferAsyncSequenceTests: XCTestCase {
         XCTAssertEqual(buffer, result)
     }
 
-    func testLargerChunkSize() async throws {
+    func testFixedSizeByteBufferLargerChunkSize() async throws {
         try await self.testFixedSizeByteBufferSequence(bufferSize: 16000, generatedByteBufferSizeRange: 1..<1000, fixedChunkSize: 4096)
     }
 
-    func testSmallerChunkSize() async throws {
+    func testFixedSizeByteBufferSmallerChunkSize() async throws {
         try await self.testFixedSizeByteBufferSequence(bufferSize: 16000, generatedByteBufferSizeRange: 500..<1000, fixedChunkSize: 256)
     }
 
-    func testSimilarSizedChunkSize() async throws {
+    func testFixedSizeByteBufferSimilarSizedChunkSize() async throws {
         try await self.testFixedSizeByteBufferSequence(bufferSize: 16000, generatedByteBufferSizeRange: 1..<1000, fixedChunkSize: 500)
     }
 
-    func testBufferSizeIsMultipleOfChunkSize() async throws {
+    func testFixedSizeByteBufferBufferSizeIsMultipleOfChunkSize() async throws {
         try await self.testFixedSizeByteBufferSequence(bufferSize: 1000, generatedByteBufferSizeRange: 1..<200, fixedChunkSize: 250)
         try await self.testFixedSizeByteBufferSequence(bufferSize: 1000, generatedByteBufferSizeRange: 500..<1000, fixedChunkSize: 250)
     }
 
-    func testBufferSizeIsEqualToChunkSize() async throws {
+    func testFixedSizeByteBufferBufferSizeIsEqualToChunkSize() async throws {
         try await self.testFixedSizeByteBufferSequence(bufferSize: 1000, generatedByteBufferSizeRange: 500..<1000, fixedChunkSize: 1000)
         try await self.testFixedSizeByteBufferSequence(bufferSize: 1000, generatedByteBufferSizeRange: 1000..<1001, fixedChunkSize: 1000)
     }
 
-    func testShortSequence() async throws {
+    func testFixedSizeByteBufferShortSequence() async throws {
         try await self.testFixedSizeByteBufferSequence(bufferSize: 250, generatedByteBufferSizeRange: 500..<1000, fixedChunkSize: 1000)
+    }
+
+    func testEnumeratedSequence() async throws {
+        let sequence = [24, 23, 300]
+        let asyncSequence = sequence.asyncSequence
+        let result: [(Int, Int)] = try await asyncSequence.enumerated().collect()
+        XCTAssertEqual(result.map { $0.0 }, [0, 1, 2])
+        XCTAssertEqual(result.map { $0.1 }, sequence)
     }
 }
 
@@ -93,6 +101,42 @@ struct TestByteBufferSequence: AsyncSequence {
     /// Make async iterator
     public func makeAsyncIterator() -> AsyncIterator {
         return AsyncIterator(source: self.source, range: self.range)
+    }
+}
+
+/// create AsyncSequence from Sequence
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+extension Sequence {
+    var asyncSequence: SequenceAsyncSequence<Self> { .init(base: self) }
+}
+
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+struct SequenceAsyncSequence<Base: Sequence>: AsyncSequence {
+    typealias Element = Base.Element
+    let base: Base
+    public struct AsyncIterator: AsyncIteratorProtocol {
+        var iterator: Base.Iterator
+
+        public mutating func next() async throws -> Element? {
+            return self.iterator.next()
+        }
+    }
+
+    /// Make async iterator
+    public func makeAsyncIterator() -> AsyncIterator {
+        return AsyncIterator(iterator: self.base.makeIterator())
+    }
+}
+
+/// Collect output of AsyncSequence into an Array
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+extension AsyncSequence {
+    func collect() async rethrows -> [Element] {
+        var result: [Element] = []
+        for try await element in self {
+            result.append(element)
+        }
+        return result
     }
 }
 

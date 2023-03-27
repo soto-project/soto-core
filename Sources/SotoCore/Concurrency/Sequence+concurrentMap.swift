@@ -19,27 +19,6 @@ extension Sequence where Element: Sendable {
     /// Returns an array containing the results of mapping the given async closure over
     /// the sequence’s elements.
     ///
-    /// The closure calls are made serially. The next call is only made once the previous call
-    /// has finished. Returns once the closure has run on all the elements of the Sequence
-    /// or when the closure throws an error.
-    /// - Parameter transform: An async  mapping closure. transform accepts an
-    ///     element of this sequence as its parameter and returns a transformed value of
-    ///     the same or of a different type.
-    /// - Returns: An array containing the transformed elements of this sequence.
-    public func asyncMap<T: Sendable>(_ transform: @Sendable @escaping (Element) async throws -> T) async rethrows -> [T] {
-        let initialCapacity = underestimatedCount
-        var result = ContiguousArray<T>()
-        result.reserveCapacity(initialCapacity)
-
-        for element in self {
-            try await result.append(transform(element))
-        }
-        return Array(result)
-    }
-
-    /// Returns an array containing the results of mapping the given async closure over
-    /// the sequence’s elements.
-    ///
     /// This differs from `asyncMap` in that it uses a `TaskGroup` to run the transform
     /// closure for all the elements of the Sequence. This allows all the transform closures
     /// to run concurrently instead of serially. Returns only when the closure has been run

@@ -29,6 +29,7 @@ public struct FixedSizeByteBufferAsyncSequence<ByteBufferSequence: AsyncSequence
         let chunkSize: Int
         var currentByteBuffer: ByteBuffer?
 
+        @usableFromInline
         init(sequence: FixedSizeByteBufferAsyncSequence) {
             self.iterator = sequence.byteBufferSequence.makeAsyncIterator()
             self.chunkSize = sequence.chunkSize
@@ -72,7 +73,7 @@ public struct FixedSizeByteBufferAsyncSequence<ByteBufferSequence: AsyncSequence
     }
 
     /// Make async iterator
-    public func makeAsyncIterator() -> AsyncIterator {
+    public __consuming func makeAsyncIterator() -> AsyncIterator {
         return AsyncIterator(sequence: self)
     }
 }

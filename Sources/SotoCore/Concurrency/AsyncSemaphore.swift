@@ -68,7 +68,7 @@ public final class AsyncSemaphore: @unchecked Sendable {
     /// Signal (increments) semaphore
     /// - Returns: Returns if a task was awaken
     @discardableResult public func signal() -> Bool {
-        let valueAfterSignal = self.value.wrappingIncrementThenLoad(by: 1, ordering: .sequentiallyConsistent)
+        let valueAfterSignal = self.value.wrappingIncrementThenLoad(by: 1, ordering: .relaxed)
         if valueAfterSignal <= 0 {
             return self.lock.withLock {
                 // if value after signal is <= 0 then there should be a suspended
@@ -90,13 +90,13 @@ public final class AsyncSemaphore: @unchecked Sendable {
 
     ///  Wait for or decrement a semaphore
     public func wait() async throws {
-        let valueAfterWait = self.value.wrappingDecrementThenLoad(by: 1, ordering: .sequentiallyConsistent)
+        let valueAfterWait = self.value.wrappingDecrementThenLoad(by: 1, ordering: .relaxed)
         if valueAfterWait >= 0 {
             return
         }
         let suspension = Suspension()
         try await withTaskCancellationHandler {
-            try await withUnsafeThrowingContinuation { (cont: UnsafeContinuation<Void, any Error>) in
+            try await withUnsafeThrowingContinuation { (cont: UnsafeContinuation<Void, Error>) in
                 self.lock.withLockVoid {
                     if case .cancelled = suspension.state {
                         // remove missed signal if it existed, otherwise the next wait will automatically

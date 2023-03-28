@@ -57,23 +57,25 @@ public final class AsyncSemaphore: @unchecked Sendable {
     /// Signal (increments) semaphore
     /// - Returns: Returns if a task was awaken
     @discardableResult public func signal() -> Bool {
-        self.lock.withLock {
-            self.value += 1
-            if self.value <= 0 {
-                // if value after signal is <= 0 then there should be a suspended
-                // task in the suspended array. If there isn't it is because `signal`
-                // in the middle of a `wait` call. In that situation increment
-                // `missedSignals`
-                assert(suspended.count == 1 - self.value)
-                if let suspension = suspended.popFirst() {
-                    suspension.continuation.resume()
-                } else {
-                    fatalError("Cannot have a negative semaphore value without values in the suspension array")
-                }
-                return true
+        self.lock.lock()
+        self.value += 1
+        if self.value <= 0 {
+            // if value after signal is <= 0 then there should be a suspended
+            // task in the suspended array. If there isn't it is because `signal`
+            // in the middle of a `wait` call. In that situation increment
+            // `missedSignals`
+            if let suspension = suspended.popFirst() {
+                self.lock.unlock()
+                suspension.continuation.resume()
+            } else {
+                self.lock.unlock()
+                fatalError("Cannot have a negative semaphore value without values in the suspension array")
             }
-            return false
+            return true
+        } else {
+            self.lock.unlock()
         }
+        return false
     }
 
     ///  Wait for or decrement a semaphore
@@ -89,23 +91,26 @@ public final class AsyncSemaphore: @unchecked Sendable {
             try await withUnsafeThrowingContinuation { (cont: UnsafeContinuation<Void, Error>) in
                 if Task.isCancelled {
                     self.value += 1
+                    self.lock.unlock()
                     // if the state is cancelled, send cancellation error to continuation
                     cont.resume(throwing: CancellationError())
                 } else {
                     // set state to suspended and add to suspended array
                     self.suspended.append(.init(cont, id: id))
+                    self.lock.unlock()
                 }
-                self.lock.unlock()
             }
         } onCancel: {
-            self.lock.withLockVoid {
-                if let index = self.suspended.firstIndex(where: { $0.id == id }) {
-                    // if we find the suspension in the suspended array the remove and resume
-                    // continuation with a cancellation error
-                    self.value += 1
-                    self.suspended[index].continuation.resume(throwing: CancellationError())
-                    self.suspended.remove(at: index)
-                }
+            self.lock.lock()
+            if let index = self.suspended.firstIndex(where: { $0.id == id }) {
+                // if we find the suspension in the suspended array the remove and resume
+                // continuation with a cancellation error
+                self.value += 1
+                let suspension = self.suspended.remove(at: index)
+                self.lock.unlock()
+                suspension.continuation.resume(throwing: CancellationError())
+            } else {
+                self.lock.unlock()
             }
         }
     }

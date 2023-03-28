@@ -115,7 +115,7 @@ final class AsyncSemaphoreTests: XCTestCase {
             do {
                 try await semaphore.wait()
             } catch is CancellationError {
-                XCTAssertEqual(semaphore.value.load(ordering: .sequentiallyConsistent), 0)
+                XCTAssertEqual(semaphore.value, 0)
             } catch {
                 XCTFail("Wrong Error")
             }
@@ -133,7 +133,7 @@ final class AsyncSemaphoreTests: XCTestCase {
                 } catch {}
                 try await semaphore.wait()
             } catch is CancellationError {
-                XCTAssertEqual(semaphore.value.load(ordering: .sequentiallyConsistent), 0)
+                XCTAssertEqual(semaphore.value, 0)
             } catch {
                 XCTFail("Wrong Error")
             }

@@ -54,7 +54,7 @@ final class AsyncSemaphoreTests: XCTestCase {
                 try await semaphore.wait()
             }
             group.addTask {
-                try await Task.sleep(nanoseconds: 10000)
+                try await Task.sleep(nanoseconds: 100_000)
                 let rt = semaphore.signal()
                 XCTAssertEqual(rt, true)
             }
@@ -71,6 +71,7 @@ final class AsyncSemaphoreTests: XCTestCase {
                 try await semaphore.wait()
             }
             group.addTask {
+                try await Task.sleep(nanoseconds: 100_000)
                 let rt = semaphore.signal()
                 XCTAssertEqual(rt, true)
                 let rt2 = semaphore.signal()
@@ -129,7 +130,7 @@ final class AsyncSemaphoreTests: XCTestCase {
         let task = Task {
             do {
                 do {
-                    try await Task.sleep(nanoseconds: 10000)
+                    try await Task.sleep(nanoseconds: 100_000)
                 } catch {}
                 try await semaphore.wait()
             } catch is CancellationError {

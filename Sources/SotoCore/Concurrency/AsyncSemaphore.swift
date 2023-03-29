@@ -44,7 +44,7 @@ public final class AsyncSemaphore: @unchecked Sendable {
     var value: Int
     /// queue of suspensions waiting on semaphore
     private var suspended: Deque<Suspension>
-    /// lock. Can only access `suspended` and `missedSignals` inside lock
+    /// lock. Can only access `suspended`
     private let lock: NIOLock
 
     /// Initialize AsyncSemaphore
@@ -61,9 +61,7 @@ public final class AsyncSemaphore: @unchecked Sendable {
         self.value += 1
         if self.value <= 0 {
             // if value after signal is <= 0 then there should be a suspended
-            // task in the suspended array. If there isn't it is because `signal`
-            // in the middle of a `wait` call. In that situation increment
-            // `missedSignals`
+            // task in the suspended array.
             if let suspension = suspended.popFirst() {
                 self.lock.unlock()
                 suspension.continuation.resume()

@@ -77,30 +77,25 @@ extension Sequence where Element: Sendable {
     /// - Returns: An array containing the transformed elements of this sequence.
     public func concurrentMap<T: Sendable>(maxConcurrentTasks: Int, priority: TaskPriority? = nil, _ transform: @Sendable @escaping (Element) async throws -> T) async rethrows -> [T] {
         let result: ContiguousArray<(Int, T)> = try await withThrowingTaskGroup(of: (Int, T).self) { group in
-            let semaphore = AsyncSemaphore(value: maxConcurrentTasks)
-            for element in self.enumerated() {
-                try await semaphore.wait()
+            var results = ContiguousArray<(Int, T)>()
+
+            for (index, element) in self.enumerated() {
+                if index >= maxConcurrentTasks {
+                    if let result = try await group.next() {
+                        results.append(result)
+                    }
+                }
                 group.addTask(priority: priority) {
-                    let result = try await transform(element.1)
-                    semaphore.signal()
-                    return (element.0, result)
+                    let result = try await transform(element)
+                    return (index, result)
                 }
             }
 
-            // Code for collating results copied from Sequence.map in Swift codebase
-            let initialCapacity = underestimatedCount
-            var result = ContiguousArray<(Int, T)>()
-            result.reserveCapacity(initialCapacity)
-
-            // Add elements up to the initial capacity without checking for regrowth.
-            for _ in 0..<initialCapacity {
-                try await result.append(group.next()!)
-            }
             // Add remaining elements, if any.
-            while let element = try await group.next() {
-                result.append(element)
+            while let result = try await group.next() {
+                results.append(result)
             }
-            return result
+            return results
         }
         // construct final array and fill in elements
         return [T](unsafeUninitializedCapacity: result.count) { buffer, count in

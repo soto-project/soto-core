@@ -29,6 +29,7 @@ extension AWSPayload {
         func stream(_ eventLoop: EventLoop) -> EventLoopFuture<StreamReaderResult> {
             let promise = eventLoop.makePromise(of: StreamReaderResult.self)
             promise.completeWithTask {
+                try Task.checkCancellation()
                 if let buffer = try await iteratorWrapper.wrappedValue.next() {
                     return .byteBuffer(buffer)
                 } else {

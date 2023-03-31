@@ -88,6 +88,4 @@ public struct AWSRawError: Error, CustomStringConvertible {
     }
 }
 
-#if compiler(>=5.6)
 extension AWSErrorContext: Sendable {}
-#endif

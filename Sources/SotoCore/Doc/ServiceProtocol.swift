@@ -36,6 +36,4 @@ extension ServiceProtocol {
     }
 }
 
-#if compiler(>=5.6)
 extension ServiceProtocol: Sendable {}
-#endif

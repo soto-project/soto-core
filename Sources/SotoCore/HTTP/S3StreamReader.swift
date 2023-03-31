@@ -197,7 +197,5 @@ final class S3ChunkedStreamReader: StreamReader {
     var bytesLeftToRead: Int
 }
 
-#if compiler(>=5.6)
 // All the mutable data in this class is never accessed concurrently
 extension S3ChunkedStreamReader: @unchecked Sendable {}
-#endif

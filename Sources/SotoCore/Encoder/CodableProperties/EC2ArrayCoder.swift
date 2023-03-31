@@ -17,7 +17,7 @@
 ///
 /// EC2 requires a special case array encoder as it flattens arrays on encode, while still expecting
 /// them to have array elements on decode.
-public struct EC2ArrayCoder<Properties: ArrayCoderProperties, Element: _SotoSendable>: CustomCoder {
+public struct EC2ArrayCoder<Properties: ArrayCoderProperties, Element: Sendable>: CustomCoder {
     public typealias CodableValue = [Element]
 }
 

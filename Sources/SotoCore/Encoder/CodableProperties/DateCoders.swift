@@ -16,12 +16,6 @@ import Foundation
 
 // MARK: TimeStamp Coders
 
-#if compiler(>=5.6)
-// @preconcurrency import doesn't work where a Sendable conformance is required by a protocol.
-// See https://bugs.swift.org/browse/SR-15936
-extension Date: @unchecked Sendable {}
-#endif
-
 /// Protocol for time stamp coders that use a DateFormatter. Use this to enforce the timestamp format we require, or to set the timestamp format output
 protocol DateFormatCoder: CustomDecoder, CustomEncoder where CodableValue == Date {
     /// format used by DateFormatter

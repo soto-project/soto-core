@@ -19,7 +19,7 @@ import NIOHTTP1
 /// Protocol for matchers used in waiters.
 ///
 /// A matcher returns whether the returned value from an AWS API call matches a certain state
-public protocol AWSWaiterMatcher: _SotoSendableProtocol {
+public protocol AWSWaiterMatcher: Sendable {
     func match(result: Result<Any, Error>) -> Bool
 }
 

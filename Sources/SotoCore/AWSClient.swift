@@ -745,8 +745,6 @@ extension Logger {
     }
 }
 
-#if compiler(>=5.6)
 extension AWSClient: Sendable {}
 extension AWSClient.HTTPClientProvider: Sendable {}
 extension AWSClient.Options: Sendable {}
-#endif

@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5.2) && canImport(_Concurrency)
-
 import Atomics
 import Dispatch
 import Foundation
@@ -415,5 +413,3 @@ extension AWSClient {
         return AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
     }
 }
-
-#endif // compiler(>=5.5.2) && canImport(_Concurrency)

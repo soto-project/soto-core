@@ -104,7 +104,5 @@ extension RotatingCredentialProvider: CustomStringConvertible {
     public var description: String { return "\(type(of: self))(\(provider.description))" }
 }
 
-#if compiler(>=5.6)
 // can use @unchecked Sendable here as access is protected by 'NIOLock'
 extension RotatingCredentialProvider: @unchecked Sendable {}
-#endif

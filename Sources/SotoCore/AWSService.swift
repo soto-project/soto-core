@@ -16,7 +16,7 @@ import struct Foundation.URL
 import NIOCore
 
 /// Services object protocol. Contains a client to communicate with AWS and configuration for defining how to communicate.
-public protocol AWSService: _SotoSendableProtocol {
+public protocol AWSService: Sendable {
     /// Client used to communicate with AWS
     var client: AWSClient { get }
     /// Service context details

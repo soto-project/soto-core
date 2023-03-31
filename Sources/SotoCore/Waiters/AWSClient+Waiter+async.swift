@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5.2) && canImport(_Concurrency)
-
 import Logging
 import NIOCore
 
@@ -39,5 +37,3 @@ extension AWSClient {
         return try await self.waitUntil(input, waiter: waiter, maxWaitTime: maxWaitTime, logger: logger, on: eventLoop).get()
     }
 }
-
-#endif // compiler(>=5.5.2) && canImport(_Concurrency)

@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5.2) && canImport(_Concurrency)
-
 import Logging
 import NIOCore
 
@@ -263,5 +261,3 @@ extension AWSClient {
         }
     }
 }
-
-#endif // compiler(>=5.5.2) && canImport(_Concurrency)

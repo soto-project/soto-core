@@ -19,7 +19,7 @@ import NIOCore
 import SotoSignerV4
 
 /// Provides AWS credentials
-public protocol CredentialProvider: _SotoSendableProtocol, CustomStringConvertible {
+public protocol CredentialProvider: Sendable, CustomStringConvertible {
     /// Return credential
     /// - Parameters:
     ///   - eventLoop: EventLoop to run on

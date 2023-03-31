@@ -124,7 +124,6 @@ public struct AWSEndpointDiscovery {
     }
 }
 
-#if compiler(>=5.6)
 // can be set to Sendable as the contents are only set internally and they are
 // protected by a lock
 extension AWSEndpointStorage: @unchecked Sendable {}
@@ -133,4 +132,3 @@ extension AWSEndpointStorage: @unchecked Sendable {}
 // which then requires multiple versions of that function if I am going to support backwards
 // compatiblity
 extension AWSEndpointDiscovery: @unchecked Sendable {}
-#endif

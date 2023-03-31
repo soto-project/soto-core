@@ -302,11 +302,8 @@ public final class AWSServiceConfig {
 
     /// Details about endpoint variants eg fips, dualstack
     public struct EndpointVariant {
-        #if compiler(>=5.6)
         public typealias EndpointCallback = @Sendable (String) -> String
-        #else
-        public typealias EndpointCallback = (String) -> String
-        #endif
+
         let defaultEndpoint: EndpointCallback?
         let endpoints: [String: String]
 
@@ -367,8 +364,6 @@ public final class AWSServiceConfig {
     }
 }
 
-#if compiler(>=5.6)
 extension AWSServiceConfig: Sendable {}
 extension AWSServiceConfig.Options: Sendable {}
 extension AWSServiceConfig.EndpointVariant: Sendable {}
-#endif

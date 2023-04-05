@@ -12,7 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
+#if compiler(<5.7)
+@preconcurrency import struct Foundation.Data
+#else
+import struct Foundation.Data
+#endif
 @testable import SotoCore
 import XCTest
 

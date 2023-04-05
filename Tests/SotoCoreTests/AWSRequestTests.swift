@@ -12,6 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if compiler(<5.7)
+@preconcurrency import struct Foundation.Data
+#else
+import struct Foundation.Data
+#endif
 import NIOCore
 import NIOHTTP1
 @testable import SotoCore

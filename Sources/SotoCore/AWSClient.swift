@@ -12,12 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.6)
-@preconcurrency import Atomics
-#else
-import Atomics
-#endif
 import AsyncHTTPClient
+import Atomics
 import Dispatch
 import struct Foundation.URL
 import struct Foundation.URLQueryItem

@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+import Atomics
 import Foundation
 import Logging
 import NIOConcurrencyHelpers
@@ -24,11 +25,6 @@ import NIOPosix
 import SotoTestUtils
 import SotoXML
 import XCTest
-#if compiler(>=5.6)
-@preconcurrency import Atomics
-#else
-import Atomics
-#endif
 
 class AWSClientTests: XCTestCase {
     func testGetCredential() {

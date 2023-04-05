@@ -12,11 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.6)
-@preconcurrency import Atomics
-#else
 import Atomics
-#endif
 import NIOCore
 import SotoCore
 import SotoTestUtils

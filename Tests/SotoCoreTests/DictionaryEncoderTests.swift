@@ -126,7 +126,7 @@ class DictionaryEncoderTests: XCTestCase {
         struct Test: AWSDecodableShape {
             let t: Test2
         }
-        let dictionary: [String: Any] = ["t": ["a": 4, "b": "Hello"] as [String : Any]]
+        let dictionary: [String: Any] = ["t": ["a": 4, "b": "Hello"] as [String: Any]]
         self.testDecode(type: Test.self, dictionary: dictionary) {
             XCTAssertEqual($0.t.a, 4)
             XCTAssertEqual($0.t.b, "Hello")
@@ -353,7 +353,7 @@ class DictionaryEncoderTests: XCTestCase {
                     "data": "hello".data(using: .utf8)!.base64EncodedString(),
                     "bool": true,
                     "optional": "hello",
-                ] as [String : Any],
+                ] as [String: Any],
                 "dictionary": ["foo": "bar"],
                 "array": ["a", "b", "c"],
             ]
@@ -395,7 +395,7 @@ class DictionaryEncoderTests: XCTestCase {
                     "data": "hello".data(using: .utf8)!,
                     "bool": true,
                     "optional": "hello",
-                ] as [String : Any],
+                ] as [String: Any],
                 "dictionary": ["foo": "bar"],
                 "array": ["a", "b", "c"],
             ]

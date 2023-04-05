@@ -33,7 +33,7 @@
 struct UnsafeTransfer<Wrapped> {
     @usableFromInline
     var wrappedValue: Wrapped
-    
+
     @inlinable
     init(_ wrappedValue: Wrapped) {
         self.wrappedValue = wrappedValue
@@ -52,7 +52,7 @@ extension UnsafeTransfer: Hashable where Wrapped: Hashable {}
 final class UnsafeMutableTransferBox<Wrapped> {
     @usableFromInline
     var wrappedValue: Wrapped
-    
+
     @inlinable
     init(_ wrappedValue: Wrapped) {
         self.wrappedValue = wrappedValue
@@ -60,4 +60,3 @@ final class UnsafeMutableTransferBox<Wrapped> {
 }
 
 extension UnsafeMutableTransferBox: @unchecked Sendable {}
-

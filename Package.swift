@@ -42,7 +42,6 @@ let package = Package(
                 .product(name: "Logging", package: "swift-log"),
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
                 .product(name: "Atomics", package: "swift-atomics"),
-                .product(name: "Collections", package: "swift-collections"),
                 .product(name: "Metrics", package: "swift-metrics"),
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "NIOHTTP1", package: "swift-nio"),

@@ -23,11 +23,14 @@ extension AWSPayload {
     ///   - seq: AsyncSequence providing ByteBuffers
     ///   - size: total size of sequence in bytes
     public static func asyncSequence<AsyncSeq: AsyncSequence & Sendable>(_ seq: AsyncSeq, size: Int?) -> Self where AsyncSeq.Element == ByteBuffer {
+        // we can wrap the iterator in an unsafe transfer box because the stream function is only
+        // ever called serially and will never be called concurrently
+        let iteratorWrapper = UnsafeMutableTransferBox(seq.makeAsyncIterator())
         func stream(_ eventLoop: EventLoop) -> EventLoopFuture<StreamReaderResult> {
             let promise = eventLoop.makePromise(of: StreamReaderResult.self)
             promise.completeWithTask {
-                var iterator = seq.makeAsyncIterator()
-                if let buffer = try await iterator.next() {
+                try Task.checkCancellation()
+                if let buffer = try await iteratorWrapper.wrappedValue.next() {
                     return .byteBuffer(buffer)
                 } else {
                     return .end

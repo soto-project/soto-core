@@ -241,7 +241,6 @@ extension Base64 {
     {
         let newCapacity = ((bytes.count + 2) / 3) * 4
 
-        #if swift(>=5.3)
         if #available(OSX 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *) {
             if let result = bytes.withContiguousStorageIfAvailable({ input -> String in
                 String(unsafeUninitializedCapacity: newCapacity) { buffer -> Int in
@@ -258,10 +257,6 @@ extension Base64 {
             let bytes: [UInt8] = self.encodeBytes(bytes: bytes, options: options)
             return String(decoding: bytes, as: Unicode.UTF8.self)
         }
-        #else
-        let bytes: [UInt8] = self.encodeBytes(bytes: bytes, options: options)
-        return String(decoding: bytes, as: Unicode.UTF8.self)
-        #endif
     }
 
     @inlinable

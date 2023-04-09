@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5.2) && canImport(_Concurrency)
-
 import NIOCore
 
 /// An AsyncSequence that returns fixed size ByteBuffers from an AsyncSequence of ByteBuffers
@@ -89,5 +87,3 @@ extension AsyncSequence where Element == ByteBuffer {
         return .init(byteBufferSequence: self, chunkSize: chunkSize)
     }
 }
-
-#endif // compiler(>=5.5.2) && canImport(_Concurrency)

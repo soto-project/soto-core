@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5.2) && canImport(_Concurrency)
-
 import SotoCore
 import XCTest
 
@@ -110,5 +108,3 @@ final class MapTests: XCTestCase {
         XCTAssertNotEqual(value, 1 * 2 * 3 * 4 * 5 * 6 * 7 * 8)
     }
 }
-
-#endif // compiler(>=5.5.2) && canImport(_Concurrency)

@@ -68,14 +68,6 @@ final class AsyncSequenceTests: XCTestCase {
     func testFixedSizeByteBufferShortSequence() async throws {
         try await self.testFixedSizeByteBufferSequence(bufferSize: 250, generatedByteBufferSizeRange: 500..<1000, fixedChunkSize: 1000)
     }
-
-    func testEnumeratedSequence() async throws {
-        let sequence = [24, 23, 300]
-        let asyncSequence = sequence.asyncSequence
-        let result: [(Int, Int)] = try await asyncSequence.enumerated().collect()
-        XCTAssertEqual(result.map { $0.0 }, [0, 1, 2])
-        XCTAssertEqual(result.map { $0.1 }, sequence)
-    }
 }
 
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
@@ -101,42 +93,6 @@ struct TestByteBufferSequence: AsyncSequence {
     /// Make async iterator
     public func makeAsyncIterator() -> AsyncIterator {
         return AsyncIterator(source: self.source, range: self.range)
-    }
-}
-
-/// create AsyncSequence from Sequence
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-extension Sequence {
-    var asyncSequence: SequenceAsyncSequence<Self> { .init(base: self) }
-}
-
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-struct SequenceAsyncSequence<Base: Sequence>: AsyncSequence {
-    typealias Element = Base.Element
-    let base: Base
-    public struct AsyncIterator: AsyncIteratorProtocol {
-        var iterator: Base.Iterator
-
-        public mutating func next() async throws -> Element? {
-            return self.iterator.next()
-        }
-    }
-
-    /// Make async iterator
-    public func makeAsyncIterator() -> AsyncIterator {
-        return AsyncIterator(iterator: self.base.makeIterator())
-    }
-}
-
-/// Collect output of AsyncSequence into an Array
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-extension AsyncSequence {
-    func collect() async rethrows -> [Element] {
-        var result: [Element] = []
-        for try await element in self {
-            result.append(element)
-        }
-        return result
     }
 }
 

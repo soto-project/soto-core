@@ -31,6 +31,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", from: "1.13.1"),
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.11.2"),
         .package(url: "https://github.com/adam-fowler/jmespath.swift.git", from: "1.0.2"),
+        .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0"..<"3.0.0"),
     ],
     targets: [
         .target(
@@ -52,7 +53,9 @@ let package = Package(
                 .product(name: "JMESPath", package: "jmespath.swift"),
             ]
         ),
-        .target(name: "SotoCrypto", dependencies: []),
+        .target(name: "SotoCrypto", dependencies: [
+            .product(name: "Crypto", package: "swift-crypto", condition: .when(platforms: [.linux])),
+        ]),
         .target(name: "SotoSignerV4", dependencies: [
             .byName(name: "SotoCrypto"),
             .product(name: "NIOCore", package: "swift-nio"),
@@ -97,16 +100,3 @@ let package = Package(
         ]),
     ]
 )
-
-// switch for whether to use swift crypto. Swift crypto requires macOS10.15 or iOS13.I'd rather not pass this requirement on
-#if os(Linux)
-let useSwiftCrypto = true
-#else
-let useSwiftCrypto = false
-#endif
-
-// Use Swift cypto on Linux.
-if useSwiftCrypto {
-    package.dependencies.append(.package(url: "https://github.com/apple/swift-crypto.git", "1.0.0"..<"3.0.0"))
-    package.targets.first { $0.name == "SotoCrypto" }?.dependencies.append(.product(name: "Crypto", package: "swift-crypto"))
-}

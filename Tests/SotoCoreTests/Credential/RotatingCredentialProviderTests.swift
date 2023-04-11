@@ -23,11 +23,7 @@ import XCTest
 
 class RotatingCredentialProviderTests: XCTestCase {
     final class MetaDataTestClient: CredentialProvider {
-        #if compiler(>=5.6)
         typealias TestCallback = @Sendable (EventLoop) -> EventLoopFuture<ExpiringCredential>
-        #else
-        typealias TestCallback = (EventLoop) -> EventLoopFuture<ExpiringCredential>
-        #endif
         let callback: TestCallback
 
         init(_ callback: @escaping TestCallback) {

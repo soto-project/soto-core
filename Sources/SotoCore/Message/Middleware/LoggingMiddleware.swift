@@ -17,11 +17,7 @@ import NIOHTTP1
 
 /// Middleware that outputs the contents of requests being sent to AWS and the contents of the responses received.
 public struct AWSLoggingMiddleware: AWSServiceMiddleware {
-    #if compiler(>=5.6)
     public typealias LoggingFunction = @Sendable (String) -> Void
-    #else
-    public typealias LoggingFunction = (String) -> Void
-    #endif
     /// initialize AWSLoggingMiddleware
     /// - parameters:
     ///     - log: Function to call with logging output
@@ -90,9 +86,5 @@ public struct AWSLoggingMiddleware: AWSServiceMiddleware {
         return response
     }
 
-    #if compiler(>=5.6)
     let log: @Sendable (@autoclosure () -> String) -> Void
-    #else
-    let log: (@autoclosure () -> String) -> Void
-    #endif
 }

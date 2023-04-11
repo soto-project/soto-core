@@ -48,7 +48,5 @@ public struct AWSEditHeadersMiddleware: AWSServiceMiddleware {
     }
 }
 
-#if compiler(>=5.6)
 extension AWSEditHeadersMiddleware: Sendable {}
 extension AWSEditHeadersMiddleware.HeaderEdit: Sendable {}
-#endif

@@ -47,6 +47,4 @@ extension AWSServiceConfig.Options {
     }
 }
 
-#if compiler(>=5.6)
 extension EndpointVariantType: Sendable {}
-#endif

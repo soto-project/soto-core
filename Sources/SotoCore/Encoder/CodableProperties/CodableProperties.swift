@@ -17,7 +17,7 @@ import JMESPath
 
 /// base protocol for encoder/decoder objects
 public protocol CustomCoder {
-    associatedtype CodableValue: _SotoSendable
+    associatedtype CodableValue: Sendable
 }
 
 /// Protocol for object that will encode a value
@@ -156,7 +156,5 @@ internal struct EncodingWrapperKey: CodingKey {
     }
 }
 
-#if compiler(>=5.6)
 extension CustomCoding: Sendable {}
 extension OptionalCustomCoding: Sendable {}
-#endif

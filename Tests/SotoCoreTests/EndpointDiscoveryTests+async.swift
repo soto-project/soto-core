@@ -12,13 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5.2) && canImport(_Concurrency)
-
-#if compiler(>=5.6)
-@preconcurrency import Atomics
-#else
 import Atomics
-#endif
 import NIOCore
 import SotoCore
 import SotoTestUtils
@@ -229,5 +223,3 @@ final class EndpointDiscoveryAsyncTests: XCTestCase {
         XCTAssertEqual(service.getEndpointsCalledCount.load(ordering: .sequentiallyConsistent), 0)
     }
 }
-
-#endif // compiler(>=5.5.2) && canImport(_Concurrency)

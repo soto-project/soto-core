@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5.2) && canImport(_Concurrency)
-
 import NIOCore
 import SotoCore
 import SotoTestUtils
@@ -95,5 +93,3 @@ struct TestByteBufferSequence: AsyncSequence {
         return AsyncIterator(source: self.source, range: self.range)
     }
 }
-
-#endif // compiler(>=5.5.2) && canImport(_Concurrency)

@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5.2) && canImport(_Concurrency)
-
 import AsyncHTTPClient
 import NIOCore
 import NIOPosix
@@ -22,7 +20,7 @@ import SotoTestUtils
 import XCTest
 
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-final class PaginateAsyncTests: XCTestCase {
+final class PaginateAsyncTests: XCTestCase, @unchecked Sendable {
     enum Error: Swift.Error {
         case didntFindToken
     }
@@ -239,9 +237,3 @@ final class PaginateAsyncTests: XCTestCase {
         }
     }
 }
-
-#if compiler(>=5.6)
-extension PaginateAsyncTests: @unchecked Sendable {}
-#endif
-
-#endif // compiler(>=5.5.2) && canImport(_Concurrency)

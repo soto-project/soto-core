@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 /// Protocol for providing credential details for accessing AWS services
-public protocol Credential: _SignerSendable {
+public protocol Credential: Sendable {
     var accessKeyId: String { get }
     var secretAccessKey: String { get }
     var sessionToken: String? { get }

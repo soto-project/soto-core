@@ -23,7 +23,7 @@ import struct Foundation.URLComponents
 import SotoCrypto
 
 /// Amazon Web Services V4 Signer
-public struct AWSSigner: _SignerSendable {
+public struct AWSSigner: Sendable {
     /// Security credentials for accessing AWS services
     public let credentials: Credential
     /// Service signing name. In general this is the same as the service name

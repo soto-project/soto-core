@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2022 the Soto project authors
+// Copyright (c) 2021-2023 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -12,8 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.6)
-public typealias _SignerSendable = Sendable
-#else
-public typealias _SignerSendable = Any
-#endif
+@available(*, deprecated, renamed: "Sendable")
+public typealias _SotoSendable = Sendable
+
+@preconcurrency public protocol _SotoSendableProtocol: Sendable {}

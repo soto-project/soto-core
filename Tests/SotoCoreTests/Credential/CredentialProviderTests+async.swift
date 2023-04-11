@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5.2) && canImport(_Concurrency)
-
 import NIOCore
 import SotoCore
 import SotoTestUtils
@@ -42,5 +40,3 @@ class AsyncCredentialProviderTests: XCTestCase {
         XCTAssertNoThrow(try credentialsFuture.wait())
     }
 }
-
-#endif // compiler(>=5.5.2) && canImport(_Concurrency)

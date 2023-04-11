@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5.2) && canImport(_Concurrency)
-
 import AsyncHTTPClient
 import Dispatch
 import Logging
@@ -223,5 +221,3 @@ final class AWSClientAsyncTests: XCTestCase {
         try await httpClient.shutdown()
     }
 }
-
-#endif // compiler(>=5.5.2) && canImport(_Concurrency)

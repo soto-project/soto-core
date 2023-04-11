@@ -27,7 +27,7 @@ extension AWSClient {
     }
 
     /// A waiter is a client side abstraction used to poll a resource until a desired state is reached
-    public struct Waiter<Input: _SotoSendable, Output: _SotoSendable> {
+    public struct Waiter<Input: Sendable, Output: Sendable> {
         /// An acceptor checks the result of a call and can change the waiter state based on that result
         public struct Acceptor {
             public init(state: AWSClient.WaiterState, matcher: AWSWaiterMatcher) {
@@ -153,7 +153,6 @@ extension AWSClient {
     }
 }
 
-#if compiler(>=5.6)
 extension AWSClient.WaiterState: Sendable {}
 extension AWSClient.Waiter.Acceptor: Sendable {}
 // I could require the Waiter.command to be Sendable, but it just generates
@@ -161,4 +160,3 @@ extension AWSClient.Waiter.Acceptor: Sendable {}
 // which then requires multiple versions of those function if I am going to
 // support backwards compatiblity
 extension AWSClient.Waiter: @unchecked Sendable {}
-#endif

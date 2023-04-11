@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5.2) && canImport(_Concurrency)
-
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension Sequence where Element: Sendable {
     /// Returns an array containing the results of mapping the given async closure over
@@ -106,5 +104,3 @@ extension Sequence where Element: Sendable {
         }
     }
 }
-
-#endif // compiler(>=5.5.2) && canImport(_Concurrency)

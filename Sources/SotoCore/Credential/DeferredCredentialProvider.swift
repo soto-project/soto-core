@@ -82,8 +82,6 @@ extension DeferredCredentialProvider: CustomStringConvertible {
     public var description: String { return "\(type(of: self))(\(self.provider.description))" }
 }
 
-#if compiler(>=5.6)
 // can use @unchecked Sendable here as `internalCredential` is accessed via `credential` which
 // protects access with a `NIOLock`
 extension DeferredCredentialProvider: @unchecked Sendable {}
-#endif

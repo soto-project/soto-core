@@ -97,7 +97,7 @@ struct ECSMetaDataClient: MetaDataClient {
 
     let httpClient: HTTPClient
     let endpointURL: String
-    let decoder = Self.createJSONDecoder()
+    let decoder = UnsafeTransfer(Self.createJSONDecoder())
 
     init?(httpClient: HTTPClient, host: String = ECSMetaDataClient.Host) {
         guard let relativeURL = Environment[Self.RelativeURIEnvironmentName] else {
@@ -114,7 +114,7 @@ struct ECSMetaDataClient: MetaDataClient {
                 guard let body = response.body else {
                     throw MetaDataClientError.missingMetaData
                 }
-                return try self.decoder.decode(MetaData.self, from: body)
+                return try self.decoder.wrappedValue.decode(MetaData.self, from: body)
             }
     }
 
@@ -174,7 +174,7 @@ struct InstanceMetaDataClient: MetaDataClient {
 
     let httpClient: HTTPClient
     let host: String
-    let decoder = Self.createJSONDecoder()
+    let decoder = UnsafeTransfer(Self.createJSONDecoder())
 
     init(httpClient: HTTPClient, host: String = InstanceMetaDataClient.Host) {
         self.httpClient = httpClient
@@ -227,7 +227,7 @@ struct InstanceMetaDataClient: MetaDataClient {
                     throw MetaDataClientError.missingMetaData
                 }
 
-                return try self.decoder.decode(InstanceMetaData.self, from: body)
+                return try self.decoder.wrappedValue.decode(InstanceMetaData.self, from: body)
             }
     }
 

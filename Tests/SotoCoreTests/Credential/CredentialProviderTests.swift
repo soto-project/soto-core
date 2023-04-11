@@ -13,16 +13,12 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+import Atomics
 import Logging
 import NIOCore
 import NIOPosix
 @testable import SotoCore
 import SotoTestUtils
-#if compiler(>=5.6)
-@preconcurrency import Atomics
-#else
-import Atomics
-#endif
 import XCTest
 
 final class CredentialProviderTests: XCTestCase {

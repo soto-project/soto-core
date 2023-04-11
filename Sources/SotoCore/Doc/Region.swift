@@ -243,7 +243,5 @@ public extension Region {
     }
 }
 
-#if compiler(>=5.6)
 extension Region: Sendable {}
 extension AWSPartition: Sendable {}
-#endif

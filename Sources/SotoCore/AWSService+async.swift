@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5.2) && canImport(_Concurrency)
-
 import struct Foundation.URL
 import NIOCore
 
@@ -58,5 +56,3 @@ extension AWSService {
         return try await self.client.signHeaders(url: url, httpMethod: httpMethod, headers: headers, body: body, serviceConfig: self.config, logger: logger)
     }
 }
-
-#endif // compiler(>=5.5.2) && canImport(_Concurrency)

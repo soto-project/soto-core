@@ -21,7 +21,7 @@ import struct Foundation.UUID
 ///
 /// They need to be Codable so they can be serialized. They also need to provide details
 /// on how their container classes are coded when serializing XML.
-public protocol AWSShape: _SotoSendableProtocol {
+public protocol AWSShape: Sendable {
     /// The array of members serialization helpers
     static var _encoding: [AWSMemberEncoding] { get }
     static var _options: AWSShapeOptions { get }

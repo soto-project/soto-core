@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5.2) && canImport(_Concurrency)
-
 @testable import SotoCore
 import SotoTestUtils
 import XCTest
@@ -72,5 +70,3 @@ final class AWSServiceAsyncTests: XCTestCase {
         XCTAssertNotNil(headers["Authorization"].first)
     }
 }
-
-#endif // compiler(>=5.5.2) && canImport(_Concurrency)

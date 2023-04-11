@@ -199,7 +199,5 @@ extension AWSPayload: Decodable {
     }
 }
 
-#if compiler(>=5.6)
 extension AWSPayload: Sendable {}
 extension AWSPayload.Payload: Sendable {}
-#endif

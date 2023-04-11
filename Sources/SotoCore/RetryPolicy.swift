@@ -50,7 +50,7 @@ public enum RetryStatus {
 }
 
 /// Protocol for Retry strategy. Has function returning amount of time before the next retry after an HTTP error
-public protocol RetryPolicy: _SotoSendableProtocol {
+public protocol RetryPolicy: Sendable {
     /// Returns whether we should retry and how long we should wait before retrying
     /// - Parameters:
     ///   - error: Error returned by HTTP client

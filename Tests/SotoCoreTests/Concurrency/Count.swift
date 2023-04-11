@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.5.2) && canImport(_Concurrency)
-
 // Count type for testing concurrency primitives
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 actor Count {
@@ -47,5 +45,3 @@ actor Count {
         return self.value
     }
 }
-
-#endif // compiler(>=5.5.2) && canImport(_Concurrency)

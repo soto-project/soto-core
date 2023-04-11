@@ -25,7 +25,7 @@ public enum StreamReaderResult {
 public typealias StreamReadFunction = (EventLoop) -> EventLoopFuture<StreamReaderResult>
 
 /// Protocol for objects that supply streamed data to HTTPClient.Body.StreamWriter
-protocol StreamReader: _SotoSendableProtocol {
+protocol StreamReader: Sendable {
     /// size of data to be streamed
     var size: Int? { get }
     /// total size of data to be streamed plus any chunk headers
@@ -78,9 +78,7 @@ struct ChunkedStreamReader: StreamReader {
     let read: StreamReadFunction
 }
 
-#if compiler(>=5.6)
 extension StreamReaderResult: Sendable {}
 // read function is reason ChunkedStreamReader is not Sendable. We can guarantee this is never called
 // concurrently
 extension ChunkedStreamReader: @unchecked Sendable {}
-#endif

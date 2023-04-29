@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import func Foundation.NSMakeRange
 import var Foundation.NSNotFound
+import struct Foundation.NSRange
 import class Foundation.NSRegularExpression
 import struct Foundation.UUID
 
@@ -159,7 +159,8 @@ public extension AWSEncodableShape {
 
     func validate(_ value: String, name: String, parent: String, pattern: String) throws {
         let regularExpression = try NSRegularExpression(pattern: pattern, options: [])
-        let firstMatch = regularExpression.rangeOfFirstMatch(in: value, options: .anchored, range: NSMakeRange(0, value.count))
+        let nsRange = NSRange(value.startIndex..<value.endIndex, in: value)
+        let firstMatch = regularExpression.rangeOfFirstMatch(in: value, options: .anchored, range: nsRange)
         guard firstMatch.location != NSNotFound, firstMatch.length > 0 else { throw Self.validationError("\(parent).\(name) (\(value)) does not match pattern \(pattern).") }
     }
 

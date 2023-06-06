@@ -21,6 +21,10 @@ import class Foundation.DateFormatter
 import struct Foundation.Locale
 import struct Foundation.TimeZone
 
+#if compiler(<5.7)
+extension Date: @unchecked Sendable {}
+#endif
+
 // MARK: TimeStamp Coders
 
 /// Protocol for time stamp coders that use a DateFormatter. Use this to enforce the timestamp format we require, or to set the timestamp format output

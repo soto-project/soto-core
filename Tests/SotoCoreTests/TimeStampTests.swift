@@ -12,6 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if compiler(<5.7) || os(Linux)
+@preconcurrency import struct Foundation.Date
+#else
+import struct Foundation.Date
+#endif
 import NIOHTTP1
 @testable import SotoCore
 import SotoTestUtils

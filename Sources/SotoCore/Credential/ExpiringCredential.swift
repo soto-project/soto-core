@@ -12,7 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if compiler(>=5.7) && os(Linux)
+@preconcurrency import struct Foundation.Date
+#else
 import struct Foundation.Date
+#endif
 import struct Foundation.TimeInterval
 import SotoSignerV4
 

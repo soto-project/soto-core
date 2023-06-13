@@ -14,6 +14,11 @@
 
 import AsyncHTTPClient
 import Atomics
+#if compiler(>=5.7) && os(Linux)
+@preconcurrency import struct Foundation.Date
+#else
+import struct Foundation.Date
+#endif
 import Logging
 import NIOCore
 import NIOPosix

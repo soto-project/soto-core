@@ -12,7 +12,14 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
+#if compiler(>=5.7) && os(Linux)
+@preconcurrency import struct Foundation.Date
+#else
+import struct Foundation.Date
+#endif
+import class Foundation.DateFormatter
+import struct Foundation.Locale
+import struct Foundation.TimeZone
 
 #if compiler(<5.7)
 extension Date: @unchecked Sendable {}

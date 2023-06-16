@@ -60,7 +60,6 @@ extension AWSClient {
     ///     - input: Input object
     ///     - hostPrefix: String to prefix host name with
     ///     - logger: Logger to log request details to
-    ///     - eventLoop: EventLoop to run request on
     public func execute<Input: AWSEncodableShape>(
         operation operationName: String,
         path: String,
@@ -68,8 +67,7 @@ extension AWSClient {
         serviceConfig: AWSServiceConfig,
         input: Input,
         hostPrefix: String? = nil,
-        logger: Logger = AWSClient.loggingDisabled,
-        on eventLoop: EventLoop? = nil
+        logger: Logger = AWSClient.loggingDisabled
     ) async throws {
         return try await self.execute(
             operation: operationName,
@@ -84,14 +82,13 @@ extension AWSClient {
                 )
             },
             execute: { request, eventLoop, logger in
-                return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger)
+                return try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger)
             },
             processResponse: { _ in
                 return
             },
             config: serviceConfig,
-            logger: logger,
-            on: eventLoop
+            logger: logger
         )
     }
 
@@ -102,14 +99,12 @@ extension AWSClient {
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
     ///     - serviceConfig: AWS Service configuration
     ///     - logger: Logger to log request details to
-    ///     - eventLoop: EventLoop to run request on
     public func execute(
         operation operationName: String,
         path: String,
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
-        logger: Logger = AWSClient.loggingDisabled,
-        on eventLoop: EventLoop? = nil
+        logger: Logger = AWSClient.loggingDisabled
     ) async throws {
         return try await self.execute(
             operation: operationName,
@@ -122,14 +117,13 @@ extension AWSClient {
                 )
             },
             execute: { request, eventLoop, logger in
-                return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger)
+                return try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger)
             },
             processResponse: { _ in
                 return
             },
             config: serviceConfig,
-            logger: logger,
-            on: eventLoop
+            logger: logger
         )
     }
 
@@ -140,7 +134,6 @@ extension AWSClient {
     ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
     ///     - serviceConfig: AWS Service configuration
     ///     - logger: Logger to log request details to
-    ///     - eventLoop: EventLoop to run request on
     /// - returns:
     ///     Output object that completes when response is received
     public func execute<Output: AWSDecodableShape>(
@@ -148,8 +141,7 @@ extension AWSClient {
         path: String,
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
-        logger: Logger = AWSClient.loggingDisabled,
-        on eventLoop: EventLoop? = nil
+        logger: Logger = AWSClient.loggingDisabled
     ) async throws -> Output {
         return try await self.execute(
             operation: operationName,
@@ -162,14 +154,13 @@ extension AWSClient {
                 )
             },
             execute: { request, eventLoop, logger in
-                return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger)
+                return try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger)
             },
             processResponse: { response in
                 return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
             },
             config: serviceConfig,
-            logger: logger,
-            on: eventLoop
+            logger: logger
         )
     }
 
@@ -182,7 +173,6 @@ extension AWSClient {
     ///     - input: Input object
     ///     - hostPrefix: String to prefix host name with
     ///     - logger: Logger to log request details to
-    ///     - eventLoop: EventLoop to run request on
     /// - returns:
     ///     Output object that completes when response is received
     public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(
@@ -192,8 +182,7 @@ extension AWSClient {
         serviceConfig: AWSServiceConfig,
         input: Input,
         hostPrefix: String? = nil,
-        logger: Logger = AWSClient.loggingDisabled,
-        on eventLoop: EventLoop? = nil
+        logger: Logger = AWSClient.loggingDisabled
     ) async throws -> Output {
         return try await self.execute(
             operation: operationName,
@@ -208,14 +197,13 @@ extension AWSClient {
                 )
             },
             execute: { request, eventLoop, logger in
-                return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger)
+                return try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger)
             },
             processResponse: { response in
                 return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
             },
             config: serviceConfig,
-            logger: logger,
-            on: eventLoop
+            logger: logger
         )
     }
 
@@ -228,7 +216,6 @@ extension AWSClient {
     ///     - input: Input object
     ///     - hostPrefix: String to prefix host name with
     ///     - logger: Logger to log request details to
-    ///     - eventLoop: EventLoop to run request on
     /// - returns:
     ///     Output object that completes when response is received
     public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(
@@ -239,7 +226,6 @@ extension AWSClient {
         input: Input,
         hostPrefix: String? = nil,
         logger: Logger = AWSClient.loggingDisabled,
-        on eventLoop: EventLoop? = nil,
         stream: @escaping AWSResponseStream
     ) async throws -> Output {
         return try await self.execute(
@@ -255,14 +241,13 @@ extension AWSClient {
                 )
             },
             execute: { request, eventLoop, logger in
-                return self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger, stream: stream)
+                return try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger, stream: stream)
             },
             processResponse: { response in
                 return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
             },
             config: serviceConfig,
-            logger: logger,
-            on: eventLoop
+            logger: logger
         )
     }
 
@@ -270,18 +255,17 @@ extension AWSClient {
     internal func execute<Output>(
         operation operationName: String,
         createRequest: @escaping () throws -> AWSRequest,
-        execute: @escaping (AWSHTTPRequest, EventLoop, Logger) -> EventLoopFuture<AWSHTTPResponse>,
+        execute: @escaping (AWSHTTPRequest, EventLoop, Logger) async throws -> AWSHTTPResponse,
         processResponse: @escaping (AWSHTTPResponse) throws -> Output,
         config: AWSServiceConfig,
-        logger: Logger = AWSClient.loggingDisabled,
-        on eventLoop: EventLoop? = nil
+        logger: Logger = AWSClient.loggingDisabled
     ) async throws -> Output {
-        let eventLoop = eventLoop ?? eventLoopGroup.next()
         let logger = logger.attachingRequestId(
             Self.globalRequestID.wrappingIncrementThenLoad(ordering: .relaxed),
             operation: operationName,
             service: config.service
         )
+        let eventLoop = self.eventLoopGroup.any()
         let dimensions: [(String, String)] = [("aws-service", config.service), ("aws-operation", operationName)]
         let startTime = DispatchTime.now().uptimeNanoseconds
 
@@ -309,10 +293,10 @@ extension AWSClient {
                 with: config,
                 eventLoop: eventLoop,
                 logger: logger,
-                request: { eventLoop in execute(awsRequest, eventLoop, logger) },
+                request: { eventLoop in try await execute(awsRequest, eventLoop, logger) },
                 processResponse: processResponse,
                 streaming: streaming
-            ).get()
+            )
             logger.trace("AWS Response")
             Metrics.Timer(
                 label: "aws_request_duration",
@@ -333,6 +317,86 @@ extension AWSClient {
         }
     }
 
+    func invoke<Output>(
+        with serviceConfig: AWSServiceConfig,
+        eventLoop: EventLoop,
+        logger: Logger,
+        request: @escaping (EventLoop) async throws -> AWSHTTPResponse,
+        processResponse: @escaping (AWSHTTPResponse) throws -> Output,
+        streaming: Bool
+    ) async throws -> Output {
+        var attempt = 0
+        while true {
+            do {
+                let response = try await request(eventLoop)
+                // if it returns an HTTP status code outside 2xx then throw an error
+                guard (200..<300).contains(response.status.code) else {
+                    throw self.createError(for: response, serviceConfig: serviceConfig, logger: logger)
+                }
+                let output = try processResponse(response)
+                return output
+            } catch {
+                // if streaming and the error returned is an AWS error fail immediately. Do not attempt
+                // to retry as the streaming function will not know you are retrying
+                if streaming,
+                   error is AWSErrorType || error is AWSRawError
+                {
+                    throw error
+                }
+                // If I get a retry wait time for this error then attempt to retry request
+                if case .retry(let retryTime) = self.retryPolicy.getRetryWaitTime(error: error, attempt: attempt) {
+                    logger.trace("Retrying request", metadata: [
+                        "aws-retry-time": "\(Double(retryTime.nanoseconds) / 1_000_000_000)",
+                    ])
+                    try await Task.sleep(nanoseconds: UInt64(retryTime.nanoseconds))
+                } else {
+                    throw error
+                }
+            }
+            attempt += 1
+        }
+    }
+
+    /* func execute(attempt: Int) {
+                 // execute HTTP request
+                 _ = request(eventLoop)
+                     .flatMapThrowing { response throws -> Void in
+                         // if it returns an HTTP status code outside 2xx then throw an error
+                         guard (200..<300).contains(response.status.code) else {
+                             throw self.createError(for: response, serviceConfig: serviceConfig, logger: logger)
+                         }
+                         let output = try processResponse(response)
+                         promise.succeed(output)
+                     }
+                     .flatMapErrorThrowing { error -> Void in
+                         // if streaming and the error returned is an AWS error fail immediately. Do not attempt
+                         // to retry as the streaming function will not know you are retrying
+                         if streaming,
+                            error is AWSErrorType || error is AWSRawError
+                         {
+                             promise.fail(error)
+                             return
+                         }
+                         // If I get a retry wait time for this error then attempt to retry request
+                         if case .retry(let retryTime) = self.retryPolicy.getRetryWaitTime(error: error, attempt: attempt) {
+                             logger.trace("Retrying request", metadata: [
+                                 "aws-retry-time": "\(Double(retryTime.nanoseconds) / 1_000_000_000)",
+                             ])
+                             // schedule task for retrying AWS request
+                             eventLoop.scheduleTask(in: retryTime) {
+                                 execute(attempt: attempt + 1)
+                             }
+                         } else {
+                             promise.fail(error)
+                         }
+                     }
+             }
+
+             execute(attempt: 0)
+
+             return promise.futureResult
+         }
+     } */
     /// Get credential used by client
     /// - Parameters:
     ///   - eventLoop: optional eventLoop to run operation on

@@ -31,11 +31,11 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         return (.init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger, options: .init()), eventLoopGroup, httpClient)
     }
 
-    func testCredentialProviderStatic() {
+    func testCredentialProviderStatic() async throws {
         let credentials = ConfigFileLoader.SharedCredentials.staticCredential(credential: StaticCredential(accessKeyId: "foo", secretAccessKey: "bar"))
         let (context, eventLoopGroup, httpClient) = self.makeContext()
 
-        let provider = try? ConfigFileCredentialProvider.credentialProvider(
+        let provider = try ConfigFileCredentialProvider.credentialProvider(
             from: credentials,
             context: context,
             endpoint: nil
@@ -43,12 +43,12 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         XCTAssertEqual((provider as? StaticCredential)?.accessKeyId, "foo")
         XCTAssertEqual((provider as? StaticCredential)?.secretAccessKey, "bar")
 
-        XCTAssertNoThrow(try provider?.shutdown(on: context.eventLoop).wait())
-        XCTAssertNoThrow(try httpClient.syncShutdown())
+        try await provider.shutdown(on: context.eventLoop).get()
+        try await httpClient.shutdown()
         XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
     }
 
-    func testCredentialProviderSTSAssumeRole() {
+    func testCredentialProviderSTSAssumeRole() async throws {
         let credentials = ConfigFileLoader.SharedCredentials.assumeRole(
             roleArn: "arn",
             sessionName: "baz",
@@ -57,7 +57,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         )
         let (context, eventLoopGroup, httpClient) = self.makeContext()
 
-        let provider = try? ConfigFileCredentialProvider.credentialProvider(
+        let provider = try ConfigFileCredentialProvider.credentialProvider(
             from: credentials,
             context: context,
             endpoint: nil
@@ -65,8 +65,8 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         XCTAssertTrue(provider is STSAssumeRoleCredentialProvider)
         XCTAssertEqual((provider as? STSAssumeRoleCredentialProvider)?.request.roleArn, "arn")
 
-        XCTAssertNoThrow(try provider?.shutdown(on: context.eventLoop).wait())
-        XCTAssertNoThrow(try httpClient.syncShutdown())
+        try await provider.shutdown(on: context.eventLoop).get()
+        try await httpClient.shutdown()
         XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
     }
 

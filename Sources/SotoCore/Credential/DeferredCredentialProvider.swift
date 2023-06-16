@@ -26,12 +26,12 @@ public class DeferredCredentialProvider: CredentialProvider {
     var credential: Credential? {
         get {
             self.lock.withLock {
-                internalCredential
+                self.internalCredential
             }
         }
         set {
             self.lock.withLock {
-                internalCredential = newValue
+                self.internalCredential = newValue
             }
         }
     }

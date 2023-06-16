@@ -17,7 +17,6 @@ import NIOCore
 import SotoSignerV4
 
 /// Async Protocol for providing AWS credentials
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 public protocol AsyncCredentialProvider: CredentialProvider {
     /// Return credential
     /// - Parameters:
@@ -26,11 +25,10 @@ public protocol AsyncCredentialProvider: CredentialProvider {
     func getCredential(on eventLoop: EventLoop, logger: Logger) async throws -> Credential
 }
 
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension AsyncCredentialProvider {
     public func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
         let promise = eventLoop.makePromise(of: Credential.self)
-        promise.completeWithTask { try await getCredential(on: eventLoop, logger: logger) }
+        promise.completeWithTask { try await self.getCredential(on: eventLoop, logger: logger) }
         return promise.futureResult
     }
 }

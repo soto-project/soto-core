@@ -207,12 +207,12 @@ class _XMLEncoder: Encoder {
         }
 
         func encode(_ value: Double, forKey key: Key) throws {
-            let childElement = XML.Element(name: key.stringValue, stringValue: try encoder.box(value))
+            let childElement = try XML.Element(name: key.stringValue, stringValue: encoder.box(value))
             element.addChild(childElement)
         }
 
         func encode(_ value: Float, forKey key: Key) throws {
-            let childElement = XML.Element(name: key.stringValue, stringValue: try encoder.box(value))
+            let childElement = try XML.Element(name: key.stringValue, stringValue: encoder.box(value))
             element.addChild(childElement)
         }
 
@@ -351,13 +351,13 @@ class _XMLEncoder: Encoder {
         }
 
         mutating func encode(_ value: Double) throws {
-            let childElement = XML.Element(name: key, stringValue: try encoder.box(value))
+            let childElement = try XML.Element(name: key, stringValue: encoder.box(value))
             element.addChild(childElement)
             count += 1
         }
 
         mutating func encode(_ value: Float) throws {
-            let childElement = XML.Element(name: key, stringValue: try encoder.box(value))
+            let childElement = try XML.Element(name: key, stringValue: encoder.box(value))
             element.addChild(childElement)
             count += 1
         }
@@ -454,15 +454,15 @@ extension _XMLEncoder: SingleValueEncodingContainer {
     }
 
     func encode(_ value: Double) throws {
-        storage.push(container: XML.Element(name: currentKey, stringValue: try box(value)))
+        try storage.push(container: XML.Element(name: currentKey, stringValue: box(value)))
     }
 
     func encode(_ value: Float) throws {
-        storage.push(container: XML.Element(name: currentKey, stringValue: try box(value)))
+        try storage.push(container: XML.Element(name: currentKey, stringValue: box(value)))
     }
 
     func encode<T>(_ value: T) throws where T: Encodable {
-        storage.push(container: try box(value))
+        try storage.push(container: box(value))
     }
 }
 

@@ -37,7 +37,7 @@ class ConfigFileLoadersTests: XCTestCase {
         return filepath
     }
 
-    func testLoadFileJustCredentials() throws {
+    func testLoadFileJustCredentials() async throws {
         let accessKey = "AKIAIOSFODNN7EXAMPLE"
         let secretKey = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
         let profile = ConfigFileLoader.defaultProfile
@@ -56,12 +56,12 @@ class ConfigFileLoadersTests: XCTestCase {
             try? eventLoopGroup.syncShutdownGracefully()
         }
 
-        let sharedCredentials = try ConfigFileLoader.loadSharedCredentials(
+        let sharedCredentials = try await ConfigFileLoader.loadSharedCredentials(
             credentialsFilePath: credentialsPath,
             configFilePath: "/dev/null",
             profile: profile,
             context: context
-        ).wait()
+        ).get()
 
         switch sharedCredentials {
         case .staticCredential(let credentials):
@@ -72,7 +72,7 @@ class ConfigFileLoadersTests: XCTestCase {
         }
     }
 
-    func testLoadFileCredentialsAndConfig() throws {
+    func testLoadFileCredentialsAndConfig() async throws {
         let accessKey = "AKIAIOSFODNN7EXAMPLE"
         let secretKey = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
         let profile = "marketingadmin"
@@ -104,18 +104,18 @@ class ConfigFileLoadersTests: XCTestCase {
             try? eventLoopGroup.syncShutdownGracefully()
         }
 
-        let sharedCredentials = try ConfigFileLoader.loadSharedCredentials(
+        let sharedCredentials = try await ConfigFileLoader.loadSharedCredentials(
             credentialsFilePath: credentialsPath,
             configFilePath: configPath,
             profile: profile,
             context: context
-        ).wait()
+        ).get()
 
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
 
         switch sharedCredentials {
         case .assumeRole(let aRoleArn, let aSessionName, let region, let sourceCredentialProvider):
-            let credentials = try sourceCredentialProvider.createProvider(context: context).getCredential(on: context.eventLoop, logger: context.logger).wait()
+            let credentials = try await sourceCredentialProvider.createProvider(context: context).getCredential(on: context.eventLoop, logger: context.logger).get()
             XCTAssertEqual(credentials.accessKeyId, accessKey)
             XCTAssertEqual(credentials.secretAccessKey, secretKey)
             XCTAssertEqual(aRoleArn, roleArn)
@@ -126,7 +126,7 @@ class ConfigFileLoadersTests: XCTestCase {
         }
     }
 
-    func testLoadFileConfigNotFound() throws {
+    func testLoadFileConfigNotFound() async throws {
         let profile = "marketingadmin"
         let roleArn = "arn:aws:iam::123456789012:role/marketingadminrole"
         let credentialsFile = """
@@ -144,12 +144,12 @@ class ConfigFileLoadersTests: XCTestCase {
             try? eventLoopGroup.syncShutdownGracefully()
         }
 
-        let sharedCredentials = try ConfigFileLoader.loadSharedCredentials(
+        let sharedCredentials = try await ConfigFileLoader.loadSharedCredentials(
             credentialsFilePath: credentialsPath,
             configFilePath: "non-existing-file-path",
             profile: profile,
             context: context
-        ).wait()
+        ).get()
 
         switch sharedCredentials {
         case .assumeRole(let aRoleArn, _, _, let source):
@@ -162,7 +162,7 @@ class ConfigFileLoadersTests: XCTestCase {
         }
     }
 
-    func testLoadFileMissingAccessKey() throws {
+    func testLoadFileMissingAccessKey() async throws {
         let secretKey = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
         let profile = ConfigFileLoader.defaultProfile
         let credentialsFile = """
@@ -180,12 +180,12 @@ class ConfigFileLoadersTests: XCTestCase {
         }
 
         do {
-            _ = try ConfigFileLoader.loadSharedCredentials(
+            _ = try await ConfigFileLoader.loadSharedCredentials(
                 credentialsFilePath: credentialsPath,
                 configFilePath: "/dev/null",
                 profile: profile,
                 context: context
-            ).wait()
+            ).get()
         } catch ConfigFileLoader.ConfigFileError.missingAccessKeyId {
             // Pass
         } catch {
@@ -193,7 +193,7 @@ class ConfigFileLoadersTests: XCTestCase {
         }
     }
 
-    func testLoadFileMissingSecretKey() throws {
+    func testLoadFileMissingSecretKey() async throws {
         let accessKey = "AKIAIOSFODNN7EXAMPLE"
         let profile = ConfigFileLoader.defaultProfile
         let credentialsFile = """
@@ -211,12 +211,12 @@ class ConfigFileLoadersTests: XCTestCase {
         }
 
         do {
-            _ = try ConfigFileLoader.loadSharedCredentials(
+            _ = try await ConfigFileLoader.loadSharedCredentials(
                 credentialsFilePath: credentialsPath,
                 configFilePath: "/dev/null",
                 profile: profile,
                 context: context
-            ).wait()
+            ).get()
         } catch ConfigFileLoader.ConfigFileError.missingSecretAccessKey {
             // Pass
         } catch {
@@ -224,7 +224,7 @@ class ConfigFileLoadersTests: XCTestCase {
         }
     }
 
-    func testLoadFileMissingSourceAccessKey() throws {
+    func testLoadFileMissingSourceAccessKey() async throws {
         let secretKey = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
         let profile = "marketingadmin"
         let sourceProfile = ConfigFileLoader.defaultProfile
@@ -247,12 +247,12 @@ class ConfigFileLoadersTests: XCTestCase {
         }
 
         do {
-            _ = try ConfigFileLoader.loadSharedCredentials(
+            _ = try await ConfigFileLoader.loadSharedCredentials(
                 credentialsFilePath: credentialsPath,
                 configFilePath: "/dev/null",
                 profile: profile,
                 context: context
-            ).wait()
+            ).get()
         } catch ConfigFileLoader.ConfigFileError.missingAccessKeyId {
             // Pass
         } catch {
@@ -260,7 +260,7 @@ class ConfigFileLoadersTests: XCTestCase {
         }
     }
 
-    func testLoadFileMissingSourceSecretKey() throws {
+    func testLoadFileMissingSourceSecretKey() async throws {
         let accessKey = "AKIAIOSFODNN7EXAMPLE"
         let profile = "marketingadmin"
         let sourceProfile = ConfigFileLoader.defaultProfile
@@ -283,12 +283,12 @@ class ConfigFileLoadersTests: XCTestCase {
         }
 
         do {
-            _ = try ConfigFileLoader.loadSharedCredentials(
+            _ = try await ConfigFileLoader.loadSharedCredentials(
                 credentialsFilePath: credentialsPath,
                 configFilePath: "/dev/null",
                 profile: profile,
                 context: context
-            ).wait()
+            ).get()
         } catch ConfigFileLoader.ConfigFileError.missingSecretAccessKey {
             // Pass
         } catch {
@@ -296,7 +296,7 @@ class ConfigFileLoadersTests: XCTestCase {
         }
     }
 
-    func testLoadFileRoleArnOnly() throws {
+    func testLoadFileRoleArnOnly() async throws {
         let profile = "marketingadmin"
         let roleArn = "arn:aws:iam::123456789012:role/marketingadminrole"
         let credentialsFile = """
@@ -314,12 +314,12 @@ class ConfigFileLoadersTests: XCTestCase {
         }
 
         do {
-            _ = try ConfigFileLoader.loadSharedCredentials(
+            _ = try await ConfigFileLoader.loadSharedCredentials(
                 credentialsFilePath: credentialsPath,
                 configFilePath: "/dev/null",
                 profile: profile,
                 context: context
-            ).wait()
+            ).get()
         } catch ConfigFileLoader.ConfigFileError.invalidCredentialFile {
             // Pass
         } catch {

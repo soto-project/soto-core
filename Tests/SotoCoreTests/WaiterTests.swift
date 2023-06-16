@@ -78,7 +78,7 @@ class WaiterTests: XCTestCase {
         self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger, on: eventLoop)
     }
 
-    func testJMESPathWaiter() {
+    func testJMESPathWaiter() async throws {
         let waiter = AWSClient.Waiter(
             acceptors: [
                 .init(state: .success, matcher: try! JMESPathMatcher("array[*].status", expected: [true, true, true])),
@@ -87,7 +87,7 @@ class WaiterTests: XCTestCase {
             command: self.arrayOperation
         )
         let input = Input()
-        let response = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+        async let responseTask: Void = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
         XCTAssertNoThrow(try self.awsServer.process { (_: Input) -> AWSTestServer.Result<ArrayOutput> in
@@ -95,10 +95,10 @@ class WaiterTests: XCTestCase {
             return .result(ArrayOutput(array: [.init(i >= 3), .init(i >= 2), .init(i >= 1)]), continueProcessing: i < 3)
         })
 
-        XCTAssertNoThrow(try response.wait())
+        try await responseTask
     }
 
-    func testJMESPathWaiterWithString() {
+    func testJMESPathWaiterWithString() async throws {
         struct StringOutput: AWSDecodableShape & Encodable {
             let s: String
         }
@@ -113,7 +113,7 @@ class WaiterTests: XCTestCase {
             command: operation
         )
         let input = Input()
-        let response = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+        async let responseTask: Void = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
         XCTAssertNoThrow(try self.awsServer.process { (_: Input) -> AWSTestServer.Result<StringOutput> in
@@ -125,10 +125,10 @@ class WaiterTests: XCTestCase {
             }
         })
 
-        XCTAssertNoThrow(try response.wait())
+        try await responseTask
     }
 
-    func testJMESPathWaiterWithEnum() {
+    func testJMESPathWaiterWithEnum() async throws {
         enum YesNo: String, AWSDecodableShape & Encodable & CustomStringConvertible {
             case yes = "YES"
             case no = "NO"
@@ -148,7 +148,7 @@ class WaiterTests: XCTestCase {
             command: operation
         )
         let input = Input()
-        let response = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+        async let responseTask: Void = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
         XCTAssertNoThrow(try self.awsServer.process { (_: Input) -> AWSTestServer.Result<EnumOutput> in
@@ -160,10 +160,10 @@ class WaiterTests: XCTestCase {
             }
         })
 
-        XCTAssertNoThrow(try response.wait())
+        try await responseTask
     }
 
-    func testJMESAnyPathWaiter() {
+    func testJMESAnyPathWaiter() async throws {
         let waiter = AWSClient.Waiter(
             acceptors: [
                 .init(state: .success, matcher: try! JMESAnyPathMatcher("array[*].status", expected: true)),
@@ -172,7 +172,7 @@ class WaiterTests: XCTestCase {
             command: self.arrayOperation
         )
         let input = Input()
-        let response = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+        async let responseTask: Void = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
         XCTAssertNoThrow(try self.awsServer.process { (_: Input) -> AWSTestServer.Result<ArrayOutput> in
@@ -184,10 +184,10 @@ class WaiterTests: XCTestCase {
             }
         })
 
-        XCTAssertNoThrow(try response.wait())
+        try await responseTask
     }
 
-    func testJMESAllPathWaiter() {
+    func testJMESAllPathWaiter() async throws {
         let waiter = AWSClient.Waiter(
             acceptors: [
                 .init(state: .success, matcher: try! JMESAllPathMatcher("array[*].status", expected: true)),
@@ -196,7 +196,7 @@ class WaiterTests: XCTestCase {
             command: self.arrayOperation
         )
         let input = Input()
-        let response = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+        async let responseTask: Void = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
         XCTAssertNoThrow(try self.awsServer.process { (_: Input) -> AWSTestServer.Result<ArrayOutput> in
@@ -208,10 +208,10 @@ class WaiterTests: XCTestCase {
             }
         })
 
-        XCTAssertNoThrow(try response.wait())
+        try await responseTask
     }
 
-    func testJMESPathPropertyValueWaiter() {
+    func testJMESPathPropertyValueWaiter() async throws {
         struct ArrayOutput: AWSDecodableShape & Encodable {
             @CustomCoding<StandardArrayCoder<Bool>> var array: [Bool]
         }
@@ -234,7 +234,7 @@ class WaiterTests: XCTestCase {
             command: arrayOperation
         )
         let input = Input(test: "Input")
-        let response = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+        async let responseTask: Void = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
         XCTAssertNoThrow(try awsServer.process { (_: Input) -> AWSTestServer.Result<ArrayOutput> in
@@ -242,10 +242,10 @@ class WaiterTests: XCTestCase {
             return .result(ArrayOutput(array: [.init(i >= 3), .init(i >= 2), .init(i >= 1)]), continueProcessing: i < 3)
         })
 
-        XCTAssertNoThrow(try response.wait())
+        try await responseTask
     }
 
-    func testTimeoutWaiter() {
+    func testTimeoutWaiter() async throws {
         let waiter = AWSClient.Waiter(
             acceptors: [
                 .init(state: .success, matcher: try! JMESPathMatcher("i", expected: 3)),
@@ -255,7 +255,7 @@ class WaiterTests: XCTestCase {
             command: self.operation
         )
         let input = Input()
-        let response = self.client.waitUntil(input, waiter: waiter, maxWaitTime: .seconds(4), logger: TestEnvironment.logger)
+        async let responseTask: Void = self.client.waitUntil(input, waiter: waiter, maxWaitTime: .seconds(4), logger: TestEnvironment.logger)
 
         var i = 0
         XCTAssertNoThrow(try self.awsServer.process { (_: Input) -> AWSTestServer.Result<Output> in
@@ -263,17 +263,15 @@ class WaiterTests: XCTestCase {
             return .result(Output(i: i), continueProcessing: i < 2)
         })
 
-        XCTAssertThrowsError(try response.wait()) { error in
-            switch error {
-            case let error as AWSClient.ClientError where error == .waiterTimeout:
-                break
-            default:
-                XCTFail("\(error)")
-            }
+        do {
+            try await responseTask
+            XCTFail("Should not get here")
+        } catch {
+            XCTAssertEqual(error as? AWSClient.ClientError, .waiterTimeout)
         }
     }
 
-    func testErrorWaiter() {
+    func testErrorWaiter() async throws {
         let waiter = AWSClient.Waiter(
             acceptors: [
                 .init(state: .retry, matcher: AWSErrorCodeMatcher("AccessDenied")),
@@ -283,7 +281,7 @@ class WaiterTests: XCTestCase {
             command: self.operation
         )
         let input = Input()
-        let response = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+        async let responseTask: Void = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
         XCTAssertNoThrow(try self.awsServer.process { (_: Input) -> AWSTestServer.Result<Output> in
@@ -295,10 +293,10 @@ class WaiterTests: XCTestCase {
             }
         })
 
-        XCTAssertNoThrow(try response.wait())
+        try await responseTask
     }
 
-    func testErrorStatusWaiter() {
+    func testErrorStatusWaiter() async throws {
         let waiter = AWSClient.Waiter(
             acceptors: [
                 .init(state: .retry, matcher: AWSErrorStatusMatcher(404)),
@@ -308,7 +306,7 @@ class WaiterTests: XCTestCase {
             command: self.operation
         )
         let input = Input()
-        let response = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+        async let responseTask: Void = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
         XCTAssertNoThrow(try self.awsServer.process { (_: Input) -> AWSTestServer.Result<Output> in
@@ -320,6 +318,6 @@ class WaiterTests: XCTestCase {
             }
         })
 
-        XCTAssertNoThrow(try response.wait())
+        try await responseTask
     }
 }

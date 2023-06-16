@@ -21,7 +21,7 @@ import SotoXML
 import XCTest
 
 class STSAssumeRoleTests: XCTestCase {
-    func testInternalSTSAssumeRoleProvider() throws {
+    func testInternalSTSAssumeRoleProvider() async throws {
         let credentials = STSCredentials(
             accessKeyId: "STSACCESSKEYID",
             expiration: Date(timeIntervalSinceNow: 1_000_000),
@@ -51,8 +51,7 @@ class STSAssumeRoleTests: XCTestCase {
             let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
             return .result(response)
         })
-        var result: Credential?
-        XCTAssertNoThrow(result = try client.credentialProvider.getCredential(on: client.eventLoopGroup.next(), logger: TestEnvironment.logger).wait())
+        let result = try await client.credentialProvider.getCredential(on: client.eventLoopGroup.next(), logger: TestEnvironment.logger).get()
         let stsCredentials = result as? STSCredentials
         XCTAssertEqual(stsCredentials?.accessKeyId, credentials.accessKeyId)
         XCTAssertEqual(stsCredentials?.secretAccessKey, credentials.secretAccessKey)

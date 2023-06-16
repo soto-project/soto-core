@@ -33,7 +33,7 @@ class MiddlewareTests: XCTestCase {
         serviceOptions: AWSServiceConfig.Options = [],
         uri: String = "/",
         test: (AWSRequest) -> Void
-    ) {
+    ) async throws {
         let client = createAWSClient(credentialProvider: .empty)
         let config = createServiceConfig(
             region: .useast1,
@@ -41,16 +41,17 @@ class MiddlewareTests: XCTestCase {
             middlewares: [middleware, CatchRequestMiddleware()],
             options: serviceOptions
         )
-        let response = client.execute(operation: "test", path: uri, httpMethod: .POST, serviceConfig: config, logger: TestEnvironment.logger)
-        XCTAssertThrowsError(try response.wait()) { error in
-            if let error = error as? CatchRequestError {
-                test(error.request)
-            }
+        do {
+            _ = try await client.execute(operation: "test", path: uri, httpMethod: .POST, serviceConfig: config, logger: TestEnvironment.logger)
+            XCTFail("Should not get here")
+        } catch {
+            let error = try XCTUnwrap(error as? CatchRequestError)
+            test(error.request)
         }
-        try? client.syncShutdown()
+        try client.syncShutdown()
     }
 
-    func testMiddlewareAppliedOnce() {
+    func testMiddlewareAppliedOnce() async throws {
         struct URLAppendMiddleware: AWSServiceMiddleware {
             func chain(request: AWSRequest, context: AWSMiddlewareContext) throws -> AWSRequest {
                 var request = request
@@ -67,48 +68,48 @@ class MiddlewareTests: XCTestCase {
             XCTAssertNoThrow(try awsServer.stop())
         }
 
-        let response = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, logger: TestEnvironment.logger)
+        async let responseTask: Void = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, logger: TestEnvironment.logger)
 
         XCTAssertNoThrow(try awsServer.processRaw { request in
             XCTAssertEqual(request.uri, "/test")
             return .result(AWSTestServer.Response.ok)
         })
 
-        XCTAssertNoThrow(try response.wait())
+        try await responseTask
     }
 
-    func testEditHeaderMiddlewareAddHeader() {
+    func testEditHeaderMiddlewareAddHeader() async throws {
         // Test add header
         let middleware = AWSEditHeadersMiddleware(
             .add(name: "testAdd", value: "testValue"),
             .add(name: "user-agent", value: "testEditHeaderMiddleware")
         )
-        self.testMiddleware(middleware) { request in
+        try await self.testMiddleware(middleware) { request in
             XCTAssertEqual(request.httpHeaders["testAdd"].first, "testValue")
             XCTAssertEqual(request.httpHeaders["user-agent"].joined(separator: ","), "Soto/6.0,testEditHeaderMiddleware")
         }
     }
 
-    func testEditHeaderMiddlewareReplaceHeader() {
+    func testEditHeaderMiddlewareReplaceHeader() async throws {
         // Test replace header
         let middleware = AWSEditHeadersMiddleware(
             .replace(name: "user-agent", value: "testEditHeaderMiddleware")
         )
-        self.testMiddleware(middleware) { request in
+        try await self.testMiddleware(middleware) { request in
             XCTAssertEqual(request.httpHeaders["user-agent"].first, "testEditHeaderMiddleware")
         }
     }
 
-    func testS3MiddlewareVirtualAddress() {
+    func testS3MiddlewareVirtualAddress() async throws {
         // Test virual address
-        self.testMiddleware(S3Middleware(), uri: "/bucket/file") { request in
+        try await self.testMiddleware(S3Middleware(), uri: "/bucket/file") { request in
             XCTAssertEqual(request.url.absoluteString, "https://bucket.service.us-east-1.amazonaws.com/file")
         }
     }
 
-    func testS3MiddlewareAccelerateEndpoint() {
+    func testS3MiddlewareAccelerateEndpoint() async throws {
         // Test virual address
-        self.testMiddleware(
+        try await self.testMiddleware(
             S3Middleware(),
             serviceName: "s3",
             serviceOptions: .s3UseTransferAcceleratedEndpoint,

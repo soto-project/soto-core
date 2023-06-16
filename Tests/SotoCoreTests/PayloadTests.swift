@@ -18,7 +18,7 @@ import SotoTestUtils
 import XCTest
 
 class PayloadTests: XCTestCase {
-    func testRequestPayload(_ payload: AWSPayload, expectedResult: String) {
+    func testRequestPayload(_ payload: AWSPayload, expectedResult: String) async {
         struct DataPayload: AWSEncodableShape & AWSShapeWithPayload {
             static var _payloadPath: String = "data"
             let data: AWSPayload
@@ -34,7 +34,7 @@ class PayloadTests: XCTestCase {
                 XCTAssertNoThrow(try client.syncShutdown())
             }
             let input = DataPayload(data: payload)
-            let response = client.execute(
+            async let responseTask: Void = client.execute(
                 operation: "test",
                 path: "/",
                 httpMethod: .POST,
@@ -48,28 +48,28 @@ class PayloadTests: XCTestCase {
                 return .result(.ok)
             }
 
-            try response.wait()
+            try await responseTask
             try awsServer.stop()
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
     }
 
-    func testDataRequestPayload() {
-        self.testRequestPayload(.data(Data("testDataPayload".utf8)), expectedResult: "testDataPayload")
+    func testDataRequestPayload() async {
+        await self.testRequestPayload(.data(Data("testDataPayload".utf8)), expectedResult: "testDataPayload")
     }
 
-    func testStringRequestPayload() {
-        self.testRequestPayload(.string("testStringPayload"), expectedResult: "testStringPayload")
+    func testStringRequestPayload() async {
+        await self.testRequestPayload(.string("testStringPayload"), expectedResult: "testStringPayload")
     }
 
-    func testByteBufferRequestPayload() {
+    func testByteBufferRequestPayload() async {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: 32)
         byteBuffer.writeString("testByteBufferPayload")
-        self.testRequestPayload(.byteBuffer(byteBuffer), expectedResult: "testByteBufferPayload")
+        await self.testRequestPayload(.byteBuffer(byteBuffer), expectedResult: "testByteBufferPayload")
     }
 
-    func testResponsePayload() {
+    func testResponsePayload() async {
         struct Output: AWSDecodableShape, AWSShapeWithPayload {
             static let _payloadPath: String = "payload"
             static let _options: AWSShapeOptions = .rawPayload
@@ -82,7 +82,7 @@ class PayloadTests: XCTestCase {
             defer {
                 XCTAssertNoThrow(try client.syncShutdown())
             }
-            let response: EventLoopFuture<Output> = client.execute(
+            async let responseTask: Output = client.execute(
                 operation: "test",
                 path: "/",
                 httpMethod: .POST,
@@ -97,7 +97,7 @@ class PayloadTests: XCTestCase {
                 return .result(response)
             }
 
-            let output = try response.wait()
+            let output = try await responseTask
 
             XCTAssertEqual(output.payload.asString(), "testResponsePayload")
             // XCTAssertEqual(output.i, 547)

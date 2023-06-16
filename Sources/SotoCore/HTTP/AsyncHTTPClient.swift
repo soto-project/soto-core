@@ -97,3 +97,31 @@ extension AsyncHTTPClient.HTTPClient {
 }
 
 extension AsyncHTTPClient.HTTPClient.Response: AWSHTTPResponse {}
+
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+extension AsyncHTTPClient.HTTPClient {
+    /// Execute HTTP request
+    /// - Parameters:
+    ///   - request: HTTP request
+    ///   - timeout: If execution is idle for longer than timeout then throw error
+    ///   - eventLoop: eventLoop to run request on
+    /// - Returns: EventLoopFuture that will be fulfilled with request response
+    func execute(
+        request: AWSHTTPRequest,
+        timeout: TimeAmount,
+        on eventLoop: EventLoop,
+        logger: Logger
+    ) async throws -> AWSHTTPResponse {
+        try await self.execute(request: request, timeout: timeout, on: eventLoop, logger: logger).get()
+    }
+
+    func execute(
+        request: AWSHTTPRequest,
+        timeout: TimeAmount,
+        on eventLoop: EventLoop,
+        logger: Logger,
+        stream: @escaping AWSResponseStream
+    ) async throws -> AWSHTTPResponse {
+        try await self.execute(request: request, timeout: timeout, on: eventLoop, logger: logger, stream: stream).get()
+    }
+}

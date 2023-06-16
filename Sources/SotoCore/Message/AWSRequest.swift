@@ -19,7 +19,7 @@ import struct Foundation.URL
 import struct Foundation.URLComponents
 import NIOCore
 import NIOHTTP1
-import SotoCrypto
+import Crypto
 import SotoSignerV4
 
 /// Object encapsulating all the information needed to generate a raw HTTP request to AWS

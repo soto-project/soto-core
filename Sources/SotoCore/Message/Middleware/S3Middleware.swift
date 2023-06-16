@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
-import SotoCrypto
+import Crypto
 import SotoXML
 
 /// Middleware applied to S3 service

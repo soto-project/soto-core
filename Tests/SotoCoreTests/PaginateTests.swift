@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2021 the Soto project authors
+// Copyright (c) 2017-2022 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -13,13 +13,15 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+import Atomics
 import NIOCore
 import NIOPosix
 @testable import SotoCore
 import SotoTestUtils
 import XCTest
 
-class PaginateTests: XCTestCase {
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+final class PaginateAsyncTests: XCTestCase, @unchecked Sendable {
     enum Error: Swift.Error {
         case didntFindToken
     }
@@ -67,8 +69,8 @@ class PaginateTests: XCTestCase {
         let outputToken: Int?
     }
 
-    func counter(_ input: CounterInput, logger: Logger, on eventLoop: EventLoop?) -> EventLoopFuture<CounterOutput> {
-        return self.client.execute(
+    func counter(_ input: CounterInput, logger: Logger, on eventLoop: EventLoop?) async throws -> CounterOutput {
+        return try await self.client.execute(
             operation: "TestOperation",
             path: "/",
             httpMethod: .POST,
@@ -79,49 +81,36 @@ class PaginateTests: XCTestCase {
         )
     }
 
-    func counterPaginator(_ input: CounterInput, onPage: @escaping (CounterOutput, EventLoop) -> EventLoopFuture<Bool>) -> EventLoopFuture<Void> {
-        return self.client.paginate(
+    func asyncCounterPaginator(_ input: CounterInput) -> AWSClient.PaginatorSequence<CounterInput, CounterOutput> {
+        return .init(
             input: input,
             command: self.counter,
-            tokenKey: \CounterOutput.outputToken,
-            logger: TestEnvironment.logger,
-            onPage: onPage
+            inputKey: \CounterInput.inputToken,
+            outputKey: \CounterOutput.outputToken,
+            logger: TestEnvironment.logger
         )
     }
 
-    func testIntegerTokenPaginate() throws {
-        // paginate input
-        var finalArray: [Int] = []
-        let input = CounterInput(inputToken: nil, pageSize: 4)
-        let future = self.counterPaginator(input) { result, eventloop in
-            // collate results into array
-            finalArray.append(contentsOf: result.array)
-            return eventloop.makeSucceededFuture(true)
-        }
+    func stringList(_ input: StringListInput, logger: Logger, on eventLoop: EventLoop? = nil) async throws -> StringListOutput {
+        return try await self.client.execute(
+            operation: "TestOperation",
+            path: "/",
+            httpMethod: .POST,
+            serviceConfig: self.config,
+            input: input,
+            logger: logger,
+            on: eventLoop
+        )
+    }
 
-        let arraySize = 23
-        // aws server process
-        XCTAssertNoThrow(try self.awsServer.process { (input: CounterInput) throws -> AWSTestServer.Result<CounterOutput> in
-            // send part of array of numbers based on input startIndex and pageSize
-            let startIndex = input.inputToken ?? 0
-            let endIndex = min(startIndex + input.pageSize, arraySize)
-            var array: [Int] = []
-            for i in startIndex..<endIndex {
-                array.append(i)
-            }
-            let continueProcessing = (endIndex != arraySize)
-            let output = CounterOutput(array: array, outputToken: endIndex != arraySize ? endIndex : nil)
-            return .result(output, continueProcessing: continueProcessing)
-        })
-
-        // wait for response
-        XCTAssertNoThrow(try future.wait())
-
-        // verify contents of array
-        XCTAssertEqual(finalArray.count, arraySize)
-        for i in 0..<finalArray.count {
-            XCTAssertEqual(finalArray[i], i)
-        }
+    func asyncStringListPaginator(_ input: StringListInput) -> AWSClient.PaginatorSequence<StringListInput, StringListOutput> {
+        .init(
+            input: input,
+            command: self.stringList,
+            inputKey: \StringListInput.inputToken,
+            outputKey: \StringListOutput.outputToken,
+            logger: TestEnvironment.logger
+        )
     }
 
     // test structures/functions
@@ -143,61 +132,6 @@ class PaginateTests: XCTestCase {
     struct StringListOutput: AWSDecodableShape, Encodable {
         let array: [String]
         let outputToken: String?
-    }
-
-    // conform to Encodable so server can encode these
-    struct StringList2Output: AWSDecodableShape, Encodable {
-        let array: [String]
-        let outputToken: String?
-    }
-
-    func stringList(_ input: StringListInput, logger: Logger, on eventLoop: EventLoop? = nil) -> EventLoopFuture<StringListOutput> {
-        return self.client.execute(
-            operation: "TestOperation",
-            path: "/",
-            httpMethod: .POST,
-            serviceConfig: self.config,
-            input: input,
-            logger: logger,
-            on: eventLoop
-        )
-    }
-
-    func stringListPaginator(_ input: StringListInput, on eventLoop: EventLoop? = nil, onPage: @escaping (StringListOutput, EventLoop) -> EventLoopFuture<Bool>) -> EventLoopFuture<Void> {
-        return self.client.paginate(
-            input: input,
-            command: self.stringList,
-            inputKey: \StringListInput.inputToken,
-            outputKey: \StringListOutput.outputToken,
-            logger: TestEnvironment.logger,
-            on: eventLoop,
-            onPage: onPage
-        )
-    }
-
-    func stringList2(_ input: StringListInput, logger: Logger, on eventLoop: EventLoop? = nil) -> EventLoopFuture<StringList2Output> {
-        return self.client.execute(
-            operation: "TestOperation",
-            path: "/",
-            httpMethod: .POST,
-            serviceConfig: self.config,
-            input: input,
-            logger: logger,
-            on: eventLoop
-        )
-    }
-
-    func stringListPaginator<Result>(_ input: StringListInput, _ initialValue: Result, on eventLoop: EventLoop? = nil, onPage: @escaping (Result, StringList2Output, EventLoop) -> EventLoopFuture<(Bool, Result)>) -> EventLoopFuture<Result> {
-        return self.client.paginate(
-            input: input,
-            initialValue: initialValue,
-            command: self.stringList2,
-            inputKey: \StringListInput.inputToken,
-            outputKey: \StringList2Output.outputToken,
-            logger: TestEnvironment.logger,
-            on: eventLoop,
-            onPage: onPage
-        )
     }
 
     // create list of unique strings
@@ -227,110 +161,108 @@ class PaginateTests: XCTestCase {
         return .result(output, continueProcessing: continueProcessing)
     }
 
-    func testStringTokenPaginate() throws {
+    func testAsyncIntegerTokenPaginate() async throws {
+        #if os(iOS) // iOS async tests are failing in GitHub CI at the moment
+        guard ProcessInfo.processInfo.environment["CI"] == nil else { return }
+        #endif
         // paginate input
-        var finalArray: [String] = []
-        let input = StringListInput(inputToken: nil, pageSize: 5)
-        let future = self.stringListPaginator(input) { result, eventloop in
-            // collate results into array
-            finalArray.append(contentsOf: result.array)
-            return eventloop.makeSucceededFuture(true)
-        }
+        let input = CounterInput(inputToken: nil, pageSize: 4)
+        let arraySize = 23
 
-        // aws server process
-        XCTAssertNoThrow(try self.awsServer.process(self.stringListServerProcess))
-
-        // wait for response
-        XCTAssertNoThrow(try future.wait())
-
-        // verify contents of array
-        XCTAssertEqual(finalArray.count, self.stringList.count)
-        for i in 0..<finalArray.count {
-            XCTAssertEqual(finalArray[i], self.stringList[i])
-        }
-    }
-
-    func testStringTokenReducePaginate() throws {
-        // paginate input
-        let input = StringListInput(inputToken: nil, pageSize: 5)
-        let future = self.stringListPaginator(input, []) { current, result, eventloop in
-            // collate results into array
-            return eventloop.makeSucceededFuture((true, current + result.array))
-        }
-
-        // aws server process
-        XCTAssertNoThrow(try self.awsServer.process(self.stringListServerProcess))
-
-        // wait for response
-        var array: [String]?
-        XCTAssertNoThrow(array = try future.wait())
-        let finalArray = try XCTUnwrap(array)
-        // verify contents of array
-        XCTAssertEqual(finalArray.count, self.stringList.count)
-        for i in 0..<finalArray.count {
-            XCTAssertEqual(finalArray[i], self.stringList[i])
-        }
-    }
-
-    struct ErrorOutput: AWSShape {
-        let error: String
-    }
-
-    func testPaginateError() throws {
-        // paginate input
-        let input = StringListInput(inputToken: nil, pageSize: 5)
-        let future = self.stringListPaginator(input) { _, eventloop in
-            return eventloop.makeSucceededFuture(true)
-        }
-
-        // aws server process
-        XCTAssertNoThrow(try self.awsServer.process { (_: StringListInput) -> AWSTestServer.Result<StringListOutput> in
-            return .error(.badRequest)
-        })
-
-        // wait for response
-        XCTAssertThrowsError(try future.wait()) { error in
-            XCTAssertEqual((error as? AWSResponseError)?.errorCode, "BadRequest")
-        }
-    }
-
-    func testPaginateErrorAfterFirstRequest() throws {
-        // paginate input
-        let input = StringListInput(inputToken: nil, pageSize: 5)
-        let future = self.stringListPaginator(input) { _, eventloop in
-            return eventloop.makeSucceededFuture(true)
-        }
-
-        // aws server process
-        var count = 0
-        XCTAssertNoThrow(try self.awsServer.process { (request: StringListInput) -> AWSTestServer.Result<StringListOutput> in
-            if count > 0 {
-                return .error(.badRequest, continueProcessing: false)
-            } else {
-                count += 1
-                return try stringListServerProcess(request)
+        let finalArray = try await withThrowingTaskGroup(of: [Int].self) { group -> [Int] in
+            group.addTask {
+                return try await self.asyncCounterPaginator(input).reduce([]) { return $0 + $1.array }
             }
-        })
+            try self.awsServer.process { (input: CounterInput) throws -> AWSTestServer.Result<CounterOutput> in
+                // send part of array of numbers based on input startIndex and pageSize
+                let startIndex = input.inputToken ?? 0
+                let endIndex = min(startIndex + input.pageSize, arraySize)
+                var array: [Int] = []
+                for i in startIndex..<endIndex {
+                    array.append(i)
+                }
+                let continueProcessing = (endIndex != arraySize)
+                let output = CounterOutput(array: array, outputToken: endIndex != arraySize ? endIndex : nil)
+                return .result(output, continueProcessing: continueProcessing)
+            }
+            return try await group.next()!
+        }
 
-        // wait for response
-        XCTAssertThrowsError(try future.wait()) { error in
+        // verify contents of array
+        XCTAssertEqual(finalArray.count, arraySize)
+        for i in 0..<finalArray.count {
+            XCTAssertEqual(finalArray[i], i)
+        }
+    }
+
+    func testAsyncStringTokenPaginate() async throws {
+        #if os(iOS) // iOS async tests are failing in GitHub CI at the moment
+        guard ProcessInfo.processInfo.environment["CI"] == nil else { return }
+        #endif
+        // paginate input
+        let input = StringListInput(inputToken: nil, pageSize: 5)
+        let finalArray = try await withThrowingTaskGroup(of: [String].self) { group -> [String] in
+            group.addTask {
+                let paginator = self.asyncStringListPaginator(input)
+                return try await paginator.reduce([]) { $0 + $1.array }
+            }
+            try self.awsServer.process(self.stringListServerProcess)
+            return try await group.next()!
+        }
+        // verify contents of array
+        XCTAssertEqual(finalArray.count, self.stringList.count)
+        for i in 0..<finalArray.count {
+            XCTAssertEqual(finalArray[i], self.stringList[i])
+        }
+    }
+
+    func testAsyncPaginateError() async throws {
+        #if os(iOS) // iOS async tests are failing in GitHub CI at the moment
+        guard ProcessInfo.processInfo.environment["CI"] == nil else { return }
+        #endif
+        // paginate input
+        let input = StringListInput(inputToken: nil, pageSize: 5)
+        do {
+            _ = try await withThrowingTaskGroup(of: [String].self) { group -> [String] in
+                group.addTask {
+                    let paginator = self.asyncStringListPaginator(input)
+                    return try await paginator.reduce([]) { $0 + $1.array }
+                }
+                try self.awsServer.process { (_: StringListInput) -> AWSTestServer.Result<StringListOutput> in
+                    return .error(.badRequest)
+                }
+                return try await group.next()!
+            }
+        } catch {
             XCTAssertEqual((error as? AWSResponseError)?.errorCode, "BadRequest")
         }
     }
 
-    func testPaginateEventLoop() throws {
+    func testAsyncPaginateErrorAfterFirstRequest() async throws {
+        #if os(iOS) // iOS async tests are failing in GitHub CI at the moment
+        guard ProcessInfo.processInfo.environment["CI"] == nil else { return }
+        #endif
         // paginate input
-        let clientEventLoop = self.client.eventLoopGroup.next()
         let input = StringListInput(inputToken: nil, pageSize: 5)
-        let future = self.stringListPaginator(input, on: clientEventLoop) { _, eventloop in
-            XCTAssertTrue(clientEventLoop.inEventLoop)
-            XCTAssertTrue(clientEventLoop === eventloop)
-            return eventloop.makeSucceededFuture(true)
-        }
+        do {
+            let count = ManagedAtomic(0)
 
-        // aws server process
-        XCTAssertNoThrow(try self.awsServer.process(self.stringListServerProcess))
-        // wait for response
-        XCTAssertNoThrow(try future.wait())
+            _ = try await withThrowingTaskGroup(of: [String].self) { group -> [String] in
+                group.addTask {
+                    let paginator = self.asyncStringListPaginator(input)
+                    return try await paginator.reduce([]) { $0 + $1.array }
+                }
+                try self.awsServer.process { (request: StringListInput) -> AWSTestServer.Result<StringListOutput> in
+                    if count.loadThenWrappingIncrement(by: 1, ordering: .relaxed) > 0 {
+                        return .error(.badRequest, continueProcessing: false)
+                    } else {
+                        return try self.stringListServerProcess(request)
+                    }
+                }
+                return try await group.next()!
+            }
+        } catch {
+            XCTAssertEqual((error as? AWSResponseError)?.errorCode, "BadRequest")
+        }
     }
 }

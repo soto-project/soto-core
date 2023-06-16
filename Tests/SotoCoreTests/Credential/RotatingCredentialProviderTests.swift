@@ -27,22 +27,20 @@ import SotoTestUtils
 import XCTest
 
 class RotatingCredentialProviderTests: XCTestCase {
-    final class MetaDataTestClient: CredentialProvider {
-        typealias TestCallback = @Sendable (EventLoop) -> EventLoopFuture<ExpiringCredential>
+    final class RotatingCredentialTestClient: AsyncCredentialProvider {
+        typealias TestCallback = @Sendable () -> ExpiringCredential
         let callback: TestCallback
 
         init(_ callback: @escaping TestCallback) {
             self.callback = callback
         }
 
-        func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
-            eventLoop.flatSubmit {
-                return self.callback(eventLoop).map { $0 }
-            }
+        func getCredential(on eventLoop: EventLoop, logger: Logger) async throws -> Credential {
+            self.callback()
         }
     }
 
-    func testGetCredentialAndReuseIfStillValid() {
+    func testGetCredentialAndReuseIfStillValid() async throws {
         let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(group))
@@ -57,34 +55,34 @@ class RotatingCredentialProviderTests: XCTestCase {
         )
 
         let count = ManagedAtomic(0)
-        let client = MetaDataTestClient {
+        let client = RotatingCredentialTestClient {
             count.wrappingIncrement(ordering: .sequentiallyConsistent)
-            return $0.makeSucceededFuture(cred)
+            return cred
         }
         let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, logger: Logger(label: "soto"), options: .init())
         let provider = RotatingCredentialProvider(context: context, provider: client)
 
         // get credentials for first time
-        var returned: Credential?
-        XCTAssertNoThrow(returned = try provider.getCredential(on: loop, logger: Logger(label: "soto")).wait())
+        var returned = try await provider.getCredential(on: loop, logger: Logger(label: "soto")).get()
 
-        XCTAssertEqual(returned?.accessKeyId, cred.accessKeyId)
-        XCTAssertEqual(returned?.secretAccessKey, cred.secretAccessKey)
-        XCTAssertEqual(returned?.sessionToken, cred.sessionToken)
+        XCTAssertEqual(returned.accessKeyId, cred.accessKeyId)
+        XCTAssertEqual(returned.secretAccessKey, cred.secretAccessKey)
+        XCTAssertEqual(returned.sessionToken, cred.sessionToken)
         XCTAssertEqual((returned as? TestExpiringCredential)?.expiration, cred.expiration)
 
         // get credentials a second time, callback must not be hit
-        XCTAssertNoThrow(returned = try provider.getCredential(on: loop, logger: Logger(label: "soto")).wait())
-        XCTAssertEqual(returned?.accessKeyId, cred.accessKeyId)
-        XCTAssertEqual(returned?.secretAccessKey, cred.secretAccessKey)
-        XCTAssertEqual(returned?.sessionToken, cred.sessionToken)
+        returned = try await provider.getCredential(on: loop, logger: Logger(label: "soto")).get()
+
+        XCTAssertEqual(returned.accessKeyId, cred.accessKeyId)
+        XCTAssertEqual(returned.secretAccessKey, cred.secretAccessKey)
+        XCTAssertEqual(returned.sessionToken, cred.sessionToken)
         XCTAssertEqual((returned as? TestExpiringCredential)?.expiration, cred.expiration)
 
         // ensure callback was only hit once
         XCTAssertEqual(count.load(ordering: .sequentiallyConsistent), 1)
     }
 
-    func testGetCredentialHighlyConcurrent() {
+    func testGetCredentialHighlyConcurrent() async throws {
         let group = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(group))
@@ -98,56 +96,36 @@ class RotatingCredentialProviderTests: XCTestCase {
             expiration: Date(timeIntervalSinceNow: 60 * 5)
         )
 
-        let promise = loop.makePromise(of: ExpiringCredential.self)
-
         let count = ManagedAtomic(0)
         let count2 = ManagedAtomic(0)
-        let client = MetaDataTestClient { _ in
+        let client = RotatingCredentialTestClient {
             count.wrappingIncrement(ordering: .sequentiallyConsistent)
-            return promise.futureResult
+            return cred
         }
         let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, logger: TestEnvironment.logger, options: .init())
         let provider = RotatingCredentialProvider(context: context, provider: client)
 
-        var resultFutures = [EventLoopFuture<Void>]()
-        var setupFutures = [EventLoopFuture<Void>]()
         let iterations = 500
-        for _ in 0..<iterations {
-            let loop = group.next()
-            let setupPromise = loop.makePromise(of: Void.self)
-            setupFutures.append(setupPromise.futureResult)
-            let future: EventLoopFuture<Void> = loop.flatSubmit {
-                // this should be executed right away
-                defer {
-                    setupPromise.succeed(())
-                }
-
-                return provider.getCredential(on: loop, logger: TestEnvironment.logger).map { returned in
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            for _ in 0..<iterations {
+                group.addTask {
+                    let credential = try await provider.getCredential(on: loop, logger: TestEnvironment.logger).get()
                     // this should be executed after the promise is fulfilled.
-                    XCTAssertEqual(returned.accessKeyId, cred.accessKeyId)
-                    XCTAssertEqual(returned.secretAccessKey, cred.secretAccessKey)
-                    XCTAssertEqual(returned.sessionToken, cred.sessionToken)
-                    XCTAssertEqual((returned as? TestExpiringCredential)?.expiration, cred.expiration)
-                    XCTAssert(loop.inEventLoop)
+                    XCTAssertEqual(credential.accessKeyId, cred.accessKeyId)
+                    XCTAssertEqual(credential.secretAccessKey, cred.secretAccessKey)
+                    XCTAssertEqual(credential.sessionToken, cred.sessionToken)
+                    XCTAssertEqual((credential as? TestExpiringCredential)?.expiration, cred.expiration)
                     count2.wrappingIncrement(ordering: .sequentiallyConsistent)
                 }
+                try await group.waitForAll()
             }
-            resultFutures.append(future)
         }
-
-        // ensure all 10k have been setup
-        XCTAssertNoThrow(try EventLoopFuture.whenAllSucceed(setupFutures, on: group.next()).wait())
-        // succeed the promise call
-        promise.succeed(cred)
-        // ensure all 10k result futures have been forfilled
-        XCTAssertNoThrow(try EventLoopFuture.whenAllSucceed(resultFutures, on: group.next()).wait())
-
         // ensure callback was only hit once
         XCTAssertEqual(count.load(ordering: .sequentiallyConsistent), 1)
         XCTAssertEqual(count2.load(ordering: .sequentiallyConsistent), iterations)
     }
 
-    func testAlwaysGetNewTokenIfTokenLifetimeForUseIsShorterThanLifetime() {
+    func testAlwaysGetNewTokenIfTokenLifetimeForUseIsShorterThanLifetime() async throws {
         let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(group))
@@ -156,21 +134,20 @@ class RotatingCredentialProviderTests: XCTestCase {
 
         let iterations = 50
         let count = ManagedAtomic(0)
-        let client = MetaDataTestClient { eventLoop in
+        let client = RotatingCredentialTestClient {
             count.wrappingIncrement(ordering: .sequentiallyConsistent)
-            let cred = TestExpiringCredential(
+            return TestExpiringCredential(
                 accessKeyId: "abc123",
                 secretAccessKey: "abc123",
                 sessionToken: "abc123",
                 expiration: Date(timeIntervalSinceNow: 60 * 2)
             )
-            return eventLoop.makeSucceededFuture(cred)
         }
         let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, logger: TestEnvironment.logger, options: .init())
         let provider = RotatingCredentialProvider(context: context, provider: client)
 
         for _ in 0..<iterations {
-            XCTAssertNoThrow(_ = try provider.getCredential(on: loop, logger: TestEnvironment.logger).wait())
+            _ = try await provider.getCredential(on: loop, logger: TestEnvironment.logger).get()
         }
         XCTAssertEqual(count.load(ordering: .sequentiallyConsistent), iterations)
     }

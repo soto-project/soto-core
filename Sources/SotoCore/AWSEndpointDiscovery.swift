@@ -42,8 +42,8 @@ public struct AWSEndpoints {
 public struct AWSEndpointStorage: Sendable {
     let endpoint: ExpiringValue<String>
 
-    public init(initialValue: String) {
-        self.endpoint = .init(initialValue, threshold: 3 * 60)
+    public init() {
+        self.endpoint = .init(threshold: 3 * 60)
     }
 
     public func getValue(getExpiringValue: @escaping @Sendable () async throws -> (String, Date)) async throws -> String {

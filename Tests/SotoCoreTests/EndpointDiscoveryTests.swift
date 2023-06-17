@@ -34,7 +34,7 @@ final class EndpointDiscoveryTests: XCTestCase {
                 from.getEndpointsCalledCount.load(ordering: .sequentiallyConsistent),
                 ordering: .sequentiallyConsistent
             )
-            self.endpointStorage = AWSEndpointStorage(initialValue: self.config.endpoint)
+            self.endpointStorage = AWSEndpointStorage()
         }
 
         /// init
@@ -49,7 +49,7 @@ final class EndpointDiscoveryTests: XCTestCase {
                 endpoint: endpoint
             )
             self.endpointToDiscover = endpointToDiscover
-            self.endpointStorage = AWSEndpointStorage(initialValue: self.config.endpoint)
+            self.endpointStorage = AWSEndpointStorage()
         }
 
         struct TestRequest: AWSEncodableShape {}

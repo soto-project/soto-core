@@ -67,10 +67,17 @@ public struct AWSEndpointDiscovery: Sendable {
     func getEndpoint(logger: Logger) async throws -> String? {
         do {
             return try await self.storage.getValue {
-                let response = try await discover(logger)
-                let index = Int.random(in: 0..<response.endpoints.count)
-                let endpoint = response.endpoints[index]
-                return (endpoint.address, Date(timeIntervalSinceNow: TimeInterval(endpoint.cachePeriodInMinutes * 60)))
+                logger.trace("Request endpoint")
+                do {
+                    let response = try await discover(logger)
+                    let index = Int.random(in: 0..<response.endpoints.count)
+                    let endpoint = response.endpoints[index]
+                    logger.trace("Received endpoint \(endpoint)")
+                    return (endpoint.address, Date(timeIntervalSinceNow: TimeInterval(endpoint.cachePeriodInMinutes * 60)))
+                } catch {
+                    logger.debug("Error requesting endpoint", metadata: ["aws-error-message": "\(error)"])
+                    throw error
+                }
             }
         } catch {
             if !isRequired {

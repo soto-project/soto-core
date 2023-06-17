@@ -39,6 +39,7 @@ public struct AWSEndpoints {
     let endpoints: [Endpoint]
 }
 
+/// Endpoint Storage attached to a Service
 public struct AWSEndpointStorage: Sendable {
     let endpoint: ExpiringValue<String>
 

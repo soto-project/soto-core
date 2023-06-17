@@ -22,17 +22,17 @@ final class ExpiringValueTests: XCTestCase {
         let expiringValue = ExpiringValue<Int>()
         let value = try await expiringValue.getValue {
             try await Task.sleep(nanoseconds: 1000)
-            return (1, Date.now)
+            return (1, Date())
         }
         XCTAssertEqual(value, 1)
     }
 
     /// Test an expired value is updated
     func testExpiredValue() async throws {
-        let expiringValue = ExpiringValue<Int>(0, expires: Date.now)
+        let expiringValue = ExpiringValue<Int>(0, expires: Date())
         let value = try await expiringValue.getValue {
             try await Task.sleep(nanoseconds: 1000)
-            return (1, Date.now)
+            return (1, Date())
         }
         XCTAssertEqual(value, 1)
     }
@@ -41,11 +41,11 @@ final class ExpiringValueTests: XCTestCase {
     /// new task to get new value
     func testJustAboutToExpireValue() async throws {
         let called = ManagedAtomic(false)
-        let expiringValue = ExpiringValue<Int>(0, expires: Date.now + 1, threshold: 3)
+        let expiringValue = ExpiringValue<Int>(0, expires: Date() + 1, threshold: 3)
         let value = try await expiringValue.getValue {
             called.store(true, ordering: .relaxed)
             try await Task.sleep(nanoseconds: 1000)
-            return (1, Date.now)
+            return (1, Date())
         }
         try await Task.sleep(nanoseconds: 10000)
         // test it return current value
@@ -61,7 +61,7 @@ final class ExpiringValueTests: XCTestCase {
         let value = try await expiringValue.getValue {
             called.store(true, ordering: .relaxed)
             try await Task.sleep(nanoseconds: 1000)
-            return (1, Date.now)
+            return (1, Date())
         }
         XCTAssertEqual(value, 0)
         XCTAssertEqual(called.load(ordering: .relaxed), false)

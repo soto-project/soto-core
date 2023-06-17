@@ -40,7 +40,7 @@ class WaiterTests: XCTestCase {
         let i: Int
     }
 
-    func operation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<Output> {
+    @Sendable func operation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<Output> {
         self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger, on: eventLoop)
     }
 
@@ -59,7 +59,7 @@ class WaiterTests: XCTestCase {
         let array: [Element]
     }
 
-    func arrayOperation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<ArrayOutput> {
+    @Sendable func arrayOperation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<ArrayOutput> {
         self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger, on: eventLoop)
     }
 
@@ -74,7 +74,7 @@ class WaiterTests: XCTestCase {
         let array: [Element]?
     }
 
-    func optionalArrayOperation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<OptionalArrayOutput> {
+    @Sendable func optionalArrayOperation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<OptionalArrayOutput> {
         self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger, on: eventLoop)
     }
 
@@ -102,7 +102,7 @@ class WaiterTests: XCTestCase {
         struct StringOutput: AWSDecodableShape & Encodable {
             let s: String
         }
-        func operation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<StringOutput> {
+        @Sendable func operation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<StringOutput> {
             self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger, on: eventLoop)
         }
         let waiter = AWSClient.Waiter(
@@ -137,7 +137,7 @@ class WaiterTests: XCTestCase {
         struct EnumOutput: AWSDecodableShape & Encodable {
             let e: YesNo
         }
-        func operation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<EnumOutput> {
+        @Sendable func operation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<EnumOutput> {
             self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger, on: eventLoop)
         }
         let waiter = AWSClient.Waiter(
@@ -222,7 +222,7 @@ class WaiterTests: XCTestCase {
         defer { XCTAssertNoThrow(try awsServer.stop()) }
         let config = createServiceConfig(serviceProtocol: .restxml, endpoint: awsServer.address)
 
-        func arrayOperation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<ArrayOutput> {
+        @Sendable func arrayOperation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<ArrayOutput> {
             self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: logger, on: eventLoop)
         }
 

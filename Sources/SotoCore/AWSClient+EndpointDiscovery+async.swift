@@ -215,24 +215,7 @@ extension AWSClient {
         logger: Logger
     ) async throws -> Output {
         guard isEnabled || endpointDiscovery.isRequired else { return try await execute(nil) }
-        // get endpoint
-        if endpointDiscovery.isExpiring(within: 3 * 60) {
-            do {
-                logger.trace("Request endpoint")
-                let endpoint = try await endpointDiscovery.getEndpoint(logger: logger, on: self.eventLoopGroup.any()).get()
-                logger.trace("Received endpoint \(endpoint)")
-
-                if endpointDiscovery.isRequired {
-                    return try await execute(endpoint)
-                } else {
-                    return try await execute(nil)
-                }
-            } catch {
-                logger.debug("Error requesting endpoint", metadata: ["aws-error-message": "\(error)"])
-                throw error
-            }
-        } else {
-            return try await execute(endpointDiscovery.endpoint)
-        }
+        let endpoint = try await endpointDiscovery.getEndpoint(logger: logger)
+        return try await execute(endpoint)
     }
 }

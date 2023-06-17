@@ -39,96 +39,44 @@ public struct AWSEndpoints {
     let endpoints: [Endpoint]
 }
 
-/// Class for storing Endpoint details
-public class AWSEndpointStorage {
-    /// endpoint url
-    internal private(set) var endpoint: String
-    /// when endpoint expires
-    internal private(set) var expiration: Date
-    /// promise for endpoint discovery process
-    private var promise: EventLoopPromise<String>?
-    /// Lock access to class
-    private let lock = NIOLock()
+public struct AWSEndpointStorage: Sendable {
+    let endpoint: ExpiringValue<String>
 
-    /// Initialize endpoint storage
-    /// - Parameter endpoint: Initial endpoint to use
-    public init(endpoint: String) {
-        self.expiration = Date.distantPast
-        self.endpoint = endpoint
+    public init(initialValue: String) {
+        self.endpoint = .init(initialValue, threshold: 3 * 60)
     }
 
-    /// Will endpoint expire within a certain time
-    func isExpiring(within interval: TimeInterval) -> Bool {
-        lock.withLock {
-            return self.expiration.timeIntervalSinceNow < interval
-        }
-    }
-
-    /// Get Endpoint from supplied closure, or wait on promise for Endpoint
-    /// - Parameters:
-    ///   - discover: Closure used to discover endpoint
-    ///   - logger: Logger
-    ///   - eventLoop: EventLoop to run process on
-    /// - Returns: EventLoopFuture holding the endpoint
-    func getEndpoint(
-        discover: @escaping AWSEndpointDiscovery.DiscoverFunction,
-        logger: Logger,
-        on eventLoop: EventLoop
-    ) -> EventLoopFuture<String> {
-        // lock access to class, until we exit the function
-        lock.lock()
-        defer { lock.unlock() }
-        // if promise is nil then run supplied closure, otherwise wait on result of promise
-        guard let promise = self.promise else {
-            let promise = eventLoop.makePromise(of: String.self)
-            let futureResult = discover(logger, eventLoop).map { response -> String in
-                let index = Int.random(in: 0..<response.endpoints.count)
-                let endpoint = response.endpoints[index]
-                self.lock.withLock {
-                    self.endpoint = endpoint.address
-                    self.expiration = Date(timeIntervalSinceNow: TimeInterval(endpoint.cachePeriodInMinutes * 60))
-                    self.promise = nil
-                }
-                return response.endpoints[0].address
-            }
-            self.promise = promise
-            futureResult.cascade(to: promise)
-            return futureResult
-        }
-        return promise.futureResult
+    public func getValue(getExpiringValue: @escaping @Sendable () async throws -> (String, Date)) async throws -> String {
+        try await self.endpoint.getValue(getExpiringValue: getExpiringValue)
     }
 }
 
 /// Helper object holding endpoint storage and closure used to discover endpoint
-public struct AWSEndpointDiscovery {
-    public typealias DiscoverFunction = (Logger, EventLoop) -> EventLoopFuture<AWSEndpoints>
-
+public struct AWSEndpointDiscovery: Sendable {
     let storage: AWSEndpointStorage
-    let discover: DiscoverFunction
+    let discover: @Sendable (Logger) async throws -> AWSEndpoints
     let isRequired: Bool
-    internal var endpoint: String? { storage.endpoint }
 
-    public init(storage: AWSEndpointStorage, discover: @escaping DiscoverFunction, required: Bool) {
+    public init(storage: AWSEndpointStorage, discover: @escaping @Sendable (Logger) async throws -> AWSEndpoints, required: Bool) {
         self.storage = storage
         self.discover = discover
         self.isRequired = required
     }
 
-    /// Will endpoint expire within a certain time
-    func isExpiring(within interval: TimeInterval) -> Bool {
-        return self.storage.expiration.timeIntervalSinceNow < interval
-    }
-
-    func getEndpoint(logger: Logger, on eventLoop: EventLoop) -> EventLoopFuture<String> {
-        return self.storage.getEndpoint(discover: self.discover, logger: logger, on: eventLoop)
+    func getEndpoint(logger: Logger) async throws -> String? {
+        do {
+            return try await self.storage.getValue {
+                let response = try await discover(logger)
+                let index = Int.random(in: 0..<response.endpoints.count)
+                let endpoint = response.endpoints[index]
+                return (endpoint.address, Date(timeIntervalSinceNow: TimeInterval(endpoint.cachePeriodInMinutes * 60)))
+            }
+        } catch {
+            if !isRequired {
+                return nil
+            } else {
+                throw error
+            }
+        }
     }
 }
-
-// can be set to Sendable as the contents are only set internally and they are
-// protected by a lock
-extension AWSEndpointStorage: @unchecked Sendable {}
-// I could require the discover function in AWSEndpointDiscovery to be Sendable, but it just
-// generates pain elsewhere where I have to mark all the endpoint functions to be @Sendable
-// which then requires multiple versions of that function if I am going to support backwards
-// compatiblity
-extension AWSEndpointDiscovery: @unchecked Sendable {}

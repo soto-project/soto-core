@@ -29,12 +29,12 @@ final class EndpointDiscoveryTests: XCTestCase {
         required init(from: EndpointDiscoveryTests.Service, patch: AWSServiceConfig.Patch) {
             self.client = from.client
             self.config = from.config.with(patch: patch)
-            self.endpointStorage = AWSEndpointStorage(endpoint: self.config.endpoint)
             self.endpointToDiscover = from.endpointToDiscover
             self.getEndpointsCalledCount.store(
                 from.getEndpointsCalledCount.load(ordering: .sequentiallyConsistent),
                 ordering: .sequentiallyConsistent
             )
+            self.endpointStorage = AWSEndpointStorage(initialValue: self.config.endpoint)
         }
 
         /// init
@@ -48,17 +48,16 @@ final class EndpointDiscoveryTests: XCTestCase {
                 apiVersion: "2021-08-08",
                 endpoint: endpoint
             )
-            self.endpointStorage = AWSEndpointStorage(endpoint: self.config.endpoint)
             self.endpointToDiscover = endpointToDiscover
+            self.endpointStorage = AWSEndpointStorage(initialValue: self.config.endpoint)
         }
 
         struct TestRequest: AWSEncodableShape {}
 
-        public func getEndpoints(logger: Logger, on eventLoop: EventLoop) -> EventLoopFuture<AWSEndpoints> {
+        @Sendable public func getEndpoints(logger: Logger) async throws -> AWSEndpoints {
             self.getEndpointsCalledCount.wrappingIncrement(ordering: .sequentiallyConsistent)
-            return eventLoop.scheduleTask(in: .milliseconds(200)) {
-                return AWSEndpoints(endpoints: [.init(address: self.endpointToDiscover, cachePeriodInMinutes: 60)])
-            }.futureResult
+            try await Task.sleep(nanoseconds: 200_000_000)
+            return AWSEndpoints(endpoints: [.init(address: self.endpointToDiscover, cachePeriodInMinutes: 60)])
         }
 
         public func test(_ input: TestRequest, logger: Logger = AWSClient.loggingDisabled, on eventLoop: EventLoop? = nil) async throws {
@@ -73,11 +72,10 @@ final class EndpointDiscoveryTests: XCTestCase {
             )
         }
 
-        public func getEndpointsDontCache(logger: Logger, on eventLoop: EventLoop) -> EventLoopFuture<AWSEndpoints> {
+        @Sendable public func getEndpointsDontCache(logger: Logger) async throws -> AWSEndpoints {
             self.getEndpointsCalledCount.wrappingIncrement(ordering: .sequentiallyConsistent)
-            return eventLoop.scheduleTask(in: .milliseconds(200)) {
-                return AWSEndpoints(endpoints: [.init(address: self.endpointToDiscover, cachePeriodInMinutes: 0)])
-            }.futureResult
+            try await Task.sleep(nanoseconds: 200_000_000)
+            return AWSEndpoints(endpoints: [.init(address: self.endpointToDiscover, cachePeriodInMinutes: 0)])
         }
 
         public func testDontCache(logger: Logger = AWSClient.loggingDisabled, on eventLoop: EventLoop? = nil) async throws {

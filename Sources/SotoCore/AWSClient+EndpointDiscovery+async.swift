@@ -31,10 +31,8 @@ extension AWSClient {
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         endpointDiscovery: AWSEndpointDiscovery,
-        logger: Logger = AWSClient.loggingDisabled,
-        on eventLoop: EventLoop? = nil
+        logger: Logger = AWSClient.loggingDisabled
     ) async throws {
-        let eventLoop = eventLoop ?? eventLoopGroup.next()
         return try await self.execute(
             execute: { endpoint in
                 return try await self.execute(
@@ -42,13 +40,11 @@ extension AWSClient {
                     path: path,
                     httpMethod: httpMethod,
                     serviceConfig: endpoint.map { serviceConfig.with(patch: .init(endpoint: $0)) } ?? serviceConfig,
-                    logger: logger,
-                    on: eventLoop
+                    logger: logger
                 )
             },
             isEnabled: serviceConfig.options.contains(.enableEndpointDiscovery),
             endpointDiscovery: endpointDiscovery,
-            eventLoop: eventLoop,
             logger: logger
         )
     }
@@ -72,10 +68,8 @@ extension AWSClient {
         input: Input,
         hostPrefix: String? = nil,
         endpointDiscovery: AWSEndpointDiscovery,
-        logger: Logger = AWSClient.loggingDisabled,
-        on eventLoop: EventLoop? = nil
+        logger: Logger = AWSClient.loggingDisabled
     ) async throws {
-        let eventLoop = eventLoop ?? eventLoopGroup.next()
         return try await self.execute(
             execute: { endpoint in
                 return try await self.execute(
@@ -85,13 +79,11 @@ extension AWSClient {
                     serviceConfig: endpoint.map { serviceConfig.with(patch: .init(endpoint: $0)) } ?? serviceConfig,
                     input: input,
                     hostPrefix: hostPrefix,
-                    logger: logger,
-                    on: eventLoop
+                    logger: logger
                 )
             },
             isEnabled: serviceConfig.options.contains(.enableEndpointDiscovery),
             endpointDiscovery: endpointDiscovery,
-            eventLoop: eventLoop,
             logger: logger
         )
     }
@@ -113,10 +105,8 @@ extension AWSClient {
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         endpointDiscovery: AWSEndpointDiscovery,
-        logger: Logger = AWSClient.loggingDisabled,
-        on eventLoop: EventLoop? = nil
+        logger: Logger = AWSClient.loggingDisabled
     ) async throws -> Output {
-        let eventLoop = eventLoop ?? eventLoopGroup.next()
         return try await self.execute(
             execute: { endpoint in
                 return try await self.execute(
@@ -124,13 +114,11 @@ extension AWSClient {
                     path: path,
                     httpMethod: httpMethod,
                     serviceConfig: endpoint.map { serviceConfig.with(patch: .init(endpoint: $0)) } ?? serviceConfig,
-                    logger: logger,
-                    on: eventLoop
+                    logger: logger
                 )
             },
             isEnabled: serviceConfig.options.contains(.enableEndpointDiscovery),
             endpointDiscovery: endpointDiscovery,
-            eventLoop: eventLoop,
             logger: logger
         )
     }
@@ -156,10 +144,8 @@ extension AWSClient {
         input: Input,
         hostPrefix: String? = nil,
         endpointDiscovery: AWSEndpointDiscovery,
-        logger: Logger = AWSClient.loggingDisabled,
-        on eventLoop: EventLoop? = nil
+        logger: Logger = AWSClient.loggingDisabled
     ) async throws -> Output {
-        let eventLoop = eventLoop ?? eventLoopGroup.next()
         return try await self.execute(
             execute: { endpoint in
                 return try await self.execute(
@@ -169,13 +155,11 @@ extension AWSClient {
                     serviceConfig: endpoint.map { serviceConfig.with(patch: .init(endpoint: $0)) } ?? serviceConfig,
                     input: input,
                     hostPrefix: hostPrefix,
-                    logger: logger,
-                    on: eventLoop
+                    logger: logger
                 )
             },
             isEnabled: serviceConfig.options.contains(.enableEndpointDiscovery),
             endpointDiscovery: endpointDiscovery,
-            eventLoop: eventLoop,
             logger: logger
         )
     }
@@ -203,10 +187,8 @@ extension AWSClient {
         hostPrefix: String? = nil,
         endpointDiscovery: AWSEndpointDiscovery,
         logger: Logger = AWSClient.loggingDisabled,
-        on eventLoop: EventLoop? = nil,
         stream: @escaping AWSResponseStream
     ) async throws -> Output {
-        let eventLoop = eventLoop ?? eventLoopGroup.next()
         return try await self.execute(
             execute: { endpoint in
                 return try await self.execute(
@@ -217,13 +199,11 @@ extension AWSClient {
                     input: input,
                     hostPrefix: hostPrefix,
                     logger: logger,
-                    on: eventLoop,
                     stream: stream
                 )
             },
             isEnabled: serviceConfig.options.contains(.enableEndpointDiscovery),
             endpointDiscovery: endpointDiscovery,
-            eventLoop: eventLoop,
             logger: logger
         )
     }
@@ -232,21 +212,17 @@ extension AWSClient {
         execute: @escaping (String?) async throws -> Output,
         isEnabled: Bool,
         endpointDiscovery: AWSEndpointDiscovery,
-        eventLoop: EventLoop,
         logger: Logger
     ) async throws -> Output {
         guard isEnabled || endpointDiscovery.isRequired else { return try await execute(nil) }
         // get endpoint
         if endpointDiscovery.isExpiring(within: 3 * 60) {
             do {
-                let endpointTask = Task { () -> String in
-                    logger.trace("Request endpoint")
-                    let endpoint = try await endpointDiscovery.getEndpoint(logger: logger, on: eventLoop).get()
-                    logger.trace("Received endpoint \(endpoint)")
-                    return endpoint
-                }
+                logger.trace("Request endpoint")
+                let endpoint = try await endpointDiscovery.getEndpoint(logger: logger, on: self.eventLoopGroup.any()).get()
+                logger.trace("Received endpoint \(endpoint)")
+
                 if endpointDiscovery.isRequired {
-                    let endpoint = try await endpointTask.value
                     return try await execute(endpoint)
                 } else {
                     return try await execute(nil)

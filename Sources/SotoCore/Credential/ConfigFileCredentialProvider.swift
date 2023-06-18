@@ -65,7 +65,7 @@ final class ConfigFileCredentialProvider: CredentialProviderSelector {
             context: context
         )
         .flatMapThrowing { sharedCredentials in
-            return try credentialProvider(from: sharedCredentials, context: context, endpoint: endpoint)
+            return try self.credentialProvider(from: sharedCredentials, context: context, endpoint: endpoint)
         }
     }
 

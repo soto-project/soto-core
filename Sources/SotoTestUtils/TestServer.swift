@@ -242,7 +242,7 @@ extension AWSTestServer {
                 case .v1:
                     return .error(.notImplemented, continueProcessing: true)
                 case .v2:
-                    var responseBody = byteBufferAllocator.buffer(capacity: token.utf8.count)
+                    var responseBody = self.byteBufferAllocator.buffer(capacity: token.utf8.count)
                     responseBody.writeString(token)
                     let headers: [String: String] = [:]
                     return .result(.init(httpStatus: .ok, headers: headers, body: responseBody), continueProcessing: true)
@@ -253,7 +253,7 @@ extension AWSTestServer {
                 guard version == .v1 || request.headers[InstanceMetaData.TokenHeaderName] == token else {
                     return .error(.badRequest, continueProcessing: false)
                 }
-                var responseBody = byteBufferAllocator.buffer(capacity: ec2Role.utf8.count)
+                var responseBody = self.byteBufferAllocator.buffer(capacity: ec2Role.utf8.count)
                 responseBody.writeString(ec2Role)
                 let headers: [String: String] = [:]
                 return .result(.init(httpStatus: .ok, headers: headers, body: responseBody), continueProcessing: true)
@@ -262,7 +262,7 @@ extension AWSTestServer {
                 // credentials
                 let encoder = JSONEncoder()
                 encoder.dateEncodingStrategy = .formatted(dateFormatter)
-                let responseBody = try encoder.encodeAsByteBuffer(metaData, allocator: byteBufferAllocator)
+                let responseBody = try encoder.encodeAsByteBuffer(metaData, allocator: self.byteBufferAllocator)
                 let headers = [
                     "Content-Type": "application/json",
                 ]
@@ -285,7 +285,7 @@ extension AWSTestServer {
             if request.method == .GET, request.uri == path {
                 let encoder = JSONEncoder()
                 encoder.dateEncodingStrategy = .formatted(dateFormatter)
-                let responseBody = try encoder.encodeAsByteBuffer(metaData, allocator: byteBufferAllocator)
+                let responseBody = try encoder.encodeAsByteBuffer(metaData, allocator: self.byteBufferAllocator)
                 let headers = [
                     "Content-Type": "application/json",
                 ]

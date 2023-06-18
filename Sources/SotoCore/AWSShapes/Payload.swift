@@ -83,7 +83,7 @@ public struct AWSPayload {
         // use chunked reader buffer size to avoid allocating additional buffers when streaming data
         let blockSize = S3ChunkedStreamReader.bufferSize
         var leftToRead = size
-        var readSoFar: Int = 0
+        var readSoFar = 0
         let stream: StreamReadFunction = { eventLoop in
             // calculate how much data is left to read, if a file size was indicated
             var downloadSize = blockSize

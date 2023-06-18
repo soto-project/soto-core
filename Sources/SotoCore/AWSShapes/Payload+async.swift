@@ -14,7 +14,6 @@
 
 import NIOCore
 
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension AWSPayload {
     /// Construct a stream payload from an `AsynSequence` of `ByteBuffers`
     /// - Parameters:

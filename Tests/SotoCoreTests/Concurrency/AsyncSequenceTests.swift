@@ -17,7 +17,6 @@ import SotoCore
 import SotoTestUtils
 import XCTest
 
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 final class AsyncSequenceTests: XCTestCase {
     func testFixedSizeByteBufferSequence(
         bufferSize: Int,
@@ -68,7 +67,6 @@ final class AsyncSequenceTests: XCTestCase {
     }
 }
 
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 struct TestByteBufferSequence: AsyncSequence {
     typealias Element = ByteBuffer
     let source: ByteBuffer

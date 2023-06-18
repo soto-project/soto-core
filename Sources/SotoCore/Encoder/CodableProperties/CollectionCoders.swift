@@ -38,7 +38,7 @@ extension ArrayCoder: CustomDecoder where Element: Decodable {
 
         var container = try topLevelContainer.nestedUnkeyedContainer(forKey: memberKey)
         while !container.isAtEnd {
-            values.append(try container.decode(Element.self))
+            try values.append(container.decode(Element.self))
         }
         return values
     }

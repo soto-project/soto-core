@@ -15,7 +15,6 @@
 import Logging
 import NIOCore
 
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension AWSClient {
     /// Execute an empty request
     /// - parameters:

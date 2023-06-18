@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Crypto
 import struct Foundation.CharacterSet
 import struct Foundation.Data
 import struct Foundation.Date
@@ -20,7 +21,6 @@ import struct Foundation.Locale
 import struct Foundation.TimeZone
 import struct Foundation.URL
 import struct Foundation.URLComponents
-import SotoCrypto
 
 /// Amazon Web Services V4 Signer
 public struct AWSSigner: Sendable {

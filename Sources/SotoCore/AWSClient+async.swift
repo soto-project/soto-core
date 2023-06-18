@@ -20,7 +20,6 @@ import Metrics
 import NIOCore
 import SotoSignerV4
 
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension AWSClient {
     /// Shutdown AWSClient asynchronously.
     ///

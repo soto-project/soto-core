@@ -66,7 +66,7 @@ public struct JMESAnyPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatch
         case .success(let output):
             do {
                 if let searchResult = try expression.search(object: output, as: [CustomStringConvertible].self) {
-                    return searchResult.first { expected == $0.description } != nil
+                    return searchResult.first { self.expected == $0.description } != nil
                 } else {
                     return false
                 }
@@ -94,7 +94,7 @@ public struct JMESAllPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatch
         case .success(let output):
             do {
                 if let searchResult = try expression.search(object: output, as: [CustomStringConvertible].self) {
-                    return searchResult.first { expected != $0.description } == nil
+                    return searchResult.first { self.expected != $0.description } == nil
                 } else {
                     return false
                 }

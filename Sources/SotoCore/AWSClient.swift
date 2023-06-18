@@ -637,7 +637,7 @@ extension AWSClient {
         func execute(attempt: Int) {
             // execute HTTP request
             _ = request(eventLoop)
-                .flatMapThrowing { response throws -> Void in
+                .flatMapThrowing { response throws in
                     // if it returns an HTTP status code outside 2xx then throw an error
                     guard (200..<300).contains(response.status.code) else {
                         throw self.createError(for: response, serviceConfig: serviceConfig, logger: logger)
@@ -645,7 +645,7 @@ extension AWSClient {
                     let output = try processResponse(response)
                     promise.succeed(output)
                 }
-                .flatMapErrorThrowing { error -> Void in
+                .flatMapErrorThrowing { error in
                     // if streaming and the error returned is an AWS error fail immediately. Do not attempt
                     // to retry as the streaming function will not know you are retrying
                     if streaming,

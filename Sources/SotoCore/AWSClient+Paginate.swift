@@ -59,7 +59,7 @@ extension AWSClient {
             let responseFuture = command(input, logger, eventLoop)
                 .flatMap { response in
                     return onPage(currentValue, response, eventLoop)
-                        .map { continuePaginate, result -> Void in
+                        .map { continuePaginate, result in
                             guard continuePaginate == true else { return promise.succeed(result) }
                             // get next block token and construct a new input with this token
                             guard let outputToken = response[keyPath: outputKey] else { return promise.succeed(result) }
@@ -140,7 +140,7 @@ extension AWSClient {
             let responseFuture = command(input, logger, eventLoop)
                 .flatMap { response in
                     return onPage(currentValue, response, eventLoop)
-                        .map { continuePaginate, result -> Void in
+                        .map { continuePaginate, result in
                             guard continuePaginate == true else { return promise.succeed(result) }
                             // get next block token and construct a new input with this token
                             guard let token = response[keyPath: tokenKey] else { return promise.succeed(result) }
@@ -219,7 +219,7 @@ extension AWSClient {
             let responseFuture = command(input, logger, eventLoop)
                 .flatMap { response in
                     return onPage(currentValue, response, eventLoop)
-                        .map { continuePaginate, result -> Void in
+                        .map { continuePaginate, result in
                             guard continuePaginate == true else { return promise.succeed(result) }
                             // get next block token and construct a new input with this token
                             guard let token = response[keyPath: tokenKey],

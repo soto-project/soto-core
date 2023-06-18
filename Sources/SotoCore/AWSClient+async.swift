@@ -361,8 +361,8 @@ extension AWSClient {
     ///   - eventLoop: optional eventLoop to run operation on
     ///   - logger: optional logger to use
     /// - Returns: Credential
-    public func getCredential(on eventLoop: EventLoop? = nil, logger: Logger = AWSClient.loggingDisabled) async throws -> Credential {
-        let eventLoop = eventLoop ?? self.eventLoopGroup.next()
+    public func getCredential(logger: Logger = AWSClient.loggingDisabled) async throws -> Credential {
+        let eventLoop = self.eventLoopGroup.any()
         if let asyncCredentialProvider = self.credentialProvider as? AsyncCredentialProvider {
             return try await asyncCredentialProvider.getCredential(on: eventLoop, logger: logger)
         } else {

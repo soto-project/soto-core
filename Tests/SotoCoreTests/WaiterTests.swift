@@ -83,7 +83,7 @@ class WaiterTests: XCTestCase {
             acceptors: [
                 .init(state: .success, matcher: try! JMESPathMatcher("array[*].status", expected: [true, true, true])),
             ],
-            minDelayTime: .seconds(2),
+            minDelayTime: .milliseconds(2),
             command: self.arrayOperation
         )
         let input = Input()
@@ -109,7 +109,7 @@ class WaiterTests: XCTestCase {
             acceptors: [
                 .init(state: .success, matcher: try! JMESPathMatcher("s", expected: "yes")),
             ],
-            minDelayTime: .seconds(2),
+            minDelayTime: .milliseconds(2),
             command: operation
         )
         let input = Input()
@@ -144,7 +144,7 @@ class WaiterTests: XCTestCase {
             acceptors: [
                 .init(state: .success, matcher: try! JMESPathMatcher("e", expected: "YES")),
             ],
-            minDelayTime: .seconds(2),
+            minDelayTime: .milliseconds(2),
             command: operation
         )
         let input = Input()
@@ -168,7 +168,7 @@ class WaiterTests: XCTestCase {
             acceptors: [
                 .init(state: .success, matcher: try! JMESAnyPathMatcher("array[*].status", expected: true)),
             ],
-            minDelayTime: .seconds(2),
+            minDelayTime: .milliseconds(2),
             command: self.arrayOperation
         )
         let input = Input()
@@ -192,7 +192,7 @@ class WaiterTests: XCTestCase {
             acceptors: [
                 .init(state: .success, matcher: try! JMESAllPathMatcher("array[*].status", expected: true)),
             ],
-            minDelayTime: .seconds(2),
+            minDelayTime: .milliseconds(2),
             command: self.arrayOperation
         )
         let input = Input()
@@ -230,7 +230,7 @@ class WaiterTests: XCTestCase {
             acceptors: [
                 .init(state: .success, matcher: try! JMESPathMatcher("array[*]", expected: [true, true, true])),
             ],
-            minDelayTime: .seconds(2),
+            minDelayTime: .milliseconds(2),
             command: arrayOperation
         )
         let input = Input(test: "Input")
@@ -250,12 +250,12 @@ class WaiterTests: XCTestCase {
             acceptors: [
                 .init(state: .success, matcher: try! JMESPathMatcher("i", expected: 3)),
             ],
-            minDelayTime: .seconds(2),
-            maxDelayTime: .seconds(4),
+            minDelayTime: .milliseconds(200),
+            maxDelayTime: .milliseconds(400),
             command: self.operation
         )
         let input = Input()
-        async let responseTask: Void = self.client.waitUntil(input, waiter: waiter, maxWaitTime: .seconds(4), logger: TestEnvironment.logger)
+        async let responseTask: Void = self.client.waitUntil(input, waiter: waiter, maxWaitTime: .milliseconds(400), logger: TestEnvironment.logger)
 
         var i = 0
         XCTAssertNoThrow(try self.awsServer.process { (_: Input) -> AWSTestServer.Result<Output> in
@@ -277,7 +277,7 @@ class WaiterTests: XCTestCase {
                 .init(state: .retry, matcher: AWSErrorCodeMatcher("AccessDenied")),
                 .init(state: .success, matcher: try! JMESPathMatcher("i", expected: 3)),
             ],
-            minDelayTime: .seconds(2),
+            minDelayTime: .milliseconds(2),
             command: self.operation
         )
         let input = Input()
@@ -302,7 +302,7 @@ class WaiterTests: XCTestCase {
                 .init(state: .retry, matcher: AWSErrorStatusMatcher(404)),
                 .init(state: .success, matcher: try! JMESPathMatcher("i", expected: 3)),
             ],
-            minDelayTime: .seconds(2),
+            minDelayTime: .milliseconds(2),
             command: self.operation
         )
         let input = Input()

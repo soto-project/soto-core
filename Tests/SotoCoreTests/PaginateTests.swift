@@ -68,7 +68,7 @@ final class PaginateTests: XCTestCase, @unchecked Sendable {
         let outputToken: Int?
     }
 
-    func counter(_ input: CounterInput, logger: Logger, on eventLoop: EventLoop?) async throws -> CounterOutput {
+    func counter(_ input: CounterInput, logger: Logger) async throws -> CounterOutput {
         return try await self.client.execute(
             operation: "TestOperation",
             path: "/",
@@ -89,7 +89,7 @@ final class PaginateTests: XCTestCase, @unchecked Sendable {
         )
     }
 
-    func stringList(_ input: StringListInput, logger: Logger, on eventLoop: EventLoop? = nil) async throws -> StringListOutput {
+    func stringList(_ input: StringListInput, logger: Logger) async throws -> StringListOutput {
         return try await self.client.execute(
             operation: "TestOperation",
             path: "/",

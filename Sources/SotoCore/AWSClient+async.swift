@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2022 the Soto project authors
+// Copyright (c) 2017-2023 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -356,46 +356,6 @@ extension AWSClient {
         }
     }
 
-    /* func execute(attempt: Int) {
-                 // execute HTTP request
-                 _ = request(eventLoop)
-                     .flatMapThrowing { response throws -> Void in
-                         // if it returns an HTTP status code outside 2xx then throw an error
-                         guard (200..<300).contains(response.status.code) else {
-                             throw self.createError(for: response, serviceConfig: serviceConfig, logger: logger)
-                         }
-                         let output = try processResponse(response)
-                         promise.succeed(output)
-                     }
-                     .flatMapErrorThrowing { error -> Void in
-                         // if streaming and the error returned is an AWS error fail immediately. Do not attempt
-                         // to retry as the streaming function will not know you are retrying
-                         if streaming,
-                            error is AWSErrorType || error is AWSRawError
-                         {
-                             promise.fail(error)
-                             return
-                         }
-                         // If I get a retry wait time for this error then attempt to retry request
-                         if case .retry(let retryTime) = self.retryPolicy.getRetryWaitTime(error: error, attempt: attempt) {
-                             logger.trace("Retrying request", metadata: [
-                                 "aws-retry-time": "\(Double(retryTime.nanoseconds) / 1_000_000_000)",
-                             ])
-                             // schedule task for retrying AWS request
-                             eventLoop.scheduleTask(in: retryTime) {
-                                 execute(attempt: attempt + 1)
-                             }
-                         } else {
-                             promise.fail(error)
-                         }
-                     }
-             }
-
-             execute(attempt: 0)
-
-             return promise.futureResult
-         }
-     } */
     /// Get credential used by client
     /// - Parameters:
     ///   - eventLoop: optional eventLoop to run operation on

@@ -16,7 +16,6 @@ import struct Foundation.URL
 import NIOCore
 
 /// Protocol for services objects. Contains a client to communicate with AWS and config for defining how to communicate
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension AWSService {
     /// Generate a signed URL
     /// - parameters:

@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Crypto
 import struct Foundation.CharacterSet
 import struct Foundation.Data
 import struct Foundation.Date
@@ -19,7 +20,6 @@ import struct Foundation.URL
 import struct Foundation.URLComponents
 import NIOCore
 import NIOHTTP1
-import SotoCrypto
 import SotoSignerV4
 
 /// Object encapsulating all the information needed to generate a raw HTTP request to AWS
@@ -211,7 +211,7 @@ extension AWSRequest {
                         Self.verifyStream(operation: operationName, payload: awsPayload, input: shapeWithPayload)
                         body = .raw(awsPayload)
                     case let shape as AWSEncodableShape:
-                        body = .json(try shape.encodeAsJSON(byteBufferAllocator: configuration.byteBufferAllocator))
+                        body = try .json(shape.encodeAsJSON(byteBufferAllocator: configuration.byteBufferAllocator))
                     default:
                         preconditionFailure("Cannot add this as a payload")
                     }
@@ -221,7 +221,7 @@ extension AWSRequest {
             } else {
                 // only include the body if there are members that are output in the body.
                 if memberVariablesCount > 0 {
-                    body = .json(try input.encodeAsJSON(byteBufferAllocator: configuration.byteBufferAllocator))
+                    body = try .json(input.encodeAsJSON(byteBufferAllocator: configuration.byteBufferAllocator))
                 } else if httpMethod == .PUT || httpMethod == .POST {
                     // PUT and POST requests require a body even if it is empty. This is not the case with XML
                     body = .json(configuration.byteBufferAllocator.buffer(string: "{}"))
@@ -242,7 +242,7 @@ extension AWSRequest {
                         if let encoding = Input.getEncoding(for: payload), case .body(let locationName) = encoding.location {
                             rootName = locationName
                         }
-                        body = .xml(try shape.encodeAsXML(rootName: rootName, namespace: configuration.xmlNamespace))
+                        body = try .xml(shape.encodeAsXML(rootName: rootName, namespace: configuration.xmlNamespace))
                     default:
                         preconditionFailure("Cannot add this as a payload")
                     }
@@ -252,7 +252,7 @@ extension AWSRequest {
             } else {
                 // only include the body if there are members that are output in the body.
                 if memberVariablesCount > 0 {
-                    body = .xml(try input.encodeAsXML(namespace: configuration.xmlNamespace))
+                    body = try .xml(input.encodeAsXML(namespace: configuration.xmlNamespace))
                 }
             }
 

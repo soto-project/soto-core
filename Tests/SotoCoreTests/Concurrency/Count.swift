@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 // Count type for testing concurrency primitives
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 actor Count {
     var value: Int
 

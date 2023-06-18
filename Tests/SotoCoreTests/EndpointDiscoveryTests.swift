@@ -69,8 +69,7 @@ final class EndpointDiscoveryTests: XCTestCase {
                 serviceConfig: self.config,
                 input: input,
                 endpointDiscovery: .init(storage: self.endpointStorage, discover: self.getEndpoints, required: true),
-                logger: logger,
-                on: eventLoop
+                logger: logger
             )
         }
 
@@ -88,8 +87,7 @@ final class EndpointDiscoveryTests: XCTestCase {
                 httpMethod: .GET,
                 serviceConfig: self.config,
                 endpointDiscovery: .init(storage: self.endpointStorage, discover: self.getEndpointsDontCache, required: true),
-                logger: logger,
-                on: eventLoop
+                logger: logger
             )
         }
 
@@ -101,8 +99,7 @@ final class EndpointDiscoveryTests: XCTestCase {
                 serviceConfig: self.config,
                 input: input,
                 endpointDiscovery: .init(storage: self.endpointStorage, discover: self.getEndpoints, required: false),
-                logger: logger,
-                on: eventLoop
+                logger: logger
             )
         }
     }

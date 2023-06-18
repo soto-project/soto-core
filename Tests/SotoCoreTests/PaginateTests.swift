@@ -75,8 +75,7 @@ final class PaginateAsyncTests: XCTestCase, @unchecked Sendable {
             httpMethod: .POST,
             serviceConfig: self.config,
             input: input,
-            logger: logger,
-            on: eventLoop
+            logger: logger
         )
     }
 
@@ -97,8 +96,7 @@ final class PaginateAsyncTests: XCTestCase, @unchecked Sendable {
             httpMethod: .POST,
             serviceConfig: self.config,
             input: input,
-            logger: logger,
-            on: eventLoop
+            logger: logger
         )
     }
 

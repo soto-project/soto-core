@@ -22,7 +22,6 @@ public protocol AWSPaginateToken: AWSShape {
     func usingPaginationToken(_ token: Token) -> Self
 }
 
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 extension AWSClient {
     /// Used to access paginated results.
     public struct PaginatorSequence<Input: AWSPaginateToken, Output: AWSShape>: AsyncSequence where Input.Token: Equatable {

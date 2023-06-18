@@ -40,7 +40,7 @@ class WaiterTests: XCTestCase {
         let i: Int
     }
 
-    func operation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<Output> {
+    @Sendable func operation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<Output> {
         self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger, on: eventLoop)
     }
 
@@ -59,7 +59,7 @@ class WaiterTests: XCTestCase {
         let array: [Element]
     }
 
-    func arrayOperation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<ArrayOutput> {
+    @Sendable func arrayOperation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<ArrayOutput> {
         self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger, on: eventLoop)
     }
 
@@ -74,7 +74,7 @@ class WaiterTests: XCTestCase {
         let array: [Element]?
     }
 
-    func optionalArrayOperation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<OptionalArrayOutput> {
+    @Sendable func optionalArrayOperation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<OptionalArrayOutput> {
         self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger, on: eventLoop)
     }
 
@@ -83,7 +83,7 @@ class WaiterTests: XCTestCase {
             acceptors: [
                 .init(state: .success, matcher: try! JMESPathMatcher("array[*].status", expected: [true, true, true])),
             ],
-            minDelayTime: .seconds(2),
+            minDelayTime: .milliseconds(2),
             command: self.arrayOperation
         )
         let input = Input()
@@ -102,14 +102,14 @@ class WaiterTests: XCTestCase {
         struct StringOutput: AWSDecodableShape & Encodable {
             let s: String
         }
-        func operation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<StringOutput> {
+        @Sendable func operation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<StringOutput> {
             self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger, on: eventLoop)
         }
         let waiter = AWSClient.Waiter(
             acceptors: [
                 .init(state: .success, matcher: try! JMESPathMatcher("s", expected: "yes")),
             ],
-            minDelayTime: .seconds(2),
+            minDelayTime: .milliseconds(2),
             command: operation
         )
         let input = Input()
@@ -137,14 +137,14 @@ class WaiterTests: XCTestCase {
         struct EnumOutput: AWSDecodableShape & Encodable {
             let e: YesNo
         }
-        func operation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<EnumOutput> {
+        @Sendable func operation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<EnumOutput> {
             self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger, on: eventLoop)
         }
         let waiter = AWSClient.Waiter(
             acceptors: [
                 .init(state: .success, matcher: try! JMESPathMatcher("e", expected: "YES")),
             ],
-            minDelayTime: .seconds(2),
+            minDelayTime: .milliseconds(2),
             command: operation
         )
         let input = Input()
@@ -168,7 +168,7 @@ class WaiterTests: XCTestCase {
             acceptors: [
                 .init(state: .success, matcher: try! JMESAnyPathMatcher("array[*].status", expected: true)),
             ],
-            minDelayTime: .seconds(2),
+            minDelayTime: .milliseconds(2),
             command: self.arrayOperation
         )
         let input = Input()
@@ -192,7 +192,7 @@ class WaiterTests: XCTestCase {
             acceptors: [
                 .init(state: .success, matcher: try! JMESAllPathMatcher("array[*].status", expected: true)),
             ],
-            minDelayTime: .seconds(2),
+            minDelayTime: .milliseconds(2),
             command: self.arrayOperation
         )
         let input = Input()
@@ -222,7 +222,7 @@ class WaiterTests: XCTestCase {
         defer { XCTAssertNoThrow(try awsServer.stop()) }
         let config = createServiceConfig(serviceProtocol: .restxml, endpoint: awsServer.address)
 
-        func arrayOperation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<ArrayOutput> {
+        @Sendable func arrayOperation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<ArrayOutput> {
             self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: logger, on: eventLoop)
         }
 
@@ -230,7 +230,7 @@ class WaiterTests: XCTestCase {
             acceptors: [
                 .init(state: .success, matcher: try! JMESPathMatcher("array[*]", expected: [true, true, true])),
             ],
-            minDelayTime: .seconds(2),
+            minDelayTime: .milliseconds(2),
             command: arrayOperation
         )
         let input = Input(test: "Input")
@@ -250,12 +250,12 @@ class WaiterTests: XCTestCase {
             acceptors: [
                 .init(state: .success, matcher: try! JMESPathMatcher("i", expected: 3)),
             ],
-            minDelayTime: .seconds(2),
-            maxDelayTime: .seconds(4),
+            minDelayTime: .milliseconds(200),
+            maxDelayTime: .milliseconds(400),
             command: self.operation
         )
         let input = Input()
-        async let responseTask: Void = self.client.waitUntil(input, waiter: waiter, maxWaitTime: .seconds(4), logger: TestEnvironment.logger)
+        async let responseTask: Void = self.client.waitUntil(input, waiter: waiter, maxWaitTime: .milliseconds(400), logger: TestEnvironment.logger)
 
         var i = 0
         XCTAssertNoThrow(try self.awsServer.process { (_: Input) -> AWSTestServer.Result<Output> in
@@ -277,7 +277,7 @@ class WaiterTests: XCTestCase {
                 .init(state: .retry, matcher: AWSErrorCodeMatcher("AccessDenied")),
                 .init(state: .success, matcher: try! JMESPathMatcher("i", expected: 3)),
             ],
-            minDelayTime: .seconds(2),
+            minDelayTime: .milliseconds(2),
             command: self.operation
         )
         let input = Input()
@@ -302,7 +302,7 @@ class WaiterTests: XCTestCase {
                 .init(state: .retry, matcher: AWSErrorStatusMatcher(404)),
                 .init(state: .success, matcher: try! JMESPathMatcher("i", expected: 3)),
             ],
-            minDelayTime: .seconds(2),
+            minDelayTime: .milliseconds(2),
             command: self.operation
         )
         let input = Input()

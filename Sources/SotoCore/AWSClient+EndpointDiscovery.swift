@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2021 the Soto project authors
+// Copyright (c) 2021-2023 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -12,10 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Logging
 import NIOCore
 
 extension AWSClient {
-    /// Execute an empty request and return a future with the output object generated from the response
+    /// Execute an empty request
     /// - parameters:
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
@@ -24,37 +25,31 @@ extension AWSClient {
     ///     - endpointDiscovery: Endpoint discovery helper
     ///     - logger: Logger
     ///     - eventLoop: Optional EventLoop to run everything on
-    /// - returns:
-    ///     Future containing output object that completes when response is received
-    @discardableResult public func execute(
+    public func execute(
         operation operationName: String,
         path: String,
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         endpointDiscovery: AWSEndpointDiscovery,
-        logger: Logger = AWSClient.loggingDisabled,
-        on eventLoop: EventLoop? = nil
-    ) -> EventLoopFuture<Void> {
-        let eventLoop = eventLoop ?? eventLoopGroup.next()
-        return self.execute(
+        logger: Logger = AWSClient.loggingDisabled
+    ) async throws {
+        return try await self.execute(
             execute: { endpoint in
-                return self.execute(
+                return try await self.execute(
                     operation: operationName,
                     path: path,
                     httpMethod: httpMethod,
                     serviceConfig: endpoint.map { serviceConfig.with(patch: .init(endpoint: $0)) } ?? serviceConfig,
-                    logger: logger,
-                    on: eventLoop
+                    logger: logger
                 )
             },
             isEnabled: serviceConfig.options.contains(.enableEndpointDiscovery),
             endpointDiscovery: endpointDiscovery,
-            eventLoop: eventLoop,
             logger: logger
         )
     }
 
-    /// Execute a request with an input object and return a future with the output object generated from the response
+    /// Execute a request with an input object
     /// - parameters:
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
@@ -65,9 +60,7 @@ extension AWSClient {
     ///     - endpointDiscovery: Endpoint discovery helper
     ///     - logger: Logger
     ///     - eventLoop: Optional EventLoop to run everything on
-    /// - returns:
-    ///     Future containing output object that completes when response is received
-    @discardableResult public func execute<Input: AWSEncodableShape>(
+    public func execute<Input: AWSEncodableShape>(
         operation operationName: String,
         path: String,
         httpMethod: HTTPMethod,
@@ -75,31 +68,27 @@ extension AWSClient {
         input: Input,
         hostPrefix: String? = nil,
         endpointDiscovery: AWSEndpointDiscovery,
-        logger: Logger = AWSClient.loggingDisabled,
-        on eventLoop: EventLoop? = nil
-    ) -> EventLoopFuture<Void> {
-        let eventLoop = eventLoop ?? eventLoopGroup.next()
-        return self.execute(
+        logger: Logger = AWSClient.loggingDisabled
+    ) async throws {
+        return try await self.execute(
             execute: { endpoint in
-                return self.execute(
+                return try await self.execute(
                     operation: operationName,
                     path: path,
                     httpMethod: httpMethod,
                     serviceConfig: endpoint.map { serviceConfig.with(patch: .init(endpoint: $0)) } ?? serviceConfig,
                     input: input,
                     hostPrefix: hostPrefix,
-                    logger: logger,
-                    on: eventLoop
+                    logger: logger
                 )
             },
             isEnabled: serviceConfig.options.contains(.enableEndpointDiscovery),
             endpointDiscovery: endpointDiscovery,
-            eventLoop: eventLoop,
             logger: logger
         )
     }
 
-    /// Execute an empty request and return a future with the output object generated from the response
+    /// Execute an empty request and return the output object generated from the response
     /// - parameters:
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
@@ -109,36 +98,32 @@ extension AWSClient {
     ///     - logger: Logger
     ///     - eventLoop: Optional EventLoop to run everything on
     /// - returns:
-    ///     Future containing output object that completes when response is received
+    ///     Output object that completes when response is received
     @discardableResult public func execute<Output: AWSDecodableShape>(
         operation operationName: String,
         path: String,
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
         endpointDiscovery: AWSEndpointDiscovery,
-        logger: Logger = AWSClient.loggingDisabled,
-        on eventLoop: EventLoop? = nil
-    ) -> EventLoopFuture<Output> {
-        let eventLoop = eventLoop ?? eventLoopGroup.next()
-        return self.execute(
+        logger: Logger = AWSClient.loggingDisabled
+    ) async throws -> Output {
+        return try await self.execute(
             execute: { endpoint in
-                return self.execute(
+                return try await self.execute(
                     operation: operationName,
                     path: path,
                     httpMethod: httpMethod,
                     serviceConfig: endpoint.map { serviceConfig.with(patch: .init(endpoint: $0)) } ?? serviceConfig,
-                    logger: logger,
-                    on: eventLoop
+                    logger: logger
                 )
             },
             isEnabled: serviceConfig.options.contains(.enableEndpointDiscovery),
             endpointDiscovery: endpointDiscovery,
-            eventLoop: eventLoop,
             logger: logger
         )
     }
 
-    /// Execute a request with an input object and return a future with the output object generated from the response
+    /// Execute a request with an input object and return the output object generated from the response
     /// - parameters:
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
@@ -150,7 +135,7 @@ extension AWSClient {
     ///     - logger: Logger
     ///     - eventLoop: Optional EventLoop to run everything on
     /// - returns:
-    ///     Future containing output object that completes when response is received
+    ///     Output object that completes when response is received
     public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(
         operation operationName: String,
         path: String,
@@ -159,31 +144,27 @@ extension AWSClient {
         input: Input,
         hostPrefix: String? = nil,
         endpointDiscovery: AWSEndpointDiscovery,
-        logger: Logger = AWSClient.loggingDisabled,
-        on eventLoop: EventLoop? = nil
-    ) -> EventLoopFuture<Output> {
-        let eventLoop = eventLoop ?? eventLoopGroup.next()
-        return self.execute(
+        logger: Logger = AWSClient.loggingDisabled
+    ) async throws -> Output {
+        return try await self.execute(
             execute: { endpoint in
-                return self.execute(
+                return try await self.execute(
                     operation: operationName,
                     path: path,
                     httpMethod: httpMethod,
                     serviceConfig: endpoint.map { serviceConfig.with(patch: .init(endpoint: $0)) } ?? serviceConfig,
                     input: input,
                     hostPrefix: hostPrefix,
-                    logger: logger,
-                    on: eventLoop
+                    logger: logger
                 )
             },
             isEnabled: serviceConfig.options.contains(.enableEndpointDiscovery),
             endpointDiscovery: endpointDiscovery,
-            eventLoop: eventLoop,
             logger: logger
         )
     }
 
-    /// Execute a request with an input object and return a future with the output object generated from the response
+    /// Execute a request with an input object and return the output object generated from the response
     /// - parameters:
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL
@@ -196,7 +177,7 @@ extension AWSClient {
     ///     - eventLoop: Optional EventLoop to run everything on
     ///     - stream: Closure to stream payload response into
     /// - returns:
-    ///     Future containing output object that completes when response is received
+    ///     Output object that completes when response is received
     public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(
         operation operationName: String,
         path: String,
@@ -206,13 +187,11 @@ extension AWSClient {
         hostPrefix: String? = nil,
         endpointDiscovery: AWSEndpointDiscovery,
         logger: Logger = AWSClient.loggingDisabled,
-        on eventLoop: EventLoop? = nil,
         stream: @escaping AWSResponseStream
-    ) -> EventLoopFuture<Output> {
-        let eventLoop = eventLoop ?? eventLoopGroup.next()
-        return self.execute(
+    ) async throws -> Output {
+        return try await self.execute(
             execute: { endpoint in
-                return self.execute(
+                return try await self.execute(
                     operation: operationName,
                     path: path,
                     httpMethod: httpMethod,
@@ -220,46 +199,23 @@ extension AWSClient {
                     input: input,
                     hostPrefix: hostPrefix,
                     logger: logger,
-                    on: eventLoop,
                     stream: stream
                 )
             },
             isEnabled: serviceConfig.options.contains(.enableEndpointDiscovery),
             endpointDiscovery: endpointDiscovery,
-            eventLoop: eventLoop,
             logger: logger
         )
     }
 
     private func execute<Output>(
-        execute: @escaping (String?) -> EventLoopFuture<Output>,
+        execute: @escaping (String?) async throws -> Output,
         isEnabled: Bool,
         endpointDiscovery: AWSEndpointDiscovery,
-        eventLoop: EventLoop,
         logger: Logger
-    ) -> EventLoopFuture<Output> {
-        guard isEnabled || endpointDiscovery.isRequired else { return execute(nil) }
-        // get endpoint
-        if endpointDiscovery.isExpiring(within: 3 * 60) {
-            let endPointFuture = endpointDiscovery.getEndpoint(logger: logger, on: eventLoop)
-            logger.trace("Request endpoint")
-            endPointFuture.whenComplete { result in
-                switch result {
-                case .failure(let error):
-                    logger.debug("Error requesting endpoint", metadata: ["aws-error-message": "\(error)"])
-                case .success(let endpoint):
-                    logger.trace("Received endpoint \(endpoint)")
-                }
-            }
-            if endpointDiscovery.isRequired {
-                return endPointFuture.flatMap { endpoint in
-                    return execute(endpoint)
-                }
-            } else {
-                return execute(nil)
-            }
-        } else {
-            return execute(endpointDiscovery.endpoint)
-        }
+    ) async throws -> Output {
+        guard isEnabled || endpointDiscovery.isRequired else { return try await execute(nil) }
+        let endpoint = try await endpointDiscovery.getEndpoint(logger: logger)
+        return try await execute(endpoint)
     }
 }

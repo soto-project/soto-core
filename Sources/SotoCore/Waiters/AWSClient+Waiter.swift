@@ -39,7 +39,7 @@ extension AWSClient {
             let matcher: AWSWaiterMatcher
         }
 
-        public typealias WaiterCommand = @Sendable (Input, Logger, EventLoop?) -> EventLoopFuture<Output>
+        public typealias WaiterCommand = @Sendable (Input, Logger) async throws -> Output
 
         /// Initialize an waiter
         /// - Parameters:

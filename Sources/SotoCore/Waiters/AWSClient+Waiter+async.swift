@@ -35,14 +35,13 @@ extension AWSClient {
     ) async throws {
         let maxWaitTime = maxWaitTime ?? waiter.maxDelayTime
         let deadline: NIODeadline = .now() + maxWaitTime
-        let eventLoop = eventLoop ?? eventLoopGroup.next()
 
         var attempt = 0
         while true {
             attempt += 1
             let result: Result<Output, Error>
             do {
-                result = try .success(await waiter.command(input, logger, eventLoop).get())
+                result = try .success(await waiter.command(input, logger))
             } catch {
                 result = .failure(error)
             }

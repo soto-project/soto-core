@@ -294,8 +294,8 @@ extension AWSClient {
                     configuration: serviceConfig
                 )
             },
-            execute: { request, eventLoop, logger in
-                return try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger)
+            execute: { request, logger in
+                return try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: self.eventLoopGroup.any(), logger: logger)
             },
             processResponse: { _ in
                 return
@@ -329,8 +329,8 @@ extension AWSClient {
                     configuration: serviceConfig
                 )
             },
-            execute: { request, eventLoop, logger in
-                return try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger)
+            execute: { request, logger in
+                return try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: self.eventLoopGroup.any(), logger: logger)
             },
             processResponse: { _ in
                 return
@@ -366,8 +366,8 @@ extension AWSClient {
                     configuration: serviceConfig
                 )
             },
-            execute: { request, eventLoop, logger in
-                return try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger)
+            execute: { request, logger in
+                return try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: self.eventLoopGroup.any(), logger: logger)
             },
             processResponse: { response in
                 return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
@@ -409,8 +409,8 @@ extension AWSClient {
                     configuration: serviceConfig
                 )
             },
-            execute: { request, eventLoop, logger in
-                return try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger)
+            execute: { request, logger in
+                return try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: self.eventLoopGroup.any(), logger: logger)
             },
             processResponse: { response in
                 return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
@@ -453,8 +453,8 @@ extension AWSClient {
                     configuration: serviceConfig
                 )
             },
-            execute: { request, eventLoop, logger in
-                return try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: eventLoop, logger: logger, stream: stream)
+            execute: { request, logger in
+                return try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: self.eventLoopGroup.any(), logger: logger, stream: stream)
             },
             processResponse: { response in
                 return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
@@ -468,7 +468,7 @@ extension AWSClient {
     internal func execute<Output>(
         operation operationName: String,
         createRequest: @escaping () throws -> AWSRequest,
-        execute: @escaping (AWSHTTPRequest, EventLoop, Logger) async throws -> AWSHTTPResponse,
+        execute: @escaping (AWSHTTPRequest, Logger) async throws -> AWSHTTPResponse,
         processResponse: @escaping (AWSHTTPResponse) throws -> Output,
         config: AWSServiceConfig,
         logger: Logger = AWSClient.loggingDisabled
@@ -478,7 +478,6 @@ extension AWSClient {
             operation: operationName,
             service: config.service
         )
-        let eventLoop = self.eventLoopGroup.any()
         let dimensions: [(String, String)] = [("aws-service", config.service), ("aws-operation", operationName)]
         let startTime = DispatchTime.now().uptimeNanoseconds
 
@@ -486,7 +485,7 @@ extension AWSClient {
         logger.log(level: self.options.requestLogLevel, "AWS Request")
         do {
             // get credentials
-            let credential = try await credentialProvider.getCredential(on: eventLoop, logger: logger).get()
+            let credential = try await credentialProvider.getCredential(on: self.eventLoopGroup.any(), logger: logger).get()
             // construct signer
             let signer = AWSSigner(credentials: credential, name: config.signingName, region: config.region.rawValue)
             // create request and sign with signer
@@ -504,9 +503,8 @@ extension AWSClient {
             try Task.checkCancellation()
             let response = try await self.invoke(
                 with: config,
-                eventLoop: eventLoop,
                 logger: logger,
-                request: { eventLoop in try await execute(awsRequest, eventLoop, logger) },
+                request: { try await execute(awsRequest, logger) },
                 processResponse: processResponse,
                 streaming: streaming
             )
@@ -532,16 +530,15 @@ extension AWSClient {
 
     func invoke<Output>(
         with serviceConfig: AWSServiceConfig,
-        eventLoop: EventLoop,
         logger: Logger,
-        request: @escaping (EventLoop) async throws -> AWSHTTPResponse,
+        request: @escaping () async throws -> AWSHTTPResponse,
         processResponse: @escaping (AWSHTTPResponse) throws -> Output,
         streaming: Bool
     ) async throws -> Output {
         var attempt = 0
         while true {
             do {
-                let response = try await request(eventLoop)
+                let response = try await request()
                 // if it returns an HTTP status code outside 2xx then throw an error
                 guard (200..<300).contains(response.status.code) else {
                     throw self.createError(for: response, serviceConfig: serviceConfig, logger: logger)

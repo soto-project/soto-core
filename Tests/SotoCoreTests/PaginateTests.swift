@@ -20,7 +20,7 @@ import NIOPosix
 import SotoTestUtils
 import XCTest
 
-final class PaginateAsyncTests: XCTestCase, @unchecked Sendable {
+final class PaginateTests: XCTestCase, @unchecked Sendable {
     enum Error: Swift.Error {
         case didntFindToken
     }

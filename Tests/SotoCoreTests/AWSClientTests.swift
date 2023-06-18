@@ -728,14 +728,12 @@ class AWSClientTests: XCTestCase {
                 XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
                 XCTAssertNoThrow(try awsServer.stop())
             }
-            let eventLoop = client.eventLoopGroup.next()
             async let responseTask: Void = client.execute(
                 operation: "test",
                 path: "/",
                 httpMethod: .POST,
                 serviceConfig: config,
-                logger: TestEnvironment.logger,
-                on: eventLoop
+                logger: TestEnvironment.logger
             )
 
             try awsServer.processRaw { _ in

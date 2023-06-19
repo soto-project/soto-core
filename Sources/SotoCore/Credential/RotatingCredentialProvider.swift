@@ -32,22 +32,26 @@ public final class RotatingCredentialProvider: CredentialProvider {
 
     public init(context: CredentialProviderFactory.Context, provider: CredentialProvider, remainingTokenLifetimeForUse: TimeInterval? = nil) {
         self.provider = provider
-        self.expiringCredential = .init(threshold: remainingTokenLifetimeForUse ?? 3 * 60)
+        self.expiringCredential = .init(threshold: remainingTokenLifetimeForUse ?? 3 * 60) {
+            try await Self.getCredentialAndExpiration(provider: provider, logger: context.logger)
+        }
     }
 
     /// Shutdown credential provider
     public func shutdown() async throws {
         await expiringCredential.cancel()
+        try await provider.shutdown()
     }
 
     public func getCredential(logger: Logger) async throws -> Credential {
         return try await expiringCredential.getValue {
-            try await self.getCredentialAndExpiration(provider: self.provider, logger: logger)
+            try await Self.getCredentialAndExpiration(provider: self.provider, logger: logger)
         }
     }
 
-    func getCredentialAndExpiration(provider: CredentialProvider, logger: Logger) async throws -> (Credential, Date) {
+    static func getCredentialAndExpiration(provider: CredentialProvider, logger: Logger) async throws -> (Credential, Date) {
         logger.debug("Refeshing AWS credentials", metadata: ["aws-credential-provider": .string("\(self)")])
+        try Task.checkCancellation()
         let credential = try await provider.getCredential(logger: logger)
         logger.debug("AWS credentials ready", metadata: ["aws-credential-provider": .string("\(self)")])
         if let expiringCredential = credential as? ExpiringCredential {
@@ -61,6 +65,3 @@ public final class RotatingCredentialProvider: CredentialProvider {
 extension RotatingCredentialProvider: CustomStringConvertible {
     public var description: String { return "\(type(of: self))(\(provider.description))" }
 }
-
-// can use @unchecked Sendable here as access is protected by 'NIOLock'
-extension RotatingCredentialProvider: @unchecked Sendable {}

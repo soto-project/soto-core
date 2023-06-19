@@ -25,6 +25,10 @@ actor ExpiringValue<T> {
     enum State {
         /// No value is stored
         case noValue
+        /// Initial call waiting on a value to be generated. Cannot use `waitingOnValue`` in
+        /// initial call as it means we would have to setup it up before all stored properties
+        /// have been initialized
+        case initialWaitingOnValue(Task<(T, Date), Error>)
         /// Waiting on a value to be generated
         case waitingOnValue(Task<T, Error>)
         /// Is holding a value
@@ -46,12 +50,29 @@ actor ExpiringValue<T> {
         self.state = .withValue(initialValue, expires)
     }
 
+    init(threshold: TimeInterval = 2, getExpiringValue: @escaping @Sendable () async throws -> (T, Date)) {
+        self.threshold = threshold
+        let task = Task {
+            try await getExpiringValue()
+        }
+        self.state = .initialWaitingOnValue(task)
+    }
+
     func getValue(getExpiringValue: @escaping @Sendable () async throws -> (T, Date)) async throws -> T {
         let task: Task<T, Error>
         switch self.state {
         case .noValue:
             task = self.getValueTask(getExpiringValue)
             self.state = .waitingOnValue(task)
+
+        case .initialWaitingOnValue(let task):
+            return try await withTaskCancellationHandler {
+                let (value, expires) = try await task.value
+                self.state = .withValue(value, expires)
+                return value
+            } onCancel: {
+                task.cancel()
+            }
 
         case .waitingOnValue(let waitingOnTask):
             task = waitingOnTask

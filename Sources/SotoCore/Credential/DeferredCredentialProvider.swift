@@ -21,9 +21,9 @@ import NIOCore
 /// Used for wrapping another credential provider whose `getCredential` method doesn't return instantly and
 /// is only needed to be called once. After the wrapped `CredentialProvider` has generated a credential this is
 /// returned instead of calling the wrapped `CredentialProvider's` `getCredentials` again.
-public final class DeferredCredentialProvider: CredentialProvider, CustomStringConvertible {
+public final class DeferredCredentialProvider: CredentialProvider {
     private let getCredentialTask: Task<Credential, Error>
-    public let description: String
+    private let provider: CredentialProvider
 
     /// Create `DeferredCredentialProvider`.
     /// - Parameters:
@@ -36,12 +36,13 @@ public final class DeferredCredentialProvider: CredentialProvider, CustomStringC
             context.logger.debug("AWS credentials ready", metadata: ["aws-credential-provider": .string(description)])
             return credentials
         }
-        self.description = description
+        self.provider = provider
     }
 
     /// Shutdown credential provider
-    public func shutdown() async {
+    public func shutdown() async throws {
         self.getCredentialTask.cancel()
+        try await self.provider.shutdown()
     }
 
     /// Return credentials. If still in process of the getting credentials then return future result of `startupPromise`
@@ -56,4 +57,8 @@ public final class DeferredCredentialProvider: CredentialProvider, CustomStringC
             self.getCredentialTask.cancel()
         }
     }
+}
+
+extension DeferredCredentialProvider: CustomStringConvertible {
+    public var description: String { return "\(type(of: self))(\(self.provider.description))" }
 }

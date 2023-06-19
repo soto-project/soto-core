@@ -119,6 +119,7 @@ struct ECSMetaDataClient: MetaDataClient {
     }
 
     private func request(url: String, timeout: TimeInterval, logger: Logger) async throws -> AWSHTTPResponse {
+        try Task.checkCancellation()
         let request = AWSHTTPRequest(url: URL(string: url)!, method: .GET, headers: [:], body: .empty)
         return try await httpClient.execute(request: request, timeout: TimeAmount.seconds(2), logger: logger)
     }
@@ -243,7 +244,8 @@ struct InstanceMetaDataClient: MetaDataClient {
         headers: HTTPHeaders = .init(),
         logger: Logger
     ) async throws -> AWSHTTPResponse {
-        let request = AWSHTTPRequest(url: url, method: .GET, headers: [:], body: .empty)
+        try Task.checkCancellation()
+        let request = AWSHTTPRequest(url: url, method: method, headers: headers, body: .empty)
         return try await httpClient.execute(request: request, timeout: TimeAmount.seconds(2), logger: logger)
     }
 }

@@ -47,7 +47,7 @@ class ConfigFileLoadersTests: XCTestCase {
         aws_secret_access_key= \(secretKey)
         """
 
-        let credentialsPath = try save(content: credentialsFile, prefix: "credentials")
+        let credentialsPath = try save(content: credentialsFile, prefix: #function)
         let (context, eventLoopGroup, httpClient) = try makeContext()
 
         defer {
@@ -93,7 +93,7 @@ class ConfigFileLoadersTests: XCTestCase {
         region = us-west-1
         """
 
-        let credentialsPath = try save(content: credentialsFile, prefix: "credentials")
+        let credentialsPath = try save(content: credentialsFile, prefix: #function)
         let configPath = try save(content: configFile, prefix: "config")
         let (context, eventLoopGroup, httpClient) = try makeContext()
 
@@ -111,11 +111,9 @@ class ConfigFileLoadersTests: XCTestCase {
             context: context
         ).get()
 
-        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
-
         switch sharedCredentials {
         case .assumeRole(let aRoleArn, let aSessionName, let region, let sourceCredentialProvider):
-            let credentials = try await sourceCredentialProvider.createProvider(context: context).getCredential(on: context.eventLoop, logger: context.logger).get()
+            let credentials = try await sourceCredentialProvider.createProvider(context: context).getCredential(logger: context.logger)
             XCTAssertEqual(credentials.accessKeyId, accessKey)
             XCTAssertEqual(credentials.secretAccessKey, secretKey)
             XCTAssertEqual(aRoleArn, roleArn)
@@ -135,7 +133,7 @@ class ConfigFileLoadersTests: XCTestCase {
         credential_source = Ec2InstanceMetadata
         """
 
-        let credentialsPath = try save(content: credentialsFile, prefix: "credentials")
+        let credentialsPath = try save(content: credentialsFile, prefix: #function)
         let (context, eventLoopGroup, httpClient) = try makeContext()
 
         defer {
@@ -157,6 +155,7 @@ class ConfigFileLoadersTests: XCTestCase {
             XCTAssertEqual(aRoleArn, roleArn)
             let rotatingCredentials: RotatingCredentialProvider = try XCTUnwrap(credentialProvider as? RotatingCredentialProvider)
             XCTAssert(rotatingCredentials.provider is InstanceMetaDataClient)
+            try await credentialProvider.shutdown()
         default:
             XCTFail("Expected credential source")
         }
@@ -170,7 +169,7 @@ class ConfigFileLoadersTests: XCTestCase {
         aws_secret_access_key= \(secretKey)
         """
 
-        let credentialsPath = try save(content: credentialsFile, prefix: "credentials")
+        let credentialsPath = try save(content: credentialsFile, prefix: #function)
         let (context, eventLoopGroup, httpClient) = try makeContext()
 
         defer {
@@ -201,7 +200,7 @@ class ConfigFileLoadersTests: XCTestCase {
         aws_access_key_id = \(accessKey)
         """
 
-        let credentialsPath = try save(content: credentialsFile, prefix: "credentials")
+        let credentialsPath = try save(content: credentialsFile, prefix: #function)
         let (context, eventLoopGroup, httpClient) = try makeContext()
 
         defer {
@@ -237,7 +236,7 @@ class ConfigFileLoadersTests: XCTestCase {
         source_profile = \(sourceProfile)
         """
 
-        let credentialsPath = try save(content: credentialsFile, prefix: "credentials")
+        let credentialsPath = try save(content: credentialsFile, prefix: #function)
         let (context, eventLoopGroup, httpClient) = try makeContext()
 
         defer {
@@ -273,7 +272,7 @@ class ConfigFileLoadersTests: XCTestCase {
         source_profile = \(sourceProfile)
         """
 
-        let credentialsPath = try save(content: credentialsFile, prefix: "credentials")
+        let credentialsPath = try save(content: credentialsFile, prefix: #function)
         let (context, eventLoopGroup, httpClient) = try makeContext()
 
         defer {
@@ -304,7 +303,7 @@ class ConfigFileLoadersTests: XCTestCase {
         role_arn = \(roleArn)
         """
 
-        let credentialsPath = try save(content: credentialsFile, prefix: "credentials")
+        let credentialsPath = try save(content: credentialsFile, prefix: #function)
         let (context, eventLoopGroup, httpClient) = try makeContext()
 
         defer {

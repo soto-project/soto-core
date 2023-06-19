@@ -125,6 +125,7 @@ public final class AWSClient: Sendable {
                     errorStorage = error
                 }
             }
+            continuation.perform()
         }
         continuation.wait()
         try errorStorage.withLockedValue { errorStorage in

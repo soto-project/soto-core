@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2022 the Soto project authors
+// Copyright (c) 2017-2023 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -150,6 +150,7 @@ class RotatingCredentialProviderTests: XCTestCase {
 
         for _ in 0..<iterations {
             _ = try await provider.getCredential(logger: TestEnvironment.logger)
+            await Task.yield()
         }
         XCTAssertEqual(count.load(ordering: .sequentiallyConsistent), 2)
     }

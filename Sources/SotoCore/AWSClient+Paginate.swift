@@ -27,12 +27,11 @@ extension AWSClient {
     public struct PaginatorSequence<Input: AWSPaginateToken, Output: AWSShape>: AsyncSequence where Input.Token: Equatable {
         public typealias Element = Output
         let input: Input
-        let command: (Input, Logger, EventLoop?) async throws -> Output
+        let command: (Input, Logger) async throws -> Output
         let inputKey: KeyPath<Input, Input.Token?>?
         let outputKey: KeyPath<Output, Input.Token?>
         let moreResultsKey: KeyPath<Output, Bool?>?
         let logger: Logger
-        let eventLoop: EventLoop?
 
         /// Initialize PaginatorSequence
         /// - Parameters:
@@ -43,12 +42,11 @@ extension AWSClient {
         ///   - eventLoop: EventLoop to run everything on
         public init(
             input: Input,
-            command: @escaping ((Input, Logger, EventLoop?) async throws -> Output),
+            command: @escaping ((Input, Logger) async throws -> Output),
             inputKey: KeyPath<Input, Input.Token?>? = nil,
             outputKey: KeyPath<Output, Input.Token?>,
             moreResultsKey: KeyPath<Output, Bool?>? = nil,
-            logger: Logger = AWSClient.loggingDisabled,
-            on eventLoop: EventLoop? = nil
+            logger: Logger = AWSClient.loggingDisabled
         ) {
             self.input = input
             self.command = command
@@ -56,7 +54,6 @@ extension AWSClient {
             self.inputKey = inputKey
             self.moreResultsKey = moreResultsKey
             self.logger = AWSClient.loggingDisabled
-            self.eventLoop = eventLoop
         }
 
         /// Iterator for iterating over `PaginatorSequence`
@@ -71,7 +68,7 @@ extension AWSClient {
 
             public mutating func next() async throws -> Output? {
                 if let input = input {
-                    let output = try await self.sequence.command(input, self.sequence.logger, self.sequence.eventLoop)
+                    let output = try await self.sequence.command(input, self.sequence.logger)
                     if let token = output[keyPath: sequence.outputKey],
                        sequence.inputKey == nil || token != input[keyPath: sequence.inputKey!],
                        sequence.moreResultsKey == nil || output[keyPath: sequence.moreResultsKey!] == true

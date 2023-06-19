@@ -38,11 +38,11 @@ final class ConfigFileCredentialProvider: CredentialProviderSelector {
         }
     }
 
-    func getTaskProviderTask() async throws -> CredentialProvider {
+    func getCredentialProviderTask() async throws -> CredentialProvider {
         try await self.getProviderTask.value
     }
 
-    func cancelGetTaskProviderTask() {
+    func cancelCredentialProviderTask() {
         self.getProviderTask.cancel()
     }
 

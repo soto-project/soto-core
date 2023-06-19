@@ -49,7 +49,7 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
         XCTAssertEqual(credential.accessKeyId, accessKeyId)
         XCTAssertEqual(credential.secretAccessKey, secretAccessKey)
         XCTAssertEqual(credential.sessionToken, sessionToken)
-        let internalProvider = try await(client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getTaskProviderTask()
+        let internalProvider = try await(client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getCredentialProviderTask()
         XCTAssert(internalProvider is StaticCredential)
 
         Environment.unset(name: "AWS_ACCESS_KEY_ID")
@@ -79,7 +79,7 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
         XCTAssertEqual(credential.accessKeyId, "")
         XCTAssertEqual(credential.secretAccessKey, "")
         XCTAssertEqual(credential.sessionToken, nil)
-        let internalProvider = try await(client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getTaskProviderTask()
+        let internalProvider = try await(client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getCredentialProviderTask()
         XCTAssert(internalProvider is StaticCredential)
     }
 
@@ -120,7 +120,7 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
         XCTAssertEqual(credential.accessKeyId, AWSTestServer.ECSMetaData.default.accessKeyId)
         XCTAssertEqual(credential.secretAccessKey, AWSTestServer.ECSMetaData.default.secretAccessKey)
         XCTAssertEqual(credential.sessionToken, AWSTestServer.ECSMetaData.default.token)
-        let internalProvider = try await(client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getTaskProviderTask()
+        let internalProvider = try await(client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getCredentialProviderTask()
         XCTAssert(internalProvider is RotatingCredentialProvider)
     }
 
@@ -157,7 +157,7 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
         XCTAssertEqual(credential.accessKeyId, AWSTestServer.EC2InstanceMetaData.default.accessKeyId)
         XCTAssertEqual(credential.secretAccessKey, AWSTestServer.EC2InstanceMetaData.default.secretAccessKey)
         XCTAssertEqual(credential.sessionToken, AWSTestServer.EC2InstanceMetaData.default.token)
-        let internalProvider = try await(client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getTaskProviderTask()
+        let internalProvider = try await(client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getCredentialProviderTask()
         XCTAssert(internalProvider is RotatingCredentialProvider)
     }
 
@@ -178,7 +178,7 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
         XCTAssertEqual(credential.accessKeyId, "AWSACCESSKEYID")
         XCTAssertEqual(credential.secretAccessKey, "AWSSECRETACCESSKEY")
         XCTAssertEqual(credential.sessionToken, nil)
-        let internalProvider = try await(client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getTaskProviderTask()
+        let internalProvider = try await(client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getCredentialProviderTask()
         XCTAssert(internalProvider is RotatingCredentialProvider)
     }
 
@@ -186,7 +186,7 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
         let client = createAWSClient(credentialProvider: .selector(.configFile(credentialsFilePath: "nonExistentCredentialFile"), .empty))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         _ = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
-        let internalProvider = try await(client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getTaskProviderTask()
+        let internalProvider = try await(client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getCredentialProviderTask()
         XCTAssert(internalProvider is StaticCredential)
         XCTAssert((internalProvider as? StaticCredential)?.isEmpty() == true)
     }

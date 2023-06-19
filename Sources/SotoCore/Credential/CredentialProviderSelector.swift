@@ -36,7 +36,8 @@ extension CredentialProviderSelector {
 
     func shutdown() async throws {
         cancelCredentialProviderTask()
-        let provider = try await getCredentialProviderTask()
-        try await provider.shutdown()
+        if let provider = try? await getCredentialProviderTask() {
+            try await provider.shutdown()
+        }
     }
 }

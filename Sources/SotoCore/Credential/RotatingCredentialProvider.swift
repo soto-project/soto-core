@@ -40,6 +40,11 @@ public final class RotatingCredentialProvider: CredentialProvider {
     /// Shutdown credential provider
     public func shutdown() async throws {
         await expiringCredential.cancel()
+        // ensure internal credential provider is not still running
+        _ = try? await expiringCredential.getValue {
+            try Task.checkCancellation()
+            preconditionFailure("Cannot get here")
+        }
         try await provider.shutdown()
     }
 
@@ -50,10 +55,10 @@ public final class RotatingCredentialProvider: CredentialProvider {
     }
 
     static func getCredentialAndExpiration(provider: CredentialProvider, logger: Logger) async throws -> (Credential, Date) {
-        logger.debug("Refeshing AWS credentials", metadata: ["aws-credential-provider": .string("\(self)")])
+        logger.debug("Refeshing AWS credentials", metadata: ["aws-credential-provider": .string("\(self)(\(provider.description))")])
         try Task.checkCancellation()
         let credential = try await provider.getCredential(logger: logger)
-        logger.debug("AWS credentials ready", metadata: ["aws-credential-provider": .string("\(self)")])
+        logger.debug("AWS credentials ready", metadata: ["aws-credential-provider": .string("\(self)(\(provider.description))")])
         if let expiringCredential = credential as? ExpiringCredential {
             return (expiringCredential, expiringCredential.expiration)
         } else {

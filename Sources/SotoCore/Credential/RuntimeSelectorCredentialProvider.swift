@@ -50,7 +50,8 @@ final class RuntimeSelectorCredentialProvider: CredentialProviderSelector {
                 context.logger.debug("Select credential provider", metadata: ["aws-credential-provider": .string("\(provider)")])
                 return provider
             } catch {
-                context.logger.log(level: context.options.errorLogLevel, "Select credential provider failed")
+                try await provider.shutdown()
+                context.logger.log(level: context.options.errorLogLevel, "Select credential provider failed", metadata: ["aws-credential-provider": .string("\(provider)")])
             }
         }
         return NullCredentialProvider()

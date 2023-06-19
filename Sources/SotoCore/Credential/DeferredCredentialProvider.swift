@@ -42,6 +42,8 @@ public final class DeferredCredentialProvider: CredentialProvider {
     /// Shutdown credential provider
     public func shutdown() async throws {
         self.getCredentialTask.cancel()
+        // ensure internal credential provider is not still running
+        _ = try? await self.getCredential(logger: AWSClient.loggingDisabled)
         try await self.provider.shutdown()
     }
 

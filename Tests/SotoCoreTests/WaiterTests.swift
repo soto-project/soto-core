@@ -40,8 +40,15 @@ class WaiterTests: XCTestCase {
         let i: Int
     }
 
-    @Sendable func operation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<Output> {
-        self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger, on: eventLoop)
+    @Sendable func operation(input: Input, logger: Logger) async throws -> Output {
+        try await self.client.execute(
+            operation: "Basic",
+            path: "/",
+            httpMethod: .POST,
+            serviceConfig: self.config,
+            input: input,
+            logger: logger
+        )
     }
 
     struct ArrayOutput: AWSDecodableShape & Encodable {
@@ -59,8 +66,15 @@ class WaiterTests: XCTestCase {
         let array: [Element]
     }
 
-    @Sendable func arrayOperation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<ArrayOutput> {
-        self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger, on: eventLoop)
+    @Sendable func arrayOperation(input: Input, logger: Logger) async throws -> ArrayOutput {
+        try await self.client.execute(
+            operation: "Basic",
+            path: "/",
+            httpMethod: .POST,
+            serviceConfig: self.config,
+            input: input,
+            logger: logger
+        )
     }
 
     struct OptionalArrayOutput: AWSDecodableShape & Encodable {
@@ -74,8 +88,15 @@ class WaiterTests: XCTestCase {
         let array: [Element]?
     }
 
-    @Sendable func optionalArrayOperation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<OptionalArrayOutput> {
-        self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger, on: eventLoop)
+    @Sendable func optionalArrayOperation(input: Input, logger: Logger) async throws -> OptionalArrayOutput {
+        try await self.client.execute(
+            operation: "Basic",
+            path: "/",
+            httpMethod: .POST,
+            serviceConfig: self.config,
+            input: input,
+            logger: logger
+        )
     }
 
     func testJMESPathWaiter() async throws {
@@ -102,8 +123,8 @@ class WaiterTests: XCTestCase {
         struct StringOutput: AWSDecodableShape & Encodable {
             let s: String
         }
-        @Sendable func operation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<StringOutput> {
-            self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger, on: eventLoop)
+        @Sendable func operation(input: Input, logger: Logger) async throws -> StringOutput {
+            try await self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger)
         }
         let waiter = AWSClient.Waiter(
             acceptors: [
@@ -137,8 +158,8 @@ class WaiterTests: XCTestCase {
         struct EnumOutput: AWSDecodableShape & Encodable {
             let e: YesNo
         }
-        @Sendable func operation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<EnumOutput> {
-            self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger, on: eventLoop)
+        @Sendable func operation(input: Input, logger: Logger) async throws -> EnumOutput {
+            try await self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger)
         }
         let waiter = AWSClient.Waiter(
             acceptors: [
@@ -222,8 +243,8 @@ class WaiterTests: XCTestCase {
         defer { XCTAssertNoThrow(try awsServer.stop()) }
         let config = createServiceConfig(serviceProtocol: .restxml, endpoint: awsServer.address)
 
-        @Sendable func arrayOperation(input: Input, logger: Logger, eventLoop: EventLoop?) -> EventLoopFuture<ArrayOutput> {
-            self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: logger, on: eventLoop)
+        @Sendable func arrayOperation(input: Input, logger: Logger) async throws -> ArrayOutput {
+            try await self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: logger)
         }
 
         let waiter = AWSClient.Waiter(

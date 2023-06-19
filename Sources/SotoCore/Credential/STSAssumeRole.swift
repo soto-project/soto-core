@@ -85,11 +85,11 @@ struct STSCredentials: AWSDecodableShape, ExpiringCredential {
 }
 
 /// Credential Provider that holds an AWSClient
-protocol CredentialProviderWithClient: CredentialProvider {
+protocol AsyncCredentialProviderWithClient: AsyncCredentialProvider {
     var client: AWSClient { get }
 }
 
-extension CredentialProviderWithClient {
+extension AsyncCredentialProviderWithClient {
     /// shutdown credential provider and client
     func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
         // shutdown AWSClient
@@ -106,7 +106,7 @@ extension CredentialProviderWithClient {
 }
 
 /// Internal version of AssumeRole credential provider used by ConfigFileCredentialProvider
-struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
+struct STSAssumeRoleCredentialProvider: AsyncCredentialProviderWithClient {
     let request: STSAssumeRoleRequest
     let client: AWSClient
     let config: AWSServiceConfig
@@ -131,17 +131,22 @@ struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
         )
     }
 
-    func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
-        self.assumeRole(self.request, logger: logger, on: eventLoop)
-            .flatMapThrowing { response in
-                guard let credentials = response.credentials else {
-                    throw CredentialProviderError.noProvider
-                }
-                return credentials
-            }
+    func getCredential(on eventLoop: EventLoop, logger: Logger) async throws -> Credential {
+        let response = try await self.assumeRole(self.request, logger: logger)
+        guard let credentials = response.credentials else {
+            throw CredentialProviderError.noProvider
+        }
+        return credentials
     }
 
-    func assumeRole(_ input: STSAssumeRoleRequest, logger: Logger, on eventLoop: EventLoop?) -> EventLoopFuture<STSAssumeRoleResponse> {
-        return self.client.execute(operation: "AssumeRole", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger, on: eventLoop)
+    func assumeRole(_ input: STSAssumeRoleRequest, logger: Logger) async throws -> STSAssumeRoleResponse {
+        return try await self.client.execute(
+            operation: "AssumeRole",
+            path: "/",
+            httpMethod: .POST,
+            serviceConfig: self.config,
+            input: input,
+            logger: logger
+        )
     }
 }

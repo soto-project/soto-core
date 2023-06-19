@@ -18,13 +18,7 @@ import NIOCore
 import SotoSignerV4
 
 final class ConfigFileCredentialProvider: CredentialProviderSelector {
-    /// promise to find a credential provider
-    let startupPromise: EventLoopPromise<CredentialProvider>
-    /// lock for access to _internalProvider.
-    let lock = NIOLock()
-    /// internal version of internal provider. Should access this through `internalProvider`
-    var _internalProvider: CredentialProvider?
-
+    private let getProviderTask: Task<CredentialProvider, Error>
     init(
         credentialsFilePath: String,
         configFilePath: String,
@@ -32,14 +26,24 @@ final class ConfigFileCredentialProvider: CredentialProviderSelector {
         context: CredentialProviderFactory.Context,
         endpoint: String? = nil
     ) {
-        self.startupPromise = context.eventLoop.makePromise(of: CredentialProvider.self)
-        self.startupPromise.futureResult.whenSuccess { result in
-            self.internalProvider = result
+        self.getProviderTask = Task {
+            let profile = profile ?? Environment["AWS_PROFILE"] ?? ConfigFileLoader.defaultProfile
+            return try await ConfigFileCredentialProvider.credentialProvider(
+                from: credentialsFilePath,
+                configFilePath: configFilePath,
+                for: profile,
+                context: context,
+                endpoint: endpoint
+            )
         }
+    }
 
-        let profile = profile ?? Environment["AWS_PROFILE"] ?? ConfigFileLoader.defaultProfile
-        Self.credentialProvider(from: credentialsFilePath, configFilePath: configFilePath, for: profile, context: context, endpoint: endpoint)
-            .cascade(to: self.startupPromise)
+    func getTaskProviderTask() async throws -> CredentialProvider {
+        try await self.getProviderTask.value
+    }
+
+    func cancelGetTaskProviderTask() {
+        self.getProviderTask.cancel()
     }
 
     /// Credential provider from shared credentials and profile configuration files
@@ -57,16 +61,14 @@ final class ConfigFileCredentialProvider: CredentialProviderSelector {
         for profile: String,
         context: CredentialProviderFactory.Context,
         endpoint: String?
-    ) -> EventLoopFuture<CredentialProvider> {
-        return ConfigFileLoader.loadSharedCredentials(
+    ) async throws -> CredentialProvider {
+        let sharedCredentials = try await ConfigFileLoader.loadSharedCredentials(
             credentialsFilePath: credentialsFilePath,
             configFilePath: configFilePath,
             profile: profile,
             context: context
-        )
-        .flatMapThrowing { sharedCredentials in
-            return try self.credentialProvider(from: sharedCredentials, context: context, endpoint: endpoint)
-        }
+        ).get()
+        return try self.credentialProvider(from: sharedCredentials, context: context, endpoint: endpoint)
     }
 
     /// Generate credential provider based on shared credentials and profile configuration
@@ -100,7 +102,3 @@ final class ConfigFileCredentialProvider: CredentialProviderSelector {
         }
     }
 }
-
-// can use @unchecked Sendable here as `_internalProvider`` is accessed via `internalProvider` which
-// protects access with a `NIOLock`
-extension ConfigFileCredentialProvider: @unchecked Sendable {}

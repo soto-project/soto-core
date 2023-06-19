@@ -85,28 +85,19 @@ struct STSCredentials: AWSDecodableShape, ExpiringCredential {
 }
 
 /// Credential Provider that holds an AWSClient
-protocol AsyncCredentialProviderWithClient: AsyncCredentialProvider {
+protocol CredentialProviderWithClient: CredentialProvider {
     var client: AWSClient { get }
 }
 
-extension AsyncCredentialProviderWithClient {
+extension CredentialProviderWithClient {
     /// shutdown credential provider and client
-    func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
-        // shutdown AWSClient
-        let promise = eventLoop.makePromise(of: Void.self)
-        client.shutdown { error in
-            if let error = error {
-                promise.completeWith(.failure(error))
-            } else {
-                promise.completeWith(.success(()))
-            }
-        }
-        return promise.futureResult
+    func shutdown() async throws {
+        try await client.shutdown()
     }
 }
 
 /// Internal version of AssumeRole credential provider used by ConfigFileCredentialProvider
-struct STSAssumeRoleCredentialProvider: AsyncCredentialProviderWithClient {
+struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
     let request: STSAssumeRoleRequest
     let client: AWSClient
     let config: AWSServiceConfig
@@ -131,7 +122,7 @@ struct STSAssumeRoleCredentialProvider: AsyncCredentialProviderWithClient {
         )
     }
 
-    func getCredential(on eventLoop: EventLoop, logger: Logger) async throws -> Credential {
+    func getCredential(logger: Logger) async throws -> Credential {
         let response = try await self.assumeRole(self.request, logger: logger)
         guard let credentials = response.credentials else {
             throw CredentialProviderError.noProvider

@@ -115,57 +115,21 @@ public final class AWSClient: Sendable {
     ///
     /// - Throws: AWSClient.ClientError.alreadyShutdown: You have already shutdown the client
     public func syncShutdown() throws {
-        let errorStorageLock = NIOLock()
-        var errorStorage: Error?
+        let errorStorage: NIOLockedValueBox<Error?> = .init(nil)
         let continuation = DispatchWorkItem {}
-        self.shutdown(queue: DispatchQueue(label: "aws-client.shutdown")) { error in
-            if let error = error {
-                errorStorageLock.withLock {
+        Task {
+            do {
+                try await shutdown()
+            } catch {
+                errorStorage.withLockedValue { errorStorage in
                     errorStorage = error
                 }
             }
-            continuation.perform()
         }
         continuation.wait()
-        try errorStorageLock.withLock {
+        try errorStorage.withLockedValue { errorStorage in
             if let error = errorStorage {
                 throw error
-            }
-        }
-    }
-
-    /// Shutdown AWSClient asynchronously.
-    ///
-    /// Before an `AWSClient` is deleted you need to call this function or the synchronous
-    /// version `syncShutdown` to do a clean shutdown of the client. It cleans up `CredentialProvider` tasks and shuts down
-    /// the HTTP client if it was created by the `AWSClient`. Given we could be destroying the `EventLoopGroup` the client
-    /// uses, we have to use a `DispatchQueue` to run some of this work on.
-    ///
-    /// - Parameters:
-    ///   - queue: Dispatch Queue to run shutdown on
-    ///   - callback: Callback called when shutdown is complete. If there was an error it will return with Error in callback
-    public func shutdown(queue: DispatchQueue = .global(), _ callback: @escaping (Error?) -> Void) {
-        guard self.isShutdown.compareExchange(expected: false, desired: true, ordering: .relaxed).exchanged else {
-            callback(ClientError.alreadyShutdown)
-            return
-        }
-        let eventLoop = eventLoopGroup.next()
-        // ignore errors from credential provider. Don't need shutdown erroring because no providers were available
-        credentialProvider.shutdown(on: eventLoop).whenComplete { _ in
-            // if httpClient was created by AWSClient then it is required to shutdown the httpClient.
-            switch self.httpClientProvider {
-            case .createNew, .createNewWithEventLoopGroup:
-                self.httpClient.shutdown(queue: queue) { error in
-                    if let error = error {
-                        self.clientLogger.log(level: self.options.errorLogLevel, "Error shutting down HTTP client", metadata: [
-                            "aws-error": "\(error)",
-                        ])
-                    }
-                    callback(error)
-                }
-
-            case .shared:
-                callback(nil)
             }
         }
     }
@@ -246,7 +210,7 @@ extension AWSClient {
         }
         // shutdown credential provider ignoring any errors as credential provider that doesn't initialize
         // can cause the shutdown process to fail
-        try? await self.credentialProvider.shutdown(on: self.eventLoopGroup.any()).get()
+        try? await self.credentialProvider.shutdown()
         // if httpClient was created by AWSClient then it is required to shutdown the httpClient.
         switch self.httpClientProvider {
         case .createNew, .createNewWithEventLoopGroup:
@@ -485,7 +449,7 @@ extension AWSClient {
         logger.log(level: self.options.requestLogLevel, "AWS Request")
         do {
             // get credentials
-            let credential = try await credentialProvider.getCredential(on: self.eventLoopGroup.any(), logger: logger).get()
+            let credential = try await credentialProvider.getCredential(logger: logger)
             // construct signer
             let signer = AWSSigner(credentials: credential, name: config.signingName, region: config.region.rawValue)
             // create request and sign with signer
@@ -573,12 +537,7 @@ extension AWSClient {
     ///   - logger: optional logger to use
     /// - Returns: Credential
     public func getCredential(logger: Logger = AWSClient.loggingDisabled) async throws -> Credential {
-        let eventLoop = self.eventLoopGroup.any()
-        if let asyncCredentialProvider = self.credentialProvider as? AsyncCredentialProvider {
-            return try await asyncCredentialProvider.getCredential(on: eventLoop, logger: logger)
-        } else {
-            return try await self.credentialProvider.getCredential(on: eventLoop, logger: logger).get()
-        }
+        try await self.credentialProvider.getCredential(logger: logger)
     }
 
     /// Generate a signed URL
@@ -643,7 +602,7 @@ extension AWSClient {
     }
 
     func createSigner(serviceConfig: AWSServiceConfig, logger: Logger) async throws -> AWSSigner {
-        let credential = try await credentialProvider.getCredential(on: eventLoopGroup.next(), logger: logger).get()
+        let credential = try await credentialProvider.getCredential(logger: logger)
         return AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
     }
 }

@@ -22,11 +22,15 @@ import SotoSignerV4
 
 /// Credential provider whose credentials expire over tiem.
 public protocol ExpiringCredential: Credential {
-    /// Will credential expire within a certain time
-    func isExpiring(within: TimeInterval) -> Bool
+    var expiration: Date { get }
 }
 
 public extension ExpiringCredential {
+    /// Will credential expire within a certain time
+    func isExpiring(within interval: TimeInterval) -> Bool {
+        return self.expiration.timeIntervalSinceNow < interval
+    }
+
     /// Has credential expired
     var isExpired: Bool {
         isExpiring(within: 0)
@@ -40,11 +44,6 @@ public struct RotatingCredential: ExpiringCredential {
         self.secretAccessKey = secretAccessKey
         self.sessionToken = sessionToken
         self.expiration = expiration
-    }
-
-    /// Will credential expire within a certain time
-    public func isExpiring(within interval: TimeInterval) -> Bool {
-        return self.expiration.timeIntervalSinceNow < interval
     }
 
     public let accessKeyId: String

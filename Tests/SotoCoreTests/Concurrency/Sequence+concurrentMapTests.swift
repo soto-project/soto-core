@@ -77,7 +77,7 @@ final class MapTests: XCTestCase {
         struct TaskError: Error {}
 
         do {
-            _ = try await(1...8).concurrentMap { element -> Int in
+            _ = try await (1...8).concurrentMap { element -> Int in
                 if element == 4 {
                     throw TaskError()
                 }

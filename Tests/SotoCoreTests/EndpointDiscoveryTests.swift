@@ -60,7 +60,7 @@ final class EndpointDiscoveryTests: XCTestCase {
             return AWSEndpoints(endpoints: [.init(address: self.endpointToDiscover, cachePeriodInMinutes: 60)])
         }
 
-        public func test(_ input: TestRequest, logger: Logger = AWSClient.loggingDisabled, on eventLoop: EventLoop? = nil) async throws {
+        public func test(_ input: TestRequest, logger: Logger = AWSClient.loggingDisabled) async throws {
             return try await self.client.execute(
                 operation: "Test",
                 path: "/test",
@@ -78,7 +78,7 @@ final class EndpointDiscoveryTests: XCTestCase {
             return AWSEndpoints(endpoints: [.init(address: self.endpointToDiscover, cachePeriodInMinutes: 0)])
         }
 
-        public func testDontCache(logger: Logger = AWSClient.loggingDisabled, on eventLoop: EventLoop? = nil) async throws {
+        public func testDontCache(logger: Logger = AWSClient.loggingDisabled) async throws {
             return try await self.client.execute(
                 operation: "Test",
                 path: "/test",
@@ -89,7 +89,7 @@ final class EndpointDiscoveryTests: XCTestCase {
             )
         }
 
-        public func testNotRequired(_ input: TestRequest, logger: Logger = AWSClient.loggingDisabled, on eventLoop: EventLoop? = nil) async throws {
+        public func testNotRequired(_ input: TestRequest, logger: Logger = AWSClient.loggingDisabled) async throws {
             return try await self.client.execute(
                 operation: "Test",
                 path: "/test",

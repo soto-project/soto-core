@@ -56,6 +56,27 @@ final class CredentialProviderTests: XCTestCase {
         XCTAssertEqual(myCredentialProvider.credentialProviderCalled.load(ordering: .sequentiallyConsistent), 1)
     }
 
+    // Verify DeferredCredential provider handlers setup and immediate shutdown
+    func testDeferredCredentialProviderSetupShutdown() async throws {
+        final class MyCredentialProvider: CredentialProvider {
+            init() {}
+            func getCredential(logger: Logger) async throws -> Credential {
+                try await Task.sleep(nanoseconds: 5_000_000_000)
+                XCTFail("Should not get here")
+                return StaticCredential(accessKeyId: "ACCESSKEYID", secretAccessKey: "SECRETACCESSKET")
+            }
+        }
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
+        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
+        let eventLoop = eventLoopGroup.next()
+        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger, options: .init())
+        let myCredentialProvider = MyCredentialProvider()
+        let deferredProvider = DeferredCredentialProvider(context: context, provider: myCredentialProvider)
+        try await deferredProvider.shutdown()
+    }
+
     func testConfigFileSuccess() async throws {
         let credentials = """
         [default]

@@ -49,7 +49,6 @@ class RotatingCredentialProviderTests: XCTestCase {
 
         let client = RotatingCredentialTestClient {
             try await Task.sleep(nanoseconds: 5_000_000_000)
-            try Task.checkCancellation()
             XCTFail("Should not get here")
             return TestExpiringCredential(
                 accessKeyId: "abc123",

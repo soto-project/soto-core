@@ -100,7 +100,6 @@ extension AWSClient {
     ///   - waiter: Waiter to wait on
     ///   - maxWaitTime: Maximum amount of time to wait
     ///   - logger: Logger used to provide output
-    ///   - eventLoop: EventLoop to run API calls on
     public func waitUntil<Input, Output>(
         _ input: Input,
         waiter: Waiter<Input, Output>,

@@ -132,14 +132,14 @@ struct STSAssumeRoleCredentialProvider: AsyncCredentialProviderWithClient {
     }
 
     func getCredential(on eventLoop: EventLoop, logger: Logger) async throws -> Credential {
-        let response = try await self.assumeRole(self.request, logger: logger, on: eventLoop)
+        let response = try await self.assumeRole(self.request, logger: logger)
         guard let credentials = response.credentials else {
             throw CredentialProviderError.noProvider
         }
         return credentials
     }
 
-    func assumeRole(_ input: STSAssumeRoleRequest, logger: Logger, on eventLoop: EventLoop?) async throws -> STSAssumeRoleResponse {
+    func assumeRole(_ input: STSAssumeRoleRequest, logger: Logger) async throws -> STSAssumeRoleResponse {
         return try await self.client.execute(
             operation: "AssumeRole",
             path: "/",

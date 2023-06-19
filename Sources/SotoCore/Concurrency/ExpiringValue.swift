@@ -138,6 +138,8 @@ actor ExpiringValue<T> {
 
     func cancel() {
         switch self.state {
+        case .initialWaitingOnValue(let task):
+            task.cancel()
         case .waitingOnValue(let task), .withValueAndWaiting(_, _, let task):
             task.cancel()
         default:

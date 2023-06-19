@@ -28,7 +28,7 @@ import XCTest
 
 class RotatingCredentialProviderTests: XCTestCase {
     final class RotatingCredentialTestClient: CredentialProvider {
-        typealias TestCallback = @Sendable () -> ExpiringCredential
+        typealias TestCallback = @Sendable () async throws -> ExpiringCredential
         let callback: TestCallback
 
         init(_ callback: @escaping TestCallback) {
@@ -36,8 +36,36 @@ class RotatingCredentialProviderTests: XCTestCase {
         }
 
         func getCredential(logger: Logger) async throws -> Credential {
-            self.callback()
+            try await self.callback()
         }
+    }
+
+    func testSetupShutdown() async throws {
+        let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
+        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(group))
+        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
+        let loop = group.next()
+
+        let client = RotatingCredentialTestClient {
+            try await Task.sleep(nanoseconds: 5_000_000_000)
+            try Task.checkCancellation()
+            XCTFail("Should not get here")
+            return TestExpiringCredential(
+                accessKeyId: "abc123",
+                secretAccessKey: "abc123",
+                sessionToken: "abc123",
+                expiration: Date(timeIntervalSinceNow: 24 * 60 * 60)
+            )
+        }
+        let context = CredentialProviderFactory.Context(
+            httpClient: httpClient,
+            eventLoop: loop,
+            logger: Logger(label: "soto"),
+            options: .init()
+        )
+        let provider = RotatingCredentialProvider(context: context, provider: client)
+        try await provider.shutdown()
     }
 
     func testGetCredentialAndReuseIfStillValid() async throws {

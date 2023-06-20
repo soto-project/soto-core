@@ -34,13 +34,12 @@ extension AsyncHTTPClient.HTTPClient {
         switch request.body.payload {
         case .byteBuffer(let byteBuffer):
             requestBody = .bytes(byteBuffer)
-        case .stream:
-            requestBody = nil
-        /*            requestHeaders = reader.updateHeaders(headers: requestHeaders)
-         requestBody = .stream(length: reader.contentSize) { writer in
-             return writer.write(reader: reader, on: eventLoop)
-         }*/
-        case .empty:
+        /* case .asyncSequence(let sequence, let length):
+         requestBody = .stream(
+             sequence,
+             length: length.map { .known($0) } ?? .unknown
+         ) */
+        default:
             requestBody = nil
         }
         var httpRequest = HTTPClientRequest(url: request.url.absoluteString)
@@ -52,7 +51,7 @@ extension AsyncHTTPClient.HTTPClient {
         return .init(
             status: response.status,
             headers: response.headers,
-            body: .init(response.body)
+            body: .init(response.body, length: nil)
         )
     }
 

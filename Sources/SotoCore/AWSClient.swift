@@ -521,7 +521,6 @@ extension AWSClient {
 
     /// Get credential used by client
     /// - Parameters:
-    ///   - eventLoop: optional eventLoop to run operation on
     ///   - logger: optional logger to use
     /// - Returns: Credential
     public func getCredential(logger: Logger = AWSClient.loggingDisabled) async throws -> Credential {

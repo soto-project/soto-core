@@ -375,47 +375,6 @@ extension AWSClient {
         )
     }
 
-    /// Execute a request with an input object and return the output object generated from the response
-    /// - parameters:
-    ///     - operationName: Name of the AWS operation
-    ///     - path: path to append to endpoint URL
-    ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
-    ///     - serviceConfig: AWS Service configuration
-    ///     - input: Input object
-    ///     - hostPrefix: String to prefix host name with
-    ///     - logger: Logger to log request details to
-    /// - returns:
-    ///     Output object that completes when response is received
-    public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(
-        operation operationName: String,
-        path: String,
-        httpMethod: HTTPMethod,
-        serviceConfig: AWSServiceConfig,
-        input: Input,
-        hostPrefix: String? = nil,
-        logger: Logger = AWSClient.loggingDisabled,
-        stream: @escaping AWSResponseStream
-    ) async throws -> Output {
-        return try await self.execute(
-            operation: operationName,
-            createRequest: {
-                try AWSRequest(
-                    operation: operationName,
-                    path: path,
-                    httpMethod: httpMethod,
-                    input: input,
-                    hostPrefix: hostPrefix,
-                    configuration: serviceConfig
-                )
-            },
-            processResponse: { response in
-                return try await self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
-            },
-            config: serviceConfig,
-            logger: logger
-        )
-    }
-
     /// internal version of execute
     internal func execute<Output>(
         operation operationName: String,

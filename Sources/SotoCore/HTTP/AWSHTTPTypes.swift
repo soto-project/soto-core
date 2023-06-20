@@ -17,9 +17,6 @@ import Logging
 import NIOCore
 import NIOHTTP1
 
-/// Function that streamed response chunks are sent ot
-public typealias AWSResponseStream = (ByteBuffer, EventLoop) -> EventLoopFuture<Void>
-
 /// Storage for HTTP body which can be either a ByteBuffer or an AsyncSequence of
 /// ByteBuffers
 public struct HTTPBody: Sendable {

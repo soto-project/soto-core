@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2022 the Soto project authors
+// Copyright (c) 2017-2023 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import struct Foundation.Date
 import struct Foundation.TimeInterval
 import Logging
 import NIOConcurrencyHelpers
@@ -25,84 +26,47 @@ import SotoSignerV4
 /// `getCredential` is called again. If current credentials have not expired they are returned otherwise we wait on new
 /// credentials being provided.
 public final class RotatingCredentialProvider: CredentialProvider {
-    let remainingTokenLifetimeForUse: TimeInterval
+    let expiringCredential: ExpiringValue<Credential>
 
     public let provider: CredentialProvider
-    private let lock = NIOConcurrencyHelpers.NIOLock()
-    private var credential: Credential?
-    private var credentialFuture: EventLoopFuture<Credential>?
 
     public init(context: CredentialProviderFactory.Context, provider: CredentialProvider, remainingTokenLifetimeForUse: TimeInterval? = nil) {
         self.provider = provider
-        self.remainingTokenLifetimeForUse = remainingTokenLifetimeForUse ?? 3 * 60
-        _ = refreshCredentials(on: context.eventLoop, logger: context.logger)
+        self.expiringCredential = .init(threshold: remainingTokenLifetimeForUse ?? 3 * 60) {
+            try await Self.getCredentialAndExpiration(provider: provider, logger: context.logger)
+        }
     }
 
     /// Shutdown credential provider
-    public func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
-        return self.lock.withLock {
-            if let future = credentialFuture {
-                return future.and(provider.shutdown(on: eventLoop)).map { _ in }.hop(to: eventLoop)
-            }
-            return provider.shutdown(on: eventLoop)
+    public func shutdown() async throws {
+        await expiringCredential.cancel()
+        // ensure internal credential provider is not still running
+        _ = try? await expiringCredential.getValue {
+            try Task.checkCancellation()
+            preconditionFailure("Cannot get here")
+        }
+        try await provider.shutdown()
+    }
+
+    public func getCredential(logger: Logger) async throws -> Credential {
+        return try await expiringCredential.getValue {
+            try await Self.getCredentialAndExpiration(provider: self.provider, logger: logger)
         }
     }
 
-    public func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
-        self.lock.lock()
-        let cred = credential
-        self.lock.unlock()
-
-        switch cred {
-        case .none:
-            return self.refreshCredentials(on: eventLoop, logger: logger)
-        case .some(let cred as ExpiringCredential):
-            if cred.isExpiring(within: remainingTokenLifetimeForUse) {
-                // the credentials are expiring... let's refresh
-                return self.refreshCredentials(on: eventLoop, logger: logger)
-            }
-
-            return eventLoop.makeSucceededFuture(cred)
-        case .some(let cred):
-            // we don't have expiring credentials
-            return eventLoop.makeSucceededFuture(cred)
+    static func getCredentialAndExpiration(provider: CredentialProvider, logger: Logger) async throws -> (Credential, Date) {
+        logger.debug("Refeshing AWS credentials", metadata: ["aws-credential-provider": .string("\(self)(\(provider.description))")])
+        try Task.checkCancellation()
+        let credential = try await provider.getCredential(logger: logger)
+        logger.debug("AWS credentials ready", metadata: ["aws-credential-provider": .string("\(self)(\(provider.description))")])
+        if let expiringCredential = credential as? ExpiringCredential {
+            return (expiringCredential, expiringCredential.expiration)
+        } else {
+            return (credential, Date.distantFuture)
         }
-    }
-
-    private func refreshCredentials(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
-        self.lock.lock()
-        defer { self.lock.unlock() }
-
-        if let future = credentialFuture {
-            // a refresh is already running
-            if future.eventLoop !== eventLoop {
-                // We want to hop back to the event loop we came in case
-                // the refresh is resolved on another EventLoop.
-                return future.hop(to: eventLoop)
-            }
-            return future
-        }
-
-        logger.debug("Refeshing AWS credentials", metadata: ["aws-credential-provider": .string("\(self)")])
-
-        credentialFuture = self.provider.getCredential(on: eventLoop, logger: logger)
-            .map { credential -> (Credential) in
-                // update the internal credential locked
-                self.lock.withLock {
-                    self.credentialFuture = nil
-                    self.credential = credential
-                    logger.debug("AWS credentials ready", metadata: ["aws-credential-provider": .string("\(self)")])
-                }
-                return credential
-            }
-
-        return credentialFuture!
     }
 }
 
 extension RotatingCredentialProvider: CustomStringConvertible {
     public var description: String { return "\(type(of: self))(\(provider.description))" }
 }
-
-// can use @unchecked Sendable here as access is protected by 'NIOLock'
-extension RotatingCredentialProvider: @unchecked Sendable {}

@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the Soto project authors
+// Copyright (c) 2017-2023 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -20,7 +20,7 @@ import SotoSignerV4
 public struct NullCredentialProvider: CredentialProvider {
     public init() {}
 
-    public func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
-        return eventLoop.makeFailedFuture(CredentialProviderError.noProvider)
+    public func getCredential(logger: Logger) async throws -> Credential {
+        throw CredentialProviderError.noProvider
     }
 }

@@ -109,19 +109,21 @@ extension AsyncHTTPClient.HTTPClient {
     func execute(
         request: AWSHTTPRequest,
         timeout: TimeAmount,
-        on eventLoop: EventLoop,
+        on eventLoop: EventLoop? = nil,
         logger: Logger
     ) async throws -> AWSHTTPResponse {
-        try await self.execute(request: request, timeout: timeout, on: eventLoop, logger: logger).get()
+        let eventLoop = eventLoop ?? self.eventLoopGroup.any()
+        return try await self.execute(request: request, timeout: timeout, on: eventLoop, logger: logger).get()
     }
 
     func execute(
         request: AWSHTTPRequest,
         timeout: TimeAmount,
-        on eventLoop: EventLoop,
+        on eventLoop: EventLoop? = nil,
         logger: Logger,
         stream: @escaping AWSResponseStream
     ) async throws -> AWSHTTPResponse {
-        try await self.execute(request: request, timeout: timeout, on: eventLoop, logger: logger, stream: stream).get()
+        let eventLoop = eventLoop ?? self.eventLoopGroup.any()
+        return try await self.execute(request: request, timeout: timeout, on: eventLoop, logger: logger, stream: stream).get()
     }
 }

@@ -19,7 +19,16 @@ import SotoTestUtils
 import SotoXML
 import XCTest
 
+/// Helper functions for creating response bodies
 extension AWSHTTPResponse.Body {
+    /// create empty body
+    init() {
+        self.init {
+            return { return nil }
+        }
+    }
+
+    /// create body from one ByteBuffer
     init(_ byteBuffer: ByteBuffer) {
         self.init {
             var served = false

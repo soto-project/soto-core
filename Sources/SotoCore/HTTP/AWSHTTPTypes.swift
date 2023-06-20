@@ -35,22 +35,27 @@ struct AWSHTTPRequest {
     }
 }
 
-/// HTTP Response
+/// Generic HTTP Response returned from HTTP Client
 struct AWSHTTPResponse: Sendable {
+    /// HTTP Body (wraps any AsyncSequence returned from HTTP Client)
     struct Body: AsyncSequence {
         typealias Element = ByteBuffer
         let nextBuffer: @Sendable () -> (() async throws -> ByteBuffer?)
 
-        init() {
-            self.nextBuffer = {
-                return { return nil }
-            }
-        }
-
+        /// initialize with function returning a function that returns a stream of
+        /// ByteBuffers
         init(_ nextBuffer: @escaping @Sendable () -> (() async throws -> ByteBuffer?)) {
             self.nextBuffer = nextBuffer
         }
 
+        /// initialize with empty body
+        init() {
+            self.init {
+                return { return nil }
+            }
+        }
+
+        /// initialize with AsyncSequence of ByteBuffers
         init<BufferSequence: AsyncSequence>(_ sequence: BufferSequence) where BufferSequence.Element == ByteBuffer {
             self.nextBuffer = {
                 var iterator = sequence.makeAsyncIterator()
@@ -71,7 +76,8 @@ struct AWSHTTPResponse: Sendable {
         }
     }
 
-    internal init(status: HTTPResponseStatus, headers: HTTPHeaders, body: Body = .init()) {
+    /// Initialize AWSHTTPResponse
+    init(status: HTTPResponseStatus, headers: HTTPHeaders, body: Body = .init()) {
         self.status = status
         self.headers = headers
         self.body = body

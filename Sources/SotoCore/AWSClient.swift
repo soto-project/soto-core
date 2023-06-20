@@ -259,8 +259,9 @@ extension AWSClient {
                     configuration: serviceConfig
                 )
             },
-            processResponse: { _ in
-                return
+            processResponse: { response in
+                // flush response body contents to complete response read
+                for try await _ in response.body {}
             },
             config: serviceConfig,
             logger: logger
@@ -291,8 +292,9 @@ extension AWSClient {
                     configuration: serviceConfig
                 )
             },
-            processResponse: { _ in
-                return
+            processResponse: { response in
+                // flush response body contents to complete response read
+                for try await _ in response.body {}
             },
             config: serviceConfig,
             logger: logger

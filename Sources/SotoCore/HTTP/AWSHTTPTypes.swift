@@ -36,11 +36,53 @@ struct AWSHTTPRequest {
 }
 
 /// HTTP Response
-protocol AWSHTTPResponse {
-    /// HTTP response status
-    var status: HTTPResponseStatus { get }
-    /// HTTP response headers
-    var headers: HTTPHeaders { get }
-    /// Payload of response
-    var body: ByteBuffer? { get }
+struct AWSHTTPResponse: Sendable {
+    struct Body: AsyncSequence {
+        typealias Element = ByteBuffer
+        let nextBuffer: @Sendable () -> (() async throws -> ByteBuffer?)
+
+        init() {
+            self.nextBuffer = {
+                return { return nil }
+            }
+        }
+
+        init(_ nextBuffer: @escaping @Sendable () -> (() async throws -> ByteBuffer?)) {
+            self.nextBuffer = nextBuffer
+        }
+
+        init<BufferSequence: AsyncSequence>(_ sequence: BufferSequence) where BufferSequence.Element == ByteBuffer {
+            self.nextBuffer = {
+                var iterator = sequence.makeAsyncIterator()
+                return { try await iterator.next() }
+            }
+        }
+
+        struct AsyncIterator: AsyncIteratorProtocol {
+            let nextBuffer: () async throws -> ByteBuffer?
+
+            func next() async throws -> Element? {
+                try await self.nextBuffer()
+            }
+        }
+
+        func makeAsyncIterator() -> AsyncIterator {
+            .init(nextBuffer: self.nextBuffer())
+        }
+    }
+
+    internal init(status: HTTPResponseStatus, headers: HTTPHeaders, body: Body = .init()) {
+        self.status = status
+        self.headers = headers
+        self.body = body
+    }
+
+    /// The HTTP status for this response.
+    var status: HTTPResponseStatus
+
+    /// The HTTP headers of this response.
+    var headers: HTTPHeaders
+
+    /// The body of this HTTP response.
+    var body: Body
 }

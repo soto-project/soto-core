@@ -605,10 +605,10 @@ extension AWSClient {
         assert((200..<300).contains(response.status.code), "Shouldn't get here if error was returned")
 
         let raw = Output._options.contains(.rawPayload) == true
-        let awsResponse = try await AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol, raw: raw)
+        let awsResponse = try await AWSResponse(from: response, streaming: raw)
             .applyMiddlewares(serviceConfig.middlewares + middlewares, config: serviceConfig)
 
-        return try awsResponse.generateOutputShape(operation: operationName)
+        return try awsResponse.generateOutputShape(operation: operationName, serviceProtocol: serviceConfig.serviceProtocol)
     }
 
     /// Create error from HTTPResponse. This is only called if we received an unsuccessful http status code.
@@ -616,7 +616,7 @@ extension AWSClient {
         // if we can create an AWSResponse and create an error from it return that
         let awsResponse: AWSResponse
         do {
-            awsResponse = try await AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol)
+            awsResponse = try await AWSResponse(from: response, streaming: false)
         } catch {
             // else return "Unhandled error message" with rawBody attached
             let context = AWSErrorContext(
@@ -641,7 +641,14 @@ extension AWSClient {
                     responseCode: response.status,
                     headers: response.headers
                 )
-                return AWSRawError(rawBody: awsResponseWithMiddleware.body.asString(), context: context)
+                let responseBody: String?
+                switch awsResponseWithMiddleware.body.storage {
+                case .byteBuffer(let buffer):
+                    responseBody = String(buffer: buffer)
+                default:
+                    responseBody = nil
+                }
+                return AWSRawError(rawBody: responseBody, context: context)
             }
         } catch {
             return error

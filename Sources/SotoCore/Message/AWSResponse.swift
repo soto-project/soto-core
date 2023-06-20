@@ -27,50 +27,25 @@ public struct AWSResponse {
     /// response headers
     public var headers: HTTPHeaders
     /// response body
-    public var body: Body
+    public var body: HTTPBody
 
     /// initialize an AWSResponse Object
     /// - parameters:
     ///     - from: Raw HTTP Response
     ///     - serviceProtocol: protocol of service (.json, .xml, .query etc)
     ///     - raw: Whether Body should be treated as raw data
-    init(from response: AWSHTTPResponse, serviceProtocol: ServiceProtocol, raw: Bool = false) async throws {
+    init(from response: AWSHTTPResponse, streaming: Bool) async throws {
         self.status = response.status
 
         // headers
         self.headers = response.headers
 
         // body
-        let buffer = try await response.body.collect(upTo: .max)
-        if buffer.readableBytes == 0 {
-            self.body = .empty
-            return
+        if streaming {
+            self.body = response.body
+        } else {
+            self.body = try await .init(response.body.collect(upTo: .max))
         }
-
-        if raw {
-            self.body = .raw(.byteBuffer(buffer))
-            return
-        }
-
-        if buffer.readableBytes == 0 {
-            self.body = .empty
-            return
-        }
-
-        var responseBody: Body = .empty
-
-        switch serviceProtocol {
-        case .json, .restjson:
-            responseBody = .json(buffer)
-
-        case .restxml, .query, .ec2:
-            let xmlString = String(buffer: buffer)
-            let xmlDocument = try XML.Document(string: xmlString)
-            if let element = xmlDocument.rootElement() {
-                responseBody = .xml(element)
-            }
-        }
-        self.body = responseBody
     }
 
     /// return new response with middleware applied
@@ -85,7 +60,7 @@ public struct AWSResponse {
     }
 
     /// Generate AWSShape from AWSResponse
-    func generateOutputShape<Output: AWSDecodableShape>(operation: String) throws -> Output {
+    func generateOutputShape<Output: AWSDecodableShape>(operation: String, serviceProtocol: ServiceProtocol) throws -> Output {
         var payloadKey: String? = (Output.self as? AWSShapeWithPayload.Type)?._payloadPath
 
         // if response has a payload with encoding info
@@ -98,58 +73,69 @@ public struct AWSResponse {
         let decoder = DictionaryDecoder()
 
         var outputDict: [String: Any] = [:]
-        switch body {
-        case .json(let buffer):
-            if let data = buffer.getData(at: buffer.readerIndex, length: buffer.readableBytes, byteTransferStrategy: .noCopy) {
-                // if required apply hypertext application language transform to body
-                if self.isHypertextApplicationLanguage {
-                    outputDict = try self.getHypertextApplicationLanguageDictionary()
-                } else {
-                    outputDict = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] ?? [:]
-                }
-                // if payload path is set then the decode will expect the payload to decode to the relevant member variable
-                if let payloadKey = payloadKey {
-                    outputDict = [payloadKey: outputDict]
-                }
-                decoder.dateDecodingStrategy = .secondsSince1970
-            }
-        case .xml(let node):
-            var outputNode = node
-            // if payload path is set then the decode will expect the payload to decode to the relevant member variable.
-            // Most CloudFront responses have this.
+        switch self.body.storage {
+        case .asyncSequence:
             if let payloadKey = payloadKey {
-                // set output node name
-                outputNode.name = payloadKey
-                // create parent node and add output node and set output node to parent
-                let parentNode = XML.Element(name: "Container")
-                parentNode.addChild(outputNode)
-                outputNode = parentNode
-            } else if let child = node.children(of: .element)?.first as? XML.Element,
-                      node.name == operation + "Response",
-                      child.name == operation + "Result"
-            {
-                outputNode = child
-            }
-
-            // add headers to XML
-            addHeadersToXML(rootElement: outputNode, output: Output.self)
-
-            // add status code to XML
-            if let statusCodeParam = Output.statusCodeParam {
-                let node = XML.Element(name: statusCodeParam, stringValue: "\(self.status.code)")
-                outputNode.addChild(node)
-            }
-            return try XMLDecoder().decode(Output.self, from: outputNode)
-
-        case .raw(let payload):
-            if let payloadKey = payloadKey {
-                outputDict[payloadKey] = payload
+                outputDict[payloadKey] = self.body
             }
             // if body is raw or empty then assume any date to be decoded will be coming from headers
             decoder.dateDecodingStrategy = .formatted(HTTPHeaderDateCoder.dateFormatters.first!)
 
-        default:
-            decoder.dateDecodingStrategy = .formatted(HTTPHeaderDateCoder.dateFormatters.first!)
+        case .byteBuffer(let buffer):
+            if buffer.readableBytes == 0 {
+                // we have no body so date decoding will be only HTTP headers
+                decoder.dateDecodingStrategy = .formatted(HTTPHeaderDateCoder.dateFormatters.first!)
+            } else {
+                switch serviceProtocol {
+                case .json, .restjson:
+                    if let data = buffer.getData(at: buffer.readerIndex, length: buffer.readableBytes, byteTransferStrategy: .noCopy) {
+                        // if required apply hypertext application language transform to body
+                        if self.isHypertextApplicationLanguage {
+                            outputDict = try self.getHypertextApplicationLanguageDictionary()
+                        } else {
+                            outputDict = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] ?? [:]
+                        }
+                        // if payload path is set then the decode will expect the payload to decode to the relevant member variable
+                        if let payloadKey = payloadKey {
+                            outputDict = [payloadKey: outputDict]
+                        }
+                        decoder.dateDecodingStrategy = .secondsSince1970
+                    } else {
+                        // we have no body so date decoding will be only HTTP headers
+                        decoder.dateDecodingStrategy = .formatted(HTTPHeaderDateCoder.dateFormatters.first!)
+                    }
+                case .restxml, .query, .ec2:
+                    let xmlDocument = try? XML.Document(buffer: buffer)
+                    if let node = xmlDocument?.rootElement() {
+                        var outputNode = node
+                        // if payload path is set then the decode will expect the payload to decode to the relevant member variable.
+                        // Most CloudFront responses have this.
+                        if let payloadKey = payloadKey {
+                            // set output node name
+                            outputNode.name = payloadKey
+                            // create parent node and add output node and set output node to parent
+                            let parentNode = XML.Element(name: "Container")
+                            parentNode.addChild(outputNode)
+                            outputNode = parentNode
+                        } else if let child = node.children(of: .element)?.first as? XML.Element,
+                                  node.name == operation + "Response",
+                                  child.name == operation + "Result"
+                        {
+                            outputNode = child
+                        }
+
+                        // add headers to XML
+                        addHeadersToXML(rootElement: outputNode, output: Output.self)
+
+                        // add status code to XML
+                        if let statusCodeParam = Output.statusCodeParam {
+                            let node = XML.Element(name: statusCodeParam, stringValue: "\(self.status.code)")
+                            outputNode.addChild(node)
+                        }
+                        return try XMLDecoder().decode(Output.self, from: outputNode)
+                    }
+                }
+            }
         }
 
         // add headers to output dictionary
@@ -211,42 +197,48 @@ public struct AWSResponse {
     /// extract error code and message from AWSResponse
     func generateError(serviceConfig: AWSServiceConfig, logLevel: Logger.Level = .info, logger: Logger) -> Error? {
         var apiError: APIError?
-        switch serviceConfig.serviceProtocol {
-        case .restjson:
-            guard case .json(let data) = self.body else { break }
-            apiError = try? JSONDecoder().decode(RESTJSONError.self, from: data)
-            if apiError?.code == nil {
-                apiError?.code = self.headers["x-amzn-errortype"].first
-            }
+        switch self.body.storage {
+        case .asyncSequence:
+            break
 
-        case .json:
-            guard case .json(let data) = self.body else { break }
-            apiError = try? JSONDecoder().decode(JSONError.self, from: data)
+        case .byteBuffer(let buffer):
+            switch serviceConfig.serviceProtocol {
+            case .restjson:
+                apiError = try? JSONDecoder().decode(RESTJSONError.self, from: buffer)
+                if apiError?.code == nil {
+                    apiError?.code = self.headers["x-amzn-errortype"].first
+                }
 
-        case .query:
-            guard case .xml(var element) = self.body else { break }
-            if let errors = element.elements(forName: "Errors").first {
-                element = errors
-            }
-            guard let errorElement = element.elements(forName: "Error").first else { break }
-            apiError = try? XMLDecoder().decode(XMLQueryError.self, from: errorElement)
+            case .json:
+                apiError = try? JSONDecoder().decode(JSONError.self, from: buffer)
 
-        case .restxml:
-            guard case .xml(var element) = self.body else { break }
-            if let error = element.elements(forName: "Error").first {
-                element = error
-            }
-            apiError = try? XMLDecoder().decode(XMLQueryError.self, from: element)
+            case .query:
+                let xmlDocument = try? XML.Document(buffer: buffer)
+                guard var element = xmlDocument?.rootElement() else { break }
+                if let errors = element.elements(forName: "Errors").first {
+                    element = errors
+                }
+                guard let errorElement = element.elements(forName: "Error").first else { break }
+                apiError = try? XMLDecoder().decode(XMLQueryError.self, from: errorElement)
 
-        case .ec2:
-            guard case .xml(var element) = self.body else { break }
-            if let errors = element.elements(forName: "Errors").first {
-                element = errors
+            case .restxml:
+                let xmlDocument = try? XML.Document(buffer: buffer)
+                guard var element = xmlDocument?.rootElement() else { break }
+                if let error = element.elements(forName: "Error").first {
+                    element = error
+                }
+                apiError = try? XMLDecoder().decode(XMLQueryError.self, from: element)
+
+            case .ec2:
+                let xmlDocument = try? XML.Document(buffer: buffer)
+                guard var element = xmlDocument?.rootElement() else { break }
+                if let errors = element.elements(forName: "Errors").first {
+                    element = errors
+                }
+                guard let errorElement = element.elements(forName: "Error").first else { break }
+                apiError = try? XMLDecoder().decode(XMLQueryError.self, from: errorElement)
             }
-            guard let errorElement = element.elements(forName: "Error").first else { break }
-            apiError = try? XMLDecoder().decode(XMLQueryError.self, from: errorElement)
         }
-
         if let errorMessage = apiError, var code = errorMessage.code {
             // remove code prefix before #
             if let index = code.firstIndex(of: "#") {
@@ -378,4 +370,11 @@ private protocol APIError {
     var code: String? { get set }
     var message: String { get }
     var additionalFields: [String: String] { get }
+}
+
+extension XML.Document {
+    convenience init(buffer: ByteBuffer) throws {
+        let xmlString = String(buffer: buffer)
+        try self.init(string: xmlString)
+    }
 }

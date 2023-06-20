@@ -52,6 +52,18 @@ public struct AWSLoggingMiddleware: AWSServiceMiddleware {
         return output
     }
 
+    func getResponseBodyOutput(_ body: HTTPBody) -> String {
+        var output = ""
+        switch body.storage {
+        case .byteBuffer(let buffer):
+            output += "\n  "
+            output += "\(buffer)"
+        default:
+            output += "binary data"
+        }
+        return output
+    }
+
     func getHeadersOutput(_ headers: HTTPHeaders) -> String {
         if headers.count == 0 {
             return "[]"
@@ -81,7 +93,7 @@ public struct AWSLoggingMiddleware: AWSServiceMiddleware {
             "Response:\n" +
                 "  Status : \(response.status.code)\n" +
                 "  Headers: \(self.getHeadersOutput(HTTPHeaders(response.headers.map { ($0, "\($1)") })))\n" +
-                "  Body: \(self.getBodyOutput(response.body))"
+                "  Body: \(self.getResponseBodyOutput(response.body))"
         )
         return response
     }

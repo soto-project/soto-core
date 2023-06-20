@@ -3,7 +3,7 @@
 ##
 ## This source file is part of the SwiftNIO open source project
 ##
-## Copyright (c) 2017-2021 Apple Inc. and the SwiftNIO project authors
+## Copyright (c) 2017-2023 Apple Inc. and the SwiftNIO project authors
 ## Licensed under Apache License v2.0
 ##
 ## See LICENSE.txt for license information
@@ -13,8 +13,7 @@
 ##
 ##===----------------------------------------------------------------------===##
 
-SWIFT_VERSION=5.2
-SWIFTFORMAT_VERSION=0.48.17
+SWIFTFORMAT_VERSION=0.51.10
 
 set -eu
 here="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"

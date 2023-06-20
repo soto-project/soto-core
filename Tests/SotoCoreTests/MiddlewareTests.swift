@@ -48,7 +48,7 @@ class MiddlewareTests: XCTestCase {
             let error = try XCTUnwrap(error as? CatchRequestError)
             test(error.request)
         }
-        try client.syncShutdown()
+        try await client.shutdown()
     }
 
     func testMiddlewareAppliedOnce() async throws {

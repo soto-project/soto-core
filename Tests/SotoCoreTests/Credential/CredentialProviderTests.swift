@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2022 the Soto project authors
+// Copyright (c) 2017-2023 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -27,19 +27,18 @@ final class CredentialProviderTests: XCTestCase {
 
         let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
-        let loop = group.next()
-        let credential = try await provider.getCredential(on: loop, logger: TestEnvironment.logger).get()
+        let credential = try await provider.getCredential(logger: TestEnvironment.logger)
         XCTAssertEqual(credential as? StaticCredential, provider)
     }
 
     // make sure getCredential in client CredentialProvider doesnt get called more than once
     func testDeferredCredentialProvider() async throws {
-        final class MyCredentialProvider: AsyncCredentialProvider {
+        final class MyCredentialProvider: CredentialProvider {
             let credentialProviderCalled = ManagedAtomic(0)
 
             init() {}
 
-            func getCredential(on eventLoop: EventLoop, logger: Logger) async throws -> Credential {
+            func getCredential(logger: Logger) async throws -> Credential {
                 self.credentialProviderCalled.wrappingIncrement(ordering: .sequentiallyConsistent)
                 return StaticCredential(accessKeyId: "ACCESSKEYID", secretAccessKey: "SECRETACCESSKET")
             }
@@ -52,9 +51,30 @@ final class CredentialProviderTests: XCTestCase {
         let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger, options: .init())
         let myCredentialProvider = MyCredentialProvider()
         let deferredProvider = DeferredCredentialProvider(context: context, provider: myCredentialProvider)
-        _ = try await deferredProvider.getCredential(on: eventLoop, logger: TestEnvironment.logger).get()
-        _ = try await deferredProvider.getCredential(on: eventLoop, logger: TestEnvironment.logger).get()
+        _ = try await deferredProvider.getCredential(logger: TestEnvironment.logger)
+        _ = try await deferredProvider.getCredential(logger: TestEnvironment.logger)
         XCTAssertEqual(myCredentialProvider.credentialProviderCalled.load(ordering: .sequentiallyConsistent), 1)
+    }
+
+    // Verify DeferredCredential provider handlers setup and immediate shutdown
+    func testDeferredCredentialProviderSetupShutdown() async throws {
+        final class MyCredentialProvider: CredentialProvider {
+            init() {}
+            func getCredential(logger: Logger) async throws -> Credential {
+                try await Task.sleep(nanoseconds: 5_000_000_000)
+                XCTFail("Should not get here")
+                return StaticCredential(accessKeyId: "ACCESSKEYID", secretAccessKey: "SECRETACCESSKET")
+            }
+        }
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
+        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
+        let eventLoop = eventLoopGroup.next()
+        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger, options: .init())
+        let myCredentialProvider = MyCredentialProvider()
+        let deferredProvider = DeferredCredentialProvider(context: context, provider: myCredentialProvider)
+        try await deferredProvider.shutdown()
     }
 
     func testConfigFileSuccess() async throws {
@@ -77,7 +97,7 @@ final class CredentialProviderTests: XCTestCase {
 
         let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger, options: .init()))
 
-        let credential = try await provider.getCredential(on: eventLoop, logger: TestEnvironment.logger).get()
+        let credential = try await provider.getCredential(logger: TestEnvironment.logger)
         XCTAssertEqual(credential.accessKeyId, "AWSACCESSKEYID")
         XCTAssertEqual(credential.secretAccessKey, "AWSSECRETACCESSKEY")
     }
@@ -96,7 +116,7 @@ final class CredentialProviderTests: XCTestCase {
         let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger, options: .init()))
 
         do {
-            _ = try await provider.getCredential(on: eventLoop, logger: TestEnvironment.logger).get()
+            _ = try await provider.getCredential(logger: TestEnvironment.logger)
             XCTFail("Should provide credential")
         } catch {
             XCTAssertEqual(error as? CredentialProviderError, .noProvider)
@@ -108,13 +128,12 @@ final class CredentialProviderTests: XCTestCase {
             let hasShutdown = ManagedAtomic(false)
             init() {}
 
-            func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential> {
-                return eventLoop.makeSucceededFuture(StaticCredential(accessKeyId: "", secretAccessKey: ""))
+            func getCredential(logger: Logger) async throws -> Credential {
+                return StaticCredential(accessKeyId: "", secretAccessKey: "")
             }
 
-            func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
+            func shutdown() async throws {
                 self.hasShutdown.store(true, ordering: .sequentiallyConsistent)
-                return eventLoop.makeSucceededFuture(())
             }
         }
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
@@ -126,7 +145,7 @@ final class CredentialProviderTests: XCTestCase {
         let testCredentialProvider = TestCredentialProvider()
 
         let deferredProvider = DeferredCredentialProvider(context: context, provider: testCredentialProvider)
-        try await deferredProvider.shutdown(on: eventLoopGroup.next()).get()
+        try await deferredProvider.shutdown()
         XCTAssertEqual(testCredentialProvider.hasShutdown.load(ordering: .sequentiallyConsistent), true)
     }
 }

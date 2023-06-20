@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the Soto project authors
+// Copyright (c) 2017-2023 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -43,7 +43,7 @@ class STSAssumeRoleTests: XCTestCase {
             logger: TestEnvironment.logger
         )
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
-
+        async let credentialTask: Credential = client.credentialProvider.getCredential(logger: TestEnvironment.logger)
         XCTAssertNoThrow(try testServer.processRaw { _ in
             let output = STSAssumeRoleResponse(credentials: credentials)
             let xml = try XMLEncoder().encode(output)
@@ -51,8 +51,8 @@ class STSAssumeRoleTests: XCTestCase {
             let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
             return .result(response)
         })
-        let result = try await client.credentialProvider.getCredential(on: client.eventLoopGroup.next(), logger: TestEnvironment.logger).get()
-        let stsCredentials = result as? STSCredentials
+        let credential = try await credentialTask
+        let stsCredentials = credential as? STSCredentials
         XCTAssertEqual(stsCredentials?.accessKeyId, credentials.accessKeyId)
         XCTAssertEqual(stsCredentials?.secretAccessKey, credentials.secretAccessKey)
         XCTAssertEqual(stsCredentials?.sessionToken, credentials.sessionToken)

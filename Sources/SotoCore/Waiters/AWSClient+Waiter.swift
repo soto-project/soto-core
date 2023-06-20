@@ -114,7 +114,7 @@ extension AWSClient {
             attempt += 1
             let result: Result<Output, Error>
             do {
-                result = try .success(await waiter.command(input, logger))
+                result = try await .success(waiter.command(input, logger))
             } catch {
                 result = .failure(error)
             }

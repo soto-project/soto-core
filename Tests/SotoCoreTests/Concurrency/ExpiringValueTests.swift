@@ -87,4 +87,16 @@ final class ExpiringValueTests: XCTestCase {
         }
         XCTAssertEqual(callCount.load(ordering: .relaxed), 1)
     }
+
+    /// Test value returned from closure is given back
+    func testInitialClosure() async throws {
+        let expiringValue = ExpiringValue<Int> {
+            try await Task.sleep(nanoseconds: 1000)
+            return (1, Date() + 3)
+        }
+        let value = try await expiringValue.getValue {
+            return (2, Date())
+        }
+        XCTAssertEqual(value, 1)
+    }
 }

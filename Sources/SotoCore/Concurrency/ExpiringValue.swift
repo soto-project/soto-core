@@ -25,12 +25,18 @@ actor ExpiringValue<T> {
     enum State {
         /// No value is stored
         case noValue
+        /// Initial call waiting on a value to be generated. Cannot use `waitingOnValue`` in
+        /// initial call as it means we would have to setup it up before all stored properties
+        /// have been initialized
+        case initialWaitingOnValue(Task<(T, Date), Error>)
         /// Waiting on a value to be generated
         case waitingOnValue(Task<T, Error>)
         /// Is holding a value
         case withValue(T, Date)
         /// Is holding a value, and there is a task in progress to update it
         case withValueAndWaiting(T, Date, Task<T, Error>)
+        /// Error
+        case error(Error)
     }
 
     var state: State
@@ -46,51 +52,98 @@ actor ExpiringValue<T> {
         self.state = .withValue(initialValue, expires)
     }
 
+    init(threshold: TimeInterval = 2, getExpiringValue: @escaping @Sendable () async throws -> (T, Date)) {
+        self.threshold = threshold
+        let task = Task {
+            try await getExpiringValue()
+        }
+        self.state = .initialWaitingOnValue(task)
+    }
+
     func getValue(getExpiringValue: @escaping @Sendable () async throws -> (T, Date)) async throws -> T {
+        let task: Task<T, Error>
         switch self.state {
         case .noValue:
-            let task = self.getValueTask(getExpiringValue)
+            task = try self.getValueTask(getExpiringValue)
             self.state = .waitingOnValue(task)
-            return try await task.value
 
-        case .waitingOnValue(let task):
-            return try await task.value
+        case .initialWaitingOnValue(let task):
+            return try await withTaskCancellationHandler {
+                switch await task.result {
+                case .success(let result):
+                    self.state = .withValue(result.0, result.1)
+                    return result.0
+                case .failure(let error):
+                    self.state = .error(error)
+                    throw error
+                }
+            } onCancel: {
+                task.cancel()
+            }
+
+        case .waitingOnValue(let waitingOnTask):
+            task = waitingOnTask
 
         case .withValue(let value, let expires):
             if expires.timeIntervalSinceNow < 0 {
                 // value has expired, create new task to update value and
                 // return the result of that task
-                let task = self.getValueTask(getExpiringValue)
+                task = try self.getValueTask(getExpiringValue)
                 self.state = .waitingOnValue(task)
-                return try await task.value
             } else if expires.timeIntervalSinceNow < self.threshold {
                 // value is about to expire, create new task to update value and
                 // return current value
-                let task = self.getValueTask(getExpiringValue)
+                let task = try self.getValueTask(getExpiringValue)
                 self.state = .withValueAndWaiting(value, expires, task)
                 return value
             } else {
                 return value
             }
 
-        case .withValueAndWaiting(let value, let expires, let task):
+        case .withValueAndWaiting(let value, let expires, let waitingOnTask):
             if expires.timeIntervalSinceNow < 0 {
                 // as value has expired wait for task to finish and return result
-                return try await task.value
+                task = waitingOnTask
             } else {
                 // value hasn't expired so return current value
                 return value
             }
+
+        case .error(let error):
+            throw error
+        }
+        return try await withTaskCancellationHandler {
+            switch await task.result {
+            case .success(let value):
+                return value
+            case .failure(let error):
+                self.state = .error(error)
+                throw error
+            }
+        } onCancel: {
+            task.cancel()
         }
     }
 
     /// Create task that will return a new version of the value and a date it will expire
     /// - Parameter getExpiringValue: Function return value and expiration date
-    func getValueTask(_ getExpiringValue: @escaping @Sendable () async throws -> (T, Date)) -> Task<T, Error> {
+    func getValueTask(_ getExpiringValue: @escaping @Sendable () async throws -> (T, Date)) throws -> Task<T, Error> {
+        try Task.checkCancellation()
         return Task {
             let (value, expires) = try await getExpiringValue()
             self.state = .withValue(value, expires)
             return value
+        }
+    }
+
+    func cancel() {
+        switch self.state {
+        case .initialWaitingOnValue(let task):
+            task.cancel()
+        case .waitingOnValue(let task), .withValueAndWaiting(_, _, let task):
+            task.cancel()
+        default:
+            break
         }
     }
 }

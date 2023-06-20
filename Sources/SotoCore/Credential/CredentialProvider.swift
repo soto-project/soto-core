@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2022 the Soto project authors
+// Copyright (c) 2017-2023 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -24,17 +24,15 @@ public protocol CredentialProvider: Sendable, CustomStringConvertible {
     /// - Parameters:
     ///   - eventLoop: EventLoop to run on
     ///   - logger: Logger to use
-    func getCredential(on eventLoop: EventLoop, logger: Logger) -> EventLoopFuture<Credential>
+    func getCredential(logger: Logger) async throws -> Credential
 
     /// Shutdown credential provider
     /// - Parameter eventLoop: EventLoop to use when shutiting down
-    func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void>
+    func shutdown() async throws
 }
 
 extension CredentialProvider {
-    public func shutdown(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
-        return eventLoop.makeSucceededFuture(())
-    }
+    public func shutdown() async throws {}
 
     public var description: String { return "\(type(of: self))" }
 }

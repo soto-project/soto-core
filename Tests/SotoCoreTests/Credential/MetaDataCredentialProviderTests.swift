@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the Soto project authors
+// Copyright (c) 2017-2023 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -37,7 +37,7 @@ class MetaDataCredentialProviderTests: XCTestCase {
         defer { Environment.unset(name: ECSMetaDataClient.RelativeURIEnvironmentName) }
 
         let client = ECSMetaDataClient(httpClient: httpClient, host: testServer.address)
-        async let metaDataTask = client!.getMetaData(on: loop, logger: TestEnvironment.logger).get()
+        async let metaDataTask = client!.getMetaData(logger: TestEnvironment.logger)
 
         // run fake server
         XCTAssertNoThrow(try testServer.ecsMetadataServer(path: path))
@@ -85,7 +85,7 @@ class MetaDataCredentialProviderTests: XCTestCase {
         defer { Environment.unset(name: ECSMetaDataClient.RelativeURIEnvironmentName) }
 
         let client = InstanceMetaDataClient(httpClient: httpClient, host: testServer.address)
-        async let metaDataTask = client.getMetaData(on: loop, logger: TestEnvironment.logger).get()
+        async let metaDataTask = client.getMetaData(logger: TestEnvironment.logger)
         // run fake server
         XCTAssertNoThrow(try testServer.ec2MetadataServer(version: .v2))
 
@@ -112,7 +112,7 @@ class MetaDataCredentialProviderTests: XCTestCase {
 
         let client = InstanceMetaDataClient(httpClient: httpClient, host: testServer.address)
 
-        async let metaDataTask = client.getMetaData(on: loop, logger: TestEnvironment.logger).get()
+        async let metaDataTask = client.getMetaData(logger: TestEnvironment.logger)
         // run fake server
         XCTAssertNoThrow(try testServer.ec2MetadataServer(version: .v1))
 

@@ -19,6 +19,21 @@ import SotoTestUtils
 import SotoXML
 import XCTest
 
+extension AWSHTTPResponse.Body {
+    init(_ byteBuffer: ByteBuffer) {
+        self.init {
+            var served = false
+            return {
+                if !served {
+                    served = true
+                    return byteBuffer
+                }
+                return nil
+            }
+        }
+    }
+}
+
 class AWSResponseTests: XCTestCase {
     func testHeaderResponseDecoding() async throws {
         struct Output: AWSDecodableShape {

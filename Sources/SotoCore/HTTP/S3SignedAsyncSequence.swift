@@ -21,6 +21,9 @@ private let endOfLineLength = 2
 private let bufferSizeInHex = String(bufferSize, radix: 16)
 private let maxHeaderSize: Int = bufferSizeInHex.count + chunkSignatureLength + endOfLineLength
 
+/// AsyncSequence that S3 signs the data returned from a base sequence
+///
+/// See https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-streaming.html for details
 struct S3SignedAsyncSequence<Base: AsyncSequence>: AsyncSequence where Base.Element == ByteBuffer {
     typealias Element = ByteBuffer
 
@@ -72,6 +75,7 @@ struct S3SignedAsyncSequence<Base: AsyncSequence>: AsyncSequence where Base.Elem
     }
 
     func makeAsyncIterator() -> AsyncIterator {
+        // S3 signing requires a fixed chunk size. AWS recommend 64K for the chunk size
         return .init(
             baseIterator: self.base.fixedSizeSequence(chunkSize: 64 * 1024).makeAsyncIterator(),
             signer: self.signer,
@@ -97,6 +101,7 @@ struct S3SignedAsyncSequence<Base: AsyncSequence>: AsyncSequence where Base.Elem
 }
 
 extension AsyncSequence where Element == ByteBuffer {
+    /// create S3 signed sequence of data
     func s3Signed(signer: AWSSigner, seedSigningData: AWSSigner.ChunkedSigningData) -> S3SignedAsyncSequence<Self> {
         S3SignedAsyncSequence(base: self, signer: signer, seedSigningData: seedSigningData)
     }

@@ -54,14 +54,4 @@ extension AsyncHTTPClient.HTTPClient {
             body: .init(response.body, length: nil)
         )
     }
-
-    func execute(
-        request: AWSHTTPRequest,
-        timeout: TimeAmount,
-        on eventLoop: EventLoop,
-        logger: Logger,
-        stream: @escaping AWSResponseStream
-    ) async throws -> HTTPClientResponse {
-        preconditionFailure("Not supported")
-    }
 }

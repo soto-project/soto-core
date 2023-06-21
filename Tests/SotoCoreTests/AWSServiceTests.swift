@@ -159,7 +159,7 @@ class AWSServiceTests: XCTestCase {
             url: url,
             httpMethod: .GET,
             headers: ["Content-Type": "application/json"],
-            body: .string("Test payload")
+            body: .init(string: "Test payload")
         )
         // remove signed query params
         XCTAssertNotNil(headers["Authorization"].first)

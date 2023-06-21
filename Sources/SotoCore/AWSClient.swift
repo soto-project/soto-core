@@ -520,7 +520,7 @@ extension AWSClient {
         url: URL,
         httpMethod: HTTPMethod,
         headers: HTTPHeaders = HTTPHeaders(),
-        body: AWSPayload,
+        body: HTTPBody,
         serviceConfig: AWSServiceConfig,
         logger: Logger = AWSClient.loggingDisabled
     ) async throws -> HTTPHeaders {
@@ -533,8 +533,14 @@ extension AWSClient {
         guard let cleanURL = signer.processURL(url: url) else {
             throw AWSClient.ClientError.invalidURL
         }
-        let body: AWSSigner.BodyData? = body.asByteBuffer().map { .byteBuffer($0) }
-        return signer.signHeaders(url: cleanURL, method: httpMethod, headers: headers, body: body)
+        let bodyData: AWSSigner.BodyData?
+        switch body.storage {
+        case .byteBuffer(let buffer):
+            bodyData = .byteBuffer(buffer)
+        case .asyncSequence:
+            bodyData = nil
+        }
+        return signer.signHeaders(url: cleanURL, method: httpMethod, headers: headers, body: bodyData)
     }
 
     func createSigner(serviceConfig: AWSServiceConfig, logger: Logger) async throws -> AWSSigner {

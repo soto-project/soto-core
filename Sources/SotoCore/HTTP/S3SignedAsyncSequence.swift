@@ -42,7 +42,7 @@ struct S3SignedAsyncSequence<Base: AsyncSequence>: AsyncSequence where Base.Elem
         var state: State = .writeHeader
         var count: Int = 0
 
-        mutating func _next() async throws -> ByteBuffer? {
+        mutating func next() async throws -> ByteBuffer? {
             switch self.state {
             case .writeHeader:
                 if let buffer = try await self.baseIterator.next() {
@@ -69,13 +69,6 @@ struct S3SignedAsyncSequence<Base: AsyncSequence>: AsyncSequence where Base.Elem
                 return nil
             }
         }
-
-        mutating func next() async throws -> Element? {
-            let buffer = try await _next()
-            self.count += buffer?.readableBytes ?? 0
-            print(self.count)
-            return buffer
-        }
     }
 
     func makeAsyncIterator() -> AsyncIterator {
@@ -99,7 +92,6 @@ struct S3SignedAsyncSequence<Base: AsyncSequence>: AsyncSequence where Base.Elem
         let fullSize = numberOfChunks * (bufferSize + maxHeaderSize + endOfLineLength) // number of chunks * chunk size
             + lastChunkSize // last chunk size
             + 1 + chunkSignatureLength + endOfLineLength * 2 // tail chunk size "(0;chunk-signature=hash)\r\n\r\n"
-        print("Expecting \(fullSize)")
         return fullSize
     }
 }

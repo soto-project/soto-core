@@ -60,7 +60,11 @@ public struct FixedSizeByteBufferAsyncSequence<Base: AsyncSequence>: AsyncSequen
                 } else {
                     // no more byte buffers are available from the source sequence so return what is left
                     self.currentByteBuffer = nil
-                    return byteBuffer
+                    if byteBuffer.readableBytes > 0 {
+                        return byteBuffer
+                    } else {
+                        return nil
+                    }
                 }
             }
             let chunkByteBuffer = byteBuffer.readSlice(length: self.chunkSize)

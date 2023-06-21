@@ -37,7 +37,7 @@ public struct AWSRequest {
     /// request headers
     public var httpHeaders: HTTPHeaders
     /// request body
-    public var body: Body
+    public var body: HTTPBody
 
     /// Create HTTP Client request from AWSRequest.
     /// If the signer's credentials are available the request will be signed. Otherwise defaults to an unsigned request
@@ -52,37 +52,39 @@ public struct AWSRequest {
 
     /// Create HTTP Client request from AWSRequest
     func toHTTPRequest(byteBufferAllocator: ByteBufferAllocator) -> AWSHTTPRequest {
-        return AWSHTTPRequest(url: url, method: httpMethod, headers: httpHeaders, body: body.asPayload(byteBufferAllocator: byteBufferAllocator))
+        return AWSHTTPRequest(url: url, method: httpMethod, headers: httpHeaders, body: body)
     }
 
     /// Create HTTP Client request with signed headers from AWSRequest
     func toHTTPRequestWithSignedHeader(signer: AWSSigner, serviceConfig: AWSServiceConfig) -> AWSHTTPRequest {
-        let payload = self.body.asPayload(byteBufferAllocator: serviceConfig.byteBufferAllocator)
+        let payload = self.body
         let bodyDataForSigning: AWSSigner.BodyData?
-        switch payload.payload {
+        switch payload.storage {
         case .byteBuffer(let buffer):
             bodyDataForSigning = .byteBuffer(buffer)
-        case .stream(let reader):
-            if signer.name == "s3", !serviceConfig.options.contains(.s3DisableChunkedUploads) {
-                assert(reader.size != nil, "S3 stream requires size")
-                var headers = httpHeaders
-                // need to add this header here as it needs to be included in the signed headers
-                headers.add(name: "x-amz-decoded-content-length", value: reader.size!.description)
-                let (signedHeaders, seedSigningData) = signer.startSigningChunks(url: url, method: httpMethod, headers: headers, date: Date())
-                let s3Reader = S3ChunkedStreamReader(
-                    size: reader.size!,
-                    seedSigningData: seedSigningData,
-                    signer: signer,
-                    byteBufferAllocator: serviceConfig.byteBufferAllocator,
-                    read: reader.read
-                )
-                let payload = AWSPayload.streamReader(s3Reader)
-                return AWSHTTPRequest(url: url, method: httpMethod, headers: signedHeaders, body: payload)
-            } else {
-                bodyDataForSigning = .unsignedPayload
-            }
-        case .empty:
-            bodyDataForSigning = nil
+        /* case .stream(let reader):
+             if signer.name == "s3", !serviceConfig.options.contains(.s3DisableChunkedUploads) {
+                 assert(reader.size != nil, "S3 stream requires size")
+                 var headers = httpHeaders
+                 // need to add this header here as it needs to be included in the signed headers
+                 headers.add(name: "x-amz-decoded-content-length", value: reader.size!.description)
+                 let (signedHeaders, seedSigningData) = signer.startSigningChunks(url: url, method: httpMethod, headers: headers, date: Date())
+                 let s3Reader = S3ChunkedStreamReader(
+                     size: reader.size!,
+                     seedSigningData: seedSigningData,
+                     signer: signer,
+                     byteBufferAllocator: serviceConfig.byteBufferAllocator,
+                     read: reader.read
+                 )
+                 let payload = AWSPayload.streamReader(s3Reader)
+                 return AWSHTTPRequest(url: url, method: httpMethod, headers: signedHeaders, body: payload)
+             } else {
+                 bodyDataForSigning = .unsignedPayload
+             }
+         case .empty:
+             bodyDataForSigning = nil */
+        case .asyncSequence:
+            bodyDataForSigning = .unsignedPayload
         }
         let signedHeaders = signer.signHeaders(url: url, method: httpMethod, headers: httpHeaders, body: bodyDataForSigning, date: Date())
         return AWSHTTPRequest(url: url, method: httpMethod, headers: signedHeaders, body: payload)
@@ -123,12 +125,16 @@ extension AWSRequest {
         switch configuration.serviceProtocol {
         case .query, .ec2:
             let params = ["Action": operationName, "Version": configuration.apiVersion]
-            self.body = try .text(QueryEncoder().encode(params)!)
+            if let queryBody = try QueryEncoder().encode(params) {
+                self.body = .init(buffer: configuration.byteBufferAllocator.buffer(string: queryBody))
+            } else {
+                self.body = .init()
+            }
         default:
-            self.body = .empty
+            self.body = .init()
         }
 
-        addStandardHeaders()
+        addStandardHeaders(serviceProtocol: configuration.serviceProtocol, raw: false)
     }
 
     internal init<Input: AWSEncodableShape>(
@@ -142,7 +148,6 @@ extension AWSRequest {
         var headers = HTTPHeaders()
         var path = path
         var hostPrefix = hostPrefix
-        var body: Body = .empty
         var queryParams: [(key: String, value: Any)] = []
 
         // validate input parameters
@@ -201,30 +206,35 @@ extension AWSRequest {
             }
         }
 
+        var raw = false
+        let body: HTTPBody
         switch configuration.serviceProtocol {
         case .json, .restjson:
             if let shapeWithPayload = Input.self as? AWSShapeWithPayload.Type {
                 let payload = shapeWithPayload._payloadPath
                 if let payloadBody = mirror.getAttribute(forKey: payload) {
                     switch payloadBody {
-                    case let awsPayload as AWSPayload:
+                    case let awsPayload as HTTPBody:
                         Self.verifyStream(operation: operationName, payload: awsPayload, input: shapeWithPayload)
-                        body = .raw(awsPayload)
+                        body = awsPayload
+                        raw = true
                     case let shape as AWSEncodableShape:
-                        body = try .json(shape.encodeAsJSON(byteBufferAllocator: configuration.byteBufferAllocator))
+                        body = try .init(buffer: shape.encodeAsJSON(byteBufferAllocator: configuration.byteBufferAllocator))
                     default:
                         preconditionFailure("Cannot add this as a payload")
                     }
                 } else {
-                    body = .empty
+                    body = .init()
                 }
             } else {
                 // only include the body if there are members that are output in the body.
                 if memberVariablesCount > 0 {
-                    body = try .json(input.encodeAsJSON(byteBufferAllocator: configuration.byteBufferAllocator))
+                    body = try .init(buffer: input.encodeAsJSON(byteBufferAllocator: configuration.byteBufferAllocator))
                 } else if httpMethod == .PUT || httpMethod == .POST {
                     // PUT and POST requests require a body even if it is empty. This is not the case with XML
-                    body = .json(configuration.byteBufferAllocator.buffer(string: "{}"))
+                    body = .init(buffer: configuration.byteBufferAllocator.buffer(string: "{}"))
+                } else {
+                    body = .init()
                 }
             }
 
@@ -233,37 +243,45 @@ extension AWSRequest {
                 let payload = shapeWithPayload._payloadPath
                 if let payloadBody = mirror.getAttribute(forKey: payload) {
                     switch payloadBody {
-                    case let awsPayload as AWSPayload:
+                    case let awsPayload as HTTPBody:
                         Self.verifyStream(operation: operationName, payload: awsPayload, input: shapeWithPayload)
-                        body = .raw(awsPayload)
+                        body = awsPayload
                     case let shape as AWSEncodableShape:
                         var rootName: String?
                         // extract custom payload name
                         if let encoding = Input.getEncoding(for: payload), case .body(let locationName) = encoding.location {
                             rootName = locationName
                         }
-                        body = try .xml(shape.encodeAsXML(rootName: rootName, namespace: configuration.xmlNamespace))
+                        let xml = try shape.encodeAsXML(rootName: rootName, namespace: configuration.xmlNamespace)
+                        body = .init(buffer: configuration.byteBufferAllocator.buffer(string: xml))
                     default:
                         preconditionFailure("Cannot add this as a payload")
                     }
                 } else {
-                    body = .empty
+                    body = .init()
                 }
             } else {
                 // only include the body if there are members that are output in the body.
                 if memberVariablesCount > 0 {
-                    body = try .xml(input.encodeAsXML(namespace: configuration.xmlNamespace))
+                    let xml = try input.encodeAsXML(namespace: configuration.xmlNamespace)
+                    body = .init(buffer: configuration.byteBufferAllocator.buffer(string: xml))
+                } else {
+                    body = .init()
                 }
             }
 
         case .query:
             if let query = try input.encodeAsQuery(with: ["Action": operationName, "Version": configuration.apiVersion]) {
-                body = .text(query)
+                body = .init(buffer: configuration.byteBufferAllocator.buffer(string: query))
+            } else {
+                body = .init()
             }
 
         case .ec2:
             if let query = try input.encodeAsQueryForEC2(with: ["Action": operationName, "Version": configuration.apiVersion]) {
-                body = .text(query)
+                body = .init(buffer: configuration.byteBufferAllocator.buffer(string: query))
+            } else {
+                body = .init()
             }
         }
 
@@ -317,7 +335,7 @@ extension AWSRequest {
         self.httpHeaders = headers
         self.body = body
 
-        addStandardHeaders()
+        addStandardHeaders(serviceProtocol: configuration.serviceProtocol, raw: raw)
     }
 
     /// Calculate checksum header for request
@@ -329,7 +347,7 @@ extension AWSRequest {
     /// - Returns: New set of headers
     private static func calculateChecksumHeader<Input: AWSEncodableShape>(
         headers: HTTPHeaders,
-        body: Body,
+        body: HTTPBody,
         shapeType: Input.Type,
         configuration: AWSServiceConfig
     ) -> HTTPHeaders {
@@ -347,7 +365,7 @@ extension AWSRequest {
         }
 
         guard let checksumType = checksumType,
-              let buffer = body.asByteBuffer(byteBufferAllocator: configuration.byteBufferAllocator),
+              case .byteBuffer(let buffer) = body.storage,
               let checksumHeader = Self.checksumHeaders[checksumType],
               headers[checksumHeader].first == nil else { return headers }
 
@@ -383,7 +401,7 @@ extension AWSRequest {
     }
 
     /// Add headers standard to all requests "content-type" and "user-agent"
-    private mutating func addStandardHeaders() {
+    private mutating func addStandardHeaders(serviceProtocol: ServiceProtocol, raw: Bool) {
         httpHeaders.add(name: "user-agent", value: "Soto/6.0")
         guard httpHeaders["content-type"].first == nil else {
             return
@@ -392,9 +410,9 @@ extension AWSRequest {
             return
         }
 
-        if case .empty = body {
+        if case .byteBuffer(let buffer) = body.storage, buffer.readableBytes == 0 {
             // don't add a content-type header when there is no content
-        } else if case .restjson = serviceProtocol, case .raw = body {
+        } else if case .restjson = serviceProtocol, raw {
             httpHeaders.replaceOrAdd(name: "content-type", value: "binary/octet-stream")
         } else {
             httpHeaders.replaceOrAdd(name: "content-type", value: serviceProtocol.contentType)
@@ -422,10 +440,10 @@ extension AWSRequest {
     }
 
     /// verify  streaming is allowed for this operation
-    internal static func verifyStream(operation: String, payload: AWSPayload, input: AWSShapeWithPayload.Type) {
-        guard case .stream(let reader) = payload.payload else { return }
+    internal static func verifyStream(operation: String, payload: HTTPBody, input: AWSShapeWithPayload.Type) {
+        guard case .asyncSequence(_, let length) = payload.storage else { return }
         precondition(input._options.contains(.allowStreaming), "\(operation) does not allow streaming of data")
-        precondition(reader.size != nil || input._options.contains(.allowChunkedStreaming), "\(operation) does not allow chunked streaming of data. Please supply a data size.")
+        precondition(length != nil || input._options.contains(.allowChunkedStreaming), "\(operation) does not allow chunked streaming of data. Please supply a data size.")
     }
 
     private static func calculateChecksum<H: HashFunction>(_ byteBuffer: ByteBuffer, function: H.Type) -> String? {

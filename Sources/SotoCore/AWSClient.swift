@@ -141,8 +141,7 @@ public final class AWSClient: Sendable {
         enum Error {
             case alreadyShutdown
             case invalidURL
-            case tooMuchData
-            case notEnoughData
+            case bodyLengthMismatch
             case waiterFailed
             case waiterTimeout
             case failedToAccessPayload
@@ -154,10 +153,8 @@ public final class AWSClient: Sendable {
         public static var alreadyShutdown: ClientError { .init(error: .alreadyShutdown) }
         /// URL provided to client is invalid
         public static var invalidURL: ClientError { .init(error: .invalidURL) }
-        /// Too much data has been supplied for the Request
-        public static var tooMuchData: ClientError { .init(error: .tooMuchData) }
-        /// Not enough data has been supplied for the Request
-        public static var notEnoughData: ClientError { .init(error: .notEnoughData) }
+        /// Data supplied to the Request does not equal length indicated
+        public static var bodyLengthMismatch: ClientError { .init(error: .bodyLengthMismatch) }
         /// Waiter failed, but without an error. ie a successful api call was an error
         public static var waiterFailed: ClientError { .init(error: .waiterFailed) }
         /// Waiter failed to complete in time alloted
@@ -402,13 +399,7 @@ extension AWSClient {
                 .applyMiddlewares(config.middlewares + self.middlewares, config: config)
                 .createHTTPRequest(signer: signer, serviceConfig: config)
             // send request to AWS and process result
-            let streaming: Bool
-            switch awsRequest.body.payload {
-            case .stream:
-                streaming = true
-            default:
-                streaming = false
-            }
+            let streaming = awsRequest.body.isStreaming
             try Task.checkCancellation()
             let response = try await self.invoke(
                 request: awsRequest,
@@ -625,10 +616,8 @@ extension AWSClient.ClientError: CustomStringConvertible {
             The request url is invalid format.
             This error is internal. So please make a issue on https://github.com/soto-project/soto/issues to solve it.
             """
-        case .tooMuchData:
-            return "You have supplied too much data for the Request."
-        case .notEnoughData:
-            return "You have not supplied enough data for the Request."
+        case .bodyLengthMismatch:
+            return "You have supplied the incorrect amount of data for the Request."
         case .waiterFailed:
             return "Waiter failed"
         case .waiterTimeout:

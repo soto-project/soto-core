@@ -31,12 +31,24 @@ public struct HTTPBody: Sendable {
         self.storage = .byteBuffer(ByteBuffer())
     }
 
-    public init(_ byteBuffer: ByteBuffer) {
+    public init(buffer: ByteBuffer) {
+        self.storage = .byteBuffer(buffer)
+    }
+
+    public init<C: Collection>(bytes: C, byteBufferAllocator: ByteBufferAllocator = .init()) where C.Element == UInt8 {
+        var byteBuffer = byteBufferAllocator.buffer(capacity: bytes.count)
+        byteBuffer.writeBytes(bytes)
         self.storage = .byteBuffer(byteBuffer)
     }
 
-    init<BufferSequence: AsyncSequence>(_ sequence: BufferSequence, length: Int?) where BufferSequence.Element == ByteBuffer {
-        self.storage = .asyncSequence(sequence: .init(sequence), length: length)
+    public init(string: String, byteBufferAllocator: ByteBufferAllocator = .init()) {
+        var byteBuffer = byteBufferAllocator.buffer(capacity: string.utf8.count)
+        byteBuffer.writeString(string)
+        self.storage = .byteBuffer(byteBuffer)
+    }
+
+    init<BufferSequence: AsyncSequence>(bufferSequence: BufferSequence, length: Int?) where BufferSequence.Element == ByteBuffer {
+        self.storage = .asyncSequence(sequence: .init(bufferSequence), length: length)
     }
 
     public func collect(upTo length: Int) async throws -> ByteBuffer {
@@ -94,9 +106,9 @@ struct AWSHTTPRequest {
     let url: URL
     let method: HTTPMethod
     let headers: HTTPHeaders
-    let body: AWSPayload
+    let body: HTTPBody
 
-    init(url: URL, method: HTTPMethod, headers: HTTPHeaders = [:], body: AWSPayload = .empty) {
+    init(url: URL, method: HTTPMethod, headers: HTTPHeaders = [:], body: HTTPBody = .init()) {
         self.url = url
         self.method = method
         self.headers = headers

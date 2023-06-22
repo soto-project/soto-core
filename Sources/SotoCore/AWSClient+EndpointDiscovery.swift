@@ -24,7 +24,6 @@ extension AWSClient {
     ///     - serviceConfig: AWS service configuration used in request creation and signing
     ///     - endpointDiscovery: Endpoint discovery helper
     ///     - logger: Logger
-    ///     - eventLoop: Optional EventLoop to run everything on
     public func execute(
         operation operationName: String,
         path: String,
@@ -59,7 +58,6 @@ extension AWSClient {
     ///     - hostPrefix: Prefix to append to host name
     ///     - endpointDiscovery: Endpoint discovery helper
     ///     - logger: Logger
-    ///     - eventLoop: Optional EventLoop to run everything on
     public func execute<Input: AWSEncodableShape>(
         operation operationName: String,
         path: String,
@@ -96,7 +94,6 @@ extension AWSClient {
     ///     - serviceConfig: AWS service configuration used in request creation and signing
     ///     - endpointDiscovery: Endpoint discovery helper
     ///     - logger: Logger
-    ///     - eventLoop: Optional EventLoop to run everything on
     /// - returns:
     ///     Output object that completes when response is received
     @discardableResult public func execute<Output: AWSDecodableShape>(
@@ -133,7 +130,6 @@ extension AWSClient {
     ///     - hostPrefix: Prefix to append to host name
     ///     - endpointDiscovery: Endpoint discovery helper
     ///     - logger: Logger
-    ///     - eventLoop: Optional EventLoop to run everything on
     /// - returns:
     ///     Output object that completes when response is received
     public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(
@@ -174,7 +170,6 @@ extension AWSClient {
     ///     - hostPrefix: Prefix to append to host name
     ///     - endpointDiscovery: Endpoint discovery helper
     ///     - logger: Logger
-    ///     - eventLoop: Optional EventLoop to run everything on
     ///     - stream: Closure to stream payload response into
     /// - returns:
     ///     Output object that completes when response is received

@@ -239,7 +239,7 @@ class AWSClientTests: XCTestCase {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: data.count)
         byteBuffer.writeBytes(data)
 
-        let payload = HTTPBody(bufferSequence: byteBuffer.asyncSequence(chunkSize: blockSize), length: bufferSize)
+        let payload = HTTPBody(asyncSequence: byteBuffer.asyncSequence(chunkSize: blockSize), length: bufferSize)
         let input = Input(payload: payload)
         async let responseTask: Void = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: TestEnvironment.logger)
 
@@ -317,7 +317,7 @@ class AWSClientTests: XCTestCase {
     func testRequestStreamingTooMuchData() async throws {
         // set up stream of 8 bytes but supply more than that
         let buffer = ByteBuffer(string: "String longer than 8 bytes")
-        let payload = HTTPBody(bufferSequence: buffer.asyncSequence(chunkSize: 1024), length: buffer.readableBytes - 1)
+        let payload = HTTPBody(asyncSequence: buffer.asyncSequence(chunkSize: 1024), length: buffer.readableBytes - 1)
         do {
             try await self.testRequestStreamingWithPayload(payload)
             XCTFail("Should not get here")
@@ -329,7 +329,7 @@ class AWSClientTests: XCTestCase {
     func testRequestStreamingNotEnoughData() async throws {
         // set up stream of 8 bytes but supply more than that
         let buffer = ByteBuffer(string: "String longer than 8 bytes")
-        let payload = HTTPBody(bufferSequence: buffer.asyncSequence(chunkSize: 1024), length: buffer.readableBytes + 1)
+        let payload = HTTPBody(asyncSequence: buffer.asyncSequence(chunkSize: 1024), length: buffer.readableBytes + 1)
         do {
             try await self.testRequestStreamingWithPayload(payload)
             XCTFail("Should not get here")
@@ -363,7 +363,7 @@ class AWSClientTests: XCTestCase {
             var byteBuffer = ByteBufferAllocator().buffer(capacity: bufferSize)
             byteBuffer.writeBytes(data)
 
-            let payload = HTTPBody(bufferSequence: byteBuffer.asyncSequence(chunkSize: blockSize), length: nil)
+            let payload = HTTPBody(asyncSequence: byteBuffer.asyncSequence(chunkSize: blockSize), length: nil)
             let input = Input(payload: payload)
             async let responseTask: Void = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: TestEnvironment.logger)
 
@@ -601,7 +601,7 @@ class AWSClientTests: XCTestCase {
                 XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try httpClient.syncShutdown())
             }
-            let payload = HTTPBody(bufferSequence: ByteBuffer().asyncSequence(chunkSize: 16), length: nil)
+            let payload = HTTPBody(asyncSequence: ByteBuffer().asyncSequence(chunkSize: 16), length: nil)
             let input = Input(payload: payload)
             async let responseTask: Void = client.execute(
                 operation: "test",

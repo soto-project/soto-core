@@ -74,7 +74,7 @@ public struct AWSRequest {
                 // create s3 signed Sequence
                 let s3Signed = sequence.s3Signed(signer: signer, seedSigningData: seedSigningData)
                 // create new payload and return request
-                let payload = HTTPBody(bufferSequence: s3Signed, length: s3Signed.contentSize(from: length!))
+                let payload = HTTPBody(asyncSequence: s3Signed, length: s3Signed.contentSize(from: length!))
                 return AWSHTTPRequest(url: url, method: httpMethod, headers: signedHeaders, body: payload)
             } else {
                 bodyDataForSigning = .unsignedPayload

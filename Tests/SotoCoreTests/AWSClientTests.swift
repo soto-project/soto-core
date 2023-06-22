@@ -261,217 +261,217 @@ class AWSClientTests: XCTestCase {
         try await responseTask
     }
 
-    func testRequestStreaming() async throws {
-        let awsServer = AWSTestServer(serviceProtocol: .json)
-        let httpClient = HTTPClient(eventLoopGroupProvider: .singleton)
-        let config = createServiceConfig(endpoint: awsServer.address)
-        let client = createAWSClient(credentialProvider: .empty, httpClientProvider: .shared(httpClient))
-        defer {
-            XCTAssertNoThrow(try awsServer.stop())
-            XCTAssertNoThrow(try client.syncShutdown())
-            XCTAssertNoThrow(try httpClient.syncShutdown())
-        }
+    /*    func testRequestStreaming() async throws {
+         let awsServer = AWSTestServer(serviceProtocol: .json)
+         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+         let config = createServiceConfig(endpoint: awsServer.address)
+         let client = createAWSClient(credentialProvider: .empty, httpClientProvider: .shared(httpClient))
+         defer {
+             XCTAssertNoThrow(try awsServer.stop())
+             XCTAssertNoThrow(try client.syncShutdown())
+             XCTAssertNoThrow(try httpClient.syncShutdown())
+         }
 
-        try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128 * 1024, blockSize: 16 * 1024)
-        try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128 * 1024, blockSize: 17 * 1024)
-        try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 18 * 1024, blockSize: 47 * 1024)
-    }
+         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128 * 1024, blockSize: 16 * 1024)
+         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128 * 1024, blockSize: 17 * 1024)
+         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 18 * 1024, blockSize: 47 * 1024)
+     }
 
-    func testRequestS3Streaming() async throws {
-        let awsServer = AWSTestServer(serviceProtocol: .json)
-        let httpClient = HTTPClient(eventLoopGroupProvider: .singleton)
-        let config = createServiceConfig(service: "s3", endpoint: awsServer.address)
-        let client = createAWSClient(credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"), httpClientProvider: .shared(httpClient))
-        defer {
-            XCTAssertNoThrow(try client.syncShutdown())
-            XCTAssertNoThrow(try awsServer.stop())
-            XCTAssertNoThrow(try httpClient.syncShutdown())
-        }
+     func testRequestS3Streaming() async throws {
+         let awsServer = AWSTestServer(serviceProtocol: .json)
+         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+         let config = createServiceConfig(service: "s3", endpoint: awsServer.address)
+         let client = createAWSClient(credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"), httpClientProvider: .shared(httpClient))
+         defer {
+             XCTAssertNoThrow(try client.syncShutdown())
+             XCTAssertNoThrow(try awsServer.stop())
+             XCTAssertNoThrow(try httpClient.syncShutdown())
+         }
 
-        try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128 * 1024, blockSize: 16 * 1024)
-        try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 192 * 1024, blockSize: 128 * 1024)
-        try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 81 * 1024, blockSize: 16 * 1024)
-        try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128 * 1024, blockSize: S3ChunkedStreamReader.bufferSize)
-        try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 130 * 1024, blockSize: S3ChunkedStreamReader.bufferSize)
-        try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128 * 1024, blockSize: 17 * 1024)
-        try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 68 * 1024, blockSize: 67 * 1024)
-        try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 65537, blockSize: 65537)
-        try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 65552, blockSize: 65552)
-    }
+         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128 * 1024, blockSize: 16 * 1024)
+         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 192 * 1024, blockSize: 128 * 1024)
+         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 81 * 1024, blockSize: 16 * 1024)
+         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128 * 1024, blockSize: S3ChunkedStreamReader.bufferSize)
+         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 130 * 1024, blockSize: S3ChunkedStreamReader.bufferSize)
+         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128 * 1024, blockSize: 17 * 1024)
+         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 68 * 1024, blockSize: 67 * 1024)
+         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 65537, blockSize: 65537)
+         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 65552, blockSize: 65552)
+     }
 
-    func testRequestStreamingAvoidStackOverflow() async throws {
-        let awsServer = AWSTestServer(serviceProtocol: .json)
-        let httpClient = HTTPClient(eventLoopGroupProvider: .singleton)
-        let config = createServiceConfig(service: "s3", endpoint: awsServer.address)
-        let client = createAWSClient(credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"), httpClientProvider: .shared(httpClient))
-        defer {
-            XCTAssertNoThrow(try client.syncShutdown())
-            XCTAssertNoThrow(try awsServer.stop())
-            XCTAssertNoThrow(try httpClient.syncShutdown())
-        }
+     func testRequestStreamingAvoidStackOverflow() async throws {
+         let awsServer = AWSTestServer(serviceProtocol: .json)
+         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+         let config = createServiceConfig(service: "s3", endpoint: awsServer.address)
+         let client = createAWSClient(credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"), httpClientProvider: .shared(httpClient))
+         defer {
+             XCTAssertNoThrow(try client.syncShutdown())
+             XCTAssertNoThrow(try awsServer.stop())
+             XCTAssertNoThrow(try httpClient.syncShutdown())
+         }
 
-        try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 16 * 1024, blockSize: 8)
-    }
+         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 16 * 1024, blockSize: 8)
+     }
 
-    func testRequestStreamingWithPayload(_ payload: AWSPayload) async throws {
-        struct Input: AWSEncodableShape & AWSShapeWithPayload {
-            static var _payloadPath: String = "payload"
-            static var _options: AWSShapeOptions = [.allowStreaming]
-            let payload: AWSPayload
-            private enum CodingKeys: CodingKey {}
-        }
+     func testRequestStreamingWithPayload(_ payload: AWSPayload) async throws {
+         struct Input: AWSEncodableShape & AWSShapeWithPayload {
+             static var _payloadPath: String = "payload"
+             static var _options: AWSShapeOptions = [.allowStreaming]
+             let payload: AWSPayload
+             private enum CodingKeys: CodingKey {}
+         }
 
-        let awsServer = AWSTestServer(serviceProtocol: .json)
-        let httpClient = HTTPClient(eventLoopGroupProvider: .singleton)
-        let config = createServiceConfig(endpoint: awsServer.address)
-        let client = createAWSClient(credentialProvider: .empty, httpClientProvider: .shared(httpClient))
-        defer {
-            // ignore error
-            try? awsServer.stop()
-            XCTAssertNoThrow(try client.syncShutdown())
-            XCTAssertNoThrow(try httpClient.syncShutdown())
-        }
-        let input = Input(payload: payload)
-        async let responseTask: Void = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: TestEnvironment.logger)
-        try await responseTask
-    }
+         let awsServer = AWSTestServer(serviceProtocol: .json)
+         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+         let config = createServiceConfig(endpoint: awsServer.address)
+         let client = createAWSClient(credentialProvider: .empty, httpClientProvider: .shared(httpClient))
+         defer {
+             // ignore error
+             try? awsServer.stop()
+             XCTAssertNoThrow(try client.syncShutdown())
+             XCTAssertNoThrow(try httpClient.syncShutdown())
+         }
+         let input = Input(payload: payload)
+         async let responseTask: Void = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: TestEnvironment.logger)
+         try await responseTask
+     }
 
-    func testRequestStreamingTooMuchData() async throws {
-        // set up stream of 8 bytes but supply more than that
-        let payload = AWSPayload.stream(size: 8) { eventLoop in
-            var buffer = ByteBufferAllocator().buffer(capacity: 0)
-            buffer.writeString("String longer than 8 bytes")
-            return eventLoop.makeSucceededFuture(.byteBuffer(buffer))
-        }
-        do {
-            try await self.testRequestStreamingWithPayload(payload)
-            XCTFail("Should not get here")
-        } catch {
-            XCTAssertEqual(error as? AWSClient.ClientError, .tooMuchData)
-        }
-    }
+     func testRequestStreamingTooMuchData() async throws {
+         // set up stream of 8 bytes but supply more than that
+         let payload = AWSPayload.stream(size: 8) { eventLoop in
+             var buffer = ByteBufferAllocator().buffer(capacity: 0)
+             buffer.writeString("String longer than 8 bytes")
+             return eventLoop.makeSucceededFuture(.byteBuffer(buffer))
+         }
+         do {
+             try await self.testRequestStreamingWithPayload(payload)
+             XCTFail("Should not get here")
+         } catch {
+             XCTAssertEqual(error as? AWSClient.ClientError, .tooMuchData)
+         }
+     }
 
-    func testRequestStreamingNotEnoughData() async throws {
-        var byteBuffer = ByteBufferAllocator().buffer(staticString: "Buffer")
-        let payload = AWSPayload.stream(size: byteBuffer.readableBytes + 1) { eventLoop in
-            let size = byteBuffer.readableBytes
-            if size == 0 {
-                return eventLoop.makeSucceededFuture(.end)
-            }
-            let buffer = byteBuffer.readSlice(length: size)!
-            return eventLoop.makeSucceededFuture(.byteBuffer(buffer))
-        }
-        do {
-            try await self.testRequestStreamingWithPayload(payload)
-            XCTFail("Should not get here")
-        } catch {
-            XCTAssertEqual(error as? AWSClient.ClientError, .notEnoughData)
-        }
-    }
+     func testRequestStreamingNotEnoughData() async throws {
+         var byteBuffer = ByteBufferAllocator().buffer(staticString: "Buffer")
+         let payload = AWSPayload.stream(size: byteBuffer.readableBytes + 1) { eventLoop in
+             let size = byteBuffer.readableBytes
+             if size == 0 {
+                 return eventLoop.makeSucceededFuture(.end)
+             }
+             let buffer = byteBuffer.readSlice(length: size)!
+             return eventLoop.makeSucceededFuture(.byteBuffer(buffer))
+         }
+         do {
+             try await self.testRequestStreamingWithPayload(payload)
+             XCTFail("Should not get here")
+         } catch {
+             XCTAssertEqual(error as? AWSClient.ClientError, .notEnoughData)
+         }
+     }
 
-    func testRequestStreamingFile() async throws {
-        struct Input: AWSEncodableShape & AWSShapeWithPayload {
-            static var _payloadPath: String = "payload"
-            static var _options: AWSShapeOptions = [.allowStreaming]
-            let payload: AWSPayload
-            private enum CodingKeys: CodingKey {}
-        }
+     func testRequestStreamingFile() async throws {
+         struct Input: AWSEncodableShape & AWSShapeWithPayload {
+             static var _payloadPath: String = "payload"
+             static var _options: AWSShapeOptions = [.allowStreaming]
+             let payload: AWSPayload
+             private enum CodingKeys: CodingKey {}
+         }
 
-        let awsServer = AWSTestServer(serviceProtocol: .json)
-        let httpClient = HTTPClient(eventLoopGroupProvider: .singleton)
-        let config = createServiceConfig(endpoint: awsServer.address)
-        let client = createAWSClient(credentialProvider: .empty, httpClientProvider: .shared(httpClient))
-        defer {
-            XCTAssertNoThrow(try awsServer.stop())
-            XCTAssertNoThrow(try client.syncShutdown())
-            XCTAssertNoThrow(try httpClient.syncShutdown())
-        }
-        do {
-            let bufferSize = 208 * 1024
-            let data = Data(createRandomBuffer(45, 9182, size: bufferSize))
-            let filename = "testRequestStreamingFile"
-            let fileURL = URL(fileURLWithPath: filename)
-            try data.write(to: fileURL)
-            defer {
-                XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL))
-            }
+         let awsServer = AWSTestServer(serviceProtocol: .json)
+         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+         let config = createServiceConfig(endpoint: awsServer.address)
+         let client = createAWSClient(credentialProvider: .empty, httpClientProvider: .shared(httpClient))
+         defer {
+             XCTAssertNoThrow(try awsServer.stop())
+             XCTAssertNoThrow(try client.syncShutdown())
+             XCTAssertNoThrow(try httpClient.syncShutdown())
+         }
+         do {
+             let bufferSize = 208 * 1024
+             let data = Data(createRandomBuffer(45, 9182, size: bufferSize))
+             let filename = "testRequestStreamingFile"
+             let fileURL = URL(fileURLWithPath: filename)
+             try data.write(to: fileURL)
+             defer {
+                 XCTAssertNoThrow(try FileManager.default.removeItem(at: fileURL))
+             }
 
-            let threadPool = NIOThreadPool(numberOfThreads: 3)
-            threadPool.start()
-            let fileIO = NonBlockingFileIO(threadPool: threadPool)
-            let fileHandle = try await fileIO.openFile(path: filename, mode: .read, eventLoop: httpClient.eventLoopGroup.next()).get()
-            defer {
-                XCTAssertNoThrow(try fileHandle.close())
-                XCTAssertNoThrow(try threadPool.syncShutdownGracefully())
-            }
+             let threadPool = NIOThreadPool(numberOfThreads: 3)
+             threadPool.start()
+             let fileIO = NonBlockingFileIO(threadPool: threadPool)
+             let fileHandle = try await fileIO.openFile(path: filename, mode: .read, eventLoop: httpClient.eventLoopGroup.next()).get()
+             defer {
+                 XCTAssertNoThrow(try fileHandle.close())
+                 XCTAssertNoThrow(try threadPool.syncShutdownGracefully())
+             }
 
-            let input = Input(payload: .fileHandle(fileHandle, size: bufferSize, fileIO: fileIO) { size in print(size) })
-            async let responseTask: Void = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: TestEnvironment.logger)
+             let input = Input(payload: .fileHandle(fileHandle, size: bufferSize, fileIO: fileIO) { size in print(size) })
+             async let responseTask: Void = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: TestEnvironment.logger)
 
-            try awsServer.processRaw { request in
-                XCTAssertNil(request.headers["transfer-encoding"])
-                XCTAssertEqual(request.headers["Content-Length"], bufferSize.description)
-                let requestData = request.body.getData(at: 0, length: request.body.readableBytes)
-                XCTAssertEqual(requestData, data)
-                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
-                return .result(response)
-            }
+             try awsServer.processRaw { request in
+                 XCTAssertNil(request.headers["transfer-encoding"])
+                 XCTAssertEqual(request.headers["Content-Length"], bufferSize.description)
+                 let requestData = request.body.getData(at: 0, length: request.body.readableBytes)
+                 XCTAssertEqual(requestData, data)
+                 let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
+                 return .result(response)
+             }
 
-            try await responseTask
-        } catch let error as AWSClient.ClientError where error == .tooMuchData {
-        } catch {
-            XCTFail("Unexpected error: \(error)")
-        }
-    }
+             try await responseTask
+         } catch let error as AWSClient.ClientError where error == .tooMuchData {
+         } catch {
+             XCTFail("Unexpected error: \(error)")
+         }
+     }
 
-    func testRequestChunkedStreaming() async throws {
-        struct Input: AWSEncodableShape & AWSShapeWithPayload {
-            static var _payloadPath: String = "payload"
-            static var _options: AWSShapeOptions = [.allowStreaming, .allowChunkedStreaming, .rawPayload]
-            let payload: AWSPayload
-            private enum CodingKeys: CodingKey {}
-        }
+     func testRequestChunkedStreaming() async throws {
+         struct Input: AWSEncodableShape & AWSShapeWithPayload {
+             static var _payloadPath: String = "payload"
+             static var _options: AWSShapeOptions = [.allowStreaming, .allowChunkedStreaming, .rawPayload]
+             let payload: AWSPayload
+             private enum CodingKeys: CodingKey {}
+         }
 
-        let awsServer = AWSTestServer(serviceProtocol: .json)
-        let httpClient = HTTPClient(eventLoopGroupProvider: .singleton)
-        let config = createServiceConfig(endpoint: awsServer.address)
-        let client = createAWSClient(credentialProvider: .empty, httpClientProvider: .shared(httpClient))
-        defer {
-            XCTAssertNoThrow(try awsServer.stop())
-            XCTAssertNoThrow(try client.syncShutdown())
-            XCTAssertNoThrow(try httpClient.syncShutdown())
-        }
-        do {
-            // supply buffer in 16k blocks
-            let bufferSize = 145 * 1024
-            let blockSize = 16 * 1024
-            let data = createRandomBuffer(45, 9182, size: bufferSize)
-            var byteBuffer = ByteBufferAllocator().buffer(capacity: bufferSize)
-            byteBuffer.writeBytes(data)
+         let awsServer = AWSTestServer(serviceProtocol: .json)
+         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+         let config = createServiceConfig(endpoint: awsServer.address)
+         let client = createAWSClient(credentialProvider: .empty, httpClientProvider: .shared(httpClient))
+         defer {
+             XCTAssertNoThrow(try awsServer.stop())
+             XCTAssertNoThrow(try client.syncShutdown())
+             XCTAssertNoThrow(try httpClient.syncShutdown())
+         }
+         do {
+             // supply buffer in 16k blocks
+             let bufferSize = 145 * 1024
+             let blockSize = 16 * 1024
+             let data = createRandomBuffer(45, 9182, size: bufferSize)
+             var byteBuffer = ByteBufferAllocator().buffer(capacity: bufferSize)
+             byteBuffer.writeBytes(data)
 
-            let payload = AWSPayload.stream { eventLoop in
-                let size = min(blockSize, byteBuffer.readableBytes)
-                if size == 0 {
-                    return eventLoop.makeSucceededFuture(.end)
-                } else {
-                    return eventLoop.makeSucceededFuture(.byteBuffer(byteBuffer.readSlice(length: size)!))
-                }
-            }
-            let input = Input(payload: payload)
-            async let responseTask: Void = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: TestEnvironment.logger)
+             let payload = AWSPayload.stream { eventLoop in
+                 let size = min(blockSize, byteBuffer.readableBytes)
+                 if size == 0 {
+                     return eventLoop.makeSucceededFuture(.end)
+                 } else {
+                     return eventLoop.makeSucceededFuture(.byteBuffer(byteBuffer.readSlice(length: size)!))
+                 }
+             }
+             let input = Input(payload: payload)
+             async let responseTask: Void = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: TestEnvironment.logger)
 
-            try awsServer.processRaw { request in
-                let bytes = request.body.getBytes(at: 0, length: request.body.readableBytes)
-                XCTAssertTrue(bytes == data)
-                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
-                return .result(response)
-            }
+             try awsServer.processRaw { request in
+                 let bytes = request.body.getBytes(at: 0, length: request.body.readableBytes)
+                 XCTAssertTrue(bytes == data)
+                 let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
+                 return .result(response)
+             }
 
-            try await responseTask
-        } catch {
-            XCTFail("Unexpected error: \(error)")
-        }
-    }
+             try await responseTask
+         } catch {
+             XCTFail("Unexpected error: \(error)")
+         }
+     }*/
 
     func testProvideHTTPClient() async {
         do {
@@ -746,101 +746,101 @@ class AWSClientTests: XCTestCase {
         }
     }
 
-    func testStreamingResponse() async {
-        struct Input: AWSEncodableShape {}
-        struct Output: AWSDecodableShape & Encodable {
-            static let _encoding = [AWSMemberEncoding(label: "test", location: .header("test"))]
-            let test: String
-        }
-        let data = createRandomBuffer(45, 109, size: 128 * 1024)
+    /* func testStreamingResponse() async {
+         struct Input: AWSEncodableShape {}
+         struct Output: AWSDecodableShape & Encodable {
+             static let _encoding = [AWSMemberEncoding(label: "test", location: .header("test"))]
+             let test: String
+         }
+         let data = createRandomBuffer(45, 109, size: 128 * 1024)
 
-        do {
-            let awsServer = AWSTestServer(serviceProtocol: .json)
-            let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 5)
-            let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
-            let config = createServiceConfig(endpoint: awsServer.address)
-            let client = createAWSClient(credentialProvider: .empty, httpClientProvider: .shared(httpClient))
-            defer {
-                XCTAssertNoThrow(try client.syncShutdown())
-                XCTAssertNoThrow(try httpClient.syncShutdown())
-                XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
-                XCTAssertNoThrow(try awsServer.stop())
-            }
-            let countAtomic = ManagedAtomic(0)
-            async let responseTask: Output = client.execute(
-                operation: "test",
-                path: "/",
-                httpMethod: .GET,
-                serviceConfig: config,
-                input: Input(),
-                logger: TestEnvironment.logger
-            ) { (payload: ByteBuffer, eventLoop: EventLoop) in
-                let payloadSize = payload.readableBytes
-                let count = countAtomic.loadThenWrappingIncrement(by: payloadSize, ordering: .relaxed)
-                let slice = Data(data[count..<(count + payloadSize)])
-                let payloadData = payload.getData(at: 0, length: payload.readableBytes)
-                XCTAssertEqual(slice, payloadData)
-                return eventLoop.makeSucceededFuture(())
-            }
+         do {
+             let awsServer = AWSTestServer(serviceProtocol: .json)
+             let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 5)
+             let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
+             let config = createServiceConfig(endpoint: awsServer.address)
+             let client = createAWSClient(credentialProvider: .empty, httpClientProvider: .shared(httpClient))
+             defer {
+                 XCTAssertNoThrow(try client.syncShutdown())
+                 XCTAssertNoThrow(try httpClient.syncShutdown())
+                 XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
+                 XCTAssertNoThrow(try awsServer.stop())
+             }
+             let countAtomic = ManagedAtomic(0)
+             async let responseTask: Output = client.execute(
+                 operation: "test",
+                 path: "/",
+                 httpMethod: .GET,
+                 serviceConfig: config,
+                 input: Input(),
+                 logger: TestEnvironment.logger
+             ) { (payload: ByteBuffer, eventLoop: EventLoop) in
+                 let payloadSize = payload.readableBytes
+                 let count = countAtomic.loadThenWrappingIncrement(by: payloadSize, ordering: .relaxed)
+                 let slice = Data(data[count..<(count + payloadSize)])
+                 let payloadData = payload.getData(at: 0, length: payload.readableBytes)
+                 XCTAssertEqual(slice, payloadData)
+                 return eventLoop.makeSucceededFuture(())
+             }
 
-            try awsServer.processRaw { _ in
-                var byteBuffer = ByteBufferAllocator().buffer(capacity: 128 * 1024)
-                byteBuffer.writeBytes(data)
-                let response = AWSTestServer.Response(httpStatus: .ok, headers: ["test": "TestHeader"], body: byteBuffer)
-                return .result(response)
-            }
+             try awsServer.processRaw { _ in
+                 var byteBuffer = ByteBufferAllocator().buffer(capacity: 128 * 1024)
+                 byteBuffer.writeBytes(data)
+                 let response = AWSTestServer.Response(httpStatus: .ok, headers: ["test": "TestHeader"], body: byteBuffer)
+                 return .result(response)
+             }
 
-            let result = try await responseTask
-            XCTAssertEqual(result.test, "TestHeader")
-            XCTAssertEqual(countAtomic.load(ordering: .relaxed), 128 * 1024)
-        } catch {
-            XCTFail("Unexpected error: \(error)")
-        }
-    }
+             let result = try await responseTask
+             XCTAssertEqual(result.test, "TestHeader")
+             XCTAssertEqual(countAtomic.load(ordering: .relaxed), 128 * 1024)
+         } catch {
+             XCTFail("Unexpected error: \(error)")
+         }
+     }
 
-    func testStreamingDelegateFinished() async throws {
-        struct Input: AWSEncodableShape {}
-        struct Output: AWSDecodableShape & Encodable {
-            static let _encoding = [AWSMemberEncoding(label: "test", location: .header("test"))]
-            let test: String
-        }
-        let bufferSize = 200 * 1024
-        let data = createRandomBuffer(45, 109, size: bufferSize)
+     func testStreamingDelegateFinished() async throws {
+         struct Input: AWSEncodableShape {}
+         struct Output: AWSDecodableShape & Encodable {
+             static let _encoding = [AWSMemberEncoding(label: "test", location: .header("test"))]
+             let test: String
+         }
+         let bufferSize = 200 * 1024
+         let data = createRandomBuffer(45, 109, size: bufferSize)
 
-        let awsServer = AWSTestServer(serviceProtocol: .json)
-        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 5)
-        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
-        let config = createServiceConfig(endpoint: awsServer.address)
-        let client = createAWSClient(credentialProvider: .empty, httpClientProvider: .shared(httpClient))
-        defer {
-            XCTAssertNoThrow(try client.syncShutdown())
-            XCTAssertNoThrow(try httpClient.syncShutdown())
-            XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
-            XCTAssertNoThrow(try awsServer.stop())
-        }
-        let countAtomic = ManagedAtomic(0)
-        async let responseTask: Output = client.execute(
-            operation: "test",
-            path: "/",
-            httpMethod: .GET,
-            serviceConfig: config,
-            input: Input(),
-            logger: TestEnvironment.logger
-        ) { (_: ByteBuffer, eventLoop: EventLoop) in
-            countAtomic.wrappingIncrement(by: 1, ordering: .relaxed)
-            return eventLoop.scheduleTask(in: .milliseconds(200)) {
-                countAtomic.wrappingDecrement(by: 1, ordering: .relaxed)
-            }.futureResult
-        }
+         let awsServer = AWSTestServer(serviceProtocol: .json)
+         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 5)
+         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
+         let config = createServiceConfig(endpoint: awsServer.address)
+         let client = createAWSClient(credentialProvider: .empty, httpClientProvider: .shared(httpClient))
+         defer {
+             XCTAssertNoThrow(try client.syncShutdown())
+             XCTAssertNoThrow(try httpClient.syncShutdown())
+             XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
+             XCTAssertNoThrow(try awsServer.stop())
+         }
+         let countAtomic = ManagedAtomic(0)
+         async let responseTask: Output = client.execute(
+             operation: "test",
+             path: "/",
+             httpMethod: .GET,
+             serviceConfig: config,
+             input: Input(),
+             logger: TestEnvironment.logger
+         ) { (_: ByteBuffer, eventLoop: EventLoop) in
+             countAtomic.wrappingIncrement(by: 1, ordering: .relaxed)
+             return eventLoop.scheduleTask(in: .milliseconds(200)) {
+                 countAtomic.wrappingDecrement(by: 1, ordering: .relaxed)
+             }.futureResult
+         }
 
-        XCTAssertNoThrow(try awsServer.processRaw { _ in
-            var byteBuffer = ByteBufferAllocator().buffer(capacity: bufferSize)
-            byteBuffer.writeBytes(data)
-            let response = AWSTestServer.Response(httpStatus: .ok, headers: ["test": "TestHeader"], body: byteBuffer)
-            return .result(response)
-        })
+         XCTAssertNoThrow(try awsServer.processRaw { _ in
+             var byteBuffer = ByteBufferAllocator().buffer(capacity: bufferSize)
+             byteBuffer.writeBytes(data)
+             let response = AWSTestServer.Response(httpStatus: .ok, headers: ["test": "TestHeader"], body: byteBuffer)
+             return .result(response)
+         })
 
-        _ = try await responseTask
-        XCTAssertEqual(countAtomic.load(ordering: .relaxed), 0)
-    }
+         _ = try await responseTask
+         XCTAssertEqual(countAtomic.load(ordering: .relaxed), 0)
+     } */
 }

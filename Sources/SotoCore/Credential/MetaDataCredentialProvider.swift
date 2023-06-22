@@ -67,6 +67,12 @@ extension MetaDataClient {
     }
 }
 
+struct MetadataHTTPResponse {
+    public var status: HTTPResponseStatus
+    public var headers: HTTPHeaders
+    public var body: ByteBuffer?
+}
+
 struct ECSMetaDataClient: MetaDataClient {
     typealias MetaData = ECSMetaData
 
@@ -111,17 +117,18 @@ struct ECSMetaDataClient: MetaDataClient {
     }
 
     func getMetaData(logger: Logger) async throws -> ECSMetaData {
-        let response = try await request(url: endpointURL, timeout: 2, logger: logger)
+        let response = try await request(url: endpointURL, timeout: .seconds(2), logger: logger)
         guard let body = response.body else {
             throw MetaDataClientError.missingMetaData
         }
         return try self.decoder.wrappedValue.decode(MetaData.self, from: body)
     }
 
-    private func request(url: String, timeout: TimeInterval, logger: Logger) async throws -> AWSHTTPResponse {
+    private func request(url: String, timeout: TimeAmount, logger: Logger) async throws -> MetadataHTTPResponse {
         try Task.checkCancellation()
         let request = AWSHTTPRequest(url: URL(string: url)!, method: .GET, headers: [:], body: .empty)
-        return try await httpClient.execute(request: request, timeout: TimeAmount.seconds(2), logger: logger)
+        let response = try await httpClient.execute(request: request, timeout: timeout, logger: logger)
+        return try await .init(status: response.status, headers: response.headers, body: response.body.collect(upTo: .max))
     }
 }
 
@@ -243,9 +250,10 @@ struct InstanceMetaDataClient: MetaDataClient {
         method: HTTPMethod = .GET,
         headers: HTTPHeaders = .init(),
         logger: Logger
-    ) async throws -> AWSHTTPResponse {
+    ) async throws -> MetadataHTTPResponse {
         try Task.checkCancellation()
         let request = AWSHTTPRequest(url: url, method: method, headers: headers, body: .empty)
-        return try await httpClient.execute(request: request, timeout: TimeAmount.seconds(2), logger: logger)
+        let response = try await httpClient.execute(request: request, timeout: TimeAmount.seconds(2), logger: logger)
+        return try await .init(status: response.status, headers: response.headers, body: response.body.collect(upTo: .max))
     }
 }

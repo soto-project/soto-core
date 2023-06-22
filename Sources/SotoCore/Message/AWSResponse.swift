@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import AsyncHTTPClient
 import class Foundation.JSONDecoder
 import class Foundation.JSONSerialization
 import Logging
@@ -33,26 +34,25 @@ public struct AWSResponse {
     ///     - from: Raw HTTP Response
     ///     - serviceProtocol: protocol of service (.json, .xml, .query etc)
     ///     - raw: Whether Body should be treated as raw data
-    init(from response: AWSHTTPResponse, serviceProtocol: ServiceProtocol, raw: Bool = false) throws {
+    init(from response: AWSHTTPResponse, serviceProtocol: ServiceProtocol, raw: Bool = false) async throws {
         self.status = response.status
 
         // headers
         self.headers = response.headers
 
         // body
-        guard let body = response.body,
-              body.readableBytes > 0
-        else {
+        let buffer = try await response.body.collect(upTo: .max)
+        if buffer.readableBytes == 0 {
             self.body = .empty
             return
         }
 
         if raw {
-            self.body = .raw(.byteBuffer(body))
+            self.body = .raw(.byteBuffer(buffer))
             return
         }
 
-        if body.readableBytes == 0 {
+        if buffer.readableBytes == 0 {
             self.body = .empty
             return
         }
@@ -61,14 +61,13 @@ public struct AWSResponse {
 
         switch serviceProtocol {
         case .json, .restjson:
-            responseBody = .json(body)
+            responseBody = .json(buffer)
 
         case .restxml, .query, .ec2:
-            if let xmlString = body.getString(at: body.readerIndex, length: body.readableBytes) {
-                let xmlDocument = try XML.Document(string: xmlString)
-                if let element = xmlDocument.rootElement() {
-                    responseBody = .xml(element)
-                }
+            let xmlString = String(buffer: buffer)
+            let xmlDocument = try XML.Document(string: xmlString)
+            if let element = xmlDocument.rootElement() {
+                responseBody = .xml(element)
             }
         }
         self.body = responseBody

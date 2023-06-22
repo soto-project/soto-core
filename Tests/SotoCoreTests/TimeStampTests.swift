@@ -36,14 +36,14 @@ class TimeStampTests: XCTestCase {
         let date: Date
     }
 
-    func testDecodeJSON() {
+    func testDecodeJSON() async throws {
         do {
             struct A: AWSDecodableShape {
                 let date: Date
             }
-            let byteBuffer = ByteBufferAllocator().buffer(string: "{\"date\": 234876345}")
-            let response = AWSHTTPResponseImpl(status: .ok, headers: [:], body: byteBuffer)
-            let awsResponse = try AWSResponse(from: response, serviceProtocol: .json(version: "1.1"))
+            let byteBuffer = ByteBuffer(string: "{\"date\": 234876345}")
+            let response = AWSHTTPResponse(status: .ok, headers: [:], body: .init(byteBuffer))
+            let awsResponse = try await AWSResponse(from: response, serviceProtocol: .json(version: "1.1"))
             let a: A = try awsResponse.generateOutputShape(operation: "TestOperation")
             XCTAssertEqual(a.date.timeIntervalSince1970, 234_876_345)
         } catch {
@@ -51,7 +51,7 @@ class TimeStampTests: XCTestCase {
         }
     }
 
-    func testEncodeJSON() {
+    func testEncodeJSON() async throws {
         struct A: AWSEncodableShape {
             var date: Date
         }
@@ -65,15 +65,15 @@ class TimeStampTests: XCTestCase {
         #endif
     }
 
-    func testDecodeXML() {
+    func testDecodeXML() async throws {
         do {
             struct A: AWSDecodableShape {
                 let date: Date
                 let date2: Date
             }
-            let byteBuffer = ByteBufferAllocator().buffer(string: "<A><date>2017-01-01T00:01:00.000Z</date><date2>2017-01-01T00:02:00Z</date2></A>")
-            let response = AWSHTTPResponseImpl(status: .ok, headers: [:], body: byteBuffer)
-            let awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml)
+            let byteBuffer = ByteBuffer(string: "<A><date>2017-01-01T00:01:00.000Z</date><date2>2017-01-01T00:02:00Z</date2></A>")
+            let response = AWSHTTPResponse(status: .ok, headers: [:], body: .init(byteBuffer))
+            let awsResponse = try await AWSResponse(from: response, serviceProtocol: .restxml)
             let a: A = try awsResponse.generateOutputShape(operation: "TestOperation")
             XCTAssertEqual(self.dateFormatter.string(from: a.date), "2017-01-01T00:01:00.000Z")
             XCTAssertEqual(self.dateFormatter.string(from: a.date2), "2017-01-01T00:02:00.000Z")
@@ -82,7 +82,7 @@ class TimeStampTests: XCTestCase {
         }
     }
 
-    func testEncodeXML() {
+    func testEncodeXML() async throws {
         struct A: AWSEncodableShape {
             var date: Date
         }
@@ -92,7 +92,7 @@ class TimeStampTests: XCTestCase {
         XCTAssertEqual(request?.body.asString(), "<?xml version=\"1.0\" encoding=\"UTF-8\"?><A><date>2017-11-01T00:15:00.000Z</date></A>")
     }
 
-    func testEncodeQuery() {
+    func testEncodeQuery() async throws {
         struct A: AWSEncodableShape {
             var date: Date
         }
@@ -102,7 +102,7 @@ class TimeStampTests: XCTestCase {
         XCTAssertEqual(request?.body.asString(), "Action=test&Version=01-01-2001&date=2017-11-01T00%3A15%3A00.000Z")
     }
 
-    func testDecodeHeader() {
+    func testDecodeHeader() async throws {
         do {
             struct A: AWSDecodableShape {
                 static let _encoding = [AWSMemberEncoding(label: "date", location: .header("Date"))]
@@ -111,8 +111,8 @@ class TimeStampTests: XCTestCase {
                     case date = "Date"
                 }
             }
-            let response = AWSHTTPResponseImpl(status: .ok, headers: ["Date": "Tue, 15 Nov 1994 12:45:27 GMT"], body: nil)
-            let awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml)
+            let response = AWSHTTPResponse(status: .ok, headers: ["Date": "Tue, 15 Nov 1994 12:45:27 GMT"])
+            let awsResponse = try await AWSResponse(from: response, serviceProtocol: .restxml)
             let a: A = try awsResponse.generateOutputShape(operation: "TestOperation")
             XCTAssertEqual(self.dateFormatter.string(from: a.date), "1994-11-15T12:45:27.000Z")
         } catch {
@@ -120,14 +120,14 @@ class TimeStampTests: XCTestCase {
         }
     }
 
-    func testDecodeISOFromXML() {
+    func testDecodeISOFromXML() async throws {
         do {
             struct A: AWSDecodableShape {
                 @CustomCoding<ISO8601DateCoder> var date: Date
             }
-            let byteBuffer = ByteBufferAllocator().buffer(string: "<A><date>2017-01-01T00:01:00.000Z</date></A>")
-            let response = AWSHTTPResponseImpl(status: .ok, headers: [:], body: byteBuffer)
-            let awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml)
+            let byteBuffer = ByteBuffer(string: "<A><date>2017-01-01T00:01:00.000Z</date></A>")
+            let response = AWSHTTPResponse(status: .ok, headers: [:], body: .init(byteBuffer))
+            let awsResponse = try await AWSResponse(from: response, serviceProtocol: .restxml)
             let a: A = try awsResponse.generateOutputShape(operation: "TestOperation")
             XCTAssertEqual(self.dateFormatter.string(from: a.date), "2017-01-01T00:01:00.000Z")
         } catch {
@@ -135,14 +135,14 @@ class TimeStampTests: XCTestCase {
         }
     }
 
-    func testDecodeISONoMillisecondFromXML() {
+    func testDecodeISONoMillisecondFromXML() async throws {
         do {
             struct A: AWSDecodableShape {
                 @CustomCoding<ISO8601DateCoder> var date: Date
             }
-            let byteBuffer = ByteBufferAllocator().buffer(string: "<A><date>2017-01-01T00:01:00Z</date></A>")
-            let response = AWSHTTPResponseImpl(status: .ok, headers: [:], body: byteBuffer)
-            let awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml)
+            let byteBuffer = ByteBuffer(string: "<A><date>2017-01-01T00:01:00Z</date></A>")
+            let response = AWSHTTPResponse(status: .ok, headers: [:], body: .init(byteBuffer))
+            let awsResponse = try await AWSResponse(from: response, serviceProtocol: .restxml)
             let a: A = try awsResponse.generateOutputShape(operation: "TestOperation")
             XCTAssertEqual(self.dateFormatter.string(from: a.date), "2017-01-01T00:01:00.000Z")
         } catch {
@@ -150,15 +150,15 @@ class TimeStampTests: XCTestCase {
         }
     }
 
-    func testDecodeHttpFormattedTimestamp() {
+    func testDecodeHttpFormattedTimestamp() async throws {
         do {
             struct A: AWSDecodableShape {
                 @CustomCoding<HTTPHeaderDateCoder> var date: Date
             }
             let xml = "<A><date>Tue, 15 Nov 1994 12:45:26 GMT</date></A>"
-            let byteBuffer = ByteBufferAllocator().buffer(string: xml)
-            let response = AWSHTTPResponseImpl(status: .ok, headers: [:], body: byteBuffer)
-            let awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml)
+            let byteBuffer = ByteBuffer(string: xml)
+            let response = AWSHTTPResponse(status: .ok, headers: [:], body: .init(byteBuffer))
+            let awsResponse = try await AWSResponse(from: response, serviceProtocol: .restxml)
             let a: A = try awsResponse.generateOutputShape(operation: "TestOperation")
             XCTAssertEqual(self.dateFormatter.string(from: a.date), "1994-11-15T12:45:26.000Z")
         } catch {
@@ -166,15 +166,15 @@ class TimeStampTests: XCTestCase {
         }
     }
 
-    func testDecodeUnixEpochTimestamp() {
+    func testDecodeUnixEpochTimestamp() async throws {
         do {
             struct A: AWSDecodableShape {
                 @CustomCoding<UnixEpochDateCoder> var date: Date
             }
             let xml = "<A><date>1221382800</date></A>"
-            let byteBuffer = ByteBufferAllocator().buffer(string: xml)
-            let response = AWSHTTPResponseImpl(status: .ok, headers: [:], body: byteBuffer)
-            let awsResponse = try AWSResponse(from: response, serviceProtocol: .restxml)
+            let byteBuffer = ByteBuffer(string: xml)
+            let response = AWSHTTPResponse(status: .ok, headers: [:], body: .init(byteBuffer))
+            let awsResponse = try await AWSResponse(from: response, serviceProtocol: .restxml)
             let a: A = try awsResponse.generateOutputShape(operation: "TestOperation")
             XCTAssertEqual(self.dateFormatter.string(from: a.date), "2008-09-14T09:00:00.000Z")
         } catch {
@@ -182,7 +182,7 @@ class TimeStampTests: XCTestCase {
         }
     }
 
-    func testEncodeISO8601ToXML() {
+    func testEncodeISO8601ToXML() async throws {
         struct A: AWSEncodableShape {
             @CustomCoding<ISO8601DateCoder> var date: Date
         }
@@ -192,7 +192,7 @@ class TimeStampTests: XCTestCase {
         XCTAssertEqual(request?.body.asString(), "<?xml version=\"1.0\" encoding=\"UTF-8\"?><A><date>2019-05-01T00:00:00.001Z</date></A>")
     }
 
-    func testEncodeHTTPHeaderToJSON() {
+    func testEncodeHTTPHeaderToJSON() async throws {
         struct A: AWSEncodableShape {
             @CustomCoding<HTTPHeaderDateCoder> var date: Date
         }
@@ -202,7 +202,7 @@ class TimeStampTests: XCTestCase {
         XCTAssertEqual(request?.body.asString(), "{\"date\":\"Wed, 1 May 2019 00:00:00 GMT\"}")
     }
 
-    func testEncodeUnixEpochToJSON() {
+    func testEncodeUnixEpochToJSON() async throws {
         struct A: AWSEncodableShape {
             @CustomCoding<UnixEpochDateCoder> var date: Date
         }
@@ -210,28 +210,5 @@ class TimeStampTests: XCTestCase {
         var request: AWSRequest?
         XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", httpMethod: .GET, input: a, configuration: createServiceConfig()))
         XCTAssertEqual(request?.body.asString(), "{\"date\":23983978378}")
-    }
-
-    // MARK: Types used in tests
-
-    struct AWSHTTPResponseImpl: AWSHTTPResponse {
-        let status: HTTPResponseStatus
-        let headers: HTTPHeaders
-        let body: ByteBuffer?
-
-        init(status: HTTPResponseStatus, headers: HTTPHeaders, body: ByteBuffer?) {
-            self.status = status
-            self.headers = headers
-            self.body = body
-        }
-
-        init(status: HTTPResponseStatus, headers: HTTPHeaders, bodyData: Data?) {
-            var body: ByteBuffer?
-            if let bodyData = bodyData {
-                body = ByteBufferAllocator().buffer(capacity: bodyData.count)
-                body?.writeBytes(bodyData)
-            }
-            self.init(status: status, headers: headers, body: body)
-        }
     }
 }

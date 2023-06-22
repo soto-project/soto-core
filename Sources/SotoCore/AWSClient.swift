@@ -259,11 +259,9 @@ extension AWSClient {
                     configuration: serviceConfig
                 )
             },
-            execute: { request, logger in
-                return try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: self.eventLoopGroup.any(), logger: logger)
-            },
-            processResponse: { _ in
-                return
+            processResponse: { response in
+                // flush response body contents to complete response read
+                for try await _ in response.body {}
             },
             config: serviceConfig,
             logger: logger
@@ -294,11 +292,9 @@ extension AWSClient {
                     configuration: serviceConfig
                 )
             },
-            execute: { request, logger in
-                return try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: self.eventLoopGroup.any(), logger: logger)
-            },
-            processResponse: { _ in
-                return
+            processResponse: { response in
+                // flush response body contents to complete response read
+                for try await _ in response.body {}
             },
             config: serviceConfig,
             logger: logger
@@ -331,11 +327,8 @@ extension AWSClient {
                     configuration: serviceConfig
                 )
             },
-            execute: { request, logger in
-                return try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: self.eventLoopGroup.any(), logger: logger)
-            },
             processResponse: { response in
-                return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
+                return try await self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
             },
             config: serviceConfig,
             logger: logger
@@ -374,11 +367,8 @@ extension AWSClient {
                     configuration: serviceConfig
                 )
             },
-            execute: { request, logger in
-                return try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: self.eventLoopGroup.any(), logger: logger)
-            },
             processResponse: { response in
-                return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
+                return try await self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
             },
             config: serviceConfig,
             logger: logger
@@ -418,11 +408,8 @@ extension AWSClient {
                     configuration: serviceConfig
                 )
             },
-            execute: { request, logger in
-                return try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, on: self.eventLoopGroup.any(), logger: logger, stream: stream)
-            },
             processResponse: { response in
-                return try self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
+                return try await self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
             },
             config: serviceConfig,
             logger: logger
@@ -433,8 +420,7 @@ extension AWSClient {
     internal func execute<Output>(
         operation operationName: String,
         createRequest: @escaping () throws -> AWSRequest,
-        execute: @escaping (AWSHTTPRequest, Logger) async throws -> AWSHTTPResponse,
-        processResponse: @escaping (AWSHTTPResponse) throws -> Output,
+        processResponse: @escaping (AWSHTTPResponse) async throws -> Output,
         config: AWSServiceConfig,
         logger: Logger = AWSClient.loggingDisabled
     ) async throws -> Output {
@@ -467,9 +453,9 @@ extension AWSClient {
             }
             try Task.checkCancellation()
             let response = try await self.invoke(
+                request: awsRequest,
                 with: config,
                 logger: logger,
-                request: { try await execute(awsRequest, logger) },
                 processResponse: processResponse,
                 streaming: streaming
             )
@@ -494,21 +480,22 @@ extension AWSClient {
     }
 
     func invoke<Output>(
+        request: AWSHTTPRequest,
         with serviceConfig: AWSServiceConfig,
         logger: Logger,
-        request: @escaping () async throws -> AWSHTTPResponse,
-        processResponse: @escaping (AWSHTTPResponse) throws -> Output,
+        processResponse: @escaping (AWSHTTPResponse) async throws -> Output,
         streaming: Bool
     ) async throws -> Output {
         var attempt = 0
         while true {
             do {
-                let response = try await request()
+                let response = try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, logger: logger)
                 // if it returns an HTTP status code outside 2xx then throw an error
                 guard (200..<300).contains(response.status.code) else {
-                    throw self.createError(for: response, serviceConfig: serviceConfig, logger: logger)
+                    let error = try await self.createError(for: response, serviceConfig: serviceConfig, logger: logger)
+                    throw error
                 }
-                let output = try processResponse(response)
+                let output = try await processResponse(response)
                 return output
             } catch {
                 // if streaming and the error returned is an AWS error fail immediately. Do not attempt
@@ -534,7 +521,6 @@ extension AWSClient {
 
     /// Get credential used by client
     /// - Parameters:
-    ///   - eventLoop: optional eventLoop to run operation on
     ///   - logger: optional logger to use
     /// - Returns: Credential
     public func getCredential(logger: Logger = AWSClient.loggingDisabled) async throws -> Credential {
@@ -611,36 +597,54 @@ extension AWSClient {
 // response validator
 extension AWSClient {
     /// Generate an AWS Response from  the operation HTTP response and return the output shape from it. This is only every called if the response includes a successful http status code
-    internal func validate<Output: AWSDecodableShape>(operation operationName: String, response: AWSHTTPResponse, serviceConfig: AWSServiceConfig) throws -> Output {
+    internal func validate<Output: AWSDecodableShape>(
+        operation operationName: String,
+        response: AWSHTTPResponse,
+        serviceConfig: AWSServiceConfig
+    ) async throws -> Output {
         assert((200..<300).contains(response.status.code), "Shouldn't get here if error was returned")
 
         let raw = Output._options.contains(.rawPayload) == true
-        let awsResponse = try AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol, raw: raw)
+        let awsResponse = try await AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol, raw: raw)
             .applyMiddlewares(serviceConfig.middlewares + middlewares, config: serviceConfig)
 
         return try awsResponse.generateOutputShape(operation: operationName)
     }
 
     /// Create error from HTTPResponse. This is only called if we received an unsuccessful http status code.
-    internal func createError(for response: AWSHTTPResponse, serviceConfig: AWSServiceConfig, logger: Logger) -> Error {
+    internal func createError(for response: AWSHTTPResponse, serviceConfig: AWSServiceConfig, logger: Logger) async throws -> Error {
         // if we can create an AWSResponse and create an error from it return that
-        if let awsResponse = try? AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol)
-            .applyMiddlewares(serviceConfig.middlewares + middlewares, config: serviceConfig),
-            let error = awsResponse.generateError(serviceConfig: serviceConfig, logLevel: options.errorLogLevel, logger: logger)
-        {
-            return error
-        } else {
+        let awsResponse: AWSResponse
+        do {
+            awsResponse = try await AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol)
+        } catch {
             // else return "Unhandled error message" with rawBody attached
-            var rawBodyString: String?
-            if var body = response.body {
-                rawBodyString = body.readString(length: body.readableBytes)
-            }
             let context = AWSErrorContext(
                 message: "Unhandled Error",
                 responseCode: response.status,
                 headers: response.headers
             )
-            return AWSRawError(rawBody: rawBodyString, context: context)
+            return AWSRawError(rawBody: nil, context: context)
+        }
+        do {
+            let awsResponseWithMiddleware = try awsResponse.applyMiddlewares(serviceConfig.middlewares + middlewares, config: serviceConfig)
+            if let error = awsResponseWithMiddleware.generateError(
+                serviceConfig: serviceConfig,
+                logLevel: options.errorLogLevel,
+                logger: logger
+            ) {
+                return error
+            } else {
+                // else return "Unhandled error message" with rawBody attached
+                let context = AWSErrorContext(
+                    message: "Unhandled Error",
+                    responseCode: response.status,
+                    headers: response.headers
+                )
+                return AWSRawError(rawBody: awsResponseWithMiddleware.body.asString(), context: context)
+            }
+        } catch {
+            return error
         }
     }
 }

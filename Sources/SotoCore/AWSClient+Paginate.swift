@@ -37,9 +37,10 @@ extension AWSClient {
         /// - Parameters:
         ///   - input: Initial Input value
         ///   - command: Command to be paginated
-        ///   - tokenKey: KeyPath for Output token used to setup new Input
+        ///   - inputKey: Optional KeyPath for Input token to compare against new key from Output
+        ///   - outputKey: KeyPath for Output token used to read new Output
+        ///   - moreResultsKey: Optional KeyPath for value indicating whether there are more results
         ///   - logger: Logger
-        ///   - eventLoop: EventLoop to run everything on
         public init(
             input: Input,
             command: @escaping ((Input, Logger) async throws -> Output),

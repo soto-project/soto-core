@@ -72,6 +72,7 @@ public struct AWSResponse {
             }
         }
         let decoder = DictionaryDecoder()
+        decoder.userInfo[.awsResponse] = self
 
         var outputDict: [String: Any] = [:]
         switch self.body.storage {
@@ -133,6 +134,8 @@ public struct AWSResponse {
                             let node = XML.Element(name: statusCodeParam, stringValue: "\(self.status.code)")
                             outputNode.addChild(node)
                         }
+                        var xmlDecoder = XMLDecoder()
+                        xmlDecoder.userInfo[.awsResponse] = self
                         return try XMLDecoder().decode(Output.self, from: outputNode)
                     }
                 }
@@ -365,6 +368,14 @@ public struct AWSResponse {
             return nil
         }
     }
+
+    public func headerValue<Value: RawRepresentable>(_ header: String) -> Value? where Value.RawValue == String {
+        self.headers[header].first.map { .init(rawValue: $0) } ?? nil
+    }
+
+    public func headerValue<Value: LosslessStringConvertible>(_ header: String) -> Value? {
+        self.headers[header].first.map { .init($0) } ?? nil
+    }
 }
 
 private protocol APIError {
@@ -378,4 +389,8 @@ extension XML.Document {
         let xmlString = String(buffer: buffer)
         try self.init(string: xmlString)
     }
+}
+
+extension CodingUserInfoKey {
+    public static var awsResponse: Self { return .init(rawValue: "soto.awsResponse")! }
 }

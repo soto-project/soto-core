@@ -13,6 +13,10 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+import struct Foundation.Date
+import class Foundation.DateFormatter
+import struct Foundation.Locale
+import struct Foundation.TimeZone
 import class Foundation.JSONDecoder
 import class Foundation.JSONSerialization
 import Logging
@@ -368,14 +372,6 @@ public struct AWSResponse {
             return nil
         }
     }
-
-    public func headerValue<Value: RawRepresentable>(_ header: String) -> Value? where Value.RawValue == String {
-        self.headers[header].first.map { .init(rawValue: $0) } ?? nil
-    }
-
-    public func headerValue<Value: LosslessStringConvertible>(_ header: String) -> Value? {
-        self.headers[header].first.map { .init($0) } ?? nil
-    }
 }
 
 private protocol APIError {
@@ -393,4 +389,30 @@ extension XML.Document {
 
 extension CodingUserInfoKey {
     public static var awsResponse: Self { return .init(rawValue: "soto.awsResponse")! }
+}
+
+extension AWSResponse {
+    public func decode<Value: RawRepresentable>(_ type: Value.Type, forHeader header: String) -> Value? where Value.RawValue == String {
+        self.headers[header].first.map { .init(rawValue: $0) } ?? nil
+    }
+
+    public func decode<Value: LosslessStringConvertible>(_ type: Value.Type, forHeader header: String) -> Value? {
+        self.headers[header].first.map { .init($0) } ?? nil
+    }
+
+    public func decode(_ type: Date.Type, forHeader header: String) -> Date? {
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.dateFormat = "EEE, d MMM yyy HH:mm:ss z"
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        return dateFormatter.date(from: header)
+    }
+
+    public func decode(_ type: [String: String].Type, forHeader header: String) -> [String: String]? {
+        let headers = self.headers.compactMap { $0.name.hasPrefix(header) ? $0 : nil }
+        if headers.count == 0 {
+            return nil
+        }
+        return [String: String](headers.map { (key: String($0.name.dropFirst(header.count)), value: $0.value) }) { first,_ in first }
+    }
 }

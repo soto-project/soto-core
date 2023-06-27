@@ -60,7 +60,7 @@ final class AWSSignerTests: XCTestCase {
         let headers = signer.signHeaders(url: URL(string: "https://sns.eu-west-1.amazonaws.com/")!, method: .POST, headers: ["Content-Type": "application/x-www-form-urlencoded; charset=utf-8"], body: .string("Action=ListTopics&Version=2010-03-31"), date: Date(timeIntervalSinceReferenceDate: 200))
         XCTAssertEqual(
             headers["Authorization"].first,
-            "AWS4-HMAC-SHA256 Credential=MYACCESSKEY/20010101/eu-west-1/sns/aws4_request,SignedHeaders=host;x-amz-content-sha256;x-amz-date,Signature=2271d5b58b667169c9608edbcc5e619d1c4d2dc897d00660aba1d3909dc2189b"
+            "AWS4-HMAC-SHA256 Credential=MYACCESSKEY/20010101/eu-west-1/sns/aws4_request,SignedHeaders=content-type;host;x-amz-content-sha256;x-amz-date,Signature=1d29943055a8ad094239e8de06082100f2426ebbb2c6a5bbcbb04c63e6a3f274"
         )
     }
 
@@ -149,9 +149,10 @@ final class AWSSignerTests: XCTestCase {
         POST
         /test
         hello=true&item=apple
+        content-type:application/json
         host:localhost
 
-        host
+        content-type;host
         44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
         """
         XCTAssertEqual(request, expectedRequest)
@@ -173,10 +174,11 @@ final class AWSSignerTests: XCTestCase {
         POST
         /test
 
+        content-type:application/json
         header:my header
         host:localhost
 
-        header;host
+        content-type;header;host
         44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
         """
         XCTAssertEqual(request, expectedRequest)

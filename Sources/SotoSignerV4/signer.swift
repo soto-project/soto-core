@@ -268,10 +268,16 @@ public struct AWSSigner: Sendable {
                 self.hashedPayload = AWSSigner.hashedPayload(body)
             }
 
+            // from S3 V4 signed documentation
+            // The CanonicalHeaders list must include the following:
+            // - HTTP host header.
+            // If the Content-Type header is present in the request, you must add it to the CanonicalHeaders list.
+            // Any x-amz-* headers that you plan to include in your request must also be added. For example, if
+            // you are using temporary security credentials, you need to include x-amz-security-token in your request.
+            // You must add this header in the list of CanonicalHeaders.
             let headersNotToSign: Set<String> = [
                 "authorization",
                 "content-length",
-                "content-type",
                 "expect",
                 "user-agent",
             ]

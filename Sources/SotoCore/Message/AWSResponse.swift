@@ -15,10 +15,10 @@
 import AsyncHTTPClient
 import struct Foundation.Date
 import class Foundation.DateFormatter
-import struct Foundation.Locale
-import struct Foundation.TimeZone
 import class Foundation.JSONDecoder
 import class Foundation.JSONSerialization
+import struct Foundation.Locale
+import struct Foundation.TimeZone
 import Logging
 import NIOCore
 import NIOFoundationCompat
@@ -76,7 +76,7 @@ public struct AWSResponse {
             }
         }
         let decoder = DictionaryDecoder()
-        decoder.userInfo[.awsResponse] = self
+        decoder.userInfo[.awsResponse] = ResponseDecodingContainer(response: self)
 
         var outputDict: [String: Any] = [:]
         switch self.body.storage {
@@ -102,9 +102,9 @@ public struct AWSResponse {
                             outputDict = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] ?? [:]
                         }
                         // if payload path is set then the decode will expect the payload to decode to the relevant member variable
-                        if let payloadKey = payloadKey {
-                            outputDict = [payloadKey: outputDict]
-                        }
+                        /* if let payloadKey = payloadKey {
+                             outputDict = [payloadKey: outputDict]
+                         } */
                         decoder.dateDecodingStrategy = .secondsSince1970
                     } else {
                         // we have no body so date decoding will be only HTTP headers
@@ -116,22 +116,22 @@ public struct AWSResponse {
                         var outputNode = node
                         // if payload path is set then the decode will expect the payload to decode to the relevant member variable.
                         // Most CloudFront responses have this.
-                        if let payloadKey = payloadKey {
-                            // set output node name
-                            outputNode.name = payloadKey
-                            // create parent node and add output node and set output node to parent
-                            let parentNode = XML.Element(name: "Container")
-                            parentNode.addChild(outputNode)
-                            outputNode = parentNode
-                        } else if let child = node.children(of: .element)?.first as? XML.Element,
-                                  node.name == operation + "Response",
-                                  child.name == operation + "Result"
+                        /* if let payloadKey = payloadKey {
+                             // set output node name
+                             outputNode.name = payloadKey
+                             // create parent node and add output node and set output node to parent
+                             let parentNode = XML.Element(name: "Container")
+                             parentNode.addChild(outputNode)
+                             outputNode = parentNode
+                         } else */ if let child = node.children(of: .element)?.first as? XML.Element,
+                                     node.name == operation + "Response",
+                                     child.name == operation + "Result"
                         {
                             outputNode = child
                         }
 
                         // add headers to XML
-                        addHeadersToXML(rootElement: outputNode, output: Output.self)
+                        // addHeadersToXML(rootElement: outputNode, output: Output.self)
 
                         // add status code to XML
                         if let statusCodeParam = Output.statusCodeParam {
@@ -139,15 +139,15 @@ public struct AWSResponse {
                             outputNode.addChild(node)
                         }
                         var xmlDecoder = XMLDecoder()
-                        xmlDecoder.userInfo[.awsResponse] = self
-                        return try XMLDecoder().decode(Output.self, from: outputNode)
+                        xmlDecoder.userInfo[.awsResponse] = ResponseDecodingContainer(response: self)
+                        return try xmlDecoder.decode(Output.self, from: outputNode)
                     }
                 }
             }
         }
 
         // add headers to output dictionary
-        outputDict = addHeadersToDictionary(dictionary: outputDict, output: Output.self)
+        // outputDict = addHeadersToDictionary(dictionary: outputDict, output: Output.self)
 
         // add status code to output dictionary
         if let statusCodeParam = Output.statusCodeParam {
@@ -384,35 +384,5 @@ extension XML.Document {
     public convenience init(buffer: ByteBuffer) throws {
         let xmlString = String(buffer: buffer)
         try self.init(string: xmlString)
-    }
-}
-
-extension CodingUserInfoKey {
-    public static var awsResponse: Self { return .init(rawValue: "soto.awsResponse")! }
-}
-
-extension AWSResponse {
-    public func decode<Value: RawRepresentable>(_ type: Value.Type, forHeader header: String) -> Value? where Value.RawValue == String {
-        self.headers[header].first.map { .init(rawValue: $0) } ?? nil
-    }
-
-    public func decode<Value: LosslessStringConvertible>(_ type: Value.Type, forHeader header: String) -> Value? {
-        self.headers[header].first.map { .init($0) } ?? nil
-    }
-
-    public func decode(_ type: Date.Type, forHeader header: String) -> Date? {
-        let dateFormatter = DateFormatter()
-        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-        dateFormatter.dateFormat = "EEE, d MMM yyy HH:mm:ss z"
-        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-        return dateFormatter.date(from: header)
-    }
-
-    public func decode(_ type: [String: String].Type, forHeader header: String) -> [String: String]? {
-        let headers = self.headers.compactMap { $0.name.hasPrefix(header) ? $0 : nil }
-        if headers.count == 0 {
-            return nil
-        }
-        return [String: String](headers.map { (key: String($0.name.dropFirst(header.count)), value: $0.value) }) { first,_ in first }
     }
 }

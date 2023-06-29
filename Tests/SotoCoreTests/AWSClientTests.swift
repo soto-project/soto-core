@@ -655,12 +655,16 @@ class AWSClientTests: XCTestCase {
 
     func testStreamingResponse() async {
         struct Input: AWSEncodableShape {}
-        struct Output: AWSDecodableShape & AWSShapeWithPayload {
-            static let _encoding = [AWSMemberEncoding(label: "test", location: .header("test"))]
-            static let _payloadPath: String = "payload"
+        struct Output: AWSDecodableShape {
             static let _options: AWSShapeOptions = .rawPayload
             let payload: AWSHTTPBody
             let test: String
+
+            public init(from decoder: Decoder) throws {
+                let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
+                self.payload = response.decodePayload()
+                self.test = try response.decode(String.self, forHeader: "test")
+            }
         }
         let data = createRandomBuffer(45, 109, size: 128 * 1024)
         var sourceByteBuffer = ByteBufferAllocator().buffer(capacity: 128 * 1024)

@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+import struct Foundation.Data
 import struct Foundation.Date
 import class Foundation.DateFormatter
 import class Foundation.JSONDecoder
@@ -66,139 +67,45 @@ public struct AWSResponse {
 
     /// Generate AWSShape from AWSResponse
     func generateOutputShape<Output: AWSDecodableShape>(operation: String, serviceProtocol: ServiceProtocol) throws -> Output {
-        var payloadKey: String? = (Output.self as? AWSShapeWithPayload.Type)?._payloadPath
-
-        // if response has a payload with encoding info
-        if let payloadPath = payloadKey, let encoding = Output.getEncoding(for: payloadPath) {
-            // get CodingKey string for payload to insert in output
-            if let location = encoding.location, case .body(let name) = location {
-                payloadKey = name
-            }
+        var payload: ByteBuffer? = nil
+        if case .byteBuffer(let buffer) = self.body.storage {
+            payload = buffer
         }
-        let decoder = DictionaryDecoder()
-        decoder.userInfo[.awsResponse] = ResponseDecodingContainer(response: self)
 
-        var outputDict: [String: Any] = [:]
-        switch self.body.storage {
-        case .asyncSequence:
-            if let payloadKey = payloadKey {
-                outputDict[payloadKey] = self.body
-            }
-            // if body is raw or empty then assume any date to be decoded will be coming from headers
-            decoder.dateDecodingStrategy = .formatted(HTTPHeaderDateCoder.dateFormatters.first!)
-
-        case .byteBuffer(let buffer):
-            if buffer.readableBytes == 0 {
-                // we have no body so date decoding will be only HTTP headers
-                decoder.dateDecodingStrategy = .formatted(HTTPHeaderDateCoder.dateFormatters.first!)
+        switch serviceProtocol {
+        case .json, .restjson:
+            let payloadData: Data
+            if self.isHypertextApplicationLanguage {
+                payloadData = try self.getHypertextApplicationLanguageDictionary()
+            } else if let payload = payload, payload.readableBytes > 0 {
+                payloadData = Data(buffer: payload, byteTransferStrategy: .noCopy)
             } else {
-                switch serviceProtocol {
-                case .json, .restjson:
-                    if let data = buffer.getData(at: buffer.readerIndex, length: buffer.readableBytes, byteTransferStrategy: .noCopy) {
-                        // if required apply hypertext application language transform to body
-                        if self.isHypertextApplicationLanguage {
-                            outputDict = try self.getHypertextApplicationLanguageDictionary()
-                        } else {
-                            outputDict = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] ?? [:]
-                        }
-                        // if payload path is set then the decode will expect the payload to decode to the relevant member variable
-                        /* if let payloadKey = payloadKey {
-                             outputDict = [payloadKey: outputDict]
-                         } */
-                        decoder.dateDecodingStrategy = .secondsSince1970
-                    } else {
-                        // we have no body so date decoding will be only HTTP headers
-                        decoder.dateDecodingStrategy = .formatted(HTTPHeaderDateCoder.dateFormatters.first!)
-                    }
-                case .restxml, .query, .ec2:
-                    let xmlDocument = try? XML.Document(buffer: buffer)
-                    if let node = xmlDocument?.rootElement() {
-                        var outputNode = node
-                        // if payload path is set then the decode will expect the payload to decode to the relevant member variable.
-                        // Most CloudFront responses have this.
-                        /* if let payloadKey = payloadKey {
-                             // set output node name
-                             outputNode.name = payloadKey
-                             // create parent node and add output node and set output node to parent
-                             let parentNode = XML.Element(name: "Container")
-                             parentNode.addChild(outputNode)
-                             outputNode = parentNode
-                         } else */ if let child = node.children(of: .element)?.first as? XML.Element,
-                                     node.name == operation + "Response",
-                                     child.name == operation + "Result"
-                        {
-                            outputNode = child
-                        }
-
-                        // add headers to XML
-                        // addHeadersToXML(rootElement: outputNode, output: Output.self)
-
-                        // add status code to XML
-                        if let statusCodeParam = Output.statusCodeParam {
-                            let node = XML.Element(name: statusCodeParam, stringValue: "\(self.status.code)")
-                            outputNode.addChild(node)
-                        }
-                        var xmlDecoder = XMLDecoder()
-                        xmlDecoder.userInfo[.awsResponse] = ResponseDecodingContainer(response: self)
-                        return try xmlDecoder.decode(Output.self, from: outputNode)
-                    }
-                }
+                payloadData = Data("{}".utf8)
             }
-        }
+            let jsonDecoder = JSONDecoder()
+            jsonDecoder.dateDecodingStrategy = .secondsSince1970
+            jsonDecoder.userInfo[.awsResponse] = ResponseDecodingContainer(response: self)
+            return try jsonDecoder.decode(Output.self, from: payloadData)
 
-        // add headers to output dictionary
-        // outputDict = addHeadersToDictionary(dictionary: outputDict, output: Output.self)
-
-        // add status code to output dictionary
-        if let statusCodeParam = Output.statusCodeParam {
-            outputDict[statusCodeParam] = self.status.code
-        }
-
-        return try decoder.decode(Output.self, from: outputDict)
-    }
-
-    /// Add headers required by Output type found in the response into dictionary to be decoded by Dictionary decoder
-    private func addHeadersToDictionary<Output: AWSDecodableShape>(dictionary: [String: Any], output: Output.Type) -> [String: Any] {
-        var dictionary = dictionary
-        // add header values to output dictionary, so they can be decoded into the response object
-        for (key, value) in self.headers {
-            let headerParams = Output.headerParams
-            if let index = headerParams.firstIndex(where: { $0.key.lowercased() == key.lowercased() }) {
-                dictionary[headerParams[index].key] = HTTPHeaderDecodable(value)
+        case .restxml, .query, .ec2:
+            var xmlElement: XML.Element
+            if let buffer = payload,
+               let xmlDocument = try? XML.Document(buffer: buffer),
+               let rootElement = xmlDocument.rootElement()
+            {
+                xmlElement = rootElement
+            } else {
+                xmlElement = .init(name: "__empty_element")
             }
-        }
-        for param in Output.headerPrefixParams {
-            var valuesDict: [String: Any] = [:]
-            for (key, value) in self.headers {
-                guard key.lowercased().hasPrefix(param.key.lowercased()) else { continue }
-                let shortKey = String(key.dropFirst(param.key.count))
-                valuesDict[shortKey] = HTTPHeaderDecodable(value)
+            if let child = xmlElement.children(of: .element)?.first as? XML.Element,
+               xmlElement.name == operation + "Response",
+               child.name == operation + "Result"
+            {
+                xmlElement = child
             }
-            if valuesDict.count > 0 {
-                dictionary[param.key] = valuesDict
-            }
-        }
-        return dictionary
-    }
-
-    /// Add headers required by Output type found in the response into xml to be decoded by xml decoder
-    private func addHeadersToXML<Output: AWSDecodableShape>(rootElement: XML.Element, output: Output.Type) {
-        // add header values to xmlnode as children nodes, so they can be decoded into the response object
-        for (key, value) in self.headers {
-            let headerParams = Output.headerParams
-            if let index = headerParams.firstIndex(where: { $0.key.lowercased() == key.lowercased() }) {
-                let node = XML.Element(name: headerParams[index].key, stringValue: value)
-                rootElement.addChild(node)
-            }
-        }
-        for param in Output.headerPrefixParams {
-            let parentNode = XML.Element(name: param.key)
-            rootElement.addChild(parentNode)
-            for (key, value) in self.headers {
-                guard key.hasPrefix(param.key) else { continue }
-                let entryNode = XML.Element(name: String(key.dropFirst(param.key.count)), stringValue: value)
-                parentNode.addChild(entryNode)
-            }
+            var xmlDecoder = XMLDecoder()
+            xmlDecoder.userInfo[.awsResponse] = ResponseDecodingContainer(response: self)
+            return try xmlDecoder.decode(Output.self, from: xmlElement)
         }
     }
 

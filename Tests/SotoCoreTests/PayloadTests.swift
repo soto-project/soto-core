@@ -74,6 +74,11 @@ class PayloadTests: XCTestCase {
             static let _payloadPath: String = "payload"
             static let _options: AWSShapeOptions = .rawPayload
             let payload: AWSHTTPBody
+
+            init(from decoder: Decoder) throws {
+                let response = decoder.userInfo[.awsResponse] as! ResponseDecodingContainer
+                self.payload = response.decodePayload()
+            }
         }
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)

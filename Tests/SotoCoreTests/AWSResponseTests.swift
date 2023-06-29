@@ -89,6 +89,10 @@ class AWSResponseTests: XCTestCase {
         struct Output: AWSDecodableShape {
             static let _encoding = [AWSMemberEncoding(label: "status", location: .statusCode)]
             let status: Int
+            public init(from decoder: Decoder) throws {
+                let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
+                self.status = response.decodeStatus()
+            }
         }
         let response = AWSHTTPResponse(
             status: .ok,
@@ -157,6 +161,11 @@ class AWSResponseTests: XCTestCase {
             static let _payloadPath: String = "body"
             static let _options: AWSShapeOptions = .rawPayload
             let body: AWSHTTPBody
+
+            init(from decoder: Decoder) throws {
+                let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
+                self.body = response.decodePayload()
+            }
         }
         let byteBuffer = ByteBuffer(string: "{\"name\":\"hello\"}")
         let response = AWSHTTPResponse(
@@ -219,10 +228,11 @@ class AWSResponseTests: XCTestCase {
         struct Output: AWSDecodableShape, AWSShapeWithPayload {
             static let _payloadPath: String = "body"
             static let _options: AWSShapeOptions = .rawPayload
-            public static var _encoding = [
-                AWSMemberEncoding(label: "contentType", location: .header("content-type")),
-            ]
             let body: AWSHTTPBody
+            init(from decoder: Decoder) throws {
+                let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
+                self.body = response.decodePayload()
+            }
         }
         let byteBuffer = ByteBuffer(string: "{\"name\":\"hello\"}")
         let response = AWSHTTPResponse(

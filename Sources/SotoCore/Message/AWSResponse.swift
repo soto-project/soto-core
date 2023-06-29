@@ -94,14 +94,17 @@ public struct AWSResponse {
                let rootElement = xmlDocument.rootElement()
             {
                 xmlElement = rootElement
+                // if root element is called operation name + "Response" and its child is called
+                // operation name + "Result" then use the child as the root element when decoding
+                // XML
+                if let child = xmlElement.children(of: .element)?.first as? XML.Element,
+                   xmlElement.name == operation + "Response",
+                   child.name == operation + "Result"
+                {
+                    xmlElement = child
+                }
             } else {
                 xmlElement = .init(name: "__empty_element")
-            }
-            if let child = xmlElement.children(of: .element)?.first as? XML.Element,
-               xmlElement.name == operation + "Response",
-               child.name == operation + "Result"
-            {
-                xmlElement = child
             }
             var xmlDecoder = XMLDecoder()
             xmlDecoder.userInfo[.awsResponse] = ResponseDecodingContainer(response: self)

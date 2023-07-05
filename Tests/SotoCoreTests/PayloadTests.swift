@@ -73,7 +73,7 @@ class PayloadTests: XCTestCase {
         struct Output: AWSDecodableShape, AWSShapeWithPayload {
             static let _payloadPath: String = "payload"
             static let _options: AWSShapeOptions = .rawPayload
-            let payload: AWSPayload
+            let payload: HTTPBody
         }
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)
@@ -99,7 +99,8 @@ class PayloadTests: XCTestCase {
 
             let output = try await responseTask
 
-            XCTAssertEqual(output.payload.asString(), "testResponsePayload")
+            let responsePayload = try await String(buffer: output.payload.collect(upTo: .max))
+            XCTAssertEqual(responsePayload, "testResponsePayload")
             // XCTAssertEqual(output.i, 547)
             try awsServer.stop()
         } catch {

@@ -32,8 +32,8 @@ public struct AWSResponse {
     /// initialize an AWSResponse Object
     /// - parameters:
     ///     - from: Raw HTTP Response
-    ///     - serviceProtocol: protocol of service (.json, .xml, .query etc)
-    ///     - raw: Whether Body should be treated as raw data
+    ///     - streaming: Whether Body should be treated as streamed data or collated into
+    ///         one ByteBuffer
     init(from response: AWSHTTPResponse, streaming: Bool) async throws {
         self.status = response.status
 

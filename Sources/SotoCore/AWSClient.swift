@@ -510,7 +510,7 @@ extension AWSClient {
     /// - parameters:
     ///     - url : URL to sign
     ///     - httpMethod: HTTP method to use (.GET, .PUT, .PUSH etc)
-    ///     - httpHeaders: Headers that are to be used with this URL.
+    ///     - headers: Headers that are to be used with this URL.
     ///     - body: Payload to sign as well. While it is unnecessary to provide the body for S3 other services may require it
     ///     - serviceConfig: additional AWS service configuration used to sign the url
     ///     - logger: Logger to output to

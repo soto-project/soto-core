@@ -17,12 +17,9 @@ import Logging
 import NIOCore
 import NIOHTTP1
 
-/// Function that streamed response chunks are sent ot
-public typealias AWSResponseStream = (ByteBuffer, EventLoop) -> EventLoopFuture<Void>
-
 /// Storage for HTTP body which can be either a ByteBuffer or an AsyncSequence of
 /// ByteBuffers
-struct HTTPBody {
+public struct HTTPBody: Sendable {
     enum Storage {
         case byteBuffer(ByteBuffer)
         case asyncSequence(sequence: AnyAsyncSequence<ByteBuffer>, length: Int?)
@@ -30,11 +27,11 @@ struct HTTPBody {
 
     let storage: Storage
 
-    init() {
+    public init() {
         self.storage = .byteBuffer(ByteBuffer())
     }
 
-    init(_ byteBuffer: ByteBuffer) {
+    public init(_ byteBuffer: ByteBuffer) {
         self.storage = .byteBuffer(byteBuffer)
     }
 
@@ -42,7 +39,7 @@ struct HTTPBody {
         self.storage = .asyncSequence(sequence: .init(sequence), length: length)
     }
 
-    func collect(upTo length: Int) async throws -> ByteBuffer {
+    public func collect(upTo length: Int) async throws -> ByteBuffer {
         switch self.storage {
         case .byteBuffer(let buffer):
             return buffer
@@ -51,7 +48,7 @@ struct HTTPBody {
         }
     }
 
-    var length: Int? {
+    public var length: Int? {
         switch self.storage {
         case .byteBuffer(let buffer):
             return buffer.readableBytes
@@ -60,25 +57,35 @@ struct HTTPBody {
         }
     }
 
-    var isStreaming: Bool {
-        if case .asyncSequence = self.storage {
+    public var isStreaming: Bool {
+        switch self.storage {
+        case .byteBuffer:
+            return false
+        case .asyncSequence:
             return true
         }
-        return false
     }
 }
 
 extension HTTPBody: AsyncSequence {
-    typealias Element = ByteBuffer
-    typealias AsyncIterator = AnyAsyncSequence<ByteBuffer>.AsyncIterator
+    public typealias Element = ByteBuffer
+    public typealias AsyncIterator = AnyAsyncSequence<ByteBuffer>.AsyncIterator
 
-    func makeAsyncIterator() -> AsyncIterator {
+    public func makeAsyncIterator() -> AsyncIterator {
         switch self.storage {
         case .byteBuffer(let buffer):
             return AnyAsyncSequence(buffer.asyncSequence(chunkSize: buffer.readableBytes)).makeAsyncIterator()
         case .asyncSequence(let sequence, _):
             return sequence.makeAsyncIterator()
         }
+    }
+}
+
+extension HTTPBody: Decodable {
+    // HTTPBody has to conform to Decodable so I can add it to AWSShape objects (which conform to Decodable). But we don't want the
+    // Encoder/Decoder ever to process a AWSPayload
+    public init(from decoder: Decoder) throws {
+        preconditionFailure("Cannot decode an HTTPBody")
     }
 }
 

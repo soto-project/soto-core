@@ -374,47 +374,6 @@ extension AWSClient {
         )
     }
 
-    /// Execute a request with an input object and return the output object generated from the response
-    /// - parameters:
-    ///     - operationName: Name of the AWS operation
-    ///     - path: path to append to endpoint URL
-    ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
-    ///     - serviceConfig: AWS Service configuration
-    ///     - input: Input object
-    ///     - hostPrefix: String to prefix host name with
-    ///     - logger: Logger to log request details to
-    /// - returns:
-    ///     Output object that completes when response is received
-    public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(
-        operation operationName: String,
-        path: String,
-        httpMethod: HTTPMethod,
-        serviceConfig: AWSServiceConfig,
-        input: Input,
-        hostPrefix: String? = nil,
-        logger: Logger = AWSClient.loggingDisabled,
-        stream: @escaping AWSResponseStream
-    ) async throws -> Output {
-        return try await self.execute(
-            operation: operationName,
-            createRequest: {
-                try AWSRequest(
-                    operation: operationName,
-                    path: path,
-                    httpMethod: httpMethod,
-                    input: input,
-                    hostPrefix: hostPrefix,
-                    configuration: serviceConfig
-                )
-            },
-            processResponse: { response in
-                return try await self.validate(operation: operationName, response: response, serviceConfig: serviceConfig)
-            },
-            config: serviceConfig,
-            logger: logger
-        )
-    }
-
     /// internal version of execute
     internal func execute<Output>(
         operation operationName: String,
@@ -604,10 +563,10 @@ extension AWSClient {
         assert((200..<300).contains(response.status.code), "Shouldn't get here if error was returned")
 
         let raw = Output._options.contains(.rawPayload) == true
-        let awsResponse = try await AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol, raw: raw)
+        let awsResponse = try await AWSResponse(from: response, streaming: raw)
             .applyMiddlewares(serviceConfig.middlewares + middlewares, config: serviceConfig)
 
-        return try awsResponse.generateOutputShape(operation: operationName)
+        return try awsResponse.generateOutputShape(operation: operationName, serviceProtocol: serviceConfig.serviceProtocol)
     }
 
     /// Create error from HTTPResponse. This is only called if we received an unsuccessful http status code.
@@ -615,7 +574,7 @@ extension AWSClient {
         // if we can create an AWSResponse and create an error from it return that
         let awsResponse: AWSResponse
         do {
-            awsResponse = try await AWSResponse(from: response, serviceProtocol: serviceConfig.serviceProtocol)
+            awsResponse = try await AWSResponse(from: response, streaming: false)
         } catch {
             // else return "Unhandled error message" with rawBody attached
             let context = AWSErrorContext(
@@ -640,7 +599,14 @@ extension AWSClient {
                     responseCode: response.status,
                     headers: response.headers
                 )
-                return AWSRawError(rawBody: awsResponseWithMiddleware.body.asString(), context: context)
+                let responseBody: String?
+                switch awsResponseWithMiddleware.body.storage {
+                case .byteBuffer(let buffer):
+                    responseBody = String(buffer: buffer)
+                default:
+                    responseBody = nil
+                }
+                return AWSRawError(rawBody: responseBody, context: context)
             }
         } catch {
             return error

@@ -25,18 +25,17 @@
 //
 //===----------------------------------------------------------------------===//
 
-@usableFromInline
-struct AnyAsyncSequence<Element>: Sendable, AsyncSequence {
-    @usableFromInline typealias AsyncIteratorNextCallback = () async throws -> Element?
+public struct AnyAsyncSequence<Element>: Sendable, AsyncSequence {
+    public typealias AsyncIteratorNextCallback = () async throws -> Element?
 
-    @usableFromInline struct AsyncIterator: AsyncIteratorProtocol {
+    public struct AsyncIterator: AsyncIteratorProtocol {
         @usableFromInline let nextCallback: AsyncIteratorNextCallback
 
         @inlinable init(nextCallback: @escaping AsyncIteratorNextCallback) {
             self.nextCallback = nextCallback
         }
 
-        @inlinable mutating func next() async throws -> Element? {
+        @inlinable public mutating func next() async throws -> Element? {
             try await self.nextCallback()
         }
     }
@@ -54,7 +53,7 @@ struct AnyAsyncSequence<Element>: Sendable, AsyncSequence {
         }
     }
 
-    @inlinable func makeAsyncIterator() -> AsyncIterator {
+    @inlinable public func makeAsyncIterator() -> AsyncIterator {
         .init(nextCallback: self.makeAsyncIteratorCallback())
     }
 }

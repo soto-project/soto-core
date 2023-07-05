@@ -22,12 +22,10 @@ import SotoSignerV4
 public protocol CredentialProvider: Sendable, CustomStringConvertible {
     /// Return credential
     /// - Parameters:
-    ///   - eventLoop: EventLoop to run on
     ///   - logger: Logger to use
     func getCredential(logger: Logger) async throws -> Credential
 
     /// Shutdown credential provider
-    /// - Parameter eventLoop: EventLoop to use when shutiting down
     func shutdown() async throws
 }
 
@@ -40,14 +38,12 @@ extension CredentialProvider {
 /// Provides factory functions for `CredentialProvider`s.
 ///
 /// The factory functions are only called once the `AWSClient` has been setup. This means we can supply
-/// things like a `Logger`, `EventLoop` and `HTTPClient` to the credential provider when we construct it.
+/// things like a `Logger` and `HTTPClient` to the credential provider when we construct it.
 public struct CredentialProviderFactory {
     /// The initialization context for a `ContextProvider`
     public struct Context {
         /// The `AWSClient`s internal `HTTPClient`
         public let httpClient: HTTPClient
-        /// The `EventLoop` that the `CredentialProvider` should use for credential refreshs
-        public let eventLoop: EventLoop
         /// The `Logger` attached to the AWSClient
         public let logger: Logger
         /// AWSClient options

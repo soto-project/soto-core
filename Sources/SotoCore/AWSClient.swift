@@ -90,7 +90,6 @@ public final class AWSClient: Sendable {
 
         self.credentialProvider = credentialProviderFactory.createProvider(context: .init(
             httpClient: httpClient,
-            eventLoop: httpClient.eventLoopGroup.next(),
             logger: clientLogger,
             options: options
         ))

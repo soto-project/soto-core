@@ -92,14 +92,14 @@ final class S3ChunkedStreamReader: StreamReader {
                     if self.bytesLeftToRead == self.workingBuffer.readableBytes {
                         promise.succeed(self.workingBuffer)
                     } else {
-                        promise.fail(AWSClient.ClientError.notEnoughData)
+                        promise.fail(AWSClient.ClientError.bodyLengthMismatch)
                     }
                     return
                 }
                 self.bytesLeftToRead -= buffer.readableBytes
 
                 guard self.bytesLeftToRead >= 0 else {
-                    promise.fail(AWSClient.ClientError.tooMuchData)
+                    promise.fail(AWSClient.ClientError.bodyLengthMismatch)
                     return
                 }
                 // if working buffer is empty and this buffer is the chunk buffer size or there is no data

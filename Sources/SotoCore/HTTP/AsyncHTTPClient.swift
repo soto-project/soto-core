@@ -31,27 +31,29 @@ extension AsyncHTTPClient.HTTPClient {
     ) async throws -> AWSHTTPResponse {
         let requestBody: HTTPClientRequest.Body?
 
-        switch request.body.payload {
+        switch request.body.storage {
         case .byteBuffer(let byteBuffer):
             requestBody = .bytes(byteBuffer)
-        /* case .asyncSequence(let sequence, let length):
-         requestBody = .stream(
-             sequence,
-             length: length.map { .known($0) } ?? .unknown
-         ) */
-        default:
-            requestBody = nil
+        case .asyncSequence(let sequence, let length):
+            requestBody = .stream(
+                sequence,
+                length: length.map { .known($0) } ?? .unknown
+            )
         }
         var httpRequest = HTTPClientRequest(url: request.url.absoluteString)
         httpRequest.method = request.method
         httpRequest.headers = request.headers
         httpRequest.body = requestBody
 
-        let response = try await self.execute(httpRequest, timeout: timeout, logger: logger)
-        return .init(
-            status: response.status,
-            headers: response.headers,
-            body: .init(response.body, length: nil)
-        )
+        do {
+            let response = try await self.execute(httpRequest, timeout: timeout, logger: logger)
+            return .init(
+                status: response.status,
+                headers: response.headers,
+                body: .init(bufferSequence: response.body, length: nil)
+            )
+        } catch let error as HTTPClientError where error == .bodyLengthMismatch {
+            throw AWSClient.ClientError.bodyLengthMismatch
+        }
     }
 }

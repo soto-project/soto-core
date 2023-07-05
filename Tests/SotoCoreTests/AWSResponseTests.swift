@@ -116,7 +116,7 @@ class AWSResponseTests: XCTestCase {
         let response = AWSHTTPResponse(
             status: .ok,
             headers: HTTPHeaders(),
-            body: .init(ByteBuffer(string: responseBody))
+            body: .init(string: responseBody)
         )
 
         var output: Output?
@@ -140,7 +140,7 @@ class AWSResponseTests: XCTestCase {
         let response = AWSHTTPResponse(
             status: .ok,
             headers: ["Content-Type": "application/xml"],
-            body: .init(ByteBuffer(string: "<name>hello</name>"))
+            body: .init(string: "<name>hello</name>")
         )
 
         var output: Output?
@@ -160,7 +160,7 @@ class AWSResponseTests: XCTestCase {
         let response = AWSHTTPResponse(
             status: .ok,
             headers: HTTPHeaders(),
-            body: .init(byteBuffer.asyncSequence(chunkSize: 32), length: nil)
+            body: .init(bufferSequence: byteBuffer.asyncSequence(chunkSize: 32), length: nil)
         )
 
         var _output: Output?
@@ -180,7 +180,7 @@ class AWSResponseTests: XCTestCase {
         let response = AWSHTTPResponse(
             status: .ok,
             headers: HTTPHeaders(),
-            body: .init(ByteBuffer(string: "{\"name\":\"hello\"}"))
+            body: .init(string: "{\"name\":\"hello\"}")
         )
 
         var output: Output?
@@ -200,7 +200,7 @@ class AWSResponseTests: XCTestCase {
         let response = AWSHTTPResponse(
             status: .ok,
             headers: HTTPHeaders(),
-            body: .init(ByteBuffer(string: "{\"name\":\"hello\"}"))
+            body: .init(string: "{\"name\":\"hello\"}")
         )
 
         var output: Output?
@@ -222,7 +222,7 @@ class AWSResponseTests: XCTestCase {
         let response = AWSHTTPResponse(
             status: .ok,
             headers: ["Content-Type": "application/json"],
-            body: .init(byteBuffer.asyncSequence(chunkSize: 32), length: nil)
+            body: .init(bufferSequence: byteBuffer.asyncSequence(chunkSize: 32), length: nil)
         )
 
         var _output: Output?
@@ -239,7 +239,7 @@ class AWSResponseTests: XCTestCase {
         let response = AWSHTTPResponse(
             status: .notFound,
             headers: HTTPHeaders(),
-            body: .init(ByteBuffer(string: "{\"__type\":\"ResourceNotFoundException\", \"message\": \"Donald Where's Your Troosers?\"}"))
+            body: .init(string: "{\"__type\":\"ResourceNotFoundException\", \"message\": \"Donald Where's Your Troosers?\"}")
         )
         let service = createServiceConfig(serviceProtocol: .json(version: "1.1"), errorType: ServiceErrorType.self)
 
@@ -254,7 +254,7 @@ class AWSResponseTests: XCTestCase {
         let response = AWSHTTPResponse(
             status: .notFound,
             headers: HTTPHeaders(),
-            body: .init(ByteBuffer(string:
+            body: .init(buffer: ByteBuffer(string:
                 #"{"__type":"ResourceNotFoundException", "Message": "Donald Where's Your Troosers?", "fault": "client","CancellationReasons":1}"#
             ))
         )
@@ -272,7 +272,7 @@ class AWSResponseTests: XCTestCase {
         let response = AWSHTTPResponse(
             status: .notFound,
             headers: ["x-amzn-errortype": "ResourceNotFoundException"],
-            body: .init(ByteBuffer(string: #"{"message": "Donald Where's Your Troosers?", "Fault": "Client"}"#))
+            body: .init(string: #"{"message": "Donald Where's Your Troosers?", "Fault": "Client"}"#)
         )
         let service = createServiceConfig(serviceProtocol: .restjson, errorType: ServiceErrorType.self)
 
@@ -289,7 +289,7 @@ class AWSResponseTests: XCTestCase {
         let response = AWSHTTPResponse(
             status: .notFound,
             headers: ["x-amzn-errortype": "ResourceNotFoundException"],
-            body: .init(ByteBuffer(string: #"{"Message": "Donald Where's Your Troosers?"}"#))
+            body: .init(string: #"{"Message": "Donald Where's Your Troosers?"}"#)
         )
         let service = createServiceConfig(serviceProtocol: .restjson, errorType: ServiceErrorType.self)
 
@@ -304,7 +304,7 @@ class AWSResponseTests: XCTestCase {
         let response = AWSHTTPResponse(
             status: .notFound,
             headers: HTTPHeaders(),
-            body: .init(ByteBuffer(string: "<Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message><fault>client</fault></Error>"))
+            body: .init(string: "<Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message><fault>client</fault></Error>")
         )
         let service = createServiceConfig(serviceProtocol: .restxml, errorType: ServiceErrorType.self)
 
@@ -320,7 +320,7 @@ class AWSResponseTests: XCTestCase {
         let response = AWSHTTPResponse(
             status: .notFound,
             headers: HTTPHeaders(),
-            body: .init(ByteBuffer(string: "<ErrorResponse><Error><Code>MessageRejected</Code><Message>Don't like it</Message><fault>client</fault></Error></ErrorResponse>"))
+            body: .init(string: "<ErrorResponse><Error><Code>MessageRejected</Code><Message>Don't like it</Message><fault>client</fault></Error></ErrorResponse>")
         )
         let queryService = createServiceConfig(serviceProtocol: .query, errorType: ServiceErrorType.self)
 
@@ -336,7 +336,7 @@ class AWSResponseTests: XCTestCase {
         let response = AWSHTTPResponse(
             status: .notFound,
             headers: HTTPHeaders(),
-            body: .init(ByteBuffer(string: "<Errors><Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message><fault>client</fault></Error></Errors>"))
+            body: .init(string: "<Errors><Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message><fault>client</fault></Error></Errors>")
         )
         let service = createServiceConfig(serviceProtocol: .ec2)
 
@@ -352,7 +352,7 @@ class AWSResponseTests: XCTestCase {
         let response = AWSHTTPResponse(
             status: .notFound,
             headers: HTTPHeaders(),
-            body: .init(ByteBuffer(string: "<Errors><Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message><fault>client</fault></Error></Errors>"))
+            body: .init(string: "<Errors><Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message><fault>client</fault></Error></Errors>")
         )
         let service = createServiceConfig(serviceProtocol: .restxml)
 
@@ -397,7 +397,7 @@ class AWSResponseTests: XCTestCase {
         let response = AWSHTTPResponse(
             status: .ok,
             headers: ["prefix-one": "first", "prefix-two": "second"],
-            body: .init(ByteBuffer(string: "<Output><body>Hello</body></Output>"))
+            body: .init(string: "<Output><body>Hello</body></Output>")
         )
         var output: Output?
         let awsResponse = try await AWSResponse(from: response, streaming: false)
@@ -421,7 +421,7 @@ class AWSResponseTests: XCTestCase {
         let response = AWSHTTPResponse(
             status: .ok,
             headers: ["Content-Type": "application/hal+json"],
-            body: .init(ByteBuffer(string: #"{"_embedded": {"a": [{"s":"Hello", "i":1234}, {"s":"Hello2", "i":12345}]}, "d":3.14, "b":true}"#))
+            body: .init(string: #"{"_embedded": {"a": [{"s":"Hello", "i":1234}, {"s":"Hello2", "i":12345}]}, "d":3.14, "b":true}"#)
         )
 
         var output: Output2?

@@ -160,49 +160,6 @@ extension AWSClient {
         )
     }
 
-    /// Execute a request with an input object and return the output object generated from the response
-    /// - parameters:
-    ///     - operationName: Name of the AWS operation
-    ///     - path: path to append to endpoint URL
-    ///     - httpMethod: HTTP method to use ("GET", "PUT", "PUSH" etc)
-    ///     - serviceConfig: AWS service configuration used in request creation and signing
-    ///     - input: Input object
-    ///     - hostPrefix: Prefix to append to host name
-    ///     - endpointDiscovery: Endpoint discovery helper
-    ///     - logger: Logger
-    ///     - stream: Closure to stream payload response into
-    /// - returns:
-    ///     Output object that completes when response is received
-    public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(
-        operation operationName: String,
-        path: String,
-        httpMethod: HTTPMethod,
-        serviceConfig: AWSServiceConfig,
-        input: Input,
-        hostPrefix: String? = nil,
-        endpointDiscovery: AWSEndpointDiscovery,
-        logger: Logger = AWSClient.loggingDisabled,
-        stream: @escaping AWSResponseStream
-    ) async throws -> Output {
-        return try await self.execute(
-            execute: { endpoint in
-                return try await self.execute(
-                    operation: operationName,
-                    path: path,
-                    httpMethod: httpMethod,
-                    serviceConfig: endpoint.map { serviceConfig.with(patch: .init(endpoint: $0)) } ?? serviceConfig,
-                    input: input,
-                    hostPrefix: hostPrefix,
-                    logger: logger,
-                    stream: stream
-                )
-            },
-            isEnabled: serviceConfig.options.contains(.enableEndpointDiscovery),
-            endpointDiscovery: endpointDiscovery,
-            logger: logger
-        )
-    }
-
     private func execute<Output>(
         execute: @escaping (String?) async throws -> Output,
         isEnabled: Bool,

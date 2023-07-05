@@ -49,7 +49,7 @@ public struct S3Middleware: AWSServiceMiddleware {
     public func chain(response: AWSResponse, context: AWSMiddlewareContext) throws -> AWSResponse {
         var response = response
 
-        self.getLocationResponseFixup(response: &response)
+        // self.getLocationResponseFixup(response: &response)
         self.fixupHeadErrors(response: &response)
 
         return response
@@ -146,28 +146,31 @@ public struct S3Middleware: AWSServiceMiddleware {
         }
     }
 
-    func getLocationResponseFixup(response: inout AWSResponse) {
-        if case .xml(let element) = response.body {
-            // GetBucketLocation comes back without a containing xml element
-            if element.name == "LocationConstraint" {
-                if element.stringValue == "" {
-                    element.addChild(.text(stringValue: "us-east-1"))
-                }
-                let parentElement = XML.Element(name: "BucketLocation")
-                parentElement.addChild(element)
-                response.body = .xml(parentElement)
-            }
-        }
-    }
+    // TODO: Find way to do getLocationResponseFixup
+    /* func getLocationResponseFixup(response: inout AWSResponse) {
+         if case .xml(let element) = response.body {
+             // GetBucketLocation comes back without a containing xml element
+             if element.name == "LocationConstraint" {
+                 if element.stringValue == "" {
+                     element.addChild(.text(stringValue: "us-east-1"))
+                 }
+                 let parentElement = XML.Element(name: "BucketLocation")
+                 parentElement.addChild(element)
+                 response.body = .xml(parentElement)
+             }
+         }
+     } */
 
     func fixupHeadErrors(response: inout AWSResponse) {
-        if response.status == .notFound, response.body.isEmpty {
+        if response.status == .notFound, response.body.length == 0 {
             let errorNode = XML.Element(name: "Error")
             let codeNode = XML.Element(name: "Code", stringValue: "NotFound")
             let messageNode = XML.Element(name: "Message", stringValue: "Not Found")
             errorNode.addChild(codeNode)
             errorNode.addChild(messageNode)
-            response.body = .xml(errorNode)
+            let documentNode = XML.Document(rootElement: errorNode)
+            let buffer = ByteBuffer(string: documentNode.xmlString)
+            response.body = .init(buffer)
         }
     }
 }

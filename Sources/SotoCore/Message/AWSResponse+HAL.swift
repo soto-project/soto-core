@@ -19,8 +19,7 @@ import NIOCore
 extension AWSResponse {
     /// return if body is hypertext application language
     var isHypertextApplicationLanguage: Bool {
-        guard case .json = self.body,
-              let contentType = self.headers["content-type"].first,
+        guard let contentType = self.headers["content-type"].first,
               contentType.contains("hal+json")
         else {
             return false
@@ -30,7 +29,7 @@ extension AWSResponse {
 
     /// process hal+json data. Extract properties from HAL
     func getHypertextApplicationLanguageDictionary() throws -> [String: Any] {
-        guard case .json(let buffer) = self.body else { return [:] }
+        guard case .byteBuffer(let buffer) = self.body.storage else { return [:] }
         // extract embedded resources from HAL
         guard let data = buffer.getData(at: buffer.readerIndex, length: buffer.readableBytes) else { return [:] }
         let jsonObject = try JSONSerialization.jsonObject(with: data, options: [])

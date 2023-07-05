@@ -24,11 +24,9 @@ import XCTest
 class ConfigFileLoadersTests: XCTestCase {
     // MARK: - File Loading
 
-    func makeContext() throws -> (CredentialProviderFactory.Context, MultiThreadedEventLoopGroup, HTTPClient) {
-        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let eventLoop = eventLoopGroup.next()
-        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoop))
-        return (.init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger, options: .init()), eventLoopGroup, httpClient)
+    func makeContext() throws -> (CredentialProviderFactory.Context, HTTPClient) {
+        let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+        return (.init(httpClient: httpClient, logger: TestEnvironment.logger, options: .init()), httpClient)
     }
 
     func save(content: String, prefix: String) throws -> String {
@@ -48,12 +46,11 @@ class ConfigFileLoadersTests: XCTestCase {
         """
 
         let credentialsPath = try save(content: credentialsFile, prefix: #function)
-        let (context, eventLoopGroup, httpClient) = try makeContext()
+        let (context, httpClient) = try makeContext()
 
         defer {
             try? FileManager.default.removeItem(atPath: credentialsPath)
             try? httpClient.syncShutdown()
-            try? eventLoopGroup.syncShutdownGracefully()
         }
 
         let sharedCredentials = try await ConfigFileLoader.loadSharedCredentials(
@@ -95,13 +92,12 @@ class ConfigFileLoadersTests: XCTestCase {
 
         let credentialsPath = try save(content: credentialsFile, prefix: #function)
         let configPath = try save(content: configFile, prefix: "config")
-        let (context, eventLoopGroup, httpClient) = try makeContext()
+        let (context, httpClient) = try makeContext()
 
         defer {
             try? FileManager.default.removeItem(atPath: credentialsPath)
             try? FileManager.default.removeItem(atPath: configPath)
             try? httpClient.syncShutdown()
-            try? eventLoopGroup.syncShutdownGracefully()
         }
 
         let sharedCredentials = try await ConfigFileLoader.loadSharedCredentials(
@@ -134,12 +130,11 @@ class ConfigFileLoadersTests: XCTestCase {
         """
 
         let credentialsPath = try save(content: credentialsFile, prefix: #function)
-        let (context, eventLoopGroup, httpClient) = try makeContext()
+        let (context, httpClient) = try makeContext()
 
         defer {
             try? FileManager.default.removeItem(atPath: credentialsPath)
             try? httpClient.syncShutdown()
-            try? eventLoopGroup.syncShutdownGracefully()
         }
 
         let sharedCredentials = try await ConfigFileLoader.loadSharedCredentials(
@@ -170,12 +165,11 @@ class ConfigFileLoadersTests: XCTestCase {
         """
 
         let credentialsPath = try save(content: credentialsFile, prefix: #function)
-        let (context, eventLoopGroup, httpClient) = try makeContext()
+        let (context, httpClient) = try makeContext()
 
         defer {
             try? FileManager.default.removeItem(atPath: credentialsPath)
             try? httpClient.syncShutdown()
-            try? eventLoopGroup.syncShutdownGracefully()
         }
 
         do {
@@ -201,12 +195,11 @@ class ConfigFileLoadersTests: XCTestCase {
         """
 
         let credentialsPath = try save(content: credentialsFile, prefix: #function)
-        let (context, eventLoopGroup, httpClient) = try makeContext()
+        let (context, httpClient) = try makeContext()
 
         defer {
             try? FileManager.default.removeItem(atPath: credentialsPath)
             try? httpClient.syncShutdown()
-            try? eventLoopGroup.syncShutdownGracefully()
         }
 
         do {
@@ -237,12 +230,11 @@ class ConfigFileLoadersTests: XCTestCase {
         """
 
         let credentialsPath = try save(content: credentialsFile, prefix: #function)
-        let (context, eventLoopGroup, httpClient) = try makeContext()
+        let (context, httpClient) = try makeContext()
 
         defer {
             try? FileManager.default.removeItem(atPath: credentialsPath)
             try? httpClient.syncShutdown()
-            try? eventLoopGroup.syncShutdownGracefully()
         }
 
         do {
@@ -273,12 +265,11 @@ class ConfigFileLoadersTests: XCTestCase {
         """
 
         let credentialsPath = try save(content: credentialsFile, prefix: #function)
-        let (context, eventLoopGroup, httpClient) = try makeContext()
+        let (context, httpClient) = try makeContext()
 
         defer {
             try? FileManager.default.removeItem(atPath: credentialsPath)
             try? httpClient.syncShutdown()
-            try? eventLoopGroup.syncShutdownGracefully()
         }
 
         do {
@@ -304,12 +295,11 @@ class ConfigFileLoadersTests: XCTestCase {
         """
 
         let credentialsPath = try save(content: credentialsFile, prefix: #function)
-        let (context, eventLoopGroup, httpClient) = try makeContext()
+        let (context, httpClient) = try makeContext()
 
         defer {
             try? FileManager.default.removeItem(atPath: credentialsPath)
             try? httpClient.syncShutdown()
-            try? eventLoopGroup.syncShutdownGracefully()
         }
 
         do {

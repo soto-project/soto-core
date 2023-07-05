@@ -22,7 +22,19 @@ import NIOHTTP1
 @testable import SotoCore
 import SotoSignerV4
 import SotoTestUtils
+import SotoXML
 import XCTest
+
+extension HTTPBody {
+    func asString() -> String? {
+        switch self.storage {
+        case .byteBuffer(let buffer):
+            return String(buffer: buffer)
+        case .asyncSequence:
+            return nil
+        }
+    }
+}
 
 class AWSRequestTests: XCTestCase {
     struct E: AWSEncodableShape & Decodable {
@@ -158,11 +170,11 @@ class AWSRequestTests: XCTestCase {
         }
         struct Object2: AWSEncodableShape & AWSShapeWithPayload {
             static var _payloadPath = "payload"
-            let payload: AWSPayload
+            let payload: HTTPBody
             private enum CodingKeys: CodingKey {}
         }
         let object = Object(string: "Name")
-        let object2 = Object2(payload: .string("Payload"))
+        let object2 = Object2(payload: .init(string: "Payload"))
 
         let config = createServiceConfig(serviceProtocol: .json(version: "1.1"))
         var request: AWSRequest?
@@ -261,7 +273,7 @@ class AWSRequestTests: XCTestCase {
         XCTAssertEqual(request?.url.absoluteString, "https://s3.ca-central-1.amazonaws.com/MyKey")
     }
 
-    func testCreateWithXMLNamespace() {
+    func testCreateWithXMLNamespace() throws {
         struct Input: AWSEncodableShape {
             public static let _xmlNamespace: String? = "https://test.amazonaws.com/doc/2020-03-11/"
             let number: Int
@@ -270,13 +282,14 @@ class AWSRequestTests: XCTestCase {
         let xmlConfig = createServiceConfig(serviceProtocol: .restxml)
         var request: AWSRequest?
         XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: xmlConfig))
-        guard case .xml(let element) = request?.body else {
+        guard case .byteBuffer(let buffer) = request?.body.storage else {
             return XCTFail("Shouldn't get here")
         }
-        XCTAssertEqual(element.xmlString, "<Input xmlns=\"https://test.amazonaws.com/doc/2020-03-11/\"><number>5</number></Input>")
+        let element = try XML.Document(buffer: buffer).rootElement()
+        XCTAssertEqual(element?.xmlString, "<Input xmlns=\"https://test.amazonaws.com/doc/2020-03-11/\"><number>5</number></Input>")
     }
 
-    func testServiceXMLNamespace() {
+    func testServiceXMLNamespace() throws {
         struct Input: AWSEncodableShape {
             let number: Int
         }
@@ -284,13 +297,14 @@ class AWSRequestTests: XCTestCase {
         let xmlConfig = createServiceConfig(serviceProtocol: .restxml, xmlNamespace: "https://test.amazonaws.com/doc/2020-03-11/")
         var request: AWSRequest?
         XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: xmlConfig))
-        guard case .xml(let element) = request?.body else {
+        guard case .byteBuffer(let buffer) = request?.body.storage else {
             return XCTFail("Shouldn't get here")
         }
-        XCTAssertEqual(element.xmlString, "<Input xmlns=\"https://test.amazonaws.com/doc/2020-03-11/\"><number>5</number></Input>")
+        let element = try XML.Document(buffer: buffer).rootElement()
+        XCTAssertEqual(element?.xmlString, "<Input xmlns=\"https://test.amazonaws.com/doc/2020-03-11/\"><number>5</number></Input>")
     }
 
-    func testCreateWithPayloadAndXMLNamespace() {
+    func testCreateWithPayloadAndXMLNamespace() throws {
         struct Payload: AWSEncodableShape {
             public static let _xmlNamespace: String? = "https://test.amazonaws.com/doc/2020-03-11/"
             let number: Int
@@ -303,10 +317,11 @@ class AWSRequestTests: XCTestCase {
         let xmlConfig = createServiceConfig(serviceProtocol: .restxml)
         var request: AWSRequest?
         XCTAssertNoThrow(request = try AWSRequest(operation: "Test", path: "/", httpMethod: .GET, input: input, configuration: xmlConfig))
-        guard case .xml(let element) = request?.body else {
+        guard case .byteBuffer(let buffer) = request?.body.storage else {
             return XCTFail("Shouldn't get here")
         }
-        XCTAssertEqual(element.xmlString, "<Payload xmlns=\"https://test.amazonaws.com/doc/2020-03-11/\"><number>5</number></Payload>")
+        let element = try XML.Document(buffer: buffer).rootElement()
+        XCTAssertEqual(element?.xmlString, "<Payload xmlns=\"https://test.amazonaws.com/doc/2020-03-11/\"><number>5</number></Payload>")
     }
 
     func testDataInJsonPayload() {
@@ -431,7 +446,7 @@ class AWSRequestTests: XCTestCase {
         struct Input: AWSEncodableShape & AWSShapeWithPayload {
             public static let _options: AWSShapeOptions = [.rawPayload, .allowStreaming]
             public static let _payloadPath: String = "payload"
-            let payload: AWSPayload
+            let payload: HTTPBody
             let member: String
 
             private enum CodingKeys: String, CodingKey {
@@ -444,31 +459,14 @@ class AWSRequestTests: XCTestCase {
             name: config.signingName,
             region: config.region.rawValue
         )
-        let stream: AWSPayload = .stream(size: 32) { eventLoop in
-            return eventLoop.makeSucceededFuture(.byteBuffer(config.byteBufferAllocator.buffer(string: "This is a test")))
-        }
+        let buffer = ByteBuffer(string: "This is a test")
+        let stream = HTTPBody(bufferSequence: buffer.asyncSequence(chunkSize: 16), length: buffer.readableBytes)
         let input = Input(payload: stream, member: "test")
         var optionalAWSRequest: AWSRequest?
         XCTAssertNoThrow(optionalAWSRequest = try AWSRequest(operation: "Test", path: "/", httpMethod: .POST, input: input, configuration: config))
         let awsRequest = try XCTUnwrap(optionalAWSRequest)
         let request = awsRequest.toHTTPRequestWithSignedHeader(signer: signer, serviceConfig: config)
         XCTAssertNil(request.headers["x-amz-decoded-content-length"].first)
-    }
-
-    /// Test `Body.isEmpty`
-    func testBodyIsEmpty() {
-        var body: Body = .empty
-        XCTAssertTrue(body.isEmpty)
-        body = .json(ByteBufferAllocator().buffer(string: "{}"))
-        XCTAssertFalse(body.isEmpty)
-        body = .raw(.string("hello"))
-        XCTAssertFalse(body.isEmpty)
-        body = .raw(.byteBuffer(ByteBufferAllocator().buffer(capacity: 0)))
-        XCTAssertTrue(body.isEmpty)
-        body = .text("hello")
-        XCTAssertFalse(body.isEmpty)
-        body = .xml(.init(name: "test"))
-        XCTAssertFalse(body.isEmpty)
     }
 
     func testRequiredMD5Checksum() {

@@ -25,12 +25,13 @@ internal extension AWSEncodableShape {
     }
 
     /// Encode AWSShape as XML
-    func encodeAsXML(rootName: String? = nil, namespace: String?) throws -> XML.Element {
+    func encodeAsXML(rootName: String? = nil, namespace: String?) throws -> String {
         let xml = try XMLEncoder().encode(self, name: rootName)
         if let xmlNamespace = Self._xmlNamespace ?? namespace {
             xml.addNamespace(XML.Node.namespace(stringValue: xmlNamespace))
         }
-        return xml
+        let document = XML.Document(rootElement: xml)
+        return document.xmlString
     }
 
     /// Encode AWSShape as a query array

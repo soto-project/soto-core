@@ -33,26 +33,7 @@ public struct AWSLoggingMiddleware: AWSServiceMiddleware {
         self.log = { logger.log(level: logLevel, "\($0())") }
     }
 
-    func getBodyOutput(_ body: Body) -> String {
-        var output = ""
-        switch body {
-        case .xml(let element):
-            output += "\n  "
-            output += element.description
-        case .json(let buffer):
-            output += "\n  "
-            output += buffer.getString(at: buffer.readerIndex, length: buffer.readableBytes) ?? "Failed to convert JSON response to UTF8"
-        case .raw(let payload):
-            output += "raw (\(payload.size?.description ?? "unknown") bytes)"
-        case .text(let string):
-            output += "\n  \(string)"
-        case .empty:
-            output += "empty"
-        }
-        return output
-    }
-
-    func getResponseBodyOutput(_ body: HTTPBody) -> String {
+    func getBodyOutput(_ body: HTTPBody) -> String {
         var output = ""
         switch body.storage {
         case .byteBuffer(let buffer):
@@ -93,7 +74,7 @@ public struct AWSLoggingMiddleware: AWSServiceMiddleware {
             "Response:\n" +
                 "  Status : \(response.status.code)\n" +
                 "  Headers: \(self.getHeadersOutput(HTTPHeaders(response.headers.map { ($0, "\($1)") })))\n" +
-                "  Body: \(self.getResponseBodyOutput(response.body))"
+                "  Body: \(self.getBodyOutput(response.body))"
         )
         return response
     }

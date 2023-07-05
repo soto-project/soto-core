@@ -31,8 +31,8 @@ public struct TreeHashMiddleware: AWSServiceMiddleware {
     public func chain(request: AWSRequest, context: AWSMiddlewareContext) throws -> AWSRequest {
         var request = request
         if request.httpHeaders[self.treeHashHeader].first == nil {
-            if let byteBuffer = request.body.asByteBuffer(byteBufferAllocator: ByteBufferAllocator()) {
-                let treeHash = try computeTreeHash(byteBuffer).hexDigest()
+            if case .byteBuffer(let buffer) = request.body.storage {
+                let treeHash = try computeTreeHash(buffer).hexDigest()
                 request.httpHeaders.replaceOrAdd(name: self.treeHashHeader, value: treeHash)
             }
         }

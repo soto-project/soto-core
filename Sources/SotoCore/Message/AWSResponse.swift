@@ -44,7 +44,7 @@ public struct AWSResponse {
         if streaming {
             self.body = response.body
         } else {
-            self.body = try await .init(response.body.collect(upTo: .max))
+            self.body = try await .init(buffer: response.body.collect(upTo: .max))
         }
     }
 
@@ -373,7 +373,7 @@ private protocol APIError {
 }
 
 extension XML.Document {
-    convenience init(buffer: ByteBuffer) throws {
+    public convenience init(buffer: ByteBuffer) throws {
         let xmlString = String(buffer: buffer)
         try self.init(string: xmlString)
     }

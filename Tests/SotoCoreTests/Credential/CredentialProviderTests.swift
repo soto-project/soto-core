@@ -47,8 +47,7 @@ final class CredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
-        let eventLoop = eventLoopGroup.next()
-        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger, options: .init())
+        let context = CredentialProviderFactory.Context(httpClient: httpClient, logger: TestEnvironment.logger, options: .init())
         let myCredentialProvider = MyCredentialProvider()
         let deferredProvider = DeferredCredentialProvider(context: context, provider: myCredentialProvider)
         _ = try await deferredProvider.getCredential(logger: TestEnvironment.logger)
@@ -70,8 +69,8 @@ final class CredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
-        let eventLoop = eventLoopGroup.next()
-        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger, options: .init())
+
+        let context = CredentialProviderFactory.Context(httpClient: httpClient, logger: TestEnvironment.logger, options: .init())
         let myCredentialProvider = MyCredentialProvider()
         let deferredProvider = DeferredCredentialProvider(context: context, provider: myCredentialProvider)
         try await deferredProvider.shutdown()
@@ -95,7 +94,7 @@ final class CredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
         let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
 
-        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger, options: .init()))
+        let provider = factory.createProvider(context: .init(httpClient: httpClient, logger: TestEnvironment.logger, options: .init()))
 
         let credential = try await provider.getCredential(logger: TestEnvironment.logger)
         XCTAssertEqual(credential.accessKeyId, "AWSACCESSKEYID")
@@ -113,7 +112,7 @@ final class CredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
         let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
 
-        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger, options: .init()))
+        let provider = factory.createProvider(context: .init(httpClient: httpClient, logger: TestEnvironment.logger, options: .init()))
 
         do {
             _ = try await provider.getCredential(logger: TestEnvironment.logger)
@@ -140,8 +139,7 @@ final class CredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
-        let eventLoop = eventLoopGroup.next()
-        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger, options: .init())
+        let context = CredentialProviderFactory.Context(httpClient: httpClient, logger: TestEnvironment.logger, options: .init())
         let testCredentialProvider = TestCredentialProvider()
 
         let deferredProvider = DeferredCredentialProvider(context: context, provider: testCredentialProvider)

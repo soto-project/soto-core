@@ -128,7 +128,8 @@ public struct S3Middleware: AWSServiceMiddleware {
                 xml += "</LocationConstraint>"
                 xml += "</CreateBucketConfiguration>"
             }
-            request.body = .text(xml)
+            // TODO: pass service config down so we can use the ByteBufferAllocator
+            request.body = .init(string: xml)
 
         default:
             break
@@ -137,12 +138,10 @@ public struct S3Middleware: AWSServiceMiddleware {
 
     func expect100Continue(request: inout AWSRequest) {
         if request.httpMethod == .PUT,
-           case .raw(let payload) = request.body,
-           let size = payload.size
+           let length = request.body.length,
+           length > 128 * 1024
         {
-            if size > 128 * 1024 {
-                request.httpHeaders.replaceOrAdd(name: "Expect", value: "100-continue")
-            }
+            request.httpHeaders.replaceOrAdd(name: "Expect", value: "100-continue")
         }
     }
 
@@ -170,7 +169,7 @@ public struct S3Middleware: AWSServiceMiddleware {
             errorNode.addChild(messageNode)
             let documentNode = XML.Document(rootElement: errorNode)
             let buffer = ByteBuffer(string: documentNode.xmlString)
-            response.body = .init(buffer)
+            response.body = .init(buffer: buffer)
         }
     }
 }

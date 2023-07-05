@@ -38,13 +38,13 @@ extension AsyncHTTPClient.HTTPClient.Body.StreamWriter {
                     let newAmountLeft: Int?
                     if let amountLeft = amountLeft {
                         guard byteBuffers.count > 0 else {
-                            promise.fail(AWSClient.ClientError.notEnoughData)
+                            promise.fail(AWSClient.ClientError.bodyLengthMismatch)
                             return
                         }
                         let bytesToWrite = byteBuffers.reduce(0) { $0 + $1.readableBytes }
                         newAmountLeft = amountLeft - bytesToWrite
                         guard newAmountLeft! >= 0 else {
-                            promise.fail(AWSClient.ClientError.tooMuchData)
+                            promise.fail(AWSClient.ClientError.bodyLengthMismatch)
                             return
                         }
                     } else {
@@ -64,7 +64,7 @@ extension AsyncHTTPClient.HTTPClient.Body.StreamWriter {
                                     promise.succeed(())
                                 } else if newAmountLeft < 0 {
                                     // should never reach here as HTTPClient throws HTTPClientError.bodyLengthMismatch
-                                    promise.fail(AWSClient.ClientError.tooMuchData)
+                                    promise.fail(AWSClient.ClientError.bodyLengthMismatch)
                                 } else {
                                     _write(newAmountLeft, on: eventLoop)
                                 }

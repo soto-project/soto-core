@@ -18,10 +18,10 @@ import SotoTestUtils
 import XCTest
 
 class PayloadTests: XCTestCase {
-    func testRequestPayload(_ payload: AWSPayload, expectedResult: String) async {
+    func testRequestPayload(_ payload: HTTPBody, expectedResult: String) async {
         struct DataPayload: AWSEncodableShape & AWSShapeWithPayload {
             static var _payloadPath: String = "data"
-            let data: AWSPayload
+            let data: HTTPBody
 
             private enum CodingKeys: CodingKey {}
         }
@@ -56,17 +56,17 @@ class PayloadTests: XCTestCase {
     }
 
     func testDataRequestPayload() async {
-        await self.testRequestPayload(.data(Data("testDataPayload".utf8)), expectedResult: "testDataPayload")
+        await self.testRequestPayload(.init(bytes: Data("testDataPayload".utf8)), expectedResult: "testDataPayload")
     }
 
     func testStringRequestPayload() async {
-        await self.testRequestPayload(.string("testStringPayload"), expectedResult: "testStringPayload")
+        await self.testRequestPayload(.init(string: "testStringPayload"), expectedResult: "testStringPayload")
     }
 
     func testByteBufferRequestPayload() async {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: 32)
         byteBuffer.writeString("testByteBufferPayload")
-        await self.testRequestPayload(.byteBuffer(byteBuffer), expectedResult: "testByteBufferPayload")
+        await self.testRequestPayload(.init(buffer: byteBuffer), expectedResult: "testByteBufferPayload")
     }
 
     func testResponsePayload() async {

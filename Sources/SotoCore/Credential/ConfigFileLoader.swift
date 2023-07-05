@@ -101,16 +101,16 @@ enum ConfigFileLoader {
         let fileIO = NonBlockingFileIO(threadPool: threadPool)
 
         // Load credentials file
-        return self.loadFile(path: credentialsFilePath, on: context.eventLoop, using: fileIO)
+        return self.loadFile(path: credentialsFilePath, on: context.httpClient.eventLoopGroup.any(), using: fileIO)
             .flatMap { credentialsByteBuffer in
                 // Load profile config file
-                return loadFile(path: configFilePath, on: context.eventLoop, using: fileIO)
+                return loadFile(path: configFilePath, on: context.httpClient.eventLoopGroup.any(), using: fileIO)
                     .map {
                         (credentialsByteBuffer, $0)
                     }
                     .flatMapError { _ in
                         // Recover from error if profile config file does not exist
-                        context.eventLoop.makeSucceededFuture((credentialsByteBuffer, nil))
+                        context.httpClient.eventLoopGroup.any().makeSucceededFuture((credentialsByteBuffer, nil))
                     }
             }
             .flatMapErrorThrowing { _ in

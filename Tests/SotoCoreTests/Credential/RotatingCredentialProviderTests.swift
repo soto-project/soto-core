@@ -45,7 +45,6 @@ class RotatingCredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(group))
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
-        let loop = group.next()
 
         let client = RotatingCredentialTestClient {
             try await Task.sleep(nanoseconds: 5_000_000_000)
@@ -59,7 +58,6 @@ class RotatingCredentialProviderTests: XCTestCase {
         }
         let context = CredentialProviderFactory.Context(
             httpClient: httpClient,
-            eventLoop: loop,
             logger: Logger(label: "soto"),
             options: .init()
         )
@@ -72,7 +70,6 @@ class RotatingCredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(group))
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
-        let loop = group.next()
 
         let cred = TestExpiringCredential(
             accessKeyId: "abc123",
@@ -86,7 +83,7 @@ class RotatingCredentialProviderTests: XCTestCase {
             count.wrappingIncrement(ordering: .sequentiallyConsistent)
             return cred
         }
-        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, logger: Logger(label: "soto"), options: .init())
+        let context = CredentialProviderFactory.Context(httpClient: httpClient, logger: Logger(label: "soto"), options: .init())
         let provider = RotatingCredentialProvider(context: context, provider: client)
 
         // get credentials for first time
@@ -114,7 +111,6 @@ class RotatingCredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(group))
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
-        let loop = group.next()
 
         let cred = TestExpiringCredential(
             accessKeyId: "abc123",
@@ -129,7 +125,7 @@ class RotatingCredentialProviderTests: XCTestCase {
             count.wrappingIncrement(ordering: .sequentiallyConsistent)
             return cred
         }
-        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, logger: TestEnvironment.logger, options: .init())
+        let context = CredentialProviderFactory.Context(httpClient: httpClient, logger: TestEnvironment.logger, options: .init())
         let provider = RotatingCredentialProvider(context: context, provider: client)
 
         let iterations = 500
@@ -159,7 +155,6 @@ class RotatingCredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(group))
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
-        let loop = group.next()
 
         let iterations = 50
         let count = ManagedAtomic(0)
@@ -172,7 +167,7 @@ class RotatingCredentialProviderTests: XCTestCase {
                 expiration: currentCount == 0 ? Date(timeIntervalSinceNow: 60 * 2) : Date.distantFuture
             )
         }
-        let context = CredentialProviderFactory.Context(httpClient: httpClient, eventLoop: loop, logger: TestEnvironment.logger, options: .init())
+        let context = CredentialProviderFactory.Context(httpClient: httpClient, logger: TestEnvironment.logger, options: .init())
         let provider = RotatingCredentialProvider(context: context, provider: client)
 
         for _ in 0..<iterations {

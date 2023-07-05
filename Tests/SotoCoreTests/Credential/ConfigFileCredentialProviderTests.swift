@@ -24,16 +24,14 @@ import XCTest
 class ConfigFileCredentialProviderTests: XCTestCase {
     // MARK: - Credential Provider
 
-    func makeContext() -> (CredentialProviderFactory.Context, MultiThreadedEventLoopGroup, HTTPClient) {
-        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let eventLoop = eventLoopGroup.next()
-        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoop))
-        return (.init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger, options: .init()), eventLoopGroup, httpClient)
+    func makeContext() -> (CredentialProviderFactory.Context, HTTPClient) {
+        let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+        return (.init(httpClient: httpClient, logger: TestEnvironment.logger, options: .init()), httpClient)
     }
 
     func testCredentialProviderStatic() async throws {
         let credentials = ConfigFileLoader.SharedCredentials.staticCredential(credential: StaticCredential(accessKeyId: "foo", secretAccessKey: "bar"))
-        let (context, eventLoopGroup, httpClient) = self.makeContext()
+        let (context, httpClient) = self.makeContext()
 
         let provider = try ConfigFileCredentialProvider.credentialProvider(
             from: credentials,
@@ -45,7 +43,6 @@ class ConfigFileCredentialProviderTests: XCTestCase {
 
         try await provider.shutdown()
         try await httpClient.shutdown()
-        XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
     }
 
     func testCredentialProviderSTSAssumeRole() async throws {
@@ -55,7 +52,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
             region: nil,
             sourceCredentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar")
         )
-        let (context, eventLoopGroup, httpClient) = self.makeContext()
+        let (context, httpClient) = self.makeContext()
 
         let provider = try ConfigFileCredentialProvider.credentialProvider(
             from: credentials,
@@ -67,7 +64,6 @@ class ConfigFileCredentialProviderTests: XCTestCase {
 
         try await provider.shutdown()
         try await httpClient.shutdown()
-        XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
     }
 
     // MARK: - Config File Credentials Provider
@@ -90,7 +86,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
         let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
 
-        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger, options: .init()))
+        let provider = factory.createProvider(context: .init(httpClient: httpClient, logger: TestEnvironment.logger, options: .init()))
 
         let credential: Credential = try await provider.getCredential(logger: TestEnvironment.logger)
         XCTAssertEqual(credential.accessKeyId, "AWSACCESSKEYID")
@@ -118,7 +114,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
         let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
 
-        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger, options: .init()))
+        let provider = factory.createProvider(context: .init(httpClient: httpClient, logger: TestEnvironment.logger, options: .init()))
 
         let credential: Credential = try await provider.getCredential(logger: TestEnvironment.logger)
         XCTAssertEqual(credential.accessKeyId, "TESTPROFILE-AWSACCESSKEYID")
@@ -136,7 +132,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
         let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
 
-        let provider = factory.createProvider(context: .init(httpClient: httpClient, eventLoop: eventLoop, logger: TestEnvironment.logger, options: .init()))
+        let provider = factory.createProvider(context: .init(httpClient: httpClient, logger: TestEnvironment.logger, options: .init()))
 
         do {
             _ = try await provider.getCredential(logger: TestEnvironment.logger)
@@ -166,12 +162,11 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         let filename = #function
         let filenameURL = URL(fileURLWithPath: filename)
         XCTAssertNoThrow(try Data(credentialsFile.utf8).write(to: filenameURL))
-        let (context, eventLoopGroup, httpClient) = makeContext()
+        let (context, httpClient) = makeContext()
 
         defer {
             XCTAssertNoThrow(try FileManager.default.removeItem(at: filenameURL))
             XCTAssertNoThrow(try httpClient.syncShutdown())
-            XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully())
         }
 
         let sharedCredentials = try await ConfigFileLoader.loadSharedCredentials(

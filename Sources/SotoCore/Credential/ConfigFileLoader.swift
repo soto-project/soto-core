@@ -137,10 +137,7 @@ enum ConfigFileLoader {
 
         return fileIO.openFile(path: path, eventLoop: eventLoop)
             .flatMap { handle, region in
-                fileIO.read(fileRegion: region, allocator: ByteBufferAllocator(), eventLoop: eventLoop)
-                    .map {
-                        ($0, handle)
-                    }
+                fileIO.read(fileRegion: region, allocator: ByteBufferAllocator(), eventLoop: eventLoop).and(value: handle)
             }
             .flatMapThrowing { byteBuffer, handle in
                 try handle.close()

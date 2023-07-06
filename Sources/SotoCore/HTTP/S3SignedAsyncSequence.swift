@@ -24,12 +24,12 @@ private let maxHeaderSize: Int = bufferSizeInHex.count + chunkSignatureLength + 
 /// AsyncSequence that S3 signs the data returned from a base sequence
 ///
 /// See https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-streaming.html for details
-struct S3SignedAsyncSequence<Base: AsyncSequence>: AsyncSequence where Base.Element == ByteBuffer {
+struct S3SignedAsyncSequence<Base: AsyncSequence & Sendable>: AsyncSequence, Sendable where Base.Element == ByteBuffer {
     typealias Element = ByteBuffer
 
     let base: Base
     let signer: AWSSigner
-    let seedSigningData: AWSSigner.ChunkedSigningData
+    let seedSigningData: UnsafeTransfer<AWSSigner.ChunkedSigningData>
 
     struct AsyncIterator: AsyncIteratorProtocol {
         enum State {
@@ -79,7 +79,7 @@ struct S3SignedAsyncSequence<Base: AsyncSequence>: AsyncSequence where Base.Elem
         return .init(
             baseIterator: self.base.fixedSizeSequence(chunkSize: 64 * 1024).makeAsyncIterator(),
             signer: self.signer,
-            signingData: self.seedSigningData
+            signingData: self.seedSigningData.wrappedValue
         )
     }
 
@@ -100,9 +100,9 @@ struct S3SignedAsyncSequence<Base: AsyncSequence>: AsyncSequence where Base.Elem
     }
 }
 
-extension AsyncSequence where Element == ByteBuffer {
+extension AsyncSequence where Element == ByteBuffer, Self: Sendable {
     /// create S3 signed sequence of data
     func s3Signed(signer: AWSSigner, seedSigningData: AWSSigner.ChunkedSigningData) -> S3SignedAsyncSequence<Self> {
-        S3SignedAsyncSequence(base: self, signer: signer, seedSigningData: seedSigningData)
+        S3SignedAsyncSequence(base: self, signer: signer, seedSigningData: .init(seedSigningData))
     }
 }

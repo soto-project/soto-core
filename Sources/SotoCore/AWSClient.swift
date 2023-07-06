@@ -510,7 +510,7 @@ extension AWSClient {
     /// - parameters:
     ///     - url : URL to sign
     ///     - httpMethod: HTTP method to use (.GET, .PUT, .PUSH etc)
-    ///     - httpHeaders: Headers that are to be used with this URL.
+    ///     - headers: Headers that are to be used with this URL.
     ///     - body: Payload to sign as well. While it is unnecessary to provide the body for S3 other services may require it
     ///     - serviceConfig: additional AWS service configuration used to sign the url
     ///     - logger: Logger to output to
@@ -520,7 +520,7 @@ extension AWSClient {
         url: URL,
         httpMethod: HTTPMethod,
         headers: HTTPHeaders = HTTPHeaders(),
-        body: AWSPayload,
+        body: HTTPBody,
         serviceConfig: AWSServiceConfig,
         logger: Logger = AWSClient.loggingDisabled
     ) async throws -> HTTPHeaders {
@@ -533,8 +533,14 @@ extension AWSClient {
         guard let cleanURL = signer.processURL(url: url) else {
             throw AWSClient.ClientError.invalidURL
         }
-        let body: AWSSigner.BodyData? = body.asByteBuffer().map { .byteBuffer($0) }
-        return signer.signHeaders(url: cleanURL, method: httpMethod, headers: headers, body: body)
+        let bodyData: AWSSigner.BodyData?
+        switch body.storage {
+        case .byteBuffer(let buffer):
+            bodyData = .byteBuffer(buffer)
+        case .asyncSequence:
+            bodyData = nil
+        }
+        return signer.signHeaders(url: cleanURL, method: httpMethod, headers: headers, body: bodyData)
     }
 
     func createSigner(serviceConfig: AWSServiceConfig, logger: Logger) async throws -> AWSSigner {

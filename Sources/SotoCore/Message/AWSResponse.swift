@@ -17,6 +17,7 @@ import class Foundation.JSONDecoder
 import class Foundation.JSONSerialization
 import Logging
 import NIOCore
+import NIOFoundationCompat
 import NIOHTTP1
 import SotoXML
 

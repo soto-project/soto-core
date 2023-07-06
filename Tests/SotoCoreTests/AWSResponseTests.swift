@@ -160,7 +160,7 @@ class AWSResponseTests: XCTestCase {
         let response = AWSHTTPResponse(
             status: .ok,
             headers: HTTPHeaders(),
-            body: .init(bufferSequence: byteBuffer.asyncSequence(chunkSize: 32), length: nil)
+            body: .init(asyncSequence: byteBuffer.asyncSequence(chunkSize: 32), length: nil)
         )
 
         var _output: Output?
@@ -222,7 +222,7 @@ class AWSResponseTests: XCTestCase {
         let response = AWSHTTPResponse(
             status: .ok,
             headers: ["Content-Type": "application/json"],
-            body: .init(bufferSequence: byteBuffer.asyncSequence(chunkSize: 32), length: nil)
+            body: .init(asyncSequence: byteBuffer.asyncSequence(chunkSize: 32), length: nil)
         )
 
         var _output: Output?

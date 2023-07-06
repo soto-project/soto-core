@@ -50,7 +50,7 @@ jobs:
     - name: Test
       run: |
         swift --version
-        swift test --enable-code-coverage --parallel
+        swift test --enable-code-coverage
     - name: Convert coverage files
       run: |
         llvm-cov export -format="lcov" \

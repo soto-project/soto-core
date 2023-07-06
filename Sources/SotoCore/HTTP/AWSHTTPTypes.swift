@@ -47,8 +47,8 @@ public struct HTTPBody: Sendable {
         self.storage = .byteBuffer(byteBuffer)
     }
 
-    init<BufferSequence: AsyncSequence>(bufferSequence: BufferSequence, length: Int?) where BufferSequence.Element == ByteBuffer {
-        self.storage = .asyncSequence(sequence: .init(bufferSequence), length: length)
+    public init<BufferSequence: AsyncSequence>(asyncSequence: BufferSequence, length: Int?) where BufferSequence.Element == ByteBuffer {
+        self.storage = .asyncSequence(sequence: .init(asyncSequence), length: length)
     }
 
     public func collect(upTo length: Int) async throws -> ByteBuffer {

@@ -38,7 +38,7 @@ public struct AWSLoggingMiddleware: AWSServiceMiddleware {
         switch body.storage {
         case .byteBuffer(let buffer):
             output += "\n  "
-            output += "\(buffer)"
+            output += "\(String(buffer: buffer))"
         default:
             output += "binary data"
         }

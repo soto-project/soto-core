@@ -62,8 +62,23 @@ public struct AWSRequest {
         switch payload.storage {
         case .byteBuffer(let buffer):
             bodyDataForSigning = .byteBuffer(buffer)
-        case .asyncSequence:
-            bodyDataForSigning = .unsignedPayload
+        case .asyncSequence(let sequence, let length):
+            if signer.name == "s3", !serviceConfig.options.contains(.s3DisableChunkedUploads) {
+                assert(length != nil, "S3 stream requires size")
+                var headers = httpHeaders
+                // need to add these headers here as it needs to be included in the signed headers
+                headers.add(name: "x-amz-decoded-content-length", value: length!.description)
+                headers.add(name: "content-encoding", value: "aws-chunked")
+                // get signed headers and seed signing data
+                let (signedHeaders, seedSigningData) = signer.startSigningChunks(url: url, method: httpMethod, headers: headers, date: Date())
+                // create s3 signed Sequence
+                let s3Signed = sequence.s3Signed(signer: signer, seedSigningData: seedSigningData)
+                // create new payload and return request
+                let payload = HTTPBody(asyncSequence: s3Signed, length: s3Signed.contentSize(from: length!))
+                return AWSHTTPRequest(url: url, method: httpMethod, headers: signedHeaders, body: payload)
+            } else {
+                bodyDataForSigning = .unsignedPayload
+            }
         }
         let signedHeaders = signer.signHeaders(url: url, method: httpMethod, headers: httpHeaders, body: bodyDataForSigning, date: Date())
         return AWSHTTPRequest(url: url, method: httpMethod, headers: signedHeaders, body: payload)

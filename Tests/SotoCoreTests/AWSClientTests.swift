@@ -239,7 +239,7 @@ class AWSClientTests: XCTestCase {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: data.count)
         byteBuffer.writeBytes(data)
 
-        let payload = HTTPBody(bufferSequence: byteBuffer.asyncSequence(chunkSize: blockSize), length: bufferSize)
+        let payload = HTTPBody(asyncSequence: byteBuffer.asyncSequence(chunkSize: blockSize), length: bufferSize)
         let input = Input(payload: payload)
         async let responseTask: Void = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: TestEnvironment.logger)
 
@@ -269,29 +269,27 @@ class AWSClientTests: XCTestCase {
         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 18 * 1024, blockSize: 47 * 1024)
     }
 
-    /*
-     func testRequestS3Streaming() async throws {
-         let awsServer = AWSTestServer(serviceProtocol: .json)
-         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
-         let config = createServiceConfig(service: "s3", endpoint: awsServer.address)
-         let client = createAWSClient(credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"), httpClientProvider: .shared(httpClient))
-         defer {
-             XCTAssertNoThrow(try client.syncShutdown())
-             XCTAssertNoThrow(try awsServer.stop())
-             XCTAssertNoThrow(try httpClient.syncShutdown())
-         }
+    func testRequestS3Streaming() async throws {
+        let awsServer = AWSTestServer(serviceProtocol: .json)
+        let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+        let config = createServiceConfig(service: "s3", endpoint: awsServer.address)
+        let client = createAWSClient(credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"), httpClientProvider: .shared(httpClient))
+        defer {
+            XCTAssertNoThrow(try client.syncShutdown())
+            XCTAssertNoThrow(try awsServer.stop())
+            XCTAssertNoThrow(try httpClient.syncShutdown())
+        }
 
-         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128 * 1024, blockSize: 16 * 1024)
-         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 192 * 1024, blockSize: 128 * 1024)
-         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 81 * 1024, blockSize: 16 * 1024)
-         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128 * 1024, blockSize: S3ChunkedStreamReader.bufferSize)
-         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 130 * 1024, blockSize: S3ChunkedStreamReader.bufferSize)
-         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128 * 1024, blockSize: 17 * 1024)
-         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 68 * 1024, blockSize: 67 * 1024)
-         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 65537, blockSize: 65537)
-         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 65552, blockSize: 65552)
-     }
-     */
+        try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128 * 1024, blockSize: 16 * 1024)
+        try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 192 * 1024, blockSize: 128 * 1024)
+        try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 81 * 1024, blockSize: 16 * 1024)
+        try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128 * 1024, blockSize: 64 * 1024)
+        try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 130 * 1024, blockSize: 64 * 1024)
+        try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128 * 1024, blockSize: 17 * 1024)
+        try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 68 * 1024, blockSize: 67 * 1024)
+        try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 65537, blockSize: 65537)
+        try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 65552, blockSize: 65552)
+    }
 
     func testRequestStreamingWithPayload(_ payload: HTTPBody) async throws {
         struct Input: AWSEncodableShape & AWSShapeWithPayload {
@@ -319,7 +317,7 @@ class AWSClientTests: XCTestCase {
     func testRequestStreamingTooMuchData() async throws {
         // set up stream of 8 bytes but supply more than that
         let buffer = ByteBuffer(string: "String longer than 8 bytes")
-        let payload = HTTPBody(bufferSequence: buffer.asyncSequence(chunkSize: 1024), length: buffer.readableBytes - 1)
+        let payload = HTTPBody(asyncSequence: buffer.asyncSequence(chunkSize: 1024), length: buffer.readableBytes - 1)
         do {
             try await self.testRequestStreamingWithPayload(payload)
             XCTFail("Should not get here")
@@ -331,7 +329,7 @@ class AWSClientTests: XCTestCase {
     func testRequestStreamingNotEnoughData() async throws {
         // set up stream of 8 bytes but supply more than that
         let buffer = ByteBuffer(string: "String longer than 8 bytes")
-        let payload = HTTPBody(bufferSequence: buffer.asyncSequence(chunkSize: 1024), length: buffer.readableBytes + 1)
+        let payload = HTTPBody(asyncSequence: buffer.asyncSequence(chunkSize: 1024), length: buffer.readableBytes + 1)
         do {
             try await self.testRequestStreamingWithPayload(payload)
             XCTFail("Should not get here")
@@ -365,7 +363,7 @@ class AWSClientTests: XCTestCase {
             var byteBuffer = ByteBufferAllocator().buffer(capacity: bufferSize)
             byteBuffer.writeBytes(data)
 
-            let payload = HTTPBody(bufferSequence: byteBuffer.asyncSequence(chunkSize: blockSize), length: nil)
+            let payload = HTTPBody(asyncSequence: byteBuffer.asyncSequence(chunkSize: blockSize), length: nil)
             let input = Input(payload: payload)
             async let responseTask: Void = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: TestEnvironment.logger)
 
@@ -603,7 +601,7 @@ class AWSClientTests: XCTestCase {
                 XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try httpClient.syncShutdown())
             }
-            let payload = HTTPBody(bufferSequence: ByteBuffer().asyncSequence(chunkSize: 16), length: nil)
+            let payload = HTTPBody(asyncSequence: ByteBuffer().asyncSequence(chunkSize: 16), length: nil)
             let input = Input(payload: payload)
             async let responseTask: Void = client.execute(
                 operation: "test",

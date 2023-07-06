@@ -61,6 +61,11 @@ public struct AWSResponseError: AWSErrorType {
     public let errorCode: String
     public let context: AWSErrorContext?
 
+    public init(errorCode: String) {
+        self.errorCode = errorCode
+        self.context = nil
+    }
+
     public init(errorCode: String, context: AWSErrorContext) {
         self.errorCode = errorCode
         self.context = context

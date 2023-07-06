@@ -98,7 +98,7 @@ extension AWSService {
         url: URL,
         httpMethod: HTTPMethod,
         headers: HTTPHeaders = HTTPHeaders(),
-        body: AWSPayload = .empty,
+        body: HTTPBody = .init(),
         logger: Logger = AWSClient.loggingDisabled
     ) async throws -> HTTPHeaders {
         return try await self.client.signHeaders(url: url, httpMethod: httpMethod, headers: headers, body: body, serviceConfig: self.config, logger: logger)

@@ -47,7 +47,7 @@ public struct HTTPBody: Sendable {
         self.storage = .byteBuffer(byteBuffer)
     }
 
-    public init<BufferSequence: AsyncSequence>(asyncSequence: BufferSequence, length: Int?) where BufferSequence.Element == ByteBuffer {
+    public init<BufferSequence: AsyncSequence & Sendable>(asyncSequence: BufferSequence, length: Int?) where BufferSequence.Element == ByteBuffer {
         self.storage = .asyncSequence(sequence: .init(asyncSequence), length: length)
     }
 

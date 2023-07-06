@@ -39,9 +39,9 @@ extension CredentialProvider {
 ///
 /// The factory functions are only called once the `AWSClient` has been setup. This means we can supply
 /// things like a `Logger` and `HTTPClient` to the credential provider when we construct it.
-public struct CredentialProviderFactory {
+public struct CredentialProviderFactory: Sendable {
     /// The initialization context for a `ContextProvider`
-    public struct Context {
+    public struct Context: Sendable {
         /// The `AWSClient`s internal `HTTPClient`
         public let httpClient: HTTPClient
         /// The `Logger` attached to the AWSClient
@@ -50,9 +50,9 @@ public struct CredentialProviderFactory {
         public let options: AWSClient.Options
     }
 
-    private let cb: (Context) -> CredentialProvider
+    private let cb: @Sendable (Context) -> CredentialProvider
 
-    private init(cb: @escaping (Context) -> CredentialProvider) {
+    private init(cb: @escaping @Sendable (Context) -> CredentialProvider) {
         self.cb = cb
     }
 
@@ -76,7 +76,7 @@ extension CredentialProviderFactory {
     }
 
     /// Create a custom `CredentialProvider`
-    public static func custom(_ factory: @escaping (Context) -> CredentialProvider) -> CredentialProviderFactory {
+    public static func custom(_ factory: @escaping @Sendable (Context) -> CredentialProvider) -> CredentialProviderFactory {
         Self(cb: factory)
     }
 

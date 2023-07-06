@@ -113,9 +113,10 @@ public final class AWSClient: Sendable {
     /// the `AWSClient`.
     ///
     /// - Throws: AWSClient.ClientError.alreadyShutdown: You have already shutdown the client
+    @available(*, noasync, message: "syncShutdown() can block indefinitely, prefer shutdown()", renamed: "shutdown()")
     public func syncShutdown() throws {
         let errorStorage: NIOLockedValueBox<Error?> = .init(nil)
-        let continuation = DispatchWorkItem {}
+        let semaphore = DispatchSemaphore(value: 0)
         Task {
             do {
                 try await shutdown()
@@ -124,9 +125,9 @@ public final class AWSClient: Sendable {
                     errorStorage = error
                 }
             }
-            continuation.perform()
+            semaphore.signal()
         }
-        continuation.wait()
+        semaphore.wait()
         try errorStorage.withLockedValue { errorStorage in
             if let error = errorStorage {
                 throw error

@@ -43,6 +43,7 @@ public struct AWSEndpoints {
 public struct AWSEndpointStorage: Sendable {
     let endpoint: ExpiringValue<String>
 
+    // TODO: Initialise endpoint storage with an endpoint
     public init() {
         // Set endpoint to renew 3 minutes before it expires
         self.endpoint = .init(threshold: 3 * 60)

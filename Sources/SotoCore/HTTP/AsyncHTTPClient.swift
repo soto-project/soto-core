@@ -50,7 +50,7 @@ extension AsyncHTTPClient.HTTPClient {
             return .init(
                 status: response.status,
                 headers: response.headers,
-                body: .init(bufferSequence: response.body, length: nil)
+                body: .init(asyncSequence: response.body, length: nil)
             )
         } catch let error as HTTPClientError where error == .bodyLengthMismatch {
             throw AWSClient.ClientError.bodyLengthMismatch

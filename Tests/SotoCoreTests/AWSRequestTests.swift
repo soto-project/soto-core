@@ -460,7 +460,7 @@ class AWSRequestTests: XCTestCase {
             region: config.region.rawValue
         )
         let buffer = ByteBuffer(string: "This is a test")
-        let stream = HTTPBody(bufferSequence: buffer.asyncSequence(chunkSize: 16), length: buffer.readableBytes)
+        let stream = HTTPBody(asyncSequence: buffer.asyncSequence(chunkSize: 16), length: buffer.readableBytes)
         let input = Input(payload: stream, member: "test")
         var optionalAWSRequest: AWSRequest?
         XCTAssertNoThrow(optionalAWSRequest = try AWSRequest(operation: "Test", path: "/", httpMethod: .POST, input: input, configuration: config))

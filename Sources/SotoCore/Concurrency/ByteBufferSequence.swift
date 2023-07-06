@@ -16,12 +16,15 @@ import NIOCore
 import NIOPosix
 
 /// Provide ByteBuffer as an AsyncSequence of equal size blocks
-struct ByteBufferAsyncSequence: AsyncSequence, Sendable {
-    typealias Element = ByteBuffer
+public struct ByteBufferAsyncSequence: AsyncSequence, Sendable {
+    public typealias Element = ByteBuffer
 
+    @usableFromInline
     let byteBuffer: ByteBuffer
+    @usableFromInline
     let chunkSize: Int
 
+    @inlinable
     init(
         _ byteBuffer: ByteBuffer,
         chunkSize: Int
@@ -30,11 +33,20 @@ struct ByteBufferAsyncSequence: AsyncSequence, Sendable {
         self.chunkSize = chunkSize
     }
 
-    struct AsyncIterator: AsyncIteratorProtocol {
+    public struct AsyncIterator: AsyncIteratorProtocol {
+        @usableFromInline
         var byteBuffer: ByteBuffer
+        @usableFromInline
         let chunkSize: Int
 
-        mutating func next() async throws -> ByteBuffer? {
+        @inlinable
+        internal init(byteBuffer: ByteBuffer, chunkSize: Int) {
+            self.byteBuffer = byteBuffer
+            self.chunkSize = chunkSize
+        }
+
+        @inlinable
+        public mutating func next() async throws -> ByteBuffer? {
             let size = Swift.min(self.chunkSize, self.byteBuffer.readableBytes)
             if size > 0 {
                 return self.byteBuffer.readSlice(length: size)
@@ -43,13 +55,15 @@ struct ByteBufferAsyncSequence: AsyncSequence, Sendable {
         }
     }
 
-    func makeAsyncIterator() -> AsyncIterator {
+    @inlinable
+    public func makeAsyncIterator() -> AsyncIterator {
         .init(byteBuffer: self.byteBuffer, chunkSize: self.chunkSize)
     }
 }
 
 extension ByteBuffer {
-    func asyncSequence(chunkSize: Int) -> ByteBufferAsyncSequence {
+    @inlinable
+    public func asyncSequence(chunkSize: Int) -> ByteBufferAsyncSequence {
         return ByteBufferAsyncSequence(self, chunkSize: chunkSize)
     }
 }

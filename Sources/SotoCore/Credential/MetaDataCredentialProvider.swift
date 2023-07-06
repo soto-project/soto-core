@@ -28,6 +28,7 @@ import struct Foundation.URL
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
+import NIOFoundationCompat
 import NIOHTTP1
 import SotoSignerV4
 

@@ -154,7 +154,7 @@ class AWSResponseTests: XCTestCase {
         struct Output: AWSDecodableShape, AWSShapeWithPayload {
             static let _payloadPath: String = "body"
             static let _options: AWSShapeOptions = .rawPayload
-            let body: HTTPBody
+            let body: AWSHTTPBody
         }
         let byteBuffer = ByteBuffer(string: "{\"name\":\"hello\"}")
         let response = AWSHTTPResponse(
@@ -216,7 +216,7 @@ class AWSResponseTests: XCTestCase {
             public static var _encoding = [
                 AWSMemberEncoding(label: "contentType", location: .header("content-type")),
             ]
-            let body: HTTPBody
+            let body: AWSHTTPBody
         }
         let byteBuffer = ByteBuffer(string: "{\"name\":\"hello\"}")
         let response = AWSHTTPResponse(

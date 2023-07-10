@@ -28,7 +28,7 @@ public struct AWSResponse {
     /// response headers
     public var headers: HTTPHeaders
     /// response body
-    public var body: HTTPBody
+    public var body: AWSHTTPBody
 
     /// initialize an AWSResponse Object
     /// - parameters:

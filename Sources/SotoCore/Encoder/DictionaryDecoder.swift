@@ -1362,7 +1362,7 @@ extension __DictionaryDecoder {
             return try self.unbox(value, as: Data.self)
         } else if type == Date.self {
             return try self.unbox(value, as: Date.self)
-        } else if type == HTTPBody.self {
+        } else if type == AWSHTTPBody.self {
             return value
         } else {
             self.storage.push(container: value)

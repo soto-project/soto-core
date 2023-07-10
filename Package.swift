@@ -57,8 +57,7 @@ let package = Package(
                 .product(name: "NIOTransportServices", package: "swift-nio-transport-services"),
                 .product(name: "NIOFoundationCompat", package: "swift-nio"),
                 .product(name: "JMESPath", package: "jmespath.swift"),
-            ],
-            swiftSettings: [.unsafeFlags(["-Xfrontend", "-warn-concurrency"])]
+            ]
         ),
         .target(name: "SotoSignerV4", dependencies: [
             .product(name: "Crypto", package: "swift-crypto"),

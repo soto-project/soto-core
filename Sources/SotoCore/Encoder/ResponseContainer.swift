@@ -54,7 +54,7 @@ public struct ResponseDecodingContainer {
         return Value(self.response.status.code)
     }
 
-    public func decodePayload() -> HTTPBody {
+    public func decodePayload() -> AWSHTTPBody {
         return self.response.body
     }
 

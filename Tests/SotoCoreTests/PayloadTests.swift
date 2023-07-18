@@ -18,10 +18,10 @@ import SotoTestUtils
 import XCTest
 
 class PayloadTests: XCTestCase {
-    func testRequestPayload(_ payload: HTTPBody, expectedResult: String) async {
+    func testRequestPayload(_ payload: AWSHTTPBody, expectedResult: String) async {
         struct DataPayload: AWSEncodableShape & AWSShapeWithPayload {
             static var _payloadPath: String = "data"
-            let data: HTTPBody
+            let data: AWSHTTPBody
 
             private enum CodingKeys: CodingKey {}
         }
@@ -73,7 +73,12 @@ class PayloadTests: XCTestCase {
         struct Output: AWSDecodableShape, AWSShapeWithPayload {
             static let _payloadPath: String = "payload"
             static let _options: AWSShapeOptions = .rawPayload
-            let payload: HTTPBody
+            let payload: AWSHTTPBody
+
+            init(from decoder: Decoder) throws {
+                let response = decoder.userInfo[.awsResponse] as! ResponseDecodingContainer
+                self.payload = response.decodePayload()
+            }
         }
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)

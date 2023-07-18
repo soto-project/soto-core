@@ -232,14 +232,14 @@ class AWSClientTests: XCTestCase {
         struct Input: AWSEncodableShape & AWSShapeWithPayload {
             static var _payloadPath: String = "payload"
             static var _options: AWSShapeOptions = [.allowStreaming, .rawPayload]
-            let payload: HTTPBody
+            let payload: AWSHTTPBody
             private enum CodingKeys: CodingKey {}
         }
         let data = createRandomBuffer(45, 9182, size: bufferSize)
         var byteBuffer = ByteBufferAllocator().buffer(capacity: data.count)
         byteBuffer.writeBytes(data)
 
-        let payload = HTTPBody(asyncSequence: byteBuffer.asyncSequence(chunkSize: blockSize), length: bufferSize)
+        let payload = AWSHTTPBody(asyncSequence: byteBuffer.asyncSequence(chunkSize: blockSize), length: bufferSize)
         let input = Input(payload: payload)
         async let responseTask: Void = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: TestEnvironment.logger)
 
@@ -291,11 +291,11 @@ class AWSClientTests: XCTestCase {
         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 65552, blockSize: 65552)
     }
 
-    func testRequestStreamingWithPayload(_ payload: HTTPBody) async throws {
+    func testRequestStreamingWithPayload(_ payload: AWSHTTPBody) async throws {
         struct Input: AWSEncodableShape & AWSShapeWithPayload {
             static var _payloadPath: String = "payload"
             static var _options: AWSShapeOptions = [.allowStreaming]
-            let payload: HTTPBody
+            let payload: AWSHTTPBody
             private enum CodingKeys: CodingKey {}
         }
 
@@ -317,7 +317,7 @@ class AWSClientTests: XCTestCase {
     func testRequestStreamingTooMuchData() async throws {
         // set up stream of 8 bytes but supply more than that
         let buffer = ByteBuffer(string: "String longer than 8 bytes")
-        let payload = HTTPBody(asyncSequence: buffer.asyncSequence(chunkSize: 1024), length: buffer.readableBytes - 1)
+        let payload = AWSHTTPBody(asyncSequence: buffer.asyncSequence(chunkSize: 1024), length: buffer.readableBytes - 1)
         do {
             try await self.testRequestStreamingWithPayload(payload)
             XCTFail("Should not get here")
@@ -329,7 +329,7 @@ class AWSClientTests: XCTestCase {
     func testRequestStreamingNotEnoughData() async throws {
         // set up stream of 8 bytes but supply more than that
         let buffer = ByteBuffer(string: "String longer than 8 bytes")
-        let payload = HTTPBody(asyncSequence: buffer.asyncSequence(chunkSize: 1024), length: buffer.readableBytes + 1)
+        let payload = AWSHTTPBody(asyncSequence: buffer.asyncSequence(chunkSize: 1024), length: buffer.readableBytes + 1)
         do {
             try await self.testRequestStreamingWithPayload(payload)
             XCTFail("Should not get here")
@@ -342,7 +342,7 @@ class AWSClientTests: XCTestCase {
         struct Input: AWSEncodableShape & AWSShapeWithPayload {
             static var _payloadPath: String = "payload"
             static var _options: AWSShapeOptions = [.allowStreaming, .allowChunkedStreaming, .rawPayload]
-            let payload: HTTPBody
+            let payload: AWSHTTPBody
             private enum CodingKeys: CodingKey {}
         }
 
@@ -363,7 +363,7 @@ class AWSClientTests: XCTestCase {
             var byteBuffer = ByteBufferAllocator().buffer(capacity: bufferSize)
             byteBuffer.writeBytes(data)
 
-            let payload = HTTPBody(asyncSequence: byteBuffer.asyncSequence(chunkSize: blockSize), length: nil)
+            let payload = AWSHTTPBody(asyncSequence: byteBuffer.asyncSequence(chunkSize: blockSize), length: nil)
             let input = Input(payload: payload)
             async let responseTask: Void = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: TestEnvironment.logger)
 
@@ -587,7 +587,7 @@ class AWSClientTests: XCTestCase {
         struct Input: AWSEncodableShape & AWSShapeWithPayload {
             static var _payloadPath: String = "payload"
             static var _options: AWSShapeOptions = [.allowStreaming, .allowChunkedStreaming, .rawPayload]
-            let payload: HTTPBody
+            let payload: AWSHTTPBody
             private enum CodingKeys: CodingKey {}
         }
         let retryPolicy = TestRetryPolicy()
@@ -601,7 +601,7 @@ class AWSClientTests: XCTestCase {
                 XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try httpClient.syncShutdown())
             }
-            let payload = HTTPBody(asyncSequence: ByteBuffer().asyncSequence(chunkSize: 16), length: nil)
+            let payload = AWSHTTPBody(asyncSequence: ByteBuffer().asyncSequence(chunkSize: 16), length: nil)
             let input = Input(payload: payload)
             async let responseTask: Void = client.execute(
                 operation: "test",
@@ -655,12 +655,16 @@ class AWSClientTests: XCTestCase {
 
     func testStreamingResponse() async {
         struct Input: AWSEncodableShape {}
-        struct Output: AWSDecodableShape & AWSShapeWithPayload {
-            static let _encoding = [AWSMemberEncoding(label: "test", location: .header("test"))]
-            static let _payloadPath: String = "payload"
+        struct Output: AWSDecodableShape {
             static let _options: AWSShapeOptions = .rawPayload
-            let payload: HTTPBody
+            let payload: AWSHTTPBody
             let test: String
+
+            public init(from decoder: Decoder) throws {
+                let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
+                self.payload = response.decodePayload()
+                self.test = try response.decode(String.self, forHeader: "test")
+            }
         }
         let data = createRandomBuffer(45, 109, size: 128 * 1024)
         var sourceByteBuffer = ByteBufferAllocator().buffer(capacity: 128 * 1024)

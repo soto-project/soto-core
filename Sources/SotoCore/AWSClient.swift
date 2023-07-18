@@ -521,7 +521,7 @@ extension AWSClient {
         url: URL,
         httpMethod: HTTPMethod,
         headers: HTTPHeaders = HTTPHeaders(),
-        body: HTTPBody,
+        body: AWSHTTPBody,
         serviceConfig: AWSServiceConfig,
         logger: Logger = AWSClient.loggingDisabled
     ) async throws -> HTTPHeaders {

@@ -19,7 +19,7 @@ import NIOHTTP1
 
 /// Storage for HTTP body which can be either a ByteBuffer or an AsyncSequence of
 /// ByteBuffers
-public struct HTTPBody: Sendable {
+public struct AWSHTTPBody: Sendable {
     enum Storage {
         case byteBuffer(ByteBuffer)
         case asyncSequence(sequence: AnyAsyncSequence<ByteBuffer>, length: Int?)
@@ -79,7 +79,7 @@ public struct HTTPBody: Sendable {
     }
 }
 
-extension HTTPBody: AsyncSequence {
+extension AWSHTTPBody: AsyncSequence {
     public typealias Element = ByteBuffer
     public typealias AsyncIterator = AnyAsyncSequence<ByteBuffer>.AsyncIterator
 
@@ -93,11 +93,11 @@ extension HTTPBody: AsyncSequence {
     }
 }
 
-extension HTTPBody: Decodable {
-    // HTTPBody has to conform to Decodable so I can add it to AWSShape objects (which conform to Decodable). But we don't want the
+extension AWSHTTPBody: Decodable {
+    // AWSHTTPBody has to conform to Decodable so I can add it to AWSShape objects (which conform to Decodable). But we don't want the
     // Encoder/Decoder ever to process a AWSPayload
     public init(from decoder: Decoder) throws {
-        preconditionFailure("Cannot decode an HTTPBody")
+        preconditionFailure("Cannot decode an AWSHTTPBody")
     }
 }
 
@@ -106,9 +106,9 @@ struct AWSHTTPRequest {
     let url: URL
     let method: HTTPMethod
     let headers: HTTPHeaders
-    let body: HTTPBody
+    let body: AWSHTTPBody
 
-    init(url: URL, method: HTTPMethod, headers: HTTPHeaders = [:], body: HTTPBody = .init()) {
+    init(url: URL, method: HTTPMethod, headers: HTTPHeaders = [:], body: AWSHTTPBody = .init()) {
         self.url = url
         self.method = method
         self.headers = headers
@@ -119,7 +119,7 @@ struct AWSHTTPRequest {
 /// Generic HTTP Response returned from HTTP Client
 struct AWSHTTPResponse: Sendable {
     /// Initialize AWSHTTPResponse
-    init(status: HTTPResponseStatus, headers: HTTPHeaders, body: HTTPBody = .init()) {
+    init(status: HTTPResponseStatus, headers: HTTPHeaders, body: AWSHTTPBody = .init()) {
         self.status = status
         self.headers = headers
         self.body = body
@@ -132,5 +132,5 @@ struct AWSHTTPResponse: Sendable {
     var headers: HTTPHeaders
 
     /// The body of this HTTP response.
-    var body: HTTPBody
+    var body: AWSHTTPBody
 }

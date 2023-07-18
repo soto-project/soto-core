@@ -25,7 +25,7 @@ import SotoTestUtils
 import SotoXML
 import XCTest
 
-extension HTTPBody {
+extension AWSHTTPBody {
     func asString() -> String? {
         switch self.storage {
         case .byteBuffer(let buffer):
@@ -170,7 +170,7 @@ class AWSRequestTests: XCTestCase {
         }
         struct Object2: AWSEncodableShape & AWSShapeWithPayload {
             static var _payloadPath = "payload"
-            let payload: HTTPBody
+            let payload: AWSHTTPBody
             private enum CodingKeys: CodingKey {}
         }
         let object = Object(string: "Name")
@@ -446,7 +446,7 @@ class AWSRequestTests: XCTestCase {
         struct Input: AWSEncodableShape & AWSShapeWithPayload {
             public static let _options: AWSShapeOptions = [.rawPayload, .allowStreaming]
             public static let _payloadPath: String = "payload"
-            let payload: HTTPBody
+            let payload: AWSHTTPBody
             let member: String
 
             private enum CodingKeys: String, CodingKey {
@@ -460,7 +460,7 @@ class AWSRequestTests: XCTestCase {
             region: config.region.rawValue
         )
         let buffer = ByteBuffer(string: "This is a test")
-        let stream = HTTPBody(asyncSequence: buffer.asyncSequence(chunkSize: 16), length: buffer.readableBytes)
+        let stream = AWSHTTPBody(asyncSequence: buffer.asyncSequence(chunkSize: 16), length: buffer.readableBytes)
         let input = Input(payload: stream, member: "test")
         var optionalAWSRequest: AWSRequest?
         XCTAssertNoThrow(optionalAWSRequest = try AWSRequest(operation: "Test", path: "/", httpMethod: .POST, input: input, configuration: config))

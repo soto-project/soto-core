@@ -42,7 +42,7 @@ public struct AnyAsyncSequence<Element>: Sendable, AsyncSequence {
 
     @usableFromInline var makeAsyncIteratorCallback: @Sendable () -> AsyncIteratorNextCallback
 
-    @inlinable init<SequenceOfBytes>(
+    @inlinable public init<SequenceOfBytes>(
         _ asyncSequence: SequenceOfBytes
     ) where SequenceOfBytes: AsyncSequence & Sendable, SequenceOfBytes.Element == Element {
         self.makeAsyncIteratorCallback = {

@@ -33,7 +33,7 @@ public struct AWSLoggingMiddleware: AWSServiceMiddleware {
         self.log = { logger.log(level: logLevel, "\($0())") }
     }
 
-    func getBodyOutput(_ body: HTTPBody) -> String {
+    func getBodyOutput(_ body: AWSHTTPBody) -> String {
         var output = ""
         switch body.storage {
         case .byteBuffer(let buffer):

@@ -141,7 +141,7 @@ public extension AWSEncodableShape {
         guard value.base64count <= max else { throw Self.validationError("Length of \(parent).\(name) (\(value.base64count)) is greater than the maximum allowed value \(max).") }
     }
 
-    func validate(_ value: HTTPBody, name: String, parent: String, min: Int) throws {
+    func validate(_ value: AWSHTTPBody, name: String, parent: String, min: Int) throws {
         if let size = value.length {
             guard size >= min else {
                 throw Self.validationError("Length of \(parent).\(name) (\(size)) is less than minimum allowed value \(min).")
@@ -149,7 +149,7 @@ public extension AWSEncodableShape {
         }
     }
 
-    func validate(_ value: HTTPBody, name: String, parent: String, max: Int) throws {
+    func validate(_ value: AWSHTTPBody, name: String, parent: String, max: Int) throws {
         if let size = value.length {
             guard size <= max else {
                 throw Self.validationError("Length of \(parent).\(name) (\(size)) is greater than the maximum allowed value \(max).")
@@ -205,12 +205,12 @@ public extension AWSEncodableShape {
         try validate(value, name: name, parent: parent, max: max)
     }
 
-    func validate(_ value: HTTPBody?, name: String, parent: String, min: Int) throws {
+    func validate(_ value: AWSHTTPBody?, name: String, parent: String, min: Int) throws {
         guard let value = value else { return }
         try validate(value, name: name, parent: parent, min: min)
     }
 
-    func validate(_ value: HTTPBody?, name: String, parent: String, max: Int) throws {
+    func validate(_ value: AWSHTTPBody?, name: String, parent: String, max: Int) throws {
         guard let value = value else { return }
         try validate(value, name: name, parent: parent, max: max)
     }

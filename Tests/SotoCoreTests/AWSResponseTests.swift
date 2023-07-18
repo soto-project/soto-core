@@ -22,10 +22,10 @@ import XCTest
 class AWSResponseTests: XCTestCase {
     func testHeaderResponseDecoding() async throws {
         struct Output: AWSDecodableShape {
-            static let _encoding = [AWSMemberEncoding(label: "h", location: .header("header-member"))]
             let h: String
-            private enum CodingKeys: String, CodingKey {
-                case h = "header-member"
+            public init(from decoder: Decoder) throws {
+                let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
+                self.h = try response.decode(String.self, forHeader: "header-member")
             }
         }
         let response = AWSHTTPResponse(
@@ -48,18 +48,20 @@ class AWSResponseTests: XCTestCase {
 
     func testHeaderResponseTypeDecoding() async throws {
         struct Output: AWSDecodableShape {
-            static let _encoding = [
-                AWSMemberEncoding(label: "string", location: .header("string")),
-                AWSMemberEncoding(label: "string2", location: .header("string2")),
-                AWSMemberEncoding(label: "double", location: .header("double")),
-                AWSMemberEncoding(label: "integer", location: .header("integer")),
-                AWSMemberEncoding(label: "bool", location: .header("bool")),
-            ]
             let string: String
             let string2: String
             let double: Double
             let integer: Int
             let bool: Bool
+
+            public init(from decoder: Decoder) throws {
+                let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
+                self.string = try response.decode(String.self, forHeader: "string")
+                self.string2 = try response.decode(String.self, forHeader: "string2")
+                self.double = try response.decode(Double.self, forHeader: "double")
+                self.integer = try response.decode(Int.self, forHeader: "integer")
+                self.bool = try response.decode(Bool.self, forHeader: "bool")
+            }
         }
         let response = AWSHTTPResponse(
             status: .ok,
@@ -87,6 +89,10 @@ class AWSResponseTests: XCTestCase {
         struct Output: AWSDecodableShape {
             static let _encoding = [AWSMemberEncoding(label: "status", location: .statusCode)]
             let status: Int
+            public init(from decoder: Decoder) throws {
+                let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
+                self.status = response.decodeStatus()
+            }
         }
         let response = AWSHTTPResponse(
             status: .ok,
@@ -127,14 +133,14 @@ class AWSResponseTests: XCTestCase {
 
     func testValidateXMLCodablePayloadResponse() async throws {
         struct Output: AWSDecodableShape & AWSShapeWithPayload {
-            static let _encoding = [AWSMemberEncoding(label: "contentType", location: .header("content-type"))]
             static let _payloadPath: String = "name"
             let name: String
             let contentType: String
 
-            private enum CodingKeys: String, CodingKey {
-                case name
-                case contentType = "content-type"
+            init(from decoder: Decoder) throws {
+                let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
+                self.contentType = try response.decode(String.self, forHeader: "content-type")
+                self.name = try .init(from: decoder)
             }
         }
         let response = AWSHTTPResponse(
@@ -154,7 +160,12 @@ class AWSResponseTests: XCTestCase {
         struct Output: AWSDecodableShape, AWSShapeWithPayload {
             static let _payloadPath: String = "body"
             static let _options: AWSShapeOptions = .rawPayload
-            let body: HTTPBody
+            let body: AWSHTTPBody
+
+            init(from decoder: Decoder) throws {
+                let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
+                self.body = response.decodePayload()
+            }
         }
         let byteBuffer = ByteBuffer(string: "{\"name\":\"hello\"}")
         let response = AWSHTTPResponse(
@@ -196,6 +207,10 @@ class AWSResponseTests: XCTestCase {
         struct Output: AWSDecodableShape & AWSShapeWithPayload {
             static let _payloadPath: String = "output2"
             let output2: Output2
+
+            init(from decoder: Decoder) throws {
+                self.output2 = try .init(from: decoder)
+            }
         }
         let response = AWSHTTPResponse(
             status: .ok,
@@ -213,10 +228,11 @@ class AWSResponseTests: XCTestCase {
         struct Output: AWSDecodableShape, AWSShapeWithPayload {
             static let _payloadPath: String = "body"
             static let _options: AWSShapeOptions = .rawPayload
-            public static var _encoding = [
-                AWSMemberEncoding(label: "contentType", location: .header("content-type")),
-            ]
-            let body: HTTPBody
+            let body: AWSHTTPBody
+            init(from decoder: Decoder) throws {
+                let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
+                self.body = response.decodePayload()
+            }
         }
         let byteBuffer = ByteBuffer(string: "{\"name\":\"hello\"}")
         let response = AWSHTTPResponse(
@@ -366,9 +382,11 @@ class AWSResponseTests: XCTestCase {
             static let _encoding: [AWSMemberEncoding] = [
                 .init(label: "content", location: .headerPrefix("prefix-")),
             ]
-            let content: [String: String]
-            private enum CodingKeys: String, CodingKey {
-                case content = "prefix-"
+            let content: [String: String]?
+
+            public init(from decoder: Decoder) throws {
+                let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
+                self.content = try response.decodeIfPresent([String: String].self, forHeader: "prefix-")
             }
         }
         let response = AWSHTTPResponse(
@@ -378,20 +396,24 @@ class AWSResponseTests: XCTestCase {
         var output: Output?
         let awsResponse = try await AWSResponse(from: response, streaming: false)
         XCTAssertNoThrow(output = try awsResponse.generateOutputShape(operation: "Test", serviceProtocol: .restxml))
-        XCTAssertEqual(output?.content["one"], "first")
-        XCTAssertEqual(output?.content["two"], "second")
+        XCTAssertEqual(output?.content?["one"], "first")
+        XCTAssertEqual(output?.content?["two"], "second")
     }
 
     func testHeaderPrefixFromXML() async throws {
         struct Output: AWSDecodableShape {
-            static let _encoding: [AWSMemberEncoding] = [
-                .init(label: "content", location: .headerPrefix("prefix-")),
-            ]
-            let content: [String: String]
+            let content: [String: String]?
             let body: String
+
+            public init(from decoder: Decoder) throws {
+                let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.content = try response.decodeIfPresent([String: String].self, forHeader: "prefix-")
+                self.body = try container.decode(String.self, forKey: .body)
+            }
+
             private enum CodingKeys: String, CodingKey {
                 case body
-                case content = "prefix-"
             }
         }
         let response = AWSHTTPResponse(
@@ -402,8 +424,8 @@ class AWSResponseTests: XCTestCase {
         var output: Output?
         let awsResponse = try await AWSResponse(from: response, streaming: false)
         XCTAssertNoThrow(output = try awsResponse.generateOutputShape(operation: "Test", serviceProtocol: .restxml))
-        XCTAssertEqual(output?.content["one"], "first")
-        XCTAssertEqual(output?.content["two"], "second")
+        XCTAssertEqual(output?.content?["one"], "first")
+        XCTAssertEqual(output?.content?["two"], "second")
     }
 
     // MARK: Miscellaneous tests

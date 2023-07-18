@@ -37,7 +37,7 @@ public struct AWSRequest {
     /// request headers
     public var httpHeaders: HTTPHeaders
     /// request body
-    public var body: HTTPBody
+    public var body: AWSHTTPBody
 
     /// Create HTTP Client request from AWSRequest.
     /// If the signer's credentials are available the request will be signed. Otherwise defaults to an unsigned request
@@ -74,7 +74,7 @@ public struct AWSRequest {
                 // create s3 signed Sequence
                 let s3Signed = sequence.s3Signed(signer: signer, seedSigningData: seedSigningData)
                 // create new payload and return request
-                let payload = HTTPBody(asyncSequence: s3Signed, length: s3Signed.contentSize(from: length!))
+                let payload = AWSHTTPBody(asyncSequence: s3Signed, length: s3Signed.contentSize(from: length!))
                 return AWSHTTPRequest(url: url, method: httpMethod, headers: signedHeaders, body: payload)
             } else {
                 bodyDataForSigning = .unsignedPayload
@@ -201,14 +201,14 @@ extension AWSRequest {
         }
 
         var raw = false
-        let body: HTTPBody
+        let body: AWSHTTPBody
         switch configuration.serviceProtocol {
         case .json, .restjson:
             if let shapeWithPayload = Input.self as? AWSShapeWithPayload.Type {
                 let payload = shapeWithPayload._payloadPath
                 if let payloadBody = mirror.getAttribute(forKey: payload) {
                     switch payloadBody {
-                    case let awsPayload as HTTPBody:
+                    case let awsPayload as AWSHTTPBody:
                         Self.verifyStream(operation: operationName, payload: awsPayload, input: shapeWithPayload)
                         body = awsPayload
                         raw = true
@@ -237,7 +237,7 @@ extension AWSRequest {
                 let payload = shapeWithPayload._payloadPath
                 if let payloadBody = mirror.getAttribute(forKey: payload) {
                     switch payloadBody {
-                    case let awsPayload as HTTPBody:
+                    case let awsPayload as AWSHTTPBody:
                         Self.verifyStream(operation: operationName, payload: awsPayload, input: shapeWithPayload)
                         body = awsPayload
                     case let shape as AWSEncodableShape:
@@ -341,7 +341,7 @@ extension AWSRequest {
     /// - Returns: New set of headers
     private static func calculateChecksumHeader<Input: AWSEncodableShape>(
         headers: HTTPHeaders,
-        body: HTTPBody,
+        body: AWSHTTPBody,
         shapeType: Input.Type,
         configuration: AWSServiceConfig
     ) -> HTTPHeaders {
@@ -434,7 +434,7 @@ extension AWSRequest {
     }
 
     /// verify  streaming is allowed for this operation
-    internal static func verifyStream(operation: String, payload: HTTPBody, input: AWSShapeWithPayload.Type) {
+    internal static func verifyStream(operation: String, payload: AWSHTTPBody, input: AWSShapeWithPayload.Type) {
         guard case .asyncSequence(_, let length) = payload.storage else { return }
         precondition(input._options.contains(.allowStreaming), "\(operation) does not allow streaming of data")
         precondition(length != nil || input._options.contains(.allowChunkedStreaming), "\(operation) does not allow chunked streaming of data. Please supply a data size.")

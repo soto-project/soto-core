@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import struct Foundation.Data
 import class Foundation.JSONSerialization
 import NIOCore
 
@@ -28,16 +29,15 @@ extension AWSResponse {
     }
 
     /// process hal+json data. Extract properties from HAL
-    func getHypertextApplicationLanguageDictionary() throws -> [String: Any] {
-        guard case .byteBuffer(let buffer) = self.body.storage else { return [:] }
+    func getHypertextApplicationLanguageDictionary() throws -> Data {
+        guard case .byteBuffer(let buffer) = self.body.storage else { return Data("{}".utf8) }
         // extract embedded resources from HAL
-        guard let data = buffer.getData(at: buffer.readerIndex, length: buffer.readableBytes) else { return [:] }
-        let jsonObject = try JSONSerialization.jsonObject(with: data, options: [])
-        guard var dictionary = jsonObject as? [String: Any] else { return [:] }
+        let jsonObject = try JSONSerialization.jsonObject(with: buffer, options: [])
+        guard var dictionary = jsonObject as? [String: Any] else { return Data("{}".utf8) }
         guard let embedded = dictionary["_embedded"],
               let embeddedDictionary = embedded as? [String: Any]
         else {
-            return dictionary
+            return try JSONSerialization.data(withJSONObject: dictionary)
         }
 
         // remove _links and _embedded elements of dictionary to reduce the size of the new dictionary
@@ -45,6 +45,6 @@ extension AWSResponse {
         dictionary["_embedded"] = nil
         // merge embedded resources into original dictionary
         dictionary.merge(embeddedDictionary) { first, _ in return first }
-        return dictionary
+        return try JSONSerialization.data(withJSONObject: dictionary)
     }
 }

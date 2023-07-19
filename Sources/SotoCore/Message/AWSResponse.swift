@@ -77,6 +77,8 @@ public struct AWSResponse {
             let payloadData: Data
             if self.isHypertextApplicationLanguage {
                 payloadData = try self.getHypertextApplicationLanguageDictionary()
+            } else if self.headers["transfer-encoding"].first == "chunked" {
+                payloadData = Data("{}".utf8)
             } else if let payload = payload, payload.readableBytes > 0 {
                 payloadData = Data(buffer: payload, byteTransferStrategy: .noCopy)
             } else {
@@ -90,6 +92,7 @@ public struct AWSResponse {
         case .restxml, .query, .ec2:
             var xmlElement: XML.Element
             if let buffer = payload,
+               self.headers["transfer-encoding"].first != "chunked",
                let xmlDocument = try? XML.Document(buffer: buffer),
                let rootElement = xmlDocument.rootElement()
             {

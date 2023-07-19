@@ -19,6 +19,11 @@ import SotoXML
 /// AsyncSequence of Event stream events
 public struct AWSEventStream<Event: Sendable>: Sendable {
     let base: AnyAsyncSequence<ByteBuffer>
+
+    /// Initialise AWSEventStream from an AsyncSequence of ByteBuffers
+    init<BaseSequence: AsyncSequence & Sendable>(_ base: BaseSequence) where BaseSequence.Element == ByteBuffer {
+        self.base = .init(base)
+    }
 }
 
 /// If Event is decodable then conform AWSEventStream to AsyncSequence
@@ -46,9 +51,11 @@ extension AWSEventStream: AsyncSequence where Event: Decodable {
                 buffer = remainingBuffer
             }
             while var validBuffer = buffer {
-                if var accumulatedBuffer = accumulatedBuffer {
-                    accumulatedBuffer.writeBuffer(&validBuffer)
-                    validBuffer = accumulatedBuffer
+                // have we already accumulated some buffer, if so append new buffer onto the end
+                if var validAccumulatedBuffer = accumulatedBuffer {
+                    validAccumulatedBuffer.writeBuffer(&validBuffer)
+                    validBuffer = validAccumulatedBuffer
+                    accumulatedBuffer = validAccumulatedBuffer
                 } else {
                     accumulatedBuffer = validBuffer
                 }

@@ -59,7 +59,7 @@ public struct ResponseDecodingContainer {
     }
 
     public func decodeEventStream<Event>() -> AWSEventStream<Event> {
-        return .init(base: .init(self.response.body))
+        return .init(self.response.body)
     }
 
     public func decode(_ type: Date.Type = Date.self, forHeader header: String) throws -> Date {

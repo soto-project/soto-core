@@ -232,11 +232,11 @@ public struct AWSShapeOptions: OptionSet {
         self.rawValue = rawValue
     }
 
-    /// Payload can be streamed
+    /// Request payload can be streamed
     public static let allowStreaming = AWSShapeOptions(rawValue: 1 << 0)
-    /// Payload can be streamed using Transfer-Encoding: chunked
+    /// Request payload can be streamed using Transfer-Encoding: chunked
     public static let allowChunkedStreaming = AWSShapeOptions(rawValue: 1 << 1)
-    /// Payload is raw data
+    /// Response Payload is raw data, or an event stream
     public static let rawPayload = AWSShapeOptions(rawValue: 1 << 2)
     /// Request can include a checksum header
     public static let checksumHeader = AWSShapeOptions(rawValue: 1 << 3)

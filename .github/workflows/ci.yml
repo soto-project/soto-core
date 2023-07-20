@@ -16,6 +16,7 @@ on:
 env:
   ENABLE_TIMING_TESTS: "false"
   AWS_LOG_LEVEL: "trace"
+  SOTO_CORE_STRICT_CONCURRENCY: "true"
 
 jobs:
   macos:

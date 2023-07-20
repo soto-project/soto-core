@@ -100,3 +100,13 @@ let package = Package(
         ]),
     ]
 )
+
+import Foundation
+
+if ProcessInfo.processInfo.environment["SOTO_CORE_STRICT_CONCURRENCY"] == "true" {
+    for target in package.targets {
+        if !target.isTest {
+            target.swiftSettings = [.unsafeFlags(["-Xfrontend", "-strict-concurrency=complete"])]
+        }
+    }
+}

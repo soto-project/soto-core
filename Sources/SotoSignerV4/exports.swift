@@ -16,4 +16,5 @@
 @_exported import struct NIOCore.ByteBufferAllocator
 @_exported import struct NIOCore.TimeAmount
 
-@_exported import NIOHTTP1
+@_exported import struct NIOHTTP1.HTTPHeaders
+@_exported import enum NIOHTTP1.HTTPMethod

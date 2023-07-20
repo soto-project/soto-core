@@ -19,9 +19,9 @@ import SotoXML
 /// Event stream decoder. Decodes top level `:event-type` header and then passes the payload
 /// to another decoder based off the `:content-type` header
 struct EventStreamDecoder {
-    public init() {}
+    init() {}
 
-    public func decode<T: Decodable>(_ type: T.Type, from buffer: inout ByteBuffer) throws -> T {
+    func decode<T: Decodable>(_ type: T.Type, from buffer: inout ByteBuffer) throws -> T {
         let decoder = try _EventStreamDecoder(buffer: &buffer)
         let value = try T(from: decoder)
         return value
@@ -190,6 +190,8 @@ private struct _EventStreamDecoder: Decoder {
 public struct EventDecodingContainer {
     let payload: ByteBuffer
 
+    /// Return payload from EventStream payload
+    /// - Returns: Payload as ByteBuffer
     public func decodePayload() -> ByteBuffer {
         return self.payload
     }

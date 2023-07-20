@@ -454,6 +454,166 @@ class AWSResponseTests: XCTestCase {
         XCTAssertEqual(output?.a[1].s, "Hello2")
     }
 
+    /// Write event stream event
+    func writeEvent(headers: [String: String], payload: ByteBuffer, to: inout ByteBuffer) {
+        var payload = payload
+        let messageStartIndex = to.writerIndex
+        // skip prelude
+        to.writeRepeatingByte(0, count: 12)
+        // get writer index
+        let headerStartIndex = to.writerIndex
+        for header in headers {
+            to.writeInteger(UInt8(header.key.utf8.count))
+            to.writeString(header.key)
+            to.writeInteger(UInt8(7)) // header type (always 7)
+            to.writeInteger(UInt16(header.value.utf8.count))
+            to.writeString(header.value)
+        }
+        let headerLength = to.writerIndex - headerStartIndex
+        to.writeBuffer(&payload)
+
+        let totalLength = to.writerIndex - messageStartIndex
+
+        // write prelude
+        to.setInteger(UInt32(totalLength + 4), at: messageStartIndex)
+        to.setInteger(UInt32(headerLength), at: messageStartIndex + 4)
+        let preludeCRC = soto_crc32(0, bytes: ByteBufferView(to.getSlice(at: messageStartIndex, length: 8)!))
+        to.setInteger(UInt32(preludeCRC), at: messageStartIndex + 8)
+
+        let messageCRC = soto_crc32(0, bytes: ByteBufferView(to.getSlice(at: messageStartIndex, length: totalLength)!))
+        to.writeInteger(UInt32(messageCRC))
+    }
+
+    enum TestEventStream: AWSDecodableShape {
+        struct EmptyEvent: AWSDecodableShape {}
+        struct PayloadEvent: AWSDecodableShape & AWSShapeWithPayload {
+            static var _payloadPath: String = "payload"
+            let payload: ByteBuffer
+
+            init(from decoder: Decoder) throws {
+                let response = decoder.userInfo[.awsEvent]! as! EventDecodingContainer
+                self.payload = response.decodePayload()
+            }
+        }
+
+        struct ShapeEvent: AWSDecodableShape, Encodable, Equatable {
+            let string: String
+            let integer: Int
+        }
+
+        /// Empty Event.
+        case empty(EmptyEvent)
+        /// Event with raw payload.
+        case payload(PayloadEvent)
+        /// Event with codable payload.
+        case shape(ShapeEvent)
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            guard container.allKeys.count == 1, let key = container.allKeys.first else {
+                let context = DecodingError.Context(
+                    codingPath: container.codingPath,
+                    debugDescription: "Expected exactly one key, but got \(container.allKeys.count)"
+                )
+                throw DecodingError.dataCorrupted(context)
+            }
+            switch key {
+            case .empty:
+                let value = try container.decode(EmptyEvent.self, forKey: .empty)
+                self = .empty(value)
+            case .payload:
+                let value = try container.decode(PayloadEvent.self, forKey: .payload)
+                self = .payload(value)
+            case .shape:
+                let value = try container.decode(ShapeEvent.self, forKey: .shape)
+                self = .shape(value)
+            }
+        }
+
+        private enum CodingKeys: String, CodingKey {
+            case empty = "Empty"
+            case payload = "Payload"
+            case shape = "Shape"
+        }
+    }
+
+    func testEventStreamDecoder() throws {
+        // test empty buffer
+        var eventByteBuffer = ByteBuffer()
+        let emptyHeaders = [":event-type": "Empty"]
+        self.writeEvent(headers: emptyHeaders, payload: ByteBuffer(), to: &eventByteBuffer)
+        let emptyResult = try EventStreamDecoder().decode(TestEventStream.self, from: &eventByteBuffer)
+        if case .empty = emptyResult {
+        } else {
+            XCTFail()
+        }
+        // test payload buffer
+        let payloadHeaders = [":event-type": "Payload", ":content-type": "application/octet-stream"]
+        let payloadPayload = ByteBuffer(staticString: "Testing payloads")
+        self.writeEvent(headers: payloadHeaders, payload: payloadPayload, to: &eventByteBuffer)
+        let payloadResult = try EventStreamDecoder().decode(TestEventStream.self, from: &eventByteBuffer)
+        if case .payload(let payload) = payloadResult {
+            XCTAssertEqual(payload.payload, payloadPayload)
+        } else {
+            XCTFail()
+        }
+        // test JSON buffer
+        let jsonHeaders = [":event-type": "Shape", ":content-type": "application/json"]
+        let shape = TestEventStream.ShapeEvent(string: "Testing", integer: 590)
+        let jsonPayload = try JSONEncoder().encodeAsByteBuffer(shape, allocator: ByteBufferAllocator())
+        self.writeEvent(headers: jsonHeaders, payload: jsonPayload, to: &eventByteBuffer)
+        let jsonResult = try EventStreamDecoder().decode(TestEventStream.self, from: &eventByteBuffer)
+        if case .shape(let shapeResult) = jsonResult {
+            XCTAssertEqual(shapeResult, shape)
+        } else {
+            XCTFail()
+        }
+        // test XML buffer
+        let xmlHeaders = [":event-type": "Shape", ":content-type": "text/xml"]
+        let xml = try XMLEncoder().encode(shape)
+        let xmlPayload = ByteBuffer(string: xml.xmlString)
+        self.writeEvent(headers: xmlHeaders, payload: xmlPayload, to: &eventByteBuffer)
+        let xmlResult = try EventStreamDecoder().decode(TestEventStream.self, from: &eventByteBuffer)
+        if case .shape(let shapeResult) = xmlResult {
+            XCTAssertEqual(shapeResult, shape)
+        } else {
+            XCTFail()
+        }
+    }
+
+    func testEventStreamStreamer() async throws {
+        var eventByteBuffer = ByteBuffer()
+        let emptyHeaders = [":event-type": "Empty"]
+        self.writeEvent(headers: emptyHeaders, payload: ByteBuffer(), to: &eventByteBuffer)
+        let payloadHeaders = [":event-type": "Payload", ":content-type": "application/octet-stream"]
+        let payloadPayload = ByteBuffer(staticString: "Testing payloads")
+        self.writeEvent(headers: payloadHeaders, payload: payloadPayload, to: &eventByteBuffer)
+        let jsonHeaders = [":event-type": "Shape", ":content-type": "application/json"]
+        let shape = TestEventStream.ShapeEvent(string: "Testing", integer: 590)
+        let jsonPayload = try JSONEncoder().encodeAsByteBuffer(shape, allocator: ByteBufferAllocator())
+        self.writeEvent(headers: jsonHeaders, payload: jsonPayload, to: &eventByteBuffer)
+
+        let eventStream = AWSEventStream<TestEventStream>(eventByteBuffer.asyncSequence(chunkSize: 65))
+        var eventIterator = eventStream.makeAsyncIterator()
+        let emptyResult = try await eventIterator.next()
+        if case .empty = emptyResult {
+        } else {
+            XCTFail()
+        }
+        let payloadResult = try await eventIterator.next()
+        if case .payload(let payload) = payloadResult {
+            XCTAssertEqual(payload.payload, payloadPayload)
+        } else {
+            XCTFail()
+        }
+        let jsonResult = try await eventIterator.next()
+        if case .shape(let shapeResult) = jsonResult {
+            XCTAssertEqual(shapeResult, shape)
+        } else {
+            XCTFail()
+        }
+    }
+
     // MARK: Types used in tests
 
     struct ServiceErrorType: AWSErrorType, Equatable {

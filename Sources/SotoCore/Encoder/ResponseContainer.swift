@@ -58,6 +58,10 @@ public struct ResponseDecodingContainer {
         return self.response.body
     }
 
+    public func decodeEventStream<Event>() -> AWSEventStream<Event> {
+        return .init(self.response.body)
+    }
+
     public func decode(_ type: Date.Type = Date.self, forHeader header: String) throws -> Date {
         guard let headerValue = response.headers[header].first else {
             throw HeaderDecodingError.headerNotFound(header)

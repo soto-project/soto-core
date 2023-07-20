@@ -50,7 +50,7 @@ class Expat {
         guard let parser = encoding.withCString({ cs in
             Soto_XML_ParserCreate(cs)
         }) else {
-            throw XML_ERROR_NO_MEMORY
+            throw XMLError(XML_ERROR_NO_MEMORY)
         }
         self.parser = parser
 
@@ -80,7 +80,7 @@ class Expat {
             if let callback = cbError {
                 callback(error)
             }
-            throw error
+            throw XMLError(error)
         }
     }
 
@@ -193,4 +193,10 @@ class Expat {
     }
 }
 
-extension XML_Error: Error {}
+struct XMLError: Error {
+    let error: XML_Error
+
+    init(_ error: XML_Error) {
+        self.error = error
+    }
+}

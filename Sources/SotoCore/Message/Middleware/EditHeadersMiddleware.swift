@@ -37,11 +37,11 @@ public struct AWSEditHeadersMiddleware: AWSServiceMiddleware {
         for edit in self.edits {
             switch edit {
             case .add(let name, let value):
-                request.httpHeaders.add(name: name, value: value)
+                request.headers.add(name: name, value: value)
             case .replace(let name, let value):
-                request.httpHeaders.replaceOrAdd(name: name, value: value)
+                request.headers.replaceOrAdd(name: name, value: value)
             case .remove(let name):
-                request.httpHeaders.remove(name: name)
+                request.headers.remove(name: name)
             }
         }
         return request

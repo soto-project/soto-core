@@ -25,7 +25,7 @@ extension AsyncHTTPClient.HTTPClient {
     ///   - eventLoop: eventLoop to run request on
     /// - Returns: EventLoopFuture that will be fulfilled with request response
     func execute(
-        request: AWSHTTPRequest,
+        request: AWSRequest,
         timeout: TimeAmount,
         logger: Logger
     ) async throws -> AWSResponse {

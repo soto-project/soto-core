@@ -14,7 +14,8 @@
 
 /// Context object sent to `AWSServiceMiddleware` `chain` functions
 public struct AWSMiddlewareContext {
-    public let options: AWSServiceConfig.Options
+    public let operation: String
+    public let serviceConfig: AWSServiceConfig
 }
 
 /// Middleware protocol. Process requests before they are sent to AWS and process responses before they are converted into output shapes

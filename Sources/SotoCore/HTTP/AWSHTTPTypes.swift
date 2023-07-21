@@ -100,18 +100,3 @@ extension AWSHTTPBody: Decodable {
         preconditionFailure("Cannot decode an AWSHTTPBody")
     }
 }
-
-/// HTTP Request
-struct AWSHTTPRequest {
-    let url: URL
-    let method: HTTPMethod
-    let headers: HTTPHeaders
-    let body: AWSHTTPBody
-
-    init(url: URL, method: HTTPMethod, headers: HTTPHeaders = [:], body: AWSHTTPBody = .init()) {
-        self.url = url
-        self.method = method
-        self.headers = headers
-        self.body = body
-    }
-}

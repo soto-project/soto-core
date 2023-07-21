@@ -56,7 +56,7 @@ class TimeStampTests: XCTestCase {
         }
         let a = A(date: Date(timeIntervalSince1970: 23_984_978_378))
         var request: AWSRequest?
-        XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", httpMethod: .GET, input: a, configuration: createServiceConfig()))
+        XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", method: .GET, input: a, configuration: createServiceConfig()))
         #if os(Linux) && compiler(>=5.5)
         XCTAssertEqual(request?.body.asString(), "{\"date\":23984978378.0}")
         #else
@@ -86,7 +86,7 @@ class TimeStampTests: XCTestCase {
         }
         let a = A(date: dateFormatter.date(from: "2017-11-01T00:15:00.000Z")!)
         var request: AWSRequest?
-        XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", httpMethod: .GET, input: a, configuration: createServiceConfig(serviceProtocol: .restxml)))
+        XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", method: .GET, input: a, configuration: createServiceConfig(serviceProtocol: .restxml)))
         XCTAssertEqual(request?.body.asString(), "<?xml version=\"1.0\" encoding=\"UTF-8\"?><A><date>2017-11-01T00:15:00.000Z</date></A>")
     }
 
@@ -96,7 +96,7 @@ class TimeStampTests: XCTestCase {
         }
         let a = A(date: dateFormatter.date(from: "2017-11-01T00:15:00.000Z")!)
         var request: AWSRequest?
-        XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", httpMethod: .GET, input: a, configuration: createServiceConfig(serviceProtocol: .query)))
+        XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", method: .GET, input: a, configuration: createServiceConfig(serviceProtocol: .query)))
         XCTAssertEqual(request?.body.asString(), "Action=test&Version=01-01-2001&date=2017-11-01T00%3A15%3A00.000Z")
     }
 
@@ -182,7 +182,7 @@ class TimeStampTests: XCTestCase {
         }
         let a = A(date: dateFormatter.date(from: "2019-05-01T00:00:00.001Z")!)
         var request: AWSRequest?
-        XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", httpMethod: .GET, input: a, configuration: createServiceConfig(serviceProtocol: .restxml)))
+        XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", method: .GET, input: a, configuration: createServiceConfig(serviceProtocol: .restxml)))
         XCTAssertEqual(request?.body.asString(), "<?xml version=\"1.0\" encoding=\"UTF-8\"?><A><date>2019-05-01T00:00:00.001Z</date></A>")
     }
 
@@ -192,7 +192,7 @@ class TimeStampTests: XCTestCase {
         }
         let a = A(date: dateFormatter.date(from: "2019-05-01T00:00:00.001Z")!)
         var request: AWSRequest?
-        XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", httpMethod: .GET, input: a, configuration: createServiceConfig()))
+        XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", method: .GET, input: a, configuration: createServiceConfig()))
         XCTAssertEqual(request?.body.asString(), "{\"date\":\"Wed, 1 May 2019 00:00:00 GMT\"}")
     }
 
@@ -202,7 +202,7 @@ class TimeStampTests: XCTestCase {
         }
         let a = A(date: Date(timeIntervalSince1970: 23_983_978_378))
         var request: AWSRequest?
-        XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", httpMethod: .GET, input: a, configuration: createServiceConfig()))
+        XCTAssertNoThrow(request = try AWSRequest(operation: "test", path: "/", method: .GET, input: a, configuration: createServiceConfig()))
         XCTAssertEqual(request?.body.asString(), "{\"date\":23983978378}")
     }
 }

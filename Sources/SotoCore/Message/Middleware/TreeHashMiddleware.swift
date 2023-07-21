@@ -30,10 +30,10 @@ public struct TreeHashMiddleware: AWSServiceMiddleware {
 
     public func chain(request: AWSRequest, context: AWSMiddlewareContext) throws -> AWSRequest {
         var request = request
-        if request.httpHeaders[self.treeHashHeader].first == nil {
+        if request.headers[self.treeHashHeader].first == nil {
             if case .byteBuffer(let buffer) = request.body.storage {
                 let treeHash = try computeTreeHash(buffer).hexDigest()
-                request.httpHeaders.replaceOrAdd(name: self.treeHashHeader, value: treeHash)
+                request.headers.replaceOrAdd(name: self.treeHashHeader, value: treeHash)
             }
         }
 

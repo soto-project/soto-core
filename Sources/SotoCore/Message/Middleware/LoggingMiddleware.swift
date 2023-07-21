@@ -60,9 +60,9 @@ public struct AWSLoggingMiddleware: AWSServiceMiddleware {
     public func chain(request: AWSRequest, context: AWSMiddlewareContext) throws -> AWSRequest {
         self.log(
             "Request:\n" +
-                "  \(request.operation)\n" +
-                "  \(request.httpMethod) \(request.url)\n" +
-                "  Headers: \(self.getHeadersOutput(request.httpHeaders))\n" +
+                "  \(context.operation)\n" +
+                "  \(request.method) \(request.url)\n" +
+                "  Headers: \(self.getHeadersOutput(request.headers))\n" +
                 "  Body: \(self.getBodyOutput(request.body))"
         )
         return request

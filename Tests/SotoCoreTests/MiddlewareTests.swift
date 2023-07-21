@@ -85,8 +85,8 @@ class MiddlewareTests: XCTestCase {
             .add(name: "user-agent", value: "testEditHeaderMiddleware")
         )
         try await self.testMiddleware(middleware) { request in
-            XCTAssertEqual(request.httpHeaders["testAdd"].first, "testValue")
-            XCTAssertEqual(request.httpHeaders["user-agent"].joined(separator: ","), "Soto/6.0,testEditHeaderMiddleware")
+            XCTAssertEqual(request.headers["testAdd"].first, "testValue")
+            XCTAssertEqual(request.headers["user-agent"].joined(separator: ","), "Soto/6.0,testEditHeaderMiddleware")
         }
     }
 
@@ -96,7 +96,7 @@ class MiddlewareTests: XCTestCase {
             .replace(name: "user-agent", value: "testEditHeaderMiddleware")
         )
         try await self.testMiddleware(middleware) { request in
-            XCTAssertEqual(request.httpHeaders["user-agent"].first, "testEditHeaderMiddleware")
+            XCTAssertEqual(request.headers["user-agent"].first, "testEditHeaderMiddleware")
         }
     }
 

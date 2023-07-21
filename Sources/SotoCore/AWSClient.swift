@@ -250,7 +250,7 @@ extension AWSClient {
                 try AWSRequest(
                     operation: operationName,
                     path: path,
-                    httpMethod: httpMethod,
+                    method: httpMethod,
                     input: input,
                     hostPrefix: hostPrefix,
                     configuration: serviceConfig
@@ -289,7 +289,7 @@ extension AWSClient {
                 try AWSRequest(
                     operation: operationName,
                     path: path,
-                    httpMethod: httpMethod,
+                    method: httpMethod,
                     configuration: serviceConfig
                 )
             },
@@ -328,7 +328,7 @@ extension AWSClient {
                 try AWSRequest(
                     operation: operationName,
                     path: path,
-                    httpMethod: httpMethod,
+                    method: httpMethod,
                     configuration: serviceConfig
                 )
             },
@@ -371,7 +371,7 @@ extension AWSClient {
                 try AWSRequest(
                     operation: operationName,
                     path: path,
-                    httpMethod: httpMethod,
+                    method: httpMethod,
                     input: input,
                     hostPrefix: hostPrefix,
                     configuration: serviceConfig
@@ -409,6 +409,7 @@ extension AWSClient {
             try Task.checkCancellation()
             let response = try await self.invoke(
                 request: request,
+                operation: operationName,
                 with: config,
                 logger: logger,
                 processResponse: processResponse
@@ -435,23 +436,26 @@ extension AWSClient {
 
     func invoke<Output>(
         request: AWSRequest,
+        operation operationName: String,
         with serviceConfig: AWSServiceConfig,
         logger: Logger,
         processResponse: @escaping (AWSResponse) async throws -> Output
     ) async throws -> Output {
+        let middlewareContext = AWSMiddlewareContext(operation: operationName, serviceConfig: serviceConfig)
+        let middlewares = serviceConfig.middlewares + self.middlewares
         var attempt = 0
         // get credentials
         let credential = try await credentialProvider.getCredential(logger: logger)
         // construct signer
         let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
         // apply middleware and sign
-        let httpRequest = try request
-            .applyMiddlewares(serviceConfig.middlewares + self.middlewares, config: serviceConfig)
-            .createHTTPRequest(signer: signer, serviceConfig: serviceConfig)
+        var request = try request
+            .applyMiddlewares(middlewares, context: middlewareContext)
+        request.signHeaders(signer: signer, serviceConfig: serviceConfig)
         while true {
             do {
-                let response = try await self.httpClient.execute(request: httpRequest, timeout: serviceConfig.timeout, logger: logger)
-                    .applyMiddlewares(serviceConfig.middlewares + self.middlewares, config: serviceConfig)
+                let response = try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, logger: logger)
+                    .applyMiddlewares(middlewares, context: middlewareContext)
                 // if response has an HTTP status code outside 2xx then throw an error
                 guard (200..<300).contains(response.status.code) else {
                     let error = await self.createError(for: response, serviceConfig: serviceConfig, logger: logger)
@@ -570,7 +574,6 @@ extension AWSClient {
         if !raw {
             try await response.collateBody()
         }
-        response = try response.applyMiddlewares(serviceConfig.middlewares, config: serviceConfig)
         return try response.generateOutputShape(operation: operationName, serviceProtocol: serviceConfig.serviceProtocol)
     }
 
@@ -600,32 +603,27 @@ extension AWSClient {
             )
             return AWSRawError(rawBody: nil, context: context)
         }
-        do {
-            let awsResponseWithMiddleware = try response.applyMiddlewares(serviceConfig.middlewares + middlewares, config: serviceConfig)
-            if let error = awsResponseWithMiddleware.generateError(
-                serviceConfig: serviceConfig,
-                logLevel: options.errorLogLevel,
-                logger: logger
-            ) {
-                return error
-            } else {
-                // else return "Unhandled error message" with rawBody attached
-                let context = AWSErrorContext(
-                    message: "Unhandled Error",
-                    responseCode: response.status,
-                    headers: response.headers
-                )
-                let responseBody: String?
-                switch awsResponseWithMiddleware.body.storage {
-                case .byteBuffer(let buffer):
-                    responseBody = String(buffer: buffer)
-                default:
-                    responseBody = nil
-                }
-                return AWSRawError(rawBody: responseBody, context: context)
-            }
-        } catch {
+        if let error = response.generateError(
+            serviceConfig: serviceConfig,
+            logLevel: options.errorLogLevel,
+            logger: logger
+        ) {
             return error
+        } else {
+            // else return "Unhandled error message" with rawBody attached
+            let context = AWSErrorContext(
+                message: "Unhandled Error",
+                responseCode: response.status,
+                headers: response.headers
+            )
+            let responseBody: String?
+            switch response.body.storage {
+            case .byteBuffer(let buffer):
+                responseBody = String(buffer: buffer)
+            default:
+                responseBody = nil
+            }
+            return AWSRawError(rawBody: responseBody, context: context)
         }
     }
 }

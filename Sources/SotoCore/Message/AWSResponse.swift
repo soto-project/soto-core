@@ -35,23 +35,16 @@ public struct AWSResponse {
     /// response body
     public var body: AWSHTTPBody
 
-    /// initialize an AWSResponse Object
-    /// - parameters:
-    ///     - from: Raw HTTP Response
-    ///     - streaming: Whether Body should be treated as streamed data or collated into
-    ///         one ByteBuffer
-    init(from response: AWSHTTPResponse, streaming: Bool) async throws {
-        self.status = response.status
+    /// Initialize AWSResponse
+    init(status: HTTPResponseStatus, headers: HTTPHeaders, body: AWSHTTPBody = .init()) {
+        self.status = status
+        self.headers = headers
+        self.body = body
+    }
 
-        // headers
-        self.headers = response.headers
-
-        // body
-        if streaming {
-            self.body = response.body
-        } else {
-            self.body = try await .init(buffer: response.body.collect(upTo: .max))
-        }
+    /// collate body
+    mutating func collateBody() async throws {
+        self.body = try await .init(buffer: self.body.collect(upTo: .max))
     }
 
     /// return new response with middleware applied

@@ -28,7 +28,7 @@ extension AsyncHTTPClient.HTTPClient {
         request: AWSHTTPRequest,
         timeout: TimeAmount,
         logger: Logger
-    ) async throws -> AWSHTTPResponse {
+    ) async throws -> AWSResponse {
         let requestBody: HTTPClientRequest.Body?
 
         switch request.body.storage {

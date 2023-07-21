@@ -389,7 +389,7 @@ extension AWSClient {
     internal func execute<Output>(
         operation operationName: String,
         createRequest: @escaping () throws -> AWSRequest,
-        processResponse: @escaping (AWSHTTPResponse) async throws -> Output,
+        processResponse: @escaping (AWSResponse) async throws -> Output,
         config: AWSServiceConfig,
         logger: Logger = AWSClient.loggingDisabled
     ) async throws -> Output {
@@ -404,32 +404,22 @@ extension AWSClient {
         Counter(label: "aws_requests_total", dimensions: dimensions).increment()
         logger.log(level: self.options.requestLogLevel, "AWS Request")
         do {
-            // get credentials
-            let credential = try await credentialProvider.getCredential(logger: logger)
-            // construct signer
-            let signer = AWSSigner(credentials: credential, name: config.signingName, region: config.region.rawValue)
             // create request and sign with signer
-            let awsRequest = try createRequest()
-                .applyMiddlewares(config.middlewares + self.middlewares, config: config)
-                .createHTTPRequest(signer: signer, serviceConfig: config)
-            // send request to AWS and process result
-            let streaming = awsRequest.body.isStreaming
+            let request = try createRequest()
             try Task.checkCancellation()
             let response = try await self.invoke(
-                request: awsRequest,
+                request: request,
                 with: config,
                 logger: logger,
-                processResponse: processResponse,
-                streaming: streaming
+                processResponse: processResponse
             )
-            let output = try await processResponse(response)
             logger.trace("AWS Response")
             Metrics.Timer(
                 label: "aws_request_duration",
                 dimensions: dimensions,
                 preferredDisplayUnit: .seconds
             ).recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
-            return output
+            return response
         } catch {
             Counter(label: "aws_request_errors", dimensions: dimensions).increment()
             // AWSErrorTypes have already been logged
@@ -444,24 +434,33 @@ extension AWSClient {
     }
 
     func invoke<Output>(
-        request: AWSHTTPRequest,
+        request: AWSRequest,
         with serviceConfig: AWSServiceConfig,
         logger: Logger,
-        processResponse: @escaping (AWSHTTPResponse) async throws -> Output,
-        streaming: Bool
-    ) async throws -> AWSHTTPResponse {
+        processResponse: @escaping (AWSResponse) async throws -> Output
+    ) async throws -> Output {
         var attempt = 0
+        // get credentials
+        let credential = try await credentialProvider.getCredential(logger: logger)
+        // construct signer
+        let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
+        // apply middleware and sign
+        let httpRequest = try request
+            .applyMiddlewares(serviceConfig.middlewares + self.middlewares, config: serviceConfig)
+            .createHTTPRequest(signer: signer, serviceConfig: serviceConfig)
         while true {
             do {
-                return try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, logger: logger)
-            } catch {
-                // if streaming and the error returned is an AWS error fail immediately. Do not attempt
-                // to retry as the streaming function will not know you are retrying
-                if streaming,
-                   error is AWSErrorType || error is AWSRawError
-                {
+                let response = try await self.httpClient.execute(request: httpRequest, timeout: serviceConfig.timeout, logger: logger)
+                    .applyMiddlewares(serviceConfig.middlewares + self.middlewares, config: serviceConfig)
+                // if response has an HTTP status code outside 2xx then throw an error
+                guard (200..<300).contains(response.status.code) else {
+                    let error = await self.createError(for: response, serviceConfig: serviceConfig, logger: logger)
                     throw error
                 }
+
+                let output = try await processResponse(response)
+                return output
+            } catch {
                 // If I get a retry wait time for this error then attempt to retry request
                 if case .retry(let retryTime) = self.retryPolicy.getRetryWaitTime(error: error, attempt: attempt) {
                     logger.trace("Retrying request", metadata: [
@@ -562,46 +561,36 @@ extension AWSClient {
     /// Generate an AWS Response from  the operation HTTP response and return the output shape from it. This is only every called if the response includes a successful http status code
     internal func processResponse<Output: AWSDecodableShape>(
         operation operationName: String,
-        response: AWSHTTPResponse,
+        response: AWSResponse,
         serviceConfig: AWSServiceConfig,
         logger: Logger
     ) async throws -> Output {
-        // if it returns an HTTP status code outside 2xx then throw an error
-        guard (200..<300).contains(response.status.code) else {
-            let error = await self.createError(for: response, serviceConfig: serviceConfig, logger: logger)
-            throw error
-        }
-
         let raw = Output._options.contains(.rawPayload) == true
-        let awsResponse = try await AWSResponse(from: response, streaming: raw)
-            .applyMiddlewares(serviceConfig.middlewares + middlewares, config: serviceConfig)
-
-        return try awsResponse.generateOutputShape(operation: operationName, serviceProtocol: serviceConfig.serviceProtocol)
+        var response = response
+        if !raw {
+            try await response.collateBody()
+        }
+        response = try response.applyMiddlewares(serviceConfig.middlewares, config: serviceConfig)
+        return try response.generateOutputShape(operation: operationName, serviceProtocol: serviceConfig.serviceProtocol)
     }
 
     /// Generate an AWS Response from  the operation HTTP response and return the output shape from it. This is only every called if the response includes a successful http status code
     internal func processEmptyResponse(
         operation operationName: String,
-        response: AWSHTTPResponse,
+        response: AWSResponse,
         serviceConfig: AWSServiceConfig,
         logger: Logger
     ) async throws {
-        // if it returns an HTTP status code outside 2xx then throw an error
-        guard (200..<300).contains(response.status.code) else {
-            let error = await self.createError(for: response, serviceConfig: serviceConfig, logger: logger)
-            throw error
-        }
-
         // flush response body contents to complete response read
         for try await _ in response.body {}
     }
 
     /// Create error from HTTPResponse. This is only called if we received an unsuccessful http status code.
-    internal func createError(for response: AWSHTTPResponse, serviceConfig: AWSServiceConfig, logger: Logger) async -> Error {
+    internal func createError(for response: AWSResponse, serviceConfig: AWSServiceConfig, logger: Logger) async -> Error {
         // if we can create an AWSResponse and create an error from it return that
-        let awsResponse: AWSResponse
+        var response = response
         do {
-            awsResponse = try await AWSResponse(from: response, streaming: false)
+            try await response.collateBody()
         } catch {
             // else return "Unhandled error message" with rawBody attached
             let context = AWSErrorContext(
@@ -612,7 +601,7 @@ extension AWSClient {
             return AWSRawError(rawBody: nil, context: context)
         }
         do {
-            let awsResponseWithMiddleware = try awsResponse.applyMiddlewares(serviceConfig.middlewares + middlewares, config: serviceConfig)
+            let awsResponseWithMiddleware = try response.applyMiddlewares(serviceConfig.middlewares + middlewares, config: serviceConfig)
             if let error = awsResponseWithMiddleware.generateError(
                 serviceConfig: serviceConfig,
                 logLevel: options.errorLogLevel,

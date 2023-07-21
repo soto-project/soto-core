@@ -115,22 +115,3 @@ struct AWSHTTPRequest {
         self.body = body
     }
 }
-
-/// Generic HTTP Response returned from HTTP Client
-struct AWSHTTPResponse: Sendable {
-    /// Initialize AWSHTTPResponse
-    init(status: HTTPResponseStatus, headers: HTTPHeaders, body: AWSHTTPBody = .init()) {
-        self.status = status
-        self.headers = headers
-        self.body = body
-    }
-
-    /// The HTTP status for this response.
-    var status: HTTPResponseStatus
-
-    /// The HTTP headers of this response.
-    var headers: HTTPHeaders
-
-    /// The body of this HTTP response.
-    var body: AWSHTTPBody
-}

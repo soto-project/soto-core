@@ -18,11 +18,11 @@ import XCTest
 
 class MiddlewareTests: XCTestCase {
     struct CatchRequestError: Error {
-        let request: AWSRequest
+        let request: AWSHTTPRequest
     }
 
     struct CatchRequestMiddleware: AWSServiceMiddleware {
-        func chain(request: AWSRequest, context: AWSMiddlewareContext) throws -> AWSRequest {
+        func chain(request: AWSHTTPRequest, context: AWSMiddlewareContext) throws -> AWSHTTPRequest {
             throw CatchRequestError(request: request)
         }
     }
@@ -32,7 +32,7 @@ class MiddlewareTests: XCTestCase {
         serviceName: String = "service",
         serviceOptions: AWSServiceConfig.Options = [],
         uri: String = "/",
-        test: (AWSRequest) -> Void
+        test: (AWSHTTPRequest) -> Void
     ) async throws {
         let client = createAWSClient(credentialProvider: .empty)
         let config = createServiceConfig(
@@ -53,7 +53,7 @@ class MiddlewareTests: XCTestCase {
 
     func testMiddlewareAppliedOnce() async throws {
         struct URLAppendMiddleware: AWSServiceMiddleware {
-            func chain(request: AWSRequest, context: AWSMiddlewareContext) throws -> AWSRequest {
+            func chain(request: AWSHTTPRequest, context: AWSMiddlewareContext) throws -> AWSHTTPRequest {
                 var request = request
                 request.url.appendPathComponent("test")
                 return request

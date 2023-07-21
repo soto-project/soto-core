@@ -17,7 +17,7 @@ import class Foundation.JSONSerialization
 import NIOCore
 
 // AWS HAL services I know of are APIGateway, Pinpoint, Greengrass
-extension AWSResponse {
+extension AWSHTTPResponse {
     /// return if body is hypertext application language
     var isHypertextApplicationLanguage: Bool {
         guard let contentType = self.headers["content-type"].first,

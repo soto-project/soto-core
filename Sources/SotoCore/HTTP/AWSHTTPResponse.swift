@@ -26,8 +26,8 @@ import NIOFoundationCompat
 import NIOHTTP1
 import SotoXML
 
-/// Structure encapsulating a processed HTTP Response
-public struct AWSResponse {
+/// Structure encapsulating a HTTP Response
+public struct AWSHTTPResponse {
     /// response status
     public let status: HTTPResponseStatus
     /// response headers
@@ -48,7 +48,7 @@ public struct AWSResponse {
     }
 
     /// return new response with middleware applied
-    func applyMiddlewares(_ middlewares: [AWSServiceMiddleware], context: AWSMiddlewareContext) throws -> AWSResponse {
+    func applyMiddlewares(_ middlewares: [AWSServiceMiddleware], context: AWSMiddlewareContext) throws -> AWSHTTPResponse {
         var awsResponse = self
         // apply middleware to response
         for middleware in middlewares {

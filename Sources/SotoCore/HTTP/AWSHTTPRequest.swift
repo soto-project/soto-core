@@ -23,7 +23,7 @@ import NIOHTTP1
 import SotoSignerV4
 
 /// Object encapsulating all the information needed to generate a raw HTTP request to AWS
-public struct AWSRequest {
+public struct AWSHTTPRequest {
     /// request URL
     public var url: URL
     /// request HTTP method
@@ -40,7 +40,7 @@ public struct AWSRequest {
         self.body = body
     }
 
-    /// Create HTTP Client request with signed headers from AWSRequest
+    /// Create signed headers for request
     mutating func signHeaders(signer: AWSSigner, serviceConfig: AWSServiceConfig) {
         guard !signer.credentials.isEmpty() else { return }
         let payload = self.body
@@ -74,7 +74,7 @@ public struct AWSRequest {
     }
 
     // return new request with middleware applied
-    func applyMiddlewares(_ middlewares: [AWSServiceMiddleware], context: AWSMiddlewareContext) throws -> AWSRequest {
+    func applyMiddlewares(_ middlewares: [AWSServiceMiddleware], context: AWSMiddlewareContext) throws -> AWSHTTPRequest {
         var awsRequest = self
         // apply middleware to request
         for middleware in middlewares {
@@ -84,7 +84,7 @@ public struct AWSRequest {
     }
 }
 
-extension AWSRequest {
+extension AWSHTTPRequest {
     internal init(operation operationName: String, path: String, method: HTTPMethod, configuration: AWSServiceConfig) throws {
         var headers = HTTPHeaders()
 
@@ -402,17 +402,17 @@ extension AWSRequest {
 
     /// percent encode query parameter value.
     private static func urlEncodeQueryParam(_ value: String) -> String {
-        return value.addingPercentEncoding(withAllowedCharacters: AWSRequest.queryAllowedCharacters) ?? value
+        return value.addingPercentEncoding(withAllowedCharacters: AWSHTTPRequest.queryAllowedCharacters) ?? value
     }
 
     /// percent encode path value.
     private static func urlEncodePath(_ value: String) -> String {
-        return value.addingPercentEncoding(withAllowedCharacters: AWSRequest.pathAllowedCharacters) ?? value
+        return value.addingPercentEncoding(withAllowedCharacters: AWSHTTPRequest.pathAllowedCharacters) ?? value
     }
 
     /// percent encode path component value. ie also encode "/"
     private static func urlEncodePathComponent(_ value: String) -> String {
-        return value.addingPercentEncoding(withAllowedCharacters: AWSRequest.pathComponentAllowedCharacters) ?? value
+        return value.addingPercentEncoding(withAllowedCharacters: AWSHTTPRequest.pathComponentAllowedCharacters) ?? value
     }
 
     /// verify  streaming is allowed for this operation

@@ -32,7 +32,7 @@ public struct AWSEditHeadersMiddleware: AWSServiceMiddleware {
         self.init(edits)
     }
 
-    public func chain(request: AWSRequest, context: AWSMiddlewareContext) throws -> AWSRequest {
+    public func chain(request: AWSHTTPRequest, context: AWSMiddlewareContext) throws -> AWSHTTPRequest {
         var request = request
         for edit in self.edits {
             switch edit {

@@ -28,7 +28,7 @@ class AWSResponseTests: XCTestCase {
                 self.h = try response.decode(String.self, forHeader: "header-member")
             }
         }
-        let response = AWSResponse(
+        let response = AWSHTTPResponse(
             status: .ok,
             headers: ["header-member": "test-header"]
         )
@@ -61,7 +61,7 @@ class AWSResponseTests: XCTestCase {
                 self.bool = try response.decode(Bool.self, forHeader: "bool")
             }
         }
-        let response = AWSResponse(
+        let response = AWSHTTPResponse(
             status: .ok,
             headers: [
                 "string": "test-header",
@@ -91,7 +91,7 @@ class AWSResponseTests: XCTestCase {
                 self.status = response.decodeStatus()
             }
         }
-        let response = AWSResponse(
+        let response = AWSHTTPResponse(
             status: .ok,
             headers: HTTPHeaders()
         )
@@ -114,7 +114,7 @@ class AWSResponseTests: XCTestCase {
             let name: String
         }
         let responseBody = "<Output><name>hello</name></Output>"
-        let response = AWSResponse(
+        let response = AWSHTTPResponse(
             status: .ok,
             headers: HTTPHeaders(),
             body: .init(string: responseBody)
@@ -137,7 +137,7 @@ class AWSResponseTests: XCTestCase {
                 self.name = try .init(from: decoder)
             }
         }
-        let response = AWSResponse(
+        let response = AWSHTTPResponse(
             status: .ok,
             headers: ["Content-Type": "application/xml"],
             body: .init(string: "<name>hello</name>")
@@ -161,7 +161,7 @@ class AWSResponseTests: XCTestCase {
             }
         }
         let byteBuffer = ByteBuffer(string: "{\"name\":\"hello\"}")
-        let response = AWSResponse(
+        let response = AWSHTTPResponse(
             status: .ok,
             headers: HTTPHeaders(),
             body: .init(asyncSequence: byteBuffer.asyncSequence(chunkSize: 32), length: nil)
@@ -180,7 +180,7 @@ class AWSResponseTests: XCTestCase {
         struct Output: AWSDecodableShape {
             let name: String
         }
-        let response = AWSResponse(
+        let response = AWSHTTPResponse(
             status: .ok,
             headers: HTTPHeaders(),
             body: .init(string: "{\"name\":\"hello\"}")
@@ -203,7 +203,7 @@ class AWSResponseTests: XCTestCase {
                 self.output2 = try .init(from: decoder)
             }
         }
-        let response = AWSResponse(
+        let response = AWSHTTPResponse(
             status: .ok,
             headers: HTTPHeaders(),
             body: .init(string: "{\"name\":\"hello\"}")
@@ -225,7 +225,7 @@ class AWSResponseTests: XCTestCase {
             }
         }
         let byteBuffer = ByteBuffer(string: "{\"name\":\"hello\"}")
-        let response = AWSResponse(
+        let response = AWSHTTPResponse(
             status: .ok,
             headers: ["Content-Type": "application/json"],
             body: .init(asyncSequence: byteBuffer.asyncSequence(chunkSize: 32), length: nil)
@@ -241,7 +241,7 @@ class AWSResponseTests: XCTestCase {
     // MARK: Error tests
 
     func testJSONError() async throws {
-        let response = AWSResponse(
+        let response = AWSHTTPResponse(
             status: .notFound,
             headers: HTTPHeaders(),
             body: .init(string: "{\"__type\":\"ResourceNotFoundException\", \"message\": \"Donald Where's Your Troosers?\"}")
@@ -255,7 +255,7 @@ class AWSResponseTests: XCTestCase {
     }
 
     func testJSONErrorV2() async throws {
-        let response = AWSResponse(
+        let response = AWSHTTPResponse(
             status: .notFound,
             headers: HTTPHeaders(),
             body: .init(buffer: ByteBuffer(string:
@@ -272,7 +272,7 @@ class AWSResponseTests: XCTestCase {
     }
 
     func testRestJSONError() async throws {
-        let response = AWSResponse(
+        let response = AWSHTTPResponse(
             status: .notFound,
             headers: ["x-amzn-errortype": "ResourceNotFoundException"],
             body: .init(string: #"{"message": "Donald Where's Your Troosers?", "Fault": "Client"}"#)
@@ -288,7 +288,7 @@ class AWSResponseTests: XCTestCase {
 
     func testRestJSONErrorV2() async throws {
         // Capitalized "Message"
-        let response = AWSResponse(
+        let response = AWSHTTPResponse(
             status: .notFound,
             headers: ["x-amzn-errortype": "ResourceNotFoundException"],
             body: .init(string: #"{"Message": "Donald Where's Your Troosers?"}"#)
@@ -302,7 +302,7 @@ class AWSResponseTests: XCTestCase {
     }
 
     func testXMLError() async throws {
-        let response = AWSResponse(
+        let response = AWSHTTPResponse(
             status: .notFound,
             headers: HTTPHeaders(),
             body: .init(string: "<Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message><fault>client</fault></Error>")
@@ -317,7 +317,7 @@ class AWSResponseTests: XCTestCase {
     }
 
     func testQueryError() async throws {
-        let response = AWSResponse(
+        let response = AWSHTTPResponse(
             status: .notFound,
             headers: HTTPHeaders(),
             body: .init(string: "<ErrorResponse><Error><Code>MessageRejected</Code><Message>Don't like it</Message><fault>client</fault></Error></ErrorResponse>")
@@ -332,7 +332,7 @@ class AWSResponseTests: XCTestCase {
     }
 
     func testEC2Error() async throws {
-        let response = AWSResponse(
+        let response = AWSHTTPResponse(
             status: .notFound,
             headers: HTTPHeaders(),
             body: .init(string: "<Errors><Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message><fault>client</fault></Error></Errors>")
@@ -347,7 +347,7 @@ class AWSResponseTests: XCTestCase {
     }
 
     func testAdditionalErrorFields() async throws {
-        let response = AWSResponse(
+        let response = AWSHTTPResponse(
             status: .notFound,
             headers: HTTPHeaders(),
             body: .init(string: "<Errors><Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message><fault>client</fault></Error></Errors>")
@@ -370,7 +370,7 @@ class AWSResponseTests: XCTestCase {
                 self.content = try response.decodeIfPresent([String: String].self, forHeader: "prefix-")
             }
         }
-        let response = AWSResponse(
+        let response = AWSHTTPResponse(
             status: .ok,
             headers: ["prefix-one": "first", "prefix-two": "second"]
         )
@@ -396,7 +396,7 @@ class AWSResponseTests: XCTestCase {
                 case body
             }
         }
-        let response = AWSResponse(
+        let response = AWSHTTPResponse(
             status: .ok,
             headers: ["prefix-one": "first", "prefix-two": "second"],
             body: .init(string: "<Output><body>Hello</body></Output>")
@@ -419,7 +419,7 @@ class AWSResponseTests: XCTestCase {
             let d: Double
             let b: Bool
         }
-        let response = AWSResponse(
+        let response = AWSHTTPResponse(
             status: .ok,
             headers: ["Content-Type": "application/hal+json"],
             body: .init(string: #"{"_embedded": {"a": [{"s":"Hello", "i":1234}, {"s":"Hello2", "i":12345}]}, "d":3.14, "b":true}"#)

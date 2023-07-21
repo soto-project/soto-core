@@ -247,7 +247,7 @@ extension AWSClient {
         return try await self.execute(
             operation: operationName,
             createRequest: {
-                try AWSRequest(
+                try AWSHTTPRequest(
                     operation: operationName,
                     path: path,
                     method: httpMethod,
@@ -286,7 +286,7 @@ extension AWSClient {
         return try await self.execute(
             operation: operationName,
             createRequest: {
-                try AWSRequest(
+                try AWSHTTPRequest(
                     operation: operationName,
                     path: path,
                     method: httpMethod,
@@ -325,7 +325,7 @@ extension AWSClient {
         return try await self.execute(
             operation: operationName,
             createRequest: {
-                try AWSRequest(
+                try AWSHTTPRequest(
                     operation: operationName,
                     path: path,
                     method: httpMethod,
@@ -368,7 +368,7 @@ extension AWSClient {
         return try await self.execute(
             operation: operationName,
             createRequest: {
-                try AWSRequest(
+                try AWSHTTPRequest(
                     operation: operationName,
                     path: path,
                     method: httpMethod,
@@ -388,8 +388,8 @@ extension AWSClient {
     /// internal version of execute
     internal func execute<Output>(
         operation operationName: String,
-        createRequest: @escaping () throws -> AWSRequest,
-        processResponse: @escaping (AWSResponse) async throws -> Output,
+        createRequest: @escaping () throws -> AWSHTTPRequest,
+        processResponse: @escaping (AWSHTTPResponse) async throws -> Output,
         config: AWSServiceConfig,
         logger: Logger = AWSClient.loggingDisabled
     ) async throws -> Output {
@@ -435,11 +435,11 @@ extension AWSClient {
     }
 
     func invoke<Output>(
-        request: AWSRequest,
+        request: AWSHTTPRequest,
         operation operationName: String,
         with serviceConfig: AWSServiceConfig,
         logger: Logger,
-        processResponse: @escaping (AWSResponse) async throws -> Output
+        processResponse: @escaping (AWSHTTPResponse) async throws -> Output
     ) async throws -> Output {
         let middlewareContext = AWSMiddlewareContext(operation: operationName, serviceConfig: serviceConfig)
         let middlewares = serviceConfig.middlewares + self.middlewares
@@ -565,7 +565,7 @@ extension AWSClient {
     /// Generate an AWS Response from  the operation HTTP response and return the output shape from it. This is only every called if the response includes a successful http status code
     internal func processResponse<Output: AWSDecodableShape>(
         operation operationName: String,
-        response: AWSResponse,
+        response: AWSHTTPResponse,
         serviceConfig: AWSServiceConfig,
         logger: Logger
     ) async throws -> Output {
@@ -580,7 +580,7 @@ extension AWSClient {
     /// Generate an AWS Response from  the operation HTTP response and return the output shape from it. This is only every called if the response includes a successful http status code
     internal func processEmptyResponse(
         operation operationName: String,
-        response: AWSResponse,
+        response: AWSHTTPResponse,
         serviceConfig: AWSServiceConfig,
         logger: Logger
     ) async throws {
@@ -589,7 +589,7 @@ extension AWSClient {
     }
 
     /// Create error from HTTPResponse. This is only called if we received an unsuccessful http status code.
-    internal func createError(for response: AWSResponse, serviceConfig: AWSServiceConfig, logger: Logger) async -> Error {
+    internal func createError(for response: AWSHTTPResponse, serviceConfig: AWSServiceConfig, logger: Logger) async -> Error {
         // if we can create an AWSResponse and create an error from it return that
         var response = response
         do {

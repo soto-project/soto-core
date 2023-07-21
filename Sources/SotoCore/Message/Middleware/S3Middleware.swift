@@ -33,7 +33,7 @@ public struct S3Middleware: AWSServiceMiddleware {
     public init() {}
 
     /// edit request before sending to S3
-    public func chain(request: AWSRequest, context: AWSMiddlewareContext) throws -> AWSRequest {
+    public func chain(request: AWSHTTPRequest, context: AWSMiddlewareContext) throws -> AWSHTTPRequest {
         var request = request
 
         self.virtualAddressFixup(request: &request, context: context)
@@ -46,7 +46,7 @@ public struct S3Middleware: AWSServiceMiddleware {
     }
 
     /// Edit responses coming back from S3
-    public func chain(response: AWSResponse, context: AWSMiddlewareContext) throws -> AWSResponse {
+    public func chain(response: AWSHTTPResponse, context: AWSMiddlewareContext) throws -> AWSHTTPResponse {
         var response = response
 
         // self.getLocationResponseFixup(response: &response)
@@ -55,7 +55,7 @@ public struct S3Middleware: AWSServiceMiddleware {
         return response
     }
 
-    func virtualAddressFixup(request: inout AWSRequest, context: AWSMiddlewareContext) {
+    func virtualAddressFixup(request: inout AWSHTTPRequest, context: AWSMiddlewareContext) {
         /// process URL into form ${bucket}.s3.amazon.com
         let paths = request.url.path.split(separator: "/", omittingEmptySubsequences: true)
         if paths.count > 0 {
@@ -116,7 +116,7 @@ public struct S3Middleware: AWSServiceMiddleware {
         return value.addingPercentEncoding(withAllowedCharacters: Self.s3PathAllowedCharacters) ?? value
     }
 
-    func createBucketFixup(request: inout AWSRequest, context: AWSMiddlewareContext) {
+    func createBucketFixup(request: inout AWSHTTPRequest, context: AWSMiddlewareContext) {
         switch context.operation {
         // fixup CreateBucket to include location
         case "CreateBucket":
@@ -136,7 +136,7 @@ public struct S3Middleware: AWSServiceMiddleware {
         }
     }
 
-    func expect100Continue(request: inout AWSRequest) {
+    func expect100Continue(request: inout AWSHTTPRequest) {
         if request.method == .PUT,
            let length = request.body.length,
            length > 128 * 1024
@@ -160,7 +160,7 @@ public struct S3Middleware: AWSServiceMiddleware {
          }
      } */
 
-    func fixupHeadErrors(response: inout AWSResponse) {
+    func fixupHeadErrors(response: inout AWSHTTPResponse) {
         if response.status == .notFound, response.body.length == 0 {
             let errorNode = XML.Element(name: "Error")
             let codeNode = XML.Element(name: "Code", stringValue: "NotFound")

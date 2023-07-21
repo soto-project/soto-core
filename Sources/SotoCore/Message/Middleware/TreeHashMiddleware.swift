@@ -28,7 +28,7 @@ public struct TreeHashMiddleware: AWSServiceMiddleware {
         self.treeHashHeader = header
     }
 
-    public func chain(request: AWSRequest, context: AWSMiddlewareContext) throws -> AWSRequest {
+    public func chain(request: AWSHTTPRequest, context: AWSMiddlewareContext) throws -> AWSHTTPRequest {
         var request = request
         if request.headers[self.treeHashHeader].first == nil {
             if case .byteBuffer(let buffer) = request.body.storage {

@@ -1,7 +1,7 @@
-public typealias AWSMiddlewareHandler = @Sendable (AWSRequest, AWSMiddlewareContext, _ next: (AWSRequest, AWSMiddlewareContext) async throws -> AWSResponse) async throws -> AWSResponse
+public typealias AWSMiddlewareHandler = @Sendable (AWSHTTPRequest, AWSMiddlewareContext, _ next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse
 
 public protocol AWSMiddlewareProtocol: Sendable {
-    func handle(_ input: AWSRequest, context: AWSMiddlewareContext, next: (AWSRequest, AWSMiddlewareContext) async throws -> AWSResponse) async throws -> AWSResponse
+    func handle(_ input: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse
 }
 
 public struct AWSMiddleware: AWSMiddlewareProtocol {
@@ -11,7 +11,7 @@ public struct AWSMiddleware: AWSMiddlewareProtocol {
         self.middleware = middleware
     }
 
-    public func handle(_ input: AWSRequest, context: AWSMiddlewareContext, next: (AWSRequest, AWSMiddlewareContext) async throws -> AWSResponse) async throws -> AWSResponse {
+    public func handle(_ input: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
         try await self.middleware(input, context, next)
     }
 }
@@ -27,7 +27,7 @@ public struct Middleware2<M0: AWSMiddlewareProtocol, M1: AWSMiddlewareProtocol>:
     }
 
     @inlinable
-    public func handle(_ input: AWSRequest, context: AWSMiddlewareContext, next: (AWSRequest, AWSMiddlewareContext) async throws -> AWSResponse) async throws -> AWSResponse {
+    public func handle(_ input: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
         try await self.m0.handle(input, context: context) { input, context in
             try await self.m1.handle(input, context: context, next: next)
         }
@@ -43,17 +43,17 @@ public struct AWSDynamicMiddlewareStack: AWSMiddlewareProtocol {
         self.stack = list.enumerated().map { i, m in ("\(i)", m) }
     }
 
-    public func handle(_ input: AWSRequest, context: AWSMiddlewareContext, next: (AWSRequest, AWSMiddlewareContext) async throws -> AWSResponse) async throws -> AWSResponse {
+    public func handle(_ input: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
         let iterator = self.stack.makeIterator()
         return try await self.run(input, context: context, iterator: iterator, finally: next)
     }
 
     func run(
-        _ input: AWSRequest,
+        _ input: AWSHTTPRequest,
         context: AWSMiddlewareContext,
         iterator: Stack.Iterator,
-        finally: (AWSRequest, AWSMiddlewareContext) async throws -> AWSResponse
-    ) async throws -> AWSResponse {
+        finally: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse
+    ) async throws -> AWSHTTPResponse {
         var iterator = iterator
         switch iterator.next() {
         case .none:

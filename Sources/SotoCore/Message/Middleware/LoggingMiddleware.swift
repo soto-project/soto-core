@@ -57,7 +57,7 @@ public struct AWSLoggingMiddleware: AWSServiceMiddleware {
     }
 
     /// output request
-    public func chain(request: AWSRequest, context: AWSMiddlewareContext) throws -> AWSRequest {
+    public func chain(request: AWSHTTPRequest, context: AWSMiddlewareContext) throws -> AWSHTTPRequest {
         self.log(
             "Request:\n" +
                 "  \(context.operation)\n" +
@@ -69,7 +69,7 @@ public struct AWSLoggingMiddleware: AWSServiceMiddleware {
     }
 
     /// output response
-    public func chain(response: AWSResponse, context: AWSMiddlewareContext) throws -> AWSResponse {
+    public func chain(response: AWSHTTPResponse, context: AWSMiddlewareContext) throws -> AWSHTTPResponse {
         self.log(
             "Response:\n" +
                 "  Status : \(response.status.code)\n" +

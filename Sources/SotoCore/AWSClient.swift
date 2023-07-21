@@ -422,13 +422,14 @@ extension AWSClient {
                 processResponse: processResponse,
                 streaming: streaming
             )
+            let output = try await processResponse(response)
             logger.trace("AWS Response")
             Metrics.Timer(
                 label: "aws_request_duration",
                 dimensions: dimensions,
                 preferredDisplayUnit: .seconds
             ).recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
-            return response
+            return output
         } catch {
             Counter(label: "aws_request_errors", dimensions: dimensions).increment()
             // AWSErrorTypes have already been logged
@@ -448,13 +449,11 @@ extension AWSClient {
         logger: Logger,
         processResponse: @escaping (AWSHTTPResponse) async throws -> Output,
         streaming: Bool
-    ) async throws -> Output {
+    ) async throws -> AWSHTTPResponse {
         var attempt = 0
         while true {
             do {
-                let response = try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, logger: logger)
-                let output = try await processResponse(response)
-                return output
+                return try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, logger: logger)
             } catch {
                 // if streaming and the error returned is an AWS error fail immediately. Do not attempt
                 // to retry as the streaming function will not know you are retrying

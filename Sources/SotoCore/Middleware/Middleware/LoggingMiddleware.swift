@@ -16,7 +16,25 @@ import Logging
 import NIOHTTP1
 
 /// Middleware that outputs the contents of requests being sent to AWS and the contents of the responses received.
-public struct AWSLoggingMiddleware: AWSServiceMiddleware {
+public struct AWSLoggingMiddleware: AWSMiddlewareProtocol {
+    public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
+        self.log(
+            "Request:\n" +
+                "  \(context.operation)\n" +
+                "  \(request.method) \(request.url)\n" +
+                "  Headers: \(self.getHeadersOutput(request.headers))\n" +
+                "  Body: \(self.getBodyOutput(request.body))"
+        )
+        let response = try await next(request, context)
+        self.log(
+            "Response:\n" +
+                "  Status : \(response.status.code)\n" +
+                "  Headers: \(self.getHeadersOutput(HTTPHeaders(response.headers.map { ($0, "\($1)") })))\n" +
+                "  Body: \(self.getBodyOutput(response.body))"
+        )
+        return response
+    }
+
     public typealias LoggingFunction = @Sendable (String) -> Void
     /// initialize AWSLoggingMiddleware
     /// - parameters:
@@ -54,29 +72,6 @@ public struct AWSLoggingMiddleware: AWSServiceMiddleware {
             output += "\n    \(header.name) : \(header.value)"
         }
         return output + "\n  ]"
-    }
-
-    /// output request
-    public func chain(request: AWSHTTPRequest, context: AWSMiddlewareContext) throws -> AWSHTTPRequest {
-        self.log(
-            "Request:\n" +
-                "  \(context.operation)\n" +
-                "  \(request.method) \(request.url)\n" +
-                "  Headers: \(self.getHeadersOutput(request.headers))\n" +
-                "  Body: \(self.getBodyOutput(request.body))"
-        )
-        return request
-    }
-
-    /// output response
-    public func chain(response: AWSHTTPResponse, context: AWSMiddlewareContext) throws -> AWSHTTPResponse {
-        self.log(
-            "Response:\n" +
-                "  Status : \(response.status.code)\n" +
-                "  Headers: \(self.getHeadersOutput(HTTPHeaders(response.headers.map { ($0, "\($1)") })))\n" +
-                "  Body: \(self.getBodyOutput(response.body))"
-        )
-        return response
     }
 
     let log: @Sendable (@autoclosure () -> String) -> Void

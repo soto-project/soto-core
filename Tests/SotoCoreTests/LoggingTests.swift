@@ -217,7 +217,7 @@ class LoggingTests: XCTestCase {
         defer { XCTAssertNoThrow(try server.stop()) }
         let client = AWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
-            middlewares: [AWSLoggingMiddleware(logger: logger, logLevel: .info)],
+            middleware: AWSLoggingMiddleware(logger: logger, logLevel: .info),
             httpClientProvider: .createNew,
             logger: logger
         )

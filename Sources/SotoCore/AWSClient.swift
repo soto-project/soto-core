@@ -41,7 +41,7 @@ public final class AWSClient: Sendable {
     /// AWS credentials provider
     public let credentialProvider: CredentialProvider
     /// Middleware code to be applied to requests and responses
-    public let middlewares: [AWSServiceMiddleware]
+    public let middleware: AWSMiddlewareProtocol
     /// HTTP client used by AWSClient
     public let httpClient: HTTPClient
     /// Keeps a record of how we obtained the HTTP client
@@ -71,7 +71,7 @@ public final class AWSClient: Sendable {
     public init(
         credentialProvider credentialProviderFactory: CredentialProviderFactory = .default,
         retryPolicy retryPolicyFactory: RetryPolicyFactory = .default,
-        middlewares: [AWSServiceMiddleware] = [],
+        middleware: AWSMiddlewareProtocol? = nil,
         options: Options = Options(),
         httpClientProvider: HTTPClientProvider,
         logger clientLogger: Logger = AWSClient.loggingDisabled
@@ -87,13 +87,20 @@ public final class AWSClient: Sendable {
             self.httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew, configuration: .init(timeout: .init(connect: .seconds(10))))
         }
 
-        self.credentialProvider = credentialProviderFactory.createProvider(context: .init(
+        let credentialProvider = credentialProviderFactory.createProvider(context: .init(
             httpClient: httpClient,
             logger: clientLogger,
             options: options
         ))
-
-        self.middlewares = middlewares
+        self.credentialProvider = credentialProvider
+        if let middleware = middleware {
+            self.middleware = AWSDynamicMiddlewareStack(
+                middleware,
+                AWSSigningMiddleware(credentialProvider: credentialProvider)
+            )
+        } else {
+            self.middleware = AWSSigningMiddleware(credentialProvider: credentialProvider)
+        }
         self.retryPolicy = retryPolicyFactory.retryPolicy
         self.clientLogger = clientLogger
         self.options = options
@@ -443,17 +450,13 @@ extension AWSClient {
         var attempt = 0
         while true {
             do {
-                let middleware = serviceConfig.middlewares + self.middlewares
-                let middlewareContext = AWSMiddlewareContext(operation: operationName, serviceConfig: serviceConfig)
-                // get credentials
-                let credential = try await credentialProvider.getCredential(logger: logger)
-                // construct signer
-                let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
-                var signedRequest = try request.applyMiddlewares(middleware, context: middlewareContext)
-                signedRequest.signHeaders(signer: signer, serviceConfig: serviceConfig)
+                let middlewareStack = serviceConfig.middleware.map { AWSDynamicMiddlewareStack($0, self.middleware) } ?? self.middleware
+                let middlewareContext = AWSMiddlewareContext(operation: operationName, serviceConfig: serviceConfig, logger: logger)
 
-                let response = try await self.httpClient.execute(request: signedRequest, timeout: serviceConfig.timeout, logger: logger)
-                    .applyMiddlewares(middleware, context: middlewareContext)
+                let response = try await middlewareStack.handle(request, context: middlewareContext) { request, _ in
+                    return try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, logger: logger)
+                }
+
                 // if response has an HTTP status code outside 2xx then throw an error
                 guard (200..<300).contains(response.status.code) else {
                     let error = await self.createError(for: response, serviceConfig: serviceConfig, logger: logger)

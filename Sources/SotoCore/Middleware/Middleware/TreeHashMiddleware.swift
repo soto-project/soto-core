@@ -20,15 +20,8 @@ let MEGA_BYTE = 1024 * 1024
 ///
 /// Calculates a tree hash calculated from the SHA256 of each 1MB section of the request body
 /// and adds it to the request as a header value
-public struct TreeHashMiddleware: AWSServiceMiddleware {
-    let treeHashHeader: String
-
-    /// - Parameter header: name of header to place tree hash in
-    public init(header: String) {
-        self.treeHashHeader = header
-    }
-
-    public func chain(request: AWSHTTPRequest, context: AWSMiddlewareContext) throws -> AWSHTTPRequest {
+public struct TreeHashMiddleware: AWSMiddlewareProtocol {
+    public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
         var request = request
         if request.headers[self.treeHashHeader].first == nil {
             if case .byteBuffer(let buffer) = request.body.storage {
@@ -36,8 +29,14 @@ public struct TreeHashMiddleware: AWSServiceMiddleware {
                 request.headers.replaceOrAdd(name: self.treeHashHeader, value: treeHash)
             }
         }
+        return try await next(request, context)
+    }
 
-        return request
+    let treeHashHeader: String
+
+    /// - Parameter header: name of header to place tree hash in
+    public init(header: String) {
+        self.treeHashHeader = header
     }
 
     // ComputeTreeHash builds a tree hash root node given a Data Object

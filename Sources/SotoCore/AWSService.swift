@@ -52,14 +52,14 @@ extension AWSService {
     /// - Returns: New version of the service
     public func with(
         region: Region? = nil,
-        middlewares: [AWSServiceMiddleware] = [],
+        middleware: AWSMiddlewareProtocol? = nil,
         timeout: TimeAmount? = nil,
         byteBufferAllocator: ByteBufferAllocator? = nil,
         options: AWSServiceConfig.Options? = nil
     ) -> Self {
         return Self(from: self, patch: .init(
             region: region,
-            middlewares: middlewares,
+            middleware: middleware,
             timeout: timeout,
             byteBufferAllocator: byteBufferAllocator,
             options: options

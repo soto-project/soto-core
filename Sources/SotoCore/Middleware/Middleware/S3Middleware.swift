@@ -29,11 +29,8 @@ import Foundation
 /// For responses it
 /// - Fixes up the GetBucketLocation response, so it can be decoded correctly
 /// - Creates error body for notFound responses to HEAD requests
-public struct S3Middleware: AWSServiceMiddleware {
-    public init() {}
-
-    /// edit request before sending to S3
-    public func chain(request: AWSHTTPRequest, context: AWSMiddlewareContext) throws -> AWSHTTPRequest {
+public struct S3Middleware: AWSMiddlewareProtocol {
+    public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
         var request = request
 
         self.virtualAddressFixup(request: &request, context: context)
@@ -42,18 +39,14 @@ public struct S3Middleware: AWSServiceMiddleware {
             self.expect100Continue(request: &request)
         }
 
-        return request
-    }
+        var response = try await next(request, context)
 
-    /// Edit responses coming back from S3
-    public func chain(response: AWSHTTPResponse, context: AWSMiddlewareContext) throws -> AWSHTTPResponse {
-        var response = response
-
-        // self.getLocationResponseFixup(response: &response)
         self.fixupHeadErrors(response: &response)
 
         return response
     }
+
+    public init() {}
 
     func virtualAddressFixup(request: inout AWSHTTPRequest, context: AWSMiddlewareContext) {
         /// process URL into form ${bucket}.s3.amazon.com

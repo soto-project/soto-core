@@ -403,14 +403,7 @@ extension AWSClient {
         Counter(label: "aws_requests_total", dimensions: dimensions).increment()
         logger.log(level: self.options.requestLogLevel, "AWS Request")
         do {
-            // get credentials
-            let credential = try await credentialProvider.getCredential(logger: logger)
-            // construct signer
-            let signer = AWSSigner(credentials: credential, name: config.signingName, region: config.region.rawValue)
-            // create request and sign with signer
-            var request = try createRequest()
-                .applyMiddlewares(config.middlewares + self.middlewares, context: .init(operation: operationName, serviceConfig: config))
-            request.signHeaders(signer: signer, serviceConfig: config)
+            let request = try createRequest()
             try Task.checkCancellation()
             // apply middleware and sign
             let response = try await self.invoke(
@@ -450,8 +443,17 @@ extension AWSClient {
         var attempt = 0
         while true {
             do {
-                let response = try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, logger: logger)
-                    .applyMiddlewares(serviceConfig.middlewares + self.middlewares, context: .init(operation: operationName, serviceConfig: serviceConfig))
+                let middleware = serviceConfig.middlewares + self.middlewares
+                let middlewareContext = AWSMiddlewareContext(operation: operationName, serviceConfig: serviceConfig)
+                // get credentials
+                let credential = try await credentialProvider.getCredential(logger: logger)
+                // construct signer
+                let signer = AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
+                var signedRequest = try request.applyMiddlewares(middleware, context: middlewareContext)
+                signedRequest.signHeaders(signer: signer, serviceConfig: serviceConfig)
+
+                let response = try await self.httpClient.execute(request: signedRequest, timeout: serviceConfig.timeout, logger: logger)
+                    .applyMiddlewares(middleware, context: middlewareContext)
                 // if response has an HTTP status code outside 2xx then throw an error
                 guard (200..<300).contains(response.status.code) else {
                     let error = await self.createError(for: response, serviceConfig: serviceConfig, logger: logger)

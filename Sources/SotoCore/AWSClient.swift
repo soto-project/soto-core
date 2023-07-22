@@ -298,14 +298,8 @@ extension AWSClient {
                     configuration: serviceConfig
                 )
             },
-            processResponse: { response in
-                return try await self.processEmptyResponse(
-                    operation: operationName,
-                    response: response,
-                    serviceConfig: serviceConfig,
-                    logger: logger
-                )
-            },
+            processResponse: { _ in },
+            streaming: false,
             config: serviceConfig,
             logger: logger
         )
@@ -335,14 +329,8 @@ extension AWSClient {
                     configuration: serviceConfig
                 )
             },
-            processResponse: { response in
-                return try await self.processEmptyResponse(
-                    operation: operationName,
-                    response: response,
-                    serviceConfig: serviceConfig,
-                    logger: logger
-                )
-            },
+            processResponse: { _ in },
+            streaming: false,
             config: serviceConfig,
             logger: logger
         )
@@ -382,6 +370,7 @@ extension AWSClient {
                     logger: logger
                 )
             },
+            streaming: Output._options.contains(.rawPayload),
             config: serviceConfig,
             logger: logger
         )
@@ -422,6 +411,7 @@ extension AWSClient {
             processResponse: { response in
                 return try await self.processResponse(operation: operationName, response: response, serviceConfig: serviceConfig, logger: logger)
             },
+            streaming: Output._options.contains(.rawPayload),
             config: serviceConfig,
             logger: logger
         )
@@ -432,6 +422,7 @@ extension AWSClient {
         operation operationName: String,
         createRequest: @escaping () throws -> AWSHTTPRequest,
         processResponse: @escaping (AWSHTTPResponse) async throws -> Output,
+        streaming: Bool,
         config: AWSServiceConfig,
         logger: Logger = AWSClient.loggingDisabled
     ) async throws -> Output {
@@ -457,7 +448,11 @@ extension AWSClient {
             )
             // run middleware stack with httpClient execute at the end
             let response = try await middlewareStack.handle(request, context: middlewareContext) { request, _ in
-                return try await self.httpClient.execute(request: request, timeout: config.timeout, logger: logger)
+                var response = try await self.httpClient.execute(request: request, timeout: config.timeout, logger: logger)
+                if !streaming {
+                    try await response.collateBody()
+                }
+                return response
             }
             logger.trace("AWS Response")
             // process response and return output type
@@ -571,23 +566,7 @@ extension AWSClient {
         serviceConfig: AWSServiceConfig,
         logger: Logger
     ) async throws -> Output {
-        let raw = Output._options.contains(.rawPayload) == true
-        var response = response
-        if !raw {
-            try await response.collateBody()
-        }
         return try response.generateOutputShape(operation: operationName, serviceProtocol: serviceConfig.serviceProtocol)
-    }
-
-    /// Generate an AWS Response from the operation HTTP response and return the output shape from it. This is only ever called if the response includes a successful http status code
-    internal func processEmptyResponse(
-        operation operationName: String,
-        response: AWSHTTPResponse,
-        serviceConfig: AWSServiceConfig,
-        logger: Logger
-    ) async throws {
-        // flush response body contents to complete response read
-        for try await _ in response.body {}
     }
 }
 

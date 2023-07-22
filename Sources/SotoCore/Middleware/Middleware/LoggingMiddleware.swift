@@ -12,11 +12,32 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 import Logging
 import NIOHTTP1
 
 /// Middleware that outputs the contents of requests being sent to AWS and the contents of the responses received.
 public struct AWSLoggingMiddleware: AWSMiddlewareProtocol {
+    @usableFromInline
+    let log: @Sendable (@autoclosure () -> String) -> Void
+
+    public typealias LoggingFunction = @Sendable (String) -> Void
+    /// initialize AWSLoggingMiddleware
+    /// - parameters:
+    ///     - log: Function to call with logging output
+    public init(log: @escaping LoggingFunction = { print($0) }) {
+        self.log = { log($0()) }
+    }
+
+    /// initialize AWSLoggingMiddleware to use Logger
+    /// - Parameters:
+    ///   - logger: Logger to use
+    ///   - logLevel: Log level to output at
+    public init(logger: Logger, logLevel: Logger.Level = .info) {
+        self.log = { logger.log(level: logLevel, "\($0())") }
+    }
+
+    @inlinable
     public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
         self.log(
             "Request:\n" +
@@ -35,22 +56,7 @@ public struct AWSLoggingMiddleware: AWSMiddlewareProtocol {
         return response
     }
 
-    public typealias LoggingFunction = @Sendable (String) -> Void
-    /// initialize AWSLoggingMiddleware
-    /// - parameters:
-    ///     - log: Function to call with logging output
-    public init(log: @escaping LoggingFunction = { print($0) }) {
-        self.log = { log($0()) }
-    }
-
-    /// initialize AWSLoggingMiddleware to use Logger
-    /// - Parameters:
-    ///   - logger: Logger to use
-    ///   - logLevel: Log level to output at
-    public init(logger: Logger, logLevel: Logger.Level = .info) {
-        self.log = { logger.log(level: logLevel, "\($0())") }
-    }
-
+    @usableFromInline
     func getBodyOutput(_ body: AWSHTTPBody) -> String {
         var output = ""
         switch body.storage {
@@ -63,6 +69,7 @@ public struct AWSLoggingMiddleware: AWSMiddlewareProtocol {
         return output
     }
 
+    @usableFromInline
     func getHeadersOutput(_ headers: HTTPHeaders) -> String {
         if headers.count == 0 {
             return "[]"
@@ -73,6 +80,4 @@ public struct AWSLoggingMiddleware: AWSMiddlewareProtocol {
         }
         return output + "\n  ]"
     }
-
-    let log: @Sendable (@autoclosure () -> String) -> Void
 }

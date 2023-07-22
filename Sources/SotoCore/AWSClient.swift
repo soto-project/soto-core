@@ -64,14 +64,14 @@ public final class AWSClient: Sendable {
     ///     - credentialProvider: An object that returns valid signing credentials for request signing.
     ///     - retryPolicy: Object returning whether retries should be attempted.
     ///         Possible options are `.default`, `.noRetry`, `.exponential` or `.jitter`.
-    ///     - middlewares: Array of middlewares to apply to requests and responses
+    ///     - middleware: Array of middlewares to apply to requests and responses
     ///     - options: Configuration flags
     ///     - httpClientProvider: HTTPClient to use. Use `.createNew` if you want the client to manage its own HTTPClient.
     ///     - logger: Logger used to log background AWSClient events
-    public init(
+    public init<Middleware: AWSMiddlewareProtocol>(
         credentialProvider credentialProviderFactory: CredentialProviderFactory = .default,
         retryPolicy retryPolicyFactory: RetryPolicyFactory = .default,
-        middleware: AWSMiddlewareProtocol? = nil,
+        middleware: Middleware,
         options: Options = Options(),
         httpClientProvider: HTTPClientProvider,
         logger clientLogger: Logger = AWSClient.loggingDisabled
@@ -93,14 +93,48 @@ public final class AWSClient: Sendable {
             options: options
         ))
         self.credentialProvider = credentialProvider
-        if let middleware = middleware {
-            self.middleware = AWSDynamicMiddlewareStack(
-                middleware,
-                AWSSigningMiddleware(credentialProvider: credentialProvider)
-            )
-        } else {
-            self.middleware = AWSSigningMiddleware(credentialProvider: credentialProvider)
+        self.middleware = AWSMiddlewareStack {
+            middleware
+            AWSSigningMiddleware(credentialProvider: credentialProvider)
         }
+        self.retryPolicy = retryPolicyFactory.retryPolicy
+        self.clientLogger = clientLogger
+        self.options = options
+    }
+
+    /// Initialize an AWSClient struct
+    /// - parameters:
+    ///     - credentialProvider: An object that returns valid signing credentials for request signing.
+    ///     - retryPolicy: Object returning whether retries should be attempted.
+    ///         Possible options are `.default`, `.noRetry`, `.exponential` or `.jitter`.
+    ///     - options: Configuration flags
+    ///     - httpClientProvider: HTTPClient to use. Use `.createNew` if you want the client to manage its own HTTPClient.
+    ///     - logger: Logger used to log background AWSClient events
+    public init(
+        credentialProvider credentialProviderFactory: CredentialProviderFactory = .default,
+        retryPolicy retryPolicyFactory: RetryPolicyFactory = .default,
+        options: Options = Options(),
+        httpClientProvider: HTTPClientProvider,
+        logger clientLogger: Logger = AWSClient.loggingDisabled
+    ) {
+        // setup httpClient
+        self.httpClientProvider = httpClientProvider
+        switch httpClientProvider {
+        case .shared(let providedHTTPClient):
+            self.httpClient = providedHTTPClient
+        case .createNewWithEventLoopGroup(let elg):
+            self.httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(elg), configuration: .init(timeout: .init(connect: .seconds(10))))
+        case .createNew:
+            self.httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew, configuration: .init(timeout: .init(connect: .seconds(10))))
+        }
+
+        let credentialProvider = credentialProviderFactory.createProvider(context: .init(
+            httpClient: httpClient,
+            logger: clientLogger,
+            options: options
+        ))
+        self.credentialProvider = credentialProvider
+        self.middleware = AWSSigningMiddleware(credentialProvider: credentialProvider)
         self.retryPolicy = retryPolicyFactory.retryPolicy
         self.clientLogger = clientLogger
         self.options = options
@@ -447,12 +481,12 @@ extension AWSClient {
         logger: Logger,
         processResponse: @escaping (AWSHTTPResponse) async throws -> Output
     ) async throws -> Output {
+        let middlewareStack = serviceConfig.middleware.map { AWSDynamicMiddlewareStack($0, self.middleware) } ?? self.middleware
+        let middlewareContext = AWSMiddlewareContext(operation: operationName, serviceConfig: serviceConfig, logger: logger)
+
         var attempt = 0
         while true {
             do {
-                let middlewareStack = serviceConfig.middleware.map { AWSDynamicMiddlewareStack($0, self.middleware) } ?? self.middleware
-                let middlewareContext = AWSMiddlewareContext(operation: operationName, serviceConfig: serviceConfig, logger: logger)
-
                 let response = try await middlewareStack.handle(request, context: middlewareContext) { request, _ in
                     return try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, logger: logger)
                 }

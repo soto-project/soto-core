@@ -18,8 +18,10 @@ import SotoSignerV4
 
 /// Middleware that outputs the contents of requests being sent to AWS and the contents of the responses received.
 struct AWSSigningMiddleware: AWSMiddlewareProtocol {
+    @usableFromInline
     let credentialProvider: any CredentialProvider
 
+    @inlinable
     func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
         var request = request
         // get credentials

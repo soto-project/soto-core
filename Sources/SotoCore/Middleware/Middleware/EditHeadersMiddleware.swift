@@ -22,6 +22,7 @@ public struct AWSEditHeadersMiddleware: AWSMiddlewareProtocol {
         case remove(name: String)
     }
 
+    @usableFromInline
     let edits: [HeaderEdit]
 
     public init(_ edits: [HeaderEdit]) {
@@ -32,6 +33,7 @@ public struct AWSEditHeadersMiddleware: AWSMiddlewareProtocol {
         self.init(edits)
     }
 
+    @inlinable
     public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
         var request = request
         for edit in self.edits {

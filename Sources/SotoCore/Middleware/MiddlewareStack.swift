@@ -11,8 +11,8 @@ public enum AWSMiddlewareBuilder {
     public static func buildPartialBlock<M0: AWSMiddlewareProtocol, M1: AWSMiddlewareProtocol>(
         accumulated m0: M0,
         next m1: M1
-    ) -> Middleware2<M0, M1> {
-        Middleware2(m0, m1)
+    ) -> AWSMiddleware2<M0, M1> {
+        AWSMiddleware2(m0, m1)
     }
 }
 

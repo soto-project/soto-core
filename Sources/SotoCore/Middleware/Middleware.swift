@@ -21,25 +21,31 @@ public struct AWSMiddlewareContext {
     public let logger: Logger
 }
 
+/// Middleware handler, function that takes a request, context and the next function to call
 public typealias AWSMiddlewareHandler = @Sendable (AWSHTTPRequest, AWSMiddlewareContext, _ next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse
 
+/// Middleware protocol, with function that takes a request, context and the next function to call
 public protocol AWSMiddlewareProtocol: Sendable {
     func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse
 }
 
+/// Middleware initialized with a middleware handle
 public struct AWSMiddleware: AWSMiddlewareProtocol {
+    @usableFromInline
     var middleware: AWSMiddlewareHandler
 
     public init(_ middleware: @escaping AWSMiddlewareHandler) {
         self.middleware = middleware
     }
 
+    @inlinable
     public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
         try await self.middleware(request, context, next)
     }
 }
 
-public struct Middleware2<M0: AWSMiddlewareProtocol, M1: AWSMiddlewareProtocol>: AWSMiddlewareProtocol {
+/// Build middleware from combining two middleware
+public struct AWSMiddleware2<M0: AWSMiddlewareProtocol, M1: AWSMiddlewareProtocol>: AWSMiddlewareProtocol {
     @usableFromInline let m0: M0
     @usableFromInline let m1: M1
 
@@ -57,10 +63,13 @@ public struct Middleware2<M0: AWSMiddlewareProtocol, M1: AWSMiddlewareProtocol>:
     }
 }
 
+/// Build middleware from array of existential middleware
 public struct AWSDynamicMiddlewareStack: AWSMiddlewareProtocol {
+    @usableFromInline
     typealias Stack = [(String, any AWSMiddlewareProtocol)]
 
-    var stack: [(String, any AWSMiddlewareProtocol)]
+    @usableFromInline
+    var stack: Stack
 
     public init(_ list: any AWSMiddlewareProtocol...) {
         self.init(list)
@@ -70,11 +79,13 @@ public struct AWSDynamicMiddlewareStack: AWSMiddlewareProtocol {
         self.stack = list.enumerated().map { i, m in ("\(i)", m) }
     }
 
+    @inlinable
     public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
         let iterator = self.stack.makeIterator()
         return try await self.run(request, context: context, iterator: iterator, finally: next)
     }
 
+    @inlinable
     func run(
         _ request: AWSHTTPRequest,
         context: AWSMiddlewareContext,

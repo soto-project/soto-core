@@ -16,9 +16,9 @@ import Logging
 
 /// Context object sent to `AWSMiddlewareProtocol` `handle` functions
 public struct AWSMiddlewareContext {
-    public let operation: String
-    public let serviceConfig: AWSServiceConfig
-    public let logger: Logger
+    public var operation: String
+    public var serviceConfig: AWSServiceConfig
+    public var logger: Logger
 }
 
 /// Middleware handler, function that takes a request, context and the next function to call

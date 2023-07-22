@@ -259,6 +259,30 @@ public final class AWSServiceConfig {
         }
     }
 
+    /// Return new version of Service with edited parameters
+    /// - Parameters:
+    ///   - region: Server region
+    ///   - middlewares: Additional middleware to add
+    ///   - timeout: Time out value for HTTP requests
+    ///   - byteBufferAllocator: byte buffer allocator used throughout AWSClient
+    ///   - options: options used by client when processing requests
+    /// - Returns: New version of the service
+    public func with(
+        region: Region? = nil,
+        middleware: AWSMiddlewareProtocol? = nil,
+        timeout: TimeAmount? = nil,
+        byteBufferAllocator: ByteBufferAllocator? = nil,
+        options: AWSServiceConfig.Options? = nil
+    ) -> AWSServiceConfig {
+        return self.with(patch: .init(
+            region: region,
+            middleware: middleware,
+            timeout: timeout,
+            byteBufferAllocator: byteBufferAllocator,
+            options: options
+        ))
+    }
+
     /// Options used by client when processing requests
     public struct Options: OptionSet {
         public typealias RawValue = Int

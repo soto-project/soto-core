@@ -39,11 +39,13 @@ public struct S3Middleware: AWSMiddlewareProtocol {
             self.expect100Continue(request: &request)
         }
 
-        var response = try await next(request, context)
-
-        self.fixupHeadErrors(response: &response)
-
-        return response
+        do {
+            let response = try await next(request, context)
+            return response
+        } catch let error as AWSRawError {
+            let newError = self.fixupRawError(error: error, context: context)
+            throw newError
+        }
     }
 
     public init() {}
@@ -153,16 +155,14 @@ public struct S3Middleware: AWSMiddlewareProtocol {
          }
      } */
 
-    func fixupHeadErrors(response: inout AWSHTTPResponse) {
-        if response.status == .notFound, response.body.length == 0 {
-            let errorNode = XML.Element(name: "Error")
-            let codeNode = XML.Element(name: "Code", stringValue: "NotFound")
-            let messageNode = XML.Element(name: "Message", stringValue: "Not Found")
-            errorNode.addChild(codeNode)
-            errorNode.addChild(messageNode)
-            let documentNode = XML.Document(rootElement: errorNode)
-            let buffer = ByteBuffer(string: documentNode.xmlString)
-            response.body = .init(buffer: buffer)
+    func fixupRawError(error: AWSRawError, context: AWSMiddlewareContext) -> Error {
+        if error.context.responseCode == .notFound {
+            if let errorType = context.serviceConfig.errorType,
+               let notFoundError = errorType.init(errorCode: "NotFound", context: error.context)
+            {
+                return notFoundError
+            }
         }
+        return error
     }
 }

@@ -66,7 +66,7 @@ final class EndpointDiscoveryTests: XCTestCase {
                 path: "/test",
                 httpMethod: .GET,
                 serviceConfig: self.config.with(
-                    middleware: EndpointDiscoveryMiddleware(.init(storage: self.endpointStorage, discover: self.getEndpoints, required: true))
+                    middleware: EndpointDiscoveryMiddleware(storage: self.endpointStorage, discover: self.getEndpoints, required: true)
                 ),
                 input: input,
                 logger: logger
@@ -85,7 +85,7 @@ final class EndpointDiscoveryTests: XCTestCase {
                 path: "/test",
                 httpMethod: .GET,
                 serviceConfig: self.config.with(
-                    middleware: EndpointDiscoveryMiddleware(.init(storage: self.endpointStorage, discover: self.getEndpointsDontCache, required: true))
+                    middleware: EndpointDiscoveryMiddleware(storage: self.endpointStorage, discover: self.getEndpointsDontCache, required: true)
                 ),
                 logger: logger
             )
@@ -97,7 +97,7 @@ final class EndpointDiscoveryTests: XCTestCase {
                 path: "/test",
                 httpMethod: .GET,
                 serviceConfig: self.config.with(
-                    middleware: EndpointDiscoveryMiddleware(.init(storage: self.endpointStorage, discover: self.getEndpoints, required: false))
+                    middleware: EndpointDiscoveryMiddleware(storage: self.endpointStorage, discover: self.getEndpoints, required: false)
                 ),
                 input: input,
                 logger: logger

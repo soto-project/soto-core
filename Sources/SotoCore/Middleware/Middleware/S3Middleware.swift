@@ -91,7 +91,7 @@ public struct S3Middleware: AWSMiddlewareProtocol {
                 urlPath = paths.joined(separator: "/")
                 urlHost = host
             }
-            // add trailing "/" back if it was present
+            // add trailing "/" back if it was present, no need to check for single slash path here
             if request.url.pathWithSlash.hasSuffix("/") {
                 urlPath += "/"
             }

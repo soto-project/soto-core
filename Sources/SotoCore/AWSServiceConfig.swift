@@ -387,7 +387,7 @@ public final class AWSServiceConfig {
 
         if let serviceMiddleware = service.middleware {
             if let patchMiddleware = patch.middleware {
-                self.middleware = AWSDynamicMiddlewareStack(patchMiddleware, serviceMiddleware)
+                self.middleware = AWSDynamicMiddlewareStack(serviceMiddleware, patchMiddleware)
             } else {
                 self.middleware = serviceMiddleware
             }

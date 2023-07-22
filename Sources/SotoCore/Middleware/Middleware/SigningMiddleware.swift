@@ -17,7 +17,7 @@ import NIOHTTP1
 import SotoSignerV4
 
 /// Middleware that outputs the contents of requests being sent to AWS and the contents of the responses received.
-struct AWSSigningMiddleware: AWSMiddlewareProtocol {
+struct SigningMiddleware: AWSMiddlewareProtocol {
     @usableFromInline
     let credentialProvider: any CredentialProvider
 

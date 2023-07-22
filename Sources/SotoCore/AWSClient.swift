@@ -95,7 +95,8 @@ public final class AWSClient: Sendable {
         self.credentialProvider = credentialProvider
         self.middleware = AWSMiddlewareStack {
             middleware
-            AWSSigningMiddleware(credentialProvider: credentialProvider)
+            SigningMiddleware(credentialProvider: credentialProvider)
+            ErrorHandlingMiddleware(options: options)
         }
         self.retryPolicy = retryPolicyFactory.retryPolicy
         self.clientLogger = clientLogger
@@ -134,7 +135,10 @@ public final class AWSClient: Sendable {
             options: options
         ))
         self.credentialProvider = credentialProvider
-        self.middleware = AWSSigningMiddleware(credentialProvider: credentialProvider)
+        self.middleware = AWSMiddlewareStack {
+            SigningMiddleware(credentialProvider: credentialProvider)
+            ErrorHandlingMiddleware(options: options)
+        }
         self.retryPolicy = retryPolicyFactory.retryPolicy
         self.clientLogger = clientLogger
         self.options = options
@@ -482,7 +486,11 @@ extension AWSClient {
         processResponse: @escaping (AWSHTTPResponse) async throws -> Output
     ) async throws -> Output {
         let middlewareStack = serviceConfig.middleware.map { AWSDynamicMiddlewareStack($0, self.middleware) } ?? self.middleware
-        let middlewareContext = AWSMiddlewareContext(operation: operationName, serviceConfig: serviceConfig, logger: logger)
+        let middlewareContext = AWSMiddlewareContext(
+            operation: operationName,
+            serviceConfig: serviceConfig,
+            logger: logger
+        )
 
         var attempt = 0
         while true {
@@ -490,13 +498,6 @@ extension AWSClient {
                 let response = try await middlewareStack.handle(request, context: middlewareContext) { request, _ in
                     return try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, logger: logger)
                 }
-
-                // if response has an HTTP status code outside 2xx then throw an error
-                guard (200..<300).contains(response.status.code) else {
-                    let error = await self.createError(for: response, serviceConfig: serviceConfig, logger: logger)
-                    throw error
-                }
-
                 let output = try await processResponse(response)
                 return output
             } catch {
@@ -621,45 +622,6 @@ extension AWSClient {
     ) async throws {
         // flush response body contents to complete response read
         for try await _ in response.body {}
-    }
-
-    /// Create error from HTTPResponse. This is only called if we received an unsuccessful http status code.
-    internal func createError(for response: AWSHTTPResponse, serviceConfig: AWSServiceConfig, logger: Logger) async -> Error {
-        // if we can create an AWSResponse and create an error from it return that
-        var response = response
-        do {
-            try await response.collateBody()
-        } catch {
-            // else return "Unhandled error message" with rawBody attached
-            let context = AWSErrorContext(
-                message: "Unhandled Error",
-                responseCode: response.status,
-                headers: response.headers
-            )
-            return AWSRawError(rawBody: nil, context: context)
-        }
-        if let error = response.generateError(
-            serviceConfig: serviceConfig,
-            logLevel: options.errorLogLevel,
-            logger: logger
-        ) {
-            return error
-        } else {
-            // else return "Unhandled error message" with rawBody attached
-            let context = AWSErrorContext(
-                message: "Unhandled Error",
-                responseCode: response.status,
-                headers: response.headers
-            )
-            let responseBody: String?
-            switch response.body.storage {
-            case .byteBuffer(let buffer):
-                responseBody = String(buffer: buffer)
-            default:
-                responseBody = nil
-            }
-            return AWSRawError(rawBody: responseBody, context: context)
-        }
     }
 }
 

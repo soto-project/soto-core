@@ -48,8 +48,6 @@ public final class AWSClient: Sendable {
     let httpClientProvider: HTTPClientProvider
     /// EventLoopGroup used by AWSClient
     public var eventLoopGroup: EventLoopGroup { return httpClient.eventLoopGroup }
-    /// Retry policy specifying what to do when a request fails
-    public let retryPolicy: RetryPolicy
     /// Logger used for non-request based output
     let clientLogger: Logger
     /// client options
@@ -96,9 +94,9 @@ public final class AWSClient: Sendable {
         self.middleware = AWSMiddlewareStack {
             middleware
             SigningMiddleware(credentialProvider: credentialProvider)
+            RetryMiddleware(retryPolicy: retryPolicyFactory.retryPolicy)
             ErrorHandlingMiddleware(options: options)
         }
-        self.retryPolicy = retryPolicyFactory.retryPolicy
         self.clientLogger = clientLogger
         self.options = options
     }
@@ -137,9 +135,9 @@ public final class AWSClient: Sendable {
         self.credentialProvider = credentialProvider
         self.middleware = AWSMiddlewareStack {
             SigningMiddleware(credentialProvider: credentialProvider)
+            RetryMiddleware(retryPolicy: retryPolicyFactory.retryPolicy)
             ErrorHandlingMiddleware(options: options)
         }
-        self.retryPolicy = retryPolicyFactory.retryPolicy
         self.clientLogger = clientLogger
         self.options = options
     }
@@ -450,21 +448,26 @@ extension AWSClient {
         do {
             let request = try createRequest()
             try Task.checkCancellation()
-            // apply middleware and sign
-            let response = try await self.invoke(
-                request: request,
+            // combine service and client middleware stacks
+            let middlewareStack = config.middleware.map { AWSDynamicMiddlewareStack($0, self.middleware) } ?? self.middleware
+            let middlewareContext = AWSMiddlewareContext(
                 operation: operationName,
-                with: config,
-                logger: logger,
-                processResponse: processResponse
+                serviceConfig: config,
+                logger: logger
             )
+            // run middleware stack with httpClient execute at the end
+            let response = try await middlewareStack.handle(request, context: middlewareContext) { request, _ in
+                return try await self.httpClient.execute(request: request, timeout: config.timeout, logger: logger)
+            }
             logger.trace("AWS Response")
+            // process response and return output type
+            let output = try await processResponse(response)
             Metrics.Timer(
                 label: "aws_request_duration",
                 dimensions: dimensions,
                 preferredDisplayUnit: .seconds
             ).recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
-            return response
+            return output
         } catch {
             Counter(label: "aws_request_errors", dimensions: dimensions).increment()
             // AWSErrorTypes have already been logged
@@ -475,43 +478,6 @@ extension AWSClient {
                 ])
             }
             throw error
-        }
-    }
-
-    func invoke<Output>(
-        request: AWSHTTPRequest,
-        operation operationName: String,
-        with serviceConfig: AWSServiceConfig,
-        logger: Logger,
-        processResponse: @escaping (AWSHTTPResponse) async throws -> Output
-    ) async throws -> Output {
-        let middlewareStack = serviceConfig.middleware.map { AWSDynamicMiddlewareStack($0, self.middleware) } ?? self.middleware
-        let middlewareContext = AWSMiddlewareContext(
-            operation: operationName,
-            serviceConfig: serviceConfig,
-            logger: logger
-        )
-
-        var attempt = 0
-        while true {
-            do {
-                let response = try await middlewareStack.handle(request, context: middlewareContext) { request, _ in
-                    return try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, logger: logger)
-                }
-                let output = try await processResponse(response)
-                return output
-            } catch {
-                // If I get a retry wait time for this error then attempt to retry request
-                if case .retry(let retryTime) = self.retryPolicy.getRetryWaitTime(error: error, attempt: attempt) {
-                    logger.trace("Retrying request", metadata: [
-                        "aws-retry-time": "\(Double(retryTime.nanoseconds) / 1_000_000_000)",
-                    ])
-                    try await Task.sleep(nanoseconds: UInt64(retryTime.nanoseconds))
-                } else {
-                    throw error
-                }
-            }
-            attempt += 1
         }
     }
 

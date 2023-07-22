@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2022 the Soto project authors
+// Copyright (c) 2023 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -16,7 +16,7 @@ import Logging
 import NIOHTTP1
 import SotoSignerV4
 
-/// Middleware that outputs the contents of requests being sent to AWS and the contents of the responses received.
+/// Middleware that SigV4 signs an HTTP request
 struct SigningMiddleware: AWSMiddlewareProtocol {
     @usableFromInline
     let credentialProvider: any CredentialProvider

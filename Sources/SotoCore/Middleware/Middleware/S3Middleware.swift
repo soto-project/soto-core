@@ -40,7 +40,10 @@ public struct S3Middleware: AWSMiddlewareProtocol {
         }
 
         do {
-            let response = try await next(request, context)
+            var response = try await next(request, context)
+            if context.operation == "GetBucketLocation" {
+                self.getBucketLocationResponseFixup(response: &response)
+            }
             return response
         } catch let error as AWSRawError {
             let newError = self.fixupRawError(error: error, context: context)
@@ -140,20 +143,22 @@ public struct S3Middleware: AWSMiddlewareProtocol {
         }
     }
 
-    // TODO: Find way to do getLocationResponseFixup
-    /* func getLocationResponseFixup(response: inout AWSResponse) {
-         if case .xml(let element) = response.body {
-             // GetBucketLocation comes back without a containing xml element
-             if element.name == "LocationConstraint" {
-                 if element.stringValue == "" {
-                     element.addChild(.text(stringValue: "us-east-1"))
-                 }
-                 let parentElement = XML.Element(name: "BucketLocation")
-                 parentElement.addChild(element)
-                 response.body = .xml(parentElement)
-             }
-         }
-     } */
+    func getBucketLocationResponseFixup(response: inout AWSHTTPResponse) {
+        if case .byteBuffer(let buffer) = response.body.storage,
+           let xmlDocument = try? XML.Document(buffer: buffer),
+           let rootElement = xmlDocument.rootElement()
+        {
+            if rootElement.name == "LocationConstraint" {
+                if rootElement.stringValue == "" {
+                    rootElement.addChild(.text(stringValue: "us-east-1"))
+                }
+                let parentElement = XML.Element(name: "BucketLocation")
+                parentElement.addChild(rootElement)
+                xmlDocument.setRootElement(parentElement)
+                response.body = .init(buffer: ByteBuffer(string: xmlDocument.xmlString))
+            }
+        }
+    }
 
     func fixupRawError(error: AWSRawError, context: AWSMiddlewareContext) -> Error {
         if error.context.responseCode == .notFound {

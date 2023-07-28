@@ -28,12 +28,12 @@ public struct TreeHashMiddleware: AWSServiceMiddleware {
         self.treeHashHeader = header
     }
 
-    public func chain(request: AWSRequest, context: AWSMiddlewareContext) throws -> AWSRequest {
+    public func chain(request: AWSHTTPRequest, context: AWSMiddlewareContext) throws -> AWSHTTPRequest {
         var request = request
-        if request.httpHeaders[self.treeHashHeader].first == nil {
+        if request.headers[self.treeHashHeader].first == nil {
             if case .byteBuffer(let buffer) = request.body.storage {
                 let treeHash = try computeTreeHash(buffer).hexDigest()
-                request.httpHeaders.replaceOrAdd(name: self.treeHashHeader, value: treeHash)
+                request.headers.replaceOrAdd(name: self.treeHashHeader, value: treeHash)
             }
         }
 

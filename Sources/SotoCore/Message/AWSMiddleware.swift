@@ -14,25 +14,26 @@
 
 /// Context object sent to `AWSServiceMiddleware` `chain` functions
 public struct AWSMiddlewareContext {
-    public let options: AWSServiceConfig.Options
+    public let operation: String
+    public let serviceConfig: AWSServiceConfig
 }
 
 /// Middleware protocol. Process requests before they are sent to AWS and process responses before they are converted into output shapes
 public protocol AWSServiceMiddleware: Sendable {
     /// Process AWSRequest before it is converted to a HTTPClient Request to be sent to AWS
-    func chain(request: AWSRequest, context: AWSMiddlewareContext) throws -> AWSRequest
+    func chain(request: AWSHTTPRequest, context: AWSMiddlewareContext) throws -> AWSHTTPRequest
 
     /// Process response before it is converted to an output AWSShape
-    func chain(response: AWSResponse, context: AWSMiddlewareContext) throws -> AWSResponse
+    func chain(response: AWSHTTPResponse, context: AWSMiddlewareContext) throws -> AWSHTTPResponse
 }
 
 /// Default versions of protocol functions
 public extension AWSServiceMiddleware {
-    func chain(request: AWSRequest, context: AWSMiddlewareContext) throws -> AWSRequest {
+    func chain(request: AWSHTTPRequest, context: AWSMiddlewareContext) throws -> AWSHTTPRequest {
         return request
     }
 
-    func chain(response: AWSResponse, context: AWSMiddlewareContext) throws -> AWSResponse {
+    func chain(response: AWSHTTPResponse, context: AWSMiddlewareContext) throws -> AWSHTTPResponse {
         return response
     }
 }

@@ -26,8 +26,8 @@ import NIOFoundationCompat
 import NIOHTTP1
 import SotoXML
 
-/// Structure encapsulating a processed HTTP Response
-public struct AWSResponse {
+/// Structure encapsulating an HTTP Response
+public struct AWSHTTPResponse {
     /// response status
     public let status: HTTPResponseStatus
     /// response headers
@@ -35,30 +35,21 @@ public struct AWSResponse {
     /// response body
     public var body: AWSHTTPBody
 
-    /// initialize an AWSResponse Object
-    /// - parameters:
-    ///     - from: Raw HTTP Response
-    ///     - streaming: Whether Body should be treated as streamed data or collated into
-    ///         one ByteBuffer
-    init(from response: AWSHTTPResponse, streaming: Bool) async throws {
-        self.status = response.status
+    /// Initialize AWSResponse
+    init(status: HTTPResponseStatus, headers: HTTPHeaders, body: AWSHTTPBody = .init()) {
+        self.status = status
+        self.headers = headers
+        self.body = body
+    }
 
-        // headers
-        self.headers = response.headers
-
-        // body
-        if streaming {
-            self.body = response.body
-        } else {
-            self.body = try await .init(buffer: response.body.collect(upTo: .max))
-        }
+    mutating func collateBody() async throws {
+        self.body = try await .init(buffer: self.body.collect(upTo: .max))
     }
 
     /// return new response with middleware applied
-    func applyMiddlewares(_ middlewares: [AWSServiceMiddleware], config: AWSServiceConfig) throws -> AWSResponse {
+    func applyMiddlewares(_ middlewares: [AWSServiceMiddleware], context: AWSMiddlewareContext) throws -> AWSHTTPResponse {
         var awsResponse = self
-        // apply middleware to respons
-        let context = AWSMiddlewareContext(options: config.options)
+        // apply middleware to response
         for middleware in middlewares {
             awsResponse = try middleware.chain(response: awsResponse, context: context)
         }

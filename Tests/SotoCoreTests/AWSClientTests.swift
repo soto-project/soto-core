@@ -576,52 +576,6 @@ class AWSClientTests: XCTestCase {
         }
     }
 
-    /// verify we are not calling the Retry handler when streaming a request
-    func testDontRetryStreamingRequests() async {
-        final class TestRetryPolicy: RetryPolicy {
-            func getRetryWaitTime(error: Error, attempt: Int) -> RetryStatus? {
-                XCTFail("This should not be called as streaming has disabled retries")
-                return .dontRetry
-            }
-        }
-        struct Input: AWSEncodableShape & AWSShapeWithPayload {
-            static var _payloadPath: String = "payload"
-            static var _options: AWSShapeOptions = [.allowStreaming, .allowChunkedStreaming, .rawPayload]
-            let payload: AWSHTTPBody
-            private enum CodingKeys: CodingKey {}
-        }
-        let retryPolicy = TestRetryPolicy()
-        do {
-            let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .singleton)
-            let awsServer = AWSTestServer(serviceProtocol: .json)
-            let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
-            let client = createAWSClient(credentialProvider: .empty, retryPolicy: .init(retryPolicy: retryPolicy), httpClientProvider: .shared(httpClient))
-            defer {
-                XCTAssertNoThrow(try awsServer.stop())
-                XCTAssertNoThrow(try client.syncShutdown())
-                XCTAssertNoThrow(try httpClient.syncShutdown())
-            }
-            let payload = AWSHTTPBody(asyncSequence: ByteBuffer().asyncSequence(chunkSize: 16), length: nil)
-            let input = Input(payload: payload)
-            async let responseTask: Void = client.execute(
-                operation: "test",
-                path: "/",
-                httpMethod: .POST,
-                serviceConfig: config,
-                input: input,
-                logger: TestEnvironment.logger
-            )
-            try awsServer.processRaw { _ in
-                return .error(.accessDenied, continueProcessing: false)
-            }
-
-            try await responseTask
-        } catch let error as AWSClientError where error == .accessDenied {
-        } catch {
-            XCTFail("Unexpected error: \(error)")
-        }
-    }
-
     func testClientResponseEventLoop() async {
         do {
             let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 5)

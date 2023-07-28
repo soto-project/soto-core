@@ -100,37 +100,3 @@ extension AWSHTTPBody: Decodable {
         preconditionFailure("Cannot decode an AWSHTTPBody")
     }
 }
-
-/// HTTP Request
-struct AWSHTTPRequest {
-    let url: URL
-    let method: HTTPMethod
-    let headers: HTTPHeaders
-    let body: AWSHTTPBody
-
-    init(url: URL, method: HTTPMethod, headers: HTTPHeaders = [:], body: AWSHTTPBody = .init()) {
-        self.url = url
-        self.method = method
-        self.headers = headers
-        self.body = body
-    }
-}
-
-/// Generic HTTP Response returned from HTTP Client
-struct AWSHTTPResponse: Sendable {
-    /// Initialize AWSHTTPResponse
-    init(status: HTTPResponseStatus, headers: HTTPHeaders, body: AWSHTTPBody = .init()) {
-        self.status = status
-        self.headers = headers
-        self.body = body
-    }
-
-    /// The HTTP status for this response.
-    var status: HTTPResponseStatus
-
-    /// The HTTP headers of this response.
-    var headers: HTTPHeaders
-
-    /// The body of this HTTP response.
-    var body: AWSHTTPBody
-}

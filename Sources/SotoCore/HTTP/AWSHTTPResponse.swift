@@ -26,7 +26,7 @@ import NIOFoundationCompat
 import NIOHTTP1
 import SotoXML
 
-/// Structure encapsulating a HTTP Response
+/// Structure encapsulating an HTTP Response
 public struct AWSHTTPResponse {
     /// response status
     public let status: HTTPResponseStatus
@@ -42,7 +42,6 @@ public struct AWSHTTPResponse {
         self.body = body
     }
 
-    /// collate body
     mutating func collateBody() async throws {
         self.body = try await .init(buffer: self.body.collect(upTo: .max))
     }

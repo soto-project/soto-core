@@ -574,7 +574,7 @@ extension AWSClient {
         return try response.generateOutputShape(operation: operationName, serviceProtocol: serviceConfig.serviceProtocol)
     }
 
-    /// Generate an AWS Response from  the operation HTTP response and return the output shape from it. This is only every called if the response includes a successful http status code
+    /// Generate an AWS Response from the operation HTTP response and return the output shape from it. This is only every called if the response includes a successful http status code
     internal func processEmptyResponse(
         operation operationName: String,
         response: AWSHTTPResponse,

@@ -33,12 +33,12 @@ public struct S3Middleware: AWSServiceMiddleware {
     public init() {}
 
     /// edit request before sending to S3
-    public func chain(request: AWSRequest, context: AWSMiddlewareContext) throws -> AWSRequest {
+    public func chain(request: AWSHTTPRequest, context: AWSMiddlewareContext) throws -> AWSHTTPRequest {
         var request = request
 
         self.virtualAddressFixup(request: &request, context: context)
-        self.createBucketFixup(request: &request)
-        if !context.options.contains(.s3Disable100Continue) {
+        self.createBucketFixup(request: &request, context: context)
+        if !context.serviceConfig.options.contains(.s3Disable100Continue) {
             self.expect100Continue(request: &request)
         }
 
@@ -46,7 +46,7 @@ public struct S3Middleware: AWSServiceMiddleware {
     }
 
     /// Edit responses coming back from S3
-    public func chain(response: AWSResponse, context: AWSMiddlewareContext) throws -> AWSResponse {
+    public func chain(response: AWSHTTPResponse, context: AWSMiddlewareContext) throws -> AWSHTTPResponse {
         var response = response
 
         // self.getLocationResponseFixup(response: &response)
@@ -55,7 +55,7 @@ public struct S3Middleware: AWSServiceMiddleware {
         return response
     }
 
-    func virtualAddressFixup(request: inout AWSRequest, context: AWSMiddlewareContext) {
+    func virtualAddressFixup(request: inout AWSHTTPRequest, context: AWSMiddlewareContext) {
         /// process URL into form ${bucket}.s3.amazon.com
         let paths = request.url.path.split(separator: "/", omittingEmptySubsequences: true)
         if paths.count > 0 {
@@ -69,7 +69,7 @@ public struct S3Middleware: AWSServiceMiddleware {
             let isAmazonUrl = host.hasSuffix("amazonaws.com")
 
             var hostComponents = host.split(separator: ".")
-            if isAmazonUrl, context.options.contains(.s3UseTransferAcceleratedEndpoint) {
+            if isAmazonUrl, context.serviceConfig.options.contains(.s3UseTransferAcceleratedEndpoint) {
                 if let s3Index = hostComponents.firstIndex(where: { $0 == "s3" }) {
                     var s3 = "s3"
                     s3 += "-accelerate"
@@ -82,7 +82,7 @@ public struct S3Middleware: AWSServiceMiddleware {
             }
 
             // if host name contains amazonaws.com and bucket name doesn't contain a period do virtual address look up
-            if isAmazonUrl || context.options.contains(.s3ForceVirtualHost), !bucket.contains(".") {
+            if isAmazonUrl || context.serviceConfig.options.contains(.s3ForceVirtualHost), !bucket.contains(".") {
                 let pathsWithoutBucket = paths.dropFirst() // bucket
                 urlPath = pathsWithoutBucket.joined(separator: "/")
 
@@ -116,15 +116,15 @@ public struct S3Middleware: AWSServiceMiddleware {
         return value.addingPercentEncoding(withAllowedCharacters: Self.s3PathAllowedCharacters) ?? value
     }
 
-    func createBucketFixup(request: inout AWSRequest) {
-        switch request.operation {
+    func createBucketFixup(request: inout AWSHTTPRequest, context: AWSMiddlewareContext) {
+        switch context.operation {
         // fixup CreateBucket to include location
         case "CreateBucket":
             var xml = ""
-            if request.region != .useast1 {
+            if context.serviceConfig.region != .useast1 {
                 xml += "<CreateBucketConfiguration xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">"
                 xml += "<LocationConstraint>"
-                xml += request.region.rawValue
+                xml += context.serviceConfig.region.rawValue
                 xml += "</LocationConstraint>"
                 xml += "</CreateBucketConfiguration>"
             }
@@ -136,12 +136,12 @@ public struct S3Middleware: AWSServiceMiddleware {
         }
     }
 
-    func expect100Continue(request: inout AWSRequest) {
-        if request.httpMethod == .PUT,
+    func expect100Continue(request: inout AWSHTTPRequest) {
+        if request.method == .PUT,
            let length = request.body.length,
            length > 128 * 1024
         {
-            request.httpHeaders.replaceOrAdd(name: "Expect", value: "100-continue")
+            request.headers.replaceOrAdd(name: "Expect", value: "100-continue")
         }
     }
 
@@ -160,7 +160,7 @@ public struct S3Middleware: AWSServiceMiddleware {
          }
      } */
 
-    func fixupHeadErrors(response: inout AWSResponse) {
+    func fixupHeadErrors(response: inout AWSHTTPResponse) {
         if response.status == .notFound, response.body.length == 0 {
             let errorNode = XML.Element(name: "Error")
             let codeNode = XML.Element(name: "Code", stringValue: "NotFound")

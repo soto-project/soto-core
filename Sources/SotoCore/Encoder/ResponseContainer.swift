@@ -26,7 +26,7 @@ public struct HeaderDecodingError: Error {
 }
 
 public struct ResponseDecodingContainer {
-    let response: AWSResponse
+    let response: AWSHTTPResponse
 
     public func decode<Value: RawRepresentable>(_ type: Value.Type = Value.self, forHeader header: String) throws -> Value where Value.RawValue == String {
         guard let headerValue = response.headers[header].first else {

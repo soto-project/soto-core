@@ -57,19 +57,19 @@ public struct AWSLoggingMiddleware: AWSServiceMiddleware {
     }
 
     /// output request
-    public func chain(request: AWSRequest, context: AWSMiddlewareContext) throws -> AWSRequest {
+    public func chain(request: AWSHTTPRequest, context: AWSMiddlewareContext) throws -> AWSHTTPRequest {
         self.log(
             "Request:\n" +
-                "  \(request.operation)\n" +
-                "  \(request.httpMethod) \(request.url)\n" +
-                "  Headers: \(self.getHeadersOutput(request.httpHeaders))\n" +
+                "  \(context.operation)\n" +
+                "  \(request.method) \(request.url)\n" +
+                "  Headers: \(self.getHeadersOutput(request.headers))\n" +
                 "  Body: \(self.getBodyOutput(request.body))"
         )
         return request
     }
 
     /// output response
-    public func chain(response: AWSResponse, context: AWSMiddlewareContext) throws -> AWSResponse {
+    public func chain(response: AWSHTTPResponse, context: AWSMiddlewareContext) throws -> AWSHTTPResponse {
         self.log(
             "Response:\n" +
                 "  Status : \(response.status.code)\n" +

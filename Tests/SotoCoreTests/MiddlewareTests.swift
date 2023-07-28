@@ -18,11 +18,11 @@ import XCTest
 
 class MiddlewareTests: XCTestCase {
     struct CatchRequestError: Error {
-        let request: AWSRequest
+        let request: AWSHTTPRequest
     }
 
     struct CatchRequestMiddleware: AWSServiceMiddleware {
-        func chain(request: AWSRequest, context: AWSMiddlewareContext) throws -> AWSRequest {
+        func chain(request: AWSHTTPRequest, context: AWSMiddlewareContext) throws -> AWSHTTPRequest {
             throw CatchRequestError(request: request)
         }
     }
@@ -32,7 +32,7 @@ class MiddlewareTests: XCTestCase {
         serviceName: String = "service",
         serviceOptions: AWSServiceConfig.Options = [],
         uri: String = "/",
-        test: (AWSRequest) -> Void
+        test: (AWSHTTPRequest) -> Void
     ) async throws {
         let client = createAWSClient(credentialProvider: .empty)
         let config = createServiceConfig(
@@ -53,7 +53,7 @@ class MiddlewareTests: XCTestCase {
 
     func testMiddlewareAppliedOnce() async throws {
         struct URLAppendMiddleware: AWSServiceMiddleware {
-            func chain(request: AWSRequest, context: AWSMiddlewareContext) throws -> AWSRequest {
+            func chain(request: AWSHTTPRequest, context: AWSMiddlewareContext) throws -> AWSHTTPRequest {
                 var request = request
                 request.url.appendPathComponent("test")
                 return request
@@ -85,8 +85,8 @@ class MiddlewareTests: XCTestCase {
             .add(name: "user-agent", value: "testEditHeaderMiddleware")
         )
         try await self.testMiddleware(middleware) { request in
-            XCTAssertEqual(request.httpHeaders["testAdd"].first, "testValue")
-            XCTAssertEqual(request.httpHeaders["user-agent"].joined(separator: ","), "Soto/6.0,testEditHeaderMiddleware")
+            XCTAssertEqual(request.headers["testAdd"].first, "testValue")
+            XCTAssertEqual(request.headers["user-agent"].joined(separator: ","), "Soto/6.0,testEditHeaderMiddleware")
         }
     }
 
@@ -96,7 +96,7 @@ class MiddlewareTests: XCTestCase {
             .replace(name: "user-agent", value: "testEditHeaderMiddleware")
         )
         try await self.testMiddleware(middleware) { request in
-            XCTAssertEqual(request.httpHeaders["user-agent"].first, "testEditHeaderMiddleware")
+            XCTAssertEqual(request.headers["user-agent"].first, "testEditHeaderMiddleware")
         }
     }
 

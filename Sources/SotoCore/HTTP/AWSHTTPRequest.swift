@@ -23,40 +23,26 @@ import NIOHTTP1
 import SotoSignerV4
 
 /// Object encapsulating all the information needed to generate a raw HTTP request to AWS
-public struct AWSRequest {
-    /// request AWS region
-    public let region: Region
+public struct AWSHTTPRequest {
     /// request URL
     public var url: URL
-    /// request communication protocol
-    public let serviceProtocol: ServiceProtocol
-    /// AWS operation name
-    public let operation: String
     /// request HTTP method
-    public let httpMethod: HTTPMethod
+    public let method: HTTPMethod
     /// request headers
-    public var httpHeaders: HTTPHeaders
+    public var headers: HTTPHeaders
     /// request body
     public var body: AWSHTTPBody
 
-    /// Create HTTP Client request from AWSRequest.
-    /// If the signer's credentials are available the request will be signed. Otherwise defaults to an unsigned request
-    func createHTTPRequest(signer: AWSSigner, serviceConfig: AWSServiceConfig) -> AWSHTTPRequest {
-        // if credentials are empty don't sign request
-        if signer.credentials.isEmpty() {
-            return self.toHTTPRequest(byteBufferAllocator: serviceConfig.byteBufferAllocator)
-        }
-
-        return self.toHTTPRequestWithSignedHeader(signer: signer, serviceConfig: serviceConfig)
+    internal init(url: URL, method: HTTPMethod, headers: HTTPHeaders, body: AWSHTTPBody) {
+        self.url = url
+        self.method = method
+        self.headers = headers
+        self.body = body
     }
 
-    /// Create HTTP Client request from AWSRequest
-    func toHTTPRequest(byteBufferAllocator: ByteBufferAllocator) -> AWSHTTPRequest {
-        return AWSHTTPRequest(url: url, method: httpMethod, headers: httpHeaders, body: body)
-    }
-
-    /// Create HTTP Client request with signed headers from AWSRequest
-    func toHTTPRequestWithSignedHeader(signer: AWSSigner, serviceConfig: AWSServiceConfig) -> AWSHTTPRequest {
+    /// Create signed headers for request
+    mutating func signHeaders(signer: AWSSigner, serviceConfig: AWSServiceConfig) {
+        guard !signer.credentials.isEmpty() else { return }
         let payload = self.body
         let bodyDataForSigning: AWSSigner.BodyData?
         switch payload.storage {
@@ -65,30 +51,32 @@ public struct AWSRequest {
         case .asyncSequence(let sequence, let length):
             if signer.name == "s3", !serviceConfig.options.contains(.s3DisableChunkedUploads) {
                 assert(length != nil, "S3 stream requires size")
-                var headers = httpHeaders
+                var headers = headers
                 // need to add these headers here as it needs to be included in the signed headers
                 headers.add(name: "x-amz-decoded-content-length", value: length!.description)
                 headers.add(name: "content-encoding", value: "aws-chunked")
                 // get signed headers and seed signing data
-                let (signedHeaders, seedSigningData) = signer.startSigningChunks(url: url, method: httpMethod, headers: headers, date: Date())
+                let (signedHeaders, seedSigningData) = signer.startSigningChunks(url: url, method: method, headers: headers, date: Date())
                 // create s3 signed Sequence
                 let s3Signed = sequence.s3Signed(signer: signer, seedSigningData: seedSigningData)
                 // create new payload and return request
                 let payload = AWSHTTPBody(asyncSequence: s3Signed, length: s3Signed.contentSize(from: length!))
-                return AWSHTTPRequest(url: url, method: httpMethod, headers: signedHeaders, body: payload)
+
+                self.headers = signedHeaders
+                self.body = payload
+                return
             } else {
                 bodyDataForSigning = .unsignedPayload
             }
         }
-        let signedHeaders = signer.signHeaders(url: url, method: httpMethod, headers: httpHeaders, body: bodyDataForSigning, date: Date())
-        return AWSHTTPRequest(url: url, method: httpMethod, headers: signedHeaders, body: payload)
+        let signedHeaders = signer.signHeaders(url: url, method: method, headers: headers, body: bodyDataForSigning, date: Date())
+        self.headers = signedHeaders
     }
 
     // return new request with middleware applied
-    func applyMiddlewares(_ middlewares: [AWSServiceMiddleware], config: AWSServiceConfig) throws -> AWSRequest {
+    func applyMiddlewares(_ middlewares: [AWSServiceMiddleware], context: AWSMiddlewareContext) throws -> AWSHTTPRequest {
         var awsRequest = self
         // apply middleware to request
-        let context = AWSMiddlewareContext(options: config.options)
         for middleware in middlewares {
             awsRequest = try middleware.chain(request: awsRequest, context: context)
         }
@@ -96,8 +84,8 @@ public struct AWSRequest {
     }
 }
 
-extension AWSRequest {
-    internal init(operation operationName: String, path: String, httpMethod: HTTPMethod, configuration: AWSServiceConfig) throws {
+extension AWSHTTPRequest {
+    internal init(operation operationName: String, path: String, method: HTTPMethod, configuration: AWSServiceConfig) throws {
         var headers = HTTPHeaders()
 
         guard let url = URL(string: "\(configuration.endpoint)\(path)"), let _ = url.host else {
@@ -109,12 +97,9 @@ extension AWSRequest {
             headers.replaceOrAdd(name: "x-amz-target", value: "\(target).\(operationName)")
         }
 
-        self.region = configuration.region
         self.url = url
-        self.serviceProtocol = configuration.serviceProtocol
-        self.operation = operationName
-        self.httpMethod = httpMethod
-        self.httpHeaders = headers
+        self.method = method
+        self.headers = headers
         // Query and EC2 protocols require the Action and API Version in the body
         switch configuration.serviceProtocol {
         case .query, .ec2:
@@ -134,7 +119,7 @@ extension AWSRequest {
     internal init<Input: AWSEncodableShape>(
         operation operationName: String,
         path: String,
-        httpMethod: HTTPMethod,
+        method: HTTPMethod,
         input: Input,
         hostPrefix: String? = nil,
         configuration: AWSServiceConfig
@@ -224,7 +209,7 @@ extension AWSRequest {
                 // only include the body if there are members that are output in the body.
                 if memberVariablesCount > 0 {
                     body = try .init(buffer: input.encodeAsJSON(byteBufferAllocator: configuration.byteBufferAllocator))
-                } else if httpMethod == .PUT || httpMethod == .POST {
+                } else if method == .PUT || method == .POST {
                     // PUT and POST requests require a body even if it is empty. This is not the case with XML
                     body = .init(buffer: configuration.byteBufferAllocator.buffer(string: "{}"))
                 } else {
@@ -321,12 +306,9 @@ extension AWSRequest {
             configuration: configuration
         )
 
-        self.region = configuration.region
         self.url = url
-        self.serviceProtocol = configuration.serviceProtocol
-        self.operation = operationName
-        self.httpMethod = httpMethod
-        self.httpHeaders = headers
+        self.method = method
+        self.headers = headers
         self.body = body
 
         addStandardHeaders(serviceProtocol: configuration.serviceProtocol, raw: raw)
@@ -396,20 +378,20 @@ extension AWSRequest {
 
     /// Add headers standard to all requests "content-type" and "user-agent"
     private mutating func addStandardHeaders(serviceProtocol: ServiceProtocol, raw: Bool) {
-        httpHeaders.add(name: "user-agent", value: "Soto/6.0")
-        guard httpHeaders["content-type"].first == nil else {
+        headers.add(name: "user-agent", value: "Soto/6.0")
+        guard headers["content-type"].first == nil else {
             return
         }
-        guard httpMethod != .GET, httpMethod != .HEAD else {
+        guard method != .GET, method != .HEAD else {
             return
         }
 
         if case .byteBuffer(let buffer) = body.storage, buffer.readableBytes == 0 {
             // don't add a content-type header when there is no content
         } else if case .restjson = serviceProtocol, raw {
-            httpHeaders.replaceOrAdd(name: "content-type", value: "binary/octet-stream")
+            headers.replaceOrAdd(name: "content-type", value: "binary/octet-stream")
         } else {
-            httpHeaders.replaceOrAdd(name: "content-type", value: serviceProtocol.contentType)
+            headers.replaceOrAdd(name: "content-type", value: serviceProtocol.contentType)
         }
     }
 
@@ -420,17 +402,17 @@ extension AWSRequest {
 
     /// percent encode query parameter value.
     private static func urlEncodeQueryParam(_ value: String) -> String {
-        return value.addingPercentEncoding(withAllowedCharacters: AWSRequest.queryAllowedCharacters) ?? value
+        return value.addingPercentEncoding(withAllowedCharacters: AWSHTTPRequest.queryAllowedCharacters) ?? value
     }
 
     /// percent encode path value.
     private static func urlEncodePath(_ value: String) -> String {
-        return value.addingPercentEncoding(withAllowedCharacters: AWSRequest.pathAllowedCharacters) ?? value
+        return value.addingPercentEncoding(withAllowedCharacters: AWSHTTPRequest.pathAllowedCharacters) ?? value
     }
 
     /// percent encode path component value. ie also encode "/"
     private static func urlEncodePathComponent(_ value: String) -> String {
-        return value.addingPercentEncoding(withAllowedCharacters: AWSRequest.pathComponentAllowedCharacters) ?? value
+        return value.addingPercentEncoding(withAllowedCharacters: AWSHTTPRequest.pathComponentAllowedCharacters) ?? value
     }
 
     /// verify  streaming is allowed for this operation

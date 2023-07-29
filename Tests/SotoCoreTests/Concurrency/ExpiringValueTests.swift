@@ -47,7 +47,7 @@ final class ExpiringValueTests: XCTestCase {
             try await Task.sleep(nanoseconds: 1000)
             return (1, Date())
         }
-        try await Task.sleep(nanoseconds: 10000)
+        await Task.yield()
         // test it return current value
         XCTAssertEqual(value, 0)
         // test it kicked off a task

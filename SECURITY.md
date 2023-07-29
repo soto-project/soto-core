@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-Currently we support versions 4.x.x and 5.x.x of Soto. These will receive security updates as and when needed.
+Currently we support versions 5.0 and above of Soto. These will receive security updates as and when needed.
 
 ## Reporting a Vulnerability
 

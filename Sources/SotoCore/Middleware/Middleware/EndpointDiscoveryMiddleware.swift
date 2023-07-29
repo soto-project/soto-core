@@ -17,9 +17,9 @@
 #else
 import struct Foundation.CharacterSet
 #endif
-import struct Foundation.URL
 import struct Foundation.Date
 import struct Foundation.TimeInterval
+import struct Foundation.URL
 import Logging
 import NIOHTTP1
 import SotoSignerV4

@@ -12,7 +12,14 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
+#if compiler(>=5.7) && os(Linux)
+@preconcurrency import struct Foundation.CharacterSet
+#else
+import struct Foundation.CharacterSet
+#endif
+import struct Foundation.URL
+import struct Foundation.Date
+import struct Foundation.TimeInterval
 import Logging
 import NIOHTTP1
 import SotoSignerV4

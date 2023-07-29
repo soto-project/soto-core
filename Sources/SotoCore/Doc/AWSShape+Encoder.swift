@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the Soto project authors
+// Copyright (c) 2017-2023 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -14,7 +14,7 @@
 
 import class Foundation.JSONEncoder
 import NIOCore
-import SotoXML
+@_implementationOnly  import SotoXML
 
 internal extension AWSEncodableShape {
     /// Encode AWSShape as JSON

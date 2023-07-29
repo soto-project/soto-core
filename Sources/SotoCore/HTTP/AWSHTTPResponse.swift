@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the Soto project authors
+// Copyright (c) 2017-2023 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -24,7 +24,7 @@ import Logging
 import NIOCore
 import NIOFoundationCompat
 import NIOHTTP1
-import SotoXML
+@_implementationOnly import SotoXML
 
 /// Structure encapsulating an HTTP Response
 public struct AWSHTTPResponse {
@@ -282,7 +282,7 @@ private protocol APIError {
 }
 
 extension XML.Document {
-    public convenience init(buffer: ByteBuffer) throws {
+    internal convenience init(buffer: ByteBuffer) throws {
         let xmlString = String(buffer: buffer)
         try self.init(string: xmlString)
     }

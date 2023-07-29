@@ -173,6 +173,7 @@ class RotatingCredentialProviderTests: XCTestCase {
         for _ in 0..<iterations {
             _ = try await provider.getCredential(logger: TestEnvironment.logger)
             await Task.yield()
+            await Task.yield()
         }
         XCTAssertEqual(count.load(ordering: .sequentiallyConsistent), 2)
     }

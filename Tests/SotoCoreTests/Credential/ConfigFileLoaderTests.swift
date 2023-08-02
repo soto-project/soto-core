@@ -18,7 +18,6 @@ import NIOCore
 import NIOPosix
 @testable import SotoCore
 import SotoTestUtils
-import SotoXML
 import XCTest
 
 class ConfigFileLoadersTests: XCTestCase {

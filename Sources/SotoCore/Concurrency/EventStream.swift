@@ -14,7 +14,6 @@
 
 import Foundation
 import NIOCore
-import SotoXML
 
 /// AsyncSequence of Event stream events
 public struct AWSEventStream<Event: Sendable>: Sendable {

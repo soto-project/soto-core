@@ -62,7 +62,7 @@ public final class AWSClient: Sendable {
     ///     - credentialProvider: An object that returns valid signing credentials for request signing.
     ///     - retryPolicy: Object returning whether retries should be attempted.
     ///         Possible options are `.default`, `.noRetry`, `.exponential` or `.jitter`.
-    ///     - middleware: Array of middlewares to apply to requests and responses
+    ///     - middleware: Chain of middlewares to apply to requests and responses
     ///     - options: Configuration flags
     ///     - httpClientProvider: HTTPClient to use. Use `.createNew` if you want the client to manage its own HTTPClient.
     ///     - logger: Logger used to log background AWSClient events

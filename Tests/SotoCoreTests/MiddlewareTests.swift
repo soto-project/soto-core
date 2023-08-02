@@ -21,13 +21,13 @@ class MiddlewareTests: XCTestCase {
         let request: AWSHTTPRequest
     }
 
-    struct CatchRequestMiddleware: AWSServiceMiddleware {
-        func chain(request: AWSHTTPRequest, context: AWSMiddlewareContext) throws -> AWSHTTPRequest {
+    struct CatchRequestMiddleware: AWSMiddlewareProtocol {
+        func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
             throw CatchRequestError(request: request)
         }
     }
 
-    func testMiddleware<Middleware: AWSServiceMiddleware>(
+    func testMiddleware<Middleware: AWSMiddlewareProtocol>(
         _ middleware: Middleware,
         serviceName: String = "service",
         serviceOptions: AWSServiceConfig.Options = [],
@@ -38,7 +38,10 @@ class MiddlewareTests: XCTestCase {
         let config = createServiceConfig(
             region: .useast1,
             endpoint: "https://\(serviceName).us-east-1.amazonaws.com",
-            middlewares: [middleware, CatchRequestMiddleware()],
+            middlewares: AWSMiddlewareStack {
+                middleware
+                CatchRequestMiddleware()
+            },
             options: serviceOptions
         )
         do {
@@ -52,17 +55,17 @@ class MiddlewareTests: XCTestCase {
     }
 
     func testMiddlewareAppliedOnce() async throws {
-        struct URLAppendMiddleware: AWSServiceMiddleware {
-            func chain(request: AWSHTTPRequest, context: AWSMiddlewareContext) throws -> AWSHTTPRequest {
+        struct URLAppendMiddleware: AWSMiddlewareProtocol {
+            func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
                 var request = request
                 request.url.appendPathComponent("test")
-                return request
+                return try await next(request, context)
             }
         }
 
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let config = createServiceConfig(endpoint: awsServer.address)
-        let client = createAWSClient(credentialProvider: .empty, middlewares: [URLAppendMiddleware()])
+        let client = createAWSClient(credentialProvider: .empty, middlewares: URLAppendMiddleware())
         defer {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())

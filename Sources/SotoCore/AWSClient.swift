@@ -27,9 +27,11 @@ import SotoSignerV4
 
 /// Client managing communication with AWS services
 ///
-/// This is the workhorse of SotoCore. You provide it with a ``AWSShape`` Input object, it converts it to ``AWSRequest`` which is then converted
-/// to a raw `HTTPClient` Request. This is then sent to AWS. When the response from AWS is received if it is successful it is converted to a ``AWSResponse``
-/// which is then decoded to generate a ``AWSShape`` Output object. If it is not successful then `AWSClient` will throw an ``AWSErrorType``.
+/// This is the workhorse of SotoCore. You provide it with a ``AWSShape`` Input object, it converts it to
+/// ``AWSHTTPRequest`` which is then passed through a chain of middleware and then sent to AWS. When
+/// the response from AWS is received if it is successful it is converted to a ``AWSHTTPResponse`` which is
+/// then decoded to generate a ``AWSShape`` Output object. If it is not successful then `AWSClient` will
+/// throw an ``AWSErrorType``.
 public final class AWSClient: Sendable {
     // MARK: Member variables
 
@@ -41,15 +43,13 @@ public final class AWSClient: Sendable {
     /// AWS credentials provider
     public let credentialProvider: CredentialProvider
     /// Middleware code to be applied to requests and responses
-    public let middlewares: [AWSServiceMiddleware]
+    public let middleware: AWSMiddlewareProtocol
     /// HTTP client used by AWSClient
     public let httpClient: HTTPClient
     /// Keeps a record of how we obtained the HTTP client
     let httpClientProvider: HTTPClientProvider
     /// EventLoopGroup used by AWSClient
     public var eventLoopGroup: EventLoopGroup { return httpClient.eventLoopGroup }
-    /// Retry policy specifying what to do when a request fails
-    public let retryPolicy: RetryPolicy
     /// Logger used for non-request based output
     let clientLogger: Logger
     /// client options
@@ -64,14 +64,14 @@ public final class AWSClient: Sendable {
     ///     - credentialProvider: An object that returns valid signing credentials for request signing.
     ///     - retryPolicy: Object returning whether retries should be attempted.
     ///         Possible options are `.default`, `.noRetry`, `.exponential` or `.jitter`.
-    ///     - middlewares: Array of middlewares to apply to requests and responses
+    ///     - middleware: Chain of middlewares to apply to requests and responses
     ///     - options: Configuration flags
     ///     - httpClientProvider: HTTPClient to use. Use `.createNew` if you want the client to manage its own HTTPClient.
     ///     - logger: Logger used to log background AWSClient events
-    public init(
+    public init<Middleware: AWSMiddlewareProtocol>(
         credentialProvider credentialProviderFactory: CredentialProviderFactory = .default,
         retryPolicy retryPolicyFactory: RetryPolicyFactory = .default,
-        middlewares: [AWSServiceMiddleware] = [],
+        middleware: Middleware,
         options: Options = Options(),
         httpClientProvider: HTTPClientProvider,
         logger clientLogger: Logger = AWSClient.loggingDisabled
@@ -87,14 +87,59 @@ public final class AWSClient: Sendable {
             self.httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .singleton, configuration: .init(timeout: .init(connect: .seconds(10))))
         }
 
-        self.credentialProvider = credentialProviderFactory.createProvider(context: .init(
+        let credentialProvider = credentialProviderFactory.createProvider(context: .init(
             httpClient: httpClient,
             logger: clientLogger,
             options: options
         ))
+        self.credentialProvider = credentialProvider
+        self.middleware = AWSMiddlewareStack {
+            middleware
+            SigningMiddleware(credentialProvider: credentialProvider)
+            RetryMiddleware(retryPolicy: retryPolicyFactory.retryPolicy)
+            ErrorHandlingMiddleware(options: options)
+        }
+        self.clientLogger = clientLogger
+        self.options = options
+    }
 
-        self.middlewares = middlewares
-        self.retryPolicy = retryPolicyFactory.retryPolicy
+    /// Initialize an AWSClient struct
+    /// - parameters:
+    ///     - credentialProvider: An object that returns valid signing credentials for request signing.
+    ///     - retryPolicy: Object returning whether retries should be attempted.
+    ///         Possible options are `.default`, `.noRetry`, `.exponential` or `.jitter`.
+    ///     - options: Configuration flags
+    ///     - httpClientProvider: HTTPClient to use. Use `.createNew` if you want the client to manage its own HTTPClient.
+    ///     - logger: Logger used to log background AWSClient events
+    public init(
+        credentialProvider credentialProviderFactory: CredentialProviderFactory = .default,
+        retryPolicy retryPolicyFactory: RetryPolicyFactory = .default,
+        options: Options = Options(),
+        httpClientProvider: HTTPClientProvider,
+        logger clientLogger: Logger = AWSClient.loggingDisabled
+    ) {
+        // setup httpClient
+        self.httpClientProvider = httpClientProvider
+        switch httpClientProvider {
+        case .shared(let providedHTTPClient):
+            self.httpClient = providedHTTPClient
+        case .createNewWithEventLoopGroup(let elg):
+            self.httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(elg), configuration: .init(timeout: .init(connect: .seconds(10))))
+        case .createNew:
+            self.httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew, configuration: .init(timeout: .init(connect: .seconds(10))))
+        }
+
+        let credentialProvider = credentialProviderFactory.createProvider(context: .init(
+            httpClient: httpClient,
+            logger: clientLogger,
+            options: options
+        ))
+        self.credentialProvider = credentialProvider
+        self.middleware = AWSMiddlewareStack {
+            SigningMiddleware(credentialProvider: credentialProvider)
+            RetryMiddleware(retryPolicy: retryPolicyFactory.retryPolicy)
+            ErrorHandlingMiddleware(options: options)
+        }
         self.clientLogger = clientLogger
         self.options = options
     }
@@ -255,14 +300,8 @@ extension AWSClient {
                     configuration: serviceConfig
                 )
             },
-            processResponse: { response in
-                return try await self.processEmptyResponse(
-                    operation: operationName,
-                    response: response,
-                    serviceConfig: serviceConfig,
-                    logger: logger
-                )
-            },
+            processResponse: { _ in },
+            streaming: false,
             config: serviceConfig,
             logger: logger
         )
@@ -292,14 +331,8 @@ extension AWSClient {
                     configuration: serviceConfig
                 )
             },
-            processResponse: { response in
-                return try await self.processEmptyResponse(
-                    operation: operationName,
-                    response: response,
-                    serviceConfig: serviceConfig,
-                    logger: logger
-                )
-            },
+            processResponse: { _ in },
+            streaming: false,
             config: serviceConfig,
             logger: logger
         )
@@ -339,6 +372,7 @@ extension AWSClient {
                     logger: logger
                 )
             },
+            streaming: Output._options.contains(.rawPayload),
             config: serviceConfig,
             logger: logger
         )
@@ -379,6 +413,7 @@ extension AWSClient {
             processResponse: { response in
                 return try await self.processResponse(operation: operationName, response: response, serviceConfig: serviceConfig, logger: logger)
             },
+            streaming: Output._options.contains(.rawPayload),
             config: serviceConfig,
             logger: logger
         )
@@ -389,6 +424,7 @@ extension AWSClient {
         operation operationName: String,
         createRequest: @escaping () throws -> AWSHTTPRequest,
         processResponse: @escaping (AWSHTTPResponse) async throws -> Output,
+        streaming: Bool,
         config: AWSServiceConfig,
         logger: Logger = AWSClient.loggingDisabled
     ) async throws -> Output {
@@ -403,30 +439,32 @@ extension AWSClient {
         Counter(label: "aws_requests_total", dimensions: dimensions).increment()
         logger.log(level: self.options.requestLogLevel, "AWS Request")
         do {
-            // get credentials
-            let credential = try await credentialProvider.getCredential(logger: logger)
-            // construct signer
-            let signer = AWSSigner(credentials: credential, name: config.signingName, region: config.region.rawValue)
-            // create request and sign with signer
-            var request = try createRequest()
-                .applyMiddlewares(config.middlewares + self.middlewares, context: .init(operation: operationName, serviceConfig: config))
-            request.signHeaders(signer: signer, serviceConfig: config)
+            let request = try createRequest()
             try Task.checkCancellation()
-            // apply middleware and sign
-            let response = try await self.invoke(
-                request: request,
+            // combine service and client middleware stacks
+            let middlewareStack = config.middleware.map { AWSDynamicMiddlewareStack($0, self.middleware) } ?? self.middleware
+            let middlewareContext = AWSMiddlewareContext(
                 operation: operationName,
-                with: config,
-                logger: logger,
-                processResponse: processResponse
+                serviceConfig: config,
+                logger: logger
             )
+            // run middleware stack with httpClient execute at the end
+            let response = try await middlewareStack.handle(request, context: middlewareContext) { request, _ in
+                var response = try await self.httpClient.execute(request: request, timeout: config.timeout, logger: logger)
+                if !streaming {
+                    try await response.collateBody()
+                }
+                return response
+            }
             logger.trace("AWS Response")
+            // process response and return output type
+            let output = try await processResponse(response)
             Metrics.Timer(
                 label: "aws_request_duration",
                 dimensions: dimensions,
                 preferredDisplayUnit: .seconds
             ).recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
-            return response
+            return output
         } catch {
             Counter(label: "aws_request_errors", dimensions: dimensions).increment()
             // AWSErrorTypes have already been logged
@@ -437,41 +475,6 @@ extension AWSClient {
                 ])
             }
             throw error
-        }
-    }
-
-    func invoke<Output>(
-        request: AWSHTTPRequest,
-        operation operationName: String,
-        with serviceConfig: AWSServiceConfig,
-        logger: Logger,
-        processResponse: @escaping (AWSHTTPResponse) async throws -> Output
-    ) async throws -> Output {
-        var attempt = 0
-        while true {
-            do {
-                let response = try await self.httpClient.execute(request: request, timeout: serviceConfig.timeout, logger: logger)
-                    .applyMiddlewares(serviceConfig.middlewares + self.middlewares, context: .init(operation: operationName, serviceConfig: serviceConfig))
-                // if response has an HTTP status code outside 2xx then throw an error
-                guard (200..<300).contains(response.status.code) else {
-                    let error = await self.createError(for: response, serviceConfig: serviceConfig, logger: logger)
-                    throw error
-                }
-
-                let output = try await processResponse(response)
-                return output
-            } catch {
-                // If I get a retry wait time for this error then attempt to retry request
-                if case .retry(let retryTime) = self.retryPolicy.getRetryWaitTime(error: error, attempt: attempt) {
-                    logger.trace("Retrying request", metadata: [
-                        "aws-retry-time": "\(Double(retryTime.nanoseconds) / 1_000_000_000)",
-                    ])
-                    try await Task.sleep(nanoseconds: UInt64(retryTime.nanoseconds))
-                } else {
-                    throw error
-                }
-            }
-            attempt += 1
         }
     }
 
@@ -565,62 +568,7 @@ extension AWSClient {
         serviceConfig: AWSServiceConfig,
         logger: Logger
     ) async throws -> Output {
-        let raw = Output._options.contains(.rawPayload) == true
-        var response = response
-        if !raw {
-            try await response.collateBody()
-        }
         return try response.generateOutputShape(operation: operationName, serviceProtocol: serviceConfig.serviceProtocol)
-    }
-
-    /// Generate an AWS Response from the operation HTTP response and return the output shape from it. This is only ever called if the response includes a successful http status code
-    internal func processEmptyResponse(
-        operation operationName: String,
-        response: AWSHTTPResponse,
-        serviceConfig: AWSServiceConfig,
-        logger: Logger
-    ) async throws {
-        // flush response body contents to complete response read
-        for try await _ in response.body {}
-    }
-
-    /// Create error from HTTPResponse. This is only called if we received an unsuccessful http status code.
-    internal func createError(for response: AWSHTTPResponse, serviceConfig: AWSServiceConfig, logger: Logger) async -> Error {
-        // if we can create an AWSResponse and create an error from it return that
-        var response = response
-        do {
-            try await response.collateBody()
-        } catch {
-            // else return "Unhandled error message" with rawBody attached
-            let context = AWSErrorContext(
-                message: "Unhandled Error",
-                responseCode: response.status,
-                headers: response.headers
-            )
-            return AWSRawError(rawBody: nil, context: context)
-        }
-        if let error = response.generateError(
-            serviceConfig: serviceConfig,
-            logLevel: options.errorLogLevel,
-            logger: logger
-        ) {
-            return error
-        } else {
-            // else return "Unhandled error message" with rawBody attached
-            let context = AWSErrorContext(
-                message: "Unhandled Error",
-                responseCode: response.status,
-                headers: response.headers
-            )
-            let responseBody: String?
-            switch response.body.storage {
-            case .byteBuffer(let buffer):
-                responseBody = String(buffer: buffer)
-            default:
-                responseBody = nil
-            }
-            return AWSRawError(rawBody: responseBody, context: context)
-        }
     }
 }
 

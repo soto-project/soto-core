@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2022 the Soto project authors
+// Copyright (c) 2017-2023 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -14,7 +14,7 @@
 
 import Crypto
 import Foundation
-import SotoXML
+@_implementationOnly import SotoXML
 
 /// Middleware applied to S3 service
 ///

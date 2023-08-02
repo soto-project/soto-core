@@ -64,7 +64,7 @@ public final class AWSServiceConfig {
     ///   - variantEndpoints: Variant endpoints (FIPS, dualstack)
     ///   - errorType: Error type that the client can throw
     ///   - xmlNamespace: XML Namespace to be applied to request objects
-    ///   - middleware: Array of middleware to apply to requests and responses
+    ///   - middleware: Chain of middleware to apply to requests and responses
     ///   - timeout: Time out value for HTTP requests
     ///   - byteBufferAllocator: byte buffer allocator used throughout AWSClient
     ///   - options: options used by client when processing requests

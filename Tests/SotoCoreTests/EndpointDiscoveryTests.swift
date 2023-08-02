@@ -65,9 +65,10 @@ final class EndpointDiscoveryTests: XCTestCase {
                 operation: "Test",
                 path: "/test",
                 httpMethod: .GET,
-                serviceConfig: self.config,
+                serviceConfig: self.config.with(
+                    middleware: EndpointDiscoveryMiddleware(storage: self.endpointStorage, discover: self.getEndpoints, required: true)
+                ),
                 input: input,
-                endpointDiscovery: .init(storage: self.endpointStorage, discover: self.getEndpoints, required: true),
                 logger: logger
             )
         }
@@ -83,8 +84,9 @@ final class EndpointDiscoveryTests: XCTestCase {
                 operation: "Test",
                 path: "/test",
                 httpMethod: .GET,
-                serviceConfig: self.config,
-                endpointDiscovery: .init(storage: self.endpointStorage, discover: self.getEndpointsDontCache, required: true),
+                serviceConfig: self.config.with(
+                    middleware: EndpointDiscoveryMiddleware(storage: self.endpointStorage, discover: self.getEndpointsDontCache, required: true)
+                ),
                 logger: logger
             )
         }
@@ -94,9 +96,10 @@ final class EndpointDiscoveryTests: XCTestCase {
                 operation: "Test",
                 path: "/test",
                 httpMethod: .GET,
-                serviceConfig: self.config,
+                serviceConfig: self.config.with(
+                    middleware: EndpointDiscoveryMiddleware(storage: self.endpointStorage, discover: self.getEndpoints, required: false)
+                ),
                 input: input,
-                endpointDiscovery: .init(storage: self.endpointStorage, discover: self.getEndpoints, required: false),
                 logger: logger
             )
         }
@@ -112,7 +115,7 @@ final class EndpointDiscoveryTests: XCTestCase {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
         }
-        let service = Service(client: client, endpointToDiscover: awsServer.address).with(middlewares: TestEnvironment.middlewares)
+        let service = Service(client: client, endpointToDiscover: awsServer.address).with(middleware: TestEnvironment.middlewares)
 
         async let response1: () = service.test(.init(), logger: TestEnvironment.logger)
         try awsServer.processRaw { request in
@@ -141,7 +144,7 @@ final class EndpointDiscoveryTests: XCTestCase {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
         }
-        let service = Service(client: client, endpointToDiscover: awsServer.address).with(middlewares: TestEnvironment.middlewares)
+        let service = Service(client: client, endpointToDiscover: awsServer.address).with(middleware: TestEnvironment.middlewares)
 
         async let response1: () = service.test(.init(), logger: TestEnvironment.logger)
         async let response2: () = service.test(.init(), logger: TestEnvironment.logger)
@@ -173,7 +176,7 @@ final class EndpointDiscoveryTests: XCTestCase {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
         }
-        let service = Service(client: client, endpointToDiscover: awsServer.address).with(middlewares: TestEnvironment.middlewares)
+        let service = Service(client: client, endpointToDiscover: awsServer.address).with(middleware: TestEnvironment.middlewares)
 
         async let response1: () = service.testDontCache(logger: TestEnvironment.logger)
         try awsServer.processRaw { request in
@@ -203,7 +206,7 @@ final class EndpointDiscoveryTests: XCTestCase {
             XCTAssertNoThrow(try awsServer.stop())
         }
         let service = Service(client: client, endpoint: awsServer.address)
-            .with(middlewares: TestEnvironment.middlewares)
+            .with(middleware: TestEnvironment.middlewares)
 
         async let response: () = service.testNotRequired(.init(), logger: TestEnvironment.logger)
 

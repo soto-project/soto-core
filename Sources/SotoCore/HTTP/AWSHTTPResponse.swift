@@ -46,16 +46,6 @@ public struct AWSHTTPResponse {
         self.body = try await .init(buffer: self.body.collect(upTo: .max))
     }
 
-    /// return new response with middleware applied
-    func applyMiddlewares(_ middlewares: [AWSServiceMiddleware], context: AWSMiddlewareContext) throws -> AWSHTTPResponse {
-        var awsResponse = self
-        // apply middleware to response
-        for middleware in middlewares {
-            awsResponse = try middleware.chain(response: awsResponse, context: context)
-        }
-        return awsResponse
-    }
-
     /// Generate AWSShape from AWSResponse
     func generateOutputShape<Output: AWSDecodableShape>(operation: String, serviceProtocol: ServiceProtocol) throws -> Output {
         var payload: ByteBuffer? = nil

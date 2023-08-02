@@ -28,7 +28,7 @@ public struct AWSTracingMiddleware: AWSMiddlewareProtocol {
     ) async throws -> AWSHTTPResponse {
         try await InstrumentationSystem.tracer.withSpan(
             "\(context.serviceConfig.serviceName).\(context.operation)",
-            ofKind: .server
+            ofKind: .client
         ) { span in
             span.updateAttributes { attributes in
                 attributes["rpc.system"] = "aws-sdk"

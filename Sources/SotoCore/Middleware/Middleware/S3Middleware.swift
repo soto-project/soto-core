@@ -29,11 +29,8 @@ import Foundation
 /// For responses it
 /// - Fixes up the GetBucketLocation response, so it can be decoded correctly
 /// - Creates error body for notFound responses to HEAD requests
-public struct S3Middleware: AWSServiceMiddleware {
-    public init() {}
-
-    /// edit request before sending to S3
-    public func chain(request: AWSHTTPRequest, context: AWSMiddlewareContext) throws -> AWSHTTPRequest {
+public struct S3Middleware: AWSMiddlewareProtocol {
+    public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
         var request = request
 
         self.virtualAddressFixup(request: &request, context: context)
@@ -42,18 +39,19 @@ public struct S3Middleware: AWSServiceMiddleware {
             self.expect100Continue(request: &request)
         }
 
-        return request
+        do {
+            var response = try await next(request, context)
+            if context.operation == "GetBucketLocation" {
+                self.getBucketLocationResponseFixup(response: &response)
+            }
+            return response
+        } catch let error as AWSRawError {
+            let newError = self.fixupRawError(error: error, context: context)
+            throw newError
+        }
     }
 
-    /// Edit responses coming back from S3
-    public func chain(response: AWSHTTPResponse, context: AWSMiddlewareContext) throws -> AWSHTTPResponse {
-        var response = response
-
-        // self.getLocationResponseFixup(response: &response)
-        self.fixupHeadErrors(response: &response)
-
-        return response
-    }
+    public init() {}
 
     func virtualAddressFixup(request: inout AWSHTTPRequest, context: AWSMiddlewareContext) {
         /// process URL into form ${bucket}.s3.amazon.com
@@ -96,7 +94,7 @@ public struct S3Middleware: AWSServiceMiddleware {
                 urlPath = paths.joined(separator: "/")
                 urlHost = host
             }
-            // add trailing "/" back if it was present
+            // add trailing "/" back if it was present, no need to check for single slash path here
             if request.url.pathWithSlash.hasSuffix("/") {
                 urlPath += "/"
             }
@@ -145,31 +143,31 @@ public struct S3Middleware: AWSServiceMiddleware {
         }
     }
 
-    // TODO: Find way to do getLocationResponseFixup
-    /* func getLocationResponseFixup(response: inout AWSResponse) {
-         if case .xml(let element) = response.body {
-             // GetBucketLocation comes back without a containing xml element
-             if element.name == "LocationConstraint" {
-                 if element.stringValue == "" {
-                     element.addChild(.text(stringValue: "us-east-1"))
-                 }
-                 let parentElement = XML.Element(name: "BucketLocation")
-                 parentElement.addChild(element)
-                 response.body = .xml(parentElement)
-             }
-         }
-     } */
-
-    func fixupHeadErrors(response: inout AWSHTTPResponse) {
-        if response.status == .notFound, response.body.length == 0 {
-            let errorNode = XML.Element(name: "Error")
-            let codeNode = XML.Element(name: "Code", stringValue: "NotFound")
-            let messageNode = XML.Element(name: "Message", stringValue: "Not Found")
-            errorNode.addChild(codeNode)
-            errorNode.addChild(messageNode)
-            let documentNode = XML.Document(rootElement: errorNode)
-            let buffer = ByteBuffer(string: documentNode.xmlString)
-            response.body = .init(buffer: buffer)
+    func getBucketLocationResponseFixup(response: inout AWSHTTPResponse) {
+        if case .byteBuffer(let buffer) = response.body.storage,
+           let xmlDocument = try? XML.Document(buffer: buffer),
+           let rootElement = xmlDocument.rootElement()
+        {
+            if rootElement.name == "LocationConstraint" {
+                if rootElement.stringValue == "" {
+                    rootElement.addChild(.text(stringValue: "us-east-1"))
+                }
+                let parentElement = XML.Element(name: "BucketLocation")
+                parentElement.addChild(rootElement)
+                xmlDocument.setRootElement(parentElement)
+                response.body = .init(buffer: ByteBuffer(string: xmlDocument.xmlString))
+            }
         }
+    }
+
+    func fixupRawError(error: AWSRawError, context: AWSMiddlewareContext) -> Error {
+        if error.context.responseCode == .notFound {
+            if let errorType = context.serviceConfig.errorType,
+               let notFoundError = errorType.init(errorCode: "NotFound", context: error.context)
+            {
+                return notFoundError
+            }
+        }
+        return error
     }
 }

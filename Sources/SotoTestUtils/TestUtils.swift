@@ -35,7 +35,7 @@ import XCTest
 public func createAWSClient(
     credentialProvider: CredentialProviderFactory = .default,
     retryPolicy: RetryPolicyFactory = .noRetry,
-    middlewares: [AWSServiceMiddleware] = TestEnvironment.middlewares,
+    middlewares: AWSMiddlewareProtocol = TestEnvironment.middlewares,
     options: AWSClient.Options = .init(),
     httpClientProvider: AWSClient.HTTPClientProvider = .createNew,
     logger: Logger = TestEnvironment.logger
@@ -43,7 +43,7 @@ public func createAWSClient(
     return AWSClient(
         credentialProvider: credentialProvider,
         retryPolicy: retryPolicy,
-        middlewares: middlewares,
+        middleware: middlewares,
         options: options,
         httpClientProvider: httpClientProvider,
         logger: logger
@@ -64,7 +64,7 @@ public func createServiceConfig(
     variantEndpoints: [EndpointVariantType: AWSServiceConfig.EndpointVariant] = [:],
     errorType: AWSErrorType.Type? = nil,
     xmlNamespace: String? = nil,
-    middlewares: [AWSServiceMiddleware] = [],
+    middlewares: AWSMiddlewareProtocol? = nil,
     timeout: TimeAmount? = nil,
     options: AWSServiceConfig.Options = []
 ) -> AWSServiceConfig {
@@ -82,7 +82,7 @@ public func createServiceConfig(
         variantEndpoints: variantEndpoints,
         errorType: errorType,
         xmlNamespace: xmlNamespace,
-        middlewares: middlewares,
+        middleware: middlewares,
         timeout: timeout,
         options: options
     )
@@ -108,8 +108,8 @@ public func createRandomBuffer(_ w: UInt, _ z: UInt, size: Int) -> [UInt8] {
 /// Provide various test environment variables
 public enum TestEnvironment {
     /// current list of middleware
-    public static var middlewares: [AWSServiceMiddleware] {
-        return (Environment["AWS_ENABLE_LOGGING"] == "true") ? [AWSLoggingMiddleware(logger: TestEnvironment.logger, logLevel: .info)] : []
+    public static var middlewares: AWSMiddlewareProtocol {
+        return (Environment["AWS_ENABLE_LOGGING"] == "true") ? AWSLoggingMiddleware(logger: TestEnvironment.logger, logLevel: .info) : PassThruMiddleware()
     }
 
     public static let logger: Logger = {

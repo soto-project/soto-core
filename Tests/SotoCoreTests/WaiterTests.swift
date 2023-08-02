@@ -26,7 +26,7 @@ class WaiterTests: XCTestCase {
     override func setUp() {
         self.awsServer = AWSTestServer(serviceProtocol: .json)
         self.config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: self.awsServer.address)
-        self.client = createAWSClient(credentialProvider: .empty, middlewares: [AWSLoggingMiddleware()])
+        self.client = createAWSClient(credentialProvider: .empty, middlewares: AWSLoggingMiddleware())
     }
 
     override func tearDown() {

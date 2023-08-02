@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2022 the Soto project authors
+// Copyright (c) 2022-2023 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -15,13 +15,14 @@
 import NIOHTTP1
 
 /// Middleware for editing header values sent to AWS service.
-public struct AWSEditHeadersMiddleware: AWSServiceMiddleware {
+public struct AWSEditHeadersMiddleware: AWSMiddlewareProtocol {
     public enum HeaderEdit {
         case add(name: String, value: String)
         case replace(name: String, value: String)
         case remove(name: String)
     }
 
+    @usableFromInline
     let edits: [HeaderEdit]
 
     public init(_ edits: [HeaderEdit]) {
@@ -32,7 +33,8 @@ public struct AWSEditHeadersMiddleware: AWSServiceMiddleware {
         self.init(edits)
     }
 
-    public func chain(request: AWSHTTPRequest, context: AWSMiddlewareContext) throws -> AWSHTTPRequest {
+    @inlinable
+    public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
         var request = request
         for edit in self.edits {
             switch edit {
@@ -44,7 +46,7 @@ public struct AWSEditHeadersMiddleware: AWSServiceMiddleware {
                 request.headers.remove(name: name)
             }
         }
-        return request
+        return try await next(request, context)
     }
 }
 

@@ -23,7 +23,6 @@ import NIOHTTP1
 import NIOPosix
 @testable import SotoCore
 import SotoTestUtils
-import SotoXML
 import XCTest
 
 class AWSClientTests: XCTestCase {

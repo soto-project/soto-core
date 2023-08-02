@@ -14,7 +14,7 @@
 
 import Foundation
 import NIOCore
-import SotoXML
+@_implementationOnly import SotoXML
 
 /// Event stream decoder. Decodes top level `:event-type` header and then passes the payload
 /// to another decoder based off the `:content-type` header

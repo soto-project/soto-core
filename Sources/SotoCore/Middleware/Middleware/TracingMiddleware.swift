@@ -18,8 +18,10 @@ import Tracing
 ///
 /// This currently only adds attributes for the basic common attributes as detailed
 /// in https://github.com/open-telemetry/semantic-conventions/blob/main/docs/cloud-providers/aws-sdk.md
-struct AWSTracingMiddleware: AWSMiddlewareProtocol {
-    func handle(
+public struct AWSTracingMiddleware: AWSMiddlewareProtocol {
+    public init() {}
+
+    public func handle(
         _ request: AWSHTTPRequest,
         context: AWSMiddlewareContext,
         next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse

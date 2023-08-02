@@ -35,7 +35,7 @@ public final class AWSServiceConfig {
     /// XML namespace to be applied to all request objects
     public let xmlNamespace: String?
     /// Middleware code specific to the service used to edit requests before they sent and responses before they are decoded
-    public let middlewares: [AWSServiceMiddleware]
+    public let middleware: AWSMiddlewareProtocol?
     /// timeout value for HTTP requests
     public let timeout: TimeAmount
     /// ByteBuffer allocator used by service
@@ -64,7 +64,7 @@ public final class AWSServiceConfig {
     ///   - variantEndpoints: Variant endpoints (FIPS, dualstack)
     ///   - errorType: Error type that the client can throw
     ///   - xmlNamespace: XML Namespace to be applied to request objects
-    ///   - middlewares: Array of middlewares to apply to requests and responses
+    ///   - middleware: Chain of middleware to apply to requests and responses
     ///   - timeout: Time out value for HTTP requests
     ///   - byteBufferAllocator: byte buffer allocator used throughout AWSClient
     ///   - options: options used by client when processing requests
@@ -82,7 +82,7 @@ public final class AWSServiceConfig {
         variantEndpoints: [EndpointVariantType: EndpointVariant],
         errorType: AWSErrorType.Type? = nil,
         xmlNamespace: String? = nil,
-        middlewares: [AWSServiceMiddleware] = [],
+        middleware: AWSMiddlewareProtocol? = nil,
         timeout: TimeAmount? = nil,
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         options: Options = []
@@ -106,7 +106,7 @@ public final class AWSServiceConfig {
         self.serviceProtocol = serviceProtocol
         self.errorType = errorType
         self.xmlNamespace = xmlNamespace
-        self.middlewares = middlewares
+        self.middleware = middleware
         self.timeout = timeout ?? .seconds(20)
         self.byteBufferAllocator = byteBufferAllocator
         self.options = options
@@ -142,7 +142,7 @@ public final class AWSServiceConfig {
     ///   - partitionEndpoints: Default endpoint to use, if no region endpoint is supplied
     ///   - errorType: Error type that the client can throw
     ///   - xmlNamespace: XML Namespace to be applied to request objects
-    ///   - middlewares: Array of middlewares to apply to requests and responses
+    ///   - middleware: Array of middleware to apply to requests and responses
     ///   - timeout: Time out value for HTTP requests
     ///   - byteBufferAllocator: byte buffer allocator used throughout AWSClient
     ///   - options: options used by client when processing requests
@@ -159,7 +159,7 @@ public final class AWSServiceConfig {
         partitionEndpoints: [AWSPartition: (endpoint: String, region: Region)] = [:],
         errorType: AWSErrorType.Type? = nil,
         xmlNamespace: String? = nil,
-        middlewares: [AWSServiceMiddleware] = [],
+        middleware: AWSMiddlewareProtocol? = nil,
         timeout: TimeAmount? = nil,
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         options: Options = []
@@ -178,7 +178,7 @@ public final class AWSServiceConfig {
             variantEndpoints: [:],
             errorType: errorType,
             xmlNamespace: xmlNamespace,
-            middlewares: middlewares,
+            middleware: middleware,
             timeout: timeout,
             byteBufferAllocator: byteBufferAllocator,
             options: options
@@ -237,7 +237,7 @@ public final class AWSServiceConfig {
     public struct Patch {
         let region: Region?
         let endpoint: String?
-        let middlewares: [AWSServiceMiddleware]
+        let middleware: AWSMiddlewareProtocol?
         let timeout: TimeAmount?
         let byteBufferAllocator: ByteBufferAllocator?
         let options: Options?
@@ -245,18 +245,42 @@ public final class AWSServiceConfig {
         init(
             region: Region? = nil,
             endpoint: String? = nil,
-            middlewares: [AWSServiceMiddleware] = [],
+            middleware: AWSMiddlewareProtocol? = nil,
             timeout: TimeAmount? = nil,
             byteBufferAllocator: ByteBufferAllocator? = nil,
             options: AWSServiceConfig.Options? = nil
         ) {
             self.region = region
             self.endpoint = endpoint
-            self.middlewares = middlewares
+            self.middleware = middleware
             self.timeout = timeout
             self.byteBufferAllocator = byteBufferAllocator
             self.options = options
         }
+    }
+
+    /// Return new version of Service with edited parameters
+    /// - Parameters:
+    ///   - region: Server region
+    ///   - middlewares: Additional middleware to add
+    ///   - timeout: Time out value for HTTP requests
+    ///   - byteBufferAllocator: byte buffer allocator used throughout AWSClient
+    ///   - options: options used by client when processing requests
+    /// - Returns: New version of the service
+    public func with(
+        region: Region? = nil,
+        middleware: AWSMiddlewareProtocol? = nil,
+        timeout: TimeAmount? = nil,
+        byteBufferAllocator: ByteBufferAllocator? = nil,
+        options: AWSServiceConfig.Options? = nil
+    ) -> AWSServiceConfig {
+        return self.with(patch: .init(
+            region: region,
+            middleware: middleware,
+            timeout: timeout,
+            byteBufferAllocator: byteBufferAllocator,
+            options: options
+        ))
     }
 
     /// Options used by client when processing requests
@@ -358,9 +382,18 @@ public final class AWSServiceConfig {
         self.variantEndpoints = service.variantEndpoints
         self.errorType = service.errorType
         self.xmlNamespace = service.xmlNamespace
-        self.middlewares = service.middlewares + patch.middlewares
         self.timeout = patch.timeout ?? service.timeout
         self.byteBufferAllocator = patch.byteBufferAllocator ?? service.byteBufferAllocator
+
+        if let serviceMiddleware = service.middleware {
+            if let patchMiddleware = patch.middleware {
+                self.middleware = AWSDynamicMiddlewareStack(serviceMiddleware, patchMiddleware)
+            } else {
+                self.middleware = serviceMiddleware
+            }
+        } else {
+            self.middleware = patch.middleware
+        }
     }
 }
 

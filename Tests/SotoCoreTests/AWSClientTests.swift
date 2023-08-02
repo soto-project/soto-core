@@ -119,7 +119,7 @@ class AWSClientTests: XCTestCase {
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
-            let client = createAWSClient(credentialProvider: .empty, middlewares: [AWSLoggingMiddleware()])
+            let client = createAWSClient(credentialProvider: .empty, middlewares: TestEnvironment.middlewares)
             defer {
                 XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try awsServer.stop())
@@ -156,7 +156,7 @@ class AWSClientTests: XCTestCase {
         do {
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
-            let client = createAWSClient(credentialProvider: .empty, middlewares: [AWSLoggingMiddleware()])
+            let client = createAWSClient(credentialProvider: .empty, middlewares: AWSLoggingMiddleware())
             defer {
                 XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try awsServer.stop())

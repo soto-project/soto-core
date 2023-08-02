@@ -111,14 +111,24 @@ class AWSServiceTests: XCTestCase {
         XCTAssertEqual(service2.config.options, .init(rawValue: 0x67FF))
     }
 
-    func testWithMiddleware() {
-        struct TestMiddleware: AWSServiceMiddleware {}
+    func testWithMiddleware() async throws {
+        struct TestMiddleware: AWSMiddlewareProtocol {
+            func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
+                var request = request
+                request.headers.add(name: "Test", value: "testWithMiddleware")
+                return try await next(request, context)
+            }
+        }
         let client = createAWSClient(credentialProvider: .empty)
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
-        let serviceConfig = createServiceConfig()
-        let service = TestService(client: client, config: serviceConfig)
-        let service2 = service.with(middlewares: [TestMiddleware()])
-        XCTAssertNotNil(service2.config.middlewares.first { type(of: $0) == TestMiddleware.self })
+        let service = TestService(client: client, config: createServiceConfig())
+        let service2 = service.with(middleware: TestMiddleware())
+        let request = AWSHTTPRequest(url: URL(string: "http://testurl.com")!, method: .GET, headers: [:], body: .init())
+        let context = AWSMiddlewareContext(operation: "TestURL", serviceConfig: service2.config, logger: TestEnvironment.logger)
+        let response = try await service2.config.middleware!.handle(request, context: context) { request, _ in
+            .init(status: .ok, headers: request.headers, body: request.body)
+        }
+        XCTAssertEqual(response.headers["Test"].first, "testWithMiddleware")
     }
 
     func testWithRegion() {

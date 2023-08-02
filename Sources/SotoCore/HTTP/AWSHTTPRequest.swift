@@ -72,16 +72,6 @@ public struct AWSHTTPRequest {
         let signedHeaders = signer.signHeaders(url: url, method: method, headers: headers, body: bodyDataForSigning, date: Date())
         self.headers = signedHeaders
     }
-
-    // return new request with middleware applied
-    func applyMiddlewares(_ middlewares: [AWSServiceMiddleware], context: AWSMiddlewareContext) throws -> AWSHTTPRequest {
-        var awsRequest = self
-        // apply middleware to request
-        for middleware in middlewares {
-            awsRequest = try middleware.chain(request: awsRequest, context: context)
-        }
-        return awsRequest
-    }
 }
 
 extension AWSHTTPRequest {

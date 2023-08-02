@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2022 the Soto project authors
+// Copyright (c) 2017-2023 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -12,11 +12,15 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 import Logging
 import NIOHTTP1
 
 /// Middleware that outputs the contents of requests being sent to AWS and the contents of the responses received.
-public struct AWSLoggingMiddleware: AWSServiceMiddleware {
+public struct AWSLoggingMiddleware: AWSMiddlewareProtocol {
+    @usableFromInline
+    let log: @Sendable (@autoclosure () -> String) -> Void
+
     public typealias LoggingFunction = @Sendable (String) -> Void
     /// initialize AWSLoggingMiddleware
     /// - parameters:
@@ -33,6 +37,26 @@ public struct AWSLoggingMiddleware: AWSServiceMiddleware {
         self.log = { logger.log(level: logLevel, "\($0())") }
     }
 
+    @inlinable
+    public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
+        self.log(
+            "Request:\n" +
+                "  \(context.operation)\n" +
+                "  \(request.method) \(request.url)\n" +
+                "  Headers: \(self.getHeadersOutput(request.headers))\n" +
+                "  Body: \(self.getBodyOutput(request.body))"
+        )
+        let response = try await next(request, context)
+        self.log(
+            "Response:\n" +
+                "  Status : \(response.status.code)\n" +
+                "  Headers: \(self.getHeadersOutput(HTTPHeaders(response.headers.map { ($0, "\($1)") })))\n" +
+                "  Body: \(self.getBodyOutput(response.body))"
+        )
+        return response
+    }
+
+    @usableFromInline
     func getBodyOutput(_ body: AWSHTTPBody) -> String {
         var output = ""
         switch body.storage {
@@ -45,6 +69,7 @@ public struct AWSLoggingMiddleware: AWSServiceMiddleware {
         return output
     }
 
+    @usableFromInline
     func getHeadersOutput(_ headers: HTTPHeaders) -> String {
         if headers.count == 0 {
             return "[]"
@@ -55,29 +80,4 @@ public struct AWSLoggingMiddleware: AWSServiceMiddleware {
         }
         return output + "\n  ]"
     }
-
-    /// output request
-    public func chain(request: AWSHTTPRequest, context: AWSMiddlewareContext) throws -> AWSHTTPRequest {
-        self.log(
-            "Request:\n" +
-                "  \(context.operation)\n" +
-                "  \(request.method) \(request.url)\n" +
-                "  Headers: \(self.getHeadersOutput(request.headers))\n" +
-                "  Body: \(self.getBodyOutput(request.body))"
-        )
-        return request
-    }
-
-    /// output response
-    public func chain(response: AWSHTTPResponse, context: AWSMiddlewareContext) throws -> AWSHTTPResponse {
-        self.log(
-            "Response:\n" +
-                "  Status : \(response.status.code)\n" +
-                "  Headers: \(self.getHeadersOutput(HTTPHeaders(response.headers.map { ($0, "\($1)") })))\n" +
-                "  Body: \(self.getBodyOutput(response.body))"
-        )
-        return response
-    }
-
-    let log: @Sendable (@autoclosure () -> String) -> Void
 }

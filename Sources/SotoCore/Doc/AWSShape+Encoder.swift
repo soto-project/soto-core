@@ -14,7 +14,7 @@
 
 import class Foundation.JSONEncoder
 import NIOCore
-@_implementationOnly  import SotoXML
+@_implementationOnly import SotoXML
 
 internal extension AWSEncodableShape {
     /// Encode AWSShape as JSON

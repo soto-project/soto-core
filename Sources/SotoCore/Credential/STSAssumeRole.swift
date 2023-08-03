@@ -114,7 +114,8 @@ struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
         self.config = AWSServiceConfig(
             region: region,
             partition: region.partition,
-            service: "sts",
+            serviceName: "STS",
+            serviceIdentifier: "sts",
             serviceProtocol: .query,
             apiVersion: "2011-06-15",
             endpoint: endpoint,

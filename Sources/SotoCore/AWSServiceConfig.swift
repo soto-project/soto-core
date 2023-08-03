@@ -21,7 +21,9 @@ public final class AWSServiceConfig {
     /// The destination service of the request. Added as a header value, along with the operation name
     public let amzTarget: String?
     /// Name of service
-    public let service: String
+    public let serviceName: String
+    /// Identifier of service. Used in ARN and as endpoint prefix
+    public let serviceIdentifier: String
     /// Name used to sign requests
     public let signingName: String
     /// Protocol used by service json/xml/query
@@ -54,7 +56,7 @@ public final class AWSServiceConfig {
     ///   - region: Region of server you want to communicate with
     ///   - partition: Amazon endpoint partition. This is ignored if region is set. If no region is set then this is used along side partitionEndpoints to calculate endpoint
     ///   - amzTarget: "x-amz-target" header value
-    ///   - service: Name of service endpoint
+    ///   - serviceIdentifier: Identifier of service. Used in ARN and endpoint
     ///   - signingName: Name that all AWS requests are signed with
     ///   - serviceProtocol: protocol of service (.json, .xml, .query etc)
     ///   - apiVersion: "Version" header value
@@ -72,14 +74,15 @@ public final class AWSServiceConfig {
         region: Region?,
         partition: AWSPartition,
         amzTarget: String? = nil,
-        service: String,
+        serviceName: String,
+        serviceIdentifier: String,
         signingName: String? = nil,
         serviceProtocol: ServiceProtocol,
         apiVersion: String,
         endpoint: String? = nil,
         serviceEndpoints: [String: String] = [:],
         partitionEndpoints: [AWSPartition: (endpoint: String, region: Region)] = [:],
-        variantEndpoints: [EndpointVariantType: EndpointVariant],
+        variantEndpoints: [EndpointVariantType: EndpointVariant] = [:],
         errorType: AWSErrorType.Type? = nil,
         xmlNamespace: String? = nil,
         middleware: AWSMiddlewareProtocol? = nil,
@@ -99,9 +102,10 @@ public final class AWSServiceConfig {
             self.region = .useast1
         }
 
-        self.service = service
+        self.serviceName = serviceName
+        self.serviceIdentifier = serviceIdentifier
         self.apiVersion = apiVersion
-        self.signingName = signingName ?? service
+        self.signingName = signingName ?? serviceIdentifier
         self.amzTarget = amzTarget
         self.serviceProtocol = serviceProtocol
         self.errorType = errorType
@@ -119,7 +123,7 @@ public final class AWSServiceConfig {
         self.endpoint = Self.getEndpoint(
             endpoint: endpoint,
             region: self.region,
-            service: service,
+            serviceIdentifier: serviceIdentifier,
             options: options,
             serviceEndpoints: serviceEndpoints,
             partitionEndpoints: partitionEndpoints,
@@ -127,69 +131,11 @@ public final class AWSServiceConfig {
         )
     }
 
-    /// Create a ServiceConfig object
-    ///
-    /// - Parameters:
-    ///   - region: Region of server you want to communicate with
-    ///   - partition: Amazon endpoint partition. This is ignored if region is set. If no region is set then this is used along side partitionEndpoints to calculate endpoint
-    ///   - amzTarget: "x-amz-target" header value
-    ///   - service: Name of service endpoint
-    ///   - signingName: Name that all AWS requests are signed with
-    ///   - serviceProtocol: protocol of service (.json, .xml, .query etc)
-    ///   - apiVersion: "Version" header value
-    ///   - endpoint: Custom endpoint URL to use instead of standard AWS servers
-    ///   - serviceEndpoints: Dictionary of endpoints to URLs
-    ///   - partitionEndpoints: Default endpoint to use, if no region endpoint is supplied
-    ///   - errorType: Error type that the client can throw
-    ///   - xmlNamespace: XML Namespace to be applied to request objects
-    ///   - middleware: Array of middleware to apply to requests and responses
-    ///   - timeout: Time out value for HTTP requests
-    ///   - byteBufferAllocator: byte buffer allocator used throughout AWSClient
-    ///   - options: options used by client when processing requests
-    public convenience init(
-        region: Region?,
-        partition: AWSPartition,
-        amzTarget: String? = nil,
-        service: String,
-        signingName: String? = nil,
-        serviceProtocol: ServiceProtocol,
-        apiVersion: String,
-        endpoint: String? = nil,
-        serviceEndpoints: [String: String] = [:],
-        partitionEndpoints: [AWSPartition: (endpoint: String, region: Region)] = [:],
-        errorType: AWSErrorType.Type? = nil,
-        xmlNamespace: String? = nil,
-        middleware: AWSMiddlewareProtocol? = nil,
-        timeout: TimeAmount? = nil,
-        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
-        options: Options = []
-    ) {
-        self.init(
-            region: region,
-            partition: partition,
-            amzTarget: amzTarget,
-            service: service,
-            signingName: signingName,
-            serviceProtocol: serviceProtocol,
-            apiVersion: apiVersion,
-            endpoint: endpoint,
-            serviceEndpoints: serviceEndpoints,
-            partitionEndpoints: partitionEndpoints,
-            variantEndpoints: [:],
-            errorType: errorType,
-            xmlNamespace: xmlNamespace,
-            middleware: middleware,
-            timeout: timeout,
-            byteBufferAllocator: byteBufferAllocator,
-            options: options
-        )
-    }
-
     /// Calculate endpoint
     private static func getEndpoint(
         endpoint: String?,
         region: Region,
-        service: String,
+        serviceIdentifier: String,
         options: Options,
         serviceEndpoints: [String: String],
         partitionEndpoints: [AWSPartition: (endpoint: String, region: Region)],
@@ -210,7 +156,7 @@ public final class AWSServiceConfig {
                 } else if let host = variantEndpoints.defaultEndpoint?(region.rawValue) {
                     serviceHost = host
                 } else {
-                    preconditionFailure("\(options.endpointVariant) endpoint for \(service) in \(region) does not exist")
+                    preconditionFailure("\(options.endpointVariant) endpoint for \(serviceIdentifier) in \(region) does not exist")
                 }
             } else if let serviceEndpoint = serviceEndpoints[region.rawValue] {
                 serviceHost = serviceEndpoint
@@ -219,7 +165,7 @@ public final class AWSServiceConfig {
             {
                 serviceHost = globalEndpoint
             } else {
-                serviceHost = region.partition.defaultEndpoint(region: region, service: service)
+                serviceHost = region.partition.defaultEndpoint(region: region, service: serviceIdentifier)
             }
             return "https://\(serviceHost)"
         }
@@ -359,7 +305,7 @@ public final class AWSServiceConfig {
             self.endpoint = patch.endpoint ?? Self.getEndpoint(
                 endpoint: service.providedEndpoint,
                 region: region,
-                service: service.service,
+                serviceIdentifier: service.serviceIdentifier,
                 options: options,
                 serviceEndpoints: service.serviceEndpoints,
                 partitionEndpoints: service.partitionEndpoints,
@@ -372,7 +318,8 @@ public final class AWSServiceConfig {
         self.options = options
 
         self.amzTarget = service.amzTarget
-        self.service = service.service
+        self.serviceName = service.serviceName
+        self.serviceIdentifier = service.serviceIdentifier
         self.signingName = service.signingName
         self.serviceProtocol = service.serviceProtocol
         self.apiVersion = service.apiVersion

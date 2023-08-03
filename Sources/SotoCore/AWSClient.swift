@@ -431,9 +431,9 @@ extension AWSClient {
         let logger = logger.attachingRequestId(
             Self.globalRequestID.wrappingIncrementThenLoad(ordering: .relaxed),
             operation: operationName,
-            service: config.service
+            service: config.serviceIdentifier
         )
-        let dimensions: [(String, String)] = [("aws-service", config.service), ("aws-operation", operationName)]
+        let dimensions: [(String, String)] = [("aws-service", config.serviceIdentifier), ("aws-operation", operationName)]
         let startTime = DispatchTime.now().uptimeNanoseconds
 
         Counter(label: "aws_requests_total", dimensions: dimensions).increment()
@@ -507,7 +507,7 @@ extension AWSClient {
         let logger = logger.attachingRequestId(
             Self.globalRequestID.wrappingIncrementThenLoad(ordering: .relaxed),
             operation: "signHeaders",
-            service: serviceConfig.service
+            service: serviceConfig.serviceIdentifier
         )
         let signer = try await self.createSigner(serviceConfig: serviceConfig, logger: logger)
         guard let cleanURL = signer.processURL(url: url) else {
@@ -537,7 +537,7 @@ extension AWSClient {
         let logger = logger.attachingRequestId(
             Self.globalRequestID.wrappingIncrementThenLoad(ordering: .relaxed),
             operation: "signHeaders",
-            service: serviceConfig.service
+            service: serviceConfig.serviceIdentifier
         )
         let signer = try await self.createSigner(serviceConfig: serviceConfig, logger: logger)
         guard let cleanURL = signer.processURL(url: url) else {

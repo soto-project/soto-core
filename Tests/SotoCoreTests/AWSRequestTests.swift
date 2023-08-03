@@ -104,7 +104,7 @@ class AWSRequestTests: XCTestCase {
 
         let signer = AWSSigner(
             credentials: StaticCredential(accessKeyId: "foo", secretAccessKey: "bar"),
-            name: config.service,
+            name: config.signingName,
             region: config.region.rawValue
         )
 
@@ -130,7 +130,7 @@ class AWSRequestTests: XCTestCase {
 
         let signer = AWSSigner(
             credentials: StaticCredential(accessKeyId: "", secretAccessKey: ""),
-            name: config.service,
+            name: config.signingName,
             region: config.region.rawValue
         )
 
@@ -144,7 +144,7 @@ class AWSRequestTests: XCTestCase {
 
         let signer = AWSSigner(
             credentials: StaticCredential(accessKeyId: "foo", secretAccessKey: "bar"),
-            name: config.service,
+            name: config.signingName,
             region: config.region.rawValue
         )
 

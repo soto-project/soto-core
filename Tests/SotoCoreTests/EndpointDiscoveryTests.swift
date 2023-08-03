@@ -43,7 +43,8 @@ final class EndpointDiscoveryTests: XCTestCase {
             self.config = .init(
                 region: .euwest1,
                 partition: .aws,
-                service: "Test",
+                serviceName: "Test",
+                serviceIdentifier: "test",
                 serviceProtocol: .restjson,
                 apiVersion: "2021-08-08",
                 endpoint: endpoint

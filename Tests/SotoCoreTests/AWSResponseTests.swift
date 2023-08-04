@@ -126,8 +126,7 @@ class AWSResponseTests: XCTestCase {
     }
 
     func testValidateXMLCodablePayloadResponse() async throws {
-        struct Output: AWSDecodableShape & AWSShapeWithPayload {
-            static let _payloadPath: String = "name"
+        struct Output: AWSDecodableShape {
             let name: String
             let contentType: String
 
@@ -150,8 +149,7 @@ class AWSResponseTests: XCTestCase {
     }
 
     func testValidateXMLRawPayloadResponse() async throws {
-        struct Output: AWSDecodableShape, AWSShapeWithPayload {
-            static let _payloadPath: String = "body"
+        struct Output: AWSDecodableShape {
             static let _options: AWSShapeOptions = .rawPayload
             let body: AWSHTTPBody
 
@@ -195,8 +193,7 @@ class AWSResponseTests: XCTestCase {
         struct Output2: AWSDecodableShape {
             let name: String
         }
-        struct Output: AWSDecodableShape & AWSShapeWithPayload {
-            static let _payloadPath: String = "output2"
+        struct Output: AWSDecodableShape {
             let output2: Output2
 
             init(from decoder: Decoder) throws {
@@ -215,8 +212,7 @@ class AWSResponseTests: XCTestCase {
     }
 
     func testValidateJSONRawPayloadResponse() async throws {
-        struct Output: AWSDecodableShape, AWSShapeWithPayload {
-            static let _payloadPath: String = "body"
+        struct Output: AWSDecodableShape {
             static let _options: AWSShapeOptions = .rawPayload
             let body: AWSHTTPBody
             init(from decoder: Decoder) throws {
@@ -464,8 +460,7 @@ class AWSResponseTests: XCTestCase {
 
     enum TestEventStream: AWSDecodableShape {
         struct EmptyEvent: AWSDecodableShape {}
-        struct PayloadEvent: AWSDecodableShape & AWSShapeWithPayload {
-            static var _payloadPath: String = "payload"
+        struct PayloadEvent: AWSDecodableShape {
             let payload: ByteBuffer
 
             init(from decoder: Decoder) throws {

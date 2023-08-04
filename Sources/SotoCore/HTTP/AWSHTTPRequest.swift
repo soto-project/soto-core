@@ -16,11 +16,14 @@ import Crypto
 import struct Foundation.CharacterSet
 import struct Foundation.Data
 import struct Foundation.Date
+import class Foundation.JSONEncoder
 import struct Foundation.URL
 import struct Foundation.URLComponents
 import NIOCore
+import NIOFoundationCompat
 import NIOHTTP1
 import SotoSignerV4
+@_implementationOnly import SotoXML
 
 /// Object encapsulating all the information needed to generate a raw HTTP request to AWS
 public struct AWSHTTPRequest {
@@ -123,127 +126,51 @@ extension AWSHTTPRequest {
 
         let requestEncoderContainer = RequestEncodingContainer(path: path, hostPrefix: hostPrefix)
 
-        // TODO: should replace with Encodable
-        let mirror = Mirror(reflecting: input)
-        var memberVariablesCount = mirror.children.count - Input._encoding.count
-
-        // extract header, query and uri params
-        for encoding in Input._encoding {
-            if let value = mirror.getAttribute(forKey: encoding.label) {
-                switch encoding.location {
-                /* case .header(let location):
-                     switch value {
-                     case let string as AWSRequestEncodableString:
-                         string.encoded.map { headers.replaceOrAdd(name: location, value: $0) }
-                     default:
-                         headers.replaceOrAdd(name: location, value: "\(value)")
-                     }
-                 
-                 case .headerPrefix(let prefix):
-                     if let dictionary = value as? AWSRequestEncodableDictionary {
-                         dictionary.encoded.forEach { headers.replaceOrAdd(name: "\(prefix)\($0.key)", value: $0.value) }
-                     }
-                 
-                 case .querystring(let location):
-                     switch value {
-                     case let string as AWSRequestEncodableString:
-                         string.encoded.map { queryParams.append((key: location, value: $0)) }
-                     case let array as AWSRequestEncodableArray:
-                         array.encoded.forEach { queryParams.append((key: location, value: $0)) }
-                     case let dictionary as AWSRequestEncodableDictionary:
-                         dictionary.encoded.forEach { queryParams.append($0) }
-                     default:
-                         queryParams.append((key: location, value: "\(value)"))
-                     }
-                 
-                 case .uri(let location):
-                     path = path
-                         .replacingOccurrences(of: "{\(location)}", with: Self.urlEncodePathComponent(String(describing: value)))
-                         .replacingOccurrences(of: "{\(location)+}", with: Self.urlEncodePath(String(describing: value)))
-                 
-                 case .hostname(let location):
-                     hostPrefix = hostPrefix?
-                         .replacingOccurrences(of: "{\(location)}", with: Self.urlEncodePathComponent(String(describing: value)))
-                 */
-                default:
-                    memberVariablesCount += 1
-                }
-            }
-        }
-
-        var raw = false
         let body: AWSHTTPBody
         switch configuration.serviceProtocol {
         case .json, .restjson:
-            if let shapeWithPayload = Input.self as? AWSShapeWithPayload.Type {
-                let payload = shapeWithPayload._payloadPath
-                if let payloadBody = mirror.getAttribute(forKey: payload) {
-                    switch payloadBody {
-                    case let awsPayload as AWSHTTPBody:
-                        Self.verifyStream(operation: operationName, payload: awsPayload, input: shapeWithPayload)
-                        body = awsPayload
-                        raw = true
-                    case let shape as AWSEncodableShape:
-                        body = try .init(buffer: shape.encodeAsJSON(byteBufferAllocator: configuration.byteBufferAllocator, container: requestEncoderContainer))
-                    default:
-                        preconditionFailure("Cannot add this as a payload")
-                    }
-                } else {
-                    body = .init()
-                }
+            let payload = input._payload
+            let encoder = JSONEncoder()
+            encoder.userInfo[.awsRequest] = requestEncoderContainer
+            encoder.dateEncodingStrategy = .secondsSince1970
+            let buffer = try encoder.encodeAsByteBuffer(payload, allocator: configuration.byteBufferAllocator)
+            if method == .GET || method == .HEAD, buffer == ByteBuffer(string: "{}") {
+                body = .init()
             } else {
-                // only include the body if there are members that are output in the body.
-                if memberVariablesCount > 0 {
-                    body = try .init(buffer: input.encodeAsJSON(byteBufferAllocator: configuration.byteBufferAllocator, container: requestEncoderContainer))
-                } else if method == .PUT || method == .POST {
-                    // PUT and POST requests require a body even if it is empty. This is not the case with XML
-                    body = .init(buffer: configuration.byteBufferAllocator.buffer(string: "{}"))
-                } else {
-                    body = .init()
-                }
+                body = .init(buffer: buffer)
             }
 
         case .restxml:
-            if let shapeWithPayload = Input.self as? AWSShapeWithPayload.Type {
-                let payload = shapeWithPayload._payloadPath
-                if let payloadBody = mirror.getAttribute(forKey: payload) {
-                    switch payloadBody {
-                    case let awsPayload as AWSHTTPBody:
-                        Self.verifyStream(operation: operationName, payload: awsPayload, input: shapeWithPayload)
-                        body = awsPayload
-                    case let shape as AWSEncodableShape:
-                        var rootName: String?
-                        // extract custom payload name
-                        if let encoding = Input.getEncoding(for: payload), case .body(let locationName) = encoding.location {
-                            rootName = locationName
-                        }
-                        let xml = try shape.encodeAsXML(rootName: rootName, namespace: configuration.xmlNamespace, container: requestEncoderContainer)
-                        body = .init(buffer: configuration.byteBufferAllocator.buffer(string: xml))
-                    default:
-                        preconditionFailure("Cannot add this as a payload")
-                    }
-                } else {
-                    body = .init()
-                }
-            } else {
-                // only include the body if there are members that are output in the body.
-                if memberVariablesCount > 0 {
-                    let xml = try input.encodeAsXML(namespace: configuration.xmlNamespace, container: requestEncoderContainer)
-                    body = .init(buffer: configuration.byteBufferAllocator.buffer(string: xml))
-                } else {
-                    body = .init()
-                }
+            let payload = input._payload
+            var encoder = XMLEncoder()
+            encoder.userInfo[.awsRequest] = requestEncoderContainer
+            let xml = try encoder.encode(payload, name: type(of: payload)._xmlRootNodeName)
+            if let xmlNamespace = type(of: payload)._xmlNamespace ?? configuration.xmlNamespace {
+                xml.addNamespace(XML.Node.namespace(stringValue: xmlNamespace))
             }
+            let document = XML.Document(rootElement: xml)
+            let xmlDocument = document.xmlString
+            body = .init(buffer: configuration.byteBufferAllocator.buffer(string: xmlDocument))
+            // }
 
         case .query:
-            if let query = try input.encodeAsQuery(with: ["Action": operationName, "Version": configuration.apiVersion], container: requestEncoderContainer) {
+            let payload = input._payload
+            var encoder = QueryEncoder()
+            encoder.userInfo[.awsRequest] = requestEncoderContainer
+            encoder.additionalKeys = ["Action": operationName, "Version": configuration.apiVersion]
+            if let query = try encoder.encode(payload) {
                 body = .init(buffer: configuration.byteBufferAllocator.buffer(string: query))
             } else {
                 body = .init()
             }
 
         case .ec2:
-            if let query = try input.encodeAsQueryForEC2(with: ["Action": operationName, "Version": configuration.apiVersion], container: requestEncoderContainer) {
+            let payload = input._payload
+            var encoder = QueryEncoder()
+            encoder.userInfo[.awsRequest] = requestEncoderContainer
+            encoder.additionalKeys = ["Action": operationName, "Version": configuration.apiVersion]
+            encoder.ec2 = true
+            if let query = try encoder.encode(payload) {
                 body = .init(buffer: configuration.byteBufferAllocator.buffer(string: query))
             } else {
                 body = .init()
@@ -300,9 +227,9 @@ extension AWSHTTPRequest {
         self.url = url
         self.method = method
         self.headers = headers
-        self.body = body
+        self.body = requestEncoderContainer.body ?? body
 
-        addStandardHeaders(serviceProtocol: configuration.serviceProtocol, raw: raw)
+        addStandardHeaders(serviceProtocol: configuration.serviceProtocol, raw: requestEncoderContainer.body != nil)
     }
 
     /// Calculate checksum header for request
@@ -407,7 +334,7 @@ extension AWSHTTPRequest {
     }
 
     /// verify  streaming is allowed for this operation
-    internal static func verifyStream(operation: String, payload: AWSHTTPBody, input: AWSShapeWithPayload.Type) {
+    internal static func verifyStream(operation: String, payload: AWSHTTPBody, input: any AWSEncodableShape.Type) {
         guard case .asyncSequence(_, let length) = payload.storage else { return }
         precondition(input._options.contains(.allowStreaming), "\(operation) does not allow streaming of data")
         precondition(length != nil || input._options.contains(.allowChunkedStreaming), "\(operation) does not allow chunked streaming of data. Please supply a data size.")

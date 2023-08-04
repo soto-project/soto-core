@@ -17,29 +17,21 @@ public class RequestEncodingContainer {
     var hostPrefix: String?
     var headers: HTTPHeaders = .init()
     var queryParams: [(key: String, value: String)] = []
+    var body: AWSHTTPBody?
 
     init(headers: HTTPHeaders = .init(), queryParams: [(key: String, value: String)] = [], path: String, hostPrefix: String?) {
         self.headers = headers
         self.queryParams = queryParams
         self.path = path
         self.hostPrefix = hostPrefix
+        self.body = nil
     }
 
-    public func encodeHeader<Value: RawRepresentable>(_ value: Value, key: String) where Value.RawValue == String {
-        self.headers.replaceOrAdd(name: key, value: value.rawValue)
-    }
-
-    public func encodeHeader<Value: LosslessStringConvertible>(_ value: Value, key: String) {
+    public func encodeHeader<Value>(_ value: Value, key: String) {
         self.headers.replaceOrAdd(name: key, value: "\(value)")
     }
 
-    public func encodeHeader<Value: RawRepresentable>(_ value: Value?, key: String) where Value.RawValue == String {
-        if let value = value {
-            self.headers.replaceOrAdd(name: key, value: value.rawValue)
-        }
-    }
-
-    public func encodeHeader<Value: LosslessStringConvertible>(_ value: Value?, key: String) {
+    public func encodeHeader<Value>(_ value: Value?, key: String) {
         if let value = value {
             self.headers.replaceOrAdd(name: key, value: "\(value)")
         }
@@ -63,21 +55,11 @@ public class RequestEncodingContainer {
         }
     }
 
-    public func encodeQuery<Value: RawRepresentable>(_ value: Value, key: String) where Value.RawValue == String {
-        self.queryParams.append((key: key, value: value.rawValue))
-    }
-
-    public func encodeQuery<Value: LosslessStringConvertible>(_ value: Value, key: String) {
+    public func encodeQuery<Value>(_ value: Value, key: String) {
         self.queryParams.append((key: key, value: "\(value)"))
     }
 
-    public func encodeQuery<Value: RawRepresentable>(_ value: Value?, key: String) where Value.RawValue == String {
-        if let value = value {
-            self.queryParams.append((key: key, value: value.rawValue))
-        }
-    }
-
-    public func encodeQuery<Value: LosslessStringConvertible>(_ value: Value?, key: String) {
+    public func encodeQuery<Value>(_ value: Value?, key: String) {
         if let value = value {
             self.queryParams.append((key: key, value: "\(value)"))
         }
@@ -116,6 +98,10 @@ public class RequestEncodingContainer {
     public func encodeHostPrefix<Value>(_ value: Value, key: String) {
         self.hostPrefix = self.hostPrefix?
             .replacingOccurrences(of: "{\(key)}", with: Self.urlEncodePathComponent(String(describing: value)))
+    }
+
+    public func encodeBody(_ body: AWSHTTPBody) {
+        self.body = body
     }
 
     /// percent encode query parameter value.

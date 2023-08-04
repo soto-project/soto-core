@@ -228,10 +228,13 @@ class AWSClientTests: XCTestCase {
     }
 
     func testRequestStreaming(config: AWSServiceConfig, client: AWSClient, server: AWSTestServer, bufferSize: Int, blockSize: Int) async throws {
-        struct Input: AWSEncodableShape & AWSShapeWithPayload {
-            static var _payloadPath: String = "payload"
-            static var _options: AWSShapeOptions = [.allowStreaming, .rawPayload]
+        struct Input: AWSEncodableShape {
+            static var _options: AWSShapeOptions = [.allowStreaming]
             let payload: AWSHTTPBody
+            func encode(to encoder: Encoder) throws {
+                try self.payload.encode(to: encoder)
+            }
+
             private enum CodingKeys: CodingKey {}
         }
         let data = createRandomBuffer(45, 9182, size: bufferSize)
@@ -291,10 +294,13 @@ class AWSClientTests: XCTestCase {
     }
 
     func testRequestStreamingWithPayload(_ payload: AWSHTTPBody) async throws {
-        struct Input: AWSEncodableShape & AWSShapeWithPayload {
-            static var _payloadPath: String = "payload"
+        struct Input: AWSEncodableShape {
             static var _options: AWSShapeOptions = [.allowStreaming]
             let payload: AWSHTTPBody
+            func encode(to encoder: Encoder) throws {
+                try self.payload.encode(to: encoder)
+            }
+
             private enum CodingKeys: CodingKey {}
         }
 
@@ -338,11 +344,12 @@ class AWSClientTests: XCTestCase {
     }
 
     func testRequestChunkedStreaming() async throws {
-        struct Input: AWSEncodableShape & AWSShapeWithPayload {
-            static var _payloadPath: String = "payload"
+        struct Input: AWSEncodableShape {
             static var _options: AWSShapeOptions = [.allowStreaming, .allowChunkedStreaming, .rawPayload]
             let payload: AWSHTTPBody
-            private enum CodingKeys: CodingKey {}
+            func encode(to encoder: Encoder) throws {
+                try self.payload.encode(to: encoder)
+            }
         }
 
         let awsServer = AWSTestServer(serviceProtocol: .json)

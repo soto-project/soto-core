@@ -17,7 +17,7 @@ import XCTest
 
 class ValidationTests: XCTestCase {
     /// test validation
-    func testValidationFail(_ shape: AWSEncodableShape) {
+    func testValidationFail(_ shape: any AWSEncodableShape) {
         do {
             try shape.validate()
             XCTFail()
@@ -28,7 +28,7 @@ class ValidationTests: XCTestCase {
         }
     }
 
-    func testValidationSuccess(_ shape: AWSEncodableShape) {
+    func testValidationSuccess(_ shape: any AWSEncodableShape) {
         do {
             try shape.validate()
         } catch {

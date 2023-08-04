@@ -19,9 +19,12 @@ import XCTest
 
 class PayloadTests: XCTestCase {
     func testRequestPayload(_ payload: AWSHTTPBody, expectedResult: String) async {
-        struct DataPayload: AWSEncodableShape & AWSShapeWithPayload {
-            static var _payloadPath: String = "data"
+        struct DataPayload: AWSEncodableShape {
+            var _payload: AWSHTTPBody { self.data }
             let data: AWSHTTPBody
+            func encode(to encoder: Encoder) throws {
+                try self.data.encode(to: encoder)
+            }
 
             private enum CodingKeys: CodingKey {}
         }
@@ -70,8 +73,7 @@ class PayloadTests: XCTestCase {
     }
 
     func testResponsePayload() async {
-        struct Output: AWSDecodableShape, AWSShapeWithPayload {
-            static let _payloadPath: String = "payload"
+        struct Output: AWSDecodableShape {
             static let _options: AWSShapeOptions = .rawPayload
             let payload: AWSHTTPBody
 

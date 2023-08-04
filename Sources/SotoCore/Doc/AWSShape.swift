@@ -22,57 +22,11 @@ import struct Foundation.UUID
 /// They need to be Codable so they can be serialized. They also need to provide details
 /// on how their container classes are coded when serializing XML.
 public protocol AWSShape: Sendable {
-    /// The array of members serialization helpers
-    static var _encoding: [AWSMemberEncoding] { get }
     static var _options: AWSShapeOptions { get }
 }
 
 extension AWSShape {
-    public static var _encoding: [AWSMemberEncoding] {
-        return []
-    }
-
     public static var _options: AWSShapeOptions { .init() }
-
-    /// return member with provided name
-    public static func getEncoding(for: String) -> AWSMemberEncoding? {
-        return _encoding.first { $0.label == `for` }
-    }
-
-    /// return list of member variables serialized in the headers
-    static var headerParams: [String: String] {
-        var params: [String: String] = [:]
-        for member in _encoding {
-            guard let location = member.location else { continue }
-            if case .header(let name) = location {
-                params[name] = member.label
-            }
-        }
-        return params
-    }
-
-    /// return list of member variables serialized in the headers with a prefix
-    static var headerPrefixParams: [String: String] {
-        var params: [String: String] = [:]
-        for member in _encoding {
-            guard let location = member.location else { continue }
-            if case .headerPrefix(let name) = location {
-                params[name] = member.label
-            }
-        }
-        return params
-    }
-
-    /// return list of member variables serialized in the headers
-    static var statusCodeParam: String? {
-        for member in _encoding {
-            guard let location = member.location else { continue }
-            if case .statusCode = location {
-                return member.label
-            }
-        }
-        return nil
-    }
 }
 
 extension AWSShape {
@@ -84,6 +38,11 @@ extension AWSShape {
 
 /// AWSShape that can be encoded into API input
 public protocol AWSEncodableShape: AWSShape & Encodable {
+    associatedtype _Payload: AWSEncodableShape
+    /// Reference to payload
+    var _payload: _Payload { get }
+    /// Name of root node. If nil just use name of type
+    static var _xmlRootNodeName: String? { get }
     /// The XML namespace for the object
     static var _xmlNamespace: String? { get }
 
@@ -91,7 +50,15 @@ public protocol AWSEncodableShape: AWSShape & Encodable {
     func validate(name: String) throws
 }
 
+public extension AWSEncodableShape where _Payload == Self {
+    /// Reference payload
+    var _payload: _Payload { self }
+}
+
 public extension AWSEncodableShape {
+    /// Default implementation returns nil ie use the type name
+    static var _xmlRootNodeName: String? { nil }
+    /// The XML namespace for the object
     static var _xmlNamespace: String? { return nil }
 }
 
@@ -244,10 +211,4 @@ public struct AWSShapeOptions: OptionSet {
     public static let checksumRequired = AWSShapeOptions(rawValue: 1 << 4)
     /// Request includes a MD5 checksum
     public static let md5ChecksumHeader = AWSShapeOptions(rawValue: 1 << 5)
-}
-
-/// Root AWSShape which include a payload
-public protocol AWSShapeWithPayload: AWSShape {
-    /// The path to the object that is included in the request body
-    static var _payloadPath: String { get }
 }

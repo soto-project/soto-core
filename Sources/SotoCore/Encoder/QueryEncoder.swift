@@ -42,7 +42,7 @@ public struct QueryEncoder {
 
     public init() {}
 
-    public func encode<T: Encodable>(_ value: T, name: String? = nil) throws -> String? {
+    public func encode<T: Encodable>(_ value: T) throws -> String? {
         let encoder = _QueryEncoder(options: options)
         try value.encode(to: encoder)
 

@@ -178,10 +178,13 @@ class AWSRequestTests: XCTestCase {
         struct Object: AWSEncodableShape {
             let string: String
         }
-        struct Object2: AWSEncodableShape & AWSShapeWithPayload {
-            static var _payloadPath = "payload"
+        struct Object2: AWSEncodableShape {
+            var _payload: any AWSEncodableShape { self.payload }
             let payload: AWSHTTPBody
-            private enum CodingKeys: CodingKey {}
+
+            func encode(to encoder: Encoder) throws {
+                try payload.encode(to: encoder)
+            }
         }
         let object = Object(string: "Name")
         let object2 = Object2(payload: .init(string: "Payload"))
@@ -349,9 +352,13 @@ class AWSRequestTests: XCTestCase {
             public static let _xmlNamespace: String? = "https://test.amazonaws.com/doc/2020-03-11/"
             let number: Int
         }
-        struct Input: AWSEncodableShape & AWSShapeWithPayload {
-            public static let _payloadPath: String = "payload"
+        struct Input: AWSEncodableShape {
+            var _payload: Payload { payload }
             let payload: Payload
+
+            func encode(to encoder: Encoder) throws {
+                try payload.encode(to: encoder)
+            }
         }
         let input = Input(payload: Payload(number: 5))
         let xmlConfig = createServiceConfig(serviceProtocol: .restxml)
@@ -368,8 +375,8 @@ class AWSRequestTests: XCTestCase {
         struct DataContainer: AWSEncodableShape {
             let data: Data
         }
-        struct J: AWSEncodableShape & AWSShapeWithPayload {
-            public static let _payloadPath: String = "dataContainer"
+        struct J: AWSEncodableShape {
+            var _payload: DataContainer { dataContainer }
             let dataContainer: DataContainer
         }
         let input = J(dataContainer: DataContainer(data: Data("test data".utf8)))
@@ -501,9 +508,60 @@ class AWSRequestTests: XCTestCase {
         XCTAssertEqual(request?.url.absoluteString, "https://12345678.test.com/")
     }
 
+    func testJSONPayload() throws {
+        struct Payload: AWSEncodableShape {
+            let number: Int
+        }
+        struct Input: AWSEncodableShape {
+            var _payload: Payload { payload }
+            let payload: Payload
+
+            func encode(to encoder: Encoder) throws {
+                try payload.encode(to: encoder)
+            }
+        }
+        let input = Input(payload: .init(number: 12_345_678))
+        let config = createServiceConfig(serviceProtocol: .json(version: "1.0"))
+        var request: AWSHTTPRequest?
+        XCTAssertNoThrow(request = try AWSHTTPRequest(
+            operation: "Test",
+            path: "/",
+            method: .POST,
+            input: input,
+            configuration: config
+        ))
+        XCTAssertEqual(request?.body.asString(), #"{"number":12345678}"#)
+    }
+
+    func testXMLPayload() throws {
+        struct Payload: AWSEncodableShape {
+            let number: Int
+        }
+        struct Input: AWSEncodableShape {
+            public static let _xmlRootNodeName: String = "Payload"
+            let payload: Payload
+
+            func encode(to encoder: Encoder) throws {
+                try payload.encode(to: encoder)
+            }
+        }
+        let input = Input(payload: .init(number: 12_345_678))
+        let config = createServiceConfig(serviceProtocol: .restxml)
+        var request: AWSHTTPRequest?
+        XCTAssertNoThrow(request = try AWSHTTPRequest(
+            operation: "Test",
+            path: "/",
+            method: .POST,
+            input: input,
+            configuration: config
+        ))
+        XCTAssertEqual(request?.body.asString(), #"<?xml version="1.0" encoding="UTF-8"?><Payload><number>12345678</number></Payload>"#)
+    }
+
     /// Test disable S3 chunked upload flag works
     func testDisableS3ChunkedUpload() throws {
-        struct Input: AWSEncodableShape & AWSShapeWithPayload {
+        struct Input: AWSEncodableShape {
+            var _payload: AWSHTTPBody { payload }
             public static let _options: AWSShapeOptions = [.rawPayload, .allowStreaming]
             public static let _payloadPath: String = "payload"
             let payload: AWSHTTPBody

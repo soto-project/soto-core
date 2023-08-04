@@ -538,7 +538,7 @@ class AWSRequestTests: XCTestCase {
             let number: Int
         }
         struct Input: AWSEncodableShape {
-            public static let _xmlRootNodeName: String = "Payload"
+            var _payload: Payload { payload }
             let payload: Payload
 
             func encode(to encoder: Encoder) throws {
@@ -556,6 +556,35 @@ class AWSRequestTests: XCTestCase {
             configuration: config
         ))
         XCTAssertEqual(request?.body.asString(), #"<?xml version="1.0" encoding="UTF-8"?><Payload><number>12345678</number></Payload>"#)
+    }
+
+    func testJSONPayloadAndHeader() throws {
+        struct Payload: AWSEncodableShape {
+            let number: Int
+        }
+        struct Input: AWSEncodableShape {
+            var _payload: Payload { payload }
+            let payload: Payload
+            let contentType: String
+
+            func encode(to encoder: Encoder) throws {
+                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                requestContainer.encodeHeader(self.contentType, key: "content-type")
+                try payload.encode(to: encoder)
+            }
+        }
+        let input = Input(payload: .init(number: 12_345_678), contentType: "image/jpeg")
+        let config = createServiceConfig(serviceProtocol: .json(version: "1.0"))
+        var request: AWSHTTPRequest?
+        XCTAssertNoThrow(request = try AWSHTTPRequest(
+            operation: "Test",
+            path: "/",
+            method: .POST,
+            input: input,
+            configuration: config
+        ))
+        XCTAssertEqual(request?.body.asString(), #"{"number":12345678}"#)
+        XCTAssertEqual(request?.headers["content-type"].first, "image/jpeg")
     }
 
     /// Test disable S3 chunked upload flag works

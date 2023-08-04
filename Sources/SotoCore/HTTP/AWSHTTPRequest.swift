@@ -117,10 +117,6 @@ extension AWSHTTPRequest {
         hostPrefix: String? = nil,
         configuration: AWSServiceConfig
     ) throws {
-        let path = path
-        let hostPrefix = hostPrefix
-        var queryParams: [(key: String, value: String)] = []
-
         // validate input parameters
         try input.validate()
 
@@ -129,11 +125,10 @@ extension AWSHTTPRequest {
         let body: AWSHTTPBody
         switch configuration.serviceProtocol {
         case .json, .restjson:
-            let payload = input._payload
             let encoder = JSONEncoder()
             encoder.userInfo[.awsRequest] = requestEncoderContainer
             encoder.dateEncodingStrategy = .secondsSince1970
-            let buffer = try encoder.encodeAsByteBuffer(payload, allocator: configuration.byteBufferAllocator)
+            let buffer = try encoder.encodeAsByteBuffer(input, allocator: configuration.byteBufferAllocator)
             if method == .GET || method == .HEAD, buffer == ByteBuffer(string: "{}") {
                 body = .init()
             } else {
@@ -141,11 +136,11 @@ extension AWSHTTPRequest {
             }
 
         case .restxml:
-            let payload = input._payload
+            let payloadType = type(of: input._payload)
             var encoder = XMLEncoder()
             encoder.userInfo[.awsRequest] = requestEncoderContainer
-            let xml = try encoder.encode(payload, name: type(of: payload)._xmlRootNodeName)
-            if let xmlNamespace = type(of: payload)._xmlNamespace ?? configuration.xmlNamespace {
+            let xml = try encoder.encode(input, name: payloadType._xmlRootNodeName)
+            if let xmlNamespace = payloadType._xmlNamespace ?? configuration.xmlNamespace {
                 xml.addNamespace(XML.Node.namespace(stringValue: xmlNamespace))
             }
             let document = XML.Document(rootElement: xml)
@@ -154,23 +149,21 @@ extension AWSHTTPRequest {
             // }
 
         case .query:
-            let payload = input._payload
             var encoder = QueryEncoder()
             encoder.userInfo[.awsRequest] = requestEncoderContainer
             encoder.additionalKeys = ["Action": operationName, "Version": configuration.apiVersion]
-            if let query = try encoder.encode(payload) {
+            if let query = try encoder.encode(input) {
                 body = .init(buffer: configuration.byteBufferAllocator.buffer(string: query))
             } else {
                 body = .init()
             }
 
         case .ec2:
-            let payload = input._payload
             var encoder = QueryEncoder()
             encoder.userInfo[.awsRequest] = requestEncoderContainer
             encoder.additionalKeys = ["Action": operationName, "Version": configuration.apiVersion]
             encoder.ec2 = true
-            if let query = try encoder.encode(payload) {
+            if let query = try encoder.encode(input) {
                 body = .init(buffer: configuration.byteBufferAllocator.buffer(string: query))
             } else {
                 body = .init()
@@ -186,6 +179,7 @@ extension AWSHTTPRequest {
         }
 
         // add queries from the parsed path to the query params list
+        var queryParams: [(key: String, value: String)] = requestEncoderContainer.queryParams
         if let pathQueryItems = urlComponents.queryItems {
             for item in pathQueryItems {
                 queryParams.append((key: item.name, value: item.value ?? ""))
@@ -194,8 +188,8 @@ extension AWSHTTPRequest {
 
         // Set query params. Percent encode these ourselves as Foundation and AWS disagree on what should be percent encoded in the query values
         // Also the signer doesn't percent encode the queries so they need to be encoded here
-        if requestEncoderContainer.queryParams.count > 0 {
-            let urlQueryString = requestEncoderContainer.queryParams
+        if queryParams.count > 0 {
+            let urlQueryString = queryParams
                 .map { (key: $0.key, value: "\($0.value)") }
                 .sorted {
                     // sort by key. if key are equal then sort by value

@@ -13,12 +13,10 @@
 //===----------------------------------------------------------------------===//
 
 import Crypto
-import struct Foundation.CharacterSet
 import struct Foundation.Data
 import struct Foundation.Date
 import class Foundation.JSONEncoder
 import struct Foundation.URL
-import struct Foundation.URLComponents
 import NIOCore
 import NIOFoundationCompat
 import NIOHTTP1
@@ -139,14 +137,13 @@ extension AWSHTTPRequest {
             let payloadType = type(of: input._payload)
             var encoder = XMLEncoder()
             encoder.userInfo[.awsRequest] = requestEncoderContainer
-            let xml = try encoder.encode(input, name: payloadType._xmlRootNodeName)
+            let xml = try encoder.encode(input, name: input._payload._xmlRootNodeName)
             if let xmlNamespace = payloadType._xmlNamespace ?? configuration.xmlNamespace {
                 xml.addNamespace(XML.Node.namespace(stringValue: xmlNamespace))
             }
             let document = XML.Document(rootElement: xml)
             let xmlDocument = document.xmlString
             body = .init(buffer: configuration.byteBufferAllocator.buffer(string: xmlDocument))
-            // }
 
         case .query:
             var encoder = QueryEncoder()
@@ -170,42 +167,6 @@ extension AWSHTTPRequest {
             }
         }
 
-        guard var urlComponents = URLComponents(string: "\(configuration.endpoint)\(requestEncoderContainer.path)") else {
-            throw AWSClient.ClientError.invalidURL
-        }
-
-        if let hostPrefix = requestEncoderContainer.hostPrefix, let host = urlComponents.host {
-            urlComponents.host = hostPrefix + host
-        }
-
-        // add queries from the parsed path to the query params list
-        var queryParams: [(key: String, value: String)] = requestEncoderContainer.queryParams
-        if let pathQueryItems = urlComponents.queryItems {
-            for item in pathQueryItems {
-                queryParams.append((key: item.name, value: item.value ?? ""))
-            }
-        }
-
-        // Set query params. Percent encode these ourselves as Foundation and AWS disagree on what should be percent encoded in the query values
-        // Also the signer doesn't percent encode the queries so they need to be encoded here
-        if queryParams.count > 0 {
-            let urlQueryString = queryParams
-                .map { (key: $0.key, value: "\($0.value)") }
-                .sorted {
-                    // sort by key. if key are equal then sort by value
-                    if $0.key < $1.key { return true }
-                    if $0.key > $1.key { return false }
-                    return $0.value < $1.value
-                }
-                .map { "\($0.key)=\(Self.urlEncodeQueryParam($0.value))" }
-                .joined(separator: "&")
-            urlComponents.percentEncodedQuery = urlQueryString
-        }
-
-        guard let url = urlComponents.url else {
-            throw AWSClient.ClientError.invalidURL
-        }
-
         var headers = Self.calculateChecksumHeader(
             headers: requestEncoderContainer.headers,
             body: body,
@@ -218,7 +179,7 @@ extension AWSHTTPRequest {
             headers.replaceOrAdd(name: "x-amz-target", value: "\(target).\(operationName)")
         }
 
-        self.url = url
+        self.url = try requestEncoderContainer.buildURL(endpoint: configuration.endpoint)
         self.method = method
         self.headers = headers
         self.body = requestEncoderContainer.body ?? body
@@ -305,26 +266,6 @@ extension AWSHTTPRequest {
         } else {
             headers.replaceOrAdd(name: "content-type", value: serviceProtocol.contentType)
         }
-    }
-
-    /// this list of query allowed characters comes from https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html
-    static let queryAllowedCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
-    static let pathAllowedCharacters = CharacterSet.urlPathAllowed.subtracting(.init(charactersIn: "+"))
-    static let pathComponentAllowedCharacters = CharacterSet.urlPathAllowed.subtracting(.init(charactersIn: "+/"))
-
-    /// percent encode query parameter value.
-    private static func urlEncodeQueryParam(_ value: String) -> String {
-        return value.addingPercentEncoding(withAllowedCharacters: AWSHTTPRequest.queryAllowedCharacters) ?? value
-    }
-
-    /// percent encode path value.
-    private static func urlEncodePath(_ value: String) -> String {
-        return value.addingPercentEncoding(withAllowedCharacters: AWSHTTPRequest.pathAllowedCharacters) ?? value
-    }
-
-    /// percent encode path component value. ie also encode "/"
-    private static func urlEncodePathComponent(_ value: String) -> String {
-        return value.addingPercentEncoding(withAllowedCharacters: AWSHTTPRequest.pathComponentAllowedCharacters) ?? value
     }
 
     /// verify  streaming is allowed for this operation

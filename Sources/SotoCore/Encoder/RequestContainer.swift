@@ -12,6 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
+import struct Foundation.CharacterSet
+import struct Foundation.URL
+import struct Foundation.URLComponents
+
 public class RequestEncodingContainer {
     var path: String
     var hostPrefix: String?
@@ -25,6 +29,46 @@ public class RequestEncodingContainer {
         self.path = path
         self.hostPrefix = hostPrefix
         self.body = nil
+    }
+
+    /// Build URL from Request encoding container values
+    func buildURL(endpoint: String) throws -> URL {
+        guard var urlComponents = URLComponents(string: "\(endpoint)\(self.path)") else {
+            throw AWSClient.ClientError.invalidURL
+        }
+
+        if let hostPrefix = self.hostPrefix, let host = urlComponents.host {
+            urlComponents.host = hostPrefix + host
+        }
+
+        // add queries from the parsed path to the query params list
+        var queryParams: [(key: String, value: String)] = self.queryParams
+        if let pathQueryItems = urlComponents.queryItems {
+            for item in pathQueryItems {
+                queryParams.append((key: item.name, value: item.value ?? ""))
+            }
+        }
+
+        // Set query params. Percent encode these ourselves as Foundation and AWS disagree on what should be percent encoded in the query values
+        // Also the signer doesn't percent encode the queries so they need to be encoded here
+        if queryParams.count > 0 {
+            let urlQueryString = queryParams
+                .map { (key: $0.key, value: "\($0.value)") }
+                .sorted {
+                    // sort by key. if key are equal then sort by value
+                    if $0.key < $1.key { return true }
+                    if $0.key > $1.key { return false }
+                    return $0.value < $1.value
+                }
+                .map { "\($0.key)=\(Self.urlEncodeQueryParam($0.value))" }
+                .joined(separator: "&")
+            urlComponents.percentEncodedQuery = urlQueryString
+        }
+
+        guard let url = urlComponents.url else {
+            throw AWSClient.ClientError.invalidURL
+        }
+        return url
     }
 
     public func encodeHeader<Value>(_ value: Value, key: String) {
@@ -106,18 +150,23 @@ public class RequestEncodingContainer {
 
     /// percent encode query parameter value.
     private static func urlEncodeQueryParam(_ value: String) -> String {
-        return value.addingPercentEncoding(withAllowedCharacters: AWSHTTPRequest.queryAllowedCharacters) ?? value
+        return value.addingPercentEncoding(withAllowedCharacters: Self.queryAllowedCharacters) ?? value
     }
 
     /// percent encode path value.
     private static func urlEncodePath(_ value: String) -> String {
-        return value.addingPercentEncoding(withAllowedCharacters: AWSHTTPRequest.pathAllowedCharacters) ?? value
+        return value.addingPercentEncoding(withAllowedCharacters: Self.pathAllowedCharacters) ?? value
     }
 
     /// percent encode path component value. ie also encode "/"
     private static func urlEncodePathComponent(_ value: String) -> String {
-        return value.addingPercentEncoding(withAllowedCharacters: AWSHTTPRequest.pathComponentAllowedCharacters) ?? value
+        return value.addingPercentEncoding(withAllowedCharacters: Self.pathComponentAllowedCharacters) ?? value
     }
+
+    /// this list of query allowed characters comes from https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html
+    static let queryAllowedCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
+    static let pathAllowedCharacters = CharacterSet.urlPathAllowed.subtracting(.init(charactersIn: "+"))
+    static let pathComponentAllowedCharacters = CharacterSet.urlPathAllowed.subtracting(.init(charactersIn: "+/"))
 }
 
 extension CodingUserInfoKey {

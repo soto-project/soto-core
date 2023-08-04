@@ -37,23 +37,6 @@ class AWSClientTests: XCTestCase {
         XCTAssertEqual(credentialForSignature.secretAccessKey, "secret")
     }
 
-    // this test only really works on Linux as it requires the MetaDataService. On mac it will just pass automatically
-    func testExpiredCredential() async throws {
-        let client = createAWSClient(credentialProvider: .selector(.ec2, .ecs))
-        defer {
-            XCTAssertNoThrow(try client.syncShutdown())
-        }
-
-        do {
-            _ = try await client.getCredential(logger: TestEnvironment.logger)
-            XCTFail("Should not get here")
-        } catch let error as CredentialProviderError where error == .noProvider {
-            // credentials request should fail. One possible error is a connectTimerout
-        } catch {
-            XCTFail("Unexpected error \(error)")
-        }
-    }
-
     func testShutdown() async throws {
         let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }

@@ -18,15 +18,18 @@ import NIOCore
 
 internal extension AWSEncodableShape {
     /// Encode AWSShape as JSON
-    func encodeAsJSON(byteBufferAllocator: ByteBufferAllocator) throws -> ByteBuffer {
+    func encodeAsJSON(byteBufferAllocator: ByteBufferAllocator, container: RequestEncodingContainer) throws -> ByteBuffer {
         let encoder = JSONEncoder()
+        encoder.userInfo[.awsRequest] = container
         encoder.dateEncodingStrategy = .secondsSince1970
         return try encoder.encodeAsByteBuffer(self, allocator: byteBufferAllocator)
     }
 
     /// Encode AWSShape as XML
-    func encodeAsXML(rootName: String? = nil, namespace: String?) throws -> String {
-        let xml = try XMLEncoder().encode(self, name: rootName)
+    func encodeAsXML(rootName: String? = nil, namespace: String?, container: RequestEncodingContainer) throws -> String {
+        var encoder = XMLEncoder()
+        encoder.userInfo[.awsRequest] = container
+        let xml = try encoder.encode(self, name: rootName)
         if let xmlNamespace = Self._xmlNamespace ?? namespace {
             xml.addNamespace(XML.Node.namespace(stringValue: xmlNamespace))
         }
@@ -35,15 +38,17 @@ internal extension AWSEncodableShape {
     }
 
     /// Encode AWSShape as a query array
-    func encodeAsQuery(with keys: [String: String]) throws -> String? {
+    func encodeAsQuery(with keys: [String: String], container: RequestEncodingContainer) throws -> String? {
         var encoder = QueryEncoder()
+        encoder.userInfo[.awsRequest] = container
         encoder.additionalKeys = keys
         return try encoder.encode(self)
     }
 
     /// Encode AWSShape as a query array
-    func encodeAsQueryForEC2(with keys: [String: String]) throws -> String? {
+    func encodeAsQueryForEC2(with keys: [String: String], container: RequestEncodingContainer) throws -> String? {
         var encoder = QueryEncoder()
+        encoder.userInfo[.awsRequest] = container
         encoder.additionalKeys = keys
         encoder.ec2 = true
         return try encoder.encode(self)

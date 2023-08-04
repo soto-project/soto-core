@@ -601,8 +601,7 @@ class AWSRequestTests: XCTestCase {
         let config = createServiceConfig(region: .useast2, service: "myservice", serviceProtocol: .restxml)
         var request: AWSHTTPRequest?
         XCTAssertNoThrow(request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config))
-        XCTAssertEqual(request?.headers["x-amz-checksum-sha1"].first, "SJuck2AdC0YGJSnr5S/2+5uL1FA=")
-        print(request?.body.asString() ?? "nil")
+        XCTAssertEqual(request?.headers["x-amz-checksum-sha1"].first, "wVl5w+ffNcoxzbahfTthTZsuivs=")
     }
 
     func testCRC32Checksum() {
@@ -625,39 +624,53 @@ class AWSRequestTests: XCTestCase {
         let config = createServiceConfig(region: .useast2, service: "myservice", serviceProtocol: .restxml)
         var request: AWSHTTPRequest?
         XCTAssertNoThrow(request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config))
-        XCTAssertEqual(request?.headers["x-amz-checksum-crc32"].first, "wvjEqA==")
+        XCTAssertEqual(request?.headers["x-amz-checksum-crc32"].first, "BNgzYg==")
     }
 
     func testCRC32CChecksum() {
         struct Input: AWSEncodableShape {
             static let _options: AWSShapeOptions = .checksumHeader
-            static let _encoding: [AWSMemberEncoding] = [
-                .init(label: "checksum", location: .header("x-amz-sdk-checksum-algorithm")),
-            ]
             let q: [String]
             let checksum: String
+            func encode(to encoder: Encoder) throws {
+                var container = encoder.container(keyedBy: CodingKeys.self)
+                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                requestContainer.encodeHeader(self.checksum, key: "x-amz-sdk-checksum-algorithm")
+                try container.encode(q, forKey: .q)
+            }
+
+            private enum CodingKeys: String, CodingKey {
+                case q
+            }
         }
         let input = Input(q: ["one", "two", "three", "four"], checksum: "CRC32C")
         let config = createServiceConfig(region: .useast2, service: "myservice", serviceProtocol: .restxml)
         var request: AWSHTTPRequest?
         XCTAssertNoThrow(request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config))
-        XCTAssertEqual(request?.headers["x-amz-checksum-crc32c"].first, "JMPW1A==")
+        XCTAssertEqual(request?.headers["x-amz-checksum-crc32c"].first, "CJR8DA==")
     }
 
     func testSHA256Checksum() {
         struct Input: AWSEncodableShape {
             static let _options: AWSShapeOptions = .checksumHeader
-            static let _encoding: [AWSMemberEncoding] = [
-                .init(label: "checksum", location: .header("x-amz-sdk-checksum-algorithm")),
-            ]
             let q: [String]
             let checksum: String
+            func encode(to encoder: Encoder) throws {
+                var container = encoder.container(keyedBy: CodingKeys.self)
+                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                requestContainer.encodeHeader(self.checksum, key: "x-amz-sdk-checksum-algorithm")
+                try container.encode(q, forKey: .q)
+            }
+
+            private enum CodingKeys: String, CodingKey {
+                case q
+            }
         }
         let input = Input(q: ["one", "two", "three", "four"], checksum: "SHA256")
         let config = createServiceConfig(region: .useast2, service: "myservice", serviceProtocol: .restxml)
         var request: AWSHTTPRequest?
         XCTAssertNoThrow(request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config))
-        XCTAssertEqual(request?.headers["x-amz-checksum-sha256"].first, "HTYjCbmfsJd3Dek0xIJJk3VKfQDLtOqX3GYDOaRJjRs=")
+        XCTAssertEqual(request?.headers["x-amz-checksum-sha256"].first, "QTQclc9fXffjuWqvYJnh/EUMgSdZcp1uOoUeq4SmiFY=")
     }
 
     func testHeaderPrefix() {

@@ -71,13 +71,15 @@ public class RequestEncodingContainer {
         return url
     }
 
+    // MARK: Header encoding
+
     public func encodeHeader<Value>(_ value: Value, key: String) {
         self.headers.replaceOrAdd(name: key, value: "\(value)")
     }
 
     public func encodeHeader<Value>(_ value: Value?, key: String) {
         if let value = value {
-            self.headers.replaceOrAdd(name: key, value: "\(value)")
+            self.encodeHeader(value, key: key)
         }
     }
 
@@ -93,11 +95,19 @@ public class RequestEncodingContainer {
         }
     }
 
-    public func encodeHeaders<Value>(_ value: [String: Value], withPrefix prefix: String) {
+    public func encodeHeader<Value>(_ value: [String: Value], key prefix: String) {
         for element in value {
             self.headers.replaceOrAdd(name: "\(prefix)\(element.key)", value: "\(element.value)")
         }
     }
+
+    public func encodeHeader<Value>(_ value: [String: Value]?, key prefix: String) {
+        if let value = value {
+            self.encodeHeader(value, key: prefix)
+        }
+    }
+
+    // MARK: Query encoding
 
     public func encodeQuery<Value>(_ value: Value, key: String) {
         self.queryParams.append((key: key, value: "\(value)"))
@@ -130,6 +140,18 @@ public class RequestEncodingContainer {
     public func encodeQuery<Value>(_ value: [String: Value]) {
         for element in value {
             self.queryParams.append((key: element.key, value: "\(element.value)"))
+        }
+    }
+
+    public func encodeQuery<Value>(_ value: [Value]?, key: String) {
+        if let value = value {
+            self.encodeQuery(value, key: key)
+        }
+    }
+
+    public func encodeQuery<Value>(_ value: [String: Value]?) {
+        if let value = value {
+            self.encodeQuery(value)
         }
     }
 

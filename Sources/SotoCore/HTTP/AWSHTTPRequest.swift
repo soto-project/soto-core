@@ -120,7 +120,7 @@ extension AWSHTTPRequest {
 
         let requestEncoderContainer = RequestEncodingContainer(path: path, hostPrefix: hostPrefix)
 
-        let body: AWSHTTPBody
+        var body: AWSHTTPBody
         switch configuration.serviceProtocol {
         case .json, .restjson:
             let encoder = JSONEncoder()
@@ -134,16 +134,19 @@ extension AWSHTTPRequest {
             }
 
         case .restxml:
-            let payloadType = type(of: input._payload)
             var encoder = XMLEncoder()
             encoder.userInfo[.awsRequest] = requestEncoderContainer
-            let xml = try encoder.encode(input, name: input._payload._xmlRootNodeName)
-            if let xmlNamespace = payloadType._xmlNamespace ?? configuration.xmlNamespace {
-                xml.addNamespace(XML.Node.namespace(stringValue: xmlNamespace))
+            let xml = try encoder.encode(input, name: Input._xmlRootNodeName)
+            if let xml = xml, xml.childCount > 0 {
+                if let xmlNamespace = Input._xmlNamespace ?? configuration.xmlNamespace {
+                    xml.addNamespace(XML.Node.namespace(stringValue: xmlNamespace))
+                }
+                let document = XML.Document(rootElement: xml)
+                let xmlDocument = document.xmlString
+                body = .init(buffer: configuration.byteBufferAllocator.buffer(string: xmlDocument))
+            } else {
+                body = .init()
             }
-            let document = XML.Document(rootElement: xml)
-            let xmlDocument = document.xmlString
-            body = .init(buffer: configuration.byteBufferAllocator.buffer(string: xmlDocument))
 
         case .query:
             var encoder = QueryEncoder()
@@ -166,7 +169,7 @@ extension AWSHTTPRequest {
                 body = .init()
             }
         }
-
+        body = requestEncoderContainer.body ?? body
         var headers = Self.calculateChecksumHeader(
             headers: requestEncoderContainer.headers,
             body: body,
@@ -182,7 +185,7 @@ extension AWSHTTPRequest {
         self.url = try requestEncoderContainer.buildURL(endpoint: configuration.endpoint)
         self.method = method
         self.headers = headers
-        self.body = requestEncoderContainer.body ?? body
+        self.body = body
 
         addStandardHeaders(serviceProtocol: configuration.serviceProtocol, raw: requestEncoderContainer.body != nil)
     }

@@ -38,10 +38,8 @@ extension AWSShape {
 
 /// AWSShape that can be encoded into API input
 public protocol AWSEncodableShape: AWSShape & Encodable {
-    /// Associated payload
-    associatedtype _Payload: AWSEncodableShape
-    /// Reference to payload
-    var _payload: _Payload { get }
+    /// Return XML root name
+    static var _xmlRootNodeName: String? { get }
     /// The XML namespace for the object
     static var _xmlNamespace: String? { get }
 
@@ -49,14 +47,9 @@ public protocol AWSEncodableShape: AWSShape & Encodable {
     func validate(name: String) throws
 }
 
-public extension AWSEncodableShape where _Payload == Self {
-    /// Reference payload
-    var _payload: _Payload { self }
-}
-
 public extension AWSEncodableShape {
     /// Return XML root name
-    var _xmlRootNodeName: String { "\(type(of: self))" }
+    static var _xmlRootNodeName: String? { return nil }
     /// The XML namespace for the object
     static var _xmlNamespace: String? { return nil }
 }

@@ -769,7 +769,7 @@ class AWSRequestTests: XCTestCase {
             func encode(to encoder: Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
-                requestContainer.encodeHeaders(self.content, withPrefix: "x-aws-metadata-")
+                requestContainer.encodeHeader(self.content, key: "x-aws-metadata-")
             }
 
             private enum CodingKeys: CodingKey {}

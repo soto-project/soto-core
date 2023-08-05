@@ -544,7 +544,7 @@ class AWSResponseTests: XCTestCase {
         // test XML buffer
         let xmlHeaders = [":event-type": "Shape", ":content-type": "text/xml"]
         let xml = try XMLEncoder().encode(shape)
-        let xmlPayload = ByteBuffer(string: xml.xmlString)
+        let xmlPayload = xml.map { ByteBuffer(string: $0.xmlString) } ?? .init()
         self.writeEvent(headers: xmlHeaders, payload: xmlPayload, to: &eventByteBuffer)
         let xmlResult = try EventStreamDecoder().decode(TestEventStream.self, from: &eventByteBuffer)
         if case .shape(let shapeResult) = xmlResult {

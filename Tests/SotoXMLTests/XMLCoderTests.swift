@@ -150,7 +150,7 @@ class XMLCoderTests: XCTestCase {
             XCTAssertNotNil(rootElement)
             let instance = try XMLDecoder().decode(T.self, from: rootElement!)
             let xmlElement = try XMLEncoder().encode(instance)
-            XCTAssertEqual(xml, xmlElement.xmlString)
+            XCTAssertEqual(xml, xmlElement?.xmlString)
         } catch {
             XCTFail("\(error)")
         }
@@ -163,7 +163,7 @@ class XMLCoderTests: XCTestCase {
         }
         let test = Test(a: ["one", "two", "three"])
         do {
-            let xml = try XMLEncoder().encode(test).xmlString
+            let xml = try XMLEncoder().encode(test)?.xmlString
             XCTAssertEqual(xml, "<Test><a><member2>one</member2><member2>two</member2><member2>three</member2></a></Test>")
         } catch {
             XCTFail("\(error)")
@@ -295,7 +295,7 @@ class XMLCoderTests: XCTestCase {
         let shape = self.testShape
         let node = try! XMLEncoder().encode(shape)
 
-        let xml = node.xmlString
+        let xml = node?.xmlString
         let xmlToTest = "<Shape><Numbers><b>true</b><i>45</i><s>3.4</s><d>7.89234</d><enum>1</enum><int8>4</int8><uint16>5</uint16><int32>7</int32><uint64>90</uint64></Numbers><Strings><string>String1</string><optionalString>String2</optionalString><stringEnum>third</stringEnum></Strings><Arrays><arrayOfNatives>34</arrayOfNatives><arrayOfNatives>1</arrayOfNatives><arrayOfNatives>4098</arrayOfNatives><arrayOfShapes><b>false</b><i>1</i><s>1.2</s><d>1.4</d><enum>0</enum><int8>4</int8><uint16>5</uint16><int32>7</int32><uint64>90</uint64></arrayOfShapes><arrayOfShapes><b>true</b><i>3</i><s>2.01</s><d>1.01</d><enum>2</enum><int8>4</int8><uint16>5</uint16><int32>7</int32><uint64>90</uint64></arrayOfShapes></Arrays></Shape>"
 
         XCTAssertEqual(xmlToTest, xml)
@@ -455,11 +455,14 @@ class XMLCoderTests: XCTestCase {
 
     func testEncodeDecodeXML() {
         do {
-            let xml = try XMLEncoder().encode(self.testShape)
-            let testShape2 = try XMLDecoder().decode(Shape.self, from: xml)
-            let xml2 = try XMLEncoder().encode(testShape2)
+            if let xml = try XMLEncoder().encode(self.testShape) {
+                let testShape2 = try XMLDecoder().decode(Shape.self, from: xml)
+                let xml2 = try XMLEncoder().encode(testShape2)
 
-            XCTAssertEqual(xml.xmlString, xml2.xmlString)
+                XCTAssertEqual(xml.xmlString, xml2?.xmlString)
+            } else {
+                XCTFail("Failed to create any XML")
+            }
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -467,13 +470,37 @@ class XMLCoderTests: XCTestCase {
 
     func testEncodeDecodeDictionariesXML() {
         do {
-            let xml = try XMLEncoder().encode(self.testShapeWithDictionaries)
-            let testShape2 = try XMLDecoder().decode(ShapeWithDictionaries.self, from: xml)
+            if let xml = try XMLEncoder().encode(self.testShapeWithDictionaries) {
+                let testShape2 = try XMLDecoder().decode(ShapeWithDictionaries.self, from: xml)
 
-            XCTAssertEqual(testShape2.dictionaries.dictionaryOfNatives["second"], 2)
-            XCTAssertEqual(testShape2.dictionaries.dictionaryOfShapes["strings2"]?.stringEnum, .fourth)
+                XCTAssertEqual(testShape2.dictionaries.dictionaryOfNatives["second"], 2)
+                XCTAssertEqual(testShape2.dictionaries.dictionaryOfShapes["strings2"]?.stringEnum, .fourth)
+            } else {
+                XCTFail("Failed to create any XML")
+            }
         } catch {
             XCTFail(error.localizedDescription)
         }
+    }
+
+    func testSingleValueContainer() {
+        struct Test2: Codable {
+            var a: [String]
+        }
+        struct Test: Codable {
+            var t: Test2
+
+            init(from decoder: Decoder) throws {
+                let container = try decoder.singleValueContainer()
+                self.t = try container.decode(Test2.self)
+            }
+
+            func encode(to encoder: Encoder) throws {
+                var container = encoder.singleValueContainer()
+                try container.encode(self.t)
+            }
+        }
+        let xml = "<Test><a>one</a></Test>"
+        self.testDecodeEncode(type: Test.self, xml: xml)
     }
 }

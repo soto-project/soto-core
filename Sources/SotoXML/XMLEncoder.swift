@@ -68,32 +68,36 @@ public struct XMLEncoder {
 
     public init() {}
 
-    public func encode<T: Encodable>(_ value: T, name: String? = nil) throws -> XML.Element {
+    public func encode<T: Encodable>(_ value: T, name: String? = nil) throws -> XML.Element? {
         let rootName = name ?? "\(type(of: value))"
         let encoder = _XMLEncoder(options: options, codingPath: [_XMLKey(stringValue: rootName, intValue: nil)])
         try value.encode(to: encoder)
-
-        guard let element = encoder.element else { throw EncodingError.invalidValue(T.self, EncodingError.Context(codingPath: [], debugDescription: "Failed to create any XML elements")) }
-        return element
+        return encoder.element
     }
 }
 
 /// storage for XML Encoder. Stores a stack of XMLElements
 struct _XMLEncoderStorage {
     /// the container stack
-    private var containers: [XML.Element] = []
+    private var containers: [XML.Element?] = []
 
     /// initializes self with no containers
     init() {}
 
     /// return the container at the top of the storage
-    var topContainer: XML.Element? { return containers.last }
+    var topContainer: XML.Element? { return containers.last ?? nil }
 
     /// push a new container onto the storage
-    mutating func push(container: XML.Element) { containers.append(container) }
+    mutating func push(container: XML.Element?) { containers.append(container) }
 
     /// pop a container from the storage
-    @discardableResult mutating func popContainer() -> XML.Element { return containers.removeLast() }
+    @discardableResult mutating func popContainer() -> XML.Element? {
+        if containers.count > 0 {
+            return containers.removeLast()
+        } else {
+            return nil
+        }
+    }
 }
 
 /// Internal XMLEncoder class. Does all the heavy lifting
@@ -221,9 +225,10 @@ class _XMLEncoder: Encoder {
             self.encoder.codingPath.append(key)
             defer { self.encoder.codingPath.removeLast() }
 
-            let childElement = try encoder.box(value)
-            if element !== childElement {
-                element.addChild(childElement)
+            if let childElement = try encoder.box(value) {
+                if element !== childElement {
+                    element.addChild(childElement)
+                }
             }
         }
 
@@ -366,9 +371,10 @@ class _XMLEncoder: Encoder {
             self.encoder.codingPath.append(_XMLKey(stringValue: key, intValue: count))
             defer { self.encoder.codingPath.removeLast() }
 
-            let childElement = try encoder.box(value)
-            if element !== childElement {
-                element.addChild(childElement)
+            if let childElement = try encoder.box(value) {
+                if element !== childElement {
+                    element.addChild(childElement)
+                }
             }
             count += 1
         }
@@ -527,11 +533,11 @@ extension _XMLEncoder {
         return double.description
     }
 
-    func box(_ date: Date) throws -> XML.Element {
+    func box(_ date: Date) throws -> XML.Element? {
         return XML.Element(name: currentKey, stringValue: Self.dateFormatter.string(from: date))
     }
 
-    func box(_ data: Data) throws -> XML.Element {
+    func box(_ data: Data) throws -> XML.Element? {
         switch self.options.dataEncodingStrategy {
         case .base64:
             return XML.Element(name: currentKey, stringValue: data.base64EncodedString())
@@ -541,7 +547,7 @@ extension _XMLEncoder {
         }
     }
 
-    func box(_ value: Encodable) throws -> XML.Element {
+    func box(_ value: Encodable) throws -> XML.Element? {
         let type = Swift.type(of: value)
 
         if type == Data.self {

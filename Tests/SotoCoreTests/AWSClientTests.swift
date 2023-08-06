@@ -607,7 +607,7 @@ class AWSClientTests: XCTestCase {
                 let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
                 let container = try decoder.singleValueContainer()
                 self.payload = try container.decode(AWSHTTPBody.self)
-                self.test = try response.decode(String.self, forHeader: "test")
+                self.test = try response.decodeHeader(String.self, key: "test")
             }
         }
         let data = createRandomBuffer(45, 109, size: 128 * 1024)

@@ -17,18 +17,24 @@ import class Foundation.DateFormatter
 import struct Foundation.Locale
 import struct Foundation.TimeZone
 
+/// Decoding error returned when extracting data out of response headers
 public struct HeaderDecodingError: Error {
     let header: String
     let message: String
 
-    static func headerNotFound(_ header: String) -> Self { .init(header: header, message: "Header not found") }
-    static func typeMismatch(_ header: String, expectedType: String) -> Self { .init(header: header, message: "Cannot convert header to \(expectedType)") }
+    public static func headerNotFound(_ header: String) -> Self { .init(header: header, message: "Header not found") }
+    public static func typeMismatch(_ header: String, expectedType: String) -> Self { .init(header: header, message: "Cannot convert header to \(expectedType)") }
 }
 
+/// Response container used during Codable `init(decoder)` that allows for extracting data from
+/// the full response and not only its body
 public struct ResponseDecodingContainer {
+    @usableFromInline
     let response: AWSHTTPResponse
 
-    public func decode<Value: RawRepresentable>(_ type: Value.Type = Value.self, forHeader header: String) throws -> Value where Value.RawValue == String {
+    /// Decode header to type conforming to RawRepresentable
+    @inlinable
+    public func decodeHeader<Value: RawRepresentable>(_ type: Value.Type = Value.self, key header: String) throws -> Value where Value.RawValue == String {
         guard let headerValue = response.headers[header].first else {
             throw HeaderDecodingError.headerNotFound(header)
         }
@@ -39,7 +45,9 @@ public struct ResponseDecodingContainer {
         }
     }
 
-    public func decode<Value: LosslessStringConvertible>(_ type: Value.Type = Value.self, forHeader header: String) throws -> Value {
+    /// Decode header to type conforming to LosslessStringConvertible
+    @inlinable
+    public func decodeHeader<Value: LosslessStringConvertible>(_ type: Value.Type = Value.self, key header: String) throws -> Value {
         guard let headerValue = response.headers[header].first else {
             throw HeaderDecodingError.headerNotFound(header)
         }
@@ -50,11 +58,15 @@ public struct ResponseDecodingContainer {
         }
     }
 
+    /// Decode response status to integer
+    @inlinable
     public func decodeStatus<Value: FixedWidthInteger>(_: Value.Type = Value.self) -> Value {
         return Value(self.response.status.code)
     }
 
-    public func decode(_ type: Date.Type = Date.self, forHeader header: String) throws -> Date {
+    /// Decode header to Date. Assumes the date format is HTTP date time
+    @inlinable
+    public func decodeHeader(_ type: Date.Type = Date.self, key header: String) throws -> Date {
         guard let headerValue = response.headers[header].first else {
             throw HeaderDecodingError.headerNotFound(header)
         }
@@ -69,7 +81,12 @@ public struct ResponseDecodingContainer {
         }
     }
 
-    public func decodeIfPresent<Value: RawRepresentable>(_ type: Value.Type = Value.self, forHeader header: String) throws -> Value? where Value.RawValue == String {
+    /// Decode header if present to type conforming to RawRepresentable
+    @inlinable
+    public func decodeHeaderIfPresent<Value: RawRepresentable>(
+        _ type: Value.Type = Value.self,
+        key header: String
+    ) throws -> Value? where Value.RawValue == String {
         guard let headerValue = response.headers[header].first else { return nil }
         if let result = Value(rawValue: headerValue) {
             return result
@@ -78,7 +95,9 @@ public struct ResponseDecodingContainer {
         }
     }
 
-    public func decodeIfPresent<Value: LosslessStringConvertible>(_ type: Value.Type = Value.self, forHeader header: String) throws -> Value? {
+    /// Decode header if present to type conforming to LosslessStringConvertible
+    @inlinable
+    public func decodeHeaderIfPresent<Value: LosslessStringConvertible>(_ type: Value.Type = Value.self, key header: String) throws -> Value? {
         guard let headerValue = response.headers[header].first else { return nil }
         if let result = Value(headerValue) {
             return result
@@ -87,8 +106,11 @@ public struct ResponseDecodingContainer {
         }
     }
 
-    public func decodeIfPresent(_ type: Date.Type = Date.self, forHeader header: String) throws -> Date? {
+    /// Decode header if present to Date. Assumes the date format is HTTP date time
+    @inlinable
+    public func decodeHeaderIfPresent(_ type: Date.Type = Date.self, key header: String) throws -> Date? {
         guard let headerValue = response.headers[header].first else { return nil }
+        // TODO: // Don't keep creating a DateFormatter
         let dateFormatter = DateFormatter()
         dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.dateFormat = "EEE, d MMM yyy HH:mm:ss z"
@@ -100,7 +122,9 @@ public struct ResponseDecodingContainer {
         }
     }
 
-    public func decodeIfPresent(_ type: [String: String].Type = [String: String].self, forHeader header: String) throws -> [String: String]? {
+    /// Decode headers with prefix to Dictionary.
+    @inlinable
+    public func decodeHeaderIfPresent(_ type: [String: String].Type = [String: String].self, key header: String) throws -> [String: String]? {
         let headers = self.response.headers.compactMap { $0.name.hasPrefix(header) ? $0 : nil }
         if headers.count == 0 {
             return nil

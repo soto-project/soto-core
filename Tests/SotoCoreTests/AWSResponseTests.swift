@@ -25,7 +25,7 @@ class AWSResponseTests: XCTestCase {
             let h: String
             public init(from decoder: Decoder) throws {
                 let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
-                self.h = try response.decode(String.self, forHeader: "header-member")
+                self.h = try response.decodeHeader(String.self, key: "header-member")
             }
         }
         let response = AWSHTTPResponse(
@@ -54,11 +54,11 @@ class AWSResponseTests: XCTestCase {
 
             public init(from decoder: Decoder) throws {
                 let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
-                self.string = try response.decode(String.self, forHeader: "string")
-                self.string2 = try response.decode(String.self, forHeader: "string2")
-                self.double = try response.decode(Double.self, forHeader: "double")
-                self.integer = try response.decode(Int.self, forHeader: "integer")
-                self.bool = try response.decode(Bool.self, forHeader: "bool")
+                self.string = try response.decodeHeader(String.self, key: "string")
+                self.string2 = try response.decodeHeader(String.self, key: "string2")
+                self.double = try response.decodeHeader(Double.self, key: "double")
+                self.integer = try response.decodeHeader(Int.self, key: "integer")
+                self.bool = try response.decodeHeader(Bool.self, key: "bool")
             }
         }
         let response = AWSHTTPResponse(
@@ -132,7 +132,7 @@ class AWSResponseTests: XCTestCase {
 
             init(from decoder: Decoder) throws {
                 let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
-                self.contentType = try response.decode(String.self, forHeader: "content-type")
+                self.contentType = try response.decodeHeader(String.self, key: "content-type")
                 self.name = try .init(from: decoder)
             }
         }
@@ -363,7 +363,7 @@ class AWSResponseTests: XCTestCase {
 
             public init(from decoder: Decoder) throws {
                 let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
-                self.content = try response.decodeIfPresent([String: String].self, forHeader: "prefix-")
+                self.content = try response.decodeHeaderIfPresent([String: String].self, key: "prefix-")
             }
         }
         let response = AWSHTTPResponse(
@@ -384,7 +384,7 @@ class AWSResponseTests: XCTestCase {
             public init(from decoder: Decoder) throws {
                 let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
                 let container = try decoder.container(keyedBy: CodingKeys.self)
-                self.content = try response.decodeIfPresent([String: String].self, forHeader: "prefix-")
+                self.content = try response.decodeHeaderIfPresent([String: String].self, key: "prefix-")
                 self.body = try container.decode(String.self, forKey: .body)
             }
 

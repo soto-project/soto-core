@@ -16,6 +16,8 @@ import struct Foundation.CharacterSet
 import struct Foundation.URL
 import struct Foundation.URLComponents
 
+/// Request container used during Codable `encode(to:)` that allows for encoding data into
+/// the request that is not part of standard Codable output
 public class RequestEncodingContainer {
     @usableFromInline
     var path: String
@@ -78,11 +80,13 @@ public class RequestEncodingContainer {
 
     // MARK: Header encoding
 
+    /// Write value to header
     @inlinable
     public func encodeHeader<Value>(_ value: Value, key: String) {
         self.headers.replaceOrAdd(name: key, value: "\(value)")
     }
 
+    /// Write optional value to header
     @inlinable
     public func encodeHeader<Value>(_ value: Value?, key: String) {
         if let value = value {
@@ -90,6 +94,7 @@ public class RequestEncodingContainer {
         }
     }
 
+    /// Write value inside CustomCoding property wrapper to header
     @inlinable
     public func encodeHeader<Coder: CustomEncoder>(_ value: CustomCoding<Coder>, key: String) {
         if let string = Coder.string(from: value.wrappedValue) {
@@ -97,6 +102,7 @@ public class RequestEncodingContainer {
         }
     }
 
+    /// Write value inside OptionalCustomCoding property wrapper to header
     @inlinable
     public func encodeHeader<Coder: CustomEncoder>(_ value: OptionalCustomCoding<Coder>, key: String) {
         if let wrappedValue = value.wrappedValue, let string = Coder.string(from: wrappedValue) {
@@ -104,6 +110,7 @@ public class RequestEncodingContainer {
         }
     }
 
+    /// Write dictionary key value pairs to headers with prefix added to the keys
     @inlinable
     public func encodeHeader<Value>(_ value: [String: Value], key prefix: String) {
         for element in value {
@@ -111,6 +118,7 @@ public class RequestEncodingContainer {
         }
     }
 
+    /// Write optional dictionary key value pairs to headers with prefix added to the keys
     @inlinable
     public func encodeHeader<Value>(_ value: [String: Value]?, key prefix: String) {
         if let value = value {
@@ -120,11 +128,13 @@ public class RequestEncodingContainer {
 
     // MARK: Query encoding
 
+    /// Write value to query
     @inlinable
     public func encodeQuery<Value>(_ value: Value, key: String) {
         self.queryParams.append((key: key, value: "\(value)"))
     }
 
+    /// Write optional value to query
     @inlinable
     public func encodeQuery<Value>(_ value: Value?, key: String) {
         if let value = value {
@@ -132,6 +142,7 @@ public class RequestEncodingContainer {
         }
     }
 
+    /// Write value inside CustomCoding property wrapper to query
     @inlinable
     public func encodeQuery<Coder: CustomEncoder>(_ value: CustomCoding<Coder>, key: String) {
         if let string = Coder.string(from: value.wrappedValue) {
@@ -139,6 +150,7 @@ public class RequestEncodingContainer {
         }
     }
 
+    /// Write value inside OptionalCustomCoding property wrapper to query
     @inlinable
     public func encodeQuery<Coder: CustomEncoder>(_ value: OptionalCustomCoding<Coder>, key: String) {
         if let wrappedValue = value.wrappedValue, let string = Coder.string(from: wrappedValue) {
@@ -146,6 +158,7 @@ public class RequestEncodingContainer {
         }
     }
 
+    /// Write array as a series of query values
     @inlinable
     public func encodeQuery<Value>(_ value: [Value], key: String) {
         for element in value {
@@ -153,6 +166,7 @@ public class RequestEncodingContainer {
         }
     }
 
+    /// Write dictionary key value pairs as query key value pairs
     @inlinable
     public func encodeQuery<Value>(_ value: [String: Value]) {
         for element in value {
@@ -160,6 +174,7 @@ public class RequestEncodingContainer {
         }
     }
 
+    /// Write optional array as a series of query values
     @inlinable
     public func encodeQuery<Value>(_ value: [Value]?, key: String) {
         if let value = value {
@@ -167,6 +182,7 @@ public class RequestEncodingContainer {
         }
     }
 
+    /// Write optional dictionary key value pairs as query key value pairs
     @inlinable
     public func encodeQuery<Value>(_ value: [String: Value]?) {
         if let value = value {
@@ -174,6 +190,7 @@ public class RequestEncodingContainer {
         }
     }
 
+    /// Write value into URI path
     @inlinable
     public func encodePath<Value>(_ value: Value, key: String) {
         self.path = self.path
@@ -181,6 +198,7 @@ public class RequestEncodingContainer {
             .replacingOccurrences(of: "{\(key)+}", with: Self.urlEncodePath(String(describing: value)))
     }
 
+    /// Write value into hostname
     @inlinable
     public func encodeHostPrefix<Value>(_ value: Value, key: String) {
         self.hostPrefix = self.hostPrefix?

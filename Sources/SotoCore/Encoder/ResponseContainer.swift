@@ -26,7 +26,7 @@ public struct HeaderDecodingError: Error {
     public static func typeMismatch(_ header: String, expectedType: String) -> Self { .init(header: header, message: "Cannot convert header to \(expectedType)") }
 }
 
-/// Response container used during Codable `init(decoder)` that allows for extracting data from
+/// Response container used during Codable `init(from:)` that allows for extracting data from
 /// the full response and not only its body
 public struct ResponseDecodingContainer {
     @usableFromInline

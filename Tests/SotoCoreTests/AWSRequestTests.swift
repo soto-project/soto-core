@@ -347,30 +347,6 @@ class AWSRequestTests: XCTestCase {
         XCTAssertEqual(element?.xmlString, "<Input xmlns=\"https://test.amazonaws.com/doc/2020-03-11/\"><number>5</number></Input>")
     }
 
-    func testCreateWithPayloadAndXMLNamespace() throws {
-        struct Payload: AWSEncodableShape {
-            public static let _xmlNamespace: String? = "https://test.amazonaws.com/doc/2020-03-11/"
-            let number: Int
-        }
-        struct Input: AWSEncodableShape {
-            var _payload: Payload { payload }
-            let payload: Payload
-
-            func encode(to encoder: Encoder) throws {
-                try payload.encode(to: encoder)
-            }
-        }
-        let input = Input(payload: Payload(number: 5))
-        let xmlConfig = createServiceConfig(serviceProtocol: .restxml)
-        var request: AWSHTTPRequest?
-        XCTAssertNoThrow(request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: xmlConfig))
-        guard case .byteBuffer(let buffer) = request?.body.storage else {
-            return XCTFail("Shouldn't get here")
-        }
-        let element = try XML.Document(buffer: buffer).rootElement()
-        XCTAssertEqual(element?.xmlString, "<Payload xmlns=\"https://test.amazonaws.com/doc/2020-03-11/\"><number>5</number></Payload>")
-    }
-
     func testDataInJsonPayload() {
         struct DataContainer: AWSEncodableShape {
             let data: Data
@@ -538,7 +514,7 @@ class AWSRequestTests: XCTestCase {
             let number: Int
         }
         struct Input: AWSEncodableShape {
-            var _payload: Payload { payload }
+            static var _xmlRootNodeName: String? = "Payload"
             let payload: Payload
 
             func encode(to encoder: Encoder) throws {

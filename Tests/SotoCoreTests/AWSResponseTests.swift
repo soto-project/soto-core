@@ -461,11 +461,11 @@ class AWSResponseTests: XCTestCase {
     enum TestEventStream: AWSDecodableShape {
         struct EmptyEvent: AWSDecodableShape {}
         struct PayloadEvent: AWSDecodableShape {
-            let payload: ByteBuffer
+            let payload: AWSEventPayload
 
             init(from decoder: Decoder) throws {
-                let response = decoder.userInfo[.awsEvent]! as! EventDecodingContainer
-                self.payload = response.decodePayload()
+                let container = try decoder.singleValueContainer()
+                self.payload = try container.decode(AWSEventPayload.self)
             }
         }
 
@@ -522,11 +522,11 @@ class AWSResponseTests: XCTestCase {
         }
         // test payload buffer
         let payloadHeaders = [":event-type": "Payload", ":content-type": "application/octet-stream"]
-        let payloadPayload = ByteBuffer(staticString: "Testing payloads")
-        self.writeEvent(headers: payloadHeaders, payload: payloadPayload, to: &eventByteBuffer)
+        let payloadBuffer = ByteBuffer(staticString: "Testing payloads")
+        self.writeEvent(headers: payloadHeaders, payload: payloadBuffer, to: &eventByteBuffer)
         let payloadResult = try EventStreamDecoder().decode(TestEventStream.self, from: &eventByteBuffer)
         if case .payload(let payload) = payloadResult {
-            XCTAssertEqual(payload.payload, payloadPayload)
+            XCTAssertEqual(payload.payload.buffer, payloadBuffer)
         } else {
             XCTFail()
         }
@@ -559,8 +559,8 @@ class AWSResponseTests: XCTestCase {
         let emptyHeaders = [":event-type": "Empty"]
         self.writeEvent(headers: emptyHeaders, payload: ByteBuffer(), to: &eventByteBuffer)
         let payloadHeaders = [":event-type": "Payload", ":content-type": "application/octet-stream"]
-        let payloadPayload = ByteBuffer(staticString: "Testing payloads")
-        self.writeEvent(headers: payloadHeaders, payload: payloadPayload, to: &eventByteBuffer)
+        let payloadBuffer = ByteBuffer(staticString: "Testing payloads")
+        self.writeEvent(headers: payloadHeaders, payload: payloadBuffer, to: &eventByteBuffer)
         let jsonHeaders = [":event-type": "Shape", ":content-type": "application/json"]
         let shape = TestEventStream.ShapeEvent(string: "Testing", integer: 590)
         let jsonPayload = try JSONEncoder().encodeAsByteBuffer(shape, allocator: ByteBufferAllocator())
@@ -575,7 +575,7 @@ class AWSResponseTests: XCTestCase {
         }
         let payloadResult = try await eventIterator.next()
         if case .payload(let payload) = payloadResult {
-            XCTAssertEqual(payload.payload, payloadPayload)
+            XCTAssertEqual(payload.payload.buffer, payloadBuffer)
         } else {
             XCTFail()
         }

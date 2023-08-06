@@ -17,10 +17,15 @@ import struct Foundation.URL
 import struct Foundation.URLComponents
 
 public class RequestEncodingContainer {
+    @usableFromInline
     var path: String
+    @usableFromInline
     var hostPrefix: String?
+    @usableFromInline
     var headers: HTTPHeaders = .init()
+    @usableFromInline
     var queryParams: [(key: String, value: String)] = []
+    @usableFromInline
     var body: AWSHTTPBody?
 
     init(headers: HTTPHeaders = .init(), queryParams: [(key: String, value: String)] = [], path: String, hostPrefix: String?) {
@@ -73,34 +78,40 @@ public class RequestEncodingContainer {
 
     // MARK: Header encoding
 
+    @inlinable
     public func encodeHeader<Value>(_ value: Value, key: String) {
         self.headers.replaceOrAdd(name: key, value: "\(value)")
     }
 
+    @inlinable
     public func encodeHeader<Value>(_ value: Value?, key: String) {
         if let value = value {
             self.encodeHeader(value, key: key)
         }
     }
 
+    @inlinable
     public func encodeHeader<Coder: CustomEncoder>(_ value: CustomCoding<Coder>, key: String) {
         if let string = Coder.string(from: value.wrappedValue) {
             self.headers.replaceOrAdd(name: key, value: string)
         }
     }
 
+    @inlinable
     public func encodeHeader<Coder: CustomEncoder>(_ value: OptionalCustomCoding<Coder>, key: String) {
         if let wrappedValue = value.wrappedValue, let string = Coder.string(from: wrappedValue) {
             self.headers.replaceOrAdd(name: key, value: string)
         }
     }
 
+    @inlinable
     public func encodeHeader<Value>(_ value: [String: Value], key prefix: String) {
         for element in value {
             self.headers.replaceOrAdd(name: "\(prefix)\(element.key)", value: "\(element.value)")
         }
     }
 
+    @inlinable
     public func encodeHeader<Value>(_ value: [String: Value]?, key prefix: String) {
         if let value = value {
             self.encodeHeader(value, key: prefix)
@@ -109,85 +120,95 @@ public class RequestEncodingContainer {
 
     // MARK: Query encoding
 
+    @inlinable
     public func encodeQuery<Value>(_ value: Value, key: String) {
         self.queryParams.append((key: key, value: "\(value)"))
     }
 
+    @inlinable
     public func encodeQuery<Value>(_ value: Value?, key: String) {
         if let value = value {
             self.queryParams.append((key: key, value: "\(value)"))
         }
     }
 
+    @inlinable
     public func encodeQuery<Coder: CustomEncoder>(_ value: CustomCoding<Coder>, key: String) {
         if let string = Coder.string(from: value.wrappedValue) {
             self.queryParams.append((key: key, value: string))
         }
     }
 
+    @inlinable
     public func encodeQuery<Coder: CustomEncoder>(_ value: OptionalCustomCoding<Coder>, key: String) {
         if let wrappedValue = value.wrappedValue, let string = Coder.string(from: wrappedValue) {
             self.queryParams.append((key: key, value: string))
         }
     }
 
+    @inlinable
     public func encodeQuery<Value>(_ value: [Value], key: String) {
         for element in value {
             self.queryParams.append((key: key, value: "\(element)"))
         }
     }
 
+    @inlinable
     public func encodeQuery<Value>(_ value: [String: Value]) {
         for element in value {
             self.queryParams.append((key: element.key, value: "\(element.value)"))
         }
     }
 
+    @inlinable
     public func encodeQuery<Value>(_ value: [Value]?, key: String) {
         if let value = value {
             self.encodeQuery(value, key: key)
         }
     }
 
+    @inlinable
     public func encodeQuery<Value>(_ value: [String: Value]?) {
         if let value = value {
             self.encodeQuery(value)
         }
     }
 
+    @inlinable
     public func encodePath<Value>(_ value: Value, key: String) {
         self.path = self.path
             .replacingOccurrences(of: "{\(key)}", with: Self.urlEncodePathComponent(String(describing: value)))
             .replacingOccurrences(of: "{\(key)+}", with: Self.urlEncodePath(String(describing: value)))
     }
 
+    @inlinable
     public func encodeHostPrefix<Value>(_ value: Value, key: String) {
         self.hostPrefix = self.hostPrefix?
             .replacingOccurrences(of: "{\(key)}", with: Self.urlEncodePathComponent(String(describing: value)))
     }
 
-    public func encodeBody(_ body: AWSHTTPBody) {
-        self.body = body
-    }
-
     /// percent encode query parameter value.
-    private static func urlEncodeQueryParam(_ value: String) -> String {
+    internal static func urlEncodeQueryParam(_ value: String) -> String {
         return value.addingPercentEncoding(withAllowedCharacters: Self.queryAllowedCharacters) ?? value
     }
 
     /// percent encode path value.
-    private static func urlEncodePath(_ value: String) -> String {
+    @usableFromInline
+    internal static func urlEncodePath(_ value: String) -> String {
         return value.addingPercentEncoding(withAllowedCharacters: Self.pathAllowedCharacters) ?? value
     }
 
     /// percent encode path component value. ie also encode "/"
-    private static func urlEncodePathComponent(_ value: String) -> String {
+    @usableFromInline
+    internal static func urlEncodePathComponent(_ value: String) -> String {
         return value.addingPercentEncoding(withAllowedCharacters: Self.pathComponentAllowedCharacters) ?? value
     }
 
     /// this list of query allowed characters comes from https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html
     static let queryAllowedCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
+    @usableFromInline
     static let pathAllowedCharacters = CharacterSet.urlPathAllowed.subtracting(.init(charactersIn: "+"))
+    @usableFromInline
     static let pathComponentAllowedCharacters = CharacterSet.urlPathAllowed.subtracting(.init(charactersIn: "+/"))
 }
 

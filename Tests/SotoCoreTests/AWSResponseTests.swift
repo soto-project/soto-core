@@ -84,7 +84,6 @@ class AWSResponseTests: XCTestCase {
 
     func testStatusCodeResponseDecoding() async throws {
         struct Output: AWSDecodableShape {
-            static let _encoding = [AWSMemberEncoding(label: "status", location: .statusCode)]
             let status: Int
             public init(from decoder: Decoder) throws {
                 let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
@@ -356,9 +355,6 @@ class AWSResponseTests: XCTestCase {
 
     func testHeaderPrefixFromDictionary() async throws {
         struct Output: AWSDecodableShape {
-            static let _encoding: [AWSMemberEncoding] = [
-                .init(label: "content", location: .headerPrefix("prefix-")),
-            ]
             let content: [String: String]?
 
             public init(from decoder: Decoder) throws {

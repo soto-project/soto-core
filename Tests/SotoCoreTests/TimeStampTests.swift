@@ -103,7 +103,6 @@ class TimeStampTests: XCTestCase {
     func testDecodeHeader() async throws {
         do {
             struct A: AWSDecodableShape {
-                static let _encoding = [AWSMemberEncoding(label: "date", location: .header("Date"))]
                 let date: Date
                 public init(from decoder: Decoder) throws {
                     let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer

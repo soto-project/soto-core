@@ -738,9 +738,6 @@ class AWSRequestTests: XCTestCase {
 
     func testHeaderPrefix() {
         struct Input: AWSEncodableShape {
-            static let _encoding: [AWSMemberEncoding] = [
-                .init(label: "content", location: .headerPrefix("x-aws-metadata-")),
-            ]
             let content: [String: String]
             func encode(to encoder: Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)

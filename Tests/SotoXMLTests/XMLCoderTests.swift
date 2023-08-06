@@ -488,7 +488,7 @@ class XMLCoderTests: XCTestCase {
             var a: [String]
         }
         struct Test: Codable {
-            var t: Test2
+            var t: Test2?
 
             init(from decoder: Decoder) throws {
                 let container = try decoder.singleValueContainer()
@@ -502,5 +502,21 @@ class XMLCoderTests: XCTestCase {
         }
         let xml = "<Test><a>one</a></Test>"
         self.testDecodeEncode(type: Test.self, xml: xml)
+    }
+
+    func testSingleValueContainerEncode() throws {
+        struct Test2: Encodable {
+            var a: [String]
+        }
+        struct Test: Encodable {
+            var t: Test2?
+
+            func encode(to encoder: Encoder) throws {
+                var container = encoder.singleValueContainer()
+                try container.encode(self.t)
+            }
+        }
+        let xml = try XMLEncoder().encode(Test(t: nil))
+        XCTAssertNil(xml)
     }
 }

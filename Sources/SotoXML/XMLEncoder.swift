@@ -409,7 +409,9 @@ class _XMLEncoder: Encoder {
 }
 
 extension _XMLEncoder: SingleValueEncodingContainer {
-    func encodeNil() throws {}
+    func encodeNil() throws {
+        storage.push(container: nil)
+    }
 
     func encode(_ value: Bool) throws {
         storage.push(container: XML.Element(name: currentKey, stringValue: box(value)))

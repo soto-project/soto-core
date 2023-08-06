@@ -82,6 +82,31 @@ class AWSResponseTests: XCTestCase {
         XCTAssertEqual(jsonResult?.bool, false)
     }
 
+    func testHeaderResponseEnumDecoding() async throws {
+        enum TestEnum: String, Decodable {
+            case hello
+            case goodbye
+        }
+        struct Output: AWSDecodableShape {
+            let test: TestEnum
+
+            public init(from decoder: Decoder) throws {
+                let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
+                self.test = try response.decodeHeader(TestEnum.self, key: "testEnum")
+            }
+        }
+        let response = AWSHTTPResponse(
+            status: .ok,
+            headers: [
+                "testEnum": "hello",
+            ]
+        )
+
+        var jsonResult: Output?
+        XCTAssertNoThrow(jsonResult = try response.generateOutputShape(operation: "Test", serviceProtocol: .restjson))
+        XCTAssertEqual(jsonResult?.test, .hello)
+    }
+
     func testStatusCodeResponseDecoding() async throws {
         struct Output: AWSDecodableShape {
             let status: Int

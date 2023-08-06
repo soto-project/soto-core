@@ -210,6 +210,52 @@ class AWSClientTests: XCTestCase {
         }
     }
 
+    func testBase64Coding() async throws {
+        struct Output: AWSDecodableShape & Encodable {
+            let data: AWSBase64Data
+        }
+        struct Input: AWSEncodableShape & Decodable {
+            let data: AWSBase64Data
+        }
+        do {
+            let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+            defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+            let awsServer = AWSTestServer(serviceProtocol: .json)
+            let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
+            let client = createAWSClient(
+                credentialProvider: .empty,
+                httpClientProvider: .createNewWithEventLoopGroup(eventLoopGroup)
+            )
+            defer {
+                XCTAssertNoThrow(try client.syncShutdown())
+                XCTAssertNoThrow(try awsServer.stop())
+            }
+            let input = Input(data: .data(Data("Test base64 data".utf8)))
+            async let response: Output = client.execute(
+                operation: "test",
+                path: "/",
+                httpMethod: .POST,
+                serviceConfig: config,
+                input: input,
+                logger: TestEnvironment.logger
+            )
+
+            try awsServer.processRaw { request in
+                let receivedInput = try JSONDecoder().decode(Input.self, from: request.body)
+                let output = Output(data: receivedInput.data)
+                let byteBuffer = try JSONEncoder().encodeAsByteBuffer(output, allocator: ByteBufferAllocator())
+                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
+                return .result(response)
+            }
+
+            let output = try await response
+
+            XCTAssertEqual(output.data.decoded(), [UInt8]("Test base64 data".utf8))
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
     func testRequestStreaming(config: AWSServiceConfig, client: AWSClient, server: AWSTestServer, bufferSize: Int, blockSize: Int) async throws {
         struct Input: AWSEncodableShape {
             static var _options: AWSShapeOptions = [.allowStreaming]

@@ -35,27 +35,19 @@ public struct ResponseDecodingContainer {
     /// Decode header to type conforming to RawRepresentable
     @inlinable
     public func decodeHeader<Value: RawRepresentable>(_ type: Value.Type = Value.self, key header: String) throws -> Value where Value.RawValue == String {
-        guard let headerValue = response.headers[header].first else {
+        guard let value = try decodeHeaderIfPresent(type, key: header) else {
             throw HeaderDecodingError.headerNotFound(header)
         }
-        if let result = Value(rawValue: headerValue) {
-            return result
-        } else {
-            throw HeaderDecodingError.typeMismatch(header, expectedType: "\(Value.self)")
-        }
+        return value
     }
 
     /// Decode header to type conforming to LosslessStringConvertible
     @inlinable
     public func decodeHeader<Value: LosslessStringConvertible>(_ type: Value.Type = Value.self, key header: String) throws -> Value {
-        guard let headerValue = response.headers[header].first else {
+        guard let value = try decodeHeaderIfPresent(type, key: header) else {
             throw HeaderDecodingError.headerNotFound(header)
         }
-        if let result = Value(headerValue) {
-            return result
-        } else {
-            throw HeaderDecodingError.typeMismatch(header, expectedType: "\(Value.self)")
-        }
+        return value
     }
 
     /// Decode response status to integer
@@ -67,18 +59,10 @@ public struct ResponseDecodingContainer {
     /// Decode header to Date. Assumes the date format is HTTP date time
     @inlinable
     public func decodeHeader(_ type: Date.Type = Date.self, key header: String) throws -> Date {
-        guard let headerValue = response.headers[header].first else {
+        guard let date = try decodeHeaderIfPresent(type, key: header) else {
             throw HeaderDecodingError.headerNotFound(header)
         }
-        let dateFormatter = DateFormatter()
-        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-        dateFormatter.dateFormat = "EEE, d MMM yyy HH:mm:ss z"
-        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-        if let result = dateFormatter.date(from: headerValue) {
-            return result
-        } else {
-            throw HeaderDecodingError.typeMismatch(header, expectedType: "Date")
-        }
+        return date
     }
 
     /// Decode header if present to type conforming to RawRepresentable

@@ -78,8 +78,8 @@ class PayloadTests: XCTestCase {
             let payload: AWSHTTPBody
 
             init(from decoder: Decoder) throws {
-                let response = decoder.userInfo[.awsResponse] as! ResponseDecodingContainer
-                self.payload = response.decodePayload()
+                let container = try decoder.singleValueContainer()
+                self.payload = try container.decode(AWSHTTPBody.self)
             }
         }
         do {

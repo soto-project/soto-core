@@ -154,8 +154,8 @@ class AWSResponseTests: XCTestCase {
             let body: AWSHTTPBody
 
             init(from decoder: Decoder) throws {
-                let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
-                self.body = response.decodePayload()
+                let container = try decoder.singleValueContainer()
+                self.body = try container.decode(AWSHTTPBody.self)
             }
         }
         let byteBuffer = ByteBuffer(string: "{\"name\":\"hello\"}")
@@ -216,8 +216,8 @@ class AWSResponseTests: XCTestCase {
             static let _options: AWSShapeOptions = .rawPayload
             let body: AWSHTTPBody
             init(from decoder: Decoder) throws {
-                let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
-                self.body = response.decodePayload()
+                let container = try decoder.singleValueContainer()
+                self.body = try container.decode(AWSHTTPBody.self)
             }
         }
         let byteBuffer = ByteBuffer(string: "{\"name\":\"hello\"}")

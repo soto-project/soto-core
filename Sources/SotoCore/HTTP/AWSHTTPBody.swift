@@ -94,17 +94,13 @@ extension AWSHTTPBody: AsyncSequence {
 }
 
 extension AWSHTTPBody: AWSDecodableShape {
-    // AWSHTTPBody has to conform to Decodable so I can add it to AWSShape objects (which conform to Decodable). But we don't want the
-    // Encoder/Decoder ever to process a AWSPayload
     public init(from decoder: Decoder) throws {
         let responseContainer = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
-        self = responseContainer.decodePayload()
+        self = responseContainer.response.body
     }
 }
 
 extension AWSHTTPBody: AWSEncodableShape {
-    // AWSHTTPBody has to conform to Encodable so I can add it to AWSShape objects (which conform to Decodable). But we don't want the
-    // Encoder/Decoder ever to process a AWSPayload
     public func encode(to encoder: Encoder) throws {
         enum CodingKeys: CodingKey {}
         _ = encoder.container(keyedBy: CodingKeys.self)

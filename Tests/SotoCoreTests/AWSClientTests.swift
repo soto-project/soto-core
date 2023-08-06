@@ -605,7 +605,8 @@ class AWSClientTests: XCTestCase {
 
             public init(from decoder: Decoder) throws {
                 let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
-                self.payload = response.decodePayload()
+                let container = try decoder.singleValueContainer()
+                self.payload = try container.decode(AWSHTTPBody.self)
                 self.test = try response.decode(String.self, forHeader: "test")
             }
         }

@@ -122,6 +122,32 @@ class MiddlewareTests: XCTestCase {
         }
     }
 
+    func testS3MiddlewareErrorFixup() async throws {
+        struct ThrowNotFoundErrorMiddleware: AWSMiddlewareProtocol {
+            public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
+                throw AWSRawError(rawBody: nil, context: .init(message: "NotFound", responseCode: .notFound))
+            }
+        }
+        let client = createAWSClient(credentialProvider: .empty)
+        let config = createServiceConfig(
+            region: .useast1,
+            endpoint: "https://test.us-east-1.amazonaws.com",
+            errorType: S3TestErrorType.self,
+            middlewares: AWSMiddlewareStack {
+                S3Middleware()
+                ThrowNotFoundErrorMiddleware()
+            }
+        )
+        do {
+            _ = try await client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, logger: TestEnvironment.logger)
+            XCTFail("Should not get here")
+        } catch let error as S3TestErrorType where error == .notFound {
+        } catch {
+            XCTFail("Throwing wrong error: \(error)")
+        }
+        try await client.shutdown()
+    }
+
     // create a buffer of random values. Will always create the same given you supply the same z and w values
     // Random number generator from https://www.codeproject.com/Articles/25172/Simple-Random-Number-Generation
     func createRandomBuffer(_ w: UInt, _ z: UInt, size: Int) -> [UInt8] {
@@ -154,5 +180,39 @@ class MiddlewareTests: XCTestCase {
             treeHash,
             [210, 50, 5, 126, 16, 6, 59, 6, 21, 40, 186, 74, 192, 56, 39, 85, 210, 25, 238, 54, 4, 252, 221, 238, 107, 127, 76, 118, 245, 76, 22, 45]
         )
+    }
+
+    struct S3TestErrorType: AWSErrorType, Equatable {
+        enum Code: String {
+            case notFound = "NotFound"
+        }
+
+        private let error: Code
+        let context: AWSErrorContext?
+
+        /// initialize S3
+        init?(errorCode: String, context: AWSErrorContext) {
+            guard let error = Code(rawValue: errorCode) else { return nil }
+            self.error = error
+            self.context = context
+        }
+
+        internal init(_ error: Code) {
+            self.error = error
+            self.context = nil
+        }
+
+        /// return error code string
+        var errorCode: String { self.error.rawValue }
+
+        static var notFound: Self { .init(.notFound) }
+
+        var description: String {
+            return "\(self.error.rawValue): \(self.message ?? "")"
+        }
+
+        static func == (lhs: S3TestErrorType, rhs: S3TestErrorType) -> Bool {
+            lhs.error == rhs.error
+        }
     }
 }

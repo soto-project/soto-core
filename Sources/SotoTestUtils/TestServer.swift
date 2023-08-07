@@ -337,7 +337,7 @@ extension AWSTestServer {
             case .json, .restjson:
                 outputData = try JSONEncoder().encode(response)
             case .xml:
-                outputData = try XMLEncoder().encode(response).xmlString.data(using: .utf8) ?? Data()
+                outputData = try XMLEncoder().encode(response)?.xmlString.data(using: .utf8) ?? Data()
             }
             var byteBuffer = self.byteBufferAllocator.buffer(capacity: 0)
             byteBuffer.writeBytes(outputData)

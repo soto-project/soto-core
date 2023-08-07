@@ -25,7 +25,7 @@ class AWSResponseTests: XCTestCase {
             let h: String
             public init(from decoder: Decoder) throws {
                 let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
-                self.h = try response.decode(String.self, forHeader: "header-member")
+                self.h = try response.decodeHeader(String.self, key: "header-member")
             }
         }
         let response = AWSHTTPResponse(
@@ -54,11 +54,11 @@ class AWSResponseTests: XCTestCase {
 
             public init(from decoder: Decoder) throws {
                 let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
-                self.string = try response.decode(String.self, forHeader: "string")
-                self.string2 = try response.decode(String.self, forHeader: "string2")
-                self.double = try response.decode(Double.self, forHeader: "double")
-                self.integer = try response.decode(Int.self, forHeader: "integer")
-                self.bool = try response.decode(Bool.self, forHeader: "bool")
+                self.string = try response.decodeHeader(String.self, key: "string")
+                self.string2 = try response.decodeHeader(String.self, key: "string2")
+                self.double = try response.decodeHeader(Double.self, key: "double")
+                self.integer = try response.decodeHeader(Int.self, key: "integer")
+                self.bool = try response.decodeHeader(Bool.self, key: "bool")
             }
         }
         let response = AWSHTTPResponse(
@@ -82,9 +82,33 @@ class AWSResponseTests: XCTestCase {
         XCTAssertEqual(jsonResult?.bool, false)
     }
 
+    func testHeaderResponseEnumDecoding() async throws {
+        enum TestEnum: String, Decodable {
+            case hello
+            case goodbye
+        }
+        struct Output: AWSDecodableShape {
+            let test: TestEnum
+
+            public init(from decoder: Decoder) throws {
+                let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
+                self.test = try response.decodeHeader(TestEnum.self, key: "testEnum")
+            }
+        }
+        let response = AWSHTTPResponse(
+            status: .ok,
+            headers: [
+                "testEnum": "hello",
+            ]
+        )
+
+        var jsonResult: Output?
+        XCTAssertNoThrow(jsonResult = try response.generateOutputShape(operation: "Test", serviceProtocol: .restjson))
+        XCTAssertEqual(jsonResult?.test, .hello)
+    }
+
     func testStatusCodeResponseDecoding() async throws {
         struct Output: AWSDecodableShape {
-            static let _encoding = [AWSMemberEncoding(label: "status", location: .statusCode)]
             let status: Int
             public init(from decoder: Decoder) throws {
                 let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
@@ -126,14 +150,13 @@ class AWSResponseTests: XCTestCase {
     }
 
     func testValidateXMLCodablePayloadResponse() async throws {
-        struct Output: AWSDecodableShape & AWSShapeWithPayload {
-            static let _payloadPath: String = "name"
+        struct Output: AWSDecodableShape {
             let name: String
             let contentType: String
 
             init(from decoder: Decoder) throws {
                 let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
-                self.contentType = try response.decode(String.self, forHeader: "content-type")
+                self.contentType = try response.decodeHeader(String.self, key: "content-type")
                 self.name = try .init(from: decoder)
             }
         }
@@ -150,14 +173,13 @@ class AWSResponseTests: XCTestCase {
     }
 
     func testValidateXMLRawPayloadResponse() async throws {
-        struct Output: AWSDecodableShape, AWSShapeWithPayload {
-            static let _payloadPath: String = "body"
+        struct Output: AWSDecodableShape {
             static let _options: AWSShapeOptions = .rawPayload
             let body: AWSHTTPBody
 
             init(from decoder: Decoder) throws {
-                let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
-                self.body = response.decodePayload()
+                let container = try decoder.singleValueContainer()
+                self.body = try container.decode(AWSHTTPBody.self)
             }
         }
         let byteBuffer = ByteBuffer(string: "{\"name\":\"hello\"}")
@@ -195,8 +217,7 @@ class AWSResponseTests: XCTestCase {
         struct Output2: AWSDecodableShape {
             let name: String
         }
-        struct Output: AWSDecodableShape & AWSShapeWithPayload {
-            static let _payloadPath: String = "output2"
+        struct Output: AWSDecodableShape {
             let output2: Output2
 
             init(from decoder: Decoder) throws {
@@ -215,13 +236,12 @@ class AWSResponseTests: XCTestCase {
     }
 
     func testValidateJSONRawPayloadResponse() async throws {
-        struct Output: AWSDecodableShape, AWSShapeWithPayload {
-            static let _payloadPath: String = "body"
+        struct Output: AWSDecodableShape {
             static let _options: AWSShapeOptions = .rawPayload
             let body: AWSHTTPBody
             init(from decoder: Decoder) throws {
-                let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
-                self.body = response.decodePayload()
+                let container = try decoder.singleValueContainer()
+                self.body = try container.decode(AWSHTTPBody.self)
             }
         }
         let byteBuffer = ByteBuffer(string: "{\"name\":\"hello\"}")
@@ -360,14 +380,11 @@ class AWSResponseTests: XCTestCase {
 
     func testHeaderPrefixFromDictionary() async throws {
         struct Output: AWSDecodableShape {
-            static let _encoding: [AWSMemberEncoding] = [
-                .init(label: "content", location: .headerPrefix("prefix-")),
-            ]
             let content: [String: String]?
 
             public init(from decoder: Decoder) throws {
                 let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
-                self.content = try response.decodeIfPresent([String: String].self, forHeader: "prefix-")
+                self.content = try response.decodeHeaderIfPresent([String: String].self, key: "prefix-")
             }
         }
         let response = AWSHTTPResponse(
@@ -388,7 +405,7 @@ class AWSResponseTests: XCTestCase {
             public init(from decoder: Decoder) throws {
                 let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
                 let container = try decoder.container(keyedBy: CodingKeys.self)
-                self.content = try response.decodeIfPresent([String: String].self, forHeader: "prefix-")
+                self.content = try response.decodeHeaderIfPresent([String: String].self, key: "prefix-")
                 self.body = try container.decode(String.self, forKey: .body)
             }
 
@@ -464,13 +481,12 @@ class AWSResponseTests: XCTestCase {
 
     enum TestEventStream: AWSDecodableShape {
         struct EmptyEvent: AWSDecodableShape {}
-        struct PayloadEvent: AWSDecodableShape & AWSShapeWithPayload {
-            static var _payloadPath: String = "payload"
-            let payload: ByteBuffer
+        struct PayloadEvent: AWSDecodableShape {
+            let payload: AWSEventPayload
 
             init(from decoder: Decoder) throws {
-                let response = decoder.userInfo[.awsEvent]! as! EventDecodingContainer
-                self.payload = response.decodePayload()
+                let container = try decoder.singleValueContainer()
+                self.payload = try container.decode(AWSEventPayload.self)
             }
         }
 
@@ -527,11 +543,11 @@ class AWSResponseTests: XCTestCase {
         }
         // test payload buffer
         let payloadHeaders = [":event-type": "Payload", ":content-type": "application/octet-stream"]
-        let payloadPayload = ByteBuffer(staticString: "Testing payloads")
-        self.writeEvent(headers: payloadHeaders, payload: payloadPayload, to: &eventByteBuffer)
+        let payloadBuffer = ByteBuffer(staticString: "Testing payloads")
+        self.writeEvent(headers: payloadHeaders, payload: payloadBuffer, to: &eventByteBuffer)
         let payloadResult = try EventStreamDecoder().decode(TestEventStream.self, from: &eventByteBuffer)
         if case .payload(let payload) = payloadResult {
-            XCTAssertEqual(payload.payload, payloadPayload)
+            XCTAssertEqual(payload.payload.buffer, payloadBuffer)
         } else {
             XCTFail()
         }
@@ -549,7 +565,7 @@ class AWSResponseTests: XCTestCase {
         // test XML buffer
         let xmlHeaders = [":event-type": "Shape", ":content-type": "text/xml"]
         let xml = try XMLEncoder().encode(shape)
-        let xmlPayload = ByteBuffer(string: xml.xmlString)
+        let xmlPayload = xml.map { ByteBuffer(string: $0.xmlString) } ?? .init()
         self.writeEvent(headers: xmlHeaders, payload: xmlPayload, to: &eventByteBuffer)
         let xmlResult = try EventStreamDecoder().decode(TestEventStream.self, from: &eventByteBuffer)
         if case .shape(let shapeResult) = xmlResult {
@@ -564,8 +580,8 @@ class AWSResponseTests: XCTestCase {
         let emptyHeaders = [":event-type": "Empty"]
         self.writeEvent(headers: emptyHeaders, payload: ByteBuffer(), to: &eventByteBuffer)
         let payloadHeaders = [":event-type": "Payload", ":content-type": "application/octet-stream"]
-        let payloadPayload = ByteBuffer(staticString: "Testing payloads")
-        self.writeEvent(headers: payloadHeaders, payload: payloadPayload, to: &eventByteBuffer)
+        let payloadBuffer = ByteBuffer(staticString: "Testing payloads")
+        self.writeEvent(headers: payloadHeaders, payload: payloadBuffer, to: &eventByteBuffer)
         let jsonHeaders = [":event-type": "Shape", ":content-type": "application/json"]
         let shape = TestEventStream.ShapeEvent(string: "Testing", integer: 590)
         let jsonPayload = try JSONEncoder().encodeAsByteBuffer(shape, allocator: ByteBufferAllocator())
@@ -580,7 +596,7 @@ class AWSResponseTests: XCTestCase {
         }
         let payloadResult = try await eventIterator.next()
         if case .payload(let payload) = payloadResult {
-            XCTAssertEqual(payload.payload, payloadPayload)
+            XCTAssertEqual(payload.payload.buffer, payloadBuffer)
         } else {
             XCTFail()
         }

@@ -60,10 +60,15 @@ class AWSRequestTests: XCTestCase {
 
     func testCreateAwsRequestWithKeywordInHeader() {
         struct KeywordRequest: AWSEncodableShape {
-            static var _encoding: [AWSMemberEncoding] = [
-                AWSMemberEncoding(label: "repeat", location: .header("repeat")),
-            ]
             let `repeat`: String
+
+            func encode(to encoder: Encoder) throws {
+                _ = encoder.container(keyedBy: CodingKeys.self)
+                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                requestContainer.encodeHeader(self.repeat, key: "repeat")
+            }
+
+            private enum CodingKeys: CodingKey {}
         }
         let config = createServiceConfig()
         let request = KeywordRequest(repeat: "Repeat")
@@ -74,10 +79,15 @@ class AWSRequestTests: XCTestCase {
 
     func testCreateAwsRequestWithKeywordInQuery() {
         struct KeywordRequest: AWSEncodableShape {
-            static var _encoding: [AWSMemberEncoding] = [
-                AWSMemberEncoding(label: "throw", location: .querystring("throw")),
-            ]
             let `throw`: String
+
+            func encode(to encoder: Encoder) throws {
+                _ = encoder.container(keyedBy: CodingKeys.self)
+                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                requestContainer.encodeQuery(self.throw, key: "throw")
+            }
+
+            private enum CodingKeys: CodingKey {}
         }
         let config = createServiceConfig(region: .cacentral1, service: "s3")
 
@@ -168,10 +178,13 @@ class AWSRequestTests: XCTestCase {
         struct Object: AWSEncodableShape {
             let string: String
         }
-        struct Object2: AWSEncodableShape & AWSShapeWithPayload {
-            static var _payloadPath = "payload"
+        struct Object2: AWSEncodableShape {
+            var _payload: any AWSEncodableShape { self.payload }
             let payload: AWSHTTPBody
-            private enum CodingKeys: CodingKey {}
+
+            func encode(to encoder: Encoder) throws {
+                try payload.encode(to: encoder)
+            }
         }
         let object = Object(string: "Name")
         let object2 = Object2(payload: .init(string: "Payload"))
@@ -207,8 +220,14 @@ class AWSRequestTests: XCTestCase {
 
     func testHeaderEncoding() {
         struct Input: AWSEncodableShape {
-            static let _encoding = [AWSMemberEncoding(label: "h", location: .header("header-member"))]
             let h: String
+            func encode(to encoder: Encoder) throws {
+                _ = encoder.container(keyedBy: CodingKeys.self)
+                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                requestContainer.encodeHeader(self.h, key: "header-member")
+            }
+
+            private enum CodingKeys: CodingKey {}
         }
         let input = Input(h: "TestHeader")
         let config = createServiceConfig()
@@ -219,20 +238,36 @@ class AWSRequestTests: XCTestCase {
 
     func testQueryEncoding() {
         struct Input: AWSEncodableShape {
-            static let _encoding = [AWSMemberEncoding(label: "q", location: .querystring("query"))]
+            let p: String?
             let q: String
+            let r: String?
+            func encode(to encoder: Encoder) throws {
+                _ = encoder.container(keyedBy: CodingKeys.self)
+                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                requestContainer.encodeQuery(self.p, key: "puery")
+                requestContainer.encodeQuery(self.q, key: "query")
+                requestContainer.encodeQuery(self.r, key: "ruery")
+            }
+
+            private enum CodingKeys: CodingKey {}
         }
-        let input = Input(q: "=3+5897^sdfjh&")
+        let input = Input(p: "hmmm", q: "=3+5897^sdfjh&", r: nil)
         let config = createServiceConfig(region: .useast1)
         var request: AWSHTTPRequest?
         XCTAssertNoThrow(request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config))
-        XCTAssertEqual(request?.url.absoluteString, "https://test.us-east-1.amazonaws.com/?query=%3D3%2B5897%5Esdfjh%26")
+        XCTAssertEqual(request?.url.absoluteString, "https://test.us-east-1.amazonaws.com/?puery=hmmm&query=%3D3%2B5897%5Esdfjh%26")
     }
 
     func testQueryEncodedArray() {
         struct Input: AWSEncodableShape {
-            static let _encoding = [AWSMemberEncoding(label: "q", location: .querystring("query"))]
-            let q: [String]
+            let q: [String]?
+            func encode(to encoder: Encoder) throws {
+                _ = encoder.container(keyedBy: CodingKeys.self)
+                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                requestContainer.encodeQuery(self.q, key: "query")
+            }
+
+            private enum CodingKeys: CodingKey {}
         }
         let input = Input(q: ["=3+5897^sdfjh&", "test"])
         let config = createServiceConfig(region: .useast1)
@@ -244,14 +279,38 @@ class AWSRequestTests: XCTestCase {
 
     func testQueryEncodedDictionary() {
         struct Input: AWSEncodableShape {
-            static let _encoding = [AWSMemberEncoding(label: "q", location: .querystring("query"))]
-            let q: [String: Int]
+            let q: [String: Int]?
+            func encode(to encoder: Encoder) throws {
+                _ = encoder.container(keyedBy: CodingKeys.self)
+                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                requestContainer.encodeQuery(self.q)
+            }
+
+            private enum CodingKeys: CodingKey {}
         }
         let input = Input(q: ["one": 1, "two": 2])
         let config = createServiceConfig(region: .useast2, service: "myservice")
         var request: AWSHTTPRequest?
         XCTAssertNoThrow(request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config))
         XCTAssertEqual(request?.url.absoluteString, "https://myservice.us-east-2.amazonaws.com/?one=1&two=2")
+    }
+
+    func testQueryInPath() {
+        struct Input: AWSEncodableShape {
+            let q: String
+            func encode(to encoder: Encoder) throws {
+                _ = encoder.container(keyedBy: CodingKeys.self)
+                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                requestContainer.encodeQuery(self.q, key: "query")
+            }
+
+            private enum CodingKeys: CodingKey {}
+        }
+        let input = Input(q: "path")
+        let config = createServiceConfig(region: .useast1)
+        var request: AWSHTTPRequest?
+        XCTAssertNoThrow(request = try AWSHTTPRequest(operation: "Test", path: "/?test=true", method: .GET, input: input, configuration: config))
+        XCTAssertEqual(request?.url.absoluteString, "https://test.us-east-1.amazonaws.com/?query=path&test=true")
     }
 
     func testQueryProtocolEmptyRequest() {
@@ -263,8 +322,14 @@ class AWSRequestTests: XCTestCase {
 
     func testURIEncoding() {
         struct Input: AWSEncodableShape {
-            static let _encoding = [AWSMemberEncoding(label: "u", location: .uri("key"))]
             let u: String
+            func encode(to encoder: Encoder) throws {
+                _ = encoder.container(keyedBy: CodingKeys.self)
+                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                requestContainer.encodePath(self.u, key: "key")
+            }
+
+            private enum CodingKeys: CodingKey {}
         }
         let input = Input(u: "MyKey")
         let config = createServiceConfig(region: .cacentral1, service: "s3")
@@ -304,32 +369,12 @@ class AWSRequestTests: XCTestCase {
         XCTAssertEqual(element?.xmlString, "<Input xmlns=\"https://test.amazonaws.com/doc/2020-03-11/\"><number>5</number></Input>")
     }
 
-    func testCreateWithPayloadAndXMLNamespace() throws {
-        struct Payload: AWSEncodableShape {
-            public static let _xmlNamespace: String? = "https://test.amazonaws.com/doc/2020-03-11/"
-            let number: Int
-        }
-        struct Input: AWSEncodableShape & AWSShapeWithPayload {
-            public static let _payloadPath: String = "payload"
-            let payload: Payload
-        }
-        let input = Input(payload: Payload(number: 5))
-        let xmlConfig = createServiceConfig(serviceProtocol: .restxml)
-        var request: AWSHTTPRequest?
-        XCTAssertNoThrow(request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: xmlConfig))
-        guard case .byteBuffer(let buffer) = request?.body.storage else {
-            return XCTFail("Shouldn't get here")
-        }
-        let element = try XML.Document(buffer: buffer).rootElement()
-        XCTAssertEqual(element?.xmlString, "<Payload xmlns=\"https://test.amazonaws.com/doc/2020-03-11/\"><number>5</number></Payload>")
-    }
-
     func testDataInJsonPayload() {
         struct DataContainer: AWSEncodableShape {
             let data: Data
         }
-        struct J: AWSEncodableShape & AWSShapeWithPayload {
-            public static let _payloadPath: String = "dataContainer"
+        struct J: AWSEncodableShape {
+            var _payload: DataContainer { dataContainer }
             let dataContainer: DataContainer
         }
         let input = J(dataContainer: DataContainer(data: Data("test data".utf8)))
@@ -350,8 +395,14 @@ class AWSRequestTests: XCTestCase {
 
     func testPercentEncodePath() {
         struct Input: AWSEncodableShape {
-            static let _encoding: [AWSMemberEncoding] = [.init(label: "path", location: .uri("path"))]
             let path: String
+            func encode(to encoder: Encoder) throws {
+                _ = encoder.container(keyedBy: CodingKeys.self)
+                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                requestContainer.encodePath(self.path, key: "path")
+            }
+
+            private enum CodingKeys: CodingKey {}
         }
         let input = Input(path: "Test me/once+")
         let config = createServiceConfig(endpoint: "https://test.com")
@@ -364,8 +415,14 @@ class AWSRequestTests: XCTestCase {
 
     func testSortedArrayQuery() {
         struct Input: AWSEncodableShape {
-            static let _encoding: [AWSMemberEncoding] = [.init(label: "items", location: .querystring("item"))]
             let items: [String]
+            func encode(to encoder: Encoder) throws {
+                _ = encoder.container(keyedBy: CodingKeys.self)
+                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                requestContainer.encodeQuery(self.items, key: "item")
+            }
+
+            private enum CodingKeys: CodingKey {}
         }
         let input = Input(items: ["orange", "apple"])
         let config = createServiceConfig(endpoint: "https://test.com")
@@ -376,14 +433,18 @@ class AWSRequestTests: XCTestCase {
 
     func testCustomEncoderInQuery() {
         struct Input: AWSEncodableShape {
-            static let _encoding: [AWSMemberEncoding] = [
-                .init(label: "_date", location: .querystring("date")),
-                .init(label: "_values", location: .querystring("values")),
-            ]
             @OptionalCustomCoding<HTTPHeaderDateCoder>
             var date: Date?
             @CustomCoding<StandardArrayCoder>
             var values: [Int]
+            func encode(to encoder: Encoder) throws {
+                _ = encoder.container(keyedBy: CodingKeys.self)
+                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                requestContainer.encodeQuery(self._date, key: "date")
+                requestContainer.encodeQuery(self._values, key: "values")
+            }
+
+            private enum CodingKeys: CodingKey {}
         }
         let input = Input(date: Date(timeIntervalSince1970: 10_000_000), values: [1])
         let config = createServiceConfig(endpoint: "https://test.com")
@@ -422,10 +483,14 @@ class AWSRequestTests: XCTestCase {
     /// Test host prefix
     func testHostPrefixLabel() {
         struct Input: AWSEncodableShape {
-            static let _encoding: [AWSMemberEncoding] = [
-                .init(label: "accountId", location: .hostname("AccountId")),
-            ]
             let accountId: String
+            func encode(to encoder: Encoder) throws {
+                _ = encoder.container(keyedBy: CodingKeys.self)
+                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                requestContainer.encodeHostPrefix(self.accountId, key: "AccountId")
+            }
+
+            private enum CodingKeys: CodingKey {}
         }
         let input = Input(accountId: "12345678")
         let config = createServiceConfig(serviceProtocol: .json(version: "1.0"), endpoint: "https://test.com")
@@ -441,9 +506,89 @@ class AWSRequestTests: XCTestCase {
         XCTAssertEqual(request?.url.absoluteString, "https://12345678.test.com/")
     }
 
+    func testJSONPayload() throws {
+        struct Payload: AWSEncodableShape {
+            let number: Int
+        }
+        struct Input: AWSEncodableShape {
+            var _payload: Payload { payload }
+            let payload: Payload
+
+            func encode(to encoder: Encoder) throws {
+                try payload.encode(to: encoder)
+            }
+        }
+        let input = Input(payload: .init(number: 12_345_678))
+        let config = createServiceConfig(serviceProtocol: .json(version: "1.0"))
+        var request: AWSHTTPRequest?
+        XCTAssertNoThrow(request = try AWSHTTPRequest(
+            operation: "Test",
+            path: "/",
+            method: .POST,
+            input: input,
+            configuration: config
+        ))
+        XCTAssertEqual(request?.body.asString(), #"{"number":12345678}"#)
+    }
+
+    func testXMLPayload() throws {
+        struct Payload: AWSEncodableShape {
+            let number: Int
+        }
+        struct Input: AWSEncodableShape {
+            static var _xmlRootNodeName: String? = "Payload"
+            let payload: Payload
+
+            func encode(to encoder: Encoder) throws {
+                try payload.encode(to: encoder)
+            }
+        }
+        let input = Input(payload: .init(number: 12_345_678))
+        let config = createServiceConfig(serviceProtocol: .restxml)
+        var request: AWSHTTPRequest?
+        XCTAssertNoThrow(request = try AWSHTTPRequest(
+            operation: "Test",
+            path: "/",
+            method: .POST,
+            input: input,
+            configuration: config
+        ))
+        XCTAssertEqual(request?.body.asString(), #"<?xml version="1.0" encoding="UTF-8"?><Payload><number>12345678</number></Payload>"#)
+    }
+
+    func testJSONPayloadAndHeader() throws {
+        struct Payload: AWSEncodableShape {
+            let number: Int
+        }
+        struct Input: AWSEncodableShape {
+            var _payload: Payload { payload }
+            let payload: Payload
+            let contentType: String
+
+            func encode(to encoder: Encoder) throws {
+                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                requestContainer.encodeHeader(self.contentType, key: "content-type")
+                try payload.encode(to: encoder)
+            }
+        }
+        let input = Input(payload: .init(number: 12_345_678), contentType: "image/jpeg")
+        let config = createServiceConfig(serviceProtocol: .json(version: "1.0"))
+        var request: AWSHTTPRequest?
+        XCTAssertNoThrow(request = try AWSHTTPRequest(
+            operation: "Test",
+            path: "/",
+            method: .POST,
+            input: input,
+            configuration: config
+        ))
+        XCTAssertEqual(request?.body.asString(), #"{"number":12345678}"#)
+        XCTAssertEqual(request?.headers["content-type"].first, "image/jpeg")
+    }
+
     /// Test disable S3 chunked upload flag works
     func testDisableS3ChunkedUpload() throws {
-        struct Input: AWSEncodableShape & AWSShapeWithPayload {
+        struct Input: AWSEncodableShape {
+            var _payload: AWSHTTPBody { payload }
             public static let _options: AWSShapeOptions = [.rawPayload, .allowStreaming]
             public static let _payloadPath: String = "payload"
             let payload: AWSHTTPBody
@@ -501,11 +646,18 @@ class AWSRequestTests: XCTestCase {
     func testMD5ChecksumSetAlready() {
         struct Input: AWSEncodableShape {
             static let _options: AWSShapeOptions = .checksumRequired
-            static let _encoding: [AWSMemberEncoding] = [
-                .init(label: "checksum", location: .header("Content-MD5")),
-            ]
             let checksum: String?
             let q: [String: Int]
+            func encode(to encoder: Encoder) throws {
+                var container = encoder.container(keyedBy: CodingKeys.self)
+                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                requestContainer.encodeHeader(self.checksum, key: "Content-MD5")
+                try container.encode(q, forKey: .q)
+            }
+
+            private enum CodingKeys: String, CodingKey {
+                case q
+            }
         }
         let input = Input(checksum: "Set already", q: ["one": 1, "two": 2])
         let config = createServiceConfig(region: .useast2, service: "myservice")
@@ -517,73 +669,105 @@ class AWSRequestTests: XCTestCase {
     func testSHA1Checksum() {
         struct Input: AWSEncodableShape {
             static let _options: AWSShapeOptions = .checksumHeader
-            static let _encoding: [AWSMemberEncoding] = [
-                .init(label: "checksum", location: .header("x-amz-sdk-checksum-algorithm")),
-            ]
             let q: [String]
             let checksum: String
+            func encode(to encoder: Encoder) throws {
+                var container = encoder.container(keyedBy: CodingKeys.self)
+                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                requestContainer.encodeHeader(self.checksum, key: "x-amz-sdk-checksum-algorithm")
+                try container.encode(q, forKey: .q)
+            }
+
+            private enum CodingKeys: String, CodingKey {
+                case q
+            }
         }
         let input = Input(q: ["one", "two", "three", "four"], checksum: "SHA1")
         let config = createServiceConfig(region: .useast2, service: "myservice", serviceProtocol: .restxml)
         var request: AWSHTTPRequest?
         XCTAssertNoThrow(request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config))
-        XCTAssertEqual(request?.headers["x-amz-checksum-sha1"].first, "SJuck2AdC0YGJSnr5S/2+5uL1FA=")
+        XCTAssertEqual(request?.headers["x-amz-checksum-sha1"].first, "wVl5w+ffNcoxzbahfTthTZsuivs=")
     }
 
     func testCRC32Checksum() {
         struct Input: AWSEncodableShape {
             static let _options: AWSShapeOptions = .checksumHeader
-            static let _encoding: [AWSMemberEncoding] = [
-                .init(label: "checksum", location: .header("x-amz-sdk-checksum-algorithm")),
-            ]
             let q: [String]
             let checksum: String
+            func encode(to encoder: Encoder) throws {
+                var container = encoder.container(keyedBy: CodingKeys.self)
+                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                requestContainer.encodeHeader(self.checksum, key: "x-amz-sdk-checksum-algorithm")
+                try container.encode(q, forKey: .q)
+            }
+
+            private enum CodingKeys: String, CodingKey {
+                case q
+            }
         }
         let input = Input(q: ["one", "two", "three", "four"], checksum: "CRC32")
         let config = createServiceConfig(region: .useast2, service: "myservice", serviceProtocol: .restxml)
         var request: AWSHTTPRequest?
         XCTAssertNoThrow(request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config))
-        XCTAssertEqual(request?.headers["x-amz-checksum-crc32"].first, "wvjEqA==")
+        XCTAssertEqual(request?.headers["x-amz-checksum-crc32"].first, "BNgzYg==")
     }
 
     func testCRC32CChecksum() {
         struct Input: AWSEncodableShape {
             static let _options: AWSShapeOptions = .checksumHeader
-            static let _encoding: [AWSMemberEncoding] = [
-                .init(label: "checksum", location: .header("x-amz-sdk-checksum-algorithm")),
-            ]
             let q: [String]
             let checksum: String
+            func encode(to encoder: Encoder) throws {
+                var container = encoder.container(keyedBy: CodingKeys.self)
+                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                requestContainer.encodeHeader(self.checksum, key: "x-amz-sdk-checksum-algorithm")
+                try container.encode(q, forKey: .q)
+            }
+
+            private enum CodingKeys: String, CodingKey {
+                case q
+            }
         }
         let input = Input(q: ["one", "two", "three", "four"], checksum: "CRC32C")
         let config = createServiceConfig(region: .useast2, service: "myservice", serviceProtocol: .restxml)
         var request: AWSHTTPRequest?
         XCTAssertNoThrow(request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config))
-        XCTAssertEqual(request?.headers["x-amz-checksum-crc32c"].first, "JMPW1A==")
+        XCTAssertEqual(request?.headers["x-amz-checksum-crc32c"].first, "CJR8DA==")
     }
 
     func testSHA256Checksum() {
         struct Input: AWSEncodableShape {
             static let _options: AWSShapeOptions = .checksumHeader
-            static let _encoding: [AWSMemberEncoding] = [
-                .init(label: "checksum", location: .header("x-amz-sdk-checksum-algorithm")),
-            ]
             let q: [String]
             let checksum: String
+            func encode(to encoder: Encoder) throws {
+                var container = encoder.container(keyedBy: CodingKeys.self)
+                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                requestContainer.encodeHeader(self.checksum, key: "x-amz-sdk-checksum-algorithm")
+                try container.encode(q, forKey: .q)
+            }
+
+            private enum CodingKeys: String, CodingKey {
+                case q
+            }
         }
         let input = Input(q: ["one", "two", "three", "four"], checksum: "SHA256")
         let config = createServiceConfig(region: .useast2, service: "myservice", serviceProtocol: .restxml)
         var request: AWSHTTPRequest?
         XCTAssertNoThrow(request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config))
-        XCTAssertEqual(request?.headers["x-amz-checksum-sha256"].first, "HTYjCbmfsJd3Dek0xIJJk3VKfQDLtOqX3GYDOaRJjRs=")
+        XCTAssertEqual(request?.headers["x-amz-checksum-sha256"].first, "QTQclc9fXffjuWqvYJnh/EUMgSdZcp1uOoUeq4SmiFY=")
     }
 
     func testHeaderPrefix() {
         struct Input: AWSEncodableShape {
-            static let _encoding: [AWSMemberEncoding] = [
-                .init(label: "content", location: .headerPrefix("x-aws-metadata-")),
-            ]
             let content: [String: String]
+            func encode(to encoder: Encoder) throws {
+                _ = encoder.container(keyedBy: CodingKeys.self)
+                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                requestContainer.encodeHeader(self.content, key: "x-aws-metadata-")
+            }
+
+            private enum CodingKeys: CodingKey {}
         }
         let input = Input(content: ["one": "first", "two": "second"])
         let config = createServiceConfig(region: .useast2, service: "myservice", serviceProtocol: .restxml)

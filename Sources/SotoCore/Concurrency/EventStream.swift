@@ -25,6 +25,19 @@ public struct AWSEventStream<Event: Sendable>: Sendable {
     }
 }
 
+extension AWSEventStream: Decodable where Event: Decodable {
+    public init(from decoder: Decoder) throws {
+        let responseContainer = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
+        self.init(responseContainer.response.body)
+    }
+}
+
+extension AWSEventStream: Encodable where Event: Encodable {
+    public func encode(to encoder: Encoder) throws {
+        preconditionFailure("Encoding EventStreams is unsupported")
+    }
+}
+
 /// If Event is decodable then conform AWSEventStream to AsyncSequence
 extension AWSEventStream: AsyncSequence where Event: Decodable {
     public typealias Element = Event

@@ -13,14 +13,15 @@
 //===----------------------------------------------------------------------===//
 
 import Crypto
-import struct Foundation.CharacterSet
 import struct Foundation.Data
 import struct Foundation.Date
+import class Foundation.JSONEncoder
 import struct Foundation.URL
-import struct Foundation.URLComponents
 import NIOCore
+import NIOFoundationCompat
 import NIOHTTP1
 import SotoSignerV4
+@_implementationOnly import SotoXML
 
 /// Object encapsulating all the information needed to generate a raw HTTP request to AWS
 public struct AWSHTTPRequest {
@@ -114,194 +115,79 @@ extension AWSHTTPRequest {
         hostPrefix: String? = nil,
         configuration: AWSServiceConfig
     ) throws {
-        var headers = HTTPHeaders()
-        var path = path
-        var hostPrefix = hostPrefix
-        var queryParams: [(key: String, value: Any)] = []
-
         // validate input parameters
         try input.validate()
 
-        // set x-amz-target header
-        if let target = configuration.amzTarget {
-            headers.replaceOrAdd(name: "x-amz-target", value: "\(target).\(operationName)")
-        }
+        let requestEncoderContainer = RequestEncodingContainer(path: path, hostPrefix: hostPrefix)
 
-        // TODO: should replace with Encodable
-        let mirror = Mirror(reflecting: input)
-        var memberVariablesCount = mirror.children.count - Input._encoding.count
-
-        // extract header, query and uri params
-        for encoding in Input._encoding {
-            if let value = mirror.getAttribute(forKey: encoding.label) {
-                switch encoding.location {
-                case .header(let location):
-                    switch value {
-                    case let string as AWSRequestEncodableString:
-                        string.encoded.map { headers.replaceOrAdd(name: location, value: $0) }
-                    default:
-                        headers.replaceOrAdd(name: location, value: "\(value)")
-                    }
-
-                case .headerPrefix(let prefix):
-                    if let dictionary = value as? AWSRequestEncodableDictionary {
-                        dictionary.encoded.forEach { headers.replaceOrAdd(name: "\(prefix)\($0.key)", value: $0.value) }
-                    }
-
-                case .querystring(let location):
-                    switch value {
-                    case let string as AWSRequestEncodableString:
-                        string.encoded.map { queryParams.append((key: location, value: $0)) }
-                    case let array as AWSRequestEncodableArray:
-                        array.encoded.forEach { queryParams.append((key: location, value: $0)) }
-                    case let dictionary as AWSRequestEncodableDictionary:
-                        dictionary.encoded.forEach { queryParams.append($0) }
-                    default:
-                        queryParams.append((key: location, value: "\(value)"))
-                    }
-
-                case .uri(let location):
-                    path = path
-                        .replacingOccurrences(of: "{\(location)}", with: Self.urlEncodePathComponent(String(describing: value)))
-                        .replacingOccurrences(of: "{\(location)+}", with: Self.urlEncodePath(String(describing: value)))
-
-                case .hostname(let location):
-                    hostPrefix = hostPrefix?
-                        .replacingOccurrences(of: "{\(location)}", with: Self.urlEncodePathComponent(String(describing: value)))
-
-                default:
-                    memberVariablesCount += 1
-                }
-            }
-        }
-
-        var raw = false
-        let body: AWSHTTPBody
+        var body: AWSHTTPBody
         switch configuration.serviceProtocol {
         case .json, .restjson:
-            if let shapeWithPayload = Input.self as? AWSShapeWithPayload.Type {
-                let payload = shapeWithPayload._payloadPath
-                if let payloadBody = mirror.getAttribute(forKey: payload) {
-                    switch payloadBody {
-                    case let awsPayload as AWSHTTPBody:
-                        Self.verifyStream(operation: operationName, payload: awsPayload, input: shapeWithPayload)
-                        body = awsPayload
-                        raw = true
-                    case let shape as AWSEncodableShape:
-                        body = try .init(buffer: shape.encodeAsJSON(byteBufferAllocator: configuration.byteBufferAllocator))
-                    default:
-                        preconditionFailure("Cannot add this as a payload")
-                    }
-                } else {
-                    body = .init()
-                }
+            let encoder = JSONEncoder()
+            encoder.userInfo[.awsRequest] = requestEncoderContainer
+            encoder.dateEncodingStrategy = .secondsSince1970
+            let buffer = try encoder.encodeAsByteBuffer(input, allocator: configuration.byteBufferAllocator)
+            if method == .GET || method == .HEAD, buffer == ByteBuffer(string: "{}") {
+                body = .init()
             } else {
-                // only include the body if there are members that are output in the body.
-                if memberVariablesCount > 0 {
-                    body = try .init(buffer: input.encodeAsJSON(byteBufferAllocator: configuration.byteBufferAllocator))
-                } else if method == .PUT || method == .POST {
-                    // PUT and POST requests require a body even if it is empty. This is not the case with XML
-                    body = .init(buffer: configuration.byteBufferAllocator.buffer(string: "{}"))
-                } else {
-                    body = .init()
-                }
+                body = .init(buffer: buffer)
             }
 
         case .restxml:
-            if let shapeWithPayload = Input.self as? AWSShapeWithPayload.Type {
-                let payload = shapeWithPayload._payloadPath
-                if let payloadBody = mirror.getAttribute(forKey: payload) {
-                    switch payloadBody {
-                    case let awsPayload as AWSHTTPBody:
-                        Self.verifyStream(operation: operationName, payload: awsPayload, input: shapeWithPayload)
-                        body = awsPayload
-                    case let shape as AWSEncodableShape:
-                        var rootName: String?
-                        // extract custom payload name
-                        if let encoding = Input.getEncoding(for: payload), case .body(let locationName) = encoding.location {
-                            rootName = locationName
-                        }
-                        let xml = try shape.encodeAsXML(rootName: rootName, namespace: configuration.xmlNamespace)
-                        body = .init(buffer: configuration.byteBufferAllocator.buffer(string: xml))
-                    default:
-                        preconditionFailure("Cannot add this as a payload")
-                    }
-                } else {
-                    body = .init()
+            var encoder = XMLEncoder()
+            encoder.userInfo[.awsRequest] = requestEncoderContainer
+            let xml = try encoder.encode(input, name: Input._xmlRootNodeName)
+            if let xml = xml, xml.childCount > 0 {
+                if let xmlNamespace = Input._xmlNamespace ?? configuration.xmlNamespace {
+                    xml.addNamespace(XML.Node.namespace(stringValue: xmlNamespace))
                 }
+                let document = XML.Document(rootElement: xml)
+                let xmlDocument = document.xmlString
+                body = .init(buffer: configuration.byteBufferAllocator.buffer(string: xmlDocument))
             } else {
-                // only include the body if there are members that are output in the body.
-                if memberVariablesCount > 0 {
-                    let xml = try input.encodeAsXML(namespace: configuration.xmlNamespace)
-                    body = .init(buffer: configuration.byteBufferAllocator.buffer(string: xml))
-                } else {
-                    body = .init()
-                }
+                body = .init()
             }
 
         case .query:
-            if let query = try input.encodeAsQuery(with: ["Action": operationName, "Version": configuration.apiVersion]) {
+            var encoder = QueryEncoder()
+            encoder.userInfo[.awsRequest] = requestEncoderContainer
+            encoder.additionalKeys = ["Action": operationName, "Version": configuration.apiVersion]
+            if let query = try encoder.encode(input) {
                 body = .init(buffer: configuration.byteBufferAllocator.buffer(string: query))
             } else {
                 body = .init()
             }
 
         case .ec2:
-            if let query = try input.encodeAsQueryForEC2(with: ["Action": operationName, "Version": configuration.apiVersion]) {
+            var encoder = QueryEncoder()
+            encoder.userInfo[.awsRequest] = requestEncoderContainer
+            encoder.additionalKeys = ["Action": operationName, "Version": configuration.apiVersion]
+            encoder.ec2 = true
+            if let query = try encoder.encode(input) {
                 body = .init(buffer: configuration.byteBufferAllocator.buffer(string: query))
             } else {
                 body = .init()
             }
         }
-
-        guard var urlComponents = URLComponents(string: "\(configuration.endpoint)\(path)") else {
-            throw AWSClient.ClientError.invalidURL
-        }
-
-        if let hostPrefix = hostPrefix, let host = urlComponents.host {
-            urlComponents.host = hostPrefix + host
-        }
-
-        // add queries from the parsed path to the query params list
-        if let pathQueryItems = urlComponents.queryItems {
-            for item in pathQueryItems {
-                queryParams.append((key: item.name, value: item.value ?? ""))
-            }
-        }
-
-        // Set query params. Percent encode these ourselves as Foundation and AWS disagree on what should be percent encoded in the query values
-        // Also the signer doesn't percent encode the queries so they need to be encoded here
-        if queryParams.count > 0 {
-            let urlQueryString = queryParams
-                .map { (key: $0.key, value: "\($0.value)") }
-                .sorted {
-                    // sort by key. if key are equal then sort by value
-                    if $0.key < $1.key { return true }
-                    if $0.key > $1.key { return false }
-                    return $0.value < $1.value
-                }
-                .map { "\($0.key)=\(Self.urlEncodeQueryParam($0.value))" }
-                .joined(separator: "&")
-            urlComponents.percentEncodedQuery = urlQueryString
-        }
-
-        guard let url = urlComponents.url else {
-            throw AWSClient.ClientError.invalidURL
-        }
-
-        headers = Self.calculateChecksumHeader(
-            headers: headers,
+        body = requestEncoderContainer.body ?? body
+        var headers = Self.calculateChecksumHeader(
+            headers: requestEncoderContainer.headers,
             body: body,
             shapeType: Input.self,
             configuration: configuration
         )
 
-        self.url = url
+        // set x-amz-target header
+        if let target = configuration.amzTarget {
+            headers.replaceOrAdd(name: "x-amz-target", value: "\(target).\(operationName)")
+        }
+
+        self.url = try requestEncoderContainer.buildURL(endpoint: configuration.endpoint)
         self.method = method
         self.headers = headers
         self.body = body
 
-        addStandardHeaders(serviceProtocol: configuration.serviceProtocol, raw: raw)
+        addStandardHeaders(serviceProtocol: configuration.serviceProtocol, raw: requestEncoderContainer.body != nil)
     }
 
     /// Calculate checksum header for request
@@ -385,28 +271,8 @@ extension AWSHTTPRequest {
         }
     }
 
-    /// this list of query allowed characters comes from https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html
-    static let queryAllowedCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
-    static let pathAllowedCharacters = CharacterSet.urlPathAllowed.subtracting(.init(charactersIn: "+"))
-    static let pathComponentAllowedCharacters = CharacterSet.urlPathAllowed.subtracting(.init(charactersIn: "+/"))
-
-    /// percent encode query parameter value.
-    private static func urlEncodeQueryParam(_ value: String) -> String {
-        return value.addingPercentEncoding(withAllowedCharacters: AWSHTTPRequest.queryAllowedCharacters) ?? value
-    }
-
-    /// percent encode path value.
-    private static func urlEncodePath(_ value: String) -> String {
-        return value.addingPercentEncoding(withAllowedCharacters: AWSHTTPRequest.pathAllowedCharacters) ?? value
-    }
-
-    /// percent encode path component value. ie also encode "/"
-    private static func urlEncodePathComponent(_ value: String) -> String {
-        return value.addingPercentEncoding(withAllowedCharacters: AWSHTTPRequest.pathComponentAllowedCharacters) ?? value
-    }
-
     /// verify  streaming is allowed for this operation
-    internal static func verifyStream(operation: String, payload: AWSHTTPBody, input: AWSShapeWithPayload.Type) {
+    internal static func verifyStream(operation: String, payload: AWSHTTPBody, input: any AWSEncodableShape.Type) {
         guard case .asyncSequence(_, let length) = payload.storage else { return }
         precondition(input._options.contains(.allowStreaming), "\(operation) does not allow streaming of data")
         precondition(length != nil || input._options.contains(.allowChunkedStreaming), "\(operation) does not allow chunked streaming of data. Please supply a data size.")

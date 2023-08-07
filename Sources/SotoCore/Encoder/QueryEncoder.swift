@@ -42,7 +42,7 @@ public struct QueryEncoder {
 
     public init() {}
 
-    public func encode<T: Encodable>(_ value: T, name: String? = nil) throws -> String? {
+    public func encode<T: Encodable>(_ value: T) throws -> String? {
         let encoder = _QueryEncoder(options: options)
         try value.encode(to: encoder)
 
@@ -55,7 +55,7 @@ public struct QueryEncoder {
     static let queryAllowedCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
 
     private static func urlEncodeQueryParam(_ value: String) -> String {
-        return value.addingPercentEncoding(withAllowedCharacters: AWSHTTPRequest.queryAllowedCharacters) ?? value
+        return value.addingPercentEncoding(withAllowedCharacters: Self.queryAllowedCharacters) ?? value
     }
 
     // generate string from

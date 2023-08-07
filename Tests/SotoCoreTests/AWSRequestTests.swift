@@ -238,25 +238,29 @@ class AWSRequestTests: XCTestCase {
 
     func testQueryEncoding() {
         struct Input: AWSEncodableShape {
+            let p: String?
             let q: String
+            let r: String?
             func encode(to encoder: Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                requestContainer.encodeQuery(self.p, key: "puery")
                 requestContainer.encodeQuery(self.q, key: "query")
+                requestContainer.encodeQuery(self.r, key: "ruery")
             }
 
             private enum CodingKeys: CodingKey {}
         }
-        let input = Input(q: "=3+5897^sdfjh&")
+        let input = Input(p: "hmmm", q: "=3+5897^sdfjh&", r: nil)
         let config = createServiceConfig(region: .useast1)
         var request: AWSHTTPRequest?
         XCTAssertNoThrow(request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config))
-        XCTAssertEqual(request?.url.absoluteString, "https://test.us-east-1.amazonaws.com/?query=%3D3%2B5897%5Esdfjh%26")
+        XCTAssertEqual(request?.url.absoluteString, "https://test.us-east-1.amazonaws.com/?puery=hmmm&query=%3D3%2B5897%5Esdfjh%26")
     }
 
     func testQueryEncodedArray() {
         struct Input: AWSEncodableShape {
-            let q: [String]
+            let q: [String]?
             func encode(to encoder: Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
@@ -275,7 +279,7 @@ class AWSRequestTests: XCTestCase {
 
     func testQueryEncodedDictionary() {
         struct Input: AWSEncodableShape {
-            let q: [String: Int]
+            let q: [String: Int]?
             func encode(to encoder: Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
@@ -289,6 +293,24 @@ class AWSRequestTests: XCTestCase {
         var request: AWSHTTPRequest?
         XCTAssertNoThrow(request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config))
         XCTAssertEqual(request?.url.absoluteString, "https://myservice.us-east-2.amazonaws.com/?one=1&two=2")
+    }
+
+    func testQueryInPath() {
+        struct Input: AWSEncodableShape {
+            let q: String
+            func encode(to encoder: Encoder) throws {
+                _ = encoder.container(keyedBy: CodingKeys.self)
+                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                requestContainer.encodeQuery(self.q, key: "query")
+            }
+
+            private enum CodingKeys: CodingKey {}
+        }
+        let input = Input(q: "path")
+        let config = createServiceConfig(region: .useast1)
+        var request: AWSHTTPRequest?
+        XCTAssertNoThrow(request = try AWSHTTPRequest(operation: "Test", path: "/?test=true", method: .GET, input: input, configuration: config))
+        XCTAssertEqual(request?.url.absoluteString, "https://test.us-east-1.amazonaws.com/?query=path&test=true")
     }
 
     func testQueryProtocolEmptyRequest() {

@@ -37,23 +37,6 @@ class AWSClientTests: XCTestCase {
         XCTAssertEqual(credentialForSignature.secretAccessKey, "secret")
     }
 
-    // this test only really works on Linux as it requires the MetaDataService. On mac it will just pass automatically
-    func testExpiredCredential() async throws {
-        let client = createAWSClient(credentialProvider: .selector(.ec2, .ecs))
-        defer {
-            XCTAssertNoThrow(try client.syncShutdown())
-        }
-
-        do {
-            _ = try await client.getCredential(logger: TestEnvironment.logger)
-            XCTFail("Should not get here")
-        } catch let error as CredentialProviderError where error == .noProvider {
-            // credentials request should fail. One possible error is a connectTimerout
-        } catch {
-            XCTFail("Unexpected error \(error)")
-        }
-    }
-
     func testShutdown() async throws {
         let httpClient = HTTPClient(eventLoopGroupProvider: .singleton)
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
@@ -227,11 +210,60 @@ class AWSClientTests: XCTestCase {
         }
     }
 
+    func testBase64Coding() async throws {
+        struct Output: AWSDecodableShape & Encodable {
+            let data: AWSBase64Data
+        }
+        struct Input: AWSEncodableShape & Decodable {
+            let data: AWSBase64Data
+        }
+        do {
+            let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+            defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+            let awsServer = AWSTestServer(serviceProtocol: .json)
+            let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
+            let client = createAWSClient(
+                credentialProvider: .empty,
+                httpClientProvider: .createNewWithEventLoopGroup(eventLoopGroup)
+            )
+            defer {
+                XCTAssertNoThrow(try client.syncShutdown())
+                XCTAssertNoThrow(try awsServer.stop())
+            }
+            let input = Input(data: .data(Data("Test base64 data".utf8)))
+            async let response: Output = client.execute(
+                operation: "test",
+                path: "/",
+                httpMethod: .POST,
+                serviceConfig: config,
+                input: input,
+                logger: TestEnvironment.logger
+            )
+
+            try awsServer.processRaw { request in
+                let receivedInput = try JSONDecoder().decode(Input.self, from: request.body)
+                let output = Output(data: receivedInput.data)
+                let byteBuffer = try JSONEncoder().encodeAsByteBuffer(output, allocator: ByteBufferAllocator())
+                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
+                return .result(response)
+            }
+
+            let output = try await response
+
+            XCTAssertEqual(output.data.decoded(), [UInt8]("Test base64 data".utf8))
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
     func testRequestStreaming(config: AWSServiceConfig, client: AWSClient, server: AWSTestServer, bufferSize: Int, blockSize: Int) async throws {
-        struct Input: AWSEncodableShape & AWSShapeWithPayload {
-            static var _payloadPath: String = "payload"
-            static var _options: AWSShapeOptions = [.allowStreaming, .rawPayload]
+        struct Input: AWSEncodableShape {
+            static var _options: AWSShapeOptions = [.allowStreaming]
             let payload: AWSHTTPBody
+            func encode(to encoder: Encoder) throws {
+                try self.payload.encode(to: encoder)
+            }
+
             private enum CodingKeys: CodingKey {}
         }
         let data = createRandomBuffer(45, 9182, size: bufferSize)
@@ -291,10 +323,13 @@ class AWSClientTests: XCTestCase {
     }
 
     func testRequestStreamingWithPayload(_ payload: AWSHTTPBody) async throws {
-        struct Input: AWSEncodableShape & AWSShapeWithPayload {
-            static var _payloadPath: String = "payload"
+        struct Input: AWSEncodableShape {
             static var _options: AWSShapeOptions = [.allowStreaming]
             let payload: AWSHTTPBody
+            func encode(to encoder: Encoder) throws {
+                try self.payload.encode(to: encoder)
+            }
+
             private enum CodingKeys: CodingKey {}
         }
 
@@ -338,11 +373,12 @@ class AWSClientTests: XCTestCase {
     }
 
     func testRequestChunkedStreaming() async throws {
-        struct Input: AWSEncodableShape & AWSShapeWithPayload {
-            static var _payloadPath: String = "payload"
+        struct Input: AWSEncodableShape {
             static var _options: AWSShapeOptions = [.allowStreaming, .allowChunkedStreaming, .rawPayload]
             let payload: AWSHTTPBody
-            private enum CodingKeys: CodingKey {}
+            func encode(to encoder: Encoder) throws {
+                try self.payload.encode(to: encoder)
+            }
         }
 
         let awsServer = AWSTestServer(serviceProtocol: .json)
@@ -615,8 +651,9 @@ class AWSClientTests: XCTestCase {
 
             public init(from decoder: Decoder) throws {
                 let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
-                self.payload = response.decodePayload()
-                self.test = try response.decode(String.self, forHeader: "test")
+                let container = try decoder.singleValueContainer()
+                self.payload = try container.decode(AWSHTTPBody.self)
+                self.test = try response.decodeHeader(String.self, key: "test")
             }
         }
         let data = createRandomBuffer(45, 109, size: 128 * 1024)

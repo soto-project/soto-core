@@ -256,7 +256,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         try testServer.processRaw { _ in
             let output = STSAssumeRoleResponse(credentials: stsCredentials)
             let xml = try XMLEncoder().encode(output)
-            let byteBuffer = ByteBufferAllocator().buffer(string: xml.xmlString)
+            let byteBuffer = xml.map { ByteBuffer(string: $0.xmlString) } ?? .init()
             let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
             return .result(response)
         }

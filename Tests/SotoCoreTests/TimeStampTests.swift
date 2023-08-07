@@ -103,11 +103,10 @@ class TimeStampTests: XCTestCase {
     func testDecodeHeader() async throws {
         do {
             struct A: AWSDecodableShape {
-                static let _encoding = [AWSMemberEncoding(label: "date", location: .header("Date"))]
                 let date: Date
                 public init(from decoder: Decoder) throws {
                     let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
-                    self.date = try response.decode(Date.self, forHeader: "Date")
+                    self.date = try response.decodeHeader(Date.self, key: "Date")
                 }
             }
             let response = AWSHTTPResponse(status: .ok, headers: ["Date": "Tue, 15 Nov 1994 12:45:27 GMT"])

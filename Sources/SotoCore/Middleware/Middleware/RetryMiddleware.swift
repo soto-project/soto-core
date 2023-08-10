@@ -22,7 +22,7 @@ struct RetryMiddleware: AWSMiddlewareProtocol {
     let retryPolicy: RetryPolicy
 
     @inlinable
-    func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
+    func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse {
         var attempt = 0
         while true {
             do {

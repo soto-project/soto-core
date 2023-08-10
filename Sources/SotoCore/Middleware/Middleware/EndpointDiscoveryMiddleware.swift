@@ -37,7 +37,7 @@ public struct EndpointDiscoveryMiddleware: AWSMiddlewareProtocol {
         self.isRequired = required
     }
 
-    public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
+    public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse {
         let isEnabled = context.serviceConfig.options.contains(.enableEndpointDiscovery)
         guard isEnabled || self.isRequired else {
             return try await next(request, context)

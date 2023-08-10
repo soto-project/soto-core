@@ -27,7 +27,7 @@ public final class DeferredCredentialProvider: CredentialProvider {
 
     /// Create `DeferredCredentialProvider`.
     /// - Parameters:
-    ///   - eventLoop: EventLoop that getCredential should run on
+    ///   - context: Context including HTTP client and logger
     ///   - provider: Credential provider to wrap
     public init(context: CredentialProviderFactory.Context, provider: CredentialProvider) {
         let description = "\(type(of: self))(\(provider.description))"
@@ -47,10 +47,9 @@ public final class DeferredCredentialProvider: CredentialProvider {
         try await self.provider.shutdown()
     }
 
-    /// Return credentials. If still in process of the getting credentials then return future result of `startupPromise`
-    /// otherwise return credentials store in class
-    /// - Parameter eventLoop: EventLoop to run off
-    /// - Returns: EventLoopFuture that will hold credentials
+    /// Return credentials
+    /// - Parameter logger: Logger
+    /// - Returns: Credentials
     public func getCredential(logger: Logger) async throws -> Credential {
         try await withTaskCancellationHandler {
             try await self.getCredentialTask.value

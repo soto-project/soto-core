@@ -22,7 +22,7 @@ struct SigningMiddleware: AWSMiddlewareProtocol {
     let credentialProvider: any CredentialProvider
 
     @inlinable
-    func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
+    func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse {
         var request = request
         // get credentials
         let credential = try await self.credentialProvider.getCredential(logger: context.logger)

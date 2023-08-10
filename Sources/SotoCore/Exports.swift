@@ -19,9 +19,6 @@
 
 @_exported import struct NIOCore.ByteBuffer
 @_exported import struct NIOCore.ByteBufferAllocator
-@_exported import protocol NIOCore.EventLoop
-@_exported import class NIOCore.EventLoopFuture
-@_exported import protocol NIOCore.EventLoopGroup
 @_exported import struct NIOCore.TimeAmount
 
 @_exported import struct NIOHTTP1.HTTPHeaders

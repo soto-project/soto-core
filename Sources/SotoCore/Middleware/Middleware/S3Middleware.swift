@@ -30,7 +30,7 @@ import Foundation
 /// - Fixes up the GetBucketLocation response, so it can be decoded correctly
 /// - Creates error body for notFound responses to HEAD requests
 public struct S3Middleware: AWSMiddlewareProtocol {
-    public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
+    public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse {
         var request = request
 
         self.virtualAddressFixup(request: &request, context: context)

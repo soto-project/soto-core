@@ -24,7 +24,7 @@ public struct AWSTracingMiddleware: AWSMiddlewareProtocol {
     public func handle(
         _ request: AWSHTTPRequest,
         context: AWSMiddlewareContext,
-        next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse
+        next: AWSMiddlewareNextHandler
     ) async throws -> AWSHTTPResponse {
         try await InstrumentationSystem.tracer.withSpan(
             "\(context.serviceConfig.serviceName).\(context.operation)",

@@ -130,9 +130,6 @@ SotoCore is the underlying driver for executing requests for the Soto Swift SDK 
 
 ### Exported (NIOCore)
 
-- ``EventLoop``
-- ``EventLoopGroup``
-- ``EventLoopFuture``
 - ``ByteBuffer``
 - ``ByteBufferAllocator``
 - ``TimeAmount``

@@ -20,7 +20,7 @@ import SotoSignerV4
 struct ErrorHandlingMiddleware: AWSMiddlewareProtocol {
     let options: AWSClient.Options
 
-    func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
+    func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse {
         let response = try await next(request, context)
 
         // if response has an HTTP status code outside 2xx then throw an error

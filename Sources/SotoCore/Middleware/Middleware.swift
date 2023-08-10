@@ -21,12 +21,14 @@ public struct AWSMiddlewareContext {
     public var logger: Logger
 }
 
+/// Function to call next middleware in the chain
+public typealias AWSMiddlewareNextHandler = (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse
 /// Middleware handler, function that takes a request, context and the next function to call
-public typealias AWSMiddlewareHandler = @Sendable (AWSHTTPRequest, AWSMiddlewareContext, _ next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse
+public typealias AWSMiddlewareHandler = @Sendable (AWSHTTPRequest, AWSMiddlewareContext, _ next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse
 
 /// Middleware protocol, with function that takes a request, context and the next function to call
 public protocol AWSMiddlewareProtocol: Sendable {
-    func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse
+    func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse
 }
 
 /// Middleware initialized with a middleware handle
@@ -39,7 +41,7 @@ public struct AWSMiddleware: AWSMiddlewareProtocol {
     }
 
     @inlinable
-    public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
+    public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse {
         try await self.middleware(request, context, next)
     }
 }
@@ -56,7 +58,7 @@ public struct AWSMiddleware2<M0: AWSMiddlewareProtocol, M1: AWSMiddlewareProtoco
     }
 
     @inlinable
-    public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
+    public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse {
         try await self.m0.handle(request, context: context) { request, context in
             try await self.m1.handle(request, context: context, next: next)
         }
@@ -80,7 +82,7 @@ public struct AWSDynamicMiddlewareStack: AWSMiddlewareProtocol {
     }
 
     @inlinable
-    public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
+    public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse {
         let iterator = self.stack.makeIterator()
         return try await self.run(request, context: context, iterator: iterator, finally: next)
     }
@@ -90,7 +92,7 @@ public struct AWSDynamicMiddlewareStack: AWSMiddlewareProtocol {
         _ request: AWSHTTPRequest,
         context: AWSMiddlewareContext,
         iterator: Stack.Iterator,
-        finally: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse
+        finally: AWSMiddlewareNextHandler
     ) async throws -> AWSHTTPResponse {
         var iterator = iterator
         switch iterator.next() {
@@ -107,7 +109,7 @@ public struct AWSDynamicMiddlewareStack: AWSMiddlewareProtocol {
 public struct PassThruMiddleware: AWSMiddlewareProtocol {
     public init() {}
 
-    public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
+    public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse {
         try await next(request, context)
     }
 }

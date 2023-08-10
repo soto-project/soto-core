@@ -34,7 +34,7 @@ public struct AWSEditHeadersMiddleware: AWSMiddlewareProtocol {
     }
 
     @inlinable
-    public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
+    public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse {
         var request = request
         for edit in self.edits {
             switch edit {

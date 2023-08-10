@@ -38,7 +38,7 @@ public struct AWSLoggingMiddleware: AWSMiddlewareProtocol {
     }
 
     @inlinable
-    public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
+    public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse {
         self.log(
             "Request:\n" +
                 "  \(context.operation)\n" +

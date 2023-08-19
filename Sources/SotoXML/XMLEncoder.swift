@@ -14,9 +14,7 @@
 
 import struct Foundation.Data
 import struct Foundation.Date
-import class Foundation.DateFormatter
-import struct Foundation.Locale
-import struct Foundation.TimeZone
+import class Foundation.ISO8601DateFormatter
 import struct Foundation.URL
 
 /// The wrapper class for encoding Codable classes to XMLElements
@@ -562,11 +560,9 @@ extension _XMLEncoder {
         }
     }
 
-    static let dateFormatter: DateFormatter = {
-        let dateFormatter = DateFormatter()
-        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
-        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+    static let dateFormatter: ISO8601DateFormatter = {
+        let dateFormatter = ISO8601DateFormatter()
+        dateFormatter.formatOptions = [.withFullDate, .withFullTime, .withFractionalSeconds]
         return dateFormatter
     }()
 }

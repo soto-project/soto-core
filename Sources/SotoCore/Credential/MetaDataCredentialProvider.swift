@@ -21,7 +21,6 @@ import struct Foundation.Date
 import class Foundation.ISO8601DateFormatter
 import class Foundation.JSONDecoder
 import struct Foundation.TimeInterval
-import struct Foundation.TimeZone
 import struct Foundation.URL
 
 import Logging

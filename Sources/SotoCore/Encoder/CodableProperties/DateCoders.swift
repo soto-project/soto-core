@@ -18,6 +18,7 @@
 import struct Foundation.Date
 #endif
 import class Foundation.DateFormatter
+import class Foundation.ISO8601DateFormatter
 import struct Foundation.Locale
 import struct Foundation.TimeZone
 
@@ -74,9 +75,36 @@ extension DateFormatCoder {
 }
 
 /// Date coder for ISO8601 format
-public struct ISO8601DateCoder: DateFormatCoder {
-    public static let formats = ["yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", "yyyy-MM-dd'T'HH:mm:ss'Z'"]
-    public static let dateFormatters = createDateFormatters()
+public struct ISO8601DateCoder: CustomDecoder, CustomEncoder {
+    public typealias CodableValue = Date
+    /// decode Date using DateFormatter
+    public static func decode(from decoder: Decoder) throws -> Date {
+        let container = try decoder.singleValueContainer()
+        let value = try container.decode(String.self)
+        for dateFormatter in dateFormatters {
+            if let date = dateFormatter.date(from: value) {
+                return date
+            }
+        }
+        throw DecodingError.dataCorruptedError(in: container, debugDescription: "String is not the correct date format")
+    }
+
+    /// encode Date using DateFormatter
+    public static func encode(value: Date, to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(dateFormatters[0].string(from: value))
+    }
+
+    public static func string(from value: Date) -> String? {
+        dateFormatters[0].string(from: value)
+    }
+
+    static let dateFormatters: [ISO8601DateFormatter] = {
+        let dateFormatters: [ISO8601DateFormatter] = [ISO8601DateFormatter(), ISO8601DateFormatter()]
+        dateFormatters[0].formatOptions = [.withFullDate, .withFullTime, .withFractionalSeconds]
+        dateFormatters[1].formatOptions = [.withFullDate, .withFullTime]
+        return dateFormatters
+    }()
 }
 
 /// Date coder for HTTP header format

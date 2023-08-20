@@ -14,9 +14,7 @@
 
 import struct Foundation.CharacterSet
 import struct Foundation.Date
-import class Foundation.DateFormatter
-import struct Foundation.Locale
-import struct Foundation.TimeZone
+import class Foundation.ISO8601DateFormatter
 
 /// The wrapper struct for encoding Codable classes to Query dictionary
 public struct QueryEncoder {
@@ -394,11 +392,9 @@ extension _QueryEncoder {
         }
     }
 
-    static let dateFormatter: DateFormatter = {
-        let dateFormatter = DateFormatter()
-        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
-        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+    static let dateFormatter: ISO8601DateFormatter = {
+        let dateFormatter = ISO8601DateFormatter()
+        dateFormatter.formatOptions = [.withFullDate, .withFullTime, .withFractionalSeconds]
         return dateFormatter
     }()
 }

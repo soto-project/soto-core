@@ -18,6 +18,7 @@
 import struct Foundation.Date
 #endif
 import class Foundation.DateFormatter
+import class Foundation.ISO8601DateFormatter
 import struct Foundation.Locale
 import struct Foundation.TimeZone
 
@@ -28,16 +29,49 @@ extension Date: @unchecked Sendable {}
 // MARK: TimeStamp Coders
 
 /// Protocol for time stamp coders that use a DateFormatter. Use this to enforce the timestamp format we require, or to set the timestamp format output
-protocol DateFormatCoder: CustomDecoder, CustomEncoder where CodableValue == Date {
+public protocol DateFormatCoder: CustomDecoder, CustomEncoder where CodableValue == Date {
     /// format used by DateFormatter
-    static var formats: [String] { get }
+    static var format: String { get }
     /// Date formatter
-    static var dateFormatters: [DateFormatter] { get }
+    static var dateFormatter: DateFormatter { get }
 }
 
 extension DateFormatCoder {
     /// decode Date using DateFormatter
     public static func decode(from decoder: Decoder) throws -> CodableValue {
+        let container = try decoder.singleValueContainer()
+        let value = try container.decode(String.self)
+        if let date = dateFormatter.date(from: value) {
+            return date
+        }
+        throw DecodingError.dataCorruptedError(in: container, debugDescription: "String is not the correct date format")
+    }
+
+    /// encode Date using DateFormatter
+    public static func encode(value: CodableValue, to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(dateFormatter.string(from: value))
+    }
+
+    public static func string(from value: Date) -> String? {
+        dateFormatter.string(from: value)
+    }
+
+    /// create DateFormatter
+    static func createDateFormatter() -> DateFormatter {
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.dateFormat = format
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        return dateFormatter
+    }
+}
+
+/// Date coder for ISO8601 format
+public struct ISO8601DateCoder: CustomDecoder, CustomEncoder {
+    public typealias CodableValue = Date
+    /// decode Date using DateFormatter
+    public static func decode(from decoder: Decoder) throws -> Date {
         let container = try decoder.singleValueContainer()
         let value = try container.decode(String.self)
         for dateFormatter in dateFormatters {
@@ -49,7 +83,7 @@ extension DateFormatCoder {
     }
 
     /// encode Date using DateFormatter
-    public static func encode(value: CodableValue, to encoder: Encoder) throws {
+    public static func encode(value: Date, to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(dateFormatters[0].string(from: value))
     }
@@ -58,31 +92,18 @@ extension DateFormatCoder {
         dateFormatters[0].string(from: value)
     }
 
-    /// create DateFormatter
-    static func createDateFormatters() -> [DateFormatter] {
-        var dateFormatters: [DateFormatter] = []
-        precondition(formats.count > 0, "TimeStampFormatterCoder requires at least one format")
-        for format in formats {
-            let dateFormatter = DateFormatter()
-            dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-            dateFormatter.dateFormat = format
-            dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-            dateFormatters.append(dateFormatter)
-        }
+    static let dateFormatters: [ISO8601DateFormatter] = {
+        let dateFormatters: [ISO8601DateFormatter] = [ISO8601DateFormatter(), ISO8601DateFormatter()]
+        dateFormatters[0].formatOptions = [.withFullDate, .withFullTime, .withFractionalSeconds]
+        dateFormatters[1].formatOptions = [.withFullDate, .withFullTime]
         return dateFormatters
-    }
-}
-
-/// Date coder for ISO8601 format
-public struct ISO8601DateCoder: DateFormatCoder {
-    public static let formats = ["yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", "yyyy-MM-dd'T'HH:mm:ss'Z'"]
-    public static let dateFormatters = createDateFormatters()
+    }()
 }
 
 /// Date coder for HTTP header format
 public struct HTTPHeaderDateCoder: DateFormatCoder {
-    public static let formats = ["EEE, d MMM yyy HH:mm:ss z"]
-    public static let dateFormatters = createDateFormatters()
+    public static let format = "EEE, d MMM yyy HH:mm:ss z"
+    public static let dateFormatter = createDateFormatter()
 }
 
 /// Unix Epoch Date coder

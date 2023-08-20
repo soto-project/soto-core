@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import struct Foundation.CharacterSet
+import struct Foundation.Date
 import struct Foundation.URL
 import struct Foundation.URLComponents
 
@@ -108,6 +109,12 @@ public class RequestEncodingContainer {
         if let wrappedValue = value.wrappedValue, let string = Coder.string(from: wrappedValue) {
             self.headers.replaceOrAdd(name: key, value: string)
         }
+    }
+
+    /// Write dictionary key value pairs to headers with prefix added to the keys
+    @inlinable
+    public func encodeHeader(_ value: Date, key: String) {
+        self.encodeHeader(HTTPHeaderDateCoder.string(from: value), key: key)
     }
 
     /// Write dictionary key value pairs to headers with prefix added to the keys

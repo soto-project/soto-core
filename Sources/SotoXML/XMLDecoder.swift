@@ -14,11 +14,9 @@
 
 import struct Foundation.Data
 import struct Foundation.Date
-import class Foundation.DateFormatter
-import struct Foundation.Locale
+import class Foundation.ISO8601DateFormatter
 import class Foundation.NSNull
 import class Foundation.NSNumber
-import struct Foundation.TimeZone
 import struct Foundation.URL
 
 /// The wrapper class for decoding Codable classes from XMLNodes
@@ -660,16 +658,10 @@ private class _XMLDecoder: Decoder {
         }
     }
 
-    static let dateFormatters: [DateFormatter] = {
-        var dateFormatters: [DateFormatter] = []
-        let formats = ["yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", "yyyy-MM-dd'T'HH:mm:ss'Z'"]
-        for format in formats {
-            let dateFormatter = DateFormatter()
-            dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-            dateFormatter.dateFormat = format
-            dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-            dateFormatters.append(dateFormatter)
-        }
+    static let dateFormatters: [ISO8601DateFormatter] = {
+        let dateFormatters: [ISO8601DateFormatter] = [ISO8601DateFormatter(), ISO8601DateFormatter()]
+        dateFormatters[0].formatOptions = [.withFullDate, .withFullTime, .withFractionalSeconds]
+        dateFormatters[1].formatOptions = [.withFullDate, .withFullTime]
         return dateFormatters
     }()
 }

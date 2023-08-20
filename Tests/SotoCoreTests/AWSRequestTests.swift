@@ -236,6 +236,32 @@ class AWSRequestTests: XCTestCase {
         XCTAssertEqual(request?.headers["header-member"].first, "TestHeader")
     }
 
+    func testHeaderDateEncoding() {
+        struct Input: AWSEncodableShape {
+            let httpDate: Date
+            @OptionalCustomCoding<ISO8601DateCoder>
+            var iso8601Date: Date?
+
+            func encode(to encoder: Encoder) throws {
+                _ = encoder.container(keyedBy: CodingKeys.self)
+                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                requestContainer.encodeHeader(self.httpDate, key: "date")
+                requestContainer.encodeHeader(self._iso8601Date, key: "iso8601-date")
+            }
+
+            private enum CodingKeys: CodingKey {}
+        }
+        let input = Input(
+            httpDate: Date(timeIntervalSince1970: 1_000_000),
+            iso8601Date: Date(timeIntervalSince1970: 1_000_000)
+        )
+        let config = createServiceConfig()
+        var request: AWSHTTPRequest?
+        XCTAssertNoThrow(request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config))
+        XCTAssertEqual(request?.headers["date"].first, "Mon, 12 Jan 1970 13:46:40 GMT")
+        XCTAssertEqual(request?.headers["iso8601-date"].first, "1970-01-12T13:46:40.000Z")
+    }
+
     func testQueryEncoding() {
         struct Input: AWSEncodableShape {
             let p: String?

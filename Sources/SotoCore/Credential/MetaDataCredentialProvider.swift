@@ -18,11 +18,9 @@ import AsyncHTTPClient
 #else
 import struct Foundation.Date
 #endif
-import class Foundation.DateFormatter
+import class Foundation.ISO8601DateFormatter
 import class Foundation.JSONDecoder
-import struct Foundation.Locale
 import struct Foundation.TimeInterval
-import struct Foundation.TimeZone
 import struct Foundation.URL
 
 import Logging
@@ -58,12 +56,7 @@ extension MetaDataClient {
     static func createJSONDecoder() -> JSONDecoder {
         let decoder = JSONDecoder()
         // set JSON decoding strategy for dates
-        let dateFormatter = DateFormatter()
-        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
-        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-        decoder.dateDecodingStrategy = .formatted(dateFormatter)
-
+        decoder.dateDecodingStrategy = .iso8601
         return decoder
     }
 }

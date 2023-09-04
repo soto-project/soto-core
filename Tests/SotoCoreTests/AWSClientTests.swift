@@ -60,7 +60,7 @@ class AWSClientTests: XCTestCase {
     }
 
     func testShutdown() {
-        let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+        let httpClient = HTTPClient(eventLoopGroupProvider: .singleton)
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
 
         let client = createAWSClient(httpClientProvider: .shared(httpClient))
@@ -265,7 +265,7 @@ class AWSClientTests: XCTestCase {
 
     func testRequestStreaming() {
         let awsServer = AWSTestServer(serviceProtocol: .json)
-        let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+        let httpClient = HTTPClient(eventLoopGroupProvider: .singleton)
         let config = createServiceConfig(endpoint: awsServer.address)
         let client = createAWSClient(credentialProvider: .empty, httpClientProvider: .shared(httpClient))
         defer {
@@ -281,7 +281,7 @@ class AWSClientTests: XCTestCase {
 
     func testRequestS3Streaming() {
         let awsServer = AWSTestServer(serviceProtocol: .json)
-        let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+        let httpClient = HTTPClient(eventLoopGroupProvider: .singleton)
         let config = createServiceConfig(service: "s3", endpoint: awsServer.address)
         let client = createAWSClient(credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"), httpClientProvider: .shared(httpClient))
         defer {
@@ -303,7 +303,7 @@ class AWSClientTests: XCTestCase {
 
     func testRequestStreamingAvoidStackOverflow() {
         let awsServer = AWSTestServer(serviceProtocol: .json)
-        let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+        let httpClient = HTTPClient(eventLoopGroupProvider: .singleton)
         let config = createServiceConfig(service: "s3", endpoint: awsServer.address)
         let client = createAWSClient(credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"), httpClientProvider: .shared(httpClient))
         defer {
@@ -324,7 +324,7 @@ class AWSClientTests: XCTestCase {
         }
 
         let awsServer = AWSTestServer(serviceProtocol: .json)
-        let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+        let httpClient = HTTPClient(eventLoopGroupProvider: .singleton)
         let config = createServiceConfig(endpoint: awsServer.address)
         let client = createAWSClient(credentialProvider: .empty, httpClientProvider: .shared(httpClient))
         defer {
@@ -380,7 +380,7 @@ class AWSClientTests: XCTestCase {
         }
 
         let awsServer = AWSTestServer(serviceProtocol: .json)
-        let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+        let httpClient = HTTPClient(eventLoopGroupProvider: .singleton)
         let config = createServiceConfig(endpoint: awsServer.address)
         let client = createAWSClient(credentialProvider: .empty, httpClientProvider: .shared(httpClient))
         defer {
@@ -435,7 +435,7 @@ class AWSClientTests: XCTestCase {
         }
 
         let awsServer = AWSTestServer(serviceProtocol: .json)
-        let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+        let httpClient = HTTPClient(eventLoopGroupProvider: .singleton)
         let config = createServiceConfig(endpoint: awsServer.address)
         let client = createAWSClient(credentialProvider: .empty, httpClientProvider: .shared(httpClient))
         defer {
@@ -481,7 +481,7 @@ class AWSClientTests: XCTestCase {
             // provides it to AWSClient
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let httpClientConfig = AsyncHTTPClient.HTTPClient.Configuration(redirectConfiguration: .init(.disallow))
-            let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew, configuration: httpClientConfig)
+            let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .singleton, configuration: httpClientConfig)
             let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
             let client = createAWSClient(credentialProvider: .empty, httpClientProvider: .shared(httpClient))
             defer {
@@ -507,7 +507,7 @@ class AWSClientTests: XCTestCase {
 
     func testServerError() {
         do {
-            let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew)
+            let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .singleton)
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
             let client = createAWSClient(credentialProvider: .empty, retryPolicy: .exponential(base: .milliseconds(200)), httpClientProvider: .shared(httpClient))
@@ -546,7 +546,7 @@ class AWSClientTests: XCTestCase {
             let s: String
         }
         do {
-            let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew)
+            let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .singleton)
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
             let client = createAWSClient(credentialProvider: .empty, retryPolicy: .jitter(), httpClientProvider: .shared(httpClient))
@@ -640,7 +640,7 @@ class AWSClientTests: XCTestCase {
             let s: String
         }
         do {
-            let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew)
+            let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .singleton)
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
             let client = createAWSClient(credentialProvider: .empty, retryPolicy: .jitter(), httpClientProvider: .shared(httpClient))
@@ -687,7 +687,7 @@ class AWSClientTests: XCTestCase {
         }
         let retryPolicy = TestRetryPolicy()
         do {
-            let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew)
+            let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .singleton)
             let awsServer = AWSTestServer(serviceProtocol: .json)
             let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: awsServer.address)
             let client = createAWSClient(credentialProvider: .empty, retryPolicy: .init(retryPolicy: retryPolicy), httpClientProvider: .shared(httpClient))

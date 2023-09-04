@@ -85,7 +85,7 @@ public final class AWSClient {
         case .createNewWithEventLoopGroup(let elg):
             self.httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(elg), configuration: .init(timeout: .init(connect: .seconds(10))))
         case .createNew:
-            self.httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew, configuration: .init(timeout: .init(connect: .seconds(10))))
+            self.httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .singleton, configuration: .init(timeout: .init(connect: .seconds(10))))
         }
 
         self.credentialProvider = credentialProviderFactory.createProvider(context: .init(

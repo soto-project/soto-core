@@ -238,7 +238,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         // Prepare test server and AWS client
         let testServer = AWSTestServer(serviceProtocol: .xml)
         defer { XCTAssertNoThrow(try testServer.stop()) }
-        let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+        let httpClient = HTTPClient(eventLoopGroupProvider: .singleton)
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
 
         // Here we use `.custom` provider factory, since we need to inject the testServer endpoint

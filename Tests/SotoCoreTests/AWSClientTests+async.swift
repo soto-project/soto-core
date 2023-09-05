@@ -196,7 +196,7 @@ final class AWSClientAsyncTests: XCTestCase {
         guard ProcessInfo.processInfo.environment["CI"] == nil else { return }
         #endif
         let awsServer = AWSTestServer(serviceProtocol: .json)
-        let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+        let httpClient = HTTPClient(eventLoopGroupProvider: .singleton)
         let config = createServiceConfig(endpoint: awsServer.address)
         let client = createAWSClient(credentialProvider: .empty, httpClientProvider: .shared(httpClient))
         defer {
@@ -211,7 +211,7 @@ final class AWSClientAsyncTests: XCTestCase {
     }
 
     func testShutdown() async throws {
-        let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+        let httpClient = HTTPClient(eventLoopGroupProvider: .singleton)
 
         let client = createAWSClient(httpClientProvider: .shared(httpClient))
         try await client.shutdown()

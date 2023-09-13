@@ -24,7 +24,7 @@ class ConfigFileLoadersTests: XCTestCase {
     // MARK: - File Loading
 
     func makeContext() throws -> (CredentialProviderFactory.Context, HTTPClient) {
-        let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+        let httpClient = HTTPClient(eventLoopGroupProvider: .singleton)
         return (.init(httpClient: httpClient, logger: TestEnvironment.logger, options: .init()), httpClient)
     }
 

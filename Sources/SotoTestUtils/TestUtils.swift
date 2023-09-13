@@ -34,7 +34,7 @@ import XCTest
 
 public func createAWSClient(
     credentialProvider: CredentialProviderFactory = .default,
-    retryPolicy: RetryPolicyFactory = .noRetry,
+    retryPolicy: RetryPolicy = .noRetry,
     middlewares: AWSMiddlewareProtocol = TestEnvironment.middlewares,
     options: AWSClient.Options = .init(),
     httpClientProvider: AWSClient.HTTPClientProvider = .createNew,

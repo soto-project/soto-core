@@ -70,7 +70,7 @@ public final class AWSClient: Sendable {
     ///     - logger: Logger used to log background AWSClient events
     public init<Middleware: AWSMiddlewareProtocol>(
         credentialProvider credentialProviderFactory: CredentialProviderFactory = .default,
-        retryPolicy retryPolicyFactory: RetryPolicyFactory = .default,
+        retryPolicy: RetryPolicy = .default,
         middleware: Middleware,
         options: Options = Options(),
         httpClientProvider: HTTPClientProvider,
@@ -96,7 +96,7 @@ public final class AWSClient: Sendable {
         self.middleware = AWSMiddlewareStack {
             middleware
             SigningMiddleware(credentialProvider: credentialProvider)
-            RetryMiddleware(retryPolicy: retryPolicyFactory.retryPolicy)
+            RetryMiddleware(retryPolicy: retryPolicy)
             ErrorHandlingMiddleware(options: options)
         }
         self.clientLogger = clientLogger
@@ -113,7 +113,7 @@ public final class AWSClient: Sendable {
     ///     - logger: Logger used to log background AWSClient events
     public init(
         credentialProvider credentialProviderFactory: CredentialProviderFactory = .default,
-        retryPolicy retryPolicyFactory: RetryPolicyFactory = .default,
+        retryPolicy: RetryPolicy = .default,
         options: Options = Options(),
         httpClientProvider: HTTPClientProvider,
         logger clientLogger: Logger = AWSClient.loggingDisabled
@@ -137,7 +137,7 @@ public final class AWSClient: Sendable {
         self.credentialProvider = credentialProvider
         self.middleware = AWSMiddlewareStack {
             SigningMiddleware(credentialProvider: credentialProvider)
-            RetryMiddleware(retryPolicy: retryPolicyFactory.retryPolicy)
+            RetryMiddleware(retryPolicy: retryPolicy)
             ErrorHandlingMiddleware(options: options)
         }
         self.clientLogger = clientLogger

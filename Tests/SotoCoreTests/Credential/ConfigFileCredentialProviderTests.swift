@@ -25,7 +25,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
     // MARK: - Credential Provider
 
     func makeContext() -> (CredentialProviderFactory.Context, HTTPClient) {
-        let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+        let httpClient = HTTPClient(eventLoopGroupProvider: .singleton)
         return (.init(httpClient: httpClient, logger: TestEnvironment.logger, options: .init()), httpClient)
     }
 

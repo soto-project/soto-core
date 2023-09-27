@@ -107,6 +107,6 @@ let useSwiftCrypto = false
 
 // Use Swift cypto on Linux.
 if useSwiftCrypto {
-    package.dependencies.append(.package(url: "https://github.com/apple/swift-crypto.git", "1.0.0"..<"3.0.0"))
+    package.dependencies.append(.package(url: "https://github.com/apple/swift-crypto.git", "1.0.0"..<"4.0.0"))
     package.targets.first { $0.name == "SotoCrypto" }?.dependencies.append(.product(name: "Crypto", package: "swift-crypto"))
 }

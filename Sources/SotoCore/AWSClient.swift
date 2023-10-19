@@ -78,7 +78,7 @@ public final class AWSClient: Sendable {
     ) {
         // setup httpClient
         self.httpClientProvider = httpClientProvider
-        switch httpClientProvider {
+        switch httpClientProvider.value {
         case .shared(let providedHTTPClient):
             self.httpClient = providedHTTPClient
         case .createNewWithEventLoopGroup(let elg):
@@ -120,13 +120,13 @@ public final class AWSClient: Sendable {
     ) {
         // setup httpClient
         self.httpClientProvider = httpClientProvider
-        switch httpClientProvider {
+        switch httpClientProvider.value {
         case .shared(let providedHTTPClient):
             self.httpClient = providedHTTPClient
         case .createNewWithEventLoopGroup(let elg):
             self.httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(elg), configuration: .init(timeout: .init(connect: .seconds(10))))
         case .createNew:
-            self.httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .createNew, configuration: .init(timeout: .init(connect: .seconds(10))))
+            self.httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .singleton, configuration: .init(timeout: .init(connect: .seconds(10))))
         }
 
         let credentialProvider = credentialProviderFactory.createProvider(context: .init(
@@ -209,14 +209,25 @@ public final class AWSClient: Sendable {
     }
 
     /// Specifies how `HTTPClient` will be created and establishes lifecycle ownership.
-    public enum HTTPClientProvider: Sendable {
-        /// Use HTTPClient provided by the user. User is responsible for the lifecycle of the HTTPClient.
+    public struct HTTPClientProvider: Sendable {
+    fileprivate enum Internal: Sendable {
         case shared(HTTPClient)
+        case createNewWithEventLoopGroup(EventLoopGroup)
+        case createNew
+    }
+        fileprivate let value: Internal
+
+        fileprivate init(_ value: Internal) {
+            self.value = value
+        }
+
+        /// Use HTTPClient provided by the user. User is responsible for the lifecycle of the HTTPClient.
+        public static func shared(_ httpClient: HTTPClient) -> Self { .init(.shared(httpClient))}
         /// HTTPClient will be created by AWSClient using provided EventLoopGroup. When `shutdown` is called, created `HTTPClient`
         /// will be shut down as well.
-        case createNewWithEventLoopGroup(EventLoopGroup)
+        public static func createNewWithEventLoopGroup(_ eventLoopGroup: EventLoopGroup) -> Self { .init(.createNewWithEventLoopGroup(eventLoopGroup))}
         /// `HTTPClient` will be created by `AWSClient`. When `shutdown` is called, created `HTTPClient` will be shut down as well.
-        case createNew
+        public static var createNew: Self { .init(.createNew) }
     }
 
     /// Additional options
@@ -254,7 +265,7 @@ extension AWSClient {
         // can cause the shutdown process to fail
         try? await self.credentialProvider.shutdown()
         // if httpClient was created by AWSClient then it is required to shutdown the httpClient.
-        switch self.httpClientProvider {
+        switch self.httpClientProvider.value {
         case .createNew, .createNewWithEventLoopGroup:
             do {
                 try await self.httpClient.shutdown()

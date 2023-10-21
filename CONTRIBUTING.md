@@ -24,11 +24,11 @@ Please ensure to include the following in your Pull Request
 
 Please keep you PRs to a minimal number of changes. If a PR is large try to split it up into smaller PRs. Don't move code around unnecessarily it makes comparing old with new very hard. 
 
-The main development branch of the repository is  `main`. Each major version release has it's own branch named "version number".x.x eg `4.x.x` . If you are submitting code for an older version then you should use the version branch as the base for your code changes. 
+The main development branch of the repository is  `main`. Each major version release has it's own branch named "version number".x.x eg `6.x.x` . If you are submitting code for an older version then you should use the version branch as the base for your code changes. 
 
 ### Formatting
 
-We use Nick Lockwood's SwiftFormat for formatting code. PRs will not be accepted if they haven't be formatted. The current version of SwiftFormat we are using is v0.48.17.
+We use Nick Lockwood's SwiftFormat for formatting code. PRs will not be accepted if they haven't be formatted. The current version of SwiftFormat we are using is v0.51.15.
 
 All new files need to include the following file header at the top
 ```swift

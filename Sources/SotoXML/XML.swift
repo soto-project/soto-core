@@ -77,26 +77,26 @@ public enum XML {
 
         /// return child node at index
         private func child(at index: Int) -> XML.Node? {
-            return children?[index]
+            return self.children?[index]
         }
 
         /// return number of children
-        public var childCount: Int { return children?.count ?? 0 }
+        public var childCount: Int { return self.children?.count ?? 0 }
 
         /// detach XML node from its parent
         public func detach() {
-            parent?.detach(child: self)
-            parent = nil
+            self.parent?.detach(child: self)
+            self.parent = nil
         }
 
         /// detach child XML Node
         fileprivate func detach(child: XML.Node) {
-            children?.removeAll(where: { $0 === child })
+            self.children?.removeAll(where: { $0 === child })
         }
 
         /// return children of a specific kind
         public func children(of kind: Kind) -> [XML.Node]? {
-            return children?.compactMap { $0.kind == kind ? $0 : nil }
+            return self.children?.compactMap { $0.kind == kind ? $0 : nil }
         }
 
         private static let xmlEncodedCharacters: [String.Element: String] = [
@@ -119,7 +119,7 @@ public enum XML {
 
         /// output formatted XML
         public var xmlString: String {
-            switch kind {
+            switch self.kind {
             case .text:
                 if let stringValue = stringValue {
                     return XML.Node.xmlEncode(string: stringValue)
@@ -127,7 +127,7 @@ public enum XML {
                 return ""
             case .attribute:
                 if let name = name {
-                    return "\(name)=\"\(stringValue ?? "")\""
+                    return "\(name)=\"\(self.stringValue ?? "")\""
                 } else {
                     return ""
                 }
@@ -142,7 +142,7 @@ public enum XML {
                 if let name = name, name != "" {
                     string += ":\(name)"
                 }
-                string += "=\"\(stringValue ?? "")\""
+                string += "=\"\(self.stringValue ?? "")\""
                 return string
             default:
                 return ""
@@ -161,7 +161,7 @@ public enum XML {
 
         public init(rootElement: XML.Element) {
             super.init(.document)
-            setRootElement(rootElement)
+            self.setRootElement(rootElement)
         }
 
         /// initialise with a block XML data
@@ -169,7 +169,7 @@ public enum XML {
             super.init(.document)
             do {
                 let element = try XML.Element(xmlData: data)
-                setRootElement(element)
+                self.setRootElement(element)
             } catch ParsingError.emptyFile {}
         }
 
@@ -178,7 +178,7 @@ public enum XML {
             super.init(.document)
             do {
                 let element = try XML.Element(xmlString: string)
-                setRootElement(element)
+                self.setRootElement(element)
             } catch ParsingError.emptyFile {}
         }
 
@@ -205,7 +205,7 @@ public enum XML {
         }
 
         /// output formatted XML as Data
-        public var xmlData: Data { return xmlString.data(using: .utf8) ?? Data() }
+        public var xmlData: Data { return self.xmlString.data(using: .utf8) ?? Data() }
     }
 
     /// XML Element class
@@ -303,7 +303,7 @@ public enum XML {
             set(value) {
                 children?.removeAll { $0.kind == .text }
                 if let value = value {
-                    addChild(XML.Node(.text, stringValue: value))
+                    self.addChild(XML.Node(.text, stringValue: value))
                 }
             }
         }
@@ -341,7 +341,7 @@ public enum XML {
 
         /// return attribute attached to element
         public func attribute(forName: String) -> XML.Node? {
-            return attributes?.first {
+            return self.attributes?.first {
                 if $0.name == forName {
                     return true
                 }
@@ -355,10 +355,10 @@ public enum XML {
             if let name = node.name, let attributeNode = attribute(forName: name) {
                 attributeNode.detach()
             }
-            if attributes == nil {
-                attributes = [node]
+            if self.attributes == nil {
+                self.attributes = [node]
             } else {
-                attributes!.append(node)
+                self.attributes!.append(node)
             }
             node.parent = self
         }
@@ -377,7 +377,7 @@ public enum XML {
 
         /// return namespace attached to element
         public func namespace(forName: String?) -> XML.Node? {
-            return namespaces?.first {
+            return self.namespaces?.first {
                 if $0.name == forName {
                     return true
                 }
@@ -391,10 +391,10 @@ public enum XML {
             if let attributeNode = namespace(forName: node.name) {
                 attributeNode.detach()
             }
-            if namespaces == nil {
-                namespaces = [node]
+            if self.namespaces == nil {
+                self.namespaces = [node]
             } else {
-                namespaces!.append(node)
+                self.namespaces!.append(node)
             }
             node.parent = self
         }
@@ -415,9 +415,9 @@ public enum XML {
         override fileprivate func detach(child: XML.Node) {
             switch child.kind {
             case .attribute:
-                attributes?.removeAll(where: { $0 === child })
+                self.attributes?.removeAll(where: { $0 === child })
             case .namespace:
-                namespaces?.removeAll(where: { $0 === child })
+                self.namespaces?.removeAll(where: { $0 === child })
             default:
                 super.detach(child: child)
             }
@@ -427,8 +427,8 @@ public enum XML {
         override public var xmlString: String {
             var string = ""
             string += "<\(name!)"
-            string += namespaces?.map { " " + $0.xmlString }.joined(separator: "") ?? ""
-            string += attributes?.map { " " + $0.xmlString }.joined(separator: "") ?? ""
+            string += self.namespaces?.map { " " + $0.xmlString }.joined(separator: "") ?? ""
+            string += self.attributes?.map { " " + $0.xmlString }.joined(separator: "") ?? ""
             string += ">"
             for node in children ?? [] {
                 string += node.xmlString

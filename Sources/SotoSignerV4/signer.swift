@@ -73,7 +73,7 @@ public struct AWSSigner: Sendable {
             .joined(separator: "&")
         urlComponents.percentEncodedQuery = urlQueryString
         // S3 requires "+" encoded in the URL
-        if name == "s3" {
+        if self.name == "s3" {
             urlComponents.percentEncodedPath = urlComponents.path.s3PathEncode()
         }
         return urlComponents.url
@@ -111,9 +111,9 @@ public struct AWSSigner: Sendable {
 
         // construct authorization string
         let authorization = "AWS4-HMAC-SHA256 " +
-            "Credential=\(credentials.accessKeyId)/\(signingData.date)/\(region)/\(name)/aws4_request," +
+            "Credential=\(credentials.accessKeyId)/\(signingData.date)/\(self.region)/\(self.name)/aws4_request," +
             "SignedHeaders=\(signingData.signedHeaders)," +
-            "Signature=\(signature(signingData: signingData))"
+            "Signature=\(self.signature(signingData: signingData))"
 
         // add Authorization header
         headers.replaceOrAdd(name: "authorization", value: authorization)
@@ -154,7 +154,7 @@ public struct AWSSigner: Sendable {
             query += "&"
         }
         query += "X-Amz-Algorithm=AWS4-HMAC-SHA256"
-        query += "&X-Amz-Credential=\(credentials.accessKeyId)/\(signingData.date)/\(region)/\(name)/aws4_request"
+        query += "&X-Amz-Credential=\(self.credentials.accessKeyId)/\(signingData.date)/\(self.region)/\(self.name)/aws4_request"
         query += "&X-Amz-Date=\(signingData.datetime)"
         query += "&X-Amz-Expires=\(expires.nanoseconds / 1_000_000_000)"
         query += "&X-Amz-SignedHeaders=\(signingData.signedHeaders)"
@@ -169,7 +169,7 @@ public struct AWSSigner: Sendable {
 
         // update unsignedURL in the signingData so when the canonical request is constructed it includes all the signing query items
         signingData.unsignedURL = URL(string: url.absoluteString.split(separator: "?")[0] + "?" + query)! // NEED TO DEAL WITH SITUATION WHERE THIS FAILS
-        query += "&X-Amz-Signature=\(signature(signingData: signingData))"
+        query += "&X-Amz-Signature=\(self.signature(signingData: signingData))"
         if omitSecurityToken, let sessionToken = credentials.sessionToken {
             query += "&X-Amz-Security-Token=\(sessionToken.uriEncode())"
         }
@@ -221,7 +221,7 @@ public struct AWSSigner: Sendable {
 
         // construct authorization string
         let authorization = "AWS4-HMAC-SHA256 " +
-            "Credential=\(credentials.accessKeyId)/\(signingData.date)/\(region)/\(name)/aws4_request," +
+            "Credential=\(credentials.accessKeyId)/\(signingData.date)/\(self.region)/\(self.name)/aws4_request," +
             "SignedHeaders=\(signingData.signedHeaders)," +
             "Signature=\(signature)"
 
@@ -252,7 +252,7 @@ public struct AWSSigner: Sendable {
         let signedHeaders: String
         var unsignedURL: URL
 
-        var date: String { return String(datetime.prefix(8)) }
+        var date: String { return String(self.datetime.prefix(8)) }
 
         init(url: URL, method: HTTPMethod = .GET, headers: HTTPHeaders = HTTPHeaders(), body: BodyData? = nil, bodyHash: String? = nil, date: String, signer: AWSSigner) {
             self.url = url
@@ -299,7 +299,7 @@ public struct AWSSigner: Sendable {
     // Stage 3 Calculating signature as in https://docs.aws.amazon.com/general/latest/gr/sigv4-calculate-signature.html
     func signature(signingData: SigningData) -> String {
         let signingKey = self.signingKey(date: signingData.date)
-        let kSignature = HMAC<SHA256>.authenticationCode(for: [UInt8](stringToSign(signingData: signingData).utf8), using: signingKey)
+        let kSignature = HMAC<SHA256>.authenticationCode(for: [UInt8](self.stringToSign(signingData: signingData).utf8), using: signingKey)
         return kSignature.hexDigest()
     }
 
@@ -307,8 +307,8 @@ public struct AWSSigner: Sendable {
     func stringToSign(signingData: SigningData) -> String {
         let stringToSign = "AWS4-HMAC-SHA256\n" +
             "\(signingData.datetime)\n" +
-            "\(signingData.date)/\(region)/\(name)/aws4_request\n" +
-            SHA256.hash(data: [UInt8](canonicalRequest(signingData: signingData).utf8)).hexDigest()
+            "\(signingData.date)/\(self.region)/\(self.name)/aws4_request\n" +
+            SHA256.hash(data: [UInt8](self.canonicalRequest(signingData: signingData).utf8)).hexDigest()
         return stringToSign
     }
 
@@ -321,7 +321,7 @@ public struct AWSSigner: Sendable {
             .joined(separator: "\n")
         let canonicalPath: String
         let urlComps = URLComponents(url: signingData.unsignedURL, resolvingAgainstBaseURL: false)!
-        if name == "s3" {
+        if self.name == "s3" {
             canonicalPath = urlComps.path.uriEncodeWithSlash()
         } else {
             // non S3 paths need to be encoded twice
@@ -338,9 +338,9 @@ public struct AWSSigner: Sendable {
 
     /// get signing key
     func signingKey(date: String) -> SymmetricKey {
-        let kDate = HMAC<SHA256>.authenticationCode(for: [UInt8](date.utf8), using: SymmetricKey(data: Array("AWS4\(credentials.secretAccessKey)".utf8)))
-        let kRegion = HMAC<SHA256>.authenticationCode(for: [UInt8](region.utf8), using: SymmetricKey(data: kDate))
-        let kService = HMAC<SHA256>.authenticationCode(for: [UInt8](name.utf8), using: SymmetricKey(data: kRegion))
+        let kDate = HMAC<SHA256>.authenticationCode(for: [UInt8](date.utf8), using: SymmetricKey(data: Array("AWS4\(self.credentials.secretAccessKey)".utf8)))
+        let kRegion = HMAC<SHA256>.authenticationCode(for: [UInt8](self.region.utf8), using: SymmetricKey(data: kDate))
+        let kService = HMAC<SHA256>.authenticationCode(for: [UInt8](self.name.utf8), using: SymmetricKey(data: kRegion))
         let kSigning = HMAC<SHA256>.authenticationCode(for: [UInt8]("aws4_request".utf8), using: SymmetricKey(data: kService))
         return SymmetricKey(data: kSigning)
     }
@@ -359,7 +359,7 @@ public struct AWSSigner: Sendable {
 
     /// Create a SHA256 hash of the Requests body
     static func hashedPayload(_ payload: BodyData?) -> String {
-        guard let payload = payload else { return hashedEmptyBody }
+        guard let payload = payload else { return self.hashedEmptyBody }
         let hash: String?
         switch payload {
         case .string(let string):
@@ -379,7 +379,7 @@ public struct AWSSigner: Sendable {
         if let hash = hash {
             return hash
         } else {
-            return hashedEmptyBody
+            return self.hashedEmptyBody
         }
     }
 
@@ -394,7 +394,7 @@ public struct AWSSigner: Sendable {
 
     /// return a timestamp formatted for signing requests
     static func timestamp(_ date: Date) -> String {
-        return timeStampDateFormatter.string(from: date)
+        return self.timeStampDateFormatter.string(from: date)
     }
 
     /// returns port from URL. If port is set to 80 on an http url or 443 on an https url nil is returned
@@ -406,7 +406,7 @@ public struct AWSSigner: Sendable {
     }
 
     private static func hostname(from url: URL) -> String {
-        "\(url.host ?? "")\(port(from: url).map { ":\($0)" } ?? "")"
+        "\(url.host ?? "")\(self.port(from: url).map { ":\($0)" } ?? "")"
     }
 }
 

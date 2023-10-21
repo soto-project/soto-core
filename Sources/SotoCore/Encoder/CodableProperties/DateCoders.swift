@@ -74,7 +74,7 @@ public struct ISO8601DateCoder: CustomDecoder, CustomEncoder {
     public static func decode(from decoder: Decoder) throws -> Date {
         let container = try decoder.singleValueContainer()
         let value = try container.decode(String.self)
-        for dateFormatter in dateFormatters {
+        for dateFormatter in self.dateFormatters {
             if let date = dateFormatter.date(from: value) {
                 return date
             }
@@ -85,11 +85,11 @@ public struct ISO8601DateCoder: CustomDecoder, CustomEncoder {
     /// encode Date using DateFormatter
     public static func encode(value: Date, to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        try container.encode(dateFormatters[0].string(from: value))
+        try container.encode(self.dateFormatters[0].string(from: value))
     }
 
     public static func string(from value: Date) -> String? {
-        dateFormatters[0].string(from: value)
+        self.dateFormatters[0].string(from: value)
     }
 
     static let dateFormatters: [ISO8601DateFormatter] = {

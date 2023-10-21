@@ -45,7 +45,7 @@ public struct QueryEncoder {
         try value.encode(to: encoder)
 
         // encode generates a tree of dictionaries and arrays. We need to flatten this into a single dictionary with keys joined together
-        let result = flatten(encoder.result)
+        let result = self.flatten(encoder.result)
         return Self.urlEncodeQueryParams(dictionary: result)
     }
 
@@ -61,14 +61,14 @@ public struct QueryEncoder {
         guard dictionary.count > 0 else { return nil }
         return dictionary
             .sorted { $0.key < $1.key }
-            .map { "\($0.key)=\(urlEncodeQueryParam(String(describing: $0.value)))" }
+            .map { "\($0.key)=\(self.urlEncodeQueryParam(String(describing: $0.value)))" }
             .joined(separator: "&")
     }
 
     /// Flatten dictionary and array tree into one dictionary
     /// - Parameter container: The root container
     private func flatten(_ container: _QueryEncoderKeyedContainer?) -> [(key: String, value: String)] {
-        var result: [(key: String, value: String)] = additionalKeys.map { return $0 }
+        var result: [(key: String, value: String)] = self.additionalKeys.map { return $0 }
 
         func flatten(dictionary: [String: Any], path: String) {
             for (key, value) in dictionary {
@@ -107,7 +107,7 @@ private class _QueryEncoderKeyedContainer {
     private(set) var values: [String: Any] = [:]
 
     func addChild(path: String, child: Any) {
-        values[path] = child
+        self.values[path] = child
     }
 }
 
@@ -117,7 +117,7 @@ private class _QueryEncoderUnkeyedContainer {
     private(set) var values: [Any] = []
 
     func addChild(_ child: Any) {
-        values.append(child)
+        self.values.append(child)
     }
 }
 
@@ -132,24 +132,24 @@ private struct _QueryEncoderStorage {
     /// push a new container onto the storage
     mutating func pushKeyedContainer() -> _QueryEncoderKeyedContainer {
         let container = _QueryEncoderKeyedContainer()
-        containers.append(container)
+        self.containers.append(container)
         return container
     }
 
     /// push a new container onto the storage
     mutating func pushUnkeyedContainer() -> _QueryEncoderUnkeyedContainer {
         let container = _QueryEncoderUnkeyedContainer()
-        containers.append(container)
+        self.containers.append(container)
         return container
     }
 
     mutating func push(container: Any) {
-        containers.append(container)
+        self.containers.append(container)
     }
 
     /// pop a container from the storage
     @discardableResult mutating func popContainer() -> Any {
-        return containers.removeLast()
+        return self.containers.removeLast()
     }
 }
 
@@ -183,7 +183,7 @@ private class _QueryEncoder: Encoder {
     }
 
     func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key: CodingKey {
-        let newContainer = storage.pushKeyedContainer()
+        let newContainer = self.storage.pushKeyedContainer()
         if self.result == nil {
             self.result = newContainer
         }
@@ -191,7 +191,7 @@ private class _QueryEncoder: Encoder {
     }
 
     struct KEC<Key: CodingKey>: KeyedEncodingContainerProtocol {
-        var codingPath: [CodingKey] { return encoder.codingPath }
+        var codingPath: [CodingKey] { return self.encoder.codingPath }
         let container: _QueryEncoderKeyedContainer
         let encoder: _QueryEncoder
 
@@ -203,31 +203,31 @@ private class _QueryEncoder: Encoder {
         }
 
         mutating func encode(_ value: Any, key: String) {
-            container.addChild(path: ec2Encode(key), child: value)
+            self.container.addChild(path: self.ec2Encode(key), child: value)
         }
 
-        mutating func encodeNil(forKey key: Key) throws { encode("", key: key.stringValue) }
-        mutating func encode(_ value: Bool, forKey key: Key) throws { encode(value, key: key.stringValue) }
-        mutating func encode(_ value: String, forKey key: Key) throws { encode(value, key: key.stringValue) }
-        mutating func encode(_ value: Double, forKey key: Key) throws { encode(value, key: key.stringValue) }
-        mutating func encode(_ value: Float, forKey key: Key) throws { encode(value, key: key.stringValue) }
-        mutating func encode(_ value: Int, forKey key: Key) throws { encode(value, key: key.stringValue) }
-        mutating func encode(_ value: Int8, forKey key: Key) throws { encode(value, key: key.stringValue) }
-        mutating func encode(_ value: Int16, forKey key: Key) throws { encode(value, key: key.stringValue) }
-        mutating func encode(_ value: Int32, forKey key: Key) throws { encode(value, key: key.stringValue) }
-        mutating func encode(_ value: Int64, forKey key: Key) throws { encode(value, key: key.stringValue) }
-        mutating func encode(_ value: UInt, forKey key: Key) throws { encode(value, key: key.stringValue) }
-        mutating func encode(_ value: UInt8, forKey key: Key) throws { encode(value, key: key.stringValue) }
-        mutating func encode(_ value: UInt16, forKey key: Key) throws { encode(value, key: key.stringValue) }
-        mutating func encode(_ value: UInt32, forKey key: Key) throws { encode(value, key: key.stringValue) }
-        mutating func encode(_ value: UInt64, forKey key: Key) throws { encode(value, key: key.stringValue) }
+        mutating func encodeNil(forKey key: Key) throws { self.encode("", key: key.stringValue) }
+        mutating func encode(_ value: Bool, forKey key: Key) throws { self.encode(value, key: key.stringValue) }
+        mutating func encode(_ value: String, forKey key: Key) throws { self.encode(value, key: key.stringValue) }
+        mutating func encode(_ value: Double, forKey key: Key) throws { self.encode(value, key: key.stringValue) }
+        mutating func encode(_ value: Float, forKey key: Key) throws { self.encode(value, key: key.stringValue) }
+        mutating func encode(_ value: Int, forKey key: Key) throws { self.encode(value, key: key.stringValue) }
+        mutating func encode(_ value: Int8, forKey key: Key) throws { self.encode(value, key: key.stringValue) }
+        mutating func encode(_ value: Int16, forKey key: Key) throws { self.encode(value, key: key.stringValue) }
+        mutating func encode(_ value: Int32, forKey key: Key) throws { self.encode(value, key: key.stringValue) }
+        mutating func encode(_ value: Int64, forKey key: Key) throws { self.encode(value, key: key.stringValue) }
+        mutating func encode(_ value: UInt, forKey key: Key) throws { self.encode(value, key: key.stringValue) }
+        mutating func encode(_ value: UInt8, forKey key: Key) throws { self.encode(value, key: key.stringValue) }
+        mutating func encode(_ value: UInt16, forKey key: Key) throws { self.encode(value, key: key.stringValue) }
+        mutating func encode(_ value: UInt32, forKey key: Key) throws { self.encode(value, key: key.stringValue) }
+        mutating func encode(_ value: UInt64, forKey key: Key) throws { self.encode(value, key: key.stringValue) }
 
         mutating func encode<T: Encodable>(_ value: T, forKey key: Key) throws {
             self.encoder.codingPath.append(key)
             defer { self.encoder.codingPath.removeLast() }
 
             let childContainer = try encoder.box(value)
-            container.addChild(path: ec2Encode(key.stringValue), child: childContainer)
+            self.container.addChild(path: self.ec2Encode(key.stringValue), child: childContainer)
         }
 
         mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey: CodingKey {
@@ -235,7 +235,7 @@ private class _QueryEncoder: Encoder {
             defer { self.encoder.codingPath.removeLast() }
 
             let keyedContainer = _QueryEncoderKeyedContainer()
-            container.addChild(path: ec2Encode(key.stringValue), child: keyedContainer)
+            self.container.addChild(path: self.ec2Encode(key.stringValue), child: keyedContainer)
 
             let kec = KEC<NestedKey>(referencing: self.encoder, container: keyedContainer)
             return KeyedEncodingContainer(kec)
@@ -246,21 +246,21 @@ private class _QueryEncoder: Encoder {
             defer { self.encoder.codingPath.removeLast() }
 
             let unkeyedContainer = _QueryEncoderUnkeyedContainer()
-            container.addChild(path: ec2Encode(key.stringValue), child: unkeyedContainer)
+            self.container.addChild(path: self.ec2Encode(key.stringValue), child: unkeyedContainer)
 
             return UKEC(referencing: self.encoder, container: unkeyedContainer)
         }
 
         mutating func superEncoder() -> Encoder {
-            return encoder
+            return self.encoder
         }
 
         mutating func superEncoder(forKey key: Key) -> Encoder {
-            return encoder
+            return self.encoder
         }
 
         func ec2Encode(_ string: String) -> String {
-            if encoder.options.ec2 {
+            if self.encoder.options.ec2 {
                 return string.uppercaseFirst()
             }
             return string
@@ -268,12 +268,12 @@ private class _QueryEncoder: Encoder {
     }
 
     func unkeyedContainer() -> UnkeyedEncodingContainer {
-        let container = storage.pushUnkeyedContainer()
+        let container = self.storage.pushUnkeyedContainer()
         return UKEC(referencing: self, container: container)
     }
 
     struct UKEC: UnkeyedEncodingContainer {
-        var codingPath: [CodingKey] { return encoder.codingPath }
+        var codingPath: [CodingKey] { return self.encoder.codingPath }
         let container: _QueryEncoderUnkeyedContainer
         let encoder: _QueryEncoder
         var count: Int
@@ -285,87 +285,87 @@ private class _QueryEncoder: Encoder {
         }
 
         mutating func encodeResult(_ value: Any) {
-            count += 1
-            container.addChild(value)
+            self.count += 1
+            self.container.addChild(value)
         }
 
-        mutating func encodeNil() throws { encodeResult("") }
-        mutating func encode(_ value: Bool) throws { encodeResult(value) }
-        mutating func encode(_ value: String) throws { encodeResult(value) }
-        mutating func encode(_ value: Double) throws { encodeResult(value) }
-        mutating func encode(_ value: Float) throws { encodeResult(value) }
-        mutating func encode(_ value: Int) throws { encodeResult(value) }
-        mutating func encode(_ value: Int8) throws { encodeResult(value) }
-        mutating func encode(_ value: Int16) throws { encodeResult(value) }
-        mutating func encode(_ value: Int32) throws { encodeResult(value) }
-        mutating func encode(_ value: Int64) throws { encodeResult(value) }
-        mutating func encode(_ value: UInt) throws { encodeResult(value) }
-        mutating func encode(_ value: UInt8) throws { encodeResult(value) }
-        mutating func encode(_ value: UInt16) throws { encodeResult(value) }
-        mutating func encode(_ value: UInt32) throws { encodeResult(value) }
-        mutating func encode(_ value: UInt64) throws { encodeResult(value) }
+        mutating func encodeNil() throws { self.encodeResult("") }
+        mutating func encode(_ value: Bool) throws { self.encodeResult(value) }
+        mutating func encode(_ value: String) throws { self.encodeResult(value) }
+        mutating func encode(_ value: Double) throws { self.encodeResult(value) }
+        mutating func encode(_ value: Float) throws { self.encodeResult(value) }
+        mutating func encode(_ value: Int) throws { self.encodeResult(value) }
+        mutating func encode(_ value: Int8) throws { self.encodeResult(value) }
+        mutating func encode(_ value: Int16) throws { self.encodeResult(value) }
+        mutating func encode(_ value: Int32) throws { self.encodeResult(value) }
+        mutating func encode(_ value: Int64) throws { self.encodeResult(value) }
+        mutating func encode(_ value: UInt) throws { self.encodeResult(value) }
+        mutating func encode(_ value: UInt8) throws { self.encodeResult(value) }
+        mutating func encode(_ value: UInt16) throws { self.encodeResult(value) }
+        mutating func encode(_ value: UInt32) throws { self.encodeResult(value) }
+        mutating func encode(_ value: UInt64) throws { self.encodeResult(value) }
 
         mutating func encode<T: Encodable>(_ value: T) throws {
-            count += 1
+            self.count += 1
 
-            self.encoder.codingPath.append(_QueryKey(index: count))
+            self.encoder.codingPath.append(_QueryKey(index: self.count))
             defer { self.encoder.codingPath.removeLast() }
 
             let childContainer = try encoder.box(value)
-            container.addChild(childContainer)
+            self.container.addChild(childContainer)
         }
 
         mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> where NestedKey: CodingKey {
-            count += 1
+            self.count += 1
 
-            self.encoder.codingPath.append(_QueryKey(index: count))
+            self.encoder.codingPath.append(_QueryKey(index: self.count))
             defer { self.encoder.codingPath.removeLast() }
 
             let keyedContainer = _QueryEncoderKeyedContainer()
-            container.addChild(keyedContainer)
+            self.container.addChild(keyedContainer)
 
             let kec = KEC<NestedKey>(referencing: self.encoder, container: keyedContainer)
             return KeyedEncodingContainer(kec)
         }
 
         mutating func nestedUnkeyedContainer() -> UnkeyedEncodingContainer {
-            count += 1
+            self.count += 1
 
             let unkeyedContainer = _QueryEncoderUnkeyedContainer()
-            container.addChild(unkeyedContainer)
+            self.container.addChild(unkeyedContainer)
 
             return UKEC(referencing: self.encoder, container: unkeyedContainer)
         }
 
         mutating func superEncoder() -> Encoder {
-            return encoder
+            return self.encoder
         }
     }
 }
 
 extension _QueryEncoder: SingleValueEncodingContainer {
     func encodeResult(_ value: Any) {
-        storage.push(container: value)
+        self.storage.push(container: value)
     }
 
     func encodeNil() throws {
-        encodeResult("")
+        self.encodeResult("")
     }
 
-    func encode(_ value: Bool) throws { encodeResult(value) }
-    func encode(_ value: String) throws { encodeResult(value) }
-    func encode(_ value: Double) throws { encodeResult(value) }
-    func encode(_ value: Float) throws { encodeResult(value) }
-    func encode(_ value: Int) throws { encodeResult(value) }
-    func encode(_ value: Int8) throws { encodeResult(value) }
-    func encode(_ value: Int16) throws { encodeResult(value) }
-    func encode(_ value: Int32) throws { encodeResult(value) }
-    func encode(_ value: Int64) throws { encodeResult(value) }
-    func encode(_ value: UInt) throws { encodeResult(value) }
-    func encode(_ value: UInt8) throws { encodeResult(value) }
-    func encode(_ value: UInt16) throws { encodeResult(value) }
-    func encode(_ value: UInt32) throws { encodeResult(value) }
-    func encode(_ value: UInt64) throws { encodeResult(value) }
+    func encode(_ value: Bool) throws { self.encodeResult(value) }
+    func encode(_ value: String) throws { self.encodeResult(value) }
+    func encode(_ value: Double) throws { self.encodeResult(value) }
+    func encode(_ value: Float) throws { self.encodeResult(value) }
+    func encode(_ value: Int) throws { self.encodeResult(value) }
+    func encode(_ value: Int8) throws { self.encodeResult(value) }
+    func encode(_ value: Int16) throws { self.encodeResult(value) }
+    func encode(_ value: Int32) throws { self.encodeResult(value) }
+    func encode(_ value: Int64) throws { self.encodeResult(value) }
+    func encode(_ value: UInt) throws { self.encodeResult(value) }
+    func encode(_ value: UInt8) throws { self.encodeResult(value) }
+    func encode(_ value: UInt16) throws { self.encodeResult(value) }
+    func encode(_ value: UInt32) throws { self.encodeResult(value) }
+    func encode(_ value: UInt64) throws { self.encodeResult(value) }
 
     func encode<T: Encodable>(_ value: T) throws {
         try value.encode(to: self)
@@ -378,8 +378,8 @@ extension _QueryEncoder: SingleValueEncodingContainer {
 
 extension _QueryEncoder {
     func box(_ date: Date) throws -> Any {
-        try encode(Self.dateFormatter.string(from: date))
-        return storage.popContainer()
+        try self.encode(Self.dateFormatter.string(from: date))
+        return self.storage.popContainer()
     }
 
     func box(_ value: Encodable) throws -> Any {
@@ -388,7 +388,7 @@ extension _QueryEncoder {
             return try self.box(value as! Date)
         } else {
             try value.encode(to: self)
-            return storage.popContainer()
+            return self.storage.popContainer()
         }
     }
 

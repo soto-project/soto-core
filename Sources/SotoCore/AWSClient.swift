@@ -49,7 +49,7 @@ public final class AWSClient: Sendable {
     /// Keeps a record of how we obtained the HTTP client
     let httpClientProvider: HTTPClientProvider
     /// EventLoopGroup used by AWSClient
-    public var eventLoopGroup: EventLoopGroup { return httpClient.eventLoopGroup }
+    public var eventLoopGroup: EventLoopGroup { return self.httpClient.eventLoopGroup }
     /// Logger used for non-request based output
     let clientLogger: Logger
     /// client options
@@ -88,7 +88,7 @@ public final class AWSClient: Sendable {
         }
 
         let credentialProvider = credentialProviderFactory.createProvider(context: .init(
-            httpClient: httpClient,
+            httpClient: self.httpClient,
             logger: clientLogger,
             options: options
         ))
@@ -130,7 +130,7 @@ public final class AWSClient: Sendable {
         }
 
         let credentialProvider = credentialProviderFactory.createProvider(context: .init(
-            httpClient: httpClient,
+            httpClient: self.httpClient,
             logger: clientLogger,
             options: options
         ))

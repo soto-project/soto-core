@@ -19,7 +19,7 @@ import struct Foundation.Data
 #endif
 import NIOCore
 import NIOHTTP1
-@testable import SotoCore
+@testable @_spi(SotoInternal) import SotoCore
 import SotoSignerV4
 import SotoTestUtils
 import SotoXML

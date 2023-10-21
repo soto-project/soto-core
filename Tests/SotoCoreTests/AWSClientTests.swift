@@ -21,7 +21,7 @@ import NIOCore
 import NIOFoundationCompat
 import NIOHTTP1
 import NIOPosix
-@testable import SotoCore
+@testable @_spi(SotoInternal) import SotoCore
 import SotoTestUtils
 import XCTest
 

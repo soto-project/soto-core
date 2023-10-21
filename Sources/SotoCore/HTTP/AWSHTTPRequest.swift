@@ -57,7 +57,7 @@ public struct AWSHTTPRequest {
                 headers.add(name: "x-amz-decoded-content-length", value: length!.description)
                 headers.add(name: "content-encoding", value: "aws-chunked")
                 // get signed headers and seed signing data
-                let (signedHeaders, seedSigningData) = signer.startSigningChunks(url: url, method: method, headers: headers, date: Date())
+                let (signedHeaders, seedSigningData) = signer.startSigningChunks(url: self.url, method: self.method, headers: headers, date: Date())
                 // create s3 signed Sequence
                 let s3Signed = sequence.s3Signed(signer: signer, seedSigningData: seedSigningData)
                 // create new payload and return request
@@ -70,7 +70,7 @@ public struct AWSHTTPRequest {
                 bodyDataForSigning = .unsignedPayload
             }
         }
-        let signedHeaders = signer.signHeaders(url: url, method: method, headers: headers, body: bodyDataForSigning, date: Date())
+        let signedHeaders = signer.signHeaders(url: self.url, method: self.method, headers: self.headers, body: bodyDataForSigning, date: Date())
         self.headers = signedHeaders
     }
 }
@@ -104,7 +104,7 @@ extension AWSHTTPRequest {
             self.body = .init()
         }
 
-        addStandardHeaders(serviceProtocol: configuration.serviceProtocol, raw: false)
+        self.addStandardHeaders(serviceProtocol: configuration.serviceProtocol, raw: false)
     }
 
     internal init<Input: AWSEncodableShape>(
@@ -187,7 +187,7 @@ extension AWSHTTPRequest {
         self.headers = headers
         self.body = body
 
-        addStandardHeaders(serviceProtocol: configuration.serviceProtocol, raw: requestEncoderContainer.body != nil)
+        self.addStandardHeaders(serviceProtocol: configuration.serviceProtocol, raw: requestEncoderContainer.body != nil)
     }
 
     /// Calculate checksum header for request
@@ -240,11 +240,11 @@ extension AWSHTTPRequest {
             }
             checksum = data.base64EncodedString()
         case .sha1:
-            checksum = calculateChecksum(buffer, function: Insecure.SHA1.self)
+            checksum = self.calculateChecksum(buffer, function: Insecure.SHA1.self)
         case .sha256:
-            checksum = calculateChecksum(buffer, function: SHA256.self)
+            checksum = self.calculateChecksum(buffer, function: SHA256.self)
         case .md5:
-            checksum = calculateChecksum(buffer, function: Insecure.MD5.self)
+            checksum = self.calculateChecksum(buffer, function: Insecure.MD5.self)
         }
         if let checksum = checksum {
             headers.add(name: checksumHeader, value: checksum)
@@ -254,20 +254,20 @@ extension AWSHTTPRequest {
 
     /// Add headers standard to all requests "content-type" and "user-agent"
     private mutating func addStandardHeaders(serviceProtocol: ServiceProtocol, raw: Bool) {
-        headers.add(name: "user-agent", value: "Soto/6.0")
-        guard headers["content-type"].first == nil else {
+        self.headers.add(name: "user-agent", value: "Soto/6.0")
+        guard self.headers["content-type"].first == nil else {
             return
         }
-        guard method != .GET, method != .HEAD else {
+        guard self.method != .GET, self.method != .HEAD else {
             return
         }
 
         if case .byteBuffer(let buffer) = body.storage, buffer.readableBytes == 0 {
             // don't add a content-type header when there is no content
         } else if case .restjson = serviceProtocol, raw {
-            headers.replaceOrAdd(name: "content-type", value: "binary/octet-stream")
+            self.headers.replaceOrAdd(name: "content-type", value: "binary/octet-stream")
         } else {
-            headers.replaceOrAdd(name: "content-type", value: serviceProtocol.contentType)
+            self.headers.replaceOrAdd(name: "content-type", value: serviceProtocol.contentType)
         }
     }
 

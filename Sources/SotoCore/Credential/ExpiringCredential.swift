@@ -33,7 +33,7 @@ public extension ExpiringCredential {
 
     /// Has credential expired
     var isExpired: Bool {
-        isExpiring(within: 0)
+        self.isExpiring(within: 0)
     }
 }
 

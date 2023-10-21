@@ -183,7 +183,7 @@ class AWSRequestTests: XCTestCase {
             let payload: AWSHTTPBody
 
             func encode(to encoder: Encoder) throws {
-                try payload.encode(to: encoder)
+                try self.payload.encode(to: encoder)
             }
         }
         let object = Object(string: "Name")
@@ -400,7 +400,7 @@ class AWSRequestTests: XCTestCase {
             let data: Data
         }
         struct J: AWSEncodableShape {
-            var _payload: DataContainer { dataContainer }
+            var _payload: DataContainer { self.dataContainer }
             let dataContainer: DataContainer
         }
         let input = J(dataContainer: DataContainer(data: Data("test data".utf8)))
@@ -537,11 +537,11 @@ class AWSRequestTests: XCTestCase {
             let number: Int
         }
         struct Input: AWSEncodableShape {
-            var _payload: Payload { payload }
+            var _payload: Payload { self.payload }
             let payload: Payload
 
             func encode(to encoder: Encoder) throws {
-                try payload.encode(to: encoder)
+                try self.payload.encode(to: encoder)
             }
         }
         let input = Input(payload: .init(number: 12_345_678))
@@ -566,7 +566,7 @@ class AWSRequestTests: XCTestCase {
             let payload: Payload
 
             func encode(to encoder: Encoder) throws {
-                try payload.encode(to: encoder)
+                try self.payload.encode(to: encoder)
             }
         }
         let input = Input(payload: .init(number: 12_345_678))
@@ -587,14 +587,14 @@ class AWSRequestTests: XCTestCase {
             let number: Int
         }
         struct Input: AWSEncodableShape {
-            var _payload: Payload { payload }
+            var _payload: Payload { self.payload }
             let payload: Payload
             let contentType: String
 
             func encode(to encoder: Encoder) throws {
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
                 requestContainer.encodeHeader(self.contentType, key: "content-type")
-                try payload.encode(to: encoder)
+                try self.payload.encode(to: encoder)
             }
         }
         let input = Input(payload: .init(number: 12_345_678), contentType: "image/jpeg")
@@ -614,7 +614,7 @@ class AWSRequestTests: XCTestCase {
     /// Test disable S3 chunked upload flag works
     func testDisableS3ChunkedUpload() throws {
         struct Input: AWSEncodableShape {
-            var _payload: AWSHTTPBody { payload }
+            var _payload: AWSHTTPBody { self.payload }
             public static let _options: AWSShapeOptions = [.rawPayload, .allowStreaming]
             public static let _payloadPath: String = "payload"
             let payload: AWSHTTPBody
@@ -678,7 +678,7 @@ class AWSRequestTests: XCTestCase {
                 var container = encoder.container(keyedBy: CodingKeys.self)
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
                 requestContainer.encodeHeader(self.checksum, key: "Content-MD5")
-                try container.encode(q, forKey: .q)
+                try container.encode(self.q, forKey: .q)
             }
 
             private enum CodingKeys: String, CodingKey {
@@ -701,7 +701,7 @@ class AWSRequestTests: XCTestCase {
                 var container = encoder.container(keyedBy: CodingKeys.self)
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
                 requestContainer.encodeHeader(self.checksum, key: "x-amz-sdk-checksum-algorithm")
-                try container.encode(q, forKey: .q)
+                try container.encode(self.q, forKey: .q)
             }
 
             private enum CodingKeys: String, CodingKey {
@@ -724,7 +724,7 @@ class AWSRequestTests: XCTestCase {
                 var container = encoder.container(keyedBy: CodingKeys.self)
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
                 requestContainer.encodeHeader(self.checksum, key: "x-amz-sdk-checksum-algorithm")
-                try container.encode(q, forKey: .q)
+                try container.encode(self.q, forKey: .q)
             }
 
             private enum CodingKeys: String, CodingKey {
@@ -747,7 +747,7 @@ class AWSRequestTests: XCTestCase {
                 var container = encoder.container(keyedBy: CodingKeys.self)
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
                 requestContainer.encodeHeader(self.checksum, key: "x-amz-sdk-checksum-algorithm")
-                try container.encode(q, forKey: .q)
+                try container.encode(self.q, forKey: .q)
             }
 
             private enum CodingKeys: String, CodingKey {
@@ -770,7 +770,7 @@ class AWSRequestTests: XCTestCase {
                 var container = encoder.container(keyedBy: CodingKeys.self)
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
                 requestContainer.encodeHeader(self.checksum, key: "x-amz-sdk-checksum-algorithm")
-                try container.encode(q, forKey: .q)
+                try container.encode(self.q, forKey: .q)
             }
 
             private enum CodingKeys: String, CodingKey {

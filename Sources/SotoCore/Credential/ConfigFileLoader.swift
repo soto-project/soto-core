@@ -104,7 +104,7 @@ enum ConfigFileLoader {
         return self.loadFile(path: credentialsFilePath, on: context.httpClient.eventLoopGroup.any(), using: fileIO)
             .flatMap { credentialsByteBuffer in
                 // Load profile config file
-                return loadFile(path: configFilePath, on: context.httpClient.eventLoopGroup.any(), using: fileIO)
+                return self.loadFile(path: configFilePath, on: context.httpClient.eventLoopGroup.any(), using: fileIO)
                     .map {
                         (credentialsByteBuffer, $0)
                     }
@@ -118,7 +118,7 @@ enum ConfigFileLoader {
                 throw CredentialProviderError.noProvider
             }
             .flatMapThrowing { credentialsByteBuffer, configByteBuffer in
-                return try parseSharedCredentials(from: credentialsByteBuffer, configByteBuffer: configByteBuffer, for: profile)
+                return try self.parseSharedCredentials(from: credentialsByteBuffer, configByteBuffer: configByteBuffer, for: profile)
             }
             .always { _ in
                 // shutdown the threadpool async
@@ -159,7 +159,7 @@ enum ConfigFileLoader {
     ///   - profile: named profile to load (optional)
     /// - Returns: Parsed SharedCredentials
     static func parseSharedCredentials(from credentialsByteBuffer: ByteBuffer, configByteBuffer: ByteBuffer?, for profile: String) throws -> SharedCredentials {
-        let config = try configByteBuffer.flatMap { try parseProfileConfig(from: $0, for: profile) }
+        let config = try configByteBuffer.flatMap { try self.parseProfileConfig(from: $0, for: profile) }
         let credentials = try parseCredentials(from: credentialsByteBuffer, for: profile, sourceProfile: config?.sourceProfile)
 
         // If `role_arn` is defined, check for source profile or credential source

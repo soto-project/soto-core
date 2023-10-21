@@ -162,7 +162,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         let filename = #function
         let filenameURL = URL(fileURLWithPath: filename)
         XCTAssertNoThrow(try Data(credentialsFile.utf8).write(to: filenameURL))
-        let (context, httpClient) = makeContext()
+        let (context, httpClient) = self.makeContext()
 
         defer {
             XCTAssertNoThrow(try FileManager.default.removeItem(at: filenameURL))

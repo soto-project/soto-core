@@ -57,7 +57,7 @@ public extension AWSEncodableShape {
 /// Validation code to add to AWSEncodableShape
 public extension AWSEncodableShape {
     func validate() throws {
-        try validate(name: "\(type(of: self))")
+        try self.validate(name: "\(type(of: self))")
     }
 
     /// stub validate function for all shapes
@@ -126,57 +126,57 @@ public extension AWSEncodableShape {
     // validate optional values
     func validate<T: BinaryInteger>(_ value: T?, name: String, parent: String, min: T) throws {
         guard let value = value else { return }
-        try validate(value, name: name, parent: parent, min: min)
+        try self.validate(value, name: name, parent: parent, min: min)
     }
 
     func validate<T: BinaryInteger>(_ value: T?, name: String, parent: String, max: T) throws {
         guard let value = value else { return }
-        try validate(value, name: name, parent: parent, max: max)
+        try self.validate(value, name: name, parent: parent, max: max)
     }
 
     func validate<T: FloatingPoint>(_ value: T?, name: String, parent: String, min: T) throws {
         guard let value = value else { return }
-        try validate(value, name: name, parent: parent, min: min)
+        try self.validate(value, name: name, parent: parent, min: min)
     }
 
     func validate<T: FloatingPoint>(_ value: T?, name: String, parent: String, max: T) throws {
         guard let value = value else { return }
-        try validate(value, name: name, parent: parent, max: max)
+        try self.validate(value, name: name, parent: parent, max: max)
     }
 
     func validate<T: Collection>(_ value: T?, name: String, parent: String, min: Int) throws {
         guard let value = value else { return }
-        try validate(value, name: name, parent: parent, min: min)
+        try self.validate(value, name: name, parent: parent, min: min)
     }
 
     func validate<T: Collection>(_ value: T?, name: String, parent: String, max: Int) throws {
         guard let value = value else { return }
-        try validate(value, name: name, parent: parent, max: max)
+        try self.validate(value, name: name, parent: parent, max: max)
     }
 
     func validate(_ value: AWSBase64Data?, name: String, parent: String, min: Int) throws {
         guard let value = value else { return }
-        try validate(value, name: name, parent: parent, min: min)
+        try self.validate(value, name: name, parent: parent, min: min)
     }
 
     func validate(_ value: AWSBase64Data?, name: String, parent: String, max: Int) throws {
         guard let value = value else { return }
-        try validate(value, name: name, parent: parent, max: max)
+        try self.validate(value, name: name, parent: parent, max: max)
     }
 
     func validate(_ value: AWSHTTPBody?, name: String, parent: String, min: Int) throws {
         guard let value = value else { return }
-        try validate(value, name: name, parent: parent, min: min)
+        try self.validate(value, name: name, parent: parent, min: min)
     }
 
     func validate(_ value: AWSHTTPBody?, name: String, parent: String, max: Int) throws {
         guard let value = value else { return }
-        try validate(value, name: name, parent: parent, max: max)
+        try self.validate(value, name: name, parent: parent, max: max)
     }
 
     func validate(_ value: String?, name: String, parent: String, pattern: String) throws {
         guard let value = value else { return }
-        try validate(value, name: name, parent: parent, pattern: pattern)
+        try self.validate(value, name: name, parent: parent, pattern: pattern)
     }
 }
 

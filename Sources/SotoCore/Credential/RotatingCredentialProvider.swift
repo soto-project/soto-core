@@ -39,17 +39,17 @@ public final class RotatingCredentialProvider: CredentialProvider {
 
     /// Shutdown credential provider
     public func shutdown() async throws {
-        await expiringCredential.cancel()
+        await self.expiringCredential.cancel()
         // ensure internal credential provider is not still running
-        _ = try? await expiringCredential.getValue {
+        _ = try? await self.expiringCredential.getValue {
             try Task.checkCancellation()
             preconditionFailure("Cannot get here")
         }
-        try await provider.shutdown()
+        try await self.provider.shutdown()
     }
 
     public func getCredential(logger: Logger) async throws -> Credential {
-        return try await expiringCredential.getValue {
+        return try await self.expiringCredential.getValue {
             try await Self.getCredentialAndExpiration(provider: self.provider, logger: logger)
         }
     }
@@ -68,5 +68,5 @@ public final class RotatingCredentialProvider: CredentialProvider {
 }
 
 extension RotatingCredentialProvider: CustomStringConvertible {
-    public var description: String { return "\(type(of: self))(\(provider.description))" }
+    public var description: String { return "\(type(of: self))(\(self.provider.description))" }
 }

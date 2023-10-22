@@ -210,11 +210,12 @@ public final class AWSClient: Sendable {
 
     /// Specifies how `HTTPClient` will be created and establishes lifecycle ownership.
     public struct HTTPClientProvider: Sendable {
-    fileprivate enum Internal: Sendable {
-        case shared(HTTPClient)
-        case createNewWithEventLoopGroup(EventLoopGroup)
-        case createNew
-    }
+        fileprivate enum Internal: Sendable {
+            case shared(HTTPClient)
+            case createNewWithEventLoopGroup(EventLoopGroup)
+            case createNew
+        }
+
         fileprivate let value: Internal
 
         fileprivate init(_ value: Internal) {
@@ -222,10 +223,10 @@ public final class AWSClient: Sendable {
         }
 
         /// Use HTTPClient provided by the user. User is responsible for the lifecycle of the HTTPClient.
-        public static func shared(_ httpClient: HTTPClient) -> Self { .init(.shared(httpClient))}
+        public static func shared(_ httpClient: HTTPClient) -> Self { .init(.shared(httpClient)) }
         /// HTTPClient will be created by AWSClient using provided EventLoopGroup. When `shutdown` is called, created `HTTPClient`
         /// will be shut down as well.
-        public static func createNewWithEventLoopGroup(_ eventLoopGroup: EventLoopGroup) -> Self { .init(.createNewWithEventLoopGroup(eventLoopGroup))}
+        public static func createNewWithEventLoopGroup(_ eventLoopGroup: EventLoopGroup) -> Self { .init(.createNewWithEventLoopGroup(eventLoopGroup)) }
         /// `HTTPClient` will be created by `AWSClient`. When `shutdown` is called, created `HTTPClient` will be shut down as well.
         public static var createNew: Self { .init(.createNew) }
     }

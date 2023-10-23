@@ -1,6 +1,6 @@
 # Soto Core
 
-[<img src="http://img.shields.io/badge/swift-5.6_to_5.8-brightgreen.svg" alt="Swift 5.7" />](https://swift.org)
+[<img src="http://img.shields.io/badge/swift-5.7-brightgreen.svg" alt="Swift 5.7" />](https://swift.org)
 [<img src="https://github.com/soto-project/soto-core/workflows/CI/badge.svg" />](https://github.com/soto-project/soto-core/actions)
 [<img src="https://codecov.io/gh/soto-project/soto-core/branch/main/graph/badge.svg" alt="Codecov Result" />](https://codecov.io/gh/soto-project/soto-core)
 

@@ -57,7 +57,7 @@ class TimeStampTests: XCTestCase {
         let a = A(date: Date(timeIntervalSince1970: 23_984_978_378))
         var request: AWSHTTPRequest?
         XCTAssertNoThrow(request = try AWSHTTPRequest(operation: "test", path: "/", method: .GET, input: a, configuration: createServiceConfig()))
-        #if os(Linux) && compiler(>=5.5)
+        #if os(Linux)
         XCTAssertEqual(request?.body.asString(), "{\"date\":23984978378.0}")
         #else
         XCTAssertEqual(request?.body.asString(), "{\"date\":23984978378}")

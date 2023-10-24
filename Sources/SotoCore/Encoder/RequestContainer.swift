@@ -19,6 +19,7 @@ import struct Foundation.URLComponents
 
 /// Request container used during Codable `encode(to:)` that allows for encoding data into
 /// the request that is not part of standard Codable output
+@_spi(SotoInternal)
 public class RequestEncodingContainer {
     @usableFromInline
     var path: String

@@ -18,7 +18,7 @@
 import struct Foundation.Date
 #endif
 import NIOHTTP1
-@testable import SotoCore
+@testable @_spi(SotoInternal) import SotoCore
 import SotoTestUtils
 import SotoXML
 import XCTest

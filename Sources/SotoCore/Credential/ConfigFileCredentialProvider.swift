@@ -65,9 +65,8 @@ final class ConfigFileCredentialProvider: CredentialProviderSelector {
         let sharedCredentials = try await ConfigFileLoader.loadSharedCredentials(
             credentialsFilePath: credentialsFilePath,
             configFilePath: configFilePath,
-            profile: profile,
-            context: context
-        ).get()
+            profile: profile
+        )
         return try self.credentialProvider(from: sharedCredentials, context: context, endpoint: endpoint)
     }
 

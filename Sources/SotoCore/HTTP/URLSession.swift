@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 #if !os(Linux)
+import AsyncAlgorithms
 import AsyncHTTPClient
 import Foundation
 import Logging
@@ -20,6 +21,24 @@ import NIOFoundationCompat
 import NIOHTTP1
 
 extension URLSession: AWSHTTPClient {
+    public struct SotoError: Error, Equatable {
+        enum Internal {
+            case unexpectedResponse
+            case requestStreamFailed
+            case streamingError
+        }
+
+        let value: Internal
+        private init(_ value: Internal) { self.value = value }
+
+        /// Unexpected resposne from URLSession request
+        public static var unexpectedResponse: Self { .init(.unexpectedResponse) }
+        /// Create a stream failed
+        public static var requestStreamFailed: Self { .init(.requestStreamFailed) }
+        /// Error occurred while streaming
+        public static var streamingError: Self { .init(.streamingError) }
+    }
+
     /// Execute HTTP request
     /// - Parameters:
     ///   - request: HTTP request
@@ -31,31 +50,114 @@ extension URLSession: AWSHTTPClient {
         timeout: TimeAmount,
         logger: Logger
     ) async throws -> AWSHTTPResponse {
-        var urlRequest = URLRequest(url: request.url)
-        urlRequest.httpMethod = request.method.rawValue
-        for header in request.headers {
-            urlRequest.addValue(header.value, forHTTPHeaderField: header.name)
-        }
-        switch request.body.storage {
-        case .byteBuffer(let byteBuffer):
-            urlRequest.httpBody = Data(buffer: byteBuffer)
-        case .asyncSequence:
-            preconditionFailure("Input streams are currently not supported")
-        }
-        let (data, urlResponse) = try await self.data(for: urlRequest)
-        guard let httpURLResponse = urlResponse as? HTTPURLResponse else { preconditionFailure() }
-        let statusCode = HTTPResponseStatus(statusCode: httpURLResponse.statusCode)
-        var headers = HTTPHeaders()
-        for header in httpURLResponse.allHeaderFields {
-            guard let name = header.key as? String, let value = header.value as? String else { continue }
-            headers.add(name: name, value: value)
-        }
-        let (bodyStream, bodyStreamContinuation) = AsyncStream<ByteBuffer>.makeStream()
-        let body = AWSHTTPBody(asyncSequence: bodyStream, length: data.count)
-        bodyStreamContinuation.yield(.init(data: data))
-        bodyStreamContinuation.finish()
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            var urlRequest = URLRequest(url: request.url)
+            urlRequest.httpMethod = request.method.rawValue
+            for header in request.headers {
+                urlRequest.addValue(header.value, forHTTPHeaderField: header.name)
+            }
+            switch request.body.storage {
+            case .byteBuffer(let byteBuffer):
+                urlRequest.httpBody = Data(buffer: byteBuffer)
+            case .asyncSequence(let byteBufferSequence, _):
 
-        return .init(status: statusCode, headers: headers, body: body)
+                guard let stream = AsyncSequenceStream(byteBufferSequence: byteBufferSequence) else {
+                    throw SotoError.requestStreamFailed
+                }
+                group.addTask {
+                    try await stream.write()
+                }
+                urlRequest.httpBodyStream = stream.inputStream
+            }
+
+            let (bytes, urlResponse) = try await self.bytes(for: urlRequest)
+            guard let httpURLResponse = urlResponse as? HTTPURLResponse else { throw SotoError.unexpectedResponse }
+
+            let statusCode = HTTPResponseStatus(statusCode: httpURLResponse.statusCode)
+            var headers = HTTPHeaders()
+            for header in httpURLResponse.allHeaderFields {
+                guard let name = header.key as? String, let value = header.value as? String else { continue }
+                headers.add(name: name, value: value)
+            }
+            let body = AWSHTTPBody(asyncSequence: bytes.chunks(ofCount: 8192).map { ByteBuffer(bytes: $0) }, length: nil)
+
+            return .init(status: statusCode, headers: headers, body: body)
+        }
+    }
+}
+
+class AsyncSequenceStream<BufferSequence: AsyncSequence>: NSObject, StreamDelegate where BufferSequence.Element == ByteBuffer {
+    static var currentRunLoop: RunLoop { .main }
+    let inputStream: InputStream
+    let outputStream: OutputStream
+    let byteBufferSequence: BufferSequence
+    let maxBufferSize: Int
+    var cont: CheckedContinuation<Void, Error>?
+
+    init?(byteBufferSequence: BufferSequence, bufferSize: Int = 16384) {
+        self.byteBufferSequence = byteBufferSequence
+        self.maxBufferSize = bufferSize
+        var inputStream: InputStream? = nil
+        var outputStream: OutputStream? = nil
+        Stream.getBoundStreams(
+            withBufferSize: self.maxBufferSize,
+            inputStream: &inputStream,
+            outputStream: &outputStream
+        )
+        guard let inputStream = inputStream, let outputStream = outputStream else { return nil }
+        self.inputStream = inputStream
+        self.outputStream = outputStream
+        super.init()
+        // configure and open output stream
+        self.outputStream.delegate = self
+        self.outputStream.schedule(in: Self.currentRunLoop, forMode: .default)
+        self.outputStream.open()
+    }
+
+    func write() async throws {
+        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
+            self.cont = cont
+        }
+        for try await buffer in self.byteBufferSequence {
+            try await buffer.withUnsafeReadableBytes { buffer in
+                var bufferSize = buffer.count
+                var address = buffer.baseAddress!
+                while bufferSize > 0 {
+                    let size = min(bufferSize, self.maxBufferSize)
+                    if !self.outputStream.hasSpaceAvailable {
+                        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
+                            self.cont = cont
+                        }
+                    }
+                    self.outputStream.write(address, maxLength: size)
+                    bufferSize -= size
+                    address += size
+                }
+            }
+        }
+        self.outputStream.close()
+    }
+
+    func stream(_: Stream, handle event: Stream.Event) {
+        switch event {
+        case .openCompleted:
+            if let cont = self.cont {
+                cont.resume()
+                self.cont = nil
+            }
+
+        case .hasSpaceAvailable:
+            if let cont = self.cont {
+                cont.resume()
+                self.cont = nil
+            }
+
+        case .errorOccurred:
+            self.cont?.resume(throwing: URLSession.SotoError.streamingError)
+
+        default:
+            break
+        }
     }
 }
 

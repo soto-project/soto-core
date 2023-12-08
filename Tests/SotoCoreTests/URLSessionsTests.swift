@@ -166,19 +166,19 @@ class URLSessionTests: XCTestCase {
         try await responseTask
     }
 
-    /* func testRequestStreaming() async throws {
-         let awsServer = AWSTestServer(serviceProtocol: .json)
-         let config = createServiceConfig(endpoint: awsServer.address)
-         let client = createAWSClient(credentialProvider: .empty, httpClientProvider: .shared(URLSession.shared))
-         defer {
-             XCTAssertNoThrow(try awsServer.stop())
-             XCTAssertNoThrow(try client.syncShutdown())
-         }
+    func testRequestStreaming() async throws {
+        let awsServer = AWSTestServer(serviceProtocol: .json)
+        let config = createServiceConfig(endpoint: awsServer.address)
+        let client = createAWSClient(credentialProvider: .empty, httpClientProvider: .shared(URLSession.shared))
+        defer {
+            XCTAssertNoThrow(try awsServer.stop())
+            XCTAssertNoThrow(try client.syncShutdown())
+        }
 
-         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128 * 1024, blockSize: 16 * 1024)
-         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128 * 1024, blockSize: 17 * 1024)
-         try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 18 * 1024, blockSize: 47 * 1024)
-     } */
+        try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128 * 1024, blockSize: 16 * 1024)
+        try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 128 * 1024, blockSize: 17 * 1024)
+        try await self.testRequestStreaming(config: config, client: client, server: awsServer, bufferSize: 18 * 1024, blockSize: 47 * 1024)
+    }
 
     func testStreamingResponse() async {
         struct Input: AWSEncodableShape {}

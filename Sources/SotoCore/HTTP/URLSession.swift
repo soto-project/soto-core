@@ -60,16 +60,16 @@ extension URLSession: AWSHTTPClient {
             case .byteBuffer(let byteBuffer):
                 urlRequest.httpBody = Data(buffer: byteBuffer)
             case .asyncSequence(let byteBufferSequence, _):
-
                 guard let stream = AsyncSequenceStream(byteBufferSequence: byteBufferSequence) else {
                     throw SotoError.requestStreamFailed
                 }
                 group.addTask {
                     try await stream.write()
                 }
-                urlRequest.httpBodyStream = stream.inputStream
+                urlRequest.httpBodyStream = stream.inputStream // InputStream(url: URL(string: "https://swift.org")!)
             }
 
+            // Execute HTTP request
             let (bytes, urlResponse) = try await self.bytes(for: urlRequest)
             guard let httpURLResponse = urlResponse as? HTTPURLResponse else { throw SotoError.unexpectedResponse }
 
@@ -79,15 +79,15 @@ extension URLSession: AWSHTTPClient {
                 guard let name = header.key as? String, let value = header.value as? String else { continue }
                 headers.add(name: name, value: value)
             }
-            let body = AWSHTTPBody(asyncSequence: bytes.chunks(ofCount: 8192).map { ByteBuffer(bytes: $0) }, length: nil)
+            let body = AWSHTTPBody(asyncSequence: bytes.chunks(ofCount: 16384).map { ByteBuffer(bytes: $0) }, length: nil)
 
             return .init(status: statusCode, headers: headers, body: body)
         }
     }
 }
 
+/// Create an InputStream whose source is an AsyncSequnce of ByteBuffers
 class AsyncSequenceStream<BufferSequence: AsyncSequence>: NSObject, StreamDelegate where BufferSequence.Element == ByteBuffer {
-    static var currentRunLoop: RunLoop { .main }
     let inputStream: InputStream
     let outputStream: OutputStream
     let byteBufferSequence: BufferSequence
@@ -97,6 +97,7 @@ class AsyncSequenceStream<BufferSequence: AsyncSequence>: NSObject, StreamDelega
     init?(byteBufferSequence: BufferSequence, bufferSize: Int = 16384) {
         self.byteBufferSequence = byteBufferSequence
         self.maxBufferSize = bufferSize
+        // bind an input stream and output stream together.
         var inputStream: InputStream? = nil
         var outputStream: OutputStream? = nil
         Stream.getBoundStreams(
@@ -110,42 +111,51 @@ class AsyncSequenceStream<BufferSequence: AsyncSequence>: NSObject, StreamDelega
         super.init()
         // configure and open output stream
         self.outputStream.delegate = self
-        self.outputStream.schedule(in: Self.currentRunLoop, forMode: .default)
+        self.outputStream.schedule(in: RunLoop.main, forMode: .default)
         self.outputStream.open()
     }
 
+    /// Write contents of AsyncSequence to output stream
     func write() async throws {
-        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
-            self.cont = cont
+        defer {
+            self.outputStream.close()
         }
         for try await buffer in self.byteBufferSequence {
-            try await buffer.withUnsafeReadableBytes { buffer in
-                var bufferSize = buffer.count
-                var address = buffer.baseAddress!
-                while bufferSize > 0 {
-                    let size = min(bufferSize, self.maxBufferSize)
-                    if !self.outputStream.hasSpaceAvailable {
+            var bufferSize = buffer.readableBytes
+            var offset = 0
+            while bufferSize > 0 {
+                let size = min(bufferSize, self.maxBufferSize)
+                if !self.outputStream.hasSpaceAvailable {
+                    try await withTaskCancellationHandler {
+                        if Task.isCancelled {
+                            throw CancellationError()
+                        }
                         try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
                             self.cont = cont
                         }
+                    } onCancel: {
+                        self.cont?.resume(throwing: CancellationError())
                     }
-                    self.outputStream.write(address, maxLength: size)
-                    bufferSize -= size
-                    address += size
                 }
+                let bytesWritten = buffer.withUnsafeReadableBytes { buffer in
+                    let address = buffer.baseAddress! + offset
+                    return self.outputStream.write(address, maxLength: size)
+                }
+                bufferSize -= bytesWritten
+                offset += bytesWritten
             }
         }
-        self.outputStream.close()
+    }
+
+    deinit {
+        if let cont = self.cont {
+            cont.resume()
+            self.cont = nil
+        }
     }
 
     func stream(_: Stream, handle event: Stream.Event) {
         switch event {
-        case .openCompleted:
-            if let cont = self.cont {
-                cont.resume()
-                self.cont = nil
-            }
-
         case .hasSpaceAvailable:
             if let cont = self.cont {
                 cont.resume()

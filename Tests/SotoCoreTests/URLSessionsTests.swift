@@ -19,6 +19,7 @@ import Foundation
 import SotoTestUtils
 import XCTest
 
+@available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
 class URLSessionTests: XCTestCase {
     func testClientNoInputNoOutput() async throws {
         do {

@@ -12,6 +12,19 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if swift(>=5.8)
+@_exported @_documentation(visibility: internal) import protocol SotoSignerV4.Credential
+@_exported @_documentation(visibility: internal) import struct SotoSignerV4.StaticCredential
+
+@_exported @_documentation(visibility: internal) import struct Logging.Logger
+
+@_exported @_documentation(visibility: internal) import struct NIOCore.ByteBuffer
+@_exported @_documentation(visibility: internal) import struct NIOCore.ByteBufferAllocator
+@_exported @_documentation(visibility: internal) import struct NIOCore.TimeAmount
+
+@_exported @_documentation(visibility: internal) import struct NIOHTTP1.HTTPHeaders
+@_exported @_documentation(visibility: internal) import enum NIOHTTP1.HTTPMethod
+#else
 @_exported import protocol SotoSignerV4.Credential
 @_exported import struct SotoSignerV4.StaticCredential
 
@@ -23,3 +36,4 @@
 
 @_exported import struct NIOHTTP1.HTTPHeaders
 @_exported import enum NIOHTTP1.HTTPMethod
+#endif

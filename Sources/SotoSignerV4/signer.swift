@@ -433,6 +433,7 @@ extension String {
     static let queryAllowedCharacters = CharacterSet(charactersIn: "/;+").inverted
 }
 
+@_spi(SotoInternal)
 public extension Sequence where Element == UInt8 {
     /// return a hexEncoded string buffer from an array of bytes
     func hexDigest() -> String {
@@ -440,6 +441,7 @@ public extension Sequence where Element == UInt8 {
     }
 }
 
+@_spi(SotoInternal)
 public extension URL {
     /// return URL path, but do not remove the slash at the end if it exists.
     ///

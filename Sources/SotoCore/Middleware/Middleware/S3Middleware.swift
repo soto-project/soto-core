@@ -14,6 +14,7 @@
 
 import Crypto
 import Foundation
+@_spi(SotoInternal) import SotoSignerV4
 @_implementationOnly import SotoXML
 
 /// Middleware applied to S3 service

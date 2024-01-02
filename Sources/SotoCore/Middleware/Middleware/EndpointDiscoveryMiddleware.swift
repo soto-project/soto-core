@@ -22,7 +22,7 @@ import struct Foundation.TimeInterval
 import struct Foundation.URL
 import Logging
 import NIOHTTP1
-import SotoSignerV4
+@_spi(SotoInternal) import SotoSignerV4
 
 /// Middleware that runs an endpoint discovery function  to set service endpoint
 /// prior to running operation

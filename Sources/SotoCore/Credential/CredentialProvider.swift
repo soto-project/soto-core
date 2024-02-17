@@ -43,7 +43,7 @@ public struct CredentialProviderFactory: Sendable {
     /// The initialization context for a `ContextProvider`
     public struct Context: Sendable {
         /// The `AWSClient`s internal `HTTPClient`
-        public let httpClient: HTTPClient
+        public let httpClient: AWSHTTPClient
         /// The `Logger` attached to the AWSClient
         public let logger: Logger
         /// AWSClient options

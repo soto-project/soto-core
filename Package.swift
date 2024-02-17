@@ -29,7 +29,7 @@ let package = Package(
         .library(name: "SotoSignerV4", targets: ["SotoSignerV4"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/glbrntt/swift-nio.git", branch: "filesystem"),
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.63.0"),
         .package(url: "https://github.com/apple/swift-atomics.git", from: "1.1.0"),
         .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0"..<"4.0.0"),
         .package(url: "https://github.com/apple/swift-distributed-tracing.git", from: "1.0.1"),

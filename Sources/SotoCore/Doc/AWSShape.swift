@@ -225,7 +225,7 @@ public extension AWSEncodableShape {
 public protocol AWSDecodableShape: AWSShape & Decodable {}
 
 /// AWSShape options.
-public struct AWSShapeOptions: OptionSet {
+public struct AWSShapeOptions: OptionSet, Sendable {
     public var rawValue: Int
 
     public init(rawValue: Int) {

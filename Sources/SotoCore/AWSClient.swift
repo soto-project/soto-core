@@ -48,8 +48,6 @@ public final class AWSClient: Sendable {
     public let httpClient: HTTPClient
     /// Keeps a record of how we obtained the HTTP client
     let httpClientProvider: HTTPClientProvider
-    /// EventLoopGroup used by AWSClient
-    public var eventLoopGroup: EventLoopGroup { return self.httpClient.eventLoopGroup }
     /// Logger used for non-request based output
     let clientLogger: Logger
     /// client options

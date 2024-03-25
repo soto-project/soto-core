@@ -39,8 +39,6 @@ extension AWSService {
     public var region: Region { return config.region }
     /// The url to use in requests
     public var endpoint: String { return config.endpoint }
-    /// The EventLoopGroup service is using
-    public var eventLoopGroup: EventLoopGroup { return client.eventLoopGroup }
 
     /// Return new version of Service with edited parameters
     /// - Parameters:

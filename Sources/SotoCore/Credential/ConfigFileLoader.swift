@@ -94,36 +94,31 @@ enum ConfigFileLoader {
         credentialsFilePath: String,
         configFilePath: String,
         profile: String,
-        context: CredentialProviderFactory.Context
-    ) -> EventLoopFuture<SharedCredentials> {
-        let threadPool = NIOThreadPool(numberOfThreads: 1)
-        threadPool.start()
+        threadPool: NIOThreadPool = .singleton
+    ) async throws -> SharedCredentials {
         let fileIO = NonBlockingFileIO(threadPool: threadPool)
-
-        // Load credentials file
-        return self.loadFile(path: credentialsFilePath, on: context.httpClient.eventLoopGroup.any(), using: fileIO)
-            .flatMap { credentialsByteBuffer in
-                // Load profile config file
-                return self.loadFile(path: configFilePath, on: context.httpClient.eventLoopGroup.any(), using: fileIO)
-                    .map {
-                        (credentialsByteBuffer, $0)
-                    }
-                    .flatMapError { _ in
-                        // Recover from error if profile config file does not exist
-                        context.httpClient.eventLoopGroup.any().makeSucceededFuture((credentialsByteBuffer, nil))
-                    }
-            }
-            .flatMapErrorThrowing { _ in
-                // Throw `.noProvider` error if credential file cannot be loaded
-                throw CredentialProviderError.noProvider
-            }
-            .flatMapThrowing { credentialsByteBuffer, configByteBuffer in
-                return try self.parseSharedCredentials(from: credentialsByteBuffer, configByteBuffer: configByteBuffer, for: profile)
-            }
-            .always { _ in
-                // shutdown the threadpool async
-                threadPool.shutdownGracefully { _ in }
-            }
+        let credentialsByteBuffer: ByteBuffer
+        do {
+            // Load credentials file
+            credentialsByteBuffer = try await self.loadFile(
+                path: credentialsFilePath,
+                fileIO: fileIO
+            )
+        } catch {
+            // Throw `.noProvider` error if credential file cannot be loaded
+            throw CredentialProviderError.noProvider
+        }
+        let configByteBuffer: ByteBuffer?
+        do {
+            // Load profile config file
+            configByteBuffer = try await self.loadFile(
+                path: configFilePath,
+                fileIO: fileIO
+            )
+        } catch {
+            configByteBuffer = nil
+        }
+        return try self.parseSharedCredentials(from: credentialsByteBuffer, configByteBuffer: configByteBuffer, for: profile)
     }
 
     /// Load a file from disk without blocking the current thread
@@ -132,17 +127,11 @@ enum ConfigFileLoader {
     ///   - eventLoop: event loop to run everything on
     ///   - fileIO: non-blocking file IO
     /// - Returns: Event loop future with file contents in a byte-buffer
-    static func loadFile(path: String, on eventLoop: EventLoop, using fileIO: NonBlockingFileIO) -> EventLoopFuture<ByteBuffer> {
+    static func loadFile(path: String, fileIO: NonBlockingFileIO) async throws -> ByteBuffer {
         let path = self.expandTildeInFilePath(path)
-
-        return fileIO.openFile(path: path, eventLoop: eventLoop)
-            .flatMap { handle, region in
-                fileIO.read(fileRegion: region, allocator: ByteBufferAllocator(), eventLoop: eventLoop).and(value: handle)
-            }
-            .flatMapThrowing { byteBuffer, handle in
-                try handle.close()
-                return byteBuffer
-            }
+        return try await fileIO.withFileRegion(path: path) { fileRegion in
+            try await fileIO.read(fileHandle: fileRegion.fileHandle, byteCount: fileRegion.readableBytes, allocator: ByteBufferAllocator())
+        }
     }
 
     // MARK: - Byte Buffer parsing (INIParser)

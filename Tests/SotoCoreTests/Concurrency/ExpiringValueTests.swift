@@ -48,6 +48,7 @@ final class ExpiringValueTests: XCTestCase {
             return (1, Date())
         }
         await Task.yield()
+        await Task.yield()
         // test it return current value
         XCTAssertEqual(value, 0)
         // test it kicked off a task

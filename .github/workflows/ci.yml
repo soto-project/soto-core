@@ -6,9 +6,6 @@ on:
     - main
     - 7.x.x
   pull_request:
-    branches:
-    - main
-    - 7.x.x
   release:
     types: [published]
   workflow_dispatch:

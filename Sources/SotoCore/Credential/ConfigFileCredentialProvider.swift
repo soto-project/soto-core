@@ -15,6 +15,7 @@
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
+import NIOPosix
 import SotoSignerV4
 
 final class ConfigFileCredentialProvider: CredentialProviderSelector {
@@ -60,12 +61,14 @@ final class ConfigFileCredentialProvider: CredentialProviderSelector {
         configFilePath: String,
         for profile: String,
         context: CredentialProviderFactory.Context,
-        endpoint: String?
+        endpoint: String?,
+        threadPool: NIOThreadPool = .singleton
     ) async throws -> CredentialProvider {
         let sharedCredentials = try await ConfigFileLoader.loadSharedCredentials(
             credentialsFilePath: credentialsFilePath,
             configFilePath: configFilePath,
-            profile: profile
+            profile: profile,
+            threadPool: threadPool
         )
         return try self.credentialProvider(from: sharedCredentials, context: context, endpoint: endpoint)
     }

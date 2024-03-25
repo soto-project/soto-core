@@ -16,7 +16,7 @@ import struct Foundation.UUID
 import INIParser
 import Logging
 import NIOCore
-import NIOFileSystem
+import NIOPosix
 #if os(Linux)
 import Glibc
 #else
@@ -93,30 +93,44 @@ enum ConfigFileLoader {
     static func loadSharedCredentials(
         credentialsFilePath: String,
         configFilePath: String,
-        profile: String
+        profile: String,
+        threadPool: NIOThreadPool = .singleton
     ) async throws -> SharedCredentials {
-        try await withFileSystem(numberOfThreads: 1) { fileSystem in
-            let credentialsByteBuffer: ByteBuffer
-            do {
-                // Load credentials file
-                credentialsByteBuffer = try await ByteBuffer(
-                    contentsOf: FilePath(credentialsFilePath),
-                    maximumSizeAllowed: .megabytes(1024),
-                    fileSystem: fileSystem
-                )
-            } catch {
-                // Throw `.noProvider` error if credential file cannot be loaded
-                throw CredentialProviderError.noProvider
-            }
-
-            // Load profile config file
-            let configByteBuffer = try? await ByteBuffer(
-                contentsOf: FilePath(configFilePath),
-                maximumSizeAllowed: .megabytes(1024),
-                fileSystem: fileSystem
+        let fileIO = NonBlockingFileIO(threadPool: threadPool)
+        let credentialsByteBuffer: ByteBuffer
+        do {
+            // Load credentials file
+            credentialsByteBuffer = try await self.loadFile(
+                path: credentialsFilePath,
+                fileIO: fileIO
             )
+        } catch {
+            // Throw `.noProvider` error if credential file cannot be loaded
+            throw CredentialProviderError.noProvider
+        }
+        let configByteBuffer: ByteBuffer?
+        do {
+            // Load profile config file
+            configByteBuffer = try await self.loadFile(
+                path: configFilePath,
+                fileIO: fileIO
+            )
+        } catch {
+            configByteBuffer = nil
+        }
+        return try self.parseSharedCredentials(from: credentialsByteBuffer, configByteBuffer: configByteBuffer, for: profile)
+    }
 
-            return try self.parseSharedCredentials(from: credentialsByteBuffer, configByteBuffer: configByteBuffer, for: profile)
+    /// Load a file from disk without blocking the current thread
+    /// - Parameters:
+    ///   - path: path for the file to load
+    ///   - eventLoop: event loop to run everything on
+    ///   - fileIO: non-blocking file IO
+    /// - Returns: Event loop future with file contents in a byte-buffer
+    static func loadFile(path: String, fileIO: NonBlockingFileIO) async throws -> ByteBuffer {
+        let path = self.expandTildeInFilePath(path)
+        return try await fileIO.withFileRegion(path: path) { fileRegion in
+            try await fileIO.read(fileHandle: fileRegion.fileHandle, byteCount: fileRegion.readableBytes, allocator: ByteBufferAllocator())
         }
     }
 

@@ -52,7 +52,6 @@ let package = Package(
                 .product(name: "Atomics", package: "swift-atomics"),
                 .product(name: "Metrics", package: "swift-metrics"),
                 .product(name: "NIOCore", package: "swift-nio"),
-                .product(name: "_NIOFileSystem", package: "swift-nio"),
                 .product(name: "NIOHTTP1", package: "swift-nio"),
                 .product(name: "NIOPosix", package: "swift-nio"),
                 .product(name: "NIOSSL", package: "swift-nio-ssl"),

@@ -45,7 +45,7 @@ public final class AWSClient: Sendable {
     /// Middleware code to be applied to requests and responses
     public let middleware: AWSMiddlewareProtocol
     /// HTTP client used by AWSClient
-    public let httpClient: HTTPClient
+    public let httpClient: AWSHTTPClient
     /// Keeps a record of how we obtained the HTTP client
     let httpClientProvider: HTTPClientProvider
     /// Logger used for non-request based output
@@ -209,7 +209,7 @@ public final class AWSClient: Sendable {
     /// Specifies how `HTTPClient` will be created and establishes lifecycle ownership.
     public struct HTTPClientProvider: Sendable {
         fileprivate enum Internal: Sendable {
-            case shared(HTTPClient)
+            case shared(AWSHTTPClient)
             case createNewWithEventLoopGroup(EventLoopGroup)
             case createNew
         }
@@ -221,7 +221,7 @@ public final class AWSClient: Sendable {
         }
 
         /// Use HTTPClient provided by the user. User is responsible for the lifecycle of the HTTPClient.
-        public static func shared(_ httpClient: HTTPClient) -> Self { .init(.shared(httpClient)) }
+        public static func shared(_ httpClient: AWSHTTPClient) -> Self { .init(.shared(httpClient)) }
         /// HTTPClient will be created by AWSClient using provided EventLoopGroup. When `shutdown` is called, created `HTTPClient`
         /// will be shut down as well.
         public static func createNewWithEventLoopGroup(_ eventLoopGroup: EventLoopGroup) -> Self { .init(.createNewWithEventLoopGroup(eventLoopGroup)) }

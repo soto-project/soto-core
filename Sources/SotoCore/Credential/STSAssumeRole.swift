@@ -106,7 +106,7 @@ struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
         request: STSAssumeRoleRequest,
         credentialProvider: CredentialProviderFactory,
         region: Region,
-        httpClient: HTTPClient,
+        httpClient: AWSHTTPClient,
         endpoint: String? = nil
     ) {
         self.client = AWSClient(credentialProvider: credentialProvider, httpClientProvider: .shared(httpClient))

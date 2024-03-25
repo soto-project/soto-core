@@ -97,10 +97,10 @@ struct ECSMetaDataClient: MetaDataClient {
         }
     }
 
-    let httpClient: HTTPClient
+    let httpClient: AWSHTTPClient
     let endpointURL: String
 
-    init?(httpClient: HTTPClient, host: String = ECSMetaDataClient.Host) {
+    init?(httpClient: AWSHTTPClient, host: String = ECSMetaDataClient.Host) {
         guard let relativeURL = Environment[Self.RelativeURIEnvironmentName] else {
             return nil
         }
@@ -173,10 +173,10 @@ struct InstanceMetaDataClient: MetaDataClient {
         return URL(string: "\(self.host)\(Self.CredentialUri)")!
     }
 
-    let httpClient: HTTPClient
+    let httpClient: AWSHTTPClient
     let host: String
 
-    init(httpClient: HTTPClient, host: String = InstanceMetaDataClient.Host) {
+    init(httpClient: AWSHTTPClient, host: String = InstanceMetaDataClient.Host) {
         self.httpClient = httpClient
         self.host = host
     }

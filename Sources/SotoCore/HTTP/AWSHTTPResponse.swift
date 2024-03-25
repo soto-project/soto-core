@@ -24,7 +24,11 @@ import Logging
 import NIOCore
 import NIOFoundationCompat
 import NIOHTTP1
+#if compiler(>=5.10)
+internal import SotoXML
+#else
 @_implementationOnly import SotoXML
+#endif
 
 /// Structure encapsulating an HTTP Response
 public struct AWSHTTPResponse {

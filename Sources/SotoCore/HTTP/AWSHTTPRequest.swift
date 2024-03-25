@@ -21,7 +21,11 @@ import NIOCore
 import NIOFoundationCompat
 import NIOHTTP1
 import SotoSignerV4
+#if compiler(>=5.10)
+internal import SotoXML
+#else
 @_implementationOnly import SotoXML
+#endif
 
 /// Object encapsulating all the information needed to generate a raw HTTP request to AWS
 public struct AWSHTTPRequest {

@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.7) && os(Linux)
+#if os(Linux)
 @preconcurrency import struct Foundation.CharacterSet
 #else
 import struct Foundation.CharacterSet

@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=5.7) && os(Linux)
+#if compiler(<5.9) && os(Linux)
 @preconcurrency import struct Foundation.Data
 #else
 import struct Foundation.Data

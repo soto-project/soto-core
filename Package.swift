@@ -1,4 +1,4 @@
-// swift-tools-version:5.7
+// swift-tools-version:5.8
 //===----------------------------------------------------------------------===//
 //
 // This source file is part of the Soto for AWS open source project
@@ -14,6 +14,11 @@
 //===----------------------------------------------------------------------===//
 
 import PackageDescription
+
+let swiftSettings: [SwiftSetting] = [
+    .enableExperimentalFeature("StrictConcurrency=complete"),
+    .enableExperimentalFeature("AccessLevelOnImport"),
+]
 
 let package = Package(
     name: "soto-core",
@@ -59,13 +64,18 @@ let package = Package(
                 .product(name: "NIOFoundationCompat", package: "swift-nio"),
                 .product(name: "JMESPath", package: "jmespath.swift"),
                 .product(name: "Tracing", package: "swift-distributed-tracing"),
-            ]
+            ],
+            swiftSettings: swiftSettings
         ),
-        .target(name: "SotoSignerV4", dependencies: [
-            .product(name: "Crypto", package: "swift-crypto"),
-            .product(name: "NIOCore", package: "swift-nio"),
-            .product(name: "NIOHTTP1", package: "swift-nio"),
-        ]),
+        .target(
+            name: "SotoSignerV4",
+            dependencies: [
+                .product(name: "Crypto", package: "swift-crypto"),
+                .product(name: "NIOCore", package: "swift-nio"),
+                .product(name: "NIOHTTP1", package: "swift-nio"),
+            ],
+            swiftSettings: swiftSettings
+        ),
         .target(name: "SotoTestUtils", dependencies: [
             .byName(name: "SotoCore"),
             .byName(name: "SotoXML"),
@@ -76,12 +86,19 @@ let package = Package(
             .product(name: "NIOPosix", package: "swift-nio"),
             .product(name: "NIOTestUtils", package: "swift-nio"),
         ]),
-        .target(name: "SotoXML", dependencies: [
-            .byName(name: "CSotoExpat"),
-        ]),
+        .target(
+            name: "SotoXML",
+            dependencies: [
+                .byName(name: "CSotoExpat"),
+            ],
+            swiftSettings: swiftSettings
+        ),
         .target(name: "CSotoExpat", dependencies: []),
-        .target(name: "INIParser", dependencies: []),
-
+        .target(
+            name: "INIParser",
+            dependencies: [],
+            swiftSettings: swiftSettings
+        ),
         .testTarget(
             name: "SotoCoreTests",
             dependencies: [
@@ -102,13 +119,3 @@ let package = Package(
         ]),
     ]
 )
-
-import Foundation
-
-if ProcessInfo.processInfo.environment["SOTO_CORE_STRICT_CONCURRENCY"] == "true" {
-    for target in package.targets {
-        if !target.isTest {
-            target.swiftSettings = [.unsafeFlags(["-Xfrontend", "-strict-concurrency=complete"])]
-        }
-    }
-}

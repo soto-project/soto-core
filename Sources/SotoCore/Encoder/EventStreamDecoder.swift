@@ -14,7 +14,11 @@
 
 import Foundation
 import NIOCore
+#if compiler(>=5.10)
+internal import SotoXML
+#else
 @_implementationOnly import SotoXML
+#endif
 
 /// Event stream decoder. Decodes top level `:event-type` header and then passes the payload
 /// to another decoder based off the `:content-type` header

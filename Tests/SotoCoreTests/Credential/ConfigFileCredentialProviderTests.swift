@@ -59,8 +59,13 @@ class ConfigFileCredentialProviderTests: XCTestCase {
             context: context,
             endpoint: nil
         )
-        XCTAssertTrue(provider is STSAssumeRoleCredentialProvider)
-        XCTAssertEqual((provider as? STSAssumeRoleCredentialProvider)?.request.roleArn, "arn")
+        let stsProvider = try XCTUnwrap(provider as? STSAssumeRoleCredentialProvider)
+        switch stsProvider.request {
+        case .assumeRole(let arn, let sessionName):
+            XCTAssertEqual(arn, "arn")
+            XCTAssertEqual(sessionName, "baz")
+        default: XCTFail()
+        }
 
         try await provider.shutdown()
         try await httpClient.shutdown()

@@ -124,3 +124,16 @@ public enum TestEnvironment {
         return AWSClient.loggingDisabled
     }()
 }
+
+/// Run closure and then run teardown closure once closure has either returned or throw an error
+public func withTeardown<Value>(_ process: () async throws -> Value, teardown: () async -> Void) async throws -> Value {
+    let result: Value
+    do {
+        result = try await process()
+    } catch {
+        await teardown()
+        throw error
+    }
+    await teardown()
+    return result
+}

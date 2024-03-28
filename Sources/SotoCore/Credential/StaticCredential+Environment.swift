@@ -14,10 +14,10 @@
 
 import SotoSignerV4
 
-public extension StaticCredential {
+extension StaticCredential {
     /// construct static credentaisl from environment variables `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
     /// and `AWS_SESSION_TOKEN` if it exists
-    static func fromEnvironment() -> StaticCredential? {
+    static func fromEnvironment() -> CredentialProvider? {
         guard let accessKeyId = Environment["AWS_ACCESS_KEY_ID"] else {
             return nil
         }
@@ -25,7 +25,7 @@ public extension StaticCredential {
             return nil
         }
 
-        return .init(
+        return StaticCredential(
             accessKeyId: accessKeyId,
             secretAccessKey: secretAccessKey,
             sessionToken: Environment["AWS_SESSION_TOKEN"]

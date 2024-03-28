@@ -70,6 +70,7 @@ class STSAssumeRoleTests: XCTestCase {
         }
         let fileIO = NonBlockingFileIO(threadPool: .singleton)
         let webIdentityToken = "TestThis"
+        // Write token to file referenced by AWS_WEB_IDENTITY_TOKEN_FILE env variable
         try await fileIO.withFileHandle(path: "temp_webidentity_token", mode: .write, flags: .allowFileCreation()) { fileHandle in
             try await fileIO.write(fileHandle: fileHandle, buffer: ByteBuffer(string: webIdentityToken))
         }

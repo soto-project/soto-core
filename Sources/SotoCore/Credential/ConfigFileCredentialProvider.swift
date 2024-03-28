@@ -92,10 +92,10 @@ final class ConfigFileCredentialProvider: CredentialProviderSelector {
         case .staticCredential(let staticCredential):
             return staticCredential
         case .assumeRole(let roleArn, let sessionName, let region, let sourceCredentialProvider):
-            let request = STSAssumeRoleRequest(roleArn: roleArn, roleSessionName: sessionName)
             let region = region ?? .useast1
             return STSAssumeRoleCredentialProvider(
-                request: request,
+                roleArn: roleArn,
+                roleSessionName: sessionName,
                 credentialProvider: sourceCredentialProvider,
                 region: region,
                 httpClient: context.httpClient,

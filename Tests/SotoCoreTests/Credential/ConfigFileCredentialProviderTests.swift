@@ -172,9 +172,8 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         let sharedCredentials = try await ConfigFileLoader.loadSharedCredentials(
             credentialsFilePath: filename,
             configFilePath: "/dev/null",
-            profile: profile,
-            context: context
-        ).get()
+            profile: profile
+        )
 
         switch sharedCredentials {
         case .assumeRole(let aRoleArn, _, _, let sourceCredentialProvider):

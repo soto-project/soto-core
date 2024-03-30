@@ -45,7 +45,7 @@ class ConfigFileLoadersTests: XCTestCase {
         """
 
         let credentialsPath = try save(content: credentialsFile, prefix: #function)
-        let (context, httpClient) = try makeContext()
+        let (_, httpClient) = try makeContext()
 
         defer {
             try? FileManager.default.removeItem(atPath: credentialsPath)
@@ -55,9 +55,8 @@ class ConfigFileLoadersTests: XCTestCase {
         let sharedCredentials = try await ConfigFileLoader.loadSharedCredentials(
             credentialsFilePath: credentialsPath,
             configFilePath: "/dev/null",
-            profile: profile,
-            context: context
-        ).get()
+            profile: profile
+        )
 
         switch sharedCredentials {
         case .staticCredential(let credentials):
@@ -102,9 +101,8 @@ class ConfigFileLoadersTests: XCTestCase {
         let sharedCredentials = try await ConfigFileLoader.loadSharedCredentials(
             credentialsFilePath: credentialsPath,
             configFilePath: configPath,
-            profile: profile,
-            context: context
-        ).get()
+            profile: profile
+        )
 
         switch sharedCredentials {
         case .assumeRole(let aRoleArn, let aSessionName, let region, let sourceCredentialProvider):
@@ -139,9 +137,8 @@ class ConfigFileLoadersTests: XCTestCase {
         let sharedCredentials = try await ConfigFileLoader.loadSharedCredentials(
             credentialsFilePath: credentialsPath,
             configFilePath: "non-existing-file-path",
-            profile: profile,
-            context: context
-        ).get()
+            profile: profile
+        )
 
         switch sharedCredentials {
         case .assumeRole(let aRoleArn, _, _, let source):
@@ -164,7 +161,7 @@ class ConfigFileLoadersTests: XCTestCase {
         """
 
         let credentialsPath = try save(content: credentialsFile, prefix: #function)
-        let (context, httpClient) = try makeContext()
+        let (_, httpClient) = try makeContext()
 
         defer {
             try? FileManager.default.removeItem(atPath: credentialsPath)
@@ -175,9 +172,8 @@ class ConfigFileLoadersTests: XCTestCase {
             _ = try await ConfigFileLoader.loadSharedCredentials(
                 credentialsFilePath: credentialsPath,
                 configFilePath: "/dev/null",
-                profile: profile,
-                context: context
-            ).get()
+                profile: profile
+            )
         } catch ConfigFileLoader.ConfigFileError.missingAccessKeyId {
             // Pass
         } catch {
@@ -194,7 +190,7 @@ class ConfigFileLoadersTests: XCTestCase {
         """
 
         let credentialsPath = try save(content: credentialsFile, prefix: #function)
-        let (context, httpClient) = try makeContext()
+        let (_, httpClient) = try makeContext()
 
         defer {
             try? FileManager.default.removeItem(atPath: credentialsPath)
@@ -205,9 +201,8 @@ class ConfigFileLoadersTests: XCTestCase {
             _ = try await ConfigFileLoader.loadSharedCredentials(
                 credentialsFilePath: credentialsPath,
                 configFilePath: "/dev/null",
-                profile: profile,
-                context: context
-            ).get()
+                profile: profile
+            )
         } catch ConfigFileLoader.ConfigFileError.missingSecretAccessKey {
             // Pass
         } catch {
@@ -229,7 +224,7 @@ class ConfigFileLoadersTests: XCTestCase {
         """
 
         let credentialsPath = try save(content: credentialsFile, prefix: #function)
-        let (context, httpClient) = try makeContext()
+        let (_, httpClient) = try makeContext()
 
         defer {
             try? FileManager.default.removeItem(atPath: credentialsPath)
@@ -240,9 +235,8 @@ class ConfigFileLoadersTests: XCTestCase {
             _ = try await ConfigFileLoader.loadSharedCredentials(
                 credentialsFilePath: credentialsPath,
                 configFilePath: "/dev/null",
-                profile: profile,
-                context: context
-            ).get()
+                profile: profile
+            )
         } catch ConfigFileLoader.ConfigFileError.missingAccessKeyId {
             // Pass
         } catch {
@@ -264,7 +258,7 @@ class ConfigFileLoadersTests: XCTestCase {
         """
 
         let credentialsPath = try save(content: credentialsFile, prefix: #function)
-        let (context, httpClient) = try makeContext()
+        let (_, httpClient) = try makeContext()
 
         defer {
             try? FileManager.default.removeItem(atPath: credentialsPath)
@@ -275,9 +269,8 @@ class ConfigFileLoadersTests: XCTestCase {
             _ = try await ConfigFileLoader.loadSharedCredentials(
                 credentialsFilePath: credentialsPath,
                 configFilePath: "/dev/null",
-                profile: profile,
-                context: context
-            ).get()
+                profile: profile
+            )
         } catch ConfigFileLoader.ConfigFileError.missingSecretAccessKey {
             // Pass
         } catch {
@@ -294,7 +287,7 @@ class ConfigFileLoadersTests: XCTestCase {
         """
 
         let credentialsPath = try save(content: credentialsFile, prefix: #function)
-        let (context, httpClient) = try makeContext()
+        let (_, httpClient) = try makeContext()
 
         defer {
             try? FileManager.default.removeItem(atPath: credentialsPath)
@@ -305,9 +298,8 @@ class ConfigFileLoadersTests: XCTestCase {
             _ = try await ConfigFileLoader.loadSharedCredentials(
                 credentialsFilePath: credentialsPath,
                 configFilePath: "/dev/null",
-                profile: profile,
-                context: context
-            ).get()
+                profile: profile
+            )
         } catch ConfigFileLoader.ConfigFileError.invalidCredentialFile {
             // Pass
         } catch {

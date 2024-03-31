@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2022 the Soto project authors
+// Copyright (c) 2017-2024 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -17,14 +17,14 @@ import Logging
 import NIOCore
 import NIOHTTP1
 
-extension AsyncHTTPClient.HTTPClient {
+extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
     /// Execute HTTP request
     /// - Parameters:
     ///   - request: HTTP request
     ///   - timeout: If execution is idle for longer than timeout then throw error
     ///   - eventLoop: eventLoop to run request on
     /// - Returns: EventLoopFuture that will be fulfilled with request response
-    func execute(
+    public func execute(
         request: AWSHTTPRequest,
         timeout: TimeAmount,
         logger: Logger

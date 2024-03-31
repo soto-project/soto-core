@@ -171,7 +171,7 @@ class LoggingTests: XCTestCase {
                 logger: logger
             )
         } catch {}
-        XCTAssertNotNil(logCollection.filter(metadata: "aws-error-message", with: "No credential provider found").first)
+        XCTAssertNotNil(logCollection.filter(metadata: "aws-error-message", with: "No credential provider found.").first)
     }
 
     func testRequestLogLevel() async throws {

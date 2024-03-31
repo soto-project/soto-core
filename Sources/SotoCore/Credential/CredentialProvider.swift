@@ -16,6 +16,7 @@ import AsyncHTTPClient
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
+import NIOPosix
 import SotoSignerV4
 
 /// Provides AWS credentials
@@ -81,10 +82,24 @@ extension CredentialProviderFactory {
     }
 
     /// Get `CredentialProvider` details from the environment
-    /// Looks in environment variables `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_SESSION_TOKEN`.
+    /// Looks in environment variables `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_SESSION_TOKEN`
+    /// and then checks `AWS_ROLE_ARN`, `AWS_ROLE_SESSION_NAME` and `AWS_WEB_IDENTITY_TOKEN_FILE`.
     public static var environment: CredentialProviderFactory {
-        Self { _ -> CredentialProvider in
-            return StaticCredential.fromEnvironment() ?? NullCredentialProvider()
+        return .environment()
+    }
+
+    /// Get `CredentialProvider` details from the environment
+    /// Looks in environment variables `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_SESSION_TOKEN`
+    /// and then checks `AWS_ROLE_ARN`, `AWS_ROLE_SESSION_NAME` and `AWS_WEB_IDENTITY_TOKEN_FILE`.
+    public static func environment(endpoint: String? = nil, threadPool: NIOThreadPool = .singleton) -> CredentialProviderFactory {
+        Self { context -> CredentialProvider in
+            return StaticCredential.fromEnvironment()
+                ?? STSAssumeRoleCredentialProvider.fromEnvironment(
+                    context: context,
+                    endpoint: endpoint,
+                    threadPool: threadPool
+                )
+                ?? NullCredentialProvider()
         }
     }
 
@@ -135,6 +150,19 @@ extension CredentialProviderFactory {
                 profile: profile,
                 context: context
             )
+            return RotatingCredentialProvider(context: context, provider: provider)
+        }
+    }
+
+    /// Return credential provider for AWS_ROLE_ARN, AWS_ROLE_SESSION_NAME,
+    /// AWS_WEB_IDENTITY_TOKEN_FILE environment variables
+    public static func stsRoleARN(
+        credentialProvider: CredentialProviderFactory
+    ) -> CredentialProviderFactory {
+        return Self { context in
+            guard let provider = STSAssumeRoleCredentialProvider.fromEnvironment(context: context) else {
+                return NullCredentialProvider()
+            }
             return RotatingCredentialProvider(context: context, provider: provider)
         }
     }

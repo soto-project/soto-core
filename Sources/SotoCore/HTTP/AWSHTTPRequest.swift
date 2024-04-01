@@ -34,7 +34,7 @@ public struct AWSHTTPRequest {
     /// request body
     public var body: AWSHTTPBody
 
-    internal init(url: URL, method: HTTPMethod, headers: HTTPHeaders, body: AWSHTTPBody) {
+    public init(url: URL, method: HTTPMethod, headers: HTTPHeaders, body: AWSHTTPBody) {
         self.url = url
         self.method = method
         self.headers = headers

@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "soto-benchmark",
     dependencies: [
-        .package(url: "https://github.com/soto-project/soto-core", .branch("main")),
+        .package(url: "https://github.com/soto-project/soto-core", .branch("6.x.x")),
         .package(name: "Benchmark", url: "https://github.com/google/swift-benchmark", from: "0.1.0"),
     ],
     targets: [

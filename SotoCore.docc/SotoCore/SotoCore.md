@@ -27,10 +27,15 @@ SotoCore is the underlying driver for executing requests for the Soto Swift SDK 
 
 ### Middleware
 
-- ``AWSServiceMiddleware``
+- ``AWSMiddleware``
+- ``AWSMiddleware2``
+- ``AWSMiddlewareProtocol``
+- ``AWSDynamicMiddlewareStack``
 - ``AWSMiddlewareContext``
-- ``AWSLoggingMiddleware``
 - ``AWSEditHeadersMiddleware``
+- ``AWSEndpointDiscoveryMiddleware``
+- ``AWSLoggingMiddleware``
+- ``AWSTracingMiddleware``
 - ``S3Middleware``
 - ``TreeHashMiddleware``
 

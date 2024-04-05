@@ -13,7 +13,7 @@ trap cleanup exit $?
 
 #DOCC=$(xcrun --find docc)
 DOCC=docc
-VERSION=6.x.x
+VERSION=7.x.x
 SG_FOLDER=.build/symbol-graphs
 SOTOCORE_SG_FOLDER=.build/soto-core-symbol-graphs
 OUTPUT_PATH=docs/soto-core/$VERSION

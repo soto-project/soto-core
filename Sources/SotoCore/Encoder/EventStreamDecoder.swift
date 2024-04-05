@@ -191,12 +191,12 @@ private struct _EventStreamDecoder: Decoder {
 }
 
 /// Container used for passed event payload to decoders
-public struct EventDecodingContainer {
+struct EventDecodingContainer {
     let payload: ByteBuffer
 
     /// Return payload from EventStream payload
     /// - Returns: Payload as ByteBuffer
-    public func decodePayload() -> ByteBuffer {
+    func decodePayload() -> ByteBuffer {
         return self.payload
     }
 }

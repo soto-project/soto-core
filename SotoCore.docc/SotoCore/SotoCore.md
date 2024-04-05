@@ -24,26 +24,23 @@ SotoCore is the underlying driver for executing requests for the Soto Swift SDK 
 - ``ServiceProtocol``
 - ``Region``
 - ``AWSPartition``
+- ``EndpointVariantType``
 
 ### Middleware
 
-- ``AWSMiddleware``
-- ``AWSMiddleware2``
 - ``AWSMiddlewareProtocol``
+- ``AWSMiddleware``
+- ``AWSMiddlewareBuilder``
+- ``AWSMiddlewareStack(_:)``
 - ``AWSDynamicMiddlewareStack``
 - ``AWSMiddlewareContext``
+- ``AWSMiddlewareNextHandler``
 - ``AWSEditHeadersMiddleware``
-- ``AWSEndpointDiscoveryMiddleware``
 - ``AWSLoggingMiddleware``
 - ``AWSTracingMiddleware``
+- ``EndpointDiscoveryMiddleware``
 - ``S3Middleware``
 - ``TreeHashMiddleware``
-
-### Request/Response
-
-- ``AWSRequest``
-- ``AWSResponse``
-- ``Body``
 
 ### Credentials
 
@@ -77,6 +74,7 @@ SotoCore is the underlying driver for executing requests for the Soto Swift SDK 
 - ``AWSServerError``
 - ``AWSResponseError``
 - ``AWSRawError``
+- ``HeaderDecodingError``
 
 ### API Input/Outputs
 
@@ -133,20 +131,17 @@ SotoCore is the underlying driver for executing requests for the Soto Swift SDK 
 - ``soto_crc32c(_:bytes:)``
 - ``CRC32``
 
-### Exported (NIOCore)
+### HTTP Client
 
-- ``ByteBuffer``
-- ``ByteBufferAllocator``
-- ``TimeAmount``
+- ``AWSHTTPClient``
+- ``AWSHTTPRequest``
+- ``AWSHTTPResponse``
+- ``AWSHTTPBody``
 
-### Exported (NIOHTTP1)
+### Event streams
 
-- ``HTTPHeaders``
-- ``HTTPMethod``
-
-### Exported (Logger)
-
-- ``Logger``
+- ``AWSEventStream``
+- ``AWSEventPayload``
 
 ## See Also
 

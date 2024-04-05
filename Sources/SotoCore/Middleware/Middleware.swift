@@ -103,11 +103,3 @@ struct AWSDynamicMiddlewareStack: AWSMiddlewareProtocol {
         }
     }
 }
-
-public struct PassThruMiddleware: AWSMiddlewareProtocol {
-    public init() {}
-
-    public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse {
-        try await next(request, context)
-    }
-}

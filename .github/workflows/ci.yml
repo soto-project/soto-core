@@ -21,7 +21,7 @@ jobs:
     timeout-minutes: 15
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: SPM tests
       run: swift test --enable-code-coverage --parallel
     - name: Convert coverage files
@@ -31,7 +31,7 @@ jobs:
           -ignore-filename-regex="\/Tests\/" \
           -instr-profile=.build/debug/codecov/default.profdata > info.lcov
     - name: Upload to codecov.io
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         file: info.lcov
   linux:
@@ -48,7 +48,7 @@ jobs:
       image: ${{ matrix.image }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Test
       run: |
         swift --version
@@ -60,6 +60,6 @@ jobs:
           -ignore-filename-regex="\/Tests\/" \
           -instr-profile .build/debug/codecov/default.profdata > info.lcov
     - name: Upload to codecov.io
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         file: info.lcov

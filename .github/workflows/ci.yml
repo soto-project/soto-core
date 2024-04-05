@@ -4,7 +4,7 @@ on:
   push:
     branches:
     - main
-    - 7.x.x
+    - 6.x.x
   pull_request:
   release:
     types: [published]

@@ -56,21 +56,21 @@ struct STSAssumeRoleResponse: AWSDecodableShape {
     }
 }
 
-public struct STSAssumeRoleWithWebIdentityRequest: AWSEncodableShape {
+struct STSAssumeRoleWithWebIdentityRequest: AWSEncodableShape {
     /// The Amazon Resource Name (ARN) of the role that the caller is assuming.
-    public let roleArn: String
+    let roleArn: String
     /// An identifier for the assumed role session. Typically, you pass the name or identifier that is associated with the user who is using your application. That way, the temporary security credentials that your application will use are associated with that user. This session name is included as part of the ARN and assumed role ID in the AssumedRoleUser response element. The regex used to validate this parameter is a string of characters  consisting of upper- and lower-case alphanumeric characters with no spaces. You can  also include underscores or any of the following characters: =,.@-
-    public let roleSessionName: String
+    let roleSessionName: String
     /// The OAuth 2.0 access token or OpenID Connect ID token that is provided by the identity provider. Your application must get this token by authenticating the user who is using your application with a web identity provider before the application makes an AssumeRoleWithWebIdentity call. Only tokens with RSA algorithms (RS256) are supported.
-    public let webIdentityToken: String
+    let webIdentityToken: String
 
-    public init(roleArn: String, roleSessionName: String, webIdentityToken: String) {
+    init(roleArn: String, roleSessionName: String, webIdentityToken: String) {
         self.roleArn = roleArn
         self.roleSessionName = roleSessionName
         self.webIdentityToken = webIdentityToken
     }
 
-    public func validate(name: String) throws {
+    func validate(name: String) throws {
         try self.validate(self.roleArn, name: "roleArn", parent: name, max: 2048)
         try self.validate(self.roleArn, name: "roleArn", parent: name, min: 20)
         try self.validate(self.roleArn, name: "roleArn", parent: name, pattern: "^[\\u0009\\u000A\\u000D\\u0020-\\u007E\\u0085\\u00A0-\\uD7FF\\uE000-\\uFFFD\\u10000-\\u10FFFF]+$")

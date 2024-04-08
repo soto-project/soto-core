@@ -11,8 +11,15 @@ cleanup()
 }
 trap cleanup exit $?
 
-#DOCC=$(xcrun --find docc)
-DOCC=docc
+DOCC=${DOCC:-}
+if [[ -z "$DOCC" ]]; then
+    if [[ "$(uname)" == "Darwin" ]]; then
+        DOCC=$(xcrun --find docc)
+    else
+        DOCC=$(which docc)
+    fi
+fi
+echo "Found docc here ${DOCC}"
 VERSION=7.x.x
 SG_FOLDER=.build/symbol-graphs
 SOTOCORE_SG_FOLDER=.build/soto-core-symbol-graphs

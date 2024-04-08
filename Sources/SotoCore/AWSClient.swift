@@ -280,7 +280,7 @@ extension AWSClient {
         }
     }
 
-    /// execute a request with an input object and an empty response
+    /// Execute a request with an input object and an empty response
     /// - parameters:
     ///     - operationName: Name of the AWS operation
     ///     - path: path to append to endpoint URL

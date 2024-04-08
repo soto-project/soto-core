@@ -23,8 +23,6 @@ public struct AWSMiddlewareContext {
 
 /// Function to call next middleware in the chain
 public typealias AWSMiddlewareNextHandler = (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse
-/// Middleware handler, function that takes a request, context and the next function to call
-public typealias AWSMiddlewareHandler = @Sendable (AWSHTTPRequest, AWSMiddlewareContext, _ next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse
 
 /// Middleware protocol, with function that takes a request, context and the next function to call
 public protocol AWSMiddlewareProtocol: Sendable {
@@ -34,9 +32,9 @@ public protocol AWSMiddlewareProtocol: Sendable {
 /// Middleware initialized with a middleware handle
 public struct AWSMiddleware: AWSMiddlewareProtocol {
     @usableFromInline
-    var middleware: AWSMiddlewareHandler
+    var middleware: @Sendable (AWSHTTPRequest, AWSMiddlewareContext, _ next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse
 
-    public init(_ middleware: @escaping AWSMiddlewareHandler) {
+    public init(_ middleware: @escaping @Sendable (AWSHTTPRequest, AWSMiddlewareContext, _ next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse) {
         self.middleware = middleware
     }
 
@@ -47,7 +45,7 @@ public struct AWSMiddleware: AWSMiddlewareProtocol {
 }
 
 /// Build middleware from combining two middleware
-public struct AWSMiddleware2<M0: AWSMiddlewareProtocol, M1: AWSMiddlewareProtocol>: AWSMiddlewareProtocol {
+struct AWSMiddleware2<M0: AWSMiddlewareProtocol, M1: AWSMiddlewareProtocol>: AWSMiddlewareProtocol {
     @usableFromInline let m0: M0
     @usableFromInline let m1: M1
 
@@ -66,7 +64,7 @@ public struct AWSMiddleware2<M0: AWSMiddlewareProtocol, M1: AWSMiddlewareProtoco
 }
 
 /// Build middleware from array of existential middleware
-public struct AWSDynamicMiddlewareStack: AWSMiddlewareProtocol {
+struct AWSDynamicMiddlewareStack: AWSMiddlewareProtocol {
     @usableFromInline
     typealias Stack = [(String, any AWSMiddlewareProtocol)]
 
@@ -103,13 +101,5 @@ public struct AWSDynamicMiddlewareStack: AWSMiddlewareProtocol {
                 try await self.run(request, context: context, iterator: iterator, finally: finally)
             }
         }
-    }
-}
-
-public struct PassThruMiddleware: AWSMiddlewareProtocol {
-    public init() {}
-
-    public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse {
-        try await next(request, context)
     }
 }

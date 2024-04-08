@@ -46,8 +46,6 @@ public final class AWSClient: Sendable {
     public let middleware: AWSMiddlewareProtocol
     /// HTTP client used by AWSClient
     public let httpClient: AWSHTTPClient
-    /// Keeps a record of how we obtained the HTTP client
-    let httpClientProvider: HTTPClientProvider
     /// Logger used for non-request based output
     let clientLogger: Logger
     /// client options
@@ -71,20 +69,10 @@ public final class AWSClient: Sendable {
         retryPolicy retryPolicyFactory: RetryPolicyFactory = .default,
         middleware: Middleware,
         options: Options = Options(),
-        httpClientProvider: HTTPClientProvider,
+        httpClient: AWSHTTPClient = HTTPClient.shared,
         logger clientLogger: Logger = AWSClient.loggingDisabled
     ) {
-        // setup httpClient
-        self.httpClientProvider = httpClientProvider
-        switch httpClientProvider.value {
-        case .shared(let providedHTTPClient):
-            self.httpClient = providedHTTPClient
-        case .createNewWithEventLoopGroup(let elg):
-            self.httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(elg), configuration: .init(timeout: .init(connect: .seconds(10))))
-        case .createNew:
-            self.httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .singleton, configuration: .init(timeout: .init(connect: .seconds(10))))
-        }
-
+        self.httpClient = httpClient
         let credentialProvider = credentialProviderFactory.createProvider(context: .init(
             httpClient: self.httpClient,
             logger: clientLogger,
@@ -113,20 +101,10 @@ public final class AWSClient: Sendable {
         credentialProvider credentialProviderFactory: CredentialProviderFactory = .default,
         retryPolicy retryPolicyFactory: RetryPolicyFactory = .default,
         options: Options = Options(),
-        httpClientProvider: HTTPClientProvider,
+        httpClient: AWSHTTPClient = HTTPClient.shared,
         logger clientLogger: Logger = AWSClient.loggingDisabled
     ) {
-        // setup httpClient
-        self.httpClientProvider = httpClientProvider
-        switch httpClientProvider.value {
-        case .shared(let providedHTTPClient):
-            self.httpClient = providedHTTPClient
-        case .createNewWithEventLoopGroup(let elg):
-            self.httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(elg), configuration: .init(timeout: .init(connect: .seconds(10))))
-        case .createNew:
-            self.httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .singleton, configuration: .init(timeout: .init(connect: .seconds(10))))
-        }
-
+        self.httpClient = httpClient
         let credentialProvider = credentialProviderFactory.createProvider(context: .init(
             httpClient: self.httpClient,
             logger: clientLogger,
@@ -206,29 +184,6 @@ public final class AWSClient: Sendable {
         public static var failedToAccessPayload: ClientError { .init(error: .failedToAccessPayload) }
     }
 
-    /// Specifies how `HTTPClient` will be created and establishes lifecycle ownership.
-    public struct HTTPClientProvider: Sendable {
-        fileprivate enum Internal: Sendable {
-            case shared(AWSHTTPClient)
-            case createNewWithEventLoopGroup(EventLoopGroup)
-            case createNew
-        }
-
-        fileprivate let value: Internal
-
-        fileprivate init(_ value: Internal) {
-            self.value = value
-        }
-
-        /// Use HTTPClient provided by the user. User is responsible for the lifecycle of the HTTPClient.
-        public static func shared(_ httpClient: AWSHTTPClient) -> Self { .init(.shared(httpClient)) }
-        /// HTTPClient will be created by AWSClient using provided EventLoopGroup. When `shutdown` is called, created `HTTPClient`
-        /// will be shut down as well.
-        public static func createNewWithEventLoopGroup(_ eventLoopGroup: EventLoopGroup) -> Self { .init(.createNewWithEventLoopGroup(eventLoopGroup)) }
-        /// `HTTPClient` will be created by `AWSClient`. When `shutdown` is called, created `HTTPClient` will be shut down as well.
-        public static var createNew: Self { .init(.createNew) }
-    }
-
     /// Additional options
     public struct Options: Sendable {
         /// log level used for request logging
@@ -254,8 +209,7 @@ extension AWSClient {
     /// Shutdown AWSClient asynchronously.
     ///
     /// Before an `AWSClient` is deleted you need to call this function or the synchronous
-    /// version `syncShutdown` to do a clean shutdown of the client. It cleans up `CredentialProvider` tasks and shuts down
-    /// the HTTP client if it was created by the `AWSClient`.
+    /// version `syncShutdown` to do a clean shutdown of the client to clean up `CredentialProvider` tasks.
     public func shutdown() async throws {
         guard self.isShutdown.compareExchange(expected: false, desired: true, ordering: .relaxed).exchanged else {
             throw ClientError.alreadyShutdown
@@ -263,21 +217,6 @@ extension AWSClient {
         // shutdown credential provider ignoring any errors as credential provider that doesn't initialize
         // can cause the shutdown process to fail
         try? await self.credentialProvider.shutdown()
-        // if httpClient was created by AWSClient then it is required to shutdown the httpClient.
-        switch self.httpClientProvider.value {
-        case .createNew, .createNewWithEventLoopGroup:
-            do {
-                try await self.httpClient.shutdown()
-            } catch {
-                self.clientLogger.log(level: self.options.errorLogLevel, "Error shutting down HTTP client", metadata: [
-                    "aws-error": "\(error)",
-                ])
-                throw error
-            }
-
-        case .shared:
-            return
-        }
     }
 
     /// Execute a request with an input object and an empty response

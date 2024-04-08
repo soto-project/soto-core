@@ -42,7 +42,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0"..<"3.0.0"),
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.7.2"),
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", from: "1.13.1"),
-        .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.19.0"),
+        .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.21.0"),
         .package(url: "https://github.com/adam-fowler/jmespath.swift.git", from: "1.0.2"),
     ],
     targets: [

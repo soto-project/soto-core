@@ -26,7 +26,6 @@ class LoggingTests: XCTestCase {
         defer { XCTAssertNoThrow(try server.stop()) }
         let client = AWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
-            httpClientProvider: .createNew,
             logger: logger
         )
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
@@ -67,7 +66,6 @@ class LoggingTests: XCTestCase {
         defer { XCTAssertNoThrow(try server.stop()) }
         let client = AWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
-            httpClientProvider: .createNew,
             logger: logger
         )
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
@@ -102,7 +100,6 @@ class LoggingTests: XCTestCase {
         let client = AWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
             options: .init(requestLogLevel: .debug, errorLogLevel: .info),
-            httpClientProvider: .createNew,
             logger: logger
         )
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
@@ -129,7 +126,6 @@ class LoggingTests: XCTestCase {
         defer { XCTAssertNoThrow(try server.stop()) }
         let client = AWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
-            httpClientProvider: .createNew,
             logger: logger
         )
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
@@ -184,7 +180,6 @@ class LoggingTests: XCTestCase {
         let client = AWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
             options: .init(requestLogLevel: .trace),
-            httpClientProvider: .createNew,
             logger: logger
         )
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
@@ -218,7 +213,6 @@ class LoggingTests: XCTestCase {
         let client = AWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
             middleware: AWSLoggingMiddleware(logger: logger, logLevel: .info),
-            httpClientProvider: .createNew,
             logger: logger
         )
         defer { XCTAssertNoThrow(try client.syncShutdown()) }

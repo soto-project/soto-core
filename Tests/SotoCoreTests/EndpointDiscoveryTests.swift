@@ -111,7 +111,7 @@ final class EndpointDiscoveryTests: XCTestCase {
         guard ProcessInfo.processInfo.environment["CI"] == nil else { return }
         #endif
         let awsServer = AWSTestServer(serviceProtocol: .restjson)
-        let client = AWSClient(credentialProvider: .empty, httpClientProvider: .createNew)
+        let client = AWSClient(credentialProvider: .empty)
         defer {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
@@ -140,7 +140,7 @@ final class EndpointDiscoveryTests: XCTestCase {
         guard ProcessInfo.processInfo.environment["CI"] == nil else { return }
         #endif
         let awsServer = AWSTestServer(serviceProtocol: .json)
-        let client = AWSClient(credentialProvider: .empty, httpClientProvider: .createNew)
+        let client = AWSClient(credentialProvider: .empty)
         defer {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
@@ -172,7 +172,7 @@ final class EndpointDiscoveryTests: XCTestCase {
         guard ProcessInfo.processInfo.environment["CI"] == nil else { return }
         #endif
         let awsServer = AWSTestServer(serviceProtocol: .json)
-        let client = AWSClient(credentialProvider: .empty, httpClientProvider: .createNew)
+        let client = AWSClient(credentialProvider: .empty)
         defer {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())
@@ -201,7 +201,7 @@ final class EndpointDiscoveryTests: XCTestCase {
         guard ProcessInfo.processInfo.environment["CI"] == nil else { return }
         #endif
         let awsServer = AWSTestServer(serviceProtocol: .json)
-        let client = AWSClient(credentialProvider: .empty, httpClientProvider: .createNew)
+        let client = AWSClient(credentialProvider: .empty)
         defer {
             XCTAssertNoThrow(try client.syncShutdown())
             XCTAssertNoThrow(try awsServer.stop())

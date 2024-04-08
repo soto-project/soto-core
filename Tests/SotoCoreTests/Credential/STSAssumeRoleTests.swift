@@ -28,8 +28,6 @@ class STSAssumeRoleTests: XCTestCase {
             secretAccessKey: "STSSECRETACCESSKEY",
             sessionToken: "STSSESSIONTOKEN"
         )
-        let elg = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { XCTAssertNoThrow(try elg.syncShutdownGracefully()) }
         let testServer = AWSTestServer(serviceProtocol: .xml)
         defer { XCTAssertNoThrow(try testServer.stop()) }
         let client = AWSClient(
@@ -40,7 +38,6 @@ class STSAssumeRoleTests: XCTestCase {
                 region: .useast1,
                 endpoint: testServer.address
             ),
-            httpClientProvider: .createNewWithEventLoopGroup(elg),
             logger: TestEnvironment.logger
         )
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
@@ -75,13 +72,10 @@ class STSAssumeRoleTests: XCTestCase {
             try await fileIO.write(fileHandle: fileHandle, buffer: ByteBuffer(string: webIdentityToken))
         }
         try await withTeardown {
-            let elg = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-            defer { XCTAssertNoThrow(try elg.syncShutdownGracefully()) }
             let testServer = AWSTestServer(serviceProtocol: .xml)
             defer { XCTAssertNoThrow(try testServer.stop()) }
             let client = AWSClient(
                 credentialProvider: .environment(endpoint: testServer.address),
-                httpClientProvider: .createNewWithEventLoopGroup(elg),
                 logger: TestEnvironment.logger
             )
             defer { XCTAssertNoThrow(try client.syncShutdown()) }
@@ -118,11 +112,8 @@ class STSAssumeRoleTests: XCTestCase {
             Environment.unset(name: "AWS_ROLE_SESSION_NAME")
             Environment.unset(name: "AWS_WEB_IDENTITY_TOKEN_FILE")
         }
-        let elg = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { XCTAssertNoThrow(try elg.syncShutdownGracefully()) }
         let client = AWSClient(
             credentialProvider: .environment(),
-            httpClientProvider: .createNewWithEventLoopGroup(elg),
             logger: TestEnvironment.logger
         )
         defer { XCTAssertNoThrow(try client.syncShutdown()) }

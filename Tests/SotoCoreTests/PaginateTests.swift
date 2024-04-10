@@ -26,25 +26,19 @@ final class PaginateTests: XCTestCase, @unchecked Sendable {
     }
 
     var awsServer: AWSTestServer!
-    var eventLoopGroup: EventLoopGroup!
-    var httpClient: HTTPClient!
     var client: AWSClient!
     var config: AWSServiceConfig!
 
     override func setUp() {
         // create server and client
         self.awsServer = AWSTestServer(serviceProtocol: .json)
-        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 3)
-        self.httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(self.eventLoopGroup))
         self.config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: self.awsServer.address)
-        self.client = createAWSClient(credentialProvider: .empty, retryPolicy: .noRetry, httpClientProvider: .shared(self.httpClient))
+        self.client = createAWSClient(credentialProvider: .empty, retryPolicy: .noRetry)
     }
 
     override func tearDown() {
         XCTAssertNoThrow(try self.awsServer.stop())
         XCTAssertNoThrow(try self.client.syncShutdown())
-        XCTAssertNoThrow(try self.httpClient.syncShutdown())
-        XCTAssertNoThrow(try self.eventLoopGroup.syncShutdownGracefully())
     }
 
     // test structures/functions

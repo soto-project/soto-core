@@ -157,7 +157,7 @@ struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
         httpClient: AWSHTTPClient,
         endpoint: String? = nil
     ) {
-        self.client = AWSClient(credentialProvider: credentialProvider, httpClientProvider: .shared(httpClient))
+        self.client = AWSClient(credentialProvider: credentialProvider, httpClient: httpClient)
         self.request = .assumeRole(arn: roleArn, sessionName: roleSessionName)
         self.config = AWSServiceConfig(
             region: region,
@@ -180,7 +180,7 @@ struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
         endpoint: String? = nil,
         threadPool: NIOThreadPool = .singleton
     ) {
-        self.client = AWSClient(credentialProvider: .empty, httpClientProvider: .shared(httpClient))
+        self.client = AWSClient(credentialProvider: .empty, httpClient: httpClient)
         self.request = .assumeRoleWithWebIdentity(
             arn: roleArn,
             sessionName: roleSessionName,

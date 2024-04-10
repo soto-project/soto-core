@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import AsyncHTTPClient
 import Foundation
 import Logging
 import SotoCore
@@ -37,7 +38,7 @@ public func createAWSClient(
     retryPolicy: RetryPolicyFactory = .noRetry,
     middlewares: AWSMiddlewareProtocol = TestEnvironment.middlewares,
     options: AWSClient.Options = .init(),
-    httpClientProvider: AWSClient.HTTPClientProvider = .createNew,
+    httpClient: AWSHTTPClient = HTTPClient.shared,
     logger: Logger = TestEnvironment.logger
 ) -> AWSClient {
     return AWSClient(
@@ -45,7 +46,7 @@ public func createAWSClient(
         retryPolicy: retryPolicy,
         middleware: middlewares,
         options: options,
-        httpClientProvider: httpClientProvider,
+        httpClient: httpClient,
         logger: logger
     )
 }

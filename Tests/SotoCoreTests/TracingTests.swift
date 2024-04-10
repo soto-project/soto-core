@@ -36,8 +36,6 @@ final class TracingTests: XCTestCase {
         }
         InstrumentationSystem.bootstrapInternal(tracer)
 
-        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let config = createServiceConfig(
             service: "TestService",
@@ -46,8 +44,7 @@ final class TracingTests: XCTestCase {
             middlewares: AWSTracingMiddleware()
         )
         let client = createAWSClient(
-            credentialProvider: .empty,
-            httpClientProvider: .createNewWithEventLoopGroup(eventLoopGroup)
+            credentialProvider: .empty
         )
         defer {
             XCTAssertNoThrow(try client.syncShutdown())

@@ -249,7 +249,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
                 context: context,
                 endpoint: testServer.address
             )
-        }, httpClientProvider: .shared(httpClient))
+        }, httpClient: httpClient)
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
 
         // Retrieve credentials

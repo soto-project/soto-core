@@ -40,19 +40,16 @@ final class ExpiringValueTests: XCTestCase {
     /// Test when a value is just about to expire it returns current value and kicks off
     /// new task to get new value
     func testJustAboutToExpireValue() async throws {
-        let called = ManagedAtomic(false)
         let expiringValue = ExpiringValue<Int>(0, expires: Date() + 1, threshold: 3)
+        let (stream, source) = AsyncStream.makeStream(of: Void.self)
         let value = try await expiringValue.getValue {
-            called.store(true, ordering: .relaxed)
+            source.finish()
             try await Task.sleep(nanoseconds: 1000)
             return (1, Date())
         }
-        await Task.yield()
-        await Task.yield()
+        await stream.first { _ in true }
         // test it return current value
         XCTAssertEqual(value, 0)
-        // test it kicked off a task
-        XCTAssertEqual(called.load(ordering: .relaxed), true)
     }
 
     /// Test closure is not called if value has not expired

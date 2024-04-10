@@ -62,7 +62,7 @@ public final class AWSClient: Sendable {
     ///         Possible options are `.default`, `.noRetry`, `.exponential` or `.jitter`.
     ///     - middleware: Chain of middlewares to apply to requests and responses
     ///     - options: Configuration flags
-    ///     - httpClientProvider: HTTPClient to use. Use `.createNew` if you want the client to manage its own HTTPClient.
+    ///     - httpClient: HTTPClient to use.
     ///     - logger: Logger used to log background AWSClient events
     public init<Middleware: AWSMiddlewareProtocol>(
         credentialProvider credentialProviderFactory: CredentialProviderFactory = .default,
@@ -95,7 +95,7 @@ public final class AWSClient: Sendable {
     ///     - retryPolicy: Object returning whether retries should be attempted.
     ///         Possible options are `.default`, `.noRetry`, `.exponential` or `.jitter`.
     ///     - options: Configuration flags
-    ///     - httpClientProvider: HTTPClient to use. Use `.createNew` if you want the client to manage its own HTTPClient.
+    ///     - httpClient: HTTPClient to use.
     ///     - logger: Logger used to log background AWSClient events
     public init(
         credentialProvider credentialProviderFactory: CredentialProviderFactory = .default,
@@ -126,11 +126,23 @@ public final class AWSClient: Sendable {
 
     // MARK: API Calls
 
+    /// Shutdown AWSClient asynchronously.
+    ///
+    /// Before an `AWSClient` is deleted you need to call this function or the synchronous
+    /// version `syncShutdown` to do a clean shutdown of the client to clean up `CredentialProvider` tasks.
+    public func shutdown() async throws {
+        guard self.isShutdown.compareExchange(expected: false, desired: true, ordering: .relaxed).exchanged else {
+            throw ClientError.alreadyShutdown
+        }
+        // shutdown credential provider ignoring any errors as credential provider that doesn't initialize
+        // can cause the shutdown process to fail
+        try? await self.credentialProvider.shutdown()
+    }
+
     /// Shutdown client synchronously.
     ///
     /// Before an `AWSClient` is deleted you need to call this function or the async version `shutdown`
-    /// to do a clean shutdown of the client. It cleans up `CredentialProvider` tasks and shuts down the HTTP client if it was created by
-    /// the `AWSClient`.
+    /// to do a clean shutdown of the client.
     ///
     /// - Throws: AWSClient.ClientError.alreadyShutdown: You have already shutdown the client
     @available(*, noasync, message: "syncShutdown() can block indefinitely, prefer shutdown()", renamed: "shutdown()")
@@ -139,7 +151,7 @@ public final class AWSClient: Sendable {
         let semaphore = DispatchSemaphore(value: 0)
         Task {
             do {
-                try await shutdown()
+                try await self.shutdown()
             } catch {
                 errorStorage.withLockedValue { errorStorage in
                     errorStorage = error
@@ -206,19 +218,6 @@ public final class AWSClient: Sendable {
 // MARK: API Calls
 
 extension AWSClient {
-    /// Shutdown AWSClient asynchronously.
-    ///
-    /// Before an `AWSClient` is deleted you need to call this function or the synchronous
-    /// version `syncShutdown` to do a clean shutdown of the client to clean up `CredentialProvider` tasks.
-    public func shutdown() async throws {
-        guard self.isShutdown.compareExchange(expected: false, desired: true, ordering: .relaxed).exchanged else {
-            throw ClientError.alreadyShutdown
-        }
-        // shutdown credential provider ignoring any errors as credential provider that doesn't initialize
-        // can cause the shutdown process to fail
-        try? await self.credentialProvider.shutdown()
-    }
-
     /// Execute a request with an input object and an empty response
     /// - parameters:
     ///     - operationName: Name of the AWS operation

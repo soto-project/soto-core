@@ -62,8 +62,7 @@ let awsClientSuite = BenchmarkSuite(name: "AWSClient", settings: Iterations(1000
     // take the amount of time it took to construct the request
     let client = AWSClient(
         credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
-        middlewares: [RequestThrowMiddleware()],
-        httpClientProvider: .createNew
+        middlewares: [RequestThrowMiddleware()]
     )
     let jsonService = AWSServiceConfig(
         region: .useast1, partition: .aws, service: "test-service", serviceProtocol: .json(version: "1.1"), apiVersion: "10-10-2010"

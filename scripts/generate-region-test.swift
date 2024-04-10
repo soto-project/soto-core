@@ -28,9 +28,7 @@ struct RegionDesc {
 
 var regionDescs: [RegionDesc] = []
 
-let client = AWSClient(
-    httpClientProvider: .createNew
-)
+let client = AWSClient()
 let ssm = SSM(client: client, region: Region.euwest1)
 let request = SSM.GetParametersByPathRequest(
     path: REGION_PATH

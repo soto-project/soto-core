@@ -27,8 +27,8 @@ class MiddlewareTests: XCTestCase {
         }
     }
 
-    func testMiddleware<Middleware: AWSMiddlewareProtocol>(
-        _ middleware: Middleware,
+    func testMiddleware(
+        _ middleware: some AWSMiddlewareProtocol,
         serviceName: String = "service",
         serviceOptions: AWSServiceConfig.Options = [],
         uri: String = "/",

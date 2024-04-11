@@ -121,25 +121,25 @@ public enum XML {
         public var xmlString: String {
             switch self.kind {
             case .text:
-                if let stringValue = stringValue {
+                if let stringValue {
                     return XML.Node.xmlEncode(string: stringValue)
                 }
                 return ""
             case .attribute:
-                if let name = name {
+                if let name {
                     return "\(name)=\"\(self.stringValue ?? "")\""
                 } else {
                     return ""
                 }
             case .comment:
-                if let stringValue = stringValue {
+                if let stringValue {
                     return "<!--\(stringValue)-->"
                 } else {
                     return ""
                 }
             case .namespace:
                 var string = "xmlns"
-                if let name = name, name != "" {
+                if let name, name != "" {
                     string += ":\(name)"
                 }
                 string += "=\"\(self.stringValue ?? "")\""
@@ -302,7 +302,7 @@ public enum XML {
             }
             set(value) {
                 children?.removeAll { $0.kind == .text }
-                if let value = value {
+                if let value {
                     self.addChild(XML.Node(.text, stringValue: value))
                 }
             }

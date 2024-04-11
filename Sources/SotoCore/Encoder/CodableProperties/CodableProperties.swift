@@ -126,7 +126,7 @@ extension KeyedDecodingContainer {
 /// extending `KeyedEncodingContainer` so it will only encode a wrapped value it is non nil
 extension KeyedEncodingContainer {
     // Used to make make sure OptionalCodingWrappers encode no value when it's wrappedValue is nil.
-    public mutating func encode<T>(_ value: T, forKey key: KeyedEncodingContainer<K>.Key) throws where T: Encodable, T: OptionalCustomCodingWrapper {
+    public mutating func encode(_ value: some Encodable & OptionalCustomCodingWrapper, forKey key: KeyedEncodingContainer<K>.Key) throws {
         guard value.wrappedValue != nil else { return }
         try encodeIfPresent(value, forKey: key)
     }

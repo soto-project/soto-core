@@ -66,7 +66,7 @@ public struct XMLEncoder {
 
     public init() {}
 
-    public func encode<T: Encodable>(_ value: T, name: String? = nil) throws -> XML.Element? {
+    public func encode(_ value: some Encodable, name: String? = nil) throws -> XML.Element? {
         let rootName = name ?? "\(type(of: value))"
         let encoder = _XMLEncoder(options: options, codingPath: [_XMLKey(stringValue: rootName, intValue: nil)])
         try value.encode(to: encoder)
@@ -218,7 +218,7 @@ class _XMLEncoder: Encoder {
             self.element.addChild(childElement)
         }
 
-        func encode<T>(_ value: T, forKey key: Key) throws where T: Encodable {
+        func encode(_ value: some Encodable, forKey key: Key) throws {
             // get element to attach child elements, also what to name those elements
             self.encoder.codingPath.append(key)
             defer { self.encoder.codingPath.removeLast() }
@@ -365,7 +365,7 @@ class _XMLEncoder: Encoder {
             self.count += 1
         }
 
-        mutating func encode<T>(_ value: T) throws where T: Encodable {
+        mutating func encode(_ value: some Encodable) throws {
             self.encoder.codingPath.append(_XMLKey(stringValue: self.key, intValue: self.count))
             defer { self.encoder.codingPath.removeLast() }
 
@@ -467,7 +467,7 @@ extension _XMLEncoder: SingleValueEncodingContainer {
         try self.storage.push(container: XML.Element(name: self.currentKey, stringValue: box(value)))
     }
 
-    func encode<T>(_ value: T) throws where T: Encodable {
+    func encode(_ value: some Encodable) throws {
         try self.storage.push(container: box(value))
     }
 }
@@ -597,7 +597,7 @@ private class _XMLReferencingEncoder: _XMLEncoder {
 
     // Finalizes `self` by writing the contents of our storage to the referenced encoder's storage.
     deinit {
-        if let element = element {
+        if let element {
             reference.addChild(element)
         }
     }

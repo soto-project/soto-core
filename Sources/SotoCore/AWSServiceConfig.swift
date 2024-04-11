@@ -91,7 +91,7 @@ public final class AWSServiceConfig {
         options: Options = []
     ) {
         var partition = partition
-        if let region = region {
+        if let region {
             self.region = region
             partition = region.partition
         } else if let partitionEndpoint = partitionEndpoints[partition] {
@@ -142,7 +142,7 @@ public final class AWSServiceConfig {
         variantEndpoints: [EndpointVariantType: EndpointVariant]
     ) -> String {
         // work out endpoint, if provided use that otherwise
-        if let endpoint = endpoint {
+        if let endpoint {
             return endpoint
         } else {
             let serviceHost: String

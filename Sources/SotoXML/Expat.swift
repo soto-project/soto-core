@@ -130,7 +130,7 @@ class Expat {
         Soto_XML_SetCommentHandler(self.parser) { ud, comment in
             let me = unsafeBitCast(ud, to: Expat.self)
             guard let callback = me.cbComment else { return }
-            guard let comment = comment else { return }
+            guard let comment else { return }
             callback(String(cString: comment))
         }
     }
@@ -181,7 +181,7 @@ class Expat {
     /// - Returns: attributes in dictionary form
     static func makeAttributesDictionary(_ attrs: UnsafeMutablePointer<UnsafePointer<XML_Char>?>?) -> [String: String] {
         var sAttrs = [String: String]()
-        guard let attrs = attrs else { return sAttrs }
+        guard let attrs else { return sAttrs }
         var i = 0
         while attrs[i] != nil {
             let name = String(cString: attrs[i]!)

@@ -167,7 +167,7 @@ private func crc32_with_table(crc: CRC32, buffer: UnsafeBufferPointer<UInt8>, ta
 ///   - crc: base crc
 ///   - bytes: buffer to calculate CRC32 for
 /// - Returns: crc32 checksum
-public func soto_crc32<Buffer: Collection>(_ crc: CRC32, bytes: Buffer) -> CRC32 where Buffer.Element == UInt8 {
+public func soto_crc32(_ crc: CRC32, bytes: some Collection<UInt8>) -> CRC32 {
     if let rest = bytes.withContiguousStorageIfAvailable({ buffer -> CRC32 in
         crc32_with_table(crc: crc, buffer: buffer, table: crc32Table)
     }) {
@@ -184,7 +184,7 @@ public func soto_crc32<Buffer: Collection>(_ crc: CRC32, bytes: Buffer) -> CRC32
 ///   - crc: base crc
 ///   - bytes: buffer to calculate CRC32 for
 /// - Returns: crc32c checksum
-public func soto_crc32c<Buffer: Collection>(_ crc: CRC32, bytes: Buffer) -> CRC32 where Buffer.Element == UInt8 {
+public func soto_crc32c(_ crc: CRC32, bytes: some Collection<UInt8>) -> CRC32 {
     if let rest = bytes.withContiguousStorageIfAvailable({ buffer -> CRC32 in
         crc32_with_table(crc: crc, buffer: buffer, table: crc32cTable)
     }) {

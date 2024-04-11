@@ -218,7 +218,7 @@ struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
             let request = STSAssumeRoleWithWebIdentityRequest(roleArn: arn, roleSessionName: sessioName, webIdentityToken: token)
             credentials = try await self.assumeRoleWithWebIdentity(request, logger: logger).credentials
         }
-        guard let credentials = credentials else {
+        guard let credentials else {
             throw CredentialProviderError.noProvider
         }
         return credentials

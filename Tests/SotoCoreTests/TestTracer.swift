@@ -41,11 +41,11 @@ final class TestTracer: Tracer, Sendable {
         self.onEndSpan = onEndSpan
     }
 
-    func startSpan<Instant: TracerInstant>(
+    func startSpan(
         _ operationName: String,
         context: @autoclosure () -> ServiceContext,
         ofKind kind: SpanKind,
-        at instant: @autoclosure () -> Instant,
+        at instant: @autoclosure () -> some TracerInstant,
         function: String,
         file fileID: String,
         line: UInt
@@ -165,9 +165,9 @@ final class TestSpan: Span, Sendable {
 
     let onEnd: @Sendable (TestSpan) -> Void
 
-    init<Instant: TracerInstant>(
+    init(
         operationName: String,
-        startTime: Instant,
+        startTime: some TracerInstant,
         context: ServiceContext,
         kind: SpanKind,
         onEnd: @escaping @Sendable (TestSpan) -> Void
@@ -198,13 +198,13 @@ final class TestSpan: Span, Sendable {
         }
     }
 
-    func recordError<Instant: TracerInstant>(_ error: Error, attributes: SpanAttributes, at instant: @autoclosure () -> Instant) {
+    func recordError(_ error: Error, attributes: SpanAttributes, at instant: @autoclosure () -> some TracerInstant) {
         self._internal.withLockedValue {
             $0.recordedErrors.append((error, attributes))
         }
     }
 
-    func end<Instant: TracerInstant>(at instant: @autoclosure () -> Instant) {
+    func end(at instant: @autoclosure () -> some TracerInstant) {
         self._internal.withLockedValue {
             $0.endTimestampNanosSinceEpoch = instant().nanosecondsSinceEpoch
         }

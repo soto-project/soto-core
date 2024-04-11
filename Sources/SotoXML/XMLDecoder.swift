@@ -605,7 +605,7 @@ private class _XMLDecoder: Decoder {
     }
 
     fileprivate func unbox(_ element: XML.Node?, as type: Date.Type) throws -> Date {
-        guard let element = element else {
+        guard let element else {
             throw DecodingError.keyNotFound(self.codingPath.last!, DecodingError.Context(codingPath: self.codingPath, debugDescription: "Key not found"))
         }
 
@@ -620,7 +620,7 @@ private class _XMLDecoder: Decoder {
 
     /// get Data from XML.Node
     fileprivate func unbox(_ element: XML.Node?, as type: Data.Type) throws -> Data {
-        guard let element = element else {
+        guard let element else {
             throw DecodingError.keyNotFound(self.codingPath.last!, DecodingError.Context(codingPath: self.codingPath, debugDescription: "Key not found"))
         }
         switch self.options.dataDecodingStrategy {

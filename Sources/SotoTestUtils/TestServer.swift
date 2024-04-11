@@ -113,7 +113,7 @@ public class AWSTestServer {
     }
 
     /// run server reading request, convert from to an input shape processing them and converting the result back to a response.
-    public func process<Input: Decodable, Output: Encodable>(_ process: (Input) throws -> Result<Output>) throws {
+    public func process<Input: Decodable>(_ process: (Input) throws -> Result<some Encodable>) throws {
         while try processSingleRequest(process) {}
     }
 
@@ -312,7 +312,7 @@ extension AWSTestServer {
     }
 
     /// read one request, convert it from to an input shape, processing it and convert the result back to a response.
-    func processSingleRequest<Input: Decodable, Output: Encodable>(_ process: (Input) throws -> Result<Output>) throws -> Bool {
+    func processSingleRequest<Input: Decodable>(_ process: (Input) throws -> Result<some Encodable>) throws -> Bool {
         let request = try readRequest()
 
         // Convert to Input AWSShape

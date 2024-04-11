@@ -62,7 +62,7 @@ public struct AWSHTTPResponse {
             let payloadData: Data
             if self.isHypertextApplicationLanguage {
                 payloadData = try self.getHypertextApplicationLanguageDictionary()
-            } else if let payload = payload, payload.readableBytes > 0 {
+            } else if let payload, payload.readableBytes > 0 {
                 payloadData = Data(buffer: payload, byteTransferStrategy: .noCopy)
             } else {
                 payloadData = Data("{}".utf8)

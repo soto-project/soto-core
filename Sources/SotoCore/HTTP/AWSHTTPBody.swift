@@ -35,7 +35,7 @@ public struct AWSHTTPBody: Sendable {
         self.storage = .byteBuffer(buffer)
     }
 
-    public init<C: Collection>(bytes: C, byteBufferAllocator: ByteBufferAllocator = .init()) where C.Element == UInt8 {
+    public init(bytes: some Collection<UInt8>, byteBufferAllocator: ByteBufferAllocator = .init()) {
         var byteBuffer = byteBufferAllocator.buffer(capacity: bytes.count)
         byteBuffer.writeBytes(bytes)
         self.storage = .byteBuffer(byteBuffer)

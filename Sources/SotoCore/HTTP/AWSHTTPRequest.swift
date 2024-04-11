@@ -141,7 +141,7 @@ extension AWSHTTPRequest {
             var encoder = XMLEncoder()
             encoder.userInfo[.awsRequest] = requestEncoderContainer
             let xml = try encoder.encode(input, name: Input._xmlRootNodeName)
-            if let xml = xml, xml.childCount > 0 {
+            if let xml, xml.childCount > 0 {
                 if let xmlNamespace = Input._xmlNamespace ?? configuration.xmlNamespace {
                     xml.addNamespace(XML.Node.namespace(stringValue: xmlNamespace))
                 }
@@ -220,7 +220,7 @@ extension AWSHTTPRequest {
             }
         }
 
-        guard let checksumType = checksumType,
+        guard let checksumType,
               case .byteBuffer(let buffer) = body.storage,
               let checksumHeader = Self.checksumHeaders[checksumType],
               headers[checksumHeader].first == nil else { return headers }
@@ -250,7 +250,7 @@ extension AWSHTTPRequest {
         case .md5:
             checksum = self.calculateChecksum(buffer, function: Insecure.MD5.self)
         }
-        if let checksum = checksum {
+        if let checksum {
             headers.add(name: checksumHeader, value: checksum)
         }
         return headers

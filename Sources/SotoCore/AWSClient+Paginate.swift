@@ -68,7 +68,7 @@ extension AWSClient {
             }
 
             public mutating func next() async throws -> Output? {
-                if let input = input {
+                if let input {
                     let output = try await self.sequence.command(input, self.sequence.logger)
                     if let token = output[keyPath: sequence.outputKey],
                        sequence.inputKey == nil || token != input[keyPath: sequence.inputKey!],

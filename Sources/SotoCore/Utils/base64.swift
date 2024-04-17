@@ -71,9 +71,7 @@
 // MARK: - Extensions -
 
 extension String {
-    init<Buffer: Collection>(base64Encoding bytes: Buffer, options: Base64.EncodingOptions = [])
-        where Buffer.Element == UInt8
-    {
+    init(base64Encoding bytes: some Collection<UInt8>, options: Base64.EncodingOptions = []) {
         self = Base64.encodeString(bytes: bytes, options: options)
     }
 
@@ -219,8 +217,8 @@ extension Base64 {
     ]
 
     @inlinable
-    static func encodeBytes<Buffer: Collection>(bytes: Buffer, options: EncodingOptions = [])
-        -> [UInt8] where Buffer.Element == UInt8
+    static func encodeBytes(bytes: some Collection<UInt8>, options: EncodingOptions = [])
+        -> [UInt8]
     {
         let newCapacity = ((bytes.count + 2) / 3) * 4
 
@@ -236,8 +234,8 @@ extension Base64 {
     }
 
     @inlinable
-    static func encodeString<Buffer: Collection>(bytes: Buffer, options: EncodingOptions = [])
-        -> String where Buffer.Element == UInt8
+    static func encodeString(bytes: some Collection<UInt8>, options: EncodingOptions = [])
+        -> String
     {
         let newCapacity = ((bytes.count + 2) / 3) * 4
 
@@ -286,12 +284,12 @@ extension Base64 {
 
                 buffer[outIndex] = e0[Int(i1)]
 
-                if let i2 = i2, let i3 = i3 {
+                if let i2, let i3 {
                     buffer[outIndex + 1] = e1[Int(((i1 & 0x03) << 4) | ((i2 >> 4) & 0x0F))]
                     buffer[outIndex + 2] = e1[Int(((i2 & 0x0F) << 2) | ((i3 >> 6) & 0x03))]
                     buffer[outIndex + 3] = e1[Int(i3)]
                     outIndex += 4
-                } else if let i2 = i2 {
+                } else if let i2 {
                     buffer[outIndex + 1] = e1[Int(((i1 & 0x03) << 4) | ((i2 >> 4) & 0x0F))]
                     buffer[outIndex + 2] = e1[Int((i2 & 0x0F) << 2)]
                     outIndex += 3
@@ -374,7 +372,7 @@ extension Base64 {
     }
 
     @inlinable
-    static func decode<Buffer: Collection>(bytes: Buffer, options: DecodingOptions = []) throws -> [UInt8] where Buffer.Element == UInt8 {
+    static func decode(bytes: some Collection<UInt8>, options: DecodingOptions = []) throws -> [UInt8] {
         guard bytes.count > 0 else {
             return []
         }

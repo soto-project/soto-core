@@ -22,9 +22,9 @@ public enum AWSMiddlewareBuilder {
         first
     }
 
-    public static func buildPartialBlock<M0: AWSMiddlewareProtocol, M1: AWSMiddlewareProtocol>(
-        accumulated m0: M0,
-        next m1: M1
+    public static func buildPartialBlock(
+        accumulated m0: some AWSMiddlewareProtocol,
+        next m1: some AWSMiddlewareProtocol
     ) -> some AWSMiddlewareProtocol {
         AWSMiddleware2(m0, m1)
     }

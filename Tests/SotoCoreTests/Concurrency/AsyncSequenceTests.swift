@@ -31,7 +31,7 @@ final class AsyncSequenceTests: XCTestCase {
         var prevChunk: ByteBuffer?
         for try await chunk in chunkedSequence {
             // doing this so I don't check the length of the last chunk
-            if let prevChunk = prevChunk {
+            if let prevChunk {
                 XCTAssertEqual(prevChunk.readableBytes, fixedChunkSize)
             }
             result.writeImmutableBuffer(chunk)

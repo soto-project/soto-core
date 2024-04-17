@@ -359,7 +359,7 @@ public struct AWSSigner: Sendable {
 
     /// Create a SHA256 hash of the Requests body
     static func hashedPayload(_ payload: BodyData?) -> String {
-        guard let payload = payload else { return self.hashedEmptyBody }
+        guard let payload else { return self.hashedEmptyBody }
         let hash: String?
         switch payload {
         case .string(let string):
@@ -376,7 +376,7 @@ public struct AWSSigner: Sendable {
         case .s3chunked:
             return "STREAMING-AWS4-HMAC-SHA256-PAYLOAD"
         }
-        if let hash = hash {
+        if let hash {
             return hash
         } else {
             return self.hashedEmptyBody
@@ -434,7 +434,7 @@ extension String {
 }
 
 @_spi(SotoInternal)
-public extension Sequence where Element == UInt8 {
+public extension Sequence<UInt8> {
     /// return a hexEncoded string buffer from an array of bytes
     func hexDigest() -> String {
         return self.map { String(format: "%02x", $0) }.joined(separator: "")

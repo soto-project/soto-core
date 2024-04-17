@@ -84,11 +84,11 @@ public extension AWSEncodableShape {
         guard value <= max else { throw Self.validationError("\(parent).\(name) (\(value)) is greater than the maximum allowed value \(max).") }
     }
 
-    func validate<T: Collection>(_ value: T, name: String, parent: String, min: Int) throws {
+    func validate(_ value: some Collection, name: String, parent: String, min: Int) throws {
         guard value.count >= min else { throw Self.validationError("Length of \(parent).\(name) (\(value.count)) is less than minimum allowed value \(min).") }
     }
 
-    func validate<T: Collection>(_ value: T, name: String, parent: String, max: Int) throws {
+    func validate(_ value: some Collection, name: String, parent: String, max: Int) throws {
         guard value.count <= max else { throw Self.validationError("Length of \(parent).\(name) (\(value.count)) is greater than the maximum allowed value \(max).") }
     }
 
@@ -125,57 +125,57 @@ public extension AWSEncodableShape {
 
     // validate optional values
     func validate<T: BinaryInteger>(_ value: T?, name: String, parent: String, min: T) throws {
-        guard let value = value else { return }
+        guard let value else { return }
         try self.validate(value, name: name, parent: parent, min: min)
     }
 
     func validate<T: BinaryInteger>(_ value: T?, name: String, parent: String, max: T) throws {
-        guard let value = value else { return }
+        guard let value else { return }
         try self.validate(value, name: name, parent: parent, max: max)
     }
 
     func validate<T: FloatingPoint>(_ value: T?, name: String, parent: String, min: T) throws {
-        guard let value = value else { return }
+        guard let value else { return }
         try self.validate(value, name: name, parent: parent, min: min)
     }
 
     func validate<T: FloatingPoint>(_ value: T?, name: String, parent: String, max: T) throws {
-        guard let value = value else { return }
+        guard let value else { return }
         try self.validate(value, name: name, parent: parent, max: max)
     }
 
-    func validate<T: Collection>(_ value: T?, name: String, parent: String, min: Int) throws {
-        guard let value = value else { return }
+    func validate(_ value: (some Collection)?, name: String, parent: String, min: Int) throws {
+        guard let value else { return }
         try self.validate(value, name: name, parent: parent, min: min)
     }
 
-    func validate<T: Collection>(_ value: T?, name: String, parent: String, max: Int) throws {
-        guard let value = value else { return }
+    func validate(_ value: (some Collection)?, name: String, parent: String, max: Int) throws {
+        guard let value else { return }
         try self.validate(value, name: name, parent: parent, max: max)
     }
 
     func validate(_ value: AWSBase64Data?, name: String, parent: String, min: Int) throws {
-        guard let value = value else { return }
+        guard let value else { return }
         try self.validate(value, name: name, parent: parent, min: min)
     }
 
     func validate(_ value: AWSBase64Data?, name: String, parent: String, max: Int) throws {
-        guard let value = value else { return }
+        guard let value else { return }
         try self.validate(value, name: name, parent: parent, max: max)
     }
 
     func validate(_ value: AWSHTTPBody?, name: String, parent: String, min: Int) throws {
-        guard let value = value else { return }
+        guard let value else { return }
         try self.validate(value, name: name, parent: parent, min: min)
     }
 
     func validate(_ value: AWSHTTPBody?, name: String, parent: String, max: Int) throws {
-        guard let value = value else { return }
+        guard let value else { return }
         try self.validate(value, name: name, parent: parent, max: max)
     }
 
     func validate(_ value: String?, name: String, parent: String, pattern: String) throws {
-        guard let value = value else { return }
+        guard let value else { return }
         try self.validate(value, name: name, parent: parent, pattern: pattern)
     }
 }

@@ -64,10 +64,10 @@ public final class AWSClient: Sendable {
     ///     - options: Configuration flags
     ///     - httpClient: HTTPClient to use.
     ///     - logger: Logger used to log background AWSClient events
-    public init<Middleware: AWSMiddlewareProtocol>(
+    public init(
         credentialProvider credentialProviderFactory: CredentialProviderFactory = .default,
         retryPolicy retryPolicyFactory: RetryPolicyFactory = .default,
-        middleware: Middleware,
+        middleware: some AWSMiddlewareProtocol,
         options: Options = Options(),
         httpClient: AWSHTTPClient = HTTPClient.shared,
         logger clientLogger: Logger = AWSClient.loggingDisabled
@@ -227,12 +227,12 @@ extension AWSClient {
     ///     - input: Input object
     ///     - hostPrefix: String to prefix host name with
     ///     - logger: Logger to log request details to
-    public func execute<Input: AWSEncodableShape>(
+    public func execute(
         operation operationName: String,
         path: String,
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
-        input: Input,
+        input: some AWSEncodableShape,
         hostPrefix: String? = nil,
         logger: Logger = AWSClient.loggingDisabled
     ) async throws {
@@ -337,12 +337,12 @@ extension AWSClient {
     ///     - logger: Logger to log request details to
     /// - returns:
     ///     Output object that completes when response is received
-    public func execute<Output: AWSDecodableShape, Input: AWSEncodableShape>(
+    public func execute<Output: AWSDecodableShape>(
         operation operationName: String,
         path: String,
         httpMethod: HTTPMethod,
         serviceConfig: AWSServiceConfig,
-        input: Input,
+        input: some AWSEncodableShape,
         hostPrefix: String? = nil,
         logger: Logger = AWSClient.loggingDisabled
     ) async throws -> Output {

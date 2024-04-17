@@ -19,7 +19,7 @@ import XCTest
 class QueryEncoderTests: XCTestCase {
     @EnvironmentVariable("ENABLE_TIMING_TESTS", default: true) static var enableTimingTests: Bool
 
-    func testQuery<Input: Encodable>(_ value: Input, query: String) {
+    func testQuery(_ value: some Encodable, query: String) {
         do {
             let query2 = try QueryEncoder().encode(value)
             XCTAssertEqual(query2, query)

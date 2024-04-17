@@ -23,7 +23,7 @@ public struct AWSBase64Data: Sendable, Codable, Equatable {
     }
 
     /// construct `AWSBase64Data` from raw data
-    public static func data<C: Collection>(_ data: C) -> Self where C.Element == UInt8 {
+    public static func data(_ data: some Collection<UInt8>) -> Self {
         return .init(base64String: String(base64Encoding: data))
     }
 

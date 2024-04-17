@@ -84,14 +84,14 @@ public class RequestEncodingContainer {
 
     /// Write value to header
     @inlinable
-    public func encodeHeader<Value>(_ value: Value, key: String) {
+    public func encodeHeader(_ value: some Any, key: String) {
         self.headers.replaceOrAdd(name: key, value: "\(value)")
     }
 
     /// Write optional value to header
     @inlinable
-    public func encodeHeader<Value>(_ value: Value?, key: String) {
-        if let value = value {
+    public func encodeHeader(_ value: (some Any)?, key: String) {
+        if let value {
             self.encodeHeader(value, key: key)
         }
     }
@@ -120,7 +120,7 @@ public class RequestEncodingContainer {
 
     /// Write dictionary key value pairs to headers with prefix added to the keys
     @inlinable
-    public func encodeHeader<Value>(_ value: [String: Value], key prefix: String) {
+    public func encodeHeader(_ value: [String: some Any], key prefix: String) {
         for element in value {
             self.headers.replaceOrAdd(name: "\(prefix)\(element.key)", value: "\(element.value)")
         }
@@ -128,8 +128,8 @@ public class RequestEncodingContainer {
 
     /// Write optional dictionary key value pairs to headers with prefix added to the keys
     @inlinable
-    public func encodeHeader<Value>(_ value: [String: Value]?, key prefix: String) {
-        if let value = value {
+    public func encodeHeader(_ value: [String: some Any]?, key prefix: String) {
+        if let value {
             self.encodeHeader(value, key: prefix)
         }
     }
@@ -138,14 +138,14 @@ public class RequestEncodingContainer {
 
     /// Write value to query
     @inlinable
-    public func encodeQuery<Value>(_ value: Value, key: String) {
+    public func encodeQuery(_ value: some Any, key: String) {
         self.queryParams.append((key: key, value: "\(value)"))
     }
 
     /// Write optional value to query
     @inlinable
-    public func encodeQuery<Value>(_ value: Value?, key: String) {
-        if let value = value {
+    public func encodeQuery(_ value: (some Any)?, key: String) {
+        if let value {
             self.queryParams.append((key: key, value: "\(value)"))
         }
     }
@@ -168,7 +168,7 @@ public class RequestEncodingContainer {
 
     /// Write array as a series of query values
     @inlinable
-    public func encodeQuery<Value>(_ value: [Value], key: String) {
+    public func encodeQuery(_ value: [some Any], key: String) {
         for element in value {
             self.queryParams.append((key: key, value: "\(element)"))
         }
@@ -176,7 +176,7 @@ public class RequestEncodingContainer {
 
     /// Write dictionary key value pairs as query key value pairs
     @inlinable
-    public func encodeQuery<Value>(_ value: [String: Value]) {
+    public func encodeQuery(_ value: [String: some Any]) {
         for element in value {
             self.queryParams.append((key: element.key, value: "\(element.value)"))
         }
@@ -184,23 +184,23 @@ public class RequestEncodingContainer {
 
     /// Write optional array as a series of query values
     @inlinable
-    public func encodeQuery<Value>(_ value: [Value]?, key: String) {
-        if let value = value {
+    public func encodeQuery(_ value: [some Any]?, key: String) {
+        if let value {
             self.encodeQuery(value, key: key)
         }
     }
 
     /// Write optional dictionary key value pairs as query key value pairs
     @inlinable
-    public func encodeQuery<Value>(_ value: [String: Value]?) {
-        if let value = value {
+    public func encodeQuery(_ value: [String: some Any]?) {
+        if let value {
             self.encodeQuery(value)
         }
     }
 
     /// Write value into URI path
     @inlinable
-    public func encodePath<Value>(_ value: Value, key: String) {
+    public func encodePath(_ value: some Any, key: String) {
         self.path = self.path
             .replacingOccurrences(of: "{\(key)}", with: Self.urlEncodePathComponent(String(describing: value)))
             .replacingOccurrences(of: "{\(key)+}", with: Self.urlEncodePath(String(describing: value)))
@@ -208,7 +208,7 @@ public class RequestEncodingContainer {
 
     /// Write value into hostname
     @inlinable
-    public func encodeHostPrefix<Value>(_ value: Value, key: String) {
+    public func encodeHostPrefix(_ value: some Any, key: String) {
         self.hostPrefix = self.hostPrefix?
             .replacingOccurrences(of: "{\(key)}", with: Self.urlEncodePathComponent(String(describing: value)))
     }

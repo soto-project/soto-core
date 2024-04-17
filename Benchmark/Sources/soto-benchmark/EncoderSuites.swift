@@ -28,14 +28,14 @@ protocol EncoderProtocol {
 
 extension XMLEncoder: EncoderProtocol {
     typealias Output = XML.Element
-    func encode<Input: Encodable>(_ value: Input) throws -> Output {
+    func encode(_ value: some Encodable) throws -> Output {
         try self.encode(value, name: "BenchmarkTest")
     }
 }
 
 extension QueryEncoder: EncoderProtocol {
     typealias Output = String?
-    func encode<Input: Encodable>(_ value: Input) throws -> Output {
+    func encode(_ value: some Encodable) throws -> Output {
         try self.encode(value, name: "BenchmarkTest")
     }
 }
@@ -62,7 +62,7 @@ struct Dictionaries: Codable {
 }
 
 /// Generic suite of benchmark tests for an Encoder.
-func encoderSuite<E: EncoderProtocol>(for encoder: E, suite: BenchmarkSuite) {
+func encoderSuite(for encoder: some EncoderProtocol, suite: BenchmarkSuite) {
     let numbers = Numbers(b: true, i: 3478, f: 34.4633, d: 9585)
     suite.benchmark("numbers") {
         _ = try encoder.encode(numbers)

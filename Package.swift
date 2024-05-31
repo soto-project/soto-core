@@ -35,6 +35,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.63.0"),
+        .package(url: "https://github.com/apple/swift-async-algorithms.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-atomics.git", from: "1.1.0"),
         .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0"..<"4.0.0"),
         .package(url: "https://github.com/apple/swift-distributed-tracing.git", from: "1.0.1"),
@@ -53,6 +54,7 @@ let package = Package(
                 .byName(name: "SotoXML"),
                 .byName(name: "INIParser"),
                 .product(name: "Logging", package: "swift-log"),
+                .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
                 .product(name: "Atomics", package: "swift-atomics"),
                 .product(name: "Metrics", package: "swift-metrics"),

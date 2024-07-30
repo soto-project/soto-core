@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest an idea for AWSSDKSwift
+about: Suggest an idea for Soto
 title: ''
 labels: ''
 assignees: ''

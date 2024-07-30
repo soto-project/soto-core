@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to help us improve the functionality of AWSSDKSwift!
+about: Create a report to help us improve the functionality of Soto!
 title: ''
 labels: ''
 assignees: ''
@@ -19,8 +19,8 @@ Steps to reproduce the behavior:
 A clear and concise description of what you expected to happen.
 
 **Setup (please complete the following information):**
- - OS: [e.g. iOS]
- - Version of aws-sdk-swift [e.g. 3.0]
+ - OS: [e.g. Linux]
+ - Version of Soto [e.g. 5.0]
  - Authentication mechanism [hard-coded credentials, IAM Instance Profile on EC2, etc]
 
 **Additional context**

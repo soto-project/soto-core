@@ -17,11 +17,6 @@ import INIParser
 import Logging
 import NIOCore
 import NIOPosix
-#if os(Linux)
-import Glibc
-#else
-import Foundation.NSString
-#endif
 
 /// Load settings from AWS credentials and profile configuration files
 /// https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html

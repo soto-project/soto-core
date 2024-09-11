@@ -18,10 +18,14 @@
 //  Licensed under Apache License v2.0 http://www.apache.org/licenses/LICENSE-2.0.html
 //
 
-#if os(Linux)
+#if canImport(Glibc)
 import Glibc
-#else
+#elseif canImport(Musl)
+import Musl
+#elseif canImport(Darwin)
 import Darwin.C
+#else
+#error("Unsupported platform")
 #endif
 
 @_implementationOnly import CSotoExpat

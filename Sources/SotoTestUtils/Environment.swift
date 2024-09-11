@@ -12,10 +12,14 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if os(Linux)
+#if canImport(Glibc)
 import Glibc
-#else
+#elseif canImport(Musl)
+import Musl
+#elseif canImport(Darwin)
 import Darwin.C
+#else
+#error("Unsupported platform")
 #endif
 
 internal enum Environment {

@@ -13,10 +13,14 @@
 //===----------------------------------------------------------------------===//
 
 import XCTest
-#if os(Linux)
+#if canImport(Glibc)
 import Glibc
+#elseif canImport(Musl)
+import Musl
+#elseif canImport(Darwin)
+import Darwin.C
 #else
-import Darwin
+#error("Unsupported platform")
 #endif
 @testable import SotoCore
 

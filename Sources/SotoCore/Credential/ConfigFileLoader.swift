@@ -167,8 +167,7 @@ enum ConfigFileLoader {
                 return .assumeRole(roleArn: roleArn, sessionName: sessionName, region: region, sourceCredentialProvider: provider)
             }
             // If `credental_source` is defined, temporary credentials must be loaded from source
-            else if let credentialSource = credentials.credentialSource ?? config?.credentialSource
-            {
+            else if let credentialSource = credentials.credentialSource ?? config?.credentialSource {
                 let provider: CredentialProviderFactory
                 switch credentialSource {
                 case .environment:

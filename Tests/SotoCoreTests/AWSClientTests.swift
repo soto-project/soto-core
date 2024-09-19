@@ -52,42 +52,43 @@ class AWSClientTests: XCTestCase {
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let elg = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(elg))
-        defer {
+        try await withTeardown {
+            let config = createServiceConfig(
+                serviceProtocol: .json(version: "1.1"),
+                endpoint: awsServer.address
+            )
+            let client = createAWSClient(
+                credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
+                httpClient: httpClient
+            )
+            defer {
+                XCTAssertNoThrow(try client.syncShutdown())
+            }
+            async let responseTask: AWSTestServer.HTTPBinResponse = client.execute(
+                operation: "test",
+                path: "/",
+                httpMethod: .POST,
+                serviceConfig: config,
+                input: Input(content: "test"),
+                logger: TestEnvironment.logger
+            )
+
+            XCTAssertNoThrow(try awsServer.httpBin())
+
+            let httpBinResponse = try await responseTask
+            let httpHeaders = HTTPHeaders(httpBinResponse.headers.map { ($0, $1) })
+
+            XCTAssertEqual(httpHeaders["content-length"].first, "18")
+            XCTAssertEqual(httpHeaders["content-type"].first, "application/x-amz-json-1.1")
+            XCTAssertNotNil(httpHeaders["authorization"].first)
+            XCTAssertNotNil(httpHeaders["x-amz-date"].first)
+            XCTAssertEqual(httpHeaders["user-agent"].first, "Soto/6.0")
+            XCTAssertEqual(httpHeaders["host"].first, "localhost:\(awsServer.serverPort)")
+        } teardown: {
             try? awsServer.stop()
-            try? httpClient.syncShutdown()
-            try? elg.syncShutdownGracefully()
+            try? await httpClient.shutdown()
+            try? await elg.shutdownGracefully()
         }
-        let config = createServiceConfig(
-            serviceProtocol: .json(version: "1.1"),
-            endpoint: awsServer.address
-        )
-        let client = createAWSClient(
-            credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
-            httpClient: httpClient
-        )
-        defer {
-            XCTAssertNoThrow(try client.syncShutdown())
-        }
-        async let responseTask: AWSTestServer.HTTPBinResponse = client.execute(
-            operation: "test",
-            path: "/",
-            httpMethod: .POST,
-            serviceConfig: config,
-            input: Input(content: "test"),
-            logger: TestEnvironment.logger
-        )
-
-        XCTAssertNoThrow(try awsServer.httpBin())
-
-        let httpBinResponse = try await responseTask
-        let httpHeaders = HTTPHeaders(httpBinResponse.headers.map { ($0, $1) })
-
-        XCTAssertEqual(httpHeaders["content-length"].first, "18")
-        XCTAssertEqual(httpHeaders["content-type"].first, "application/x-amz-json-1.1")
-        XCTAssertNotNil(httpHeaders["authorization"].first)
-        XCTAssertNotNil(httpHeaders["x-amz-date"].first)
-        XCTAssertEqual(httpHeaders["user-agent"].first, "Soto/6.0")
-        XCTAssertEqual(httpHeaders["host"].first, "localhost:\(awsServer.serverPort)")
     }
 
     func testClientNoInputNoOutput() async throws {

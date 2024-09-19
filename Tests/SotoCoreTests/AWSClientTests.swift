@@ -52,18 +52,15 @@ class AWSClientTests: XCTestCase {
         let awsServer = AWSTestServer(serviceProtocol: .json)
         let elg = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(elg))
+        let client = createAWSClient(
+            credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
+            httpClient: httpClient
+        )
         try await withTeardown {
             let config = createServiceConfig(
                 serviceProtocol: .json(version: "1.1"),
                 endpoint: awsServer.address
             )
-            let client = createAWSClient(
-                credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
-                httpClient: httpClient
-            )
-            defer {
-                XCTAssertNoThrow(try client.syncShutdown())
-            }
             async let responseTask: AWSTestServer.HTTPBinResponse = client.execute(
                 operation: "test",
                 path: "/",
@@ -86,6 +83,7 @@ class AWSClientTests: XCTestCase {
             XCTAssertEqual(httpHeaders["host"].first, "localhost:\(awsServer.serverPort)")
         } teardown: {
             try? awsServer.stop()
+            try? await client.shutdown()
             try? await httpClient.shutdown()
             try? await elg.shutdownGracefully()
         }

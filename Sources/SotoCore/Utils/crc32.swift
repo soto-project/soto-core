@@ -126,8 +126,7 @@ let crc32cTable: [CRC32] =
         0xAD7D_5351,
     ]
 
-private func crc32_with_table(crc: CRC32, buffer: UnsafeBufferPointer<UInt8>, table: [CRC32]) -> CRC32
-{
+private func crc32_with_table(crc: CRC32, buffer: UnsafeBufferPointer<UInt8>, table: [CRC32]) -> CRC32 {
     // use unsafe buffer pointer to avoid array bounds checking on table
     return table.withUnsafeBufferPointer { table in
         var crc = crc

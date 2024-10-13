@@ -267,6 +267,7 @@ extension AWSTestServer {
                     "Content-Type": "application/json",
                 ]
                 return .result(.init(httpStatus: .ok, headers: headers, body: responseBody), continueProcessing: false)
+
             default:
                 return .error(.badRequest, continueProcessing: false)
             }
@@ -431,6 +432,7 @@ extension AWSTestServer {
                 if case .none = status {
                     status = .finished
                 }
+
             case .finished:
                 throw Error.corruptChunkedData
             }

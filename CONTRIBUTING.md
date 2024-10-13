@@ -2,7 +2,7 @@
 
 ## Legal
 By submitting a pull request, you represent that you have the right to license your contribution to the community, and agree by submitting the patch
-that your contributions are licensed under the Apache 2.0 license (see [LICENSE](LICENSE.txt)).
+that your contributions are licensed under the Apache 2.0 license (see [LICENSE](LICENSE)).
 
 ## Contributor Conduct
 All contributors are expected to adhere to the project's [Code of Conduct](CODE_OF_CONDUCT.md).
@@ -28,7 +28,7 @@ The main development branch of the repository is  `main`. Each major version rel
 
 ### Formatting
 
-We use Nick Lockwood's SwiftFormat for formatting code. PRs will not be accepted if they haven't be formatted. The current version of SwiftFormat we are using is v0.51.15.
+We use Nick Lockwood's SwiftFormat for formatting code. PRs will not be accepted if they haven't be formatted. The current version of SwiftFormat we are using is v0.53.10.
 
 All new files need to include the following file header at the top
 ```swift
@@ -47,7 +47,3 @@ All new files need to include the following file header at the top
 //===----------------------------------------------------------------------===//
 ```
 Please ensure the dates are correct in the header.
-
-## Community
-
-You can also contribute by becoming an active member of the Soto community.  Join us on the soto-aws [slack](https://join.slack.com/t/soto-project/shared_invite/zt-juqk6l9w-z9zruW5pjlod4AscdWlz7Q).

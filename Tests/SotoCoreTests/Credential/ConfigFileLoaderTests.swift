@@ -47,23 +47,23 @@ class ConfigFileLoadersTests: XCTestCase {
         let credentialsPath = try save(content: credentialsFile, prefix: #function)
         let (_, httpClient) = try makeContext()
 
-        defer {
+        try await withTeardown {
+            let sharedCredentials = try await ConfigFileLoader.loadSharedCredentials(
+                credentialsFilePath: credentialsPath,
+                configFilePath: "/dev/null",
+                profile: profile
+            )
+
+            switch sharedCredentials {
+            case .staticCredential(let credentials):
+                XCTAssertEqual(credentials.accessKeyId, accessKey)
+                XCTAssertEqual(credentials.secretAccessKey, secretKey)
+            default:
+                XCTFail("Expected static credentials")
+            }
+        } teardown: {
             try? FileManager.default.removeItem(atPath: credentialsPath)
-            try? httpClient.syncShutdown()
-        }
-
-        let sharedCredentials = try await ConfigFileLoader.loadSharedCredentials(
-            credentialsFilePath: credentialsPath,
-            configFilePath: "/dev/null",
-            profile: profile
-        )
-
-        switch sharedCredentials {
-        case .staticCredential(let credentials):
-            XCTAssertEqual(credentials.accessKeyId, accessKey)
-            XCTAssertEqual(credentials.secretAccessKey, secretKey)
-        default:
-            XCTFail("Expected static credentials")
+            try? await httpClient.shutdown()
         }
     }
 
@@ -92,28 +92,28 @@ class ConfigFileLoadersTests: XCTestCase {
         let configPath = try save(content: configFile, prefix: "config")
         let (context, httpClient) = try makeContext()
 
-        defer {
+        try await withTeardown {
+            let sharedCredentials = try await ConfigFileLoader.loadSharedCredentials(
+                credentialsFilePath: credentialsPath,
+                configFilePath: configPath,
+                profile: profile
+            )
+
+            switch sharedCredentials {
+            case .assumeRole(let aRoleArn, let aSessionName, let region, let sourceCredentialProvider):
+                let credentials = try await sourceCredentialProvider.createProvider(context: context).getCredential(logger: context.logger)
+                XCTAssertEqual(credentials.accessKeyId, accessKey)
+                XCTAssertEqual(credentials.secretAccessKey, secretKey)
+                XCTAssertEqual(aRoleArn, roleArn)
+                XCTAssertEqual(aSessionName, sessionName)
+                XCTAssertEqual(region, .uswest1)
+            default:
+                XCTFail("Expected STS Assume Role")
+            }
+        } teardown: {
             try? FileManager.default.removeItem(atPath: credentialsPath)
             try? FileManager.default.removeItem(atPath: configPath)
-            try? httpClient.syncShutdown()
-        }
-
-        let sharedCredentials = try await ConfigFileLoader.loadSharedCredentials(
-            credentialsFilePath: credentialsPath,
-            configFilePath: configPath,
-            profile: profile
-        )
-
-        switch sharedCredentials {
-        case .assumeRole(let aRoleArn, let aSessionName, let region, let sourceCredentialProvider):
-            let credentials = try await sourceCredentialProvider.createProvider(context: context).getCredential(logger: context.logger)
-            XCTAssertEqual(credentials.accessKeyId, accessKey)
-            XCTAssertEqual(credentials.secretAccessKey, secretKey)
-            XCTAssertEqual(aRoleArn, roleArn)
-            XCTAssertEqual(aSessionName, sessionName)
-            XCTAssertEqual(region, .uswest1)
-        default:
-            XCTFail("Expected STS Assume Role")
+            try? await httpClient.shutdown()
         }
     }
 
@@ -129,26 +129,26 @@ class ConfigFileLoadersTests: XCTestCase {
         let credentialsPath = try save(content: credentialsFile, prefix: #function)
         let (context, httpClient) = try makeContext()
 
-        defer {
+        try await withTeardown {
+            let sharedCredentials = try await ConfigFileLoader.loadSharedCredentials(
+                credentialsFilePath: credentialsPath,
+                configFilePath: "non-existing-file-path",
+                profile: profile
+            )
+
+            switch sharedCredentials {
+            case .assumeRole(let aRoleArn, _, _, let source):
+                let credentialProvider = source.createProvider(context: context)
+                XCTAssertEqual(aRoleArn, roleArn)
+                let rotatingCredentials: RotatingCredentialProvider = try XCTUnwrap(credentialProvider as? RotatingCredentialProvider)
+                XCTAssert(rotatingCredentials.provider is InstanceMetaDataClient)
+                try await credentialProvider.shutdown()
+            default:
+                XCTFail("Expected credential source")
+            }
+        } teardown: {
             try? FileManager.default.removeItem(atPath: credentialsPath)
-            try? httpClient.syncShutdown()
-        }
-
-        let sharedCredentials = try await ConfigFileLoader.loadSharedCredentials(
-            credentialsFilePath: credentialsPath,
-            configFilePath: "non-existing-file-path",
-            profile: profile
-        )
-
-        switch sharedCredentials {
-        case .assumeRole(let aRoleArn, _, _, let source):
-            let credentialProvider = source.createProvider(context: context)
-            XCTAssertEqual(aRoleArn, roleArn)
-            let rotatingCredentials: RotatingCredentialProvider = try XCTUnwrap(credentialProvider as? RotatingCredentialProvider)
-            XCTAssert(rotatingCredentials.provider is InstanceMetaDataClient)
-            try await credentialProvider.shutdown()
-        default:
-            XCTFail("Expected credential source")
+            try? await httpClient.shutdown()
         }
     }
 
@@ -163,21 +163,21 @@ class ConfigFileLoadersTests: XCTestCase {
         let credentialsPath = try save(content: credentialsFile, prefix: #function)
         let (_, httpClient) = try makeContext()
 
-        defer {
+        try await withTeardown {
+            do {
+                _ = try await ConfigFileLoader.loadSharedCredentials(
+                    credentialsFilePath: credentialsPath,
+                    configFilePath: "/dev/null",
+                    profile: profile
+                )
+            } catch ConfigFileLoader.ConfigFileError.missingAccessKeyId {
+                // Pass
+            } catch {
+                XCTFail("Expected ConfigFileLoader.ConfigFileError.missingAccessKeyId, got \(error.localizedDescription)")
+            }
+        } teardown: {
             try? FileManager.default.removeItem(atPath: credentialsPath)
-            try? httpClient.syncShutdown()
-        }
-
-        do {
-            _ = try await ConfigFileLoader.loadSharedCredentials(
-                credentialsFilePath: credentialsPath,
-                configFilePath: "/dev/null",
-                profile: profile
-            )
-        } catch ConfigFileLoader.ConfigFileError.missingAccessKeyId {
-            // Pass
-        } catch {
-            XCTFail("Expected ConfigFileLoader.ConfigFileError.missingAccessKeyId, got \(error.localizedDescription)")
+            try? await httpClient.shutdown()
         }
     }
 
@@ -192,21 +192,21 @@ class ConfigFileLoadersTests: XCTestCase {
         let credentialsPath = try save(content: credentialsFile, prefix: #function)
         let (_, httpClient) = try makeContext()
 
-        defer {
+        try await withTeardown {
+            do {
+                _ = try await ConfigFileLoader.loadSharedCredentials(
+                    credentialsFilePath: credentialsPath,
+                    configFilePath: "/dev/null",
+                    profile: profile
+                )
+            } catch ConfigFileLoader.ConfigFileError.missingSecretAccessKey {
+                // Pass
+            } catch {
+                XCTFail("Expected ConfigFileLoader.ConfigFileError.missingSecretAccessKey, got \(error.localizedDescription)")
+            }
+        } teardown: {
             try? FileManager.default.removeItem(atPath: credentialsPath)
-            try? httpClient.syncShutdown()
-        }
-
-        do {
-            _ = try await ConfigFileLoader.loadSharedCredentials(
-                credentialsFilePath: credentialsPath,
-                configFilePath: "/dev/null",
-                profile: profile
-            )
-        } catch ConfigFileLoader.ConfigFileError.missingSecretAccessKey {
-            // Pass
-        } catch {
-            XCTFail("Expected ConfigFileLoader.ConfigFileError.missingSecretAccessKey, got \(error.localizedDescription)")
+            try? await httpClient.shutdown()
         }
     }
 
@@ -226,21 +226,21 @@ class ConfigFileLoadersTests: XCTestCase {
         let credentialsPath = try save(content: credentialsFile, prefix: #function)
         let (_, httpClient) = try makeContext()
 
-        defer {
+        try await withTeardown {
+            do {
+                _ = try await ConfigFileLoader.loadSharedCredentials(
+                    credentialsFilePath: credentialsPath,
+                    configFilePath: "/dev/null",
+                    profile: profile
+                )
+            } catch ConfigFileLoader.ConfigFileError.missingAccessKeyId {
+                // Pass
+            } catch {
+                XCTFail("Expected ConfigFileLoader.ConfigFileError.missingAccessKeyId, got \(error.localizedDescription)")
+            }
+        } teardown: {
             try? FileManager.default.removeItem(atPath: credentialsPath)
-            try? httpClient.syncShutdown()
-        }
-
-        do {
-            _ = try await ConfigFileLoader.loadSharedCredentials(
-                credentialsFilePath: credentialsPath,
-                configFilePath: "/dev/null",
-                profile: profile
-            )
-        } catch ConfigFileLoader.ConfigFileError.missingAccessKeyId {
-            // Pass
-        } catch {
-            XCTFail("Expected ConfigFileLoader.ConfigFileError.missingAccessKeyId, got \(error.localizedDescription)")
+            try? await httpClient.shutdown()
         }
     }
 
@@ -260,21 +260,21 @@ class ConfigFileLoadersTests: XCTestCase {
         let credentialsPath = try save(content: credentialsFile, prefix: #function)
         let (_, httpClient) = try makeContext()
 
-        defer {
+        try await withTeardown {
+            do {
+                _ = try await ConfigFileLoader.loadSharedCredentials(
+                    credentialsFilePath: credentialsPath,
+                    configFilePath: "/dev/null",
+                    profile: profile
+                )
+            } catch ConfigFileLoader.ConfigFileError.missingSecretAccessKey {
+                // Pass
+            } catch {
+                XCTFail("Expected ConfigFileLoader.ConfigFileError.missingSecretAccessKey, got \(error.localizedDescription)")
+            }
+        } teardown: {
             try? FileManager.default.removeItem(atPath: credentialsPath)
-            try? httpClient.syncShutdown()
-        }
-
-        do {
-            _ = try await ConfigFileLoader.loadSharedCredentials(
-                credentialsFilePath: credentialsPath,
-                configFilePath: "/dev/null",
-                profile: profile
-            )
-        } catch ConfigFileLoader.ConfigFileError.missingSecretAccessKey {
-            // Pass
-        } catch {
-            XCTFail("Expected ConfigFileLoader.ConfigFileError.missingSecretAccessKey, got \(error.localizedDescription)")
+            try? await httpClient.shutdown()
         }
     }
 
@@ -289,21 +289,21 @@ class ConfigFileLoadersTests: XCTestCase {
         let credentialsPath = try save(content: credentialsFile, prefix: #function)
         let (_, httpClient) = try makeContext()
 
-        defer {
+        try await withTeardown {
+            do {
+                _ = try await ConfigFileLoader.loadSharedCredentials(
+                    credentialsFilePath: credentialsPath,
+                    configFilePath: "/dev/null",
+                    profile: profile
+                )
+            } catch ConfigFileLoader.ConfigFileError.invalidCredentialFile {
+                // Pass
+            } catch {
+                XCTFail("Expected ConfigFileLoader.ConfigFileError.invalidCredentialFile, got \(error.localizedDescription)")
+            }
+        } teardown: {
             try? FileManager.default.removeItem(atPath: credentialsPath)
-            try? httpClient.syncShutdown()
-        }
-
-        do {
-            _ = try await ConfigFileLoader.loadSharedCredentials(
-                credentialsFilePath: credentialsPath,
-                configFilePath: "/dev/null",
-                profile: profile
-            )
-        } catch ConfigFileLoader.ConfigFileError.invalidCredentialFile {
-            // Pass
-        } catch {
-            XCTFail("Expected ConfigFileLoader.ConfigFileError.invalidCredentialFile, got \(error.localizedDescription)")
+            try? await httpClient.shutdown()
         }
     }
 

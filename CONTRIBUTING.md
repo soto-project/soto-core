@@ -47,7 +47,3 @@ All new files need to include the following file header at the top
 //===----------------------------------------------------------------------===//
 ```
 Please ensure the dates are correct in the header.
-
-## Community
-
-You can also contribute by becoming an active member of the Soto community.  Join us on the soto-aws [slack](https://join.slack.com/t/soto-project/shared_invite/zt-juqk6l9w-z9zruW5pjlod4AscdWlz7Q).

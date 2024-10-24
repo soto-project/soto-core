@@ -22,7 +22,7 @@ import SotoXML
 import XCTest
 
 /// Test server for AWSClient. Input and Output shapes are defined by process function
-public class AWSTestServer {
+public final class AWSTestServer: Sendable {
     public enum Error: Swift.Error {
         case notHead
         case notBody
@@ -33,14 +33,14 @@ public class AWSTestServer {
     }
 
     // what are we returning
-    public enum ServiceProtocol {
+    public enum ServiceProtocol: Sendable {
         case restjson
         case json
         case xml
     }
 
     // http incoming request
-    public struct Request {
+    public struct Request: Sendable {
         public let method: HTTPMethod
         public let uri: String
         public let headers: [String: String]
@@ -55,7 +55,7 @@ public class AWSTestServer {
     }
 
     // http outgoing response
-    public struct Response {
+    public struct Response: Sendable {
         public let httpStatus: HTTPResponseStatus
         public let headers: [String: String]
         public let body: ByteBuffer?
@@ -66,11 +66,11 @@ public class AWSTestServer {
             self.body = body
         }
 
-        public static let ok = Response(httpStatus: .ok)
+        public static var ok: Response { Response(httpStatus: .ok) }
     }
 
     /// Error type
-    public struct ErrorType {
+    public struct ErrorType: Sendable {
         public let status: Int
         public let errorCode: String
         public let message: String
@@ -78,18 +78,18 @@ public class AWSTestServer {
         public var json: String { return "{\"__type\":\"\(self.errorCode)\", \"message\": \"\(self.message)\"}" }
         public var xml: String { return "<Error><Code>\(self.errorCode)</Code><Message>\(self.message)</Message></Error>" }
 
-        public static let badRequest = ErrorType(status: 400, errorCode: "BadRequest", message: "AWSTestServer_ErrorType_BadRequest")
-        public static let accessDenied = ErrorType(status: 401, errorCode: "AccessDenied", message: "AWSTestServer_ErrorType_AccessDenied")
-        public static let notFound = ErrorType(status: 404, errorCode: "NotFound", message: "AWSTestServer_ErrorType_NotFound")
-        public static let tooManyRequests = ErrorType(status: 429, errorCode: "TooManyRequests", message: "AWSTestServer_ErrorType_TooManyRequests")
+        public static var badRequest: ErrorType { ErrorType(status: 400, errorCode: "BadRequest", message: "AWSTestServer_ErrorType_BadRequest") }
+        public static var accessDenied: ErrorType { ErrorType(status: 401, errorCode: "AccessDenied", message: "AWSTestServer_ErrorType_AccessDenied") }
+        public static var notFound: ErrorType { ErrorType(status: 404, errorCode: "NotFound", message: "AWSTestServer_ErrorType_NotFound") }
+        public static var tooManyRequests: ErrorType { ErrorType(status: 429, errorCode: "TooManyRequests", message: "AWSTestServer_ErrorType_TooManyRequests") }
 
-        public static let `internal` = ErrorType(status: 500, errorCode: "InternalFailure", message: "AWSTestServer_ErrorType_InternalFailure")
-        public static let notImplemented = ErrorType(status: 501, errorCode: "NotImplemented", message: "AWSTestServer_ErrorType_NotImplemented")
-        public static let serviceUnavailable = ErrorType(status: 503, errorCode: "ServiceUnavailable", message: "AWSTestServer_ErrorType_ServiceUnavailable")
+        public static var `internal`: ErrorType { ErrorType(status: 500, errorCode: "InternalFailure", message: "AWSTestServer_ErrorType_InternalFailure") }
+        public static var notImplemented: ErrorType { ErrorType(status: 501, errorCode: "NotImplemented", message: "AWSTestServer_ErrorType_NotImplemented") }
+        public static var serviceUnavailable: ErrorType { ErrorType(status: 503, errorCode: "ServiceUnavailable", message: "AWSTestServer_ErrorType_ServiceUnavailable") }
     }
 
     /// result from process
-    public enum Result<Output> {
+    public enum Result<Output: Sendable>: Sendable {
         case result(Output, continueProcessing: Bool = false)
         case error(ErrorType, continueProcessing: Bool = false)
     }
@@ -174,15 +174,17 @@ extension AWSTestServer {
         public let lastUpdated: Date
         public let type: String
 
-        public static let `default` = EC2InstanceMetaData(
-            accessKeyId: "EC2ACCESSKEYID",
-            secretAccessKey: "EC2SECRETACCESSKEY",
-            token: "EC2SESSIONTOKEN",
-            expiration: Date(timeIntervalSinceNow: 3600),
-            code: "ec2-test-role",
-            lastUpdated: Date(timeIntervalSinceReferenceDate: 0),
-            type: "type"
-        )
+        public static var `default`: EC2InstanceMetaData {
+            .init(
+                accessKeyId: "EC2ACCESSKEYID",
+                secretAccessKey: "EC2SECRETACCESSKEY",
+                token: "EC2SESSIONTOKEN",
+                expiration: Date(timeIntervalSinceNow: 3600),
+                code: "ec2-test-role",
+                lastUpdated: Date(timeIntervalSinceReferenceDate: 0),
+                type: "type"
+            )
+        }
 
         enum CodingKeys: String, CodingKey {
             case accessKeyId = "AccessKeyId"
@@ -202,13 +204,15 @@ extension AWSTestServer {
         public let expiration: Date
         public let roleArn: String
 
-        public static let `default` = ECSMetaData(
-            accessKeyId: "ECSACCESSKEYID",
-            secretAccessKey: "ECSSECRETACCESSKEY",
-            token: "ECSSESSIONTOKEN",
-            expiration: Date(timeIntervalSinceNow: 3600),
-            roleArn: "arn:aws:iam:000000000000:role/ecs-test-role"
-        )
+        public static var `default`: ECSMetaData {
+            .init(
+                accessKeyId: "ECSACCESSKEYID",
+                secretAccessKey: "ECSSECRETACCESSKEY",
+                token: "ECSSESSIONTOKEN",
+                expiration: Date(timeIntervalSinceNow: 3600),
+                roleArn: "arn:aws:iam:000000000000:role/ecs-test-role"
+            )
+        }
 
         enum CodingKeys: String, CodingKey {
             case accessKeyId = "AccessKeyId"

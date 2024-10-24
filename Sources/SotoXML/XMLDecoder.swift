@@ -658,12 +658,21 @@ private class _XMLDecoder: Decoder {
         }
     }
 
+    #if compiler(>=5.10)
+    nonisolated(unsafe) static let dateFormatters: [ISO8601DateFormatter] = {
+        let dateFormatters: [ISO8601DateFormatter] = [ISO8601DateFormatter(), ISO8601DateFormatter()]
+        dateFormatters[0].formatOptions = [.withFullDate, .withFullTime, .withFractionalSeconds]
+        dateFormatters[1].formatOptions = [.withFullDate, .withFullTime]
+        return dateFormatters
+    }()
+    #else
     static let dateFormatters: [ISO8601DateFormatter] = {
         let dateFormatters: [ISO8601DateFormatter] = [ISO8601DateFormatter(), ISO8601DateFormatter()]
         dateFormatters[0].formatOptions = [.withFullDate, .withFullTime, .withFractionalSeconds]
         dateFormatters[1].formatOptions = [.withFullDate, .withFullTime]
         return dateFormatters
     }()
+    #endif
 }
 
 //===----------------------------------------------------------------------===//

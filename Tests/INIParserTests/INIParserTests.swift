@@ -53,8 +53,4 @@ class INIParserTests: XCTestCase {
         XCTAssertEqual(ini?.sections["汉化"]?["变量2"] ?? "", "加拿大。")
         XCTAssertNotNil(ini?.sections[" 乱死了 "])
     }
-
-    static var allTests = [
-        ("testExample", testExample),
-    ]
 }

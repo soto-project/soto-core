@@ -28,7 +28,7 @@ internal import SotoXML
 #endif
 
 /// Object encapsulating all the information needed to generate a raw HTTP request to AWS
-public struct AWSHTTPRequest {
+public struct AWSHTTPRequest: Sendable {
     /// request URL
     public var url: URL
     /// request HTTP method

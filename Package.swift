@@ -117,5 +117,6 @@ let package = Package(
         .testTarget(name: "INIParserTests", dependencies: [
             .byName(name: "INIParser"),
         ]),
-    ]
+    ],
+    swiftLanguageVersions: [.v5, .version("6")]
 )

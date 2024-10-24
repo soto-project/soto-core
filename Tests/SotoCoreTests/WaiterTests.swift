@@ -123,7 +123,7 @@ class WaiterTests: XCTestCase {
             command: service.arrayOperation
         )
         let input = TestService.Input()
-        async let responseTask: Void = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+        async let responseTask: Void = service.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
         XCTAssertNoThrow(try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<TestService.ArrayOutput> in
@@ -138,8 +138,9 @@ class WaiterTests: XCTestCase {
         struct StringOutput: AWSDecodableShape & Encodable {
             let s: String
         }
+        let service = TestService(client: self.client, config: self.config)
         @Sendable func operation(input: TestService.Input, logger: Logger) async throws -> StringOutput {
-            try await self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger)
+            try await service.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: service.config, input: input, logger: logger)
         }
         let waiter = AWSClient.Waiter(
             acceptors: [
@@ -149,7 +150,7 @@ class WaiterTests: XCTestCase {
             command: operation
         )
         let input = TestService.Input()
-        async let responseTask: Void = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+        async let responseTask: Void = service.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
         XCTAssertNoThrow(try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<StringOutput> in
@@ -173,8 +174,9 @@ class WaiterTests: XCTestCase {
         struct EnumOutput: AWSDecodableShape & Encodable {
             let e: YesNo
         }
+        let service = TestService(client: self.client, config: self.config)
         @Sendable func operation(input: TestService.Input, logger: Logger) async throws -> EnumOutput {
-            try await self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: self.config, input: input, logger: logger)
+            try await service.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: service.config, input: input, logger: logger)
         }
         let waiter = AWSClient.Waiter(
             acceptors: [
@@ -184,7 +186,7 @@ class WaiterTests: XCTestCase {
             command: operation
         )
         let input = TestService.Input()
-        async let responseTask: Void = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+        async let responseTask: Void = service.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
         XCTAssertNoThrow(try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<EnumOutput> in
@@ -209,7 +211,7 @@ class WaiterTests: XCTestCase {
             command: service.arrayOperation
         )
         let input = TestService.Input()
-        async let responseTask: Void = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+        async let responseTask: Void = service.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
         XCTAssertNoThrow(try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<TestService.ArrayOutput> in
@@ -234,7 +236,7 @@ class WaiterTests: XCTestCase {
             command: service.arrayOperation
         )
         let input = TestService.Input()
-        async let responseTask: Void = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+        async let responseTask: Void = service.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
         XCTAssertNoThrow(try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<TestService.ArrayOutput> in
@@ -258,10 +260,12 @@ class WaiterTests: XCTestCase {
         }
         let awsServer = AWSTestServer(serviceProtocol: .xml)
         defer { XCTAssertNoThrow(try awsServer.stop()) }
+
         let config = createServiceConfig(serviceProtocol: .restxml, endpoint: awsServer.address)
+        let service = TestService(client: self.client, config: config)
 
         @Sendable func arrayOperation(input: Input, logger: Logger) async throws -> ArrayOutput {
-            try await self.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: logger)
+            try await service.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: logger)
         }
 
         let waiter = AWSClient.Waiter(
@@ -272,7 +276,7 @@ class WaiterTests: XCTestCase {
             command: arrayOperation
         )
         let input = Input(test: "Input")
-        async let responseTask: Void = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+        async let responseTask: Void = service.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
         XCTAssertNoThrow(try awsServer.process { (_: Input) -> AWSTestServer.Result<ArrayOutput> in
@@ -294,7 +298,7 @@ class WaiterTests: XCTestCase {
             command: service.operation
         )
         let input = TestService.Input()
-        async let responseTask: Void = self.client.waitUntil(input, waiter: waiter, maxWaitTime: .milliseconds(400), logger: TestEnvironment.logger)
+        async let responseTask: Void = service.client.waitUntil(input, waiter: waiter, maxWaitTime: .milliseconds(400), logger: TestEnvironment.logger)
 
         var i = 0
         XCTAssertNoThrow(try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<TestService.Output> in
@@ -321,7 +325,7 @@ class WaiterTests: XCTestCase {
             command: service.operation
         )
         let input = TestService.Input()
-        async let responseTask: Void = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+        async let responseTask: Void = service.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
         XCTAssertNoThrow(try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<TestService.Output> in
@@ -347,7 +351,7 @@ class WaiterTests: XCTestCase {
             command: service.operation
         )
         let input = TestService.Input()
-        async let responseTask: Void = self.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
+        async let responseTask: Void = service.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
         XCTAssertNoThrow(try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<TestService.Output> in

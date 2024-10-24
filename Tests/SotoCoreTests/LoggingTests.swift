@@ -243,21 +243,20 @@ struct LoggingCollector: LogHandler {
     var logs: Logs
     var internalHandler: LogHandler
 
-    class Logs {
+    struct Logs {
         struct Entry {
             var level: Logger.Level
             var message: String
             var metadata: [String: String]
         }
 
-        private var lock = NIOLock()
-        private var logs: [Entry] = []
+        private let logs: NIOLockedValueBox<[Entry]> = .init([])
 
-        var allEntries: [Entry] { return self.lock.withLock { self.logs } }
+        var allEntries: [Entry] { return self.logs.withLockedValue { $0 } }
 
         func append(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?) {
-            self.lock.withLock {
-                self.logs.append(Entry(
+            self.logs.withLockedValue {
+                $0.append(Entry(
                     level: level,
                     message: message.description,
                     metadata: metadata?.mapValues { $0.description } ?? [:]

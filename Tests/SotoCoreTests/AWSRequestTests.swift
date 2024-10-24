@@ -562,7 +562,7 @@ class AWSRequestTests: XCTestCase {
             let number: Int
         }
         struct Input: AWSEncodableShape {
-            static var _xmlRootNodeName: String? = "Payload"
+            static let _xmlRootNodeName: String? = "Payload"
             let payload: Payload
 
             func encode(to encoder: Encoder) throws {

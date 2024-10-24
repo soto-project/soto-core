@@ -17,8 +17,6 @@ import SotoTestUtils
 import XCTest
 
 class QueryEncoderTests: XCTestCase {
-    @EnvironmentVariable("ENABLE_TIMING_TESTS", default: true) static var enableTimingTests: Bool
-
     func testQuery(_ value: some Encodable, query: String) {
         do {
             let query2 = try QueryEncoder().encode(value)

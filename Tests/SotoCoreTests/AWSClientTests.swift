@@ -243,7 +243,7 @@ class AWSClientTests: XCTestCase {
 
     func testRequestStreaming(config: AWSServiceConfig, client: AWSClient, server: AWSTestServer, bufferSize: Int, blockSize: Int) async throws {
         struct Input: AWSEncodableShape {
-            static var _options: AWSShapeOptions = [.allowStreaming]
+            static var _options: AWSShapeOptions { [.allowStreaming] }
             let payload: AWSHTTPBody
             func encode(to encoder: Encoder) throws {
                 try self.payload.encode(to: encoder)
@@ -309,7 +309,7 @@ class AWSClientTests: XCTestCase {
 
     func testRequestStreamingWithPayload(_ payload: AWSHTTPBody) async throws {
         struct Input: AWSEncodableShape {
-            static var _options: AWSShapeOptions = [.allowStreaming]
+            static var _options: AWSShapeOptions { [.allowStreaming] }
             let payload: AWSHTTPBody
             func encode(to encoder: Encoder) throws {
                 try self.payload.encode(to: encoder)
@@ -359,7 +359,7 @@ class AWSClientTests: XCTestCase {
 
     func testRequestChunkedStreaming() async throws {
         struct Input: AWSEncodableShape {
-            static var _options: AWSShapeOptions = [.allowStreaming, .allowChunkedStreaming, .rawPayload]
+            static let _options: AWSShapeOptions = [.allowStreaming, .allowChunkedStreaming, .rawPayload]
             let payload: AWSHTTPBody
             func encode(to encoder: Encoder) throws {
                 try self.payload.encode(to: encoder)

@@ -37,7 +37,7 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
         case .asyncSequence(let sequence, let length):
             requestBody = .stream(
                 sequence,
-                length: length.map { .known($0) } ?? .unknown
+                length: length.map { .known(Int64($0)) } ?? .unknown
             )
         }
         var httpRequest = HTTPClientRequest(url: request.url.absoluteString)

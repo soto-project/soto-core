@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct Foundation.UUID
+import Foundation
 import INIParser
 import Logging
 import NIOCore

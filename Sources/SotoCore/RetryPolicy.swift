@@ -93,10 +93,10 @@ extension StandardRetryPolicy {
                 }
             }
             return .dontRetry
-        #if DEBUG
         case let httpClientError as HTTPClientError where httpClientError == .remoteConnectionClosed:
             return .retry(wait: calculateRetryWaitTime(attempt: attempt))
-        #endif
+        case let channelError as ChannelError where channelError == .ioOnClosedChannel:
+            return .retry(wait: calculateRetryWaitTime(attempt: attempt))
         default:
             return .dontRetry
         }

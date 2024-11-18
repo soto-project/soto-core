@@ -33,7 +33,7 @@ jobs:
     - name: Upload to codecov.io
       uses: codecov/codecov-action@v5
       with:
-        file: info.lcov
+        files: info.lcov
   linux:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -61,4 +61,4 @@ jobs:
     - name: Upload to codecov.io
       uses: codecov/codecov-action@v5
       with:
-        file: info.lcov
+        files: info.lcov

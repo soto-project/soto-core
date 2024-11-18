@@ -29,6 +29,10 @@ struct RetryMiddleware: AWSMiddlewareProtocol {
                 try Task.checkCancellation()
                 return try await next(request, context)
             } catch {
+                // If request is streaming then do not allow a retry
+                if request.body.isStreaming {
+                    throw error
+                }
                 // If I get a retry wait time for this error then attempt to retry request
                 if case .retry(let retryTime) = self.retryPolicy.getRetryWaitTime(error: error, attempt: attempt) {
                     context.logger.trace("Retrying request", metadata: [

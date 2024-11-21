@@ -165,7 +165,7 @@ extension AWSTestServer {
         case v2
     }
 
-    public struct EC2InstanceMetaData: Encodable {
+    public struct EC2InstanceMetaData: Encodable, Sendable {
         public let accessKeyId: String
         public let secretAccessKey: String
         public let token: String
@@ -174,17 +174,15 @@ extension AWSTestServer {
         public let lastUpdated: Date
         public let type: String
 
-        public static var `default`: EC2InstanceMetaData {
-            .init(
-                accessKeyId: "EC2ACCESSKEYID",
-                secretAccessKey: "EC2SECRETACCESSKEY",
-                token: "EC2SESSIONTOKEN",
-                expiration: Date(timeIntervalSinceNow: 3600),
-                code: "ec2-test-role",
-                lastUpdated: Date(timeIntervalSinceReferenceDate: 0),
-                type: "type"
-            )
-        }
+        public static let `default` = EC2InstanceMetaData(
+            accessKeyId: "EC2ACCESSKEYID",
+            secretAccessKey: "EC2SECRETACCESSKEY",
+            token: "EC2SESSIONTOKEN",
+            expiration: Date(timeIntervalSinceNow: 3600),
+            code: "ec2-test-role",
+            lastUpdated: Date(timeIntervalSinceReferenceDate: 0),
+            type: "type"
+        )
 
         enum CodingKeys: String, CodingKey {
             case accessKeyId = "AccessKeyId"
@@ -197,22 +195,21 @@ extension AWSTestServer {
         }
     }
 
-    public struct ECSMetaData: Encodable {
+    public struct ECSMetaData: Encodable, Sendable {
         public let accessKeyId: String
         public let secretAccessKey: String
         public let token: String
         public let expiration: Date
         public let roleArn: String
 
-        public static var `default`: ECSMetaData {
-            .init(
-                accessKeyId: "ECSACCESSKEYID",
-                secretAccessKey: "ECSSECRETACCESSKEY",
-                token: "ECSSESSIONTOKEN",
-                expiration: Date(timeIntervalSinceNow: 3600),
-                roleArn: "arn:aws:iam:000000000000:role/ecs-test-role"
-            )
-        }
+        public static let `default` = ECSMetaData(
+            accessKeyId: "ECSACCESSKEYID",
+            secretAccessKey: "ECSSECRETACCESSKEY",
+            token: "ECSSESSIONTOKEN",
+            expiration: Date(timeIntervalSinceNow: 3600),
+            roleArn: "arn:aws:iam:000000000000:role/ecs-test-role"
+        )
+        
 
         enum CodingKeys: String, CodingKey {
             case accessKeyId = "AccessKeyId"

@@ -209,7 +209,6 @@ extension AWSTestServer {
             expiration: Date(timeIntervalSinceNow: 3600),
             roleArn: "arn:aws:iam:000000000000:role/ecs-test-role"
         )
-        
 
         enum CodingKeys: String, CodingKey {
             case accessKeyId = "AccessKeyId"

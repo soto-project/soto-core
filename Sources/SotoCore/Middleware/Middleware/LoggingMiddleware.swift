@@ -40,18 +40,14 @@ public struct AWSLoggingMiddleware: AWSMiddlewareProtocol {
     @inlinable
     public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse {
         self.log(
-            "Request:\n" +
-                "  \(context.operation)\n" +
-                "  \(request.method) \(request.url)\n" +
-                "  Headers: \(self.getHeadersOutput(request.headers))\n" +
-                "  Body: \(self.getBodyOutput(request.body))"
+            "Request:\n" + "  \(context.operation)\n" + "  \(request.method) \(request.url)\n"
+                + "  Headers: \(self.getHeadersOutput(request.headers))\n" + "  Body: \(self.getBodyOutput(request.body))"
         )
         let response = try await next(request, context)
         self.log(
-            "Response:\n" +
-                "  Status : \(response.status.code)\n" +
-                "  Headers: \(self.getHeadersOutput(HTTPHeaders(response.headers.map { ($0, "\($1)") })))\n" +
-                "  Body: \(self.getBodyOutput(response.body))"
+            "Response:\n" + "  Status : \(response.status.code)\n"
+                + "  Headers: \(self.getHeadersOutput(HTTPHeaders(response.headers.map { ($0, "\($1)") })))\n"
+                + "  Body: \(self.getBodyOutput(response.body))"
         )
         return response
     }

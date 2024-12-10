@@ -18,6 +18,6 @@ import SotoSignerV4
 extension StaticCredential: CredentialProvider {
     /// Return static credential
     public func getCredential(logger: Logger) async throws -> Credential {
-        return self
+        self
     }
 }

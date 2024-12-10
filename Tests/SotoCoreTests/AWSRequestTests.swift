@@ -12,18 +12,20 @@
 //
 //===----------------------------------------------------------------------===//
 
+import NIOCore
+import NIOHTTP1
+import SotoSignerV4
+import SotoTestUtils
+import SotoXML
+import XCTest
+
+@testable @_spi(SotoInternal) import SotoCore
+
 #if compiler(<5.9) && os(Linux)
 @preconcurrency import struct Foundation.Data
 #else
 import struct Foundation.Data
 #endif
-import NIOCore
-import NIOHTTP1
-@testable @_spi(SotoInternal) import SotoCore
-import SotoSignerV4
-import SotoTestUtils
-import SotoXML
-import XCTest
 
 extension AWSHTTPBody {
     func asString() -> String? {
@@ -103,13 +105,14 @@ class AWSRequestTests: XCTestCase {
         let config = createServiceConfig(region: .useast1, service: "kinesis", serviceProtocol: .json(version: "1.1"))
 
         var awsRequest: AWSHTTPRequest?
-        XCTAssertNoThrow(awsRequest = try AWSHTTPRequest(
-            operation: "PutRecord",
-            path: "/",
-            method: .POST,
-            input: input2,
-            configuration: config
-        )
+        XCTAssertNoThrow(
+            awsRequest = try AWSHTTPRequest(
+                operation: "PutRecord",
+                path: "/",
+                method: .POST,
+                input: input2,
+                configuration: config
+            )
         )
 
         let signer = AWSSigner(
@@ -130,13 +133,15 @@ class AWSRequestTests: XCTestCase {
         let config = createServiceConfig()
 
         var awsRequest: AWSHTTPRequest?
-        XCTAssertNoThrow(awsRequest = try AWSHTTPRequest(
-            operation: "CopyObject",
-            path: "/",
-            method: .PUT,
-            input: input,
-            configuration: config
-        ))
+        XCTAssertNoThrow(
+            awsRequest = try AWSHTTPRequest(
+                operation: "CopyObject",
+                path: "/",
+                method: .PUT,
+                input: input,
+                configuration: config
+            )
+        )
 
         let signer = AWSSigner(
             credentials: StaticCredential(accessKeyId: "", secretAccessKey: ""),
@@ -161,13 +166,15 @@ class AWSRequestTests: XCTestCase {
         for httpMethod in [HTTPMethod.GET, .HEAD, .PUT, .DELETE, .POST, .PATCH] {
             var awsRequest: AWSHTTPRequest?
 
-            XCTAssertNoThrow(awsRequest = try AWSHTTPRequest(
-                operation: "Test",
-                path: "/",
-                method: httpMethod,
-                input: input,
-                configuration: config
-            ))
+            XCTAssertNoThrow(
+                awsRequest = try AWSHTTPRequest(
+                    operation: "Test",
+                    path: "/",
+                    method: httpMethod,
+                    input: input,
+                    configuration: config
+                )
+            )
 
             awsRequest?.signHeaders(signer: signer, serviceConfig: config)
             XCTAssertNotNil(awsRequest?.headers["Authorization"].first)
@@ -495,14 +502,16 @@ class AWSRequestTests: XCTestCase {
         let input = Input()
         let config = createServiceConfig(serviceProtocol: .json(version: "1.0"), endpoint: "https://test.com")
         var request: AWSHTTPRequest?
-        XCTAssertNoThrow(request = try AWSHTTPRequest(
-            operation: "Test",
-            path: "/",
-            method: .POST,
-            input: input,
-            hostPrefix: "foo.",
-            configuration: config
-        ))
+        XCTAssertNoThrow(
+            request = try AWSHTTPRequest(
+                operation: "Test",
+                path: "/",
+                method: .POST,
+                input: input,
+                hostPrefix: "foo.",
+                configuration: config
+            )
+        )
         XCTAssertEqual(request?.url.absoluteString, "https://foo.test.com/")
     }
 
@@ -521,14 +530,16 @@ class AWSRequestTests: XCTestCase {
         let input = Input(accountId: "12345678")
         let config = createServiceConfig(serviceProtocol: .json(version: "1.0"), endpoint: "https://test.com")
         var request: AWSHTTPRequest?
-        XCTAssertNoThrow(request = try AWSHTTPRequest(
-            operation: "Test",
-            path: "/",
-            method: .POST,
-            input: input,
-            hostPrefix: "{AccountId}.",
-            configuration: config
-        ))
+        XCTAssertNoThrow(
+            request = try AWSHTTPRequest(
+                operation: "Test",
+                path: "/",
+                method: .POST,
+                input: input,
+                hostPrefix: "{AccountId}.",
+                configuration: config
+            )
+        )
         XCTAssertEqual(request?.url.absoluteString, "https://12345678.test.com/")
     }
 
@@ -547,13 +558,15 @@ class AWSRequestTests: XCTestCase {
         let input = Input(payload: .init(number: 12_345_678))
         let config = createServiceConfig(serviceProtocol: .json(version: "1.0"))
         var request: AWSHTTPRequest?
-        XCTAssertNoThrow(request = try AWSHTTPRequest(
-            operation: "Test",
-            path: "/",
-            method: .POST,
-            input: input,
-            configuration: config
-        ))
+        XCTAssertNoThrow(
+            request = try AWSHTTPRequest(
+                operation: "Test",
+                path: "/",
+                method: .POST,
+                input: input,
+                configuration: config
+            )
+        )
         XCTAssertEqual(request?.body.asString(), #"{"number":12345678}"#)
     }
 
@@ -572,13 +585,15 @@ class AWSRequestTests: XCTestCase {
         let input = Input(payload: .init(number: 12_345_678))
         let config = createServiceConfig(serviceProtocol: .restxml)
         var request: AWSHTTPRequest?
-        XCTAssertNoThrow(request = try AWSHTTPRequest(
-            operation: "Test",
-            path: "/",
-            method: .POST,
-            input: input,
-            configuration: config
-        ))
+        XCTAssertNoThrow(
+            request = try AWSHTTPRequest(
+                operation: "Test",
+                path: "/",
+                method: .POST,
+                input: input,
+                configuration: config
+            )
+        )
         XCTAssertEqual(request?.body.asString(), #"<?xml version="1.0" encoding="UTF-8"?><Payload><number>12345678</number></Payload>"#)
     }
 
@@ -600,13 +615,15 @@ class AWSRequestTests: XCTestCase {
         let input = Input(payload: .init(number: 12_345_678), contentType: "image/jpeg")
         let config = createServiceConfig(serviceProtocol: .json(version: "1.0"))
         var request: AWSHTTPRequest?
-        XCTAssertNoThrow(request = try AWSHTTPRequest(
-            operation: "Test",
-            path: "/",
-            method: .POST,
-            input: input,
-            configuration: config
-        ))
+        XCTAssertNoThrow(
+            request = try AWSHTTPRequest(
+                operation: "Test",
+                path: "/",
+                method: .POST,
+                input: input,
+                configuration: config
+            )
+        )
         XCTAssertEqual(request?.body.asString(), #"{"number":12345678}"#)
         XCTAssertEqual(request?.headers["content-type"].first, "image/jpeg")
     }

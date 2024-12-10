@@ -12,8 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct Foundation.URL
 import NIOCore
+
+import struct Foundation.URL
 
 /// Services object protocol. Contains a client to communicate with AWS and configuration for defining how to communicate.
 public protocol AWSService: Sendable {
@@ -36,9 +37,9 @@ public protocol AWSService: Sendable {
 
 extension AWSService {
     /// Region where service is running
-    public var region: Region { return config.region }
+    public var region: Region { config.region }
     /// The url to use in requests
-    public var endpoint: String { return config.endpoint }
+    public var endpoint: String { config.endpoint }
 
     /// Return new version of Service with edited parameters
     /// - Parameters:
@@ -55,13 +56,16 @@ extension AWSService {
         byteBufferAllocator: ByteBufferAllocator? = nil,
         options: AWSServiceConfig.Options? = nil
     ) -> Self {
-        return Self(from: self, patch: .init(
-            region: region,
-            middleware: middleware,
-            timeout: timeout,
-            byteBufferAllocator: byteBufferAllocator,
-            options: options
-        ))
+        Self(
+            from: self,
+            patch: .init(
+                region: region,
+                middleware: middleware,
+                timeout: timeout,
+                byteBufferAllocator: byteBufferAllocator,
+                options: options
+            )
+        )
     }
 
     /// Generate a signed URL
@@ -80,7 +84,14 @@ extension AWSService {
         expires: TimeAmount,
         logger: Logger = AWSClient.loggingDisabled
     ) async throws -> URL {
-        return try await self.client.signURL(url: url, httpMethod: httpMethod, headers: headers, expires: expires, serviceConfig: self.config, logger: logger)
+        try await self.client.signURL(
+            url: url,
+            httpMethod: httpMethod,
+            headers: headers,
+            expires: expires,
+            serviceConfig: self.config,
+            logger: logger
+        )
     }
 
     /// Generate signed headers
@@ -99,6 +110,6 @@ extension AWSService {
         body: AWSHTTPBody = .init(),
         logger: Logger = AWSClient.loggingDisabled
     ) async throws -> HTTPHeaders {
-        return try await self.client.signHeaders(url: url, httpMethod: httpMethod, headers: headers, body: body, serviceConfig: self.config, logger: logger)
+        try await self.client.signHeaders(url: url, httpMethod: httpMethod, headers: headers, body: body, serviceConfig: self.config, logger: logger)
     }
 }

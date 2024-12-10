@@ -13,9 +13,10 @@
 //===----------------------------------------------------------------------===//
 
 import NIOCore
-@testable import SotoCore
 import SotoTestUtils
 import XCTest
+
+@testable import SotoCore
 
 class PayloadTests: XCTestCase {
     func testRequestPayload(_ payload: AWSHTTPBody, expectedResult: String) async {

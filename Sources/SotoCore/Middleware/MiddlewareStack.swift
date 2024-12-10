@@ -15,7 +15,7 @@
 @resultBuilder
 public enum AWSMiddlewareBuilder {
     public static func buildBlock<M0: AWSMiddlewareProtocol>(_ m0: M0) -> M0 {
-        return m0
+        m0
     }
 
     public static func buildPartialBlock<M0: AWSMiddlewareProtocol>(first: M0) -> M0 {

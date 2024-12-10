@@ -12,15 +12,16 @@
 //
 //===----------------------------------------------------------------------===//
 
+import class Foundation.DateFormatter
+import class Foundation.ISO8601DateFormatter
+import struct Foundation.Locale
+import struct Foundation.TimeZone
+
 #if compiler(<5.9) && os(Linux)
 @preconcurrency import struct Foundation.Date
 #else
 import struct Foundation.Date
 #endif
-import class Foundation.DateFormatter
-import class Foundation.ISO8601DateFormatter
-import struct Foundation.Locale
-import struct Foundation.TimeZone
 
 // MARK: TimeStamp Coders
 

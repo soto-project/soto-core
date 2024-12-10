@@ -13,6 +13,9 @@
 //===----------------------------------------------------------------------===//
 
 import XCTest
+
+@testable import SotoCore
+
 #if canImport(Glibc)
 import Glibc
 #elseif canImport(Musl)
@@ -22,7 +25,6 @@ import Darwin.C
 #else
 #error("Unsupported platform")
 #endif
-@testable import SotoCore
 
 extension Environment {
     static func set(_ value: String, for name: String) {

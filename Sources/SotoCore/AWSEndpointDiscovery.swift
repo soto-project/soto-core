@@ -12,11 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct Foundation.Date
-import struct Foundation.TimeInterval
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
+
+import struct Foundation.Date
+import struct Foundation.TimeInterval
 
 /// Endpoint list
 public struct AWSEndpoints {

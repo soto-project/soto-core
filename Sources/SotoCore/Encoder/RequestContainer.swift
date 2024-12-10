@@ -61,7 +61,8 @@ public class RequestEncodingContainer {
         // Set query params. Percent encode these ourselves as Foundation and AWS disagree on what should be percent encoded in the query values
         // Also the signer doesn't percent encode the queries so they need to be encoded here
         if queryParams.count > 0 {
-            let urlQueryString = queryParams
+            let urlQueryString =
+                queryParams
                 .map { (key: $0.key, value: "\($0.value)") }
                 .sorted {
                     // sort by key. if key are equal then sort by value
@@ -215,19 +216,19 @@ public class RequestEncodingContainer {
 
     /// percent encode query parameter value.
     internal static func urlEncodeQueryParam(_ value: String) -> String {
-        return value.addingPercentEncoding(withAllowedCharacters: Self.queryAllowedCharacters) ?? value
+        value.addingPercentEncoding(withAllowedCharacters: Self.queryAllowedCharacters) ?? value
     }
 
     /// percent encode path value.
     @usableFromInline
     internal static func urlEncodePath(_ value: String) -> String {
-        return value.addingPercentEncoding(withAllowedCharacters: Self.pathAllowedCharacters) ?? value
+        value.addingPercentEncoding(withAllowedCharacters: Self.pathAllowedCharacters) ?? value
     }
 
     /// percent encode path component value. ie also encode "/"
     @usableFromInline
     internal static func urlEncodePathComponent(_ value: String) -> String {
-        return value.addingPercentEncoding(withAllowedCharacters: Self.pathComponentAllowedCharacters) ?? value
+        value.addingPercentEncoding(withAllowedCharacters: Self.pathComponentAllowedCharacters) ?? value
     }
 
     /// this list of query allowed characters comes from https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html
@@ -239,5 +240,5 @@ public class RequestEncodingContainer {
 }
 
 extension CodingUserInfoKey {
-    public static var awsRequest: Self { return .init(rawValue: "soto.awsRequest")! }
+    public static var awsRequest: Self { .init(rawValue: "soto.awsRequest")! }
 }

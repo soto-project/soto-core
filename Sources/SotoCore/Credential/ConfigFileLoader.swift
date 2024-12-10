@@ -142,7 +142,11 @@ enum ConfigFileLoader {
     ///   - configByteBuffer: contents of AWS profile configuration file (usually `~/.aws/config`)
     ///   - profile: named profile to load (optional)
     /// - Returns: Parsed SharedCredentials
-    static func parseSharedCredentials(from credentialsByteBuffer: ByteBuffer, configByteBuffer: ByteBuffer?, for profile: String) throws -> SharedCredentials {
+    static func parseSharedCredentials(
+        from credentialsByteBuffer: ByteBuffer,
+        configByteBuffer: ByteBuffer?,
+        for profile: String
+    ) throws -> SharedCredentials {
         let config = try configByteBuffer.flatMap { try self.parseProfileConfig(from: $0, for: profile) }
         let credentials = try parseCredentials(from: credentialsByteBuffer, for: profile, sourceProfile: config?.sourceProfile)
 
@@ -158,7 +162,11 @@ enum ConfigFileLoader {
                 guard let secretAccessKey = credentials.secretAccessKey else {
                     throw ConfigFileError.missingSecretAccessKey
                 }
-                let provider: CredentialProviderFactory = .static(accessKeyId: accessKey, secretAccessKey: secretAccessKey, sessionToken: credentials.sessionToken)
+                let provider: CredentialProviderFactory = .static(
+                    accessKeyId: accessKey,
+                    secretAccessKey: secretAccessKey,
+                    sessionToken: credentials.sessionToken
+                )
                 return .assumeRole(roleArn: roleArn, sessionName: sessionName, region: region, sourceCredentialProvider: provider)
             }
             // If `credental_source` is defined, temporary credentials must be loaded from source
@@ -197,7 +205,7 @@ enum ConfigFileLoader {
     /// - Returns: Combined profile settings
     static func parseProfileConfig(from byteBuffer: ByteBuffer, for profile: String) throws -> ProfileConfig? {
         guard let content = byteBuffer.getString(at: 0, length: byteBuffer.readableBytes),
-              let parser = try? INIParser(content)
+            let parser = try? INIParser(content)
         else {
             throw ConfigFileError.invalidCredentialFile
         }
@@ -232,7 +240,7 @@ enum ConfigFileLoader {
     /// - Returns: Combined profile credentials
     static func parseCredentials(from byteBuffer: ByteBuffer, for profile: String, sourceProfile: String?) throws -> ProfileCredentials {
         guard let content = byteBuffer.getString(at: 0, length: byteBuffer.readableBytes),
-              let parser = try? INIParser(content)
+            let parser = try? INIParser(content)
         else {
             throw ConfigFileError.invalidCredentialFile
         }
@@ -293,7 +301,7 @@ enum ConfigFileLoader {
         #elseif os(macOS)
         // can not use wordexp on macOS because for sandboxed application wexp.we_wordv == nil
         guard let home = getpwuid(getuid())?.pointee.pw_dir,
-              let homePath = String(cString: home, encoding: .utf8)
+            let homePath = String(cString: home, encoding: .utf8)
         else {
             return filePath
         }

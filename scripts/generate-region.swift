@@ -13,11 +13,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-import AsyncHTTPClient // swift-server/async-http-client
+import AsyncHTTPClient  // swift-server/async-http-client
 import Foundation
-import NIOCore // apple/swift-nio
+import NIOCore  // apple/swift-nio
 import NIOFoundationCompat
-import Stencil // soto-project/Stencil
+import Stencil  // soto-project/Stencil
 
 struct Endpoints: Decodable {
     struct CredentialScope: Decodable {
@@ -91,7 +91,12 @@ func loadEndpoints(url: String) throws -> Endpoints? {
 }
 
 print("Loading Endpoints")
-guard let endpoints = try loadEndpoints(url: "https://raw.githubusercontent.com/aws/aws-sdk-go-v2/master/codegen/smithy-aws-go-codegen/src/main/resources/software/amazon/smithy/aws/go/codegen/endpoints.json") else { exit(-1) }
+guard
+    let endpoints = try loadEndpoints(
+        url:
+            "https://raw.githubusercontent.com/aws/aws-sdk-go-v2/master/codegen/smithy-aws-go-codegen/src/main/resources/software/amazon/smithy/aws/go/codegen/endpoints.json"
+    )
+else { exit(-1) }
 
 var regionDescs: [OutputRegionDesc] = []
 var partitions: [OutputPartition] = endpoints.partitions.map {

@@ -71,8 +71,8 @@ extension AWSClient {
                 if let input {
                     let output = try await self.sequence.command(input, self.sequence.logger)
                     if let token = output[keyPath: sequence.outputKey],
-                       sequence.inputKey == nil || token != input[keyPath: sequence.inputKey!],
-                       sequence.moreResultsKey == nil || output[keyPath: sequence.moreResultsKey!] == true
+                        sequence.inputKey == nil || token != input[keyPath: sequence.inputKey!],
+                        sequence.moreResultsKey == nil || output[keyPath: sequence.moreResultsKey!] == true
                     {
                         self.input = input.usingPaginationToken(token)
                     } else {
@@ -86,7 +86,7 @@ extension AWSClient {
 
         /// Make async iterator
         public func makeAsyncIterator() -> AsyncIterator {
-            return AsyncIterator(sequence: self)
+            AsyncIterator(sequence: self)
         }
     }
 }

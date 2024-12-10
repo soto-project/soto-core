@@ -12,8 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import SotoCore
 import XCTest
+
+@testable import SotoCore
 
 class ValidationTests: XCTestCase {
     /// test validation

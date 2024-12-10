@@ -28,8 +28,7 @@ extension CredentialProviderSelector {
         try await withTaskCancellationHandler {
             let provider = try await getCredentialProviderTask()
             return try await provider.getCredential(logger: logger)
-        }
-        onCancel: {
+        } onCancel: {
             cancelCredentialProviderTask()
         }
     }

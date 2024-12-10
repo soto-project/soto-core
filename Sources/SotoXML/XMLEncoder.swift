@@ -57,7 +57,7 @@ public struct XMLEncoder {
 
     /// The options set on the top-level encoder.
     fileprivate var options: _Options {
-        return _Options(
+        _Options(
             dataEncodingStrategy: self.dataEncodingStrategy,
             nonConformingFloatEncodingStrategy: self.nonConformingFloatEncodingStrategy,
             userInfo: self.userInfo
@@ -83,7 +83,7 @@ struct _XMLEncoderStorage {
     init() {}
 
     /// return the container at the top of the storage
-    var topContainer: XML.Element? { return self.containers.last ?? nil }
+    var topContainer: XML.Element? { self.containers.last ?? nil }
 
     /// push a new container onto the storage
     mutating func push(container: XML.Element?) { self.containers.append(container) }
@@ -112,13 +112,13 @@ class _XMLEncoder: Encoder {
     var codingPath: [CodingKey]
 
     /// contextual user-provided information for use during encoding
-    var userInfo: [CodingUserInfoKey: Any] { return self.options.userInfo }
+    var userInfo: [CodingUserInfoKey: Any] { self.options.userInfo }
 
     /// the top level key
-    var currentKey: String { return self.codingPath.last!.stringValue }
+    var currentKey: String { self.codingPath.last!.stringValue }
 
     /// the top level xml element
-    var element: XML.Element? { return self.storage.topContainer }
+    var element: XML.Element? { self.storage.topContainer }
 
     // MARK: - Initialization
 
@@ -139,7 +139,7 @@ class _XMLEncoder: Encoder {
     struct KEC<Key: CodingKey>: KeyedEncodingContainerProtocol {
         let encoder: _XMLEncoder
         let element: XML.Element
-        var codingPath: [CodingKey] { return self.encoder.codingPath }
+        var codingPath: [CodingKey] { self.encoder.codingPath }
 
         init(_ element: XML.Element, referencing encoder: _XMLEncoder) {
             self.element = element
@@ -230,7 +230,8 @@ class _XMLEncoder: Encoder {
             }
         }
 
-        func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey: CodingKey {
+        func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey>
+        where NestedKey: CodingKey {
             self.encoder.codingPath.append(key)
             defer { self.encoder.codingPath.removeLast() }
 
@@ -250,11 +251,11 @@ class _XMLEncoder: Encoder {
         }
 
         func superEncoder() -> Encoder {
-            return _XMLReferencingEncoder(referencing: self.encoder, key: _XMLKey.super, wrapping: self.element)
+            _XMLReferencingEncoder(referencing: self.encoder, key: _XMLKey.super, wrapping: self.element)
         }
 
         func superEncoder(forKey key: Key) -> Encoder {
-            return _XMLReferencingEncoder(referencing: self.encoder, key: key, wrapping: self.element)
+            _XMLReferencingEncoder(referencing: self.encoder, key: key, wrapping: self.element)
         }
     }
 
@@ -266,7 +267,7 @@ class _XMLEncoder: Encoder {
     struct UKEC: UnkeyedEncodingContainer {
         let encoder: _XMLEncoder
         let element: XML.Element
-        var codingPath: [CodingKey] { return self.encoder.codingPath }
+        var codingPath: [CodingKey] { self.encoder.codingPath }
         var count: Int
         let key: String
 
@@ -397,12 +398,12 @@ class _XMLEncoder: Encoder {
         }
 
         func superEncoder() -> Encoder {
-            return _XMLReferencingEncoder(referencing: self.encoder, key: _XMLKey.super, wrapping: self.element)
+            _XMLReferencingEncoder(referencing: self.encoder, key: _XMLKey.super, wrapping: self.element)
         }
     }
 
     func singleValueContainer() -> SingleValueEncodingContainer {
-        return self
+        self
     }
 }
 
@@ -474,26 +475,27 @@ extension _XMLEncoder: SingleValueEncodingContainer {
 
 extension _XMLEncoder {
     /// Returns the given value boxed in a container appropriate for pushing onto the container stack.
-    private func box(_ value: Bool) -> String { return value.description }
-    private func box(_ value: Int) -> String { return value.description }
-    private func box(_ value: Int8) -> String { return value.description }
-    private func box(_ value: Int16) -> String { return value.description }
-    private func box(_ value: Int32) -> String { return value.description }
-    private func box(_ value: Int64) -> String { return value.description }
-    private func box(_ value: UInt) -> String { return value.description }
-    private func box(_ value: UInt8) -> String { return value.description }
-    private func box(_ value: UInt16) -> String { return value.description }
-    private func box(_ value: UInt32) -> String { return value.description }
-    private func box(_ value: UInt64) -> String { return value.description }
-    private func box(_ value: String) -> String { return value }
+    private func box(_ value: Bool) -> String { value.description }
+    private func box(_ value: Int) -> String { value.description }
+    private func box(_ value: Int8) -> String { value.description }
+    private func box(_ value: Int16) -> String { value.description }
+    private func box(_ value: Int32) -> String { value.description }
+    private func box(_ value: Int64) -> String { value.description }
+    private func box(_ value: UInt) -> String { value.description }
+    private func box(_ value: UInt8) -> String { value.description }
+    private func box(_ value: UInt16) -> String { value.description }
+    private func box(_ value: UInt32) -> String { value.description }
+    private func box(_ value: UInt64) -> String { value.description }
+    private func box(_ value: String) -> String { value }
 
     private func box(_ float: Float) throws -> String {
         guard !float.isInfinite, !float.isNaN else {
-            guard case .convertToString(
-                positiveInfinity: let posInfString,
-                negativeInfinity: let negInfString,
-                nan: let nanString
-            ) = self.options.nonConformingFloatEncodingStrategy
+            guard
+                case .convertToString(
+                    positiveInfinity: let posInfString,
+                    negativeInfinity: let negInfString,
+                    nan: let nanString
+                ) = self.options.nonConformingFloatEncodingStrategy
             else {
                 throw EncodingError._invalidFloatingPointValue(float, at: self.codingPath)
             }
@@ -512,11 +514,12 @@ extension _XMLEncoder {
 
     private func box(_ double: Double) throws -> String {
         guard !double.isInfinite, !double.isNaN else {
-            guard case .convertToString(
-                positiveInfinity: let posInfString,
-                negativeInfinity: let negInfString,
-                nan: let nanString
-            ) = self.options.nonConformingFloatEncodingStrategy
+            guard
+                case .convertToString(
+                    positiveInfinity: let posInfString,
+                    negativeInfinity: let negInfString,
+                    nan: let nanString
+                ) = self.options.nonConformingFloatEncodingStrategy
             else {
                 throw EncodingError._invalidFloatingPointValue(double, at: self.codingPath)
             }
@@ -534,7 +537,7 @@ extension _XMLEncoder {
     }
 
     func box(_ date: Date) throws -> XML.Element? {
-        return XML.Element(name: self.currentKey, stringValue: Self.dateFormatter.string(from: date))
+        XML.Element(name: self.currentKey, stringValue: Self.dateFormatter.string(from: date))
     }
 
     func box(_ data: Data) throws -> XML.Element? {
@@ -663,7 +666,8 @@ extension EncodingError {
             valueDescription = "\(T.self).nan"
         }
 
-        let debugDescription = "Unable to encode \(valueDescription) directly. Use DictionaryEncoder.NonConformingFloatEncodingStrategy.convertToString to specify how the value should be encoded."
+        let debugDescription =
+            "Unable to encode \(valueDescription) directly. Use DictionaryEncoder.NonConformingFloatEncodingStrategy.convertToString to specify how the value should be encoded."
         return .invalidValue(value, EncodingError.Context(codingPath: codingPath, debugDescription: debugDescription))
     }
 }

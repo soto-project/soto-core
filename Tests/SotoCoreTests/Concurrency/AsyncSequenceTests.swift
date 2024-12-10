@@ -88,6 +88,6 @@ struct TestByteBufferSequence: AsyncSequence {
 
     /// Make async iterator
     public func makeAsyncIterator() -> AsyncIterator {
-        return AsyncIterator(source: self.source, range: self.range)
+        AsyncIterator(source: self.source, range: self.range)
     }
 }

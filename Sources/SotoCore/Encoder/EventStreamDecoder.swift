@@ -14,6 +14,7 @@
 
 import Foundation
 import NIOCore
+
 #if compiler(>=5.10)
 internal import SotoXML
 #else
@@ -46,7 +47,7 @@ private struct _EventStreamDecoder: Decoder {
     }
 
     func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key: CodingKey {
-        return KeyedDecodingContainer(KDC<Key>(headers: self.headers, payload: self.payload))
+        KeyedDecodingContainer(KDC<Key>(headers: self.headers, payload: self.payload))
     }
 
     struct KDC<Key: CodingKey>: KeyedDecodingContainerProtocol {
@@ -67,7 +68,7 @@ private struct _EventStreamDecoder: Decoder {
         }
 
         func decodeNil(forKey key: Key) throws -> Bool {
-            return true
+            true
         }
 
         func decode<T>(_ type: T.Type, forKey key: Key) throws -> T where T: Decodable {
@@ -103,7 +104,8 @@ private struct _EventStreamDecoder: Decoder {
             }
         }
 
-        func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> where NestedKey: CodingKey {
+        func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey>
+        where NestedKey: CodingKey {
             preconditionFailure("Nested containers are not supported")
         }
 
@@ -130,10 +132,10 @@ private struct _EventStreamDecoder: Decoder {
             var headers: [String: String] = [:]
             while byteBuffer.readableBytes > 0 {
                 guard let headerLength: UInt8 = byteBuffer.readInteger(),
-                      let header: String = byteBuffer.readString(length: Int(headerLength)),
-                      let byte: UInt8 = byteBuffer.readInteger(), byte == 7,
-                      let valueLength: UInt16 = byteBuffer.readInteger(),
-                      let value: String = byteBuffer.readString(length: Int(valueLength))
+                    let header: String = byteBuffer.readString(length: Int(headerLength)),
+                    let byte: UInt8 = byteBuffer.readInteger(), byte == 7,
+                    let valueLength: UInt16 = byteBuffer.readInteger(),
+                    let value: String = byteBuffer.readString(length: Int(valueLength))
                 else {
                     throw AWSEventStreamError.corruptHeader
                 }
@@ -152,11 +154,13 @@ private struct _EventStreamDecoder: Decoder {
         guard UInt(preludeCRC) == calculatedPreludeCRC else { throw AWSEventStreamError.corruptPayload }
         // get lengths
         guard let totalLength: Int32 = preludeBuffer.readInteger(),
-              let headerLength: Int32 = preludeBuffer.readInteger() else { throw InternalAWSEventStreamError.needMoreData }
+            let headerLength: Int32 = preludeBuffer.readInteger()
+        else { throw InternalAWSEventStreamError.needMoreData }
 
         // get message and message CRC. Throw `needMoreData` if we don't have enough data
         guard var messageBuffer = byteBuffer.readSlice(length: Int(totalLength - 4)),
-              let messageCRC: UInt32 = byteBuffer.readInteger() else { throw InternalAWSEventStreamError.needMoreData }
+            let messageCRC: UInt32 = byteBuffer.readInteger()
+        else { throw InternalAWSEventStreamError.needMoreData }
         // verify message CRC
         let calculatedCRC = soto_crc32(0, bytes: ByteBufferView(messageBuffer))
         guard UInt(messageCRC) == calculatedCRC else { throw AWSEventStreamError.corruptPayload }
@@ -197,13 +201,13 @@ struct EventDecodingContainer {
     /// Return payload from EventStream payload
     /// - Returns: Payload as ByteBuffer
     func decodePayload() -> ByteBuffer {
-        return self.payload
+        self.payload
     }
 }
 
 extension CodingUserInfoKey {
     /// AWS Event user info key
-    public static var awsEvent: Self { return .init(rawValue: "soto.awsEvent")! }
+    public static var awsEvent: Self { .init(rawValue: "soto.awsEvent")! }
 }
 
 /// Errors thrown while decoding the event stream buffers

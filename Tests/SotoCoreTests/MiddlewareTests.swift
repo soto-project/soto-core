@@ -12,9 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import SotoCore
 import SotoTestUtils
 import XCTest
+
+@testable import SotoCore
 
 class MiddlewareTests: XCTestCase {
     struct CatchRequestError: Error {
@@ -22,7 +23,11 @@ class MiddlewareTests: XCTestCase {
     }
 
     struct CatchRequestMiddleware: AWSMiddlewareProtocol {
-        func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
+        func handle(
+            _ request: AWSHTTPRequest,
+            context: AWSMiddlewareContext,
+            next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse
+        ) async throws -> AWSHTTPResponse {
             throw CatchRequestError(request: request)
         }
     }
@@ -56,7 +61,11 @@ class MiddlewareTests: XCTestCase {
 
     func testMiddlewareAppliedOnce() async throws {
         struct URLAppendMiddleware: AWSMiddlewareProtocol {
-            func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
+            func handle(
+                _ request: AWSHTTPRequest,
+                context: AWSMiddlewareContext,
+                next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse
+            ) async throws -> AWSHTTPResponse {
                 var request = request
                 request.url.appendPathComponent("test")
                 return try await next(request, context)
@@ -71,12 +80,20 @@ class MiddlewareTests: XCTestCase {
             XCTAssertNoThrow(try awsServer.stop())
         }
 
-        async let responseTask: Void = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, logger: TestEnvironment.logger)
+        async let responseTask: Void = client.execute(
+            operation: "test",
+            path: "/",
+            httpMethod: .POST,
+            serviceConfig: config,
+            logger: TestEnvironment.logger
+        )
 
-        XCTAssertNoThrow(try awsServer.processRaw { request in
-            XCTAssertEqual(request.uri, "/test")
-            return .result(AWSTestServer.Response.ok)
-        })
+        XCTAssertNoThrow(
+            try awsServer.processRaw { request in
+                XCTAssertEqual(request.uri, "/test")
+                return .result(AWSTestServer.Response.ok)
+            }
+        )
 
         try await responseTask
     }
@@ -124,7 +141,11 @@ class MiddlewareTests: XCTestCase {
 
     func testS3MiddlewareErrorFixup() async throws {
         struct ThrowNotFoundErrorMiddleware: AWSMiddlewareProtocol {
-            public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
+            public func handle(
+                _ request: AWSHTTPRequest,
+                context: AWSMiddlewareContext,
+                next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse
+            ) async throws -> AWSHTTPResponse {
                 throw AWSRawError(rawBody: nil, context: .init(message: "NotFound", responseCode: .notFound))
             }
         }
@@ -208,7 +229,7 @@ class MiddlewareTests: XCTestCase {
         static var notFound: Self { .init(.notFound) }
 
         var description: String {
-            return "\(self.error.rawValue): \(self.message ?? "")"
+            "\(self.error.rawValue): \(self.message ?? "")"
         }
 
         static func == (lhs: S3TestErrorType, rhs: S3TestErrorType) -> Bool {

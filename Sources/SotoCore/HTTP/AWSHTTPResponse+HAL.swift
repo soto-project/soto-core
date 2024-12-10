@@ -12,16 +12,17 @@
 //
 //===----------------------------------------------------------------------===//
 
+import NIOCore
+
 import struct Foundation.Data
 import class Foundation.JSONSerialization
-import NIOCore
 
 // AWS HAL services I know of are APIGateway, Pinpoint, Greengrass
 extension AWSHTTPResponse {
     /// return if body is hypertext application language
     var isHypertextApplicationLanguage: Bool {
         guard let contentType = self.headers["content-type"].first,
-              contentType.contains("hal+json")
+            contentType.contains("hal+json")
         else {
             return false
         }
@@ -35,7 +36,7 @@ extension AWSHTTPResponse {
         let jsonObject = try JSONSerialization.jsonObject(with: buffer, options: [])
         guard var dictionary = jsonObject as? [String: Any] else { return Data("{}".utf8) }
         guard let embedded = dictionary["_embedded"],
-              let embeddedDictionary = embedded as? [String: Any]
+            let embeddedDictionary = embedded as? [String: Any]
         else {
             return try JSONSerialization.data(withJSONObject: dictionary)
         }
@@ -44,7 +45,7 @@ extension AWSHTTPResponse {
         dictionary["_links"] = nil
         dictionary["_embedded"] = nil
         // merge embedded resources into original dictionary
-        dictionary.merge(embeddedDictionary) { first, _ in return first }
+        dictionary.merge(embeddedDictionary) { first, _ in first }
         return try JSONSerialization.data(withJSONObject: dictionary)
     }
 }

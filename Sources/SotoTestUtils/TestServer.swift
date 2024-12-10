@@ -75,17 +75,27 @@ public final class AWSTestServer: Sendable {
         public let errorCode: String
         public let message: String
 
-        public var json: String { return "{\"__type\":\"\(self.errorCode)\", \"message\": \"\(self.message)\"}" }
-        public var xml: String { return "<Error><Code>\(self.errorCode)</Code><Message>\(self.message)</Message></Error>" }
+        public var json: String { "{\"__type\":\"\(self.errorCode)\", \"message\": \"\(self.message)\"}" }
+        public var xml: String { "<Error><Code>\(self.errorCode)</Code><Message>\(self.message)</Message></Error>" }
 
         public static var badRequest: ErrorType { ErrorType(status: 400, errorCode: "BadRequest", message: "AWSTestServer_ErrorType_BadRequest") }
-        public static var accessDenied: ErrorType { ErrorType(status: 401, errorCode: "AccessDenied", message: "AWSTestServer_ErrorType_AccessDenied") }
+        public static var accessDenied: ErrorType {
+            ErrorType(status: 401, errorCode: "AccessDenied", message: "AWSTestServer_ErrorType_AccessDenied")
+        }
         public static var notFound: ErrorType { ErrorType(status: 404, errorCode: "NotFound", message: "AWSTestServer_ErrorType_NotFound") }
-        public static var tooManyRequests: ErrorType { ErrorType(status: 429, errorCode: "TooManyRequests", message: "AWSTestServer_ErrorType_TooManyRequests") }
+        public static var tooManyRequests: ErrorType {
+            ErrorType(status: 429, errorCode: "TooManyRequests", message: "AWSTestServer_ErrorType_TooManyRequests")
+        }
 
-        public static var `internal`: ErrorType { ErrorType(status: 500, errorCode: "InternalFailure", message: "AWSTestServer_ErrorType_InternalFailure") }
-        public static var notImplemented: ErrorType { ErrorType(status: 501, errorCode: "NotImplemented", message: "AWSTestServer_ErrorType_NotImplemented") }
-        public static var serviceUnavailable: ErrorType { ErrorType(status: 503, errorCode: "ServiceUnavailable", message: "AWSTestServer_ErrorType_ServiceUnavailable") }
+        public static var `internal`: ErrorType {
+            ErrorType(status: 500, errorCode: "InternalFailure", message: "AWSTestServer_ErrorType_InternalFailure")
+        }
+        public static var notImplemented: ErrorType {
+            ErrorType(status: 501, errorCode: "NotImplemented", message: "AWSTestServer_ErrorType_NotImplemented")
+        }
+        public static var serviceUnavailable: ErrorType {
+            ErrorType(status: 503, errorCode: "ServiceUnavailable", message: "AWSTestServer_ErrorType_ServiceUnavailable")
+        }
     }
 
     /// result from process
@@ -94,10 +104,10 @@ public final class AWSTestServer: Sendable {
         case error(ErrorType, continueProcessing: Bool = false)
     }
 
-    public var addressURL: URL { return URL(string: self.address)! }
-    public var address: String { return "http://\(self.host):\(self.web.serverPort)" }
-    public var host: String { return "localhost" }
-    public var serverPort: Int { return self.web.serverPort }
+    public var addressURL: URL { URL(string: self.address)! }
+    public var address: String { "http://\(self.host):\(self.web.serverPort)" }
+    public var host: String { "localhost" }
+    public var serverPort: Int { self.web.serverPort }
     public let serviceProtocol: ServiceProtocol
 
     let eventLoopGroup: EventLoopGroup
@@ -152,7 +162,7 @@ extension AWSTestServer {
         )
         let responseBody = try JSONEncoder().encodeAsByteBuffer(httpBinResponse, allocator: self.byteBufferAllocator)
         let headers = [
-            "Content-Type": "application/json",
+            "Content-Type": "application/json"
         ]
         try writeResponse(Response(httpStatus: .ok, headers: headers, body: responseBody))
     }
@@ -264,7 +274,7 @@ extension AWSTestServer {
                 encoder.dateEncodingStrategy = .formatted(dateFormatter)
                 let responseBody = try encoder.encodeAsByteBuffer(metaData, allocator: self.byteBufferAllocator)
                 let headers = [
-                    "Content-Type": "application/json",
+                    "Content-Type": "application/json"
                 ]
                 return .result(.init(httpStatus: .ok, headers: headers, body: responseBody), continueProcessing: false)
 
@@ -288,7 +298,7 @@ extension AWSTestServer {
                 encoder.dateEncodingStrategy = .formatted(dateFormatter)
                 let responseBody = try encoder.encodeAsByteBuffer(metaData, allocator: self.byteBufferAllocator)
                 let headers = [
-                    "Content-Type": "application/json",
+                    "Content-Type": "application/json"
                 ]
                 return .result(.init(httpStatus: .ok, headers: headers, body: responseBody), continueProcessing: false)
             }
@@ -373,7 +383,7 @@ extension AWSTestServer {
                 if chunkSize.hasSuffix(";") {
                     let hexChunkSize = String(chunkSize.dropLast(1))
                     guard let chunkSize = Int(hexChunkSize, radix: 16) else { throw Error.corruptChunkedData }
-                    return .readingSignature(16 + 64 + 2, chunkSize) // "chunk-signature=" + hex(sha256) + "\r\n"
+                    return .readingSignature(16 + 64 + 2, chunkSize)  // "chunk-signature=" + hex(sha256) + "\r\n"
                 }
             }
             return .readingSize(chunkSize)
@@ -489,11 +499,15 @@ extension AWSTestServer {
         headers["Content-Length"] = nil
 
         do {
-            try self.web.writeOutbound(.head(.init(
-                version: .init(major: 1, minor: 1),
-                status: response.httpStatus,
-                headers: HTTPHeaders(headers.map { ($0, $1) })
-            )))
+            try self.web.writeOutbound(
+                .head(
+                    .init(
+                        version: .init(major: 1, minor: 1),
+                        status: response.httpStatus,
+                        headers: HTTPHeaders(headers.map { ($0, $1) })
+                    )
+                )
+            )
             if let body = response.body {
                 try self.web.writeOutbound(.body(.byteBuffer(body)))
             }

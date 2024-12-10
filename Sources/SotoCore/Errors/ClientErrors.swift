@@ -107,6 +107,6 @@ extension AWSClientError: Equatable {
 
 extension AWSClientError: CustomStringConvertible {
     public var description: String {
-        return "\(self.error.rawValue): \(message ?? "")"
+        "\(self.error.rawValue): \(message ?? "")"
     }
 }

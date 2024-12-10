@@ -13,6 +13,11 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+import Logging
+import NIOCore
+import NIOFoundationCompat
+import NIOHTTP1
+
 import struct Foundation.Data
 import struct Foundation.Date
 import class Foundation.DateFormatter
@@ -20,10 +25,7 @@ import class Foundation.JSONDecoder
 import class Foundation.JSONSerialization
 import struct Foundation.Locale
 import struct Foundation.TimeZone
-import Logging
-import NIOCore
-import NIOFoundationCompat
-import NIOHTTP1
+
 #if compiler(>=5.10)
 internal import SotoXML
 #else
@@ -75,16 +77,16 @@ public struct AWSHTTPResponse {
         case .restxml, .query, .ec2:
             var xmlElement: XML.Element
             if let buffer = payload,
-               let xmlDocument = try? XML.Document(buffer: buffer),
-               let rootElement = xmlDocument.rootElement()
+                let xmlDocument = try? XML.Document(buffer: buffer),
+                let rootElement = xmlDocument.rootElement()
             {
                 xmlElement = rootElement
                 // if root element is called operation name + "Response" and its child is called
                 // operation name + "Result" then use the child as the root element when decoding
                 // XML
                 if let child = xmlElement.children(of: .element)?.first as? XML.Element,
-                   xmlElement.name == operation + "Response",
-                   child.name == operation + "Result"
+                    xmlElement.name == operation + "Response",
+                    child.name == operation + "Result"
                 {
                     xmlElement = child
                 }
@@ -148,10 +150,14 @@ public struct AWSHTTPResponse {
                 code = String(code[code.index(index, offsetBy: 1)...])
             }
 
-            logger.log(level: logLevel, "AWS Error", metadata: [
-                "aws-error-code": .string(code),
-                "aws-error-message": .string(errorMessage.message),
-            ])
+            logger.log(
+                level: logLevel,
+                "AWS Error",
+                metadata: [
+                    "aws-error-code": .string(code),
+                    "aws-error-message": .string(errorMessage.message),
+                ]
+            )
 
             let context = AWSErrorContext(
                 message: errorMessage.message,
@@ -212,7 +218,8 @@ public struct AWSHTTPResponse {
             // use `ErrorCodingKey` so we get extract additional keys from `container.allKeys`
             let container = try decoder.container(keyedBy: ErrorCodingKey.self)
             self.code = try container.decodeIfPresent(String.self, forKey: .init("__type"))
-            self.message = try container.decodeIfPresent(String.self, forKey: .init("message")) ?? container.decode(String.self, forKey: .init("Message"))
+            self.message =
+                try container.decodeIfPresent(String.self, forKey: .init("message")) ?? container.decode(String.self, forKey: .init("Message"))
 
             var additionalFields: [String: String] = [:]
             for key in container.allKeys {
@@ -235,7 +242,8 @@ public struct AWSHTTPResponse {
             // use `ErrorCodingKey` so we get extract additional keys from `container.allKeys`
             let container = try decoder.container(keyedBy: ErrorCodingKey.self)
             self.code = try container.decodeIfPresent(String.self, forKey: .init("code"))
-            self.message = try container.decodeIfPresent(String.self, forKey: .init("message")) ?? container.decode(String.self, forKey: .init("Message"))
+            self.message =
+                try container.decodeIfPresent(String.self, forKey: .init("message")) ?? container.decode(String.self, forKey: .init("Message"))
 
             var additionalFields: [String: String] = [:]
             for key in container.allKeys {

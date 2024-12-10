@@ -10,9 +10,12 @@ let package = Package(
         .package(name: "Benchmark", url: "https://github.com/google/swift-benchmark", from: "0.1.0"),
     ],
     targets: [
-        .target(name: "soto-benchmark", dependencies: [
-            .product(name: "SotoCore", package: "soto-core"),
-            .product(name: "Benchmark", package: "Benchmark"),
-        ]),
+        .target(
+            name: "soto-benchmark",
+            dependencies: [
+                .product(name: "SotoCore", package: "soto-core"),
+                .product(name: "Benchmark", package: "Benchmark"),
+            ]
+        )
     ]
 )

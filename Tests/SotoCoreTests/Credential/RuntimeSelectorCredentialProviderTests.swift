@@ -13,9 +13,10 @@
 //===----------------------------------------------------------------------===//
 
 import NIOCore
-@testable import SotoCore
 import SotoTestUtils
 import XCTest
+
+@testable import SotoCore
 
 class RuntimeSelectorCredentialProviderTests: XCTestCase {
     func testSetupFail() async {
@@ -163,10 +164,10 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
 
     func testConfigFileProvider() async throws {
         let credentials = """
-        [default]
-        aws_access_key_id = AWSACCESSKEYID
-        aws_secret_access_key = AWSSECRETACCESSKEY
-        """
+            [default]
+            aws_access_key_id = AWSACCESSKEYID
+            aws_secret_access_key = AWSSECRETACCESSKEY
+            """
         let filename = "credentials"
         let filenameURL = URL(fileURLWithPath: filename)
         XCTAssertNoThrow(try Data(credentials.utf8).write(to: filenameURL))

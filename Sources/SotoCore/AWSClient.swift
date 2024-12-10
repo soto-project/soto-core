@@ -15,8 +15,6 @@
 import AsyncHTTPClient
 import Atomics
 import Dispatch
-import struct Foundation.URL
-import struct Foundation.URLQueryItem
 import Logging
 import Metrics
 import NIOConcurrencyHelpers
@@ -24,6 +22,9 @@ import NIOCore
 import NIOHTTP1
 import NIOTransportServices
 import SotoSignerV4
+
+import struct Foundation.URL
+import struct Foundation.URLQueryItem
 
 /// Client managing communication with AWS services
 ///
@@ -73,11 +74,13 @@ public final class AWSClient: Sendable {
         logger clientLogger: Logger = AWSClient.loggingDisabled
     ) {
         self.httpClient = httpClient
-        let credentialProvider = credentialProviderFactory.createProvider(context: .init(
-            httpClient: self.httpClient,
-            logger: clientLogger,
-            options: options
-        ))
+        let credentialProvider = credentialProviderFactory.createProvider(
+            context: .init(
+                httpClient: self.httpClient,
+                logger: clientLogger,
+                options: options
+            )
+        )
         self.credentialProvider = credentialProvider
         self.middleware = AWSMiddlewareStack {
             middleware
@@ -105,11 +108,13 @@ public final class AWSClient: Sendable {
         logger clientLogger: Logger = AWSClient.loggingDisabled
     ) {
         self.httpClient = httpClient
-        let credentialProvider = credentialProviderFactory.createProvider(context: .init(
-            httpClient: self.httpClient,
-            logger: clientLogger,
-            options: options
-        ))
+        let credentialProvider = credentialProviderFactory.createProvider(
+            context: .init(
+                httpClient: self.httpClient,
+                logger: clientLogger,
+                options: options
+            )
+        )
         self.credentialProvider = credentialProvider
         self.middleware = AWSMiddlewareStack {
             SigningMiddleware(credentialProvider: credentialProvider)
@@ -121,7 +126,10 @@ public final class AWSClient: Sendable {
     }
 
     deinit {
-        assert(self.isShutdown.load(ordering: .relaxed), "AWSClient not shut down before the deinit. Please call client.syncShutdown() when no longer needed.")
+        assert(
+            self.isShutdown.load(ordering: .relaxed),
+            "AWSClient not shut down before the deinit. Please call client.syncShutdown() when no longer needed."
+        )
     }
 
     // MARK: API Calls
@@ -236,7 +244,7 @@ extension AWSClient {
         hostPrefix: String? = nil,
         logger: Logger = AWSClient.loggingDisabled
     ) async throws {
-        return try await self.execute(
+        try await self.execute(
             operation: operationName,
             createRequest: {
                 try AWSHTTPRequest(
@@ -269,7 +277,7 @@ extension AWSClient {
         serviceConfig: AWSServiceConfig,
         logger: Logger = AWSClient.loggingDisabled
     ) async throws {
-        return try await self.execute(
+        try await self.execute(
             operation: operationName,
             createRequest: {
                 try AWSHTTPRequest(
@@ -302,7 +310,7 @@ extension AWSClient {
         serviceConfig: AWSServiceConfig,
         logger: Logger = AWSClient.loggingDisabled
     ) async throws -> Output {
-        return try await self.execute(
+        try await self.execute(
             operation: operationName,
             createRequest: {
                 try AWSHTTPRequest(
@@ -313,7 +321,7 @@ extension AWSClient {
                 )
             },
             processResponse: { response in
-                return try await self.processResponse(
+                try await self.processResponse(
                     operation: operationName,
                     response: response,
                     serviceConfig: serviceConfig,
@@ -346,7 +354,7 @@ extension AWSClient {
         hostPrefix: String? = nil,
         logger: Logger = AWSClient.loggingDisabled
     ) async throws -> Output {
-        return try await self.execute(
+        try await self.execute(
             operation: operationName,
             createRequest: {
                 try AWSHTTPRequest(
@@ -359,7 +367,7 @@ extension AWSClient {
                 )
             },
             processResponse: { response in
-                return try await self.processResponse(operation: operationName, response: response, serviceConfig: serviceConfig, logger: logger)
+                try await self.processResponse(operation: operationName, response: response, serviceConfig: serviceConfig, logger: logger)
             },
             streaming: Output._options.contains(.rawPayload),
             config: serviceConfig,
@@ -418,9 +426,12 @@ extension AWSClient {
             // AWSErrorTypes have already been logged
             if error as? AWSErrorType == nil {
                 // log error message
-                logger.error("AWSClient error", metadata: [
-                    "aws-error-message": "\(error)",
-                ])
+                logger.error(
+                    "AWSClient error",
+                    metadata: [
+                        "aws-error-message": "\(error)"
+                    ]
+                )
             }
             throw error
         }
@@ -516,7 +527,7 @@ extension AWSClient {
         serviceConfig: AWSServiceConfig,
         logger: Logger
     ) async throws -> Output {
-        return try response.generateOutputShape(operation: operationName, serviceProtocol: serviceConfig.serviceProtocol)
+        try response.generateOutputShape(operation: operationName, serviceProtocol: serviceConfig.serviceProtocol)
     }
 }
 
@@ -528,9 +539,9 @@ extension AWSClient.ClientError: CustomStringConvertible {
             return "The AWSClient is already shutdown"
         case .invalidURL:
             return """
-            The request url is invalid format.
-            This error is internal. So please make a issue on https://github.com/soto-project/soto/issues to solve it.
-            """
+                The request url is invalid format.
+                This error is internal. So please make a issue on https://github.com/soto-project/soto/issues to solve it.
+                """
         case .bodyLengthMismatch:
             return "You have supplied the incorrect amount of data for the Request."
         case .waiterFailed:

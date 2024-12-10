@@ -35,9 +35,12 @@ struct RetryMiddleware: AWSMiddlewareProtocol {
                 }
                 // If I get a retry wait time for this error then attempt to retry request
                 if case .retry(let retryTime) = self.retryPolicy.getRetryWaitTime(error: error, attempt: attempt) {
-                    context.logger.trace("Retrying request", metadata: [
-                        "aws-retry-time": "\(Double(retryTime.nanoseconds) / 1_000_000_000)",
-                    ])
+                    context.logger.trace(
+                        "Retrying request",
+                        metadata: [
+                            "aws-retry-time": "\(Double(retryTime.nanoseconds) / 1_000_000_000)"
+                        ]
+                    )
                     try await Task.sleep(nanoseconds: UInt64(retryTime.nanoseconds))
                 } else {
                     throw error

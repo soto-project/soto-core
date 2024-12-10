@@ -16,6 +16,6 @@ import SotoSignerV4
 
 extension Credential {
     func isEmpty() -> Bool {
-        return self.accessKeyId.isEmpty || self.secretAccessKey.isEmpty
+        self.accessKeyId.isEmpty || self.secretAccessKey.isEmpty
     }
 }

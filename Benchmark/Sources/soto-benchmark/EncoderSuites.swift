@@ -15,6 +15,7 @@
 import Benchmark
 import Foundation
 import SotoCore
+
 #if compiler(>=5.10)
 internal import SotoXML
 #else

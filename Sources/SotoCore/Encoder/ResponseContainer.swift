@@ -23,7 +23,9 @@ public struct HeaderDecodingError: Error {
     let message: String
 
     public static func headerNotFound(_ header: String) -> Self { .init(header: header, message: "Header not found") }
-    public static func typeMismatch(_ header: String, expectedType: String) -> Self { .init(header: header, message: "Cannot convert header to \(expectedType)") }
+    public static func typeMismatch(_ header: String, expectedType: String) -> Self {
+        .init(header: header, message: "Cannot convert header to \(expectedType)")
+    }
 }
 
 /// Response container used during Codable `init(from:)` that allows for extracting data from
@@ -35,7 +37,8 @@ public struct ResponseDecodingContainer {
 
     /// Decode header to type conforming to RawRepresentable
     @inlinable
-    public func decodeHeader<Value: RawRepresentable>(_ type: Value.Type = Value.self, key header: String) throws -> Value where Value.RawValue == String {
+    public func decodeHeader<Value: RawRepresentable>(_ type: Value.Type = Value.self, key header: String) throws -> Value
+    where Value.RawValue == String {
         guard let value = try decodeHeaderIfPresent(type, key: header) else {
             throw HeaderDecodingError.headerNotFound(header)
         }
@@ -54,7 +57,7 @@ public struct ResponseDecodingContainer {
     /// Decode response status to integer
     @inlinable
     public func decodeStatus<Value: FixedWidthInteger>(_: Value.Type = Value.self) -> Value {
-        return Value(self.response.status.code)
+        Value(self.response.status.code)
     }
 
     /// Decode header to Date. Assumes the date format is HTTP date time
@@ -119,5 +122,5 @@ public struct ResponseDecodingContainer {
 }
 
 extension CodingUserInfoKey {
-    public static var awsResponse: Self { return .init(rawValue: "soto.awsResponse")! }
+    public static var awsResponse: Self { .init(rawValue: "soto.awsResponse")! }
 }

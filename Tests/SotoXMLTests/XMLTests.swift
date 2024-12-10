@@ -12,8 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import SotoXML
 import XCTest
+
+@testable import SotoXML
 
 class XMLTests: XCTestCase {
     /// helper test function to use throughout all the decode/encode tests
@@ -119,10 +120,10 @@ class XMLTests: XCTestCase {
 
     func testNewlines() {
         let xml = """
-        <?xml version=\"1.0\" encoding=\"UTF-8\"?><test>Hello
+            <?xml version=\"1.0\" encoding=\"UTF-8\"?><test>Hello
 
-        Goodbye</test>
-        """
+            Goodbye</test>
+            """
         XCTAssertNoThrow(try self.testDecodeEncode(xml: xml))
     }
 

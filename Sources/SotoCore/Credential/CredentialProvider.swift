@@ -33,7 +33,7 @@ public protocol CredentialProvider: Sendable, CustomStringConvertible {
 extension CredentialProvider {
     public func shutdown() async throws {}
 
-    public var description: String { return "\(type(of: self))" }
+    public var description: String { "\(type(of: self))" }
 }
 
 /// Provides factory functions for `CredentialProvider`s.
@@ -85,7 +85,7 @@ extension CredentialProviderFactory {
     /// Looks in environment variables `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_SESSION_TOKEN`
     /// and then checks `AWS_ROLE_ARN`, `AWS_ROLE_SESSION_NAME` and `AWS_WEB_IDENTITY_TOKEN_FILE`.
     public static var environment: CredentialProviderFactory {
-        return .environment()
+        .environment()
     }
 
     /// Get `CredentialProvider` details from the environment
@@ -93,7 +93,7 @@ extension CredentialProviderFactory {
     /// and then checks `AWS_ROLE_ARN`, `AWS_ROLE_SESSION_NAME` and `AWS_WEB_IDENTITY_TOKEN_FILE`.
     public static func environment(endpoint: String? = nil, threadPool: NIOThreadPool = .singleton) -> CredentialProviderFactory {
         Self { context -> CredentialProvider in
-            return StaticCredential.fromEnvironment()
+            StaticCredential.fromEnvironment()
                 ?? STSAssumeRoleCredentialProvider.fromEnvironment(
                     context: context,
                     endpoint: endpoint,
@@ -143,7 +143,7 @@ extension CredentialProviderFactory {
         configFilePath: String? = nil,
         profile: String? = nil
     ) -> CredentialProviderFactory {
-        return Self { context in
+        Self { context in
             let provider = ConfigFileCredentialProvider(
                 credentialsFilePath: credentialsFilePath ?? ConfigFileLoader.defaultCredentialsPath,
                 configFilePath: configFilePath ?? ConfigFileLoader.defaultProfileConfigPath,
@@ -159,7 +159,7 @@ extension CredentialProviderFactory {
     public static func stsRoleARN(
         credentialProvider: CredentialProviderFactory
     ) -> CredentialProviderFactory {
-        return Self { context in
+        Self { context in
             guard let provider = STSAssumeRoleCredentialProvider.fromEnvironment(context: context) else {
                 return NullCredentialProvider()
             }

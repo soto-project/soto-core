@@ -29,7 +29,7 @@ public protocol CustomEncoder: CustomCoder {
 }
 
 extension CustomEncoder {
-    public static func string(from: CodableValue) -> String? { return nil }
+    public static func string(from: CodableValue) -> String? { nil }
 }
 
 /// Protocol for object that will decode a value
@@ -46,7 +46,7 @@ public protocol CustomDecoder: CustomCoder {
     }
 
     public var wrappedValue: Coder.CodableValue {
-        get { return self.value }
+        get { self.value }
         set { self.value = newValue }
     }
 }
@@ -68,7 +68,7 @@ extension CustomCoding: Encodable where Coder: CustomEncoder {
 /// extend CustomCoding property wrapper so JMESPath works correctly with it
 extension CustomCoding: JMESPropertyWrapper {
     public var anyValue: Any {
-        return self.value
+        self.value
     }
 }
 
@@ -81,7 +81,7 @@ extension CustomCoding: JMESPropertyWrapper {
     }
 
     public var wrappedValue: Coder.CodableValue? {
-        get { return self.value }
+        get { self.value }
         set { self.value = newValue }
     }
 }
@@ -104,7 +104,7 @@ extension OptionalCustomCoding: Encodable where Coder: CustomEncoder {
 /// extend OptionalCustomCoding property wrapper so JMESPath works correctly with it
 extension OptionalCustomCoding: JMESPropertyWrapper {
     public var anyValue: Any {
-        return self.value as Any
+        self.value as Any
     }
 }
 
@@ -119,7 +119,7 @@ public protocol OptionalCustomCodingWrapper {
 extension KeyedDecodingContainer {
     // This is used to override the default decoding behavior for OptionalCodingWrapper to allow a value to avoid a missing key Error
     public func decode<T>(_ type: T.Type, forKey key: KeyedDecodingContainer<K>.Key) throws -> T where T: Decodable, T: OptionalCustomCodingWrapper {
-        return try decodeIfPresent(T.self, forKey: key) ?? T(wrappedValue: nil)
+        try decodeIfPresent(T.self, forKey: key) ?? T(wrappedValue: nil)
     }
 }
 

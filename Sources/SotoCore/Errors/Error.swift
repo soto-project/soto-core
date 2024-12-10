@@ -28,11 +28,11 @@ public protocol AWSErrorType: Error, CustomStringConvertible {
 
 extension AWSErrorType {
     public var localizedDescription: String {
-        return description
+        description
     }
 
     public var message: String? {
-        return context?.message
+        context?.message
     }
 }
 
@@ -72,7 +72,7 @@ public struct AWSResponseError: AWSErrorType {
     }
 
     public var description: String {
-        return "\(self.errorCode): \(self.message ?? "")"
+        "\(self.errorCode): \(self.message ?? "")"
     }
 }
 
@@ -89,7 +89,7 @@ public struct AWSRawError: Error, CustomStringConvertible {
     }
 
     public var description: String {
-        return "Unhandled error, code: \(self.context.responseCode)\(self.rawBody.map { ", body: \($0)" } ?? "")"
+        "Unhandled error, code: \(self.context.responseCode)\(self.rawBody.map { ", body: \($0)" } ?? "")"
     }
 }
 

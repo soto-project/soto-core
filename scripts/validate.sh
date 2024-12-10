@@ -13,12 +13,8 @@
 ##
 ##===----------------------------------------------------------------------===##
 
-SWIFTFORMAT_VERSION=0.53.10
-
 set -eu
 here="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-which swiftformat > /dev/null 2>&1 || (echo "swiftformat not installed. You can install it using 'mint install swiftformat'" ; exit -1)
 
 function replace_acceptable_years() {
     # this needs to replace all acceptable forms with 'YEARS'
@@ -27,13 +23,9 @@ function replace_acceptable_years() {
 
 printf "=> Checking format... "
 FIRST_OUT="$(git status --porcelain)"
-if [[ -n "${CI-""}" ]]; then
-  printf "(using v$(mint run NickLockwood/SwiftFormat@$SWIFTFORMAT_VERSION --version)) "
-  mint run NickLockwood/SwiftFormat@$SWIFTFORMAT_VERSION . > /dev/null 2>&1
-else
-  printf "(using v$(swiftformat --version)) "
-  swiftformat . > /dev/null 2>&1
-fi
+git ls-files -z '*.swift' | xargs -0 swift format format --parallel --in-place
+git diff --exit-code '*.swift'
+
 SECOND_OUT="$(git status --porcelain)"
 if [[ "$FIRST_OUT" != "$SECOND_OUT" ]]; then
   printf "\033[0;31mformatting issues!\033[0m\n"
@@ -44,7 +36,7 @@ else
 fi
 
 printf "=> Checking license headers... "
-tmp=$(mktemp /tmp/.soto-core-sanity_XXXXXX)
+tmp=$(mktemp /tmp/.soto-core-validate_XXXXXX)
 
 for language in swift-or-c; do
   declare -a matching_files

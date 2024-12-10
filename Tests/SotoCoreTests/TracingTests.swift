@@ -12,12 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import Instrumentation
 import NIOPosix
 import SotoCore
 import SotoTestUtils
 import Tracing
 import XCTest
+
+@testable import Instrumentation
 
 final class TracingTests: XCTestCase {
     func wait(for expectations: [XCTestExpectation], timeout: TimeInterval) async {
@@ -74,12 +75,15 @@ final class TracingTests: XCTestCase {
         XCTAssertEqual(span.operationName, "TestService.TestOperation")
         XCTAssertTrue(span.recordedErrors.isEmpty)
 
-        XCTAssertSpanAttributesEqual(span.attributes, [
-            "rpc.system": "aws-sdk",
-            "rpc.method": "TestOperation",
-            "rpc.service": "TestService",
-            "aws.request_id": "test-request-1",
-        ])
+        XCTAssertSpanAttributesEqual(
+            span.attributes,
+            [
+                "rpc.system": "aws-sdk",
+                "rpc.method": "TestOperation",
+                "rpc.service": "TestService",
+                "aws.request_id": "test-request-1",
+            ]
+        )
     }
 }
 

@@ -12,9 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import SotoCore
 import SotoTestUtils
 import XCTest
+
+@testable import SotoCore
 
 class AWSServiceTests: XCTestCase {
     struct TestService: AWSService {
@@ -113,7 +114,11 @@ class AWSServiceTests: XCTestCase {
 
     func testWithMiddleware() async throws {
         struct TestMiddleware: AWSMiddlewareProtocol {
-            func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse) async throws -> AWSHTTPResponse {
+            func handle(
+                _ request: AWSHTTPRequest,
+                context: AWSMiddlewareContext,
+                next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse
+            ) async throws -> AWSHTTPResponse {
                 var request = request
                 request.headers.add(name: "Test", value: "testWithMiddleware")
                 return try await next(request, context)
@@ -149,7 +154,8 @@ class AWSServiceTests: XCTestCase {
         let signedURL = try await service.signURL(url: url, httpMethod: .GET, expires: .minutes(15))
         // remove signed query params
         let query = try XCTUnwrap(signedURL.query)
-        let queryItems = query
+        let queryItems =
+            query
             .split(separator: "&")
             .compactMap {
                 guard !$0.hasPrefix("X-Amz") else { return nil }

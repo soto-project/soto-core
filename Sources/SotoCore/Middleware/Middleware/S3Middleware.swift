@@ -15,6 +15,7 @@
 import Crypto
 import Foundation
 @_spi(SotoInternal) import SotoSignerV4
+
 #if compiler(>=5.10)
 internal import SotoXML
 #else
@@ -86,7 +87,7 @@ public struct S3Middleware: AWSMiddlewareProtocol {
 
             // if host name contains amazonaws.com and bucket name doesn't contain a period do virtual address look up
             if isAmazonUrl || context.serviceConfig.options.contains(.s3ForceVirtualHost), !bucket.contains(".") {
-                let pathsWithoutBucket = paths.dropFirst() // bucket
+                let pathsWithoutBucket = paths.dropFirst()  // bucket
                 urlPath = pathsWithoutBucket.joined(separator: "/")
 
                 if hostComponents.first == bucket {
@@ -116,7 +117,7 @@ public struct S3Middleware: AWSMiddlewareProtocol {
     static let s3PathAllowedCharacters = CharacterSet.urlPathAllowed.subtracting(.init(charactersIn: "+@()&$=:,'!*"))
     /// percent encode path value.
     private static func urlEncodePath(_ value: String) -> String {
-        return value.addingPercentEncoding(withAllowedCharacters: Self.s3PathAllowedCharacters) ?? value
+        value.addingPercentEncoding(withAllowedCharacters: Self.s3PathAllowedCharacters) ?? value
     }
 
     func createBucketFixup(request: inout AWSHTTPRequest, context: AWSMiddlewareContext) {
@@ -141,8 +142,8 @@ public struct S3Middleware: AWSMiddlewareProtocol {
 
     func expect100Continue(request: inout AWSHTTPRequest) {
         if request.method == .PUT,
-           let length = request.body.length,
-           length > 128 * 1024
+            let length = request.body.length,
+            length > 128 * 1024
         {
             request.headers.replaceOrAdd(name: "Expect", value: "100-continue")
         }
@@ -150,8 +151,8 @@ public struct S3Middleware: AWSMiddlewareProtocol {
 
     func getBucketLocationResponseFixup(response: inout AWSHTTPResponse) {
         if case .byteBuffer(let buffer) = response.body.storage,
-           let xmlDocument = try? XML.Document(buffer: buffer),
-           let rootElement = xmlDocument.rootElement()
+            let xmlDocument = try? XML.Document(buffer: buffer),
+            let rootElement = xmlDocument.rootElement()
         {
             if rootElement.name == "LocationConstraint" {
                 if rootElement.stringValue == "" {
@@ -168,7 +169,7 @@ public struct S3Middleware: AWSMiddlewareProtocol {
     func fixupRawError(error: AWSRawError, context: AWSMiddlewareContext) -> Error {
         if error.context.responseCode == .notFound {
             if let errorType = context.serviceConfig.errorType,
-               let notFoundError = errorType.init(errorCode: "NotFound", context: error.context)
+                let notFoundError = errorType.init(errorCode: "NotFound", context: error.context)
             {
                 return notFoundError
             }

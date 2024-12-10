@@ -13,13 +13,15 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+import NIOPosix
+
+import struct Foundation.TimeInterval
+
 #if compiler(<5.9) && os(Linux)
 @preconcurrency import struct Foundation.Date
 #else
 import struct Foundation.Date
 #endif
-import struct Foundation.TimeInterval
-import NIOPosix
 
 struct STSAssumeRoleRequest: AWSEncodableShape {
     /// The Amazon Resource Name (ARN) of the role to assume.
@@ -35,7 +37,12 @@ struct STSAssumeRoleRequest: AWSEncodableShape {
     func validate(name: String) throws {
         try self.validate(self.roleArn, name: "roleArn", parent: name, max: 2048)
         try self.validate(self.roleArn, name: "roleArn", parent: name, min: 20)
-        try self.validate(self.roleArn, name: "roleArn", parent: name, pattern: "[\\u0009\\u000A\\u000D\\u0020-\\u007E\\u0085\\u00A0-\\uD7FF\\uE000-\\uFFFD\\u10000-\\u10FFFF]+")
+        try self.validate(
+            self.roleArn,
+            name: "roleArn",
+            parent: name,
+            pattern: "[\\u0009\\u000A\\u000D\\u0020-\\u007E\\u0085\\u00A0-\\uD7FF\\uE000-\\uFFFD\\u10000-\\u10FFFF]+"
+        )
         try self.validate(self.roleSessionName, name: "roleSessionName", parent: name, max: 64)
         try self.validate(self.roleSessionName, name: "roleSessionName", parent: name, min: 2)
         try self.validate(self.roleSessionName, name: "roleSessionName", parent: name, pattern: "[\\w+=,.@-]*")
@@ -73,7 +80,12 @@ struct STSAssumeRoleWithWebIdentityRequest: AWSEncodableShape {
     func validate(name: String) throws {
         try self.validate(self.roleArn, name: "roleArn", parent: name, max: 2048)
         try self.validate(self.roleArn, name: "roleArn", parent: name, min: 20)
-        try self.validate(self.roleArn, name: "roleArn", parent: name, pattern: "^[\\u0009\\u000A\\u000D\\u0020-\\u007E\\u0085\\u00A0-\\uD7FF\\uE000-\\uFFFD\\u10000-\\u10FFFF]+$")
+        try self.validate(
+            self.roleArn,
+            name: "roleArn",
+            parent: name,
+            pattern: "^[\\u0009\\u000A\\u000D\\u0020-\\u007E\\u0085\\u00A0-\\uD7FF\\uE000-\\uFFFD\\u10000-\\u10FFFF]+$"
+        )
         try self.validate(self.roleSessionName, name: "roleSessionName", parent: name, max: 64)
         try self.validate(self.roleSessionName, name: "roleSessionName", parent: name, min: 2)
         try self.validate(self.roleSessionName, name: "roleSessionName", parent: name, pattern: "^[\\w+=,.@-]*$")
@@ -115,7 +127,7 @@ struct STSCredentials: AWSDecodableShape, ExpiringCredential {
     }
 
     func isExpiring(within interval: TimeInterval) -> Bool {
-        return self.expiration.timeIntervalSinceNow < interval
+        self.expiration.timeIntervalSinceNow < interval
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -225,7 +237,7 @@ struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
     }
 
     func assumeRole(_ input: STSAssumeRoleRequest, logger: Logger) async throws -> STSAssumeRoleResponse {
-        return try await self.client.execute(
+        try await self.client.execute(
             operation: "AssumeRole",
             path: "/",
             httpMethod: .POST,
@@ -235,8 +247,9 @@ struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
         )
     }
 
-    func assumeRoleWithWebIdentity(_ input: STSAssumeRoleWithWebIdentityRequest, logger: Logger) async throws -> STSAssumeRoleWithWebIdentityResponse {
-        return try await self.client.execute(
+    func assumeRoleWithWebIdentity(_ input: STSAssumeRoleWithWebIdentityRequest, logger: Logger) async throws -> STSAssumeRoleWithWebIdentityResponse
+    {
+        try await self.client.execute(
             operation: "AssumeRoleWithWebIdentity",
             path: "/",
             httpMethod: .POST,
@@ -254,8 +267,9 @@ extension STSAssumeRoleCredentialProvider {
         threadPool: NIOThreadPool = .singleton
     ) -> Self? {
         guard let roleArn = Environment["AWS_ROLE_ARN"],
-              let roleSessionName = Environment["AWS_ROLE_SESSION_NAME"],
-              let webIdentityTokenFile = Environment["AWS_WEB_IDENTITY_TOKEN_FILE"] else { return nil }
+            let roleSessionName = Environment["AWS_ROLE_SESSION_NAME"],
+            let webIdentityTokenFile = Environment["AWS_WEB_IDENTITY_TOKEN_FILE"]
+        else { return nil }
         let region = Environment["AWS_REGION"].flatMap(Region.init(awsRegionName:)) ?? .useast1
         return STSAssumeRoleCredentialProvider(
             roleArn: roleArn,

@@ -41,7 +41,7 @@ public func createAWSClient(
     httpClient: AWSHTTPClient = HTTPClient.shared,
     logger: Logger = TestEnvironment.logger
 ) -> AWSClient {
-    return AWSClient(
+    AWSClient(
         credentialProvider: credentialProvider,
         retryPolicy: retryPolicy,
         middleware: middlewares,
@@ -111,7 +111,7 @@ public func createRandomBuffer(_ w: UInt, _ z: UInt, size: Int) -> [UInt8] {
 public enum TestEnvironment {
     /// current list of middleware
     public static var middlewares: AWSMiddlewareProtocol {
-        return (Environment["AWS_ENABLE_LOGGING"] == "true")
+        (Environment["AWS_ENABLE_LOGGING"] == "true")
             ? AWSLoggingMiddleware(logger: TestEnvironment.logger, logLevel: .info)
             : AWSMiddleware { request, context, next in
                 try await next(request, context)

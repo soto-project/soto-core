@@ -62,7 +62,7 @@ final class EndpointDiscoveryTests: XCTestCase {
         }
 
         public func test(_ input: TestRequest, logger: Logger = AWSClient.loggingDisabled) async throws {
-            return try await self.client.execute(
+            try await self.client.execute(
                 operation: "Test",
                 path: "/test",
                 httpMethod: .GET,
@@ -81,7 +81,7 @@ final class EndpointDiscoveryTests: XCTestCase {
         }
 
         public func testDontCache(logger: Logger = AWSClient.loggingDisabled) async throws {
-            return try await self.client.execute(
+            try await self.client.execute(
                 operation: "Test",
                 path: "/test",
                 httpMethod: .GET,
@@ -93,7 +93,7 @@ final class EndpointDiscoveryTests: XCTestCase {
         }
 
         public func testNotRequired(_ input: TestRequest, logger: Logger = AWSClient.loggingDisabled) async throws {
-            return try await self.client.execute(
+            try await self.client.execute(
                 operation: "Test",
                 path: "/test",
                 httpMethod: .GET,
@@ -107,7 +107,7 @@ final class EndpointDiscoveryTests: XCTestCase {
     }
 
     func testCachingEndpointDiscovery() async throws {
-        #if os(iOS) // iOS async tests are failing in GitHub CI at the moment
+        #if os(iOS)  // iOS async tests are failing in GitHub CI at the moment
         guard ProcessInfo.processInfo.environment["CI"] == nil else { return }
         #endif
         let awsServer = AWSTestServer(serviceProtocol: .restjson)
@@ -136,7 +136,7 @@ final class EndpointDiscoveryTests: XCTestCase {
     }
 
     func testConcurrentEndpointDiscovery() async throws {
-        #if os(iOS) // iOS async tests are failing in GitHub CI at the moment
+        #if os(iOS)  // iOS async tests are failing in GitHub CI at the moment
         guard ProcessInfo.processInfo.environment["CI"] == nil else { return }
         #endif
         let awsServer = AWSTestServer(serviceProtocol: .json)
@@ -168,7 +168,7 @@ final class EndpointDiscoveryTests: XCTestCase {
     }
 
     func testDontCacheEndpoint() async throws {
-        #if os(iOS) // iOS async tests are failing in GitHub CI at the moment
+        #if os(iOS)  // iOS async tests are failing in GitHub CI at the moment
         guard ProcessInfo.processInfo.environment["CI"] == nil else { return }
         #endif
         let awsServer = AWSTestServer(serviceProtocol: .json)
@@ -197,7 +197,7 @@ final class EndpointDiscoveryTests: XCTestCase {
     }
 
     func testDisableEndpointDiscovery() async throws {
-        #if os(iOS) // iOS async tests are failing in GitHub CI at the moment
+        #if os(iOS)  // iOS async tests are failing in GitHub CI at the moment
         guard ProcessInfo.processInfo.environment["CI"] == nil else { return }
         #endif
         let awsServer = AWSTestServer(serviceProtocol: .json)

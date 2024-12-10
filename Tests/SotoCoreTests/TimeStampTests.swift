@@ -12,16 +12,18 @@
 //
 //===----------------------------------------------------------------------===//
 
+import NIOHTTP1
+import SotoTestUtils
+import SotoXML
+import XCTest
+
+@testable @_spi(SotoInternal) import SotoCore
+
 #if compiler(<5.9) && os(Linux)
 @preconcurrency import struct Foundation.Date
 #else
 import struct Foundation.Date
 #endif
-import NIOHTTP1
-@testable @_spi(SotoInternal) import SotoCore
-import SotoTestUtils
-import SotoXML
-import XCTest
 
 class TimeStampTests: XCTestCase {
     private let dateFormatter: DateFormatter = {
@@ -86,7 +88,15 @@ class TimeStampTests: XCTestCase {
         }
         let a = A(date: dateFormatter.date(from: "2017-11-01T00:15:00.000Z")!)
         var request: AWSHTTPRequest?
-        XCTAssertNoThrow(request = try AWSHTTPRequest(operation: "test", path: "/", method: .GET, input: a, configuration: createServiceConfig(serviceProtocol: .restxml)))
+        XCTAssertNoThrow(
+            request = try AWSHTTPRequest(
+                operation: "test",
+                path: "/",
+                method: .GET,
+                input: a,
+                configuration: createServiceConfig(serviceProtocol: .restxml)
+            )
+        )
         XCTAssertEqual(request?.body.asString(), "<?xml version=\"1.0\" encoding=\"UTF-8\"?><A><date>2017-11-01T00:15:00.000Z</date></A>")
     }
 
@@ -96,7 +106,15 @@ class TimeStampTests: XCTestCase {
         }
         let a = A(date: dateFormatter.date(from: "2017-11-01T00:15:00.000Z")!)
         var request: AWSHTTPRequest?
-        XCTAssertNoThrow(request = try AWSHTTPRequest(operation: "test", path: "/", method: .GET, input: a, configuration: createServiceConfig(serviceProtocol: .query)))
+        XCTAssertNoThrow(
+            request = try AWSHTTPRequest(
+                operation: "test",
+                path: "/",
+                method: .GET,
+                input: a,
+                configuration: createServiceConfig(serviceProtocol: .query)
+            )
+        )
         XCTAssertEqual(request?.body.asString(), "Action=test&Version=01-01-2001&date=2017-11-01T00%3A15%3A00.000Z")
     }
 
@@ -181,7 +199,15 @@ class TimeStampTests: XCTestCase {
         }
         let a = A(date: dateFormatter.date(from: "2019-05-01T00:00:00.001Z")!)
         var request: AWSHTTPRequest?
-        XCTAssertNoThrow(request = try AWSHTTPRequest(operation: "test", path: "/", method: .GET, input: a, configuration: createServiceConfig(serviceProtocol: .restxml)))
+        XCTAssertNoThrow(
+            request = try AWSHTTPRequest(
+                operation: "test",
+                path: "/",
+                method: .GET,
+                input: a,
+                configuration: createServiceConfig(serviceProtocol: .restxml)
+            )
+        )
         XCTAssertEqual(request?.body.asString(), "<?xml version=\"1.0\" encoding=\"UTF-8\"?><A><date>2019-05-01T00:00:00.001Z</date></A>")
     }
 

@@ -14,9 +14,10 @@
 
 import Logging
 import NIOConcurrencyHelpers
-@testable import SotoCore
 import SotoTestUtils
 import XCTest
+
+@testable import SotoCore
 
 class LoggingTests: XCTestCase {
     func testRequestIdIncrements() async throws {
@@ -38,15 +39,17 @@ class LoggingTests: XCTestCase {
         async let response2Task: Void = client.execute(operation: "test2", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
 
         var count = 0
-        XCTAssertNoThrow(try server.processRaw { _ in
-            let results: [AWSTestServer.Result<AWSTestServer.Response>] = [
-                .result(.ok, continueProcessing: true),
-                .result(.ok, continueProcessing: false),
-            ]
-            let result = results[count]
-            count += 1
-            return result
-        })
+        XCTAssertNoThrow(
+            try server.processRaw { _ in
+                let results: [AWSTestServer.Result<AWSTestServer.Response>] = [
+                    .result(.ok, continueProcessing: true),
+                    .result(.ok, continueProcessing: false),
+                ]
+                let result = results[count]
+                count += 1
+                return result
+            }
+        )
 
         try await responseTask
         try await response2Task
@@ -75,11 +78,19 @@ class LoggingTests: XCTestCase {
             endpoint: server.address
         )
 
-        async let responseTask: Void = client.execute(operation: "TestOperation", path: "/", httpMethod: .GET, serviceConfig: config, logger: traceLogger)
+        async let responseTask: Void = client.execute(
+            operation: "TestOperation",
+            path: "/",
+            httpMethod: .GET,
+            serviceConfig: config,
+            logger: traceLogger
+        )
 
-        XCTAssertNoThrow(try server.processRaw { _ in
-            return .result(.ok, continueProcessing: false)
-        })
+        XCTAssertNoThrow(
+            try server.processRaw { _ in
+                .result(.ok, continueProcessing: false)
+            }
+        )
 
         try await responseTask
         let requestEntry = try XCTUnwrap(logCollection.filter(message: "AWS Request").first)
@@ -110,9 +121,11 @@ class LoggingTests: XCTestCase {
 
         async let responseTask: Void = client.execute(operation: "test", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
 
-        XCTAssertNoThrow(try server.processRaw { _ in
-            return .error(.accessDenied, continueProcessing: false)
-        })
+        XCTAssertNoThrow(
+            try server.processRaw { _ in
+                .error(.accessDenied, continueProcessing: false)
+            }
+        )
 
         try? await responseTask
         XCTAssertEqual(logCollection.filter(metadata: "aws-error-code", with: "AccessDenied").first?.message, "AWS Error")
@@ -137,15 +150,17 @@ class LoggingTests: XCTestCase {
         async let responseTask: Void = client.execute(operation: "test1", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
 
         var count = 0
-        XCTAssertNoThrow(try server.processRaw { _ in
-            let results: [AWSTestServer.Result<AWSTestServer.Response>] = [
-                .error(.internal, continueProcessing: true),
-                .result(.ok, continueProcessing: false),
-            ]
-            let result = results[count]
-            count += 1
-            return result
-        })
+        XCTAssertNoThrow(
+            try server.processRaw { _ in
+                let results: [AWSTestServer.Result<AWSTestServer.Response>] = [
+                    .error(.internal, continueProcessing: true),
+                    .result(.ok, continueProcessing: false),
+                ]
+                let result = results[count]
+                count += 1
+                return result
+            }
+        )
 
         try await responseTask
         XCTAssertEqual(logCollection.filter(metadata: "aws-retry-time").first?.message, "Retrying request")
@@ -189,11 +204,19 @@ class LoggingTests: XCTestCase {
             endpoint: server.address
         )
 
-        async let responseTask: Void = client.execute(operation: "TestOperation", path: "/", httpMethod: .GET, serviceConfig: config, logger: traceLogger)
+        async let responseTask: Void = client.execute(
+            operation: "TestOperation",
+            path: "/",
+            httpMethod: .GET,
+            serviceConfig: config,
+            logger: traceLogger
+        )
 
-        XCTAssertNoThrow(try server.processRaw { _ in
-            return .result(.ok, continueProcessing: false)
-        })
+        XCTAssertNoThrow(
+            try server.processRaw { _ in
+                .result(.ok, continueProcessing: false)
+            }
+        )
 
         try await responseTask
         let requestEntry = try XCTUnwrap(logCollection.filter(message: "AWS Request").first)
@@ -222,14 +245,22 @@ class LoggingTests: XCTestCase {
             endpoint: server.address
         )
 
-        async let responseTask: Output = client.execute(operation: "TestOperation", path: "/", httpMethod: .GET, serviceConfig: config, logger: traceLogger)
+        async let responseTask: Output = client.execute(
+            operation: "TestOperation",
+            path: "/",
+            httpMethod: .GET,
+            serviceConfig: config,
+            logger: traceLogger
+        )
 
-        XCTAssertNoThrow(try server.processRaw { _ in
-            let output = Output(s: "TestOutputString")
-            let byteBuffer = try JSONEncoder().encodeAsByteBuffer(output, allocator: ByteBufferAllocator())
-            let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
-            return .result(response)
-        })
+        XCTAssertNoThrow(
+            try server.processRaw { _ in
+                let output = Output(s: "TestOutputString")
+                let byteBuffer = try JSONEncoder().encodeAsByteBuffer(output, allocator: ByteBufferAllocator())
+                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
+                return .result(response)
+            }
+        )
 
         _ = try await responseTask
         XCTAssertNotNil(logCollection.filter { $0.message.hasPrefix("Request") }.first)
@@ -252,32 +283,34 @@ struct LoggingCollector: LogHandler {
 
         private let logs: NIOLockedValueBox<[Entry]> = .init([])
 
-        var allEntries: [Entry] { return self.logs.withLockedValue { $0 } }
+        var allEntries: [Entry] { self.logs.withLockedValue { $0 } }
 
         func append(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?) {
             self.logs.withLockedValue {
-                $0.append(Entry(
-                    level: level,
-                    message: message.description,
-                    metadata: metadata?.mapValues { $0.description } ?? [:]
-                ))
+                $0.append(
+                    Entry(
+                        level: level,
+                        message: message.description,
+                        metadata: metadata?.mapValues { $0.description } ?? [:]
+                    )
+                )
             }
         }
 
         func filter(_ test: (Entry) -> Bool) -> [Entry] {
-            return self.allEntries.filter { test($0) }
+            self.allEntries.filter { test($0) }
         }
 
         func filter(message: String) -> [Entry] {
-            return self.allEntries.filter { $0.message == message }
+            self.allEntries.filter { $0.message == message }
         }
 
         func filter(metadata: String) -> [Entry] {
-            return self.allEntries.filter { $0.metadata[metadata] != nil }
+            self.allEntries.filter { $0.metadata[metadata] != nil }
         }
 
         func filter(metadata: String, with value: String) -> [Entry] {
-            return self.allEntries.filter { $0.metadata[metadata] == value }
+            self.allEntries.filter { $0.metadata[metadata] == value }
         }
     }
 
@@ -296,7 +329,7 @@ struct LoggingCollector: LogHandler {
 
     subscript(metadataKey key: String) -> Logger.Metadata.Value? {
         get {
-            return self.metadata[key]
+            self.metadata[key]
         }
         set {
             self.metadata[key] = newValue

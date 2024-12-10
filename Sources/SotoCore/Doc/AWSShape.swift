@@ -32,7 +32,7 @@ extension AWSShape {
 extension AWSShape {
     /// Return an idempotencyToken
     public static func idempotencyToken() -> String {
-        return UUID().uuidString
+        UUID().uuidString
     }
 }
 
@@ -47,60 +47,68 @@ public protocol AWSEncodableShape: AWSShape & Encodable {
     func validate(name: String) throws
 }
 
-public extension AWSEncodableShape {
+extension AWSEncodableShape {
     /// Return XML root name
-    static var _xmlRootNodeName: String? { return nil }
+    public static var _xmlRootNodeName: String? { nil }
     /// The XML namespace for the object
-    static var _xmlNamespace: String? { return nil }
+    public static var _xmlNamespace: String? { nil }
 }
 
 /// Validation code to add to AWSEncodableShape
-public extension AWSEncodableShape {
-    func validate() throws {
+extension AWSEncodableShape {
+    public func validate() throws {
         try self.validate(name: "\(type(of: self))")
     }
 
     /// stub validate function for all shapes
-    func validate(name: String) throws {}
+    public func validate(name: String) throws {}
 
     /// Return validation error
-    static func validationError(_ message: String) -> Error {
-        return AWSClientError(.validationError, context: .init(message: message, responseCode: .badRequest))
+    public static func validationError(_ message: String) -> Error {
+        AWSClientError(.validationError, context: .init(message: message, responseCode: .badRequest))
     }
 
-    func validate<T: BinaryInteger>(_ value: T, name: String, parent: String, min: T) throws {
+    public func validate<T: BinaryInteger>(_ value: T, name: String, parent: String, min: T) throws {
         guard value >= min else { throw Self.validationError("\(parent).\(name) (\(value)) is less than minimum allowed value \(min).") }
     }
 
-    func validate<T: BinaryInteger>(_ value: T, name: String, parent: String, max: T) throws {
+    public func validate<T: BinaryInteger>(_ value: T, name: String, parent: String, max: T) throws {
         guard value <= max else { throw Self.validationError("\(parent).\(name) (\(value)) is greater than the maximum allowed value \(max).") }
     }
 
-    func validate<T: FloatingPoint>(_ value: T, name: String, parent: String, min: T) throws {
+    public func validate<T: FloatingPoint>(_ value: T, name: String, parent: String, min: T) throws {
         guard value >= min else { throw Self.validationError("\(parent).\(name) (\(value)) is less than minimum allowed value \(min).") }
     }
 
-    func validate<T: FloatingPoint>(_ value: T, name: String, parent: String, max: T) throws {
+    public func validate<T: FloatingPoint>(_ value: T, name: String, parent: String, max: T) throws {
         guard value <= max else { throw Self.validationError("\(parent).\(name) (\(value)) is greater than the maximum allowed value \(max).") }
     }
 
-    func validate(_ value: some Collection, name: String, parent: String, min: Int) throws {
-        guard value.count >= min else { throw Self.validationError("Length of \(parent).\(name) (\(value.count)) is less than minimum allowed value \(min).") }
+    public func validate(_ value: some Collection, name: String, parent: String, min: Int) throws {
+        guard value.count >= min else {
+            throw Self.validationError("Length of \(parent).\(name) (\(value.count)) is less than minimum allowed value \(min).")
+        }
     }
 
-    func validate(_ value: some Collection, name: String, parent: String, max: Int) throws {
-        guard value.count <= max else { throw Self.validationError("Length of \(parent).\(name) (\(value.count)) is greater than the maximum allowed value \(max).") }
+    public func validate(_ value: some Collection, name: String, parent: String, max: Int) throws {
+        guard value.count <= max else {
+            throw Self.validationError("Length of \(parent).\(name) (\(value.count)) is greater than the maximum allowed value \(max).")
+        }
     }
 
-    func validate(_ value: AWSBase64Data, name: String, parent: String, min: Int) throws {
-        guard value.base64count >= min else { throw Self.validationError("Length of \(parent).\(name) (\(value.base64count)) is less than minimum allowed value \(min).") }
+    public func validate(_ value: AWSBase64Data, name: String, parent: String, min: Int) throws {
+        guard value.base64count >= min else {
+            throw Self.validationError("Length of \(parent).\(name) (\(value.base64count)) is less than minimum allowed value \(min).")
+        }
     }
 
-    func validate(_ value: AWSBase64Data, name: String, parent: String, max: Int) throws {
-        guard value.base64count <= max else { throw Self.validationError("Length of \(parent).\(name) (\(value.base64count)) is greater than the maximum allowed value \(max).") }
+    public func validate(_ value: AWSBase64Data, name: String, parent: String, max: Int) throws {
+        guard value.base64count <= max else {
+            throw Self.validationError("Length of \(parent).\(name) (\(value.base64count)) is greater than the maximum allowed value \(max).")
+        }
     }
 
-    func validate(_ value: AWSHTTPBody, name: String, parent: String, min: Int) throws {
+    public func validate(_ value: AWSHTTPBody, name: String, parent: String, min: Int) throws {
         if let size = value.length {
             guard size >= min else {
                 throw Self.validationError("Length of \(parent).\(name) (\(size)) is less than minimum allowed value \(min).")
@@ -108,7 +116,7 @@ public extension AWSEncodableShape {
         }
     }
 
-    func validate(_ value: AWSHTTPBody, name: String, parent: String, max: Int) throws {
+    public func validate(_ value: AWSHTTPBody, name: String, parent: String, max: Int) throws {
         if let size = value.length {
             guard size <= max else {
                 throw Self.validationError("Length of \(parent).\(name) (\(size)) is greater than the maximum allowed value \(max).")
@@ -116,65 +124,67 @@ public extension AWSEncodableShape {
         }
     }
 
-    func validate(_ value: String, name: String, parent: String, pattern: String) throws {
+    public func validate(_ value: String, name: String, parent: String, pattern: String) throws {
         let regularExpression = try NSRegularExpression(pattern: pattern, options: [])
         let nsRange = NSRange(value.startIndex..<value.endIndex, in: value)
         let firstMatch = regularExpression.rangeOfFirstMatch(in: value, options: .anchored, range: nsRange)
-        guard firstMatch.location != NSNotFound, firstMatch.length > 0 else { throw Self.validationError("\(parent).\(name) (\(value)) does not match pattern \(pattern).") }
+        guard firstMatch.location != NSNotFound, firstMatch.length > 0 else {
+            throw Self.validationError("\(parent).\(name) (\(value)) does not match pattern \(pattern).")
+        }
     }
 
     // validate optional values
-    func validate<T: BinaryInteger>(_ value: T?, name: String, parent: String, min: T) throws {
+    public func validate<T: BinaryInteger>(_ value: T?, name: String, parent: String, min: T) throws {
         guard let value else { return }
         try self.validate(value, name: name, parent: parent, min: min)
     }
 
-    func validate<T: BinaryInteger>(_ value: T?, name: String, parent: String, max: T) throws {
+    public func validate<T: BinaryInteger>(_ value: T?, name: String, parent: String, max: T) throws {
         guard let value else { return }
         try self.validate(value, name: name, parent: parent, max: max)
     }
 
-    func validate<T: FloatingPoint>(_ value: T?, name: String, parent: String, min: T) throws {
+    public func validate<T: FloatingPoint>(_ value: T?, name: String, parent: String, min: T) throws {
         guard let value else { return }
         try self.validate(value, name: name, parent: parent, min: min)
     }
 
-    func validate<T: FloatingPoint>(_ value: T?, name: String, parent: String, max: T) throws {
+    public func validate<T: FloatingPoint>(_ value: T?, name: String, parent: String, max: T) throws {
         guard let value else { return }
         try self.validate(value, name: name, parent: parent, max: max)
     }
 
-    func validate(_ value: (some Collection)?, name: String, parent: String, min: Int) throws {
+    public func validate(_ value: (some Collection)?, name: String, parent: String, min: Int) throws {
         guard let value else { return }
         try self.validate(value, name: name, parent: parent, min: min)
     }
 
-    func validate(_ value: (some Collection)?, name: String, parent: String, max: Int) throws {
+    public func validate(_ value: (some Collection)?, name: String, parent: String, max: Int) throws {
         guard let value else { return }
         try self.validate(value, name: name, parent: parent, max: max)
     }
 
-    func validate(_ value: AWSBase64Data?, name: String, parent: String, min: Int) throws {
+    public func validate(_ value: AWSBase64Data?, name: String, parent: String, min: Int) throws {
         guard let value else { return }
         try self.validate(value, name: name, parent: parent, min: min)
     }
 
-    func validate(_ value: AWSBase64Data?, name: String, parent: String, max: Int) throws {
+    public func validate(_ value: AWSBase64Data?, name: String, parent: String, max: Int) throws {
         guard let value else { return }
         try self.validate(value, name: name, parent: parent, max: max)
     }
 
-    func validate(_ value: AWSHTTPBody?, name: String, parent: String, min: Int) throws {
+    public func validate(_ value: AWSHTTPBody?, name: String, parent: String, min: Int) throws {
         guard let value else { return }
         try self.validate(value, name: name, parent: parent, min: min)
     }
 
-    func validate(_ value: AWSHTTPBody?, name: String, parent: String, max: Int) throws {
+    public func validate(_ value: AWSHTTPBody?, name: String, parent: String, max: Int) throws {
         guard let value else { return }
         try self.validate(value, name: name, parent: parent, max: max)
     }
 
-    func validate(_ value: String?, name: String, parent: String, pattern: String) throws {
+    public func validate(_ value: String?, name: String, parent: String, pattern: String) throws {
         guard let value else { return }
         try self.validate(value, name: name, parent: parent, pattern: pattern)
     }

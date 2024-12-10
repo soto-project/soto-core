@@ -24,12 +24,12 @@ public struct AWSBase64Data: Sendable, Codable, Equatable {
 
     /// construct `AWSBase64Data` from raw data
     public static func data(_ data: some Collection<UInt8>) -> Self {
-        return .init(base64String: String(base64Encoding: data))
+        .init(base64String: String(base64Encoding: data))
     }
 
     /// construct `AWSBase64Data` from base64 encoded data
     public static func base64(_ base64String: String) -> Self {
-        return .init(base64String: base64String)
+        .init(base64String: base64String)
     }
 
     /// Codable decode
@@ -46,11 +46,11 @@ public struct AWSBase64Data: Sendable, Codable, Equatable {
 
     /// size of base64 data
     public var base64count: Int {
-        return self.base64String.count
+        self.base64String.count
     }
 
     /// return blob as Data
     public func decoded() -> [UInt8]? {
-        return try? self.base64String.base64decoded()
+        try? self.base64String.base64decoded()
     }
 }

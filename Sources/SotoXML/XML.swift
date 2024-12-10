@@ -47,41 +47,41 @@ public enum XML {
 
         /// create XML document node
         public static func document() -> XML.Node {
-            return XML.Document()
+            XML.Document()
         }
 
         /// create XML element node
         public static func element(withName: String, stringValue: String? = nil) -> XML.Node {
-            return XML.Element(name: withName, stringValue: stringValue)
+            XML.Element(name: withName, stringValue: stringValue)
         }
 
         /// create raw text node
         public static func text(stringValue: String) -> XML.Node {
-            return XML.Node(.text, stringValue: stringValue)
+            XML.Node(.text, stringValue: stringValue)
         }
 
         /// create XML attribute node
         public static func attribute(withName: String, stringValue: String) -> XML.Node {
-            return XML.Node(.attribute, name: withName, stringValue: stringValue)
+            XML.Node(.attribute, name: withName, stringValue: stringValue)
         }
 
         /// create XML namespace node
         public static func namespace(withName: String? = nil, stringValue: String) -> XML.Node {
-            return XML.Node(.namespace, name: withName, stringValue: stringValue)
+            XML.Node(.namespace, name: withName, stringValue: stringValue)
         }
 
         /// create XML comment node
         public static func comment(stringValue: String) -> XML.Node {
-            return XML.Node(.comment, stringValue: stringValue)
+            XML.Node(.comment, stringValue: stringValue)
         }
 
         /// return child node at index
         private func child(at index: Int) -> XML.Node? {
-            return self.children?[index]
+            self.children?[index]
         }
 
         /// return number of children
-        public var childCount: Int { return self.children?.count ?? 0 }
+        public var childCount: Int { self.children?.count ?? 0 }
 
         /// detach XML node from its parent
         public func detach() {
@@ -96,7 +96,7 @@ public enum XML {
 
         /// return children of a specific kind
         public func children(of kind: Kind) -> [XML.Node]? {
-            return self.children?.compactMap { $0.kind == kind ? $0 : nil }
+            self.children?.compactMap { $0.kind == kind ? $0 : nil }
         }
 
         private static let xmlEncodedCharacters: [String.Element: String] = [
@@ -192,7 +192,7 @@ public enum XML {
 
         /// return the root element
         public func rootElement() -> XML.Element? {
-            return children?.first { return ($0 as? XML.Element) != nil } as? XML.Element
+            children?.first { ($0 as? XML.Element) != nil } as? XML.Element
         }
 
         /// output formatted XML
@@ -205,7 +205,7 @@ public enum XML {
         }
 
         /// output formatted XML as Data
-        public var xmlData: Data { return self.xmlString.data(using: .utf8) ?? Data() }
+        public var xmlData: Data { self.xmlString.data(using: .utf8) ?? Data() }
     }
 
     /// XML Element class
@@ -285,7 +285,7 @@ public enum XML {
 
         /// return children XML elements
         public func elements(forName: String) -> [XML.Element] {
-            return children?.compactMap {
+            children?.compactMap {
                 if let element = $0 as? XML.Element, element.name == forName {
                     return element
                 }
@@ -341,7 +341,7 @@ public enum XML {
 
         /// return attribute attached to element
         public func attribute(forName: String) -> XML.Node? {
-            return self.attributes?.first {
+            self.attributes?.first {
                 if $0.name == forName {
                     return true
                 }
@@ -377,7 +377,7 @@ public enum XML {
 
         /// return namespace attached to element
         public func namespace(forName: String?) -> XML.Node? {
-            return self.namespaces?.first {
+            self.namespaces?.first {
                 if $0.name == forName {
                     return true
                 }
@@ -459,11 +459,11 @@ public enum XML {
 
 extension XML.Node: CustomStringConvertible, CustomDebugStringConvertible {
     /// CustomStringConvertible protocol
-    public var description: String { return xmlString }
+    public var description: String { xmlString }
     /// CustomDebugStringConvertible protocol
-    public var debugDescription: String { return xmlString }
+    public var debugDescription: String { xmlString }
 }
 
 extension Character {
-    var isWhitespaceOrNewline: Bool { return isWhitespace || isNewline }
+    var isWhitespaceOrNewline: Bool { isWhitespace || isNewline }
 }

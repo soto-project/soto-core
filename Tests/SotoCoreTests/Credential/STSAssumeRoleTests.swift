@@ -15,10 +15,11 @@
 import AsyncHTTPClient
 import NIOCore
 import NIOPosix
-@testable import SotoCore
 import SotoTestUtils
 import SotoXML
 import XCTest
+
+@testable import SotoCore
 
 class STSAssumeRoleTests: XCTestCase {
     func testInternalSTSAssumeRoleProvider() async throws {
@@ -42,13 +43,15 @@ class STSAssumeRoleTests: XCTestCase {
         )
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         async let credentialTask: Credential = client.credentialProvider.getCredential(logger: TestEnvironment.logger)
-        XCTAssertNoThrow(try testServer.processRaw { _ in
-            let output = STSAssumeRoleResponse(credentials: credentials)
-            let xml = try XMLEncoder().encode(output)
-            let byteBuffer = xml.map { ByteBuffer(string: $0.xmlString) } ?? .init()
-            let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
-            return .result(response)
-        })
+        XCTAssertNoThrow(
+            try testServer.processRaw { _ in
+                let output = STSAssumeRoleResponse(credentials: credentials)
+                let xml = try XMLEncoder().encode(output)
+                let byteBuffer = xml.map { ByteBuffer(string: $0.xmlString) } ?? .init()
+                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
+                return .result(response)
+            }
+        )
         let credential = try await credentialTask
         let stsCredentials = credential as? STSCredentials
         XCTAssertEqual(stsCredentials?.accessKeyId, credentials.accessKeyId)
@@ -80,21 +83,23 @@ class STSAssumeRoleTests: XCTestCase {
             )
             defer { XCTAssertNoThrow(try client.syncShutdown()) }
             async let credentialTask: Credential = client.credentialProvider.getCredential(logger: TestEnvironment.logger)
-            XCTAssertNoThrow(try testServer.processRaw { request in
-                let tokens = String(buffer: request.body).split(separator: "&")
-                let webIdentityToken = try XCTUnwrap(tokens.first { $0.hasPrefix("WebIdentityToken=") })
-                let credentials = STSCredentials(
-                    accessKeyId: "STSACCESSKEYID",
-                    expiration: Date(timeIntervalSinceNow: 1_000_000),
-                    secretAccessKey: "STSSECRETACCESSKEY",
-                    sessionToken: String(webIdentityToken)
-                )
-                let output = STSAssumeRoleResponse(credentials: credentials)
-                let xml = try XMLEncoder().encode(output)
-                let byteBuffer = xml.map { ByteBuffer(string: $0.xmlString) } ?? .init()
-                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
-                return .result(response)
-            })
+            XCTAssertNoThrow(
+                try testServer.processRaw { request in
+                    let tokens = String(buffer: request.body).split(separator: "&")
+                    let webIdentityToken = try XCTUnwrap(tokens.first { $0.hasPrefix("WebIdentityToken=") })
+                    let credentials = STSCredentials(
+                        accessKeyId: "STSACCESSKEYID",
+                        expiration: Date(timeIntervalSinceNow: 1_000_000),
+                        secretAccessKey: "STSSECRETACCESSKEY",
+                        sessionToken: String(webIdentityToken)
+                    )
+                    let output = STSAssumeRoleResponse(credentials: credentials)
+                    let xml = try XMLEncoder().encode(output)
+                    let byteBuffer = xml.map { ByteBuffer(string: $0.xmlString) } ?? .init()
+                    let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
+                    return .result(response)
+                }
+            )
             let credential = try await credentialTask
             let stsCredentials = try XCTUnwrap(credential as? STSCredentials)
             XCTAssertEqual(stsCredentials.sessionToken, "WebIdentityToken=TestThis")

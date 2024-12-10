@@ -13,13 +13,15 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
-import struct Foundation.UUID
 import NIOCore
 import NIOPosix
-@testable import SotoCore
 import SotoTestUtils
 import SotoXML
 import XCTest
+
+import struct Foundation.UUID
+
+@testable import SotoCore
 
 class ConfigFileCredentialProviderTests: XCTestCase {
     // MARK: - Credential Provider
@@ -30,7 +32,9 @@ class ConfigFileCredentialProviderTests: XCTestCase {
     }
 
     func testCredentialProviderStatic() async throws {
-        let credentials = ConfigFileLoader.SharedCredentials.staticCredential(credential: StaticCredential(accessKeyId: "foo", secretAccessKey: "bar"))
+        let credentials = ConfigFileLoader.SharedCredentials.staticCredential(
+            credential: StaticCredential(accessKeyId: "foo", secretAccessKey: "bar")
+        )
         let (context, httpClient) = self.makeContext()
 
         let provider = try ConfigFileCredentialProvider.credentialProvider(
@@ -75,10 +79,10 @@ class ConfigFileCredentialProviderTests: XCTestCase {
 
     func testConfigFileSuccess() async throws {
         let credentials = """
-        [default]
-        aws_access_key_id = AWSACCESSKEYID
-        aws_secret_access_key = AWSSECRETACCESSKEY
-        """
+            [default]
+            aws_access_key_id = AWSACCESSKEYID
+            aws_secret_access_key = AWSSECRETACCESSKEY
+            """
         let filename = #function
         let filenameURL = URL(fileURLWithPath: filename)
         XCTAssertNoThrow(try Data(credentials.utf8).write(to: filenameURL))
@@ -100,10 +104,10 @@ class ConfigFileCredentialProviderTests: XCTestCase {
 
     func testAWSProfileConfigFile() async throws {
         let credentials = """
-        [test-profile]
-        aws_access_key_id = TESTPROFILE-AWSACCESSKEYID
-        aws_secret_access_key = TESTPROFILE-AWSSECRETACCESSKEY
-        """
+            [test-profile]
+            aws_access_key_id = TESTPROFILE-AWSACCESSKEYID
+            aws_secret_access_key = TESTPROFILE-AWSSECRETACCESSKEY
+            """
         Environment.set("test-profile", for: "AWS_PROFILE")
         defer { Environment.unset(name: "AWS_PROFILE") }
 
@@ -153,10 +157,10 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         let profile = "marketingadmin"
         let roleArn = "arn:aws:iam::123456789012:role/marketingadminrole"
         let credentialsFile = """
-        [\(profile)]
-        role_arn = \(roleArn)
-        credential_source = Environment
-        """
+            [\(profile)]
+            role_arn = \(roleArn)
+            credential_source = Environment
+            """
 
         Environment.set(accessKey, for: "AWS_ACCESS_KEY_ID")
         Environment.set(secretKey, for: "AWS_SECRET_ACCESS_KEY")
@@ -211,25 +215,25 @@ class ConfigFileCredentialProviderTests: XCTestCase {
 
         // Prepare credentials file
         let credentialsFile = """
-        [default]
-        aws_access_key_id = DEFAULTACCESSKEY
-        aws_secret_access_key=DEFAULTSECRETACCESSKEY
-        aws_session_token =TOKENFOO
+            [default]
+            aws_access_key_id = DEFAULTACCESSKEY
+            aws_secret_access_key=DEFAULTSECRETACCESSKEY
+            aws_session_token =TOKENFOO
 
-        [\(profile)]
-        role_arn       = arn:aws:iam::000000000000:role/test-sts-assume-role
-        source_profile = default
-        color          = ff0000
-        """
+            [\(profile)]
+            role_arn       = arn:aws:iam::000000000000:role/test-sts-assume-role
+            source_profile = default
+            color          = ff0000
+            """
         let credentialsFilePath = "credentials-" + UUID().uuidString
         try credentialsFile.write(toFile: credentialsFilePath, atomically: true, encoding: .utf8)
         defer { try? FileManager.default.removeItem(atPath: credentialsFilePath) }
 
         // Prepare config file
         let configFile = """
-        region=us-west-2
-        role_session_name =testRoleARNSourceProfile
-        """
+            region=us-west-2
+            role_session_name =testRoleARNSourceProfile
+            """
         let configFilePath = "config-" + UUID().uuidString
         try configFile.write(toFile: configFilePath, atomically: true, encoding: .utf8)
         defer { try? FileManager.default.removeItem(atPath: configFilePath) }
@@ -241,15 +245,18 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
 
         // Here we use `.custom` provider factory, since we need to inject the testServer endpoint
-        let client = createAWSClient(credentialProvider: .custom { context -> CredentialProvider in
-            ConfigFileCredentialProvider(
-                credentialsFilePath: credentialsFilePath,
-                configFilePath: configFilePath,
-                profile: profile,
-                context: context,
-                endpoint: testServer.address
-            )
-        }, httpClient: httpClient)
+        let client = createAWSClient(
+            credentialProvider: .custom { context -> CredentialProvider in
+                ConfigFileCredentialProvider(
+                    credentialsFilePath: credentialsFilePath,
+                    configFilePath: configFilePath,
+                    profile: profile,
+                    context: context,
+                    endpoint: testServer.address
+                )
+            },
+            httpClient: httpClient
+        )
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
 
         // Retrieve credentials

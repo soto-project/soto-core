@@ -64,6 +64,6 @@ public struct ByteBufferAsyncSequence: AsyncSequence, Sendable {
 extension ByteBuffer {
     @inlinable
     public func asyncSequence(chunkSize: Int) -> ByteBufferAsyncSequence {
-        return ByteBufferAsyncSequence(self, chunkSize: chunkSize)
+        ByteBufferAsyncSequence(self, chunkSize: chunkSize)
     }
 }

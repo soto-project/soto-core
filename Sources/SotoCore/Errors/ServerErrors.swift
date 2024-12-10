@@ -59,6 +59,6 @@ extension AWSServerError: Equatable {
 
 extension AWSServerError: CustomStringConvertible {
     public var description: String {
-        return "\(self.error.rawValue): \(message ?? "")"
+        "\(self.error.rawValue): \(message ?? "")"
     }
 }

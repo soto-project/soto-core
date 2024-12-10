@@ -22,8 +22,8 @@ public final class INIParser {
     internal var _sections: [String: [String: String]] = [:]
     internal var _anonymousSection: [String: String] = [:]
 
-    public var sections: [String: [String: String]] { return self._sections }
-    public var anonymousSection: [String: String] { return self._anonymousSection }
+    public var sections: [String: [String: String]] { self._sections }
+    public var anonymousSection: [String: String] { self._anonymousSection }
 
     public enum Error: Swift.Error {
         case invalidSyntax

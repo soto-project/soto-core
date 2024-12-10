@@ -117,7 +117,7 @@ class WaiterTests: XCTestCase {
         let service = TestService(client: self.client, config: self.config)
         let waiter = AWSClient.Waiter(
             acceptors: [
-                .init(state: .success, matcher: try! JMESPathMatcher("array[*].status", expected: [true, true, true])),
+                .init(state: .success, matcher: try! JMESPathMatcher("array[*].status", expected: [true, true, true]))
             ],
             minDelayTime: .milliseconds(2),
             command: service.arrayOperation
@@ -126,10 +126,12 @@ class WaiterTests: XCTestCase {
         async let responseTask: Void = service.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
-        XCTAssertNoThrow(try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<TestService.ArrayOutput> in
-            i += 1
-            return .result(TestService.ArrayOutput(array: [.init(i >= 3), .init(i >= 2), .init(i >= 1)]), continueProcessing: i < 3)
-        })
+        XCTAssertNoThrow(
+            try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<TestService.ArrayOutput> in
+                i += 1
+                return .result(TestService.ArrayOutput(array: [.init(i >= 3), .init(i >= 2), .init(i >= 1)]), continueProcessing: i < 3)
+            }
+        )
 
         try await responseTask
     }
@@ -140,11 +142,18 @@ class WaiterTests: XCTestCase {
         }
         let service = TestService(client: self.client, config: self.config)
         @Sendable func operation(input: TestService.Input, logger: Logger) async throws -> StringOutput {
-            try await service.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: service.config, input: input, logger: logger)
+            try await service.client.execute(
+                operation: "Basic",
+                path: "/",
+                httpMethod: .POST,
+                serviceConfig: service.config,
+                input: input,
+                logger: logger
+            )
         }
         let waiter = AWSClient.Waiter(
             acceptors: [
-                .init(state: .success, matcher: try! JMESPathMatcher("s", expected: "yes")),
+                .init(state: .success, matcher: try! JMESPathMatcher("s", expected: "yes"))
             ],
             minDelayTime: .milliseconds(2),
             command: operation
@@ -153,14 +162,16 @@ class WaiterTests: XCTestCase {
         async let responseTask: Void = service.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
-        XCTAssertNoThrow(try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<StringOutput> in
-            i += 1
-            if i < 2 {
-                return .result(.init(s: "no"), continueProcessing: true)
-            } else {
-                return .result(.init(s: "yes"), continueProcessing: false)
+        XCTAssertNoThrow(
+            try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<StringOutput> in
+                i += 1
+                if i < 2 {
+                    return .result(.init(s: "no"), continueProcessing: true)
+                } else {
+                    return .result(.init(s: "yes"), continueProcessing: false)
+                }
             }
-        })
+        )
 
         try await responseTask
     }
@@ -169,18 +180,25 @@ class WaiterTests: XCTestCase {
         enum YesNo: String, AWSDecodableShape & Encodable & CustomStringConvertible {
             case yes = "YES"
             case no = "NO"
-            var description: String { return self.rawValue }
+            var description: String { self.rawValue }
         }
         struct EnumOutput: AWSDecodableShape & Encodable {
             let e: YesNo
         }
         let service = TestService(client: self.client, config: self.config)
         @Sendable func operation(input: TestService.Input, logger: Logger) async throws -> EnumOutput {
-            try await service.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: service.config, input: input, logger: logger)
+            try await service.client.execute(
+                operation: "Basic",
+                path: "/",
+                httpMethod: .POST,
+                serviceConfig: service.config,
+                input: input,
+                logger: logger
+            )
         }
         let waiter = AWSClient.Waiter(
             acceptors: [
-                .init(state: .success, matcher: try! JMESPathMatcher("e", expected: "YES")),
+                .init(state: .success, matcher: try! JMESPathMatcher("e", expected: "YES"))
             ],
             minDelayTime: .milliseconds(2),
             command: operation
@@ -189,14 +207,16 @@ class WaiterTests: XCTestCase {
         async let responseTask: Void = service.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
-        XCTAssertNoThrow(try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<EnumOutput> in
-            i += 1
-            if i < 2 {
-                return .result(.init(e: .no), continueProcessing: true)
-            } else {
-                return .result(.init(e: .yes), continueProcessing: false)
+        XCTAssertNoThrow(
+            try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<EnumOutput> in
+                i += 1
+                if i < 2 {
+                    return .result(.init(e: .no), continueProcessing: true)
+                } else {
+                    return .result(.init(e: .yes), continueProcessing: false)
+                }
             }
-        })
+        )
 
         try await responseTask
     }
@@ -205,7 +225,7 @@ class WaiterTests: XCTestCase {
         let service = TestService(client: self.client, config: self.config)
         let waiter = AWSClient.Waiter(
             acceptors: [
-                .init(state: .success, matcher: try! JMESAnyPathMatcher("array[*].status", expected: true)),
+                .init(state: .success, matcher: try! JMESAnyPathMatcher("array[*].status", expected: true))
             ],
             minDelayTime: .milliseconds(2),
             command: service.arrayOperation
@@ -214,14 +234,16 @@ class WaiterTests: XCTestCase {
         async let responseTask: Void = service.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
-        XCTAssertNoThrow(try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<TestService.ArrayOutput> in
-            i += 1
-            if i < 2 {
-                return .result(TestService.ArrayOutput(array: [false, false, false]), continueProcessing: true)
-            } else {
-                return .result(TestService.ArrayOutput(array: [false, true, false]), continueProcessing: false)
+        XCTAssertNoThrow(
+            try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<TestService.ArrayOutput> in
+                i += 1
+                if i < 2 {
+                    return .result(TestService.ArrayOutput(array: [false, false, false]), continueProcessing: true)
+                } else {
+                    return .result(TestService.ArrayOutput(array: [false, true, false]), continueProcessing: false)
+                }
             }
-        })
+        )
 
         try await responseTask
     }
@@ -230,7 +252,7 @@ class WaiterTests: XCTestCase {
         let service = TestService(client: self.client, config: self.config)
         let waiter = AWSClient.Waiter(
             acceptors: [
-                .init(state: .success, matcher: try! JMESAllPathMatcher("array[*].status", expected: true)),
+                .init(state: .success, matcher: try! JMESAllPathMatcher("array[*].status", expected: true))
             ],
             minDelayTime: .milliseconds(2),
             command: service.arrayOperation
@@ -239,14 +261,16 @@ class WaiterTests: XCTestCase {
         async let responseTask: Void = service.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
-        XCTAssertNoThrow(try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<TestService.ArrayOutput> in
-            i += 1
-            if i < 2 {
-                return .result(TestService.ArrayOutput(array: [false, true, false]), continueProcessing: true)
-            } else {
-                return .result(TestService.ArrayOutput(array: [true, true, true]), continueProcessing: false)
+        XCTAssertNoThrow(
+            try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<TestService.ArrayOutput> in
+                i += 1
+                if i < 2 {
+                    return .result(TestService.ArrayOutput(array: [false, true, false]), continueProcessing: true)
+                } else {
+                    return .result(TestService.ArrayOutput(array: [true, true, true]), continueProcessing: false)
+                }
             }
-        })
+        )
 
         try await responseTask
     }
@@ -270,7 +294,7 @@ class WaiterTests: XCTestCase {
 
         let waiter = AWSClient.Waiter(
             acceptors: [
-                .init(state: .success, matcher: try! JMESPathMatcher("array[*]", expected: [true, true, true])),
+                .init(state: .success, matcher: try! JMESPathMatcher("array[*]", expected: [true, true, true]))
             ],
             minDelayTime: .milliseconds(2),
             command: arrayOperation
@@ -279,10 +303,12 @@ class WaiterTests: XCTestCase {
         async let responseTask: Void = service.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
-        XCTAssertNoThrow(try awsServer.process { (_: Input) -> AWSTestServer.Result<ArrayOutput> in
-            i += 1
-            return .result(ArrayOutput(array: [.init(i >= 3), .init(i >= 2), .init(i >= 1)]), continueProcessing: i < 3)
-        })
+        XCTAssertNoThrow(
+            try awsServer.process { (_: Input) -> AWSTestServer.Result<ArrayOutput> in
+                i += 1
+                return .result(ArrayOutput(array: [.init(i >= 3), .init(i >= 2), .init(i >= 1)]), continueProcessing: i < 3)
+            }
+        )
 
         try await responseTask
     }
@@ -291,20 +317,27 @@ class WaiterTests: XCTestCase {
         let service = TestService(client: self.client, config: self.config)
         let waiter = AWSClient.Waiter(
             acceptors: [
-                .init(state: .success, matcher: try! JMESPathMatcher("i", expected: 3)),
+                .init(state: .success, matcher: try! JMESPathMatcher("i", expected: 3))
             ],
             minDelayTime: .milliseconds(200),
             maxDelayTime: .milliseconds(400),
             command: service.operation
         )
         let input = TestService.Input()
-        async let responseTask: Void = service.client.waitUntil(input, waiter: waiter, maxWaitTime: .milliseconds(400), logger: TestEnvironment.logger)
+        async let responseTask: Void = service.client.waitUntil(
+            input,
+            waiter: waiter,
+            maxWaitTime: .milliseconds(400),
+            logger: TestEnvironment.logger
+        )
 
         var i = 0
-        XCTAssertNoThrow(try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<TestService.Output> in
-            i += 1
-            return .result(TestService.Output(i: i), continueProcessing: i < 2)
-        })
+        XCTAssertNoThrow(
+            try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<TestService.Output> in
+                i += 1
+                return .result(TestService.Output(i: i), continueProcessing: i < 2)
+            }
+        )
 
         do {
             try await responseTask
@@ -328,14 +361,16 @@ class WaiterTests: XCTestCase {
         async let responseTask: Void = service.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
-        XCTAssertNoThrow(try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<TestService.Output> in
-            i += 1
-            if i < 3 {
-                return .error(.accessDenied, continueProcessing: true)
-            } else {
-                return .result(TestService.Output(i: i), continueProcessing: false)
+        XCTAssertNoThrow(
+            try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<TestService.Output> in
+                i += 1
+                if i < 3 {
+                    return .error(.accessDenied, continueProcessing: true)
+                } else {
+                    return .result(TestService.Output(i: i), continueProcessing: false)
+                }
             }
-        })
+        )
 
         try await responseTask
     }
@@ -354,14 +389,16 @@ class WaiterTests: XCTestCase {
         async let responseTask: Void = service.client.waitUntil(input, waiter: waiter, logger: TestEnvironment.logger)
 
         var i = 0
-        XCTAssertNoThrow(try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<TestService.Output> in
-            i += 1
-            if i < 3 {
-                return .error(.notFound, continueProcessing: true)
-            } else {
-                return .result(TestService.Output(i: i), continueProcessing: false)
+        XCTAssertNoThrow(
+            try self.awsServer.process { (_: TestService.Input) -> AWSTestServer.Result<TestService.Output> in
+                i += 1
+                if i < 3 {
+                    return .error(.notFound, continueProcessing: true)
+                } else {
+                    return .result(TestService.Output(i: i), continueProcessing: false)
+                }
             }
-        })
+        )
 
         try await responseTask
     }

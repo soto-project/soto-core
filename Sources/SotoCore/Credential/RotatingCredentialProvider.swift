@@ -12,12 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct Foundation.Date
-import struct Foundation.TimeInterval
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
 import SotoSignerV4
+
+import struct Foundation.Date
+import struct Foundation.TimeInterval
 
 /// Wrap a credential provider that returns an `ExpiringCredential`
 ///
@@ -49,7 +50,7 @@ public final class RotatingCredentialProvider: CredentialProvider {
     }
 
     public func getCredential(logger: Logger) async throws -> Credential {
-        return try await self.expiringCredential.getValue {
+        try await self.expiringCredential.getValue {
             try await Self.getCredentialAndExpiration(provider: self.provider, logger: logger)
         }
     }
@@ -68,5 +69,5 @@ public final class RotatingCredentialProvider: CredentialProvider {
 }
 
 extension RotatingCredentialProvider: CustomStringConvertible {
-    public var description: String { return "\(type(of: self))(\(self.provider.description))" }
+    public var description: String { "\(type(of: self))(\(self.provider.description))" }
 }

@@ -14,7 +14,11 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient // swift-server/async-http-client
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import NIOCore // apple/swift-nio
 import NIOFoundationCompat
 import Stencil // soto-project/Stencil

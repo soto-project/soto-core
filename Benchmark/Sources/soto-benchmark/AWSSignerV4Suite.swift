@@ -13,7 +13,11 @@
 //===----------------------------------------------------------------------===//
 
 import Benchmark
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import SotoSignerV4
 
 let awsSignerV4Suite = BenchmarkSuite(name: "AWSSignerV4", settings: Iterations(1000), WarmupIterations(2)) { suite in

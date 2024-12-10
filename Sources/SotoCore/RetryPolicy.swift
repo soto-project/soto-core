@@ -13,7 +13,11 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import NIOCore
 import NIOHTTP1
 import NIOPosix // Needed for NIOConnectionError

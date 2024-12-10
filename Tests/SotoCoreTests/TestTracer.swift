@@ -27,7 +27,11 @@
 //===----------------------------------------------------------------------===//
 
 import Dispatch
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import Instrumentation
 import NIOConcurrencyHelpers
 import ServiceContextModule

@@ -13,7 +13,11 @@
 //===----------------------------------------------------------------------===//
 
 import Benchmark
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import SotoCore
 #if compiler(>=5.10)
 internal import SotoXML

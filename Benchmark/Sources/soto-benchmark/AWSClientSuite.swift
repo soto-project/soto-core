@@ -14,7 +14,11 @@
 
 import Benchmark
 import Dispatch
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import NIO
 import SotoCore
 

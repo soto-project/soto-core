@@ -13,7 +13,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import SotoCore // soto-project/soto-core ~> 5.0.0-beta.3.0
 import SotoSSM // soto-project/soto ~> 5.0.0-beta.3.0
 import Stencil // soto-project/Stencil

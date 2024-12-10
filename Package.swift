@@ -64,6 +64,7 @@ let package = Package(
                 .product(name: "NIOFoundationCompat", package: "swift-nio"),
                 .product(name: "JMESPath", package: "jmespath.swift"),
                 .product(name: "Tracing", package: "swift-distributed-tracing"),
+                "SotoUtils"
             ],
             swiftSettings: swiftSettings
         ),
@@ -73,6 +74,13 @@ let package = Package(
                 .product(name: "Crypto", package: "swift-crypto"),
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "NIOHTTP1", package: "swift-nio"),
+                "SotoUtils"
+            ],
+            swiftSettings: swiftSettings
+        ),
+        .target(
+            name: "SotoUtils",
+            dependencies: [
             ],
             swiftSettings: swiftSettings
         ),

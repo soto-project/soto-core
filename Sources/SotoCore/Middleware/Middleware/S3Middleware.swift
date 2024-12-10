@@ -38,8 +38,9 @@ internal import SotoXML
 public struct S3Middleware: AWSMiddlewareProtocol {
     public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse {
         var request = request
+        var context = context
 
-        self.virtualAddressFixup(request: &request, context: context)
+        try self.virtualAddressFixup(request: &request, context: &context)
         self.createBucketFixup(request: &request, context: context)
         if !context.serviceConfig.options.contains(.s3Disable100Continue) {
             self.expect100Continue(request: &request)
@@ -59,15 +60,14 @@ public struct S3Middleware: AWSMiddlewareProtocol {
 
     public init() {}
 
-    func virtualAddressFixup(request: inout AWSHTTPRequest, context: AWSMiddlewareContext) {
+    func virtualAddressFixup(request: inout AWSHTTPRequest, context: inout AWSMiddlewareContext) throws {
         /// process URL into form ${bucket}.s3.amazon.com
         let paths = request.url.path.split(separator: "/", omittingEmptySubsequences: true)
-        if paths.count > 0 {
+        if let bucket = paths.first {
             guard var host = request.url.host else { return }
             if let port = request.url.port {
                 host = "\(host):\(port)"
             }
-            let bucket = paths[0]
             var urlPath: String
             var urlHost: String
             let isAmazonUrl = host.hasSuffix("amazonaws.com")
@@ -85,8 +85,24 @@ public struct S3Middleware: AWSMiddlewareProtocol {
                 }
             }
 
-            // if host name contains amazonaws.com and bucket name doesn't contain a period do virtual address look up
-            if isAmazonUrl || context.serviceConfig.options.contains(.s3ForceVirtualHost), !bucket.contains(".") {
+            // Is bucket an ARN
+            if bucket.hasPrefix("arn:") {
+                guard let arn = ARN(string: bucket),
+                    let resourceType = arn.resourceType,
+                    let region = arn.region,
+                    let accountId = arn.accountId
+                else {
+                    throw AWSClient.ClientError.invalidARN
+                }
+                guard resourceType == "accesspoint", arn.service == "s3-object-lambda" || arn.service == "s3-outposts" else {
+                    throw AWSClient.ClientError.invalidARN
+                }
+                urlPath = "/"
+                // https://tutorial-object-lambda-accesspoint-123456789012.s3-object-lambda.us-west-2.amazonaws.com:443
+                urlHost = "https://\(arn.resourceId)-\(resourceType)-\(accountId).\(arn.service).\(region).amazonaws.com"
+
+                // if host name contains amazonaws.com and bucket name doesn't contain a period do virtual address look up
+            } else if isAmazonUrl || context.serviceConfig.options.contains(.s3ForceVirtualHost), !bucket.contains(".") {
                 let pathsWithoutBucket = paths.dropFirst()  // bucket
                 urlPath = pathsWithoutBucket.joined(separator: "/")
 

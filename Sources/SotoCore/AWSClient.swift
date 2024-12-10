@@ -186,6 +186,7 @@ public final class AWSClient: Sendable {
             case waiterFailed
             case waiterTimeout
             case failedToAccessPayload
+            case invalidARN
         }
 
         let error: Error
@@ -202,6 +203,8 @@ public final class AWSClient: Sendable {
         public static var waiterTimeout: ClientError { .init(error: .waiterTimeout) }
         /// Failed to access payload while building request
         public static var failedToAccessPayload: ClientError { .init(error: .failedToAccessPayload) }
+        /// ARN provided to client is invalid
+        public static var invalidARN: ClientError { .init(error: .invalidARN) }
     }
 
     /// Additional options
@@ -550,6 +553,8 @@ extension AWSClient.ClientError: CustomStringConvertible {
             return "Waiter failed to complete in time allocated"
         case .failedToAccessPayload:
             return "Failed to access payload while building request for AWS"
+        case .invalidARN:
+            return "ARN provided to the client was invalid"
         }
     }
 }

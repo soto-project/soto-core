@@ -182,6 +182,8 @@ public final class AWSServiceConfig {
     /// Service config parameters you can patch
     public struct Patch {
         let region: Region?
+        let serviceIdentifier: String?
+        let signingName: String?
         let endpoint: String?
         let middleware: AWSMiddlewareProtocol?
         let timeout: TimeAmount?
@@ -190,6 +192,8 @@ public final class AWSServiceConfig {
 
         init(
             region: Region? = nil,
+            serviceIdentifier: String? = nil,
+            signingName: String? = nil,
             endpoint: String? = nil,
             middleware: AWSMiddlewareProtocol? = nil,
             timeout: TimeAmount? = nil,
@@ -197,6 +201,8 @@ public final class AWSServiceConfig {
             options: AWSServiceConfig.Options? = nil
         ) {
             self.region = region
+            self.serviceIdentifier = serviceIdentifier
+            self.signingName = signingName
             self.endpoint = endpoint
             self.middleware = middleware
             self.timeout = timeout
@@ -215,6 +221,8 @@ public final class AWSServiceConfig {
     /// - Returns: New version of the service
     public func with(
         region: Region? = nil,
+        serviceIdentifier: String? = nil,
+        signingName: String? = nil,
         middleware: AWSMiddlewareProtocol? = nil,
         timeout: TimeAmount? = nil,
         byteBufferAllocator: ByteBufferAllocator? = nil,
@@ -223,6 +231,8 @@ public final class AWSServiceConfig {
         self.with(
             patch: .init(
                 region: region,
+                serviceIdentifier: serviceIdentifier,
+                signingName: signingName,
                 middleware: middleware,
                 timeout: timeout,
                 byteBufferAllocator: byteBufferAllocator,
@@ -298,8 +308,10 @@ public final class AWSServiceConfig {
         service: AWSServiceConfig,
         with patch: Patch
     ) {
-        let region = patch.region ?? service.region
-        let options = patch.options ?? service.options
+        self.region = patch.region ?? service.region
+        self.options = patch.options ?? service.options
+        self.serviceIdentifier = patch.serviceIdentifier ?? service.serviceIdentifier
+        self.signingName = patch.signingName ?? patch.serviceIdentifier ?? service.signingName
 
         if let endpoint = patch.endpoint {
             self.endpoint = endpoint
@@ -308,9 +320,9 @@ public final class AWSServiceConfig {
                 patch.endpoint
                 ?? Self.getEndpoint(
                     endpoint: service.providedEndpoint,
-                    region: region,
-                    serviceIdentifier: service.serviceIdentifier,
-                    options: options,
+                    region: self.region,
+                    serviceIdentifier: self.serviceIdentifier,
+                    options: self.options,
                     serviceEndpoints: service.serviceEndpoints,
                     partitionEndpoints: service.partitionEndpoints,
                     variantEndpoints: service.variantEndpoints
@@ -318,13 +330,9 @@ public final class AWSServiceConfig {
         } else {
             self.endpoint = service.endpoint
         }
-        self.region = region
-        self.options = options
 
         self.amzTarget = service.amzTarget
         self.serviceName = service.serviceName
-        self.serviceIdentifier = service.serviceIdentifier
-        self.signingName = service.signingName
         self.serviceProtocol = service.serviceProtocol
         self.apiVersion = service.apiVersion
         self.providedEndpoint = service.providedEndpoint

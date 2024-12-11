@@ -12,15 +12,20 @@
 //
 //===----------------------------------------------------------------------===//
 
-struct ARN {
-    init?<S: StringProtocol>(string: S) where S.SubSequence == Substring {
-        let split = string.split(separator: ":")
+public struct ARN {
+    public init?<S: StringProtocol>(string: S) where S.SubSequence == Substring {
+        let split = string.split(separator: ":", omittingEmptySubsequences: false)
         guard split.count >= 6 else { return nil }
         guard split[0] == "arn" else { return nil }
-        self.partition = split[1]
+        guard let partition = AWSPartition(rawValue: String(split[1])) else { return nil }
+        self.partition = partition
         self.service = split[2]
         self.region = split[3].count > 0 ? Region(rawValue: String(split[3])) : nil
+        if let region {
+            guard region.partition == self.partition else { return nil }
+        }
         self.accountId = split[4].count > 0 ? split[4] : nil
+        guard self.accountId?.first(where: { !$0.isNumber }) == nil else { return nil }
         if split.count == 6 {
             let resourceSplit = split[5].split(separator: "/", maxSplits: 1)
             if resourceSplit.count == 1 {
@@ -38,10 +43,10 @@ struct ARN {
         }
     }
 
-    let partition: Substring
-    let service: Substring
-    let region: Region?
-    let accountId: Substring?
-    let resourceId: Substring
-    let resourceType: Substring?
+    public let partition: AWSPartition
+    public let service: Substring
+    public let region: Region?
+    public let accountId: Substring?
+    public let resourceId: Substring
+    public let resourceType: Substring?
 }

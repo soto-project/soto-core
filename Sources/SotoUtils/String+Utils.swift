@@ -304,7 +304,7 @@ extension String {
 
     // also see https://github.com/apple/swift/pull/23050
     // and `final class __SharedStringStorage`
-
+    @available(macOS 11.0, iOS 14.0, watchOS 7.0, tvOS 17.0, *)
     init(
         utf8Capacity capacity: Int,
         initializingWith initializer: (inout OutputBuffer<UInt8>) throws -> Void

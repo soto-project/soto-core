@@ -184,7 +184,24 @@ class MiddlewareTests: XCTestCase {
         try await client.shutdown()
     }
 
-    func testS3MiddlewareArn() async throws {
+    func testS3MiddlewareAccessPointArn() async throws {
+        // Test virual address
+        try await self.testMiddleware(
+            S3Middleware(),
+            serviceName: "s3",
+            serviceOptions: .s3UseTransferAcceleratedEndpoint,
+            uri: "/arn:aws:s3:us-west-2:111122223333:accesspoint/test-accesspoint"
+        ) { request, context in
+            XCTAssertEqual(
+                request.url.absoluteString,
+                "https://test-accesspoint-111122223333.s3-accesspoint.us-west-2.amazonaws.com/"
+            )
+            XCTAssertEqual(context.serviceConfig.serviceIdentifier, "s3-accesspoint")
+            XCTAssertEqual(context.serviceConfig.region, .uswest2)
+        }
+    }
+
+    func testS3MiddlewareObjectLambdaArn() async throws {
         // Test virual address
         try await self.testMiddleware(
             S3Middleware(),

@@ -153,15 +153,27 @@ public struct S3Middleware: AWSMiddlewareProtocol {
         let resourceIDSplit = arn.resourceId.split(separator: "/", maxSplits: 1, omittingEmptySubsequences: false)
         guard let bucket = resourceIDSplit.first else { throw AWSClient.ClientError.invalidARN }
         let path = String(resourceIDSplit.dropFirst().first ?? "")
-        let urlHost = "\(bucket)-\(accountId).\(arn.service).\(region).amazonaws.com"
+        let service = String(arn.service)
+        let serviceIdentifier = service != "s3" ? service : "s3-accesspoint"
+        let urlHost = "\(bucket)-\(accountId).\(serviceIdentifier).\(region).amazonaws.com"
         let request = Self.updateRequestURL(request, host: urlHost, path: path)
 
-        // if service isn't S3 or arn region is different from the current config then build a new AWSServiceConfig
-        if arn.service != "s3" || arn.region != context.serviceConfig.region {
-            var context = context
-            context.serviceConfig = context.serviceConfig.with(region: region, serviceIdentifier: String(arn.service))
-            return try await next(request, context)
-        }
+        var context = context
+        context.serviceConfig = AWSServiceConfig(
+            region: region,
+            partition: region.partition,
+            serviceName: "S3",
+            serviceIdentifier: serviceIdentifier,
+            signingName: service,
+            serviceProtocol: context.serviceConfig.serviceProtocol,
+            apiVersion: context.serviceConfig.apiVersion,
+            errorType: context.serviceConfig.errorType,
+            xmlNamespace: context.serviceConfig.xmlNamespace,
+            middleware: context.serviceConfig.middleware,
+            timeout: context.serviceConfig.timeout,
+            byteBufferAllocator: context.serviceConfig.byteBufferAllocator,
+            options: context.serviceConfig.options
+        )
         return try await next(request, context)
     }
 

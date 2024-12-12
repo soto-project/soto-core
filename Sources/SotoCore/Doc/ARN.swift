@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+/// Amazon Resource Name (ARN). A unique identifier assigned to AWS resource
 public struct ARN {
     public init?<S: StringProtocol>(string: S) where S.SubSequence == Substring {
         let split = string.split(separator: ":", omittingEmptySubsequences: false)

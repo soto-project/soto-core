@@ -111,7 +111,7 @@ public struct S3Middleware: AWSMiddlewareProtocol {
             // if host name contains amazonaws.com and bucket name doesn't contain a period do virtual address look up
         } else if isAmazonUrl || context.serviceConfig.options.contains(.s3ForceVirtualHost), !bucket.contains(".") {
             let pathsWithoutBucket = paths.dropFirst()  // bucket
-            urlPath = pathsWithoutBucket.first.flatMap { String($0) } ?? ""  //pathsWithoutBucket.joined(separator: "/")
+            urlPath = pathsWithoutBucket.first.flatMap { String($0) } ?? ""
 
             if hostComponents.first == bucket {
                 // Bucket name is part of host. No need to append bucket

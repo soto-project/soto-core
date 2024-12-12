@@ -157,7 +157,6 @@ extension String {
     package static let queryAllowedCharacters: Set<UInt8> = Set(0 ... .max).subtracting("/;+".utf8)
 }
 
-
 extension RangeReplaceableCollection {
     package func trimming(while predicate: (Element) -> Bool) -> SubSequence {
         var idx = startIndex

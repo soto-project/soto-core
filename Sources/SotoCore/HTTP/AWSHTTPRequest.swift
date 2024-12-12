@@ -13,14 +13,16 @@
 //===----------------------------------------------------------------------===//
 
 import Crypto
-import struct Foundation.Data
-import struct Foundation.Date
-import class Foundation.JSONEncoder
-import struct Foundation.URL
 import NIOCore
 import NIOFoundationCompat
 import NIOHTTP1
 import SotoSignerV4
+
+import struct Foundation.Data
+import struct Foundation.Date
+import class Foundation.JSONEncoder
+import struct Foundation.URL
+
 #if compiler(>=5.10)
 internal import SotoXML
 #else
@@ -213,17 +215,18 @@ extension AWSHTTPRequest {
             checksumType = headers["x-amz-sdk-checksum-algorithm"].first.map { ChecksumType(rawValue: $0) } ?? nil
         }
         if checksumType == nil {
-            if Input._options.contains(.checksumRequired) ||
-                (Input._options.contains(.md5ChecksumHeader) && configuration.options.contains(.calculateMD5))
+            if Input._options.contains(.checksumRequired)
+                || (Input._options.contains(.md5ChecksumHeader) && configuration.options.contains(.calculateMD5))
             {
                 checksumType = .md5
             }
         }
 
         guard let checksumType,
-              case .byteBuffer(let buffer) = body.storage,
-              let checksumHeader = Self.checksumHeaders[checksumType],
-              headers[checksumHeader].first == nil else { return headers }
+            case .byteBuffer(let buffer) = body.storage,
+            let checksumHeader = Self.checksumHeaders[checksumType],
+            headers[checksumHeader].first == nil
+        else { return headers }
 
         var checksum: String?
         switch checksumType {
@@ -279,14 +282,17 @@ extension AWSHTTPRequest {
     internal static func verifyStream(operation: String, payload: AWSHTTPBody, input: any AWSEncodableShape.Type) {
         guard case .asyncSequence(_, let length) = payload.storage else { return }
         precondition(input._options.contains(.allowStreaming), "\(operation) does not allow streaming of data")
-        precondition(length != nil || input._options.contains(.allowChunkedStreaming), "\(operation) does not allow chunked streaming of data. Please supply a data size.")
+        precondition(
+            length != nil || input._options.contains(.allowChunkedStreaming),
+            "\(operation) does not allow chunked streaming of data. Please supply a data size."
+        )
     }
 
     private static func calculateChecksum<H: HashFunction>(_ byteBuffer: ByteBuffer, function: H.Type) -> String? {
         // if request has a body, calculate the MD5 for that body
         let byteBufferView = byteBuffer.readableBytesView
         return byteBufferView.withContiguousStorageIfAvailable { bytes in
-            return Data(H.hash(data: bytes)).base64EncodedString()
+            Data(H.hash(data: bytes)).base64EncodedString()
         }
     }
 
@@ -312,7 +318,7 @@ private protocol AWSRequestEncodableArray {
 }
 
 extension Array: AWSRequestEncodableArray {
-    var encoded: [String] { return self.map { "\($0)" }}
+    var encoded: [String] { self.map { "\($0)" } }
 }
 
 private protocol AWSRequestEncodableDictionary {
@@ -321,7 +327,7 @@ private protocol AWSRequestEncodableDictionary {
 
 extension Dictionary: AWSRequestEncodableDictionary {
     var encoded: [(key: String, value: String)] {
-        return self.map { (key: "\($0.key)", value: "\($0.value)") }
+        self.map { (key: "\($0.key)", value: "\($0.value)") }
     }
 }
 
@@ -331,7 +337,7 @@ private protocol AWSRequestEncodableString {
 
 extension CustomCoding: AWSRequestEncodableString where Coder: CustomEncoder {
     var encoded: String? {
-        return Coder.string(from: self.wrappedValue)
+        Coder.string(from: self.wrappedValue)
     }
 }
 

@@ -96,8 +96,8 @@ public struct Region: Sendable, RawRepresentable, Equatable {
     public static func other(_ name: String) -> Region { .init(rawValue: name) }
 }
 
-public extension Region {
-    var partition: AWSPartition {
+extension Region {
+    public var partition: AWSPartition {
         switch self {
         case .afsouth1: return .aws
         case .apeast1: return .aws
@@ -140,7 +140,7 @@ public extension Region {
 }
 
 extension Region: CustomStringConvertible {
-    public var description: String { return self.rawValue }
+    public var description: String { self.rawValue }
 }
 
 extension Region: Codable {}
@@ -159,7 +159,7 @@ public struct AWSPartition: Sendable, RawRepresentable, Equatable, Hashable {
 
     private var partition: InternalPartition
 
-    public var rawValue: String { return self.partition.rawValue }
+    public var rawValue: String { self.partition.rawValue }
 
     public init?(rawValue: String) {
         guard let partition = InternalPartition(rawValue: rawValue) else { return nil }
@@ -186,8 +186,8 @@ public struct AWSPartition: Sendable, RawRepresentable, Equatable, Hashable {
     public static var awsisof: AWSPartition { .init(partition: .awsisof) }
 }
 
-public extension AWSPartition {
-    var dnsSuffix: String {
+extension AWSPartition {
+    public var dnsSuffix: String {
         switch self.partition {
         case .aws: return "amazonaws.com"
         case .awscn: return "amazonaws.com.cn"
@@ -199,7 +199,7 @@ public extension AWSPartition {
         }
     }
 
-    func defaultEndpoint(region: Region, service: String) -> String {
+    public func defaultEndpoint(region: Region, service: String) -> String {
         switch self.partition {
         case .aws: return "\(service).\(region).amazonaws.com"
         case .awscn: return "\(service).\(region).amazonaws.com.cn"
@@ -215,45 +215,45 @@ public extension AWSPartition {
 // allows to create a Region from a String
 // it will only create a Region if the provided
 // region name is valid.
-public extension Region {
-    init?(awsRegionName: String) {
+extension Region {
+    public init?(awsRegionName: String) {
         self.init(rawValue: awsRegionName)
         switch self {
         case .afsouth1,
-             .apeast1,
-             .apnortheast1,
-             .apnortheast2,
-             .apnortheast3,
-             .apsouth1,
-             .apsouth2,
-             .apsoutheast1,
-             .apsoutheast2,
-             .apsoutheast3,
-             .apsoutheast4,
-             .cacentral1,
-             .cawest1,
-             .cnnorth1,
-             .cnnorthwest1,
-             .eucentral1,
-             .eucentral2,
-             .eunorth1,
-             .eusouth1,
-             .eusouth2,
-             .euwest1,
-             .euwest2,
-             .euwest3,
-             .mecentral1,
-             .mesouth1,
-             .saeast1,
-             .useast1,
-             .useast2,
-             .usgoveast1,
-             .usgovwest1,
-             .usisoeast1,
-             .usisowest1,
-             .usisobeast1,
-             .uswest1,
-             .uswest2:
+            .apeast1,
+            .apnortheast1,
+            .apnortheast2,
+            .apnortheast3,
+            .apsouth1,
+            .apsouth2,
+            .apsoutheast1,
+            .apsoutheast2,
+            .apsoutheast3,
+            .apsoutheast4,
+            .cacentral1,
+            .cawest1,
+            .cnnorth1,
+            .cnnorthwest1,
+            .eucentral1,
+            .eucentral2,
+            .eunorth1,
+            .eusouth1,
+            .eusouth2,
+            .euwest1,
+            .euwest2,
+            .euwest3,
+            .mecentral1,
+            .mesouth1,
+            .saeast1,
+            .useast1,
+            .useast2,
+            .usgoveast1,
+            .usgovwest1,
+            .usisoeast1,
+            .usisowest1,
+            .usisobeast1,
+            .uswest1,
+            .uswest2:
             return
         default:
             return nil

@@ -18,9 +18,9 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
-import SotoCore // soto-project/soto-core ~> 5.0.0-beta.3.0
-import SotoSSM // soto-project/soto ~> 5.0.0-beta.3.0
-import Stencil // soto-project/Stencil
+import SotoCore  // soto-project/soto-core ~> 5.0.0-beta.3.0
+import SotoSSM  // soto-project/soto ~> 5.0.0-beta.3.0
+import Stencil  // soto-project/Stencil
 
 let REGION_PATH = "/aws/service/global-infrastructure/regions"
 
@@ -42,7 +42,7 @@ do {
     while result.nextToken != nil {
         for p in result.parameters! {
             regionDescs.append(
-                RegionDesc(enum: p.value!.filter { return $0.isLetter || $0.isNumber }, name: p.value!)
+                RegionDesc(enum: p.value!.filter { $0.isLetter || $0.isNumber }, name: p.value!)
             )
         }
         let request = SSM.GetParametersByPathRequest(
@@ -62,7 +62,7 @@ let environment = Environment(loader: fsLoader)
 print("Creating RegionTests.swift")
 
 let context: [String: Any] = [
-    "regions": regionDescs.sorted { $0.name < $1.name },
+    "regions": regionDescs.sorted { $0.name < $1.name }
 ]
 
 let regionsFile = try environment.renderTemplate(name: "Region-Tests.stencil", context: context)

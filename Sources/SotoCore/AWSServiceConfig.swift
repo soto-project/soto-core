@@ -150,7 +150,7 @@ public final class AWSServiceConfig {
                 if let endpoint = variantEndpoints.endpoints[region.rawValue] {
                     serviceHost = endpoint
                 } else if let partitionEndpoint = partitionEndpoints[region.partition],
-                          let endpoint = variantEndpoints.endpoints[partitionEndpoint.endpoint]
+                    let endpoint = variantEndpoints.endpoints[partitionEndpoint.endpoint]
                 {
                     serviceHost = endpoint
                 } else if let host = variantEndpoints.defaultEndpoint?(region.rawValue) {
@@ -161,7 +161,7 @@ public final class AWSServiceConfig {
             } else if let serviceEndpoint = serviceEndpoints[region.rawValue] {
                 serviceHost = serviceEndpoint
             } else if let partitionEndpoint = partitionEndpoints[region.partition],
-                      let globalEndpoint = serviceEndpoints[partitionEndpoint.endpoint]
+                let globalEndpoint = serviceEndpoints[partitionEndpoint.endpoint]
             {
                 serviceHost = globalEndpoint
             } else {
@@ -176,7 +176,7 @@ public final class AWSServiceConfig {
     ///   - patch: parameters to patch service config
     /// - Returns: New AWSServiceConfig
     public func with(patch: Patch) -> AWSServiceConfig {
-        return AWSServiceConfig(service: self, with: patch)
+        AWSServiceConfig(service: self, with: patch)
     }
 
     /// Service config parameters you can patch
@@ -220,13 +220,15 @@ public final class AWSServiceConfig {
         byteBufferAllocator: ByteBufferAllocator? = nil,
         options: AWSServiceConfig.Options? = nil
     ) -> AWSServiceConfig {
-        return self.with(patch: .init(
-            region: region,
-            middleware: middleware,
-            timeout: timeout,
-            byteBufferAllocator: byteBufferAllocator,
-            options: options
-        ))
+        self.with(
+            patch: .init(
+                region: region,
+                middleware: middleware,
+                timeout: timeout,
+                byteBufferAllocator: byteBufferAllocator,
+                options: options
+            )
+        )
     }
 
     /// Options used by client when processing requests
@@ -302,15 +304,17 @@ public final class AWSServiceConfig {
         if let endpoint = patch.endpoint {
             self.endpoint = endpoint
         } else if patch.options != nil || patch.region != nil {
-            self.endpoint = patch.endpoint ?? Self.getEndpoint(
-                endpoint: service.providedEndpoint,
-                region: region,
-                serviceIdentifier: service.serviceIdentifier,
-                options: options,
-                serviceEndpoints: service.serviceEndpoints,
-                partitionEndpoints: service.partitionEndpoints,
-                variantEndpoints: service.variantEndpoints
-            )
+            self.endpoint =
+                patch.endpoint
+                ?? Self.getEndpoint(
+                    endpoint: service.providedEndpoint,
+                    region: region,
+                    serviceIdentifier: service.serviceIdentifier,
+                    options: options,
+                    serviceEndpoints: service.serviceEndpoints,
+                    partitionEndpoints: service.partitionEndpoints,
+                    variantEndpoints: service.variantEndpoints
+                )
         } else {
             self.endpoint = service.endpoint
         }

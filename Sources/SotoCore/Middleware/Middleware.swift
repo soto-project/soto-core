@@ -34,7 +34,9 @@ public struct AWSMiddleware: AWSMiddlewareProtocol {
     @usableFromInline
     var middleware: @Sendable (AWSHTTPRequest, AWSMiddlewareContext, _ next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse
 
-    public init(_ middleware: @escaping @Sendable (AWSHTTPRequest, AWSMiddlewareContext, _ next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse) {
+    public init(
+        _ middleware: @escaping @Sendable (AWSHTTPRequest, AWSMiddlewareContext, _ next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse
+    ) {
         self.middleware = middleware
     }
 

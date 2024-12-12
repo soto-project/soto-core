@@ -12,9 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import SotoCore
 import SotoTestUtils
 import XCTest
+
+@testable import SotoCore
 
 class QueryEncoderTests: XCTestCase {
     func testQuery(_ value: some Encodable, query: String) {
@@ -157,7 +158,11 @@ class QueryEncoderTests: XCTestCase {
     }
 
     func testDictionaryEncodingEncode() {
-        struct DictionaryItemKV: DictionaryCoderProperties { static let entry: String? = "item"; static let key = "k"; static let value = "v" }
+        struct DictionaryItemKV: DictionaryCoderProperties {
+            static let entry: String? = "item"
+            static let key = "k"
+            static let value = "v"
+        }
         struct Test: AWSEncodableShape {
             @CustomCoding<DictionaryCoder<DictionaryItemKV, String, Int>> var a: [String: Int]
 
@@ -171,7 +176,9 @@ class QueryEncoderTests: XCTestCase {
 
     func testDictionaryEncodingEncode2() {
         struct DictionaryNameEntry: DictionaryCoderProperties {
-            static let entry: String? = nil; static let key = "name"; static let value = "entry"
+            static let entry: String? = nil
+            static let key = "name"
+            static let value = "entry"
         }
         struct Test: AWSEncodableShape {
             @CustomCoding<DictionaryCoder<DictionaryNameEntry, String, Int>> var a: [String: Int]

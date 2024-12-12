@@ -26,7 +26,10 @@ extension Sequence where Element: Sendable {
     ///     element of this sequence as its parameter and returns a transformed value of
     ///     the same or of a different type.
     /// - Returns: An array containing the transformed elements of this sequence.
-    public func concurrentMap<T: Sendable>(priority: TaskPriority? = nil, _ transform: @Sendable @escaping (Element) async throws -> T) async rethrows -> [T] {
+    public func concurrentMap<T: Sendable>(
+        priority: TaskPriority? = nil,
+        _ transform: @Sendable @escaping (Element) async throws -> T
+    ) async rethrows -> [T] {
         let result: ContiguousArray<(Int, T)> = try await withThrowingTaskGroup(of: (Int, T).self) { group in
             self.enumerated().forEach { element in
                 group.addTask(priority: priority) {
@@ -72,7 +75,11 @@ extension Sequence where Element: Sendable {
     ///     element of this sequence as its parameter and returns a transformed value of
     ///     the same or of a different type.
     /// - Returns: An array containing the transformed elements of this sequence.
-    public func concurrentMap<T: Sendable>(maxConcurrentTasks: Int, priority: TaskPriority? = nil, _ transform: @Sendable @escaping (Element) async throws -> T) async rethrows -> [T] {
+    public func concurrentMap<T: Sendable>(
+        maxConcurrentTasks: Int,
+        priority: TaskPriority? = nil,
+        _ transform: @Sendable @escaping (Element) async throws -> T
+    ) async rethrows -> [T] {
         let result: ContiguousArray<(Int, T)> = try await withThrowingTaskGroup(of: (Int, T).self) { group in
             var results = ContiguousArray<(Int, T)>()
 

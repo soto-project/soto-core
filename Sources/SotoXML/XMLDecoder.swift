@@ -57,7 +57,7 @@ public struct XMLDecoder {
 
     /// The options set on the top-level decoder.
     fileprivate var options: _Options {
-        return _Options(
+        _Options(
             dataDecodingStrategy: self.dataDecodingStrategy,
             nonConformingFloatDecodingStrategy: self.nonConformingFloatDecodingStrategy,
             userInfo: self.userInfo
@@ -76,17 +76,17 @@ public struct XMLDecoder {
 
 extension XML.Node {
     func child(for string: String) -> XML.Node? {
-        return (children ?? []).first(where: { $0.name == string })
+        (children ?? []).first(where: { $0.name == string })
     }
 
     func child(for key: CodingKey) -> XML.Node? {
-        return self.child(for: key.stringValue)
+        self.child(for: key.stringValue)
     }
 }
 
 extension XML.Element {
     func attribute(for key: CodingKey) -> XML.Node? {
-        return self.attribute(forName: key.stringValue)
+        self.attribute(forName: key.stringValue)
     }
 }
 
@@ -99,13 +99,13 @@ struct _XMLDecoderStorage {
     init() {}
 
     /// return the container at the top of the storage
-    var topContainer: XML.Node? { return self.containers.last! }
+    var topContainer: XML.Node? { self.containers.last! }
 
     /// push a new container onto the storage
     mutating func push(container: XML.Node?) { self.containers.append(container) }
 
     /// pop a container from the storage
-    @discardableResult mutating func popContainer() -> XML.Node? { return self.containers.removeLast() }
+    @discardableResult mutating func popContainer() -> XML.Node? { self.containers.removeLast() }
 }
 
 /// Internal XMLDecoder class. Does all the heavy lifting
@@ -120,7 +120,7 @@ private class _XMLDecoder: Decoder {
     var codingPath: [CodingKey]
 
     /// Contextual user-provided information for use during encoding.
-    public var userInfo: [CodingUserInfoKey: Any] { return self.options.userInfo }
+    public var userInfo: [CodingUserInfoKey: Any] { self.options.userInfo }
 
     public init(_ element: XML.Node, at codingPath: [CodingKey] = [], options: XMLDecoder._Options) {
         self.storage = _XMLDecoderStorage()
@@ -131,13 +131,16 @@ private class _XMLDecoder: Decoder {
 
     public func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key: CodingKey {
         guard let element = storage.topContainer else {
-            throw DecodingError.keyNotFound(self.codingPath.last!, DecodingError.Context(codingPath: self.codingPath, debugDescription: "Key not found"))
+            throw DecodingError.keyNotFound(
+                self.codingPath.last!,
+                DecodingError.Context(codingPath: self.codingPath, debugDescription: "Key not found")
+            )
         }
         return KeyedDecodingContainer(KDC(element, decoder: self))
     }
 
     struct KDC<Key: CodingKey>: KeyedDecodingContainerProtocol {
-        var codingPath: [CodingKey] { return self.decoder.codingPath }
+        var codingPath: [CodingKey] { self.decoder.codingPath }
         var allKeys: [Key] = []
         let element: XML.Node
         let decoder: _XMLDecoder
@@ -147,17 +150,18 @@ private class _XMLDecoder: Decoder {
             self.decoder = decoder
 
             // all elements directly under the container xml element are considered. THe key is the name of the element and the value is the text attached to the element
-            self.allKeys = element.children?.compactMap { (element: XML.Node) -> Key? in
-                if let name = element.name {
-                    return Key(stringValue: name)
-                }
-                return nil
-            } ?? []
+            self.allKeys =
+                element.children?.compactMap { (element: XML.Node) -> Key? in
+                    if let name = element.name {
+                        return Key(stringValue: name)
+                    }
+                    return nil
+                } ?? []
         }
 
         /// return if decoder has a value for a key
         func contains(_ key: Key) -> Bool {
-            return self.element.child(for: key) != nil
+            self.element.child(for: key) != nil
         }
 
         /// get the XMLElment for a particular key
@@ -182,7 +186,7 @@ private class _XMLDecoder: Decoder {
 
         func decodeNil(forKey key: Key) throws -> Bool {
             // let child = try self.child(for: key)
-            return false
+            false
         }
 
         func decode(_ type: Bool.Type, forKey key: Key) throws -> Bool {
@@ -263,7 +267,8 @@ private class _XMLDecoder: Decoder {
             return try self.decoder.unbox(element, as: T.self)
         }
 
-        func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> where NestedKey: CodingKey {
+        func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey>
+        where NestedKey: CodingKey {
             self.decoder.codingPath.append(key)
             defer { self.decoder.codingPath.removeLast() }
 
@@ -289,11 +294,11 @@ private class _XMLDecoder: Decoder {
         }
 
         func superDecoder() throws -> Decoder {
-            return try self._superDecoder(forKey: _XMLKey.super)
+            try self._superDecoder(forKey: _XMLKey.super)
         }
 
         func superDecoder(forKey key: Key) throws -> Decoder {
-            return try self._superDecoder(forKey: key)
+            try self._superDecoder(forKey: key)
         }
     }
 
@@ -303,13 +308,16 @@ private class _XMLDecoder: Decoder {
             storage.push(container: top)
         }
         guard let element = storage.topContainer else {
-            throw DecodingError.keyNotFound(self.codingPath.last!, DecodingError.Context(codingPath: self.codingPath, debugDescription: "Key not found"))
+            throw DecodingError.keyNotFound(
+                self.codingPath.last!,
+                DecodingError.Context(codingPath: self.codingPath, debugDescription: "Key not found")
+            )
         }
         return UKDC(element, decoder: self)
     }
 
     struct UKDC: UnkeyedDecodingContainer {
-        var codingPath: [CodingKey] { return self.decoder.codingPath }
+        var codingPath: [CodingKey] { self.decoder.codingPath }
         var currentIndex: Int = 0
         let elements: [XML.Node]
         let decoder: _XMLDecoder
@@ -320,11 +328,11 @@ private class _XMLDecoder: Decoder {
         }
 
         var count: Int? {
-            return self.elements.count
+            self.elements.count
         }
 
         var isAtEnd: Bool {
-            return self.currentIndex >= self.count!
+            self.currentIndex >= self.count!
         }
 
         mutating func decodeNil() throws -> Bool {
@@ -421,7 +429,8 @@ private class _XMLDecoder: Decoder {
             return value
         }
 
-        mutating func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey> where NestedKey: CodingKey {
+        mutating func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey>
+        where NestedKey: CodingKey {
             self.decoder.codingPath.append(_XMLKey(index: self.currentIndex))
             defer { self.decoder.codingPath.removeLast() }
 
@@ -454,13 +463,16 @@ private class _XMLDecoder: Decoder {
 
     public func singleValueContainer() throws -> SingleValueDecodingContainer {
         guard let element = storage.topContainer else {
-            throw DecodingError.keyNotFound(self.codingPath.last!, DecodingError.Context(codingPath: self.codingPath, debugDescription: "Key not found"))
+            throw DecodingError.keyNotFound(
+                self.codingPath.last!,
+                DecodingError.Context(codingPath: self.codingPath, debugDescription: "Key not found")
+            )
         }
         return SVDC(element, decoder: self)
     }
 
     struct SVDC: SingleValueDecodingContainer {
-        var codingPath: [CodingKey] { return self.decoder.codingPath }
+        var codingPath: [CodingKey] { self.decoder.codingPath }
         let element: XML.Node
         let decoder: _XMLDecoder
 
@@ -474,139 +486,170 @@ private class _XMLDecoder: Decoder {
         }
 
         func decode(_: Bool.Type) throws -> Bool {
-            return try self.decoder.unbox(self.element, as: Bool.self)
+            try self.decoder.unbox(self.element, as: Bool.self)
         }
 
         func decode(_: String.Type) throws -> String {
-            return try self.decoder.unbox(self.element, as: String.self)
+            try self.decoder.unbox(self.element, as: String.self)
         }
 
         func decode(_: Double.Type) throws -> Double {
-            return try self.decoder.unbox(self.element, as: Double.self)
+            try self.decoder.unbox(self.element, as: Double.self)
         }
 
         func decode(_: Float.Type) throws -> Float {
-            return try self.decoder.unbox(self.element, as: Float.self)
+            try self.decoder.unbox(self.element, as: Float.self)
         }
 
         func decode(_: Int.Type) throws -> Int {
-            return try self.decoder.unbox(self.element, as: Int.self)
+            try self.decoder.unbox(self.element, as: Int.self)
         }
 
         func decode(_: Int8.Type) throws -> Int8 {
-            return try self.decoder.unbox(self.element, as: Int8.self)
+            try self.decoder.unbox(self.element, as: Int8.self)
         }
 
         func decode(_: Int16.Type) throws -> Int16 {
-            return try self.decoder.unbox(self.element, as: Int16.self)
+            try self.decoder.unbox(self.element, as: Int16.self)
         }
 
         func decode(_: Int32.Type) throws -> Int32 {
-            return try self.decoder.unbox(self.element, as: Int32.self)
+            try self.decoder.unbox(self.element, as: Int32.self)
         }
 
         func decode(_: Int64.Type) throws -> Int64 {
-            return try self.decoder.unbox(self.element, as: Int64.self)
+            try self.decoder.unbox(self.element, as: Int64.self)
         }
 
         func decode(_: UInt.Type) throws -> UInt {
-            return try self.decoder.unbox(self.element, as: UInt.self)
+            try self.decoder.unbox(self.element, as: UInt.self)
         }
 
         func decode(_: UInt8.Type) throws -> UInt8 {
-            return try self.decoder.unbox(self.element, as: UInt8.self)
+            try self.decoder.unbox(self.element, as: UInt8.self)
         }
 
         func decode(_: UInt16.Type) throws -> UInt16 {
-            return try self.decoder.unbox(self.element, as: UInt16.self)
+            try self.decoder.unbox(self.element, as: UInt16.self)
         }
 
         func decode(_: UInt32.Type) throws -> UInt32 {
-            return try self.decoder.unbox(self.element, as: UInt32.self)
+            try self.decoder.unbox(self.element, as: UInt32.self)
         }
 
         func decode(_: UInt64.Type) throws -> UInt64 {
-            return try self.decoder.unbox(self.element, as: UInt64.self)
+            try self.decoder.unbox(self.element, as: UInt64.self)
         }
 
         func decode<T>(_: T.Type) throws -> T where T: Decodable {
-            return try self.decoder.unbox(self.element, as: T.self)
+            try self.decoder.unbox(self.element, as: T.self)
         }
     }
 
     func unbox(_ element: XML.Node, as type: Bool.Type) throws -> Bool {
-        guard let value = element.stringValue, let unboxValue = Bool(value) else { throw DecodingError._typeMismatch(at: self.codingPath, expectation: Bool.self, reality: element.stringValue ?? "nil") }
+        guard let value = element.stringValue, let unboxValue = Bool(value) else {
+            throw DecodingError._typeMismatch(at: self.codingPath, expectation: Bool.self, reality: element.stringValue ?? "nil")
+        }
         return unboxValue
     }
 
     func unbox(_ element: XML.Node, as type: String.Type) throws -> String {
-        guard let unboxValue = element.stringValue else { throw DecodingError._typeMismatch(at: self.codingPath, expectation: String.self, reality: element.stringValue ?? "nil") }
+        guard let unboxValue = element.stringValue else {
+            throw DecodingError._typeMismatch(at: self.codingPath, expectation: String.self, reality: element.stringValue ?? "nil")
+        }
         return unboxValue
     }
 
     func unbox(_ element: XML.Node, as type: Int.Type) throws -> Int {
-        guard let value = element.stringValue, let unboxValue = Int(value) else { throw DecodingError._typeMismatch(at: self.codingPath, expectation: Int.self, reality: element.stringValue ?? "nil") }
+        guard let value = element.stringValue, let unboxValue = Int(value) else {
+            throw DecodingError._typeMismatch(at: self.codingPath, expectation: Int.self, reality: element.stringValue ?? "nil")
+        }
         return unboxValue
     }
 
     func unbox(_ element: XML.Node, as type: Int8.Type) throws -> Int8 {
-        guard let value = element.stringValue, let unboxValue = Int8(value) else { throw DecodingError._typeMismatch(at: self.codingPath, expectation: Int8.self, reality: element.stringValue ?? "nil") }
+        guard let value = element.stringValue, let unboxValue = Int8(value) else {
+            throw DecodingError._typeMismatch(at: self.codingPath, expectation: Int8.self, reality: element.stringValue ?? "nil")
+        }
         return unboxValue
     }
 
     func unbox(_ element: XML.Node, as type: Int16.Type) throws -> Int16 {
-        guard let value = element.stringValue, let unboxValue = Int16(value) else { throw DecodingError._typeMismatch(at: self.codingPath, expectation: Int16.self, reality: element.stringValue ?? "nil") }
+        guard let value = element.stringValue, let unboxValue = Int16(value) else {
+            throw DecodingError._typeMismatch(at: self.codingPath, expectation: Int16.self, reality: element.stringValue ?? "nil")
+        }
         return unboxValue
     }
 
     func unbox(_ element: XML.Node, as type: Int32.Type) throws -> Int32 {
-        guard let value = element.stringValue, let unboxValue = Int32(value) else { throw DecodingError._typeMismatch(at: self.codingPath, expectation: Int32.self, reality: element.stringValue ?? "nil") }
+        guard let value = element.stringValue, let unboxValue = Int32(value) else {
+            throw DecodingError._typeMismatch(at: self.codingPath, expectation: Int32.self, reality: element.stringValue ?? "nil")
+        }
         return unboxValue
     }
 
     func unbox(_ element: XML.Node, as type: Int64.Type) throws -> Int64 {
-        guard let value = element.stringValue, let unboxValue = Int64(value) else { throw DecodingError._typeMismatch(at: self.codingPath, expectation: Int64.self, reality: element.stringValue ?? "nil") }
+        guard let value = element.stringValue, let unboxValue = Int64(value) else {
+            throw DecodingError._typeMismatch(at: self.codingPath, expectation: Int64.self, reality: element.stringValue ?? "nil")
+        }
         return unboxValue
     }
 
     func unbox(_ element: XML.Node, as type: UInt.Type) throws -> UInt {
-        guard let value = element.stringValue, let unboxValue = UInt(value) else { throw DecodingError._typeMismatch(at: self.codingPath, expectation: UInt.self, reality: element.stringValue ?? "nil") }
+        guard let value = element.stringValue, let unboxValue = UInt(value) else {
+            throw DecodingError._typeMismatch(at: self.codingPath, expectation: UInt.self, reality: element.stringValue ?? "nil")
+        }
         return unboxValue
     }
 
     func unbox(_ element: XML.Node, as type: UInt8.Type) throws -> UInt8 {
-        guard let value = element.stringValue, let unboxValue = UInt8(value) else { throw DecodingError._typeMismatch(at: self.codingPath, expectation: UInt8.self, reality: element.stringValue ?? "nil") }
+        guard let value = element.stringValue, let unboxValue = UInt8(value) else {
+            throw DecodingError._typeMismatch(at: self.codingPath, expectation: UInt8.self, reality: element.stringValue ?? "nil")
+        }
         return unboxValue
     }
 
     func unbox(_ element: XML.Node, as type: UInt16.Type) throws -> UInt16 {
-        guard let value = element.stringValue, let unboxValue = UInt16(value) else { throw DecodingError._typeMismatch(at: self.codingPath, expectation: UInt16.self, reality: element.stringValue ?? "nil") }
+        guard let value = element.stringValue, let unboxValue = UInt16(value) else {
+            throw DecodingError._typeMismatch(at: self.codingPath, expectation: UInt16.self, reality: element.stringValue ?? "nil")
+        }
         return unboxValue
     }
 
     func unbox(_ element: XML.Node, as type: UInt32.Type) throws -> UInt32 {
-        guard let value = element.stringValue, let unboxValue = UInt32(value) else { throw DecodingError._typeMismatch(at: self.codingPath, expectation: UInt32.self, reality: element.stringValue ?? "nil") }
+        guard let value = element.stringValue, let unboxValue = UInt32(value) else {
+            throw DecodingError._typeMismatch(at: self.codingPath, expectation: UInt32.self, reality: element.stringValue ?? "nil")
+        }
         return unboxValue
     }
 
     func unbox(_ element: XML.Node, as type: UInt64.Type) throws -> UInt64 {
-        guard let value = element.stringValue, let unboxValue = UInt64(value) else { throw DecodingError._typeMismatch(at: self.codingPath, expectation: UInt64.self, reality: element.stringValue ?? "nil") }
+        guard let value = element.stringValue, let unboxValue = UInt64(value) else {
+            throw DecodingError._typeMismatch(at: self.codingPath, expectation: UInt64.self, reality: element.stringValue ?? "nil")
+        }
         return unboxValue
     }
 
     func unbox(_ element: XML.Node, as type: Double.Type) throws -> Double {
-        guard let value = element.stringValue, let unboxValue = Double(value) else { throw DecodingError._typeMismatch(at: self.codingPath, expectation: Double.self, reality: element.stringValue ?? "nil") }
+        guard let value = element.stringValue, let unboxValue = Double(value) else {
+            throw DecodingError._typeMismatch(at: self.codingPath, expectation: Double.self, reality: element.stringValue ?? "nil")
+        }
         return unboxValue
     }
 
     func unbox(_ element: XML.Node, as type: Float.Type) throws -> Float {
-        guard let value = element.stringValue, let unboxValue = Float(value) else { throw DecodingError._typeMismatch(at: self.codingPath, expectation: Float.self, reality: element.stringValue ?? "nil") }
+        guard let value = element.stringValue, let unboxValue = Float(value) else {
+            throw DecodingError._typeMismatch(at: self.codingPath, expectation: Float.self, reality: element.stringValue ?? "nil")
+        }
         return unboxValue
     }
 
     fileprivate func unbox(_ element: XML.Node?, as type: Date.Type) throws -> Date {
         guard let element else {
-            throw DecodingError.keyNotFound(self.codingPath.last!, DecodingError.Context(codingPath: self.codingPath, debugDescription: "Key not found"))
+            throw DecodingError.keyNotFound(
+                self.codingPath.last!,
+                DecodingError.Context(codingPath: self.codingPath, debugDescription: "Key not found")
+            )
         }
 
         let string = try self.unbox(element, as: String.self)
@@ -615,13 +658,18 @@ private class _XMLDecoder: Decoder {
                 return date
             }
         }
-        throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Date string does not match format expected"))
+        throw DecodingError.dataCorrupted(
+            DecodingError.Context(codingPath: self.codingPath, debugDescription: "Date string does not match format expected")
+        )
     }
 
     /// get Data from XML.Node
     fileprivate func unbox(_ element: XML.Node?, as type: Data.Type) throws -> Data {
         guard let element else {
-            throw DecodingError.keyNotFound(self.codingPath.last!, DecodingError.Context(codingPath: self.codingPath, debugDescription: "Key not found"))
+            throw DecodingError.keyNotFound(
+                self.codingPath.last!,
+                DecodingError.Context(codingPath: self.codingPath, debugDescription: "Key not found")
+            )
         }
         switch self.options.dataDecodingStrategy {
         case .base64:
@@ -630,7 +678,9 @@ private class _XMLDecoder: Decoder {
             }
 
             guard let data = Data(base64Encoded: string) else {
-                throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Encountered Data is not valid Base64."))
+                throw DecodingError.dataCorrupted(
+                    DecodingError.Context(codingPath: self.codingPath, debugDescription: "Encountered Data is not valid Base64.")
+                )
             }
 
             return data
@@ -643,7 +693,7 @@ private class _XMLDecoder: Decoder {
     }
 
     func unbox<T>(_ element: XML.Node?, as type: T.Type) throws -> T where T: Decodable {
-        return try self.unbox_(element, as: T.self) as! T
+        try self.unbox_(element, as: T.self) as! T
     }
 
     func unbox_(_ element: XML.Node?, as type: Decodable.Type) throws -> Any {
@@ -727,12 +777,13 @@ extension EncodingError {
             valueDescription = "\(T.self).nan"
         }
 
-        let debugDescription = "Unable to encode \(valueDescription) directly. Use DictionaryEncoder.NonConformingFloatEncodingStrategy.convertToString to specify how the value should be encoded."
+        let debugDescription =
+            "Unable to encode \(valueDescription) directly. Use DictionaryEncoder.NonConformingFloatEncodingStrategy.convertToString to specify how the value should be encoded."
         return .invalidValue(value, EncodingError.Context(codingPath: codingPath, debugDescription: debugDescription))
     }
 }
 
-internal extension DecodingError {
+extension DecodingError {
     /// Returns a `.typeMismatch` error describing the expected type.
     ///
     /// - parameter path: The path of `CodingKey`s taken to decode a value of this type.
@@ -752,7 +803,9 @@ internal extension DecodingError {
     fileprivate static func _typeDescription(of value: Any) -> String {
         if value is NSNull {
             return "a null value"
-        } else if value is NSNumber /* FIXME: If swift-corelibs-foundation isn't updated to use NSNumber, this check will be necessary: || value is Int || value is Double */ {
+        } else if value
+            is NSNumber /* FIXME: If swift-corelibs-foundation isn't updated to use NSNumber, this check will be necessary: || value is Int || value is Double */
+        {
             return "a number"
         } else if value is String {
             return "a string/data"

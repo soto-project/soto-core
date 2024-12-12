@@ -13,8 +13,9 @@
 //===----------------------------------------------------------------------===//
 
 import Atomics
-@testable import SotoCore
 import XCTest
+
+@testable import SotoCore
 
 final class ExpiringValueTests: XCTestCase {
     /// Test value returned from closure is given back
@@ -39,7 +40,7 @@ final class ExpiringValueTests: XCTestCase {
 
     /// Test when a value is just about to expire it returns current value and kicks off
     /// new task to get new value
-    #if swift(>=5.9) // makeStream doesn't exist in earlier versions of swift
+    #if swift(>=5.9)  // makeStream doesn't exist in earlier versions of swift
     func testJustAboutToExpireValue() async throws {
         let expiringValue = ExpiringValue<Int>(0, expires: Date() + 1, threshold: 3)
         let (stream, source) = AsyncStream<Void>.makeStream()

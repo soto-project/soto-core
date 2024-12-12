@@ -76,7 +76,7 @@ public struct FixedSizeByteBufferAsyncSequence<Base: AsyncSequence>: AsyncSequen
 
     /// Make async iterator
     public __consuming func makeAsyncIterator() -> AsyncIterator {
-        return AsyncIterator(sequence: self)
+        AsyncIterator(sequence: self)
     }
 }
 
@@ -86,6 +86,6 @@ extension AsyncSequence where Element == ByteBuffer {
     /// Return an AsyncSequence that returns ByteBuffers of a fixed size
     /// - Parameter chunkSize: Size of each chunk
     public func fixedSizeSequence(chunkSize: Int) -> FixedSizeByteBufferAsyncSequence<Self> {
-        return .init(byteBufferSequence: self, chunkSize: chunkSize)
+        .init(byteBufferSequence: self, chunkSize: chunkSize)
     }
 }

@@ -12,31 +12,32 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import INIParser
 import XCTest
+
+@testable import INIParser
 
 class INIParserTests: XCTestCase {
     func testExample() {
         let raw = """
-        ; last modified 1 April 2017 by Rockford Wei
-        ## This is another comment
-          freeVar1 = 1
-          freeVar2 = 2;
-          url = http://example.com/results?limit=10
-          [owner]
-          name =  Rocky
-          organization = PerfectlySoft
-          ;
-          [database]
-              server = 192.0.2.42 ; use IP address in case network name resolution is not working
-              port = 143
-              file = \"中文.dat  ' ' \"
-          [汉化]
-          变量1 = 🇨🇳 ;使用utf8
-          变量2 = 加拿大。
-          [ 乱死了 ]
-            foo = bar
-        """
+            ; last modified 1 April 2017 by Rockford Wei
+            ## This is another comment
+              freeVar1 = 1
+              freeVar2 = 2;
+              url = http://example.com/results?limit=10
+              [owner]
+              name =  Rocky
+              organization = PerfectlySoft
+              ;
+              [database]
+                  server = 192.0.2.42 ; use IP address in case network name resolution is not working
+                  port = 143
+                  file = \"中文.dat  ' ' \"
+              [汉化]
+              变量1 = 🇨🇳 ;使用utf8
+              变量2 = 加拿大。
+              [ 乱死了 ]
+                foo = bar
+            """
 
         var ini: INIParser?
         XCTAssertNoThrow(ini = try INIParser(raw))

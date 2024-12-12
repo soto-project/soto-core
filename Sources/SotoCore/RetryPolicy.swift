@@ -20,28 +20,28 @@ import Foundation
 #endif
 import NIOCore
 import NIOHTTP1
-import NIOPosix // Needed for NIOConnectionError
+import NIOPosix  // Needed for NIOConnectionError
 
 /// Creates a RetryPolicy for AWSClient to use
 public struct RetryPolicyFactory {
     public let retryPolicy: RetryPolicy
 
     /// The default RetryPolicy returned by RetryPolicyFactory
-    public static var `default`: RetryPolicyFactory { return .jitter() }
+    public static var `default`: RetryPolicyFactory { .jitter() }
 
     /// Retry controller that never returns a retry wait time
-    public static var noRetry: RetryPolicyFactory { return .init(retryPolicy: NoRetry()) }
+    public static var noRetry: RetryPolicyFactory { .init(retryPolicy: NoRetry()) }
 
     /// Retry with an exponentially increasing wait time between wait times
     public static func exponential(base: TimeAmount = .seconds(1), maxRetries: Int = 4) -> RetryPolicyFactory {
-        return .init(retryPolicy: ExponentialRetry(base: base, maxRetries: maxRetries))
+        .init(retryPolicy: ExponentialRetry(base: base, maxRetries: maxRetries))
     }
 
     /// Exponential jitter retry. Instead of returning an exponentially increasing retry time it returns a jittered version. In a heavy load situation
     /// where a large number of clients all hit the servers at the same time, jitter helps to smooth out the server response. See
     /// https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/ for details.
     public static func jitter(base: TimeAmount = .seconds(1), maxRetries: Int = 4) -> RetryPolicyFactory {
-        return .init(retryPolicy: JitterRetry(base: base, maxRetries: maxRetries))
+        .init(retryPolicy: JitterRetry(base: base, maxRetries: maxRetries))
     }
 }
 
@@ -66,7 +66,7 @@ public protocol RetryPolicy: Sendable {
 private struct NoRetry: RetryPolicy {
     init() {}
     func getRetryWaitTime(error: Error, attempt: Int) -> RetryStatus? {
-        return .dontRetry
+        .dontRetry
     }
 }
 
@@ -89,9 +89,8 @@ extension StandardRetryPolicy {
                     return .retry(wait: .seconds(retryAfter))
                 }
                 // server error or too many requests
-                if (500...).contains(context.responseCode.code) ||
-                    context.responseCode.code == 429 ||
-                    error.errorCode == AWSClientError.throttling.errorCode
+                if (500...).contains(context.responseCode.code) || context.responseCode.code == 429
+                    || error.errorCode == AWSClientError.throttling.errorCode
                 {
                     return .retry(wait: calculateRetryWaitTime(attempt: attempt))
                 }

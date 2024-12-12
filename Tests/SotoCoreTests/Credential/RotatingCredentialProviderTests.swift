@@ -14,17 +14,19 @@
 
 import AsyncHTTPClient
 import Atomics
+import Logging
+import NIOCore
+import NIOPosix
+import SotoTestUtils
+import XCTest
+
+@testable import SotoCore
+
 #if compiler(<5.9) && os(Linux)
 @preconcurrency import struct Foundation.Date
 #else
 import struct Foundation.Date
 #endif
-import Logging
-import NIOCore
-import NIOPosix
-@testable import SotoCore
-import SotoTestUtils
-import XCTest
 
 class RotatingCredentialProviderTests: XCTestCase {
     final class RotatingCredentialTestClient: CredentialProvider {

@@ -16,7 +16,7 @@ import NIOCore
 import SotoSignerV4
 
 private let bufferSize: Int = 64 * 1024
-private let chunkSignatureLength = 1 + 16 + 64 // ";" + "chunk-signature=" + hex(sha256)
+private let chunkSignatureLength = 1 + 16 + 64  // ";" + "chunk-signature=" + hex(sha256)
 private let endOfLineLength = 2
 private let bufferSizeInHex = String(bufferSize, radix: 16)
 private let maxHeaderSize: Int = bufferSizeInHex.count + chunkSignatureLength + endOfLineLength
@@ -76,7 +76,7 @@ struct S3SignedAsyncSequence<Base: AsyncSequence & Sendable>: AsyncSequence, Sen
 
     func makeAsyncIterator() -> AsyncIterator {
         // S3 signing requires a fixed chunk size. AWS recommend 64K for the chunk size
-        return .init(
+        .init(
             baseIterator: self.base.fixedSizeSequence(chunkSize: 64 * 1024).makeAsyncIterator(),
             signer: self.signer,
             signingData: self.seedSigningData.wrappedValue
@@ -93,9 +93,10 @@ struct S3SignedAsyncSequence<Base: AsyncSequence & Sendable>: AsyncSequence, Sen
         } else {
             lastChunkSize = 0
         }
-        let fullSize = numberOfChunks * (bufferSize + maxHeaderSize + endOfLineLength) // number of chunks * chunk size
-            + lastChunkSize // last chunk size
-            + 1 + chunkSignatureLength + endOfLineLength * 2 // tail chunk size "(0;chunk-signature=hash)\r\n\r\n"
+        let fullSize =
+            numberOfChunks * (bufferSize + maxHeaderSize + endOfLineLength)  // number of chunks * chunk size
+            + lastChunkSize  // last chunk size
+            + 1 + chunkSignatureLength + endOfLineLength * 2  // tail chunk size "(0;chunk-signature=hash)\r\n\r\n"
         return fullSize
     }
 }

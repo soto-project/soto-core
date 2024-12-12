@@ -14,10 +14,11 @@
 
 import NIOCore
 import NIOHTTP1
-@testable @_spi(SotoInternal) import SotoCore
 import SotoTestUtils
 import SotoXML
 import XCTest
+
+@testable @_spi(SotoInternal) import SotoCore
 
 class AWSResponseTests: XCTestCase {
     func testHeaderResponseDecoding() async throws {
@@ -98,7 +99,7 @@ class AWSResponseTests: XCTestCase {
         let response = AWSHTTPResponse(
             status: .ok,
             headers: [
-                "testEnum": "hello",
+                "testEnum": "hello"
             ]
         )
 
@@ -278,9 +279,12 @@ class AWSResponseTests: XCTestCase {
         let response = AWSHTTPResponse(
             status: .notFound,
             headers: HTTPHeaders(),
-            body: .init(buffer: ByteBuffer(string:
-                #"{"__type":"ResourceNotFoundException", "Message": "Donald Where's Your Troosers?", "fault": "client","CancellationReasons":1}"#
-            ))
+            body: .init(
+                buffer: ByteBuffer(
+                    string:
+                        #"{"__type":"ResourceNotFoundException", "Message": "Donald Where's Your Troosers?", "fault": "client","CancellationReasons":1}"#
+                )
+            )
         )
         let service = createServiceConfig(serviceProtocol: .json(version: "1.1"), errorType: ServiceErrorType.self)
 
@@ -340,7 +344,10 @@ class AWSResponseTests: XCTestCase {
         let response = AWSHTTPResponse(
             status: .notFound,
             headers: HTTPHeaders(),
-            body: .init(string: "<ErrorResponse><Error><Code>MessageRejected</Code><Message>Don't like it</Message><fault>client</fault></Error></ErrorResponse>")
+            body: .init(
+                string:
+                    "<ErrorResponse><Error><Code>MessageRejected</Code><Message>Don't like it</Message><fault>client</fault></Error></ErrorResponse>"
+            )
         )
         let queryService = createServiceConfig(serviceProtocol: .query, errorType: ServiceErrorType.self)
 
@@ -460,7 +467,7 @@ class AWSResponseTests: XCTestCase {
         for header in headers {
             to.writeInteger(UInt8(header.key.utf8.count))
             to.writeString(header.key)
-            to.writeInteger(UInt8(7)) // header type (always 7)
+            to.writeInteger(UInt8(7))  // header type (always 7)
             to.writeInteger(UInt16(header.value.utf8.count))
             to.writeString(header.value)
         }
@@ -642,7 +649,7 @@ class AWSResponseTests: XCTestCase {
         }
 
         public var description: String {
-            return "\(self.error.rawValue): \(message ?? "")"
+            "\(self.error.rawValue): \(message ?? "")"
         }
     }
 }

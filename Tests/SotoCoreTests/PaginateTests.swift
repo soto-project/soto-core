@@ -16,9 +16,10 @@ import AsyncHTTPClient
 import Atomics
 import NIOCore
 import NIOPosix
-@testable import SotoCore
 import SotoTestUtils
 import XCTest
+
+@testable import SotoCore
 
 final class PaginateTests: XCTestCase, @unchecked Sendable {
     enum Error: Swift.Error {
@@ -52,7 +53,7 @@ final class PaginateTests: XCTestCase, @unchecked Sendable {
         }
 
         func usingPaginationToken(_ token: Int) -> CounterInput {
-            return .init(inputToken: token, pageSize: self.pageSize)
+            .init(inputToken: token, pageSize: self.pageSize)
         }
     }
 
@@ -63,7 +64,7 @@ final class PaginateTests: XCTestCase, @unchecked Sendable {
     }
 
     func counter(_ input: CounterInput, logger: Logger) async throws -> CounterOutput {
-        return try await self.client.execute(
+        try await self.client.execute(
             operation: "TestOperation",
             path: "/",
             httpMethod: .POST,
@@ -74,7 +75,7 @@ final class PaginateTests: XCTestCase, @unchecked Sendable {
     }
 
     func asyncCounterPaginator(_ input: CounterInput) -> AWSClient.PaginatorSequence<CounterInput, CounterOutput> {
-        return .init(
+        .init(
             input: input,
             command: self.counter,
             inputKey: \CounterInput.inputToken,
@@ -84,7 +85,7 @@ final class PaginateTests: XCTestCase, @unchecked Sendable {
     }
 
     func stringList(_ input: StringListInput, logger: Logger) async throws -> StringListOutput {
-        return try await self.client.execute(
+        try await self.client.execute(
             operation: "TestOperation",
             path: "/",
             httpMethod: .POST,
@@ -115,7 +116,7 @@ final class PaginateTests: XCTestCase, @unchecked Sendable {
         }
 
         func usingPaginationToken(_ token: String) -> StringListInput {
-            return .init(inputToken: token, pageSize: self.pageSize)
+            .init(inputToken: token, pageSize: self.pageSize)
         }
     }
 
@@ -126,7 +127,10 @@ final class PaginateTests: XCTestCase, @unchecked Sendable {
     }
 
     // create list of unique strings
-    let stringList = Set("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.".split(separator: " ").map { String($0) }).map { $0 }
+    let stringList = Set(
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+            .split(separator: " ").map { String($0) }
+    ).map { $0 }
 
     func stringListServerProcess(_ input: StringListInput) throws -> AWSTestServer.Result<StringListOutput> {
         // send part of array of numbers based on input startIndex and pageSize
@@ -153,7 +157,7 @@ final class PaginateTests: XCTestCase, @unchecked Sendable {
     }
 
     func testAsyncIntegerTokenPaginate() async throws {
-        #if os(iOS) // iOS async tests are failing in GitHub CI at the moment
+        #if os(iOS)  // iOS async tests are failing in GitHub CI at the moment
         guard ProcessInfo.processInfo.environment["CI"] == nil else { return }
         #endif
         // paginate input
@@ -187,7 +191,7 @@ final class PaginateTests: XCTestCase, @unchecked Sendable {
     }
 
     func testAsyncStringTokenPaginate() async throws {
-        #if os(iOS) // iOS async tests are failing in GitHub CI at the moment
+        #if os(iOS)  // iOS async tests are failing in GitHub CI at the moment
         guard ProcessInfo.processInfo.environment["CI"] == nil else { return }
         #endif
         // paginate input
@@ -208,7 +212,7 @@ final class PaginateTests: XCTestCase, @unchecked Sendable {
     }
 
     func testAsyncPaginateError() async throws {
-        #if os(iOS) // iOS async tests are failing in GitHub CI at the moment
+        #if os(iOS)  // iOS async tests are failing in GitHub CI at the moment
         guard ProcessInfo.processInfo.environment["CI"] == nil else { return }
         #endif
         // paginate input
@@ -220,7 +224,7 @@ final class PaginateTests: XCTestCase, @unchecked Sendable {
                     return try await paginator.reduce([]) { $0 + $1.array }
                 }
                 try self.awsServer.process { (_: StringListInput) -> AWSTestServer.Result<StringListOutput> in
-                    return .error(.badRequest)
+                    .error(.badRequest)
                 }
                 return try await group.next()!
             }
@@ -230,7 +234,7 @@ final class PaginateTests: XCTestCase, @unchecked Sendable {
     }
 
     func testAsyncPaginateErrorAfterFirstRequest() async throws {
-        #if os(iOS) // iOS async tests are failing in GitHub CI at the moment
+        #if os(iOS)  // iOS async tests are failing in GitHub CI at the moment
         guard ProcessInfo.processInfo.environment["CI"] == nil else { return }
         #endif
         // paginate input

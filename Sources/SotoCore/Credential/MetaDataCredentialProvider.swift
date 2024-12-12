@@ -13,22 +13,23 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
-#if compiler(<5.9) && os(Linux)
-@preconcurrency import struct Foundation.Date
-#else
-import struct Foundation.Date
-#endif
-import class Foundation.ISO8601DateFormatter
-import class Foundation.JSONDecoder
-import struct Foundation.TimeInterval
-import struct Foundation.URL
-
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
 import NIOFoundationCompat
 import NIOHTTP1
 import SotoSignerV4
+
+import class Foundation.ISO8601DateFormatter
+import class Foundation.JSONDecoder
+import struct Foundation.TimeInterval
+import struct Foundation.URL
+
+#if compiler(<5.9) && os(Linux)
+@preconcurrency import struct Foundation.Date
+#else
+import struct Foundation.Date
+#endif
 
 /// protocol to get Credentials from the Client. With this the AWSClient requests the credentials for request signing from ecs and ec2.
 protocol MetaDataClient: CredentialProvider {
@@ -39,7 +40,7 @@ protocol MetaDataClient: CredentialProvider {
 
 extension MetaDataClient {
     func getCredential(logger: Logger) async throws -> Credential {
-        return try await self.getMetaData(logger: logger)
+        try await self.getMetaData(logger: logger)
     }
 }
 
@@ -85,7 +86,7 @@ struct ECSMetaDataClient: MetaDataClient {
         }
 
         func isExpiring(within interval: TimeInterval) -> Bool {
-            return self.expiration.timeIntervalSinceNow < interval
+            self.expiration.timeIntervalSinceNow < interval
         }
 
         enum CodingKeys: String, CodingKey {
@@ -151,7 +152,7 @@ struct InstanceMetaDataClient: MetaDataClient {
         }
 
         func isExpiring(within interval: TimeInterval) -> Bool {
-            return self.expiration.timeIntervalSinceNow < interval
+            self.expiration.timeIntervalSinceNow < interval
         }
 
         enum CodingKeys: String, CodingKey {
@@ -166,11 +167,11 @@ struct InstanceMetaDataClient: MetaDataClient {
     }
 
     private var tokenURL: URL {
-        return URL(string: "\(self.host)\(Self.TokenUri)")!
+        URL(string: "\(self.host)\(Self.TokenUri)")!
     }
 
     private var credentialURL: URL {
-        return URL(string: "\(self.host)\(Self.CredentialUri)")!
+        URL(string: "\(self.host)\(Self.CredentialUri)")!
     }
 
     let httpClient: AWSHTTPClient

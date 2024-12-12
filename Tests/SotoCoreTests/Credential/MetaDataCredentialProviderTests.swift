@@ -15,9 +15,10 @@
 import AsyncHTTPClient
 import NIOCore
 import NIOPosix
-@testable import SotoCore
 import SotoTestUtils
 import XCTest
+
+@testable import SotoCore
 
 class MetaDataCredentialProviderTests: XCTestCase {
     // MARK: - ECSMetaDataClient -

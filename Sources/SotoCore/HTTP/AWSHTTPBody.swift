@@ -55,7 +55,8 @@ public struct AWSHTTPBody: Sendable {
         self.storage = .asyncSequence(sequence: .init(asyncSequence), length: length)
     }
 
-    public init<BufferSequence: AsyncSequence & Sendable>(asyncSequence: BufferSequence, length: Int?) where BufferSequence.Element: Collection<UInt8> & Sendable {
+    public init<BufferSequence: AsyncSequence & Sendable>(asyncSequence: BufferSequence, length: Int?)
+    where BufferSequence.Element: Collection<UInt8> & Sendable {
         self.storage = .asyncSequence(sequence: .init(asyncSequence.map { .init(bytes: $0) }), length: length)
     }
 

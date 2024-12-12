@@ -84,20 +84,23 @@ let package = Package(
             ],
             swiftSettings: swiftSettings
         ),
-        .target(name: "SotoTestUtils", dependencies: [
-            .byName(name: "SotoCore"),
-            .byName(name: "SotoXML"),
-            .product(name: "Logging", package: "swift-log"),
-            .product(name: "NIO", package: "swift-nio"),
-            .product(name: "NIOFoundationCompat", package: "swift-nio"),
-            .product(name: "NIOHTTP1", package: "swift-nio"),
-            .product(name: "NIOPosix", package: "swift-nio"),
-            .product(name: "NIOTestUtils", package: "swift-nio"),
-        ]),
+        .target(
+            name: "SotoTestUtils",
+            dependencies: [
+                .byName(name: "SotoCore"),
+                .byName(name: "SotoXML"),
+                .product(name: "Logging", package: "swift-log"),
+                .product(name: "NIO", package: "swift-nio"),
+                .product(name: "NIOFoundationCompat", package: "swift-nio"),
+                .product(name: "NIOHTTP1", package: "swift-nio"),
+                .product(name: "NIOPosix", package: "swift-nio"),
+                .product(name: "NIOTestUtils", package: "swift-nio"),
+            ]
+        ),
         .target(
             name: "SotoXML",
             dependencies: [
-                .byName(name: "CSotoExpat"),
+                .byName(name: "CSotoExpat")
             ],
             swiftSettings: swiftSettings
         ),
@@ -115,16 +118,25 @@ let package = Package(
                 .product(name: "NIOPosix", package: "swift-nio"),
             ]
         ),
-        .testTarget(name: "SotoSignerV4Tests", dependencies: [
-            .byName(name: "SotoSignerV4"),
-        ]),
-        .testTarget(name: "SotoXMLTests", dependencies: [
-            .byName(name: "SotoXML"),
-            .byName(name: "SotoCore"),
-        ]),
-        .testTarget(name: "INIParserTests", dependencies: [
-            .byName(name: "INIParser"),
-        ]),
+        .testTarget(
+            name: "SotoSignerV4Tests",
+            dependencies: [
+                .byName(name: "SotoSignerV4")
+            ]
+        ),
+        .testTarget(
+            name: "SotoXMLTests",
+            dependencies: [
+                .byName(name: "SotoXML"),
+                .byName(name: "SotoCore"),
+            ]
+        ),
+        .testTarget(
+            name: "INIParserTests",
+            dependencies: [
+                .byName(name: "INIParser")
+            ]
+        ),
     ],
     swiftLanguageVersions: [.v5, .version("6")]
 )

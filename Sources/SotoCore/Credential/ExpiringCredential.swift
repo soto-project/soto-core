@@ -12,27 +12,29 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SotoSignerV4
+
+import struct Foundation.TimeInterval
+
 #if compiler(<5.9) && os(Linux)
 @preconcurrency import struct Foundation.Date
 #else
 import struct Foundation.Date
 #endif
-import struct Foundation.TimeInterval
-import SotoSignerV4
 
 /// Credential provider whose credentials expire over tiem.
 public protocol ExpiringCredential: Credential {
     var expiration: Date { get }
 }
 
-public extension ExpiringCredential {
+extension ExpiringCredential {
     /// Will credential expire within a certain time
-    func isExpiring(within interval: TimeInterval) -> Bool {
-        return self.expiration.timeIntervalSinceNow < interval
+    public func isExpiring(within interval: TimeInterval) -> Bool {
+        self.expiration.timeIntervalSinceNow < interval
     }
 
     /// Has credential expired
-    var isExpired: Bool {
+    public var isExpired: Bool {
         self.isExpiring(within: 0)
     }
 }

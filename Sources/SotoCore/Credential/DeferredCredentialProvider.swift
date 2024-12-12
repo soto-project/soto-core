@@ -53,13 +53,12 @@ public final class DeferredCredentialProvider: CredentialProvider {
     public func getCredential(logger: Logger) async throws -> Credential {
         try await withTaskCancellationHandler {
             try await self.getCredentialTask.value
-        }
-        onCancel: {
+        } onCancel: {
             self.getCredentialTask.cancel()
         }
     }
 }
 
 extension DeferredCredentialProvider: CustomStringConvertible {
-    public var description: String { return "\(type(of: self))(\(self.provider.description))" }
+    public var description: String { "\(type(of: self))(\(self.provider.description))" }
 }

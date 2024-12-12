@@ -13,12 +13,14 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
-import struct Foundation.UUID
 import NIOCore
 import NIOPosix
-@testable import SotoCore
 import SotoTestUtils
 import XCTest
+
+import struct Foundation.UUID
+
+@testable import SotoCore
 
 class ConfigFileLoadersTests: XCTestCase {
     // MARK: - File Loading
@@ -39,10 +41,10 @@ class ConfigFileLoadersTests: XCTestCase {
         let secretKey = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
         let profile = ConfigFileLoader.defaultProfile
         let credentialsFile = """
-        [\(profile)]
-        aws_access_key_id=\(accessKey)
-        aws_secret_access_key= \(secretKey)
-        """
+            [\(profile)]
+            aws_access_key_id=\(accessKey)
+            aws_secret_access_key= \(secretKey)
+            """
 
         let credentialsPath = try save(content: credentialsFile, prefix: #function)
         let (_, httpClient) = try makeContext()
@@ -75,18 +77,18 @@ class ConfigFileLoadersTests: XCTestCase {
         let sessionName = "foo@example.com"
         let roleArn = "arn:aws:iam::123456789012:role/marketingadminrole"
         let credentialsFile = """
-        [\(sourceProfile)]
-        aws_access_key_id = \(accessKey)
-        aws_secret_access_key=\(secretKey)
-        [\(profile)]
-        role_arn = \(roleArn)
-        source_profile = \(sourceProfile)
-        """
+            [\(sourceProfile)]
+            aws_access_key_id = \(accessKey)
+            aws_secret_access_key=\(secretKey)
+            [\(profile)]
+            role_arn = \(roleArn)
+            source_profile = \(sourceProfile)
+            """
         let configFile = """
-        [profile \(profile)]
-        role_session_name = \(sessionName)
-        region = us-west-1
-        """
+            [profile \(profile)]
+            role_session_name = \(sessionName)
+            region = us-west-1
+            """
 
         let credentialsPath = try save(content: credentialsFile, prefix: #function)
         let configPath = try save(content: configFile, prefix: "config")
@@ -121,10 +123,10 @@ class ConfigFileLoadersTests: XCTestCase {
         let profile = "marketingadmin"
         let roleArn = "arn:aws:iam::123456789012:role/marketingadminrole"
         let credentialsFile = """
-        [\(profile)]
-        role_arn = \(roleArn)
-        credential_source = Ec2InstanceMetadata
-        """
+            [\(profile)]
+            role_arn = \(roleArn)
+            credential_source = Ec2InstanceMetadata
+            """
 
         let credentialsPath = try save(content: credentialsFile, prefix: #function)
         let (context, httpClient) = try makeContext()
@@ -156,9 +158,9 @@ class ConfigFileLoadersTests: XCTestCase {
         let secretKey = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
         let profile = ConfigFileLoader.defaultProfile
         let credentialsFile = """
-        [\(profile)]
-        aws_secret_access_key= \(secretKey)
-        """
+            [\(profile)]
+            aws_secret_access_key= \(secretKey)
+            """
 
         let credentialsPath = try save(content: credentialsFile, prefix: #function)
         let (_, httpClient) = try makeContext()
@@ -185,9 +187,9 @@ class ConfigFileLoadersTests: XCTestCase {
         let accessKey = "AKIAIOSFODNN7EXAMPLE"
         let profile = ConfigFileLoader.defaultProfile
         let credentialsFile = """
-        [\(profile)]
-        aws_access_key_id = \(accessKey)
-        """
+            [\(profile)]
+            aws_access_key_id = \(accessKey)
+            """
 
         let credentialsPath = try save(content: credentialsFile, prefix: #function)
         let (_, httpClient) = try makeContext()
@@ -216,12 +218,12 @@ class ConfigFileLoadersTests: XCTestCase {
         let sourceProfile = ConfigFileLoader.defaultProfile
         let roleArn = "arn:aws:iam::123456789012:role/marketingadminrole"
         let credentialsFile = """
-        [\(sourceProfile)]
-        aws_secret_access_key=\(secretKey)
-        [\(profile)]
-        role_arn = \(roleArn)
-        source_profile = \(sourceProfile)
-        """
+            [\(sourceProfile)]
+            aws_secret_access_key=\(secretKey)
+            [\(profile)]
+            role_arn = \(roleArn)
+            source_profile = \(sourceProfile)
+            """
 
         let credentialsPath = try save(content: credentialsFile, prefix: #function)
         let (_, httpClient) = try makeContext()
@@ -250,12 +252,12 @@ class ConfigFileLoadersTests: XCTestCase {
         let sourceProfile = ConfigFileLoader.defaultProfile
         let roleArn = "arn:aws:iam::123456789012:role/marketingadminrole"
         let credentialsFile = """
-        [\(sourceProfile)]
-        aws_access_key_id = \(accessKey)
-        [\(profile)]
-        role_arn = \(roleArn)
-        source_profile = \(sourceProfile)
-        """
+            [\(sourceProfile)]
+            aws_access_key_id = \(accessKey)
+            [\(profile)]
+            role_arn = \(roleArn)
+            source_profile = \(sourceProfile)
+            """
 
         let credentialsPath = try save(content: credentialsFile, prefix: #function)
         let (_, httpClient) = try makeContext()
@@ -282,9 +284,9 @@ class ConfigFileLoadersTests: XCTestCase {
         let profile = "marketingadmin"
         let roleArn = "arn:aws:iam::123456789012:role/marketingadminrole"
         let credentialsFile = """
-        [\(profile)]
-        role_arn = \(roleArn)
-        """
+            [\(profile)]
+            role_arn = \(roleArn)
+            """
 
         let credentialsPath = try save(content: credentialsFile, prefix: #function)
         let (_, httpClient) = try makeContext()
@@ -314,11 +316,11 @@ class ConfigFileLoadersTests: XCTestCase {
         let sourceProfile = "user1"
         let roleArn = "arn:aws:iam::123456789012:role/marketingadminrole"
         let content = """
-        [\(profile)]
-        role_arn = \(roleArn)
-        source_profile = \(sourceProfile)
-        region=us-west-2
-        """
+            [\(profile)]
+            role_arn = \(roleArn)
+            source_profile = \(sourceProfile)
+            region=us-west-2
+            """
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
 
@@ -330,16 +332,16 @@ class ConfigFileLoadersTests: XCTestCase {
 
     func testConfigFileNamedProfile() throws {
         let content = """
-        [default]
-        region=us-west-2
-        output=json
+            [default]
+            region=us-west-2
+            output=json
 
-        [profile marketingadmin]
-        role_arn = arn:aws:iam::123456789012:role/marketingadminrole
-        source_profile = user1
-        role_session_name = foo@example.com
-        region = us-west-1
-        """
+            [profile marketingadmin]
+            role_arn = arn:aws:iam::123456789012:role/marketingadminrole
+            source_profile = user1
+            role_session_name = foo@example.com
+            region = us-west-1
+            """
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
 
@@ -352,10 +354,10 @@ class ConfigFileLoadersTests: XCTestCase {
 
     func testConfigFileCredentialSourceEc2() throws {
         let content = """
-        [profile marketingadmin]
-        role_arn = arn:aws:iam::123456789012:role/marketingadminrole
-        credential_source = Ec2InstanceMetadata
-        """
+            [profile marketingadmin]
+            role_arn = arn:aws:iam::123456789012:role/marketingadminrole
+            credential_source = Ec2InstanceMetadata
+            """
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
 
@@ -365,10 +367,10 @@ class ConfigFileLoadersTests: XCTestCase {
 
     func testConfigFileCredentialSourceEcs() throws {
         let content = """
-        [profile marketingadmin]
-        role_arn = arn:aws:iam::123456789012:role/marketingadminrole
-        credential_source = EcsContainer
-        """
+            [profile marketingadmin]
+            role_arn = arn:aws:iam::123456789012:role/marketingadminrole
+            credential_source = EcsContainer
+            """
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
 
@@ -378,10 +380,10 @@ class ConfigFileLoadersTests: XCTestCase {
 
     func testConfigFileCredentialSourceEnvironment() throws {
         let content = """
-        [profile marketingadmin]
-        role_arn = arn:aws:iam::123456789012:role/marketingadminrole
-        credential_source = Environment
-        """
+            [profile marketingadmin]
+            role_arn = arn:aws:iam::123456789012:role/marketingadminrole
+            credential_source = Environment
+            """
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
 
@@ -391,9 +393,9 @@ class ConfigFileLoadersTests: XCTestCase {
 
     func testConfigMissingProfile() {
         let content = """
-        [profile foo]
-        bar = foo
-        """
+            [profile foo]
+            bar = foo
+            """
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
 
@@ -408,9 +410,9 @@ class ConfigFileLoadersTests: XCTestCase {
 
     func testParseInvalidConfig() {
         let content = """
-        [profile
-        = foo
-        """
+            [profile
+            = foo
+            """
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
 
@@ -431,11 +433,11 @@ class ConfigFileLoadersTests: XCTestCase {
         let secretKey = "Asecretreglkjrd"
         let sessionToken = "xyz"
         let credential = """
-        [\(profile)]
-        aws_access_key_id=\(accessKey)
-        aws_secret_access_key = \(secretKey)
-        aws_session_token =\(sessionToken)
-        """
+            [\(profile)]
+            aws_access_key_id=\(accessKey)
+            aws_secret_access_key = \(secretKey)
+            aws_session_token =\(sessionToken)
+            """
 
         var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
         byteBuffer.writeString(credential)
@@ -451,10 +453,10 @@ class ConfigFileLoadersTests: XCTestCase {
         let accessKey = "FAKE-ACCESS-KEY123"
         let secretKey = "Asecretreglkjrd"
         let credential = """
-        [\(profile)]
-        aws_access_key_id=\(accessKey)
-        aws_secret_access_key=\(secretKey)
-        """
+            [\(profile)]
+            aws_access_key_id=\(accessKey)
+            aws_secret_access_key=\(secretKey)
+            """
 
         var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
         byteBuffer.writeString(credential)
@@ -472,14 +474,14 @@ class ConfigFileLoadersTests: XCTestCase {
         let profileAccessKey = "profile-FAKE-ACCESS-KEY123"
         let profileSecretKey = "profile-Asecretreglkjrd"
         let content = """
-        [default]
-        aws_access_key_id=\(defaultAccessKey)
-        aws_secret_access_key=\(defaultSecretKey)
+            [default]
+            aws_access_key_id=\(defaultAccessKey)
+            aws_secret_access_key=\(defaultSecretKey)
 
-        [\(profile)]
-        aws_access_key_id=\(profileAccessKey)
-        aws_secret_access_key=\(profileSecretKey)
-        """
+            [\(profile)]
+            aws_access_key_id=\(profileAccessKey)
+            aws_secret_access_key=\(profileSecretKey)
+            """
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
 
@@ -490,15 +492,15 @@ class ConfigFileLoadersTests: XCTestCase {
 
     func testCredentialsWithSourceProfile() throws {
         let content = """
-        [default]
-        aws_access_key_id=AKIAIOSFODNN7EXAMPLE
-        aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+            [default]
+            aws_access_key_id=AKIAIOSFODNN7EXAMPLE
+            aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 
-        [user1]
-        role_arn = arn:aws:iam::123456789012:role/marketingadminrole
-        source_profile = default
-        role_session_name = foo@example.com
-        """
+            [user1]
+            role_arn = arn:aws:iam::123456789012:role/marketingadminrole
+            source_profile = default
+            role_session_name = foo@example.com
+            """
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
 
@@ -511,10 +513,10 @@ class ConfigFileLoadersTests: XCTestCase {
 
     func testCredentialsMissingProfile() {
         let content = """
-        [default]
-        aws_access_key_id=AKIAIOSFODNN7EXAMPLE
-        aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-        """
+            [default]
+            aws_access_key_id=AKIAIOSFODNN7EXAMPLE
+            aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+            """
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
 
@@ -529,10 +531,10 @@ class ConfigFileLoadersTests: XCTestCase {
 
     func testCredentialsMissingSourceProfile() {
         let content = """
-        [foo]
-        aws_access_key_id=AKIAIOSFODNN7EXAMPLE
-        aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-        """
+            [foo]
+            aws_access_key_id=AKIAIOSFODNN7EXAMPLE
+            aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+            """
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
 
@@ -547,9 +549,9 @@ class ConfigFileLoadersTests: XCTestCase {
 
     func testCredentialsMissingAccessKey() {
         let content = """
-        [foo]
-        aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-        """
+            [foo]
+            aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+            """
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
 
@@ -564,9 +566,9 @@ class ConfigFileLoadersTests: XCTestCase {
 
     func testCredentialsMissingSecretAccessKey() {
         let content = """
-        [foo]
-        aws_access_key_id=AKIAIOSFODNN7EXAMPLE
-        """
+            [foo]
+            aws_access_key_id=AKIAIOSFODNN7EXAMPLE
+            """
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
 
@@ -581,12 +583,12 @@ class ConfigFileLoadersTests: XCTestCase {
 
     func testCredentialsMissingAccessKeyFromSourceProfile() {
         let content = """
-        [foo]
-        aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-        [bar]
-        role_arn = arn:aws:iam::123456789012:role/marketingadminrole
-        source_profile = foo
-        """
+            [foo]
+            aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+            [bar]
+            role_arn = arn:aws:iam::123456789012:role/marketingadminrole
+            source_profile = foo
+            """
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
 
@@ -601,12 +603,12 @@ class ConfigFileLoadersTests: XCTestCase {
 
     func testCredentialsMissingSecretAccessKeyFromSourceProfile() {
         let content = """
-        [foo]
-        aws_access_key_id=AKIAIOSFODNN7EXAMPLE
-        [bar]
-        role_arn = arn:aws:iam::123456789012:role/marketingadminrole
-        source_profile = foo
-        """
+            [foo]
+            aws_access_key_id=AKIAIOSFODNN7EXAMPLE
+            [bar]
+            role_arn = arn:aws:iam::123456789012:role/marketingadminrole
+            source_profile = foo
+            """
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
 
@@ -621,13 +623,13 @@ class ConfigFileLoadersTests: XCTestCase {
 
     func testCredentialSourceEc2() throws {
         let content = """
-        [default]
-        aws_access_key_id=AKIAIOSFODNN7EXAMPLE
-        aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-        [marketingadmin]
-        role_arn = arn:aws:iam::123456789012:role/marketingadminrole
-        credential_source = Ec2InstanceMetadata
-        """
+            [default]
+            aws_access_key_id=AKIAIOSFODNN7EXAMPLE
+            aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+            [marketingadmin]
+            role_arn = arn:aws:iam::123456789012:role/marketingadminrole
+            credential_source = Ec2InstanceMetadata
+            """
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
 
@@ -637,13 +639,13 @@ class ConfigFileLoadersTests: XCTestCase {
 
     func testCredentialSourceEcs() throws {
         let content = """
-        [default]
-        aws_access_key_id=AKIAIOSFODNN7EXAMPLE
-        aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-        [marketingadmin]
-        role_arn = arn:aws:iam::123456789012:role/marketingadminrole
-        credential_source = EcsContainer
-        """
+            [default]
+            aws_access_key_id=AKIAIOSFODNN7EXAMPLE
+            aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+            [marketingadmin]
+            role_arn = arn:aws:iam::123456789012:role/marketingadminrole
+            credential_source = EcsContainer
+            """
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
 
@@ -653,13 +655,13 @@ class ConfigFileLoadersTests: XCTestCase {
 
     func testCredentialSourceEnvironment() throws {
         let content = """
-        [default]
-        aws_access_key_id=AKIAIOSFODNN7EXAMPLE
-        aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-        [marketingadmin]
-        role_arn = arn:aws:iam::123456789012:role/marketingadminrole
-        credential_source = Environment
-        """
+            [default]
+            aws_access_key_id=AKIAIOSFODNN7EXAMPLE
+            aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+            [marketingadmin]
+            role_arn = arn:aws:iam::123456789012:role/marketingadminrole
+            credential_source = Environment
+            """
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
 
@@ -669,9 +671,9 @@ class ConfigFileLoadersTests: XCTestCase {
 
     func testParseInvalidCredentials() {
         let content = """
-        [profile
-        = foo
-        """
+            [profile
+            = foo
+            """
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
 

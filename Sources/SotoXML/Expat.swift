@@ -18,6 +18,8 @@
 //  Licensed under Apache License v2.0 http://www.apache.org/licenses/LICENSE-2.0.html
 //
 
+@_implementationOnly import CSotoExpat
+
 #if canImport(Glibc)
 import Glibc
 #elseif canImport(Musl)
@@ -27,8 +29,6 @@ import Darwin.C
 #else
 #error("Unsupported platform")
 #endif
-
-@_implementationOnly import CSotoExpat
 
 /// Simple wrapper for the Expat parser. Though the block based Expat is
 /// reasonably easy to use as-is.
@@ -51,9 +51,11 @@ class Expat {
     var parser: XML_Parser
 
     init(encoding: String = "UTF-8") throws {
-        guard let parser = encoding.withCString({ cs in
-            Soto_XML_ParserCreate(cs)
-        }) else {
+        guard
+            let parser = encoding.withCString({ cs in
+                Soto_XML_ParserCreate(cs)
+            })
+        else {
             throw XMLError(XML_ERROR_NO_MEMORY)
         }
         self.parser = parser
@@ -71,12 +73,12 @@ class Expat {
 
     /// feed the parser
     func feedRaw(_ cs: UnsafePointer<CChar>, final: Bool = false) throws -> Result {
-        let cslen = strlen(cs) // cs? checks for a NULL C string
+        let cslen = strlen(cs)  // cs? checks for a NULL C string
         let isFinal: Int32 = final ? 1 : 0
 
         let status: XML_Status = Soto_XML_Parse(parser, cs, Int32(cslen), isFinal)
 
-        switch status { // the Expat enum's don't work?
+        switch status {  // the Expat enum's don't work?
         case XML_STATUS_OK: return .ok
         case XML_STATUS_SUSPENDED: return .suspended
         default:
@@ -89,13 +91,13 @@ class Expat {
     }
 
     func feed(_ s: String, final: Bool = false) throws -> Result {
-        return try s.withCString { cs -> Result in
-            return try self.feedRaw(cs, final: final)
+        try s.withCString { cs -> Result in
+            try self.feedRaw(cs, final: final)
         }
     }
 
     func close() throws -> Result {
-        return try self.feed("", final: true)
+        try self.feed("", final: true)
     }
 
     func registerCallbacks() {
@@ -113,7 +115,7 @@ class Expat {
         Soto_XML_SetEndElementHandler(self.parser) { ud, name in
             let me = unsafeBitCast(ud, to: Expat.self)
             guard let callback = me.cbEndElement else { return }
-            let sName = String(cString: name!) // force unwrap, must be set
+            let sName = String(cString: name!)  // force unwrap, must be set
             callback(sName)
         }
 

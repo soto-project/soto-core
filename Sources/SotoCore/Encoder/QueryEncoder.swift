@@ -35,7 +35,7 @@ public struct QueryEncoder {
 
     /// The options set on the top-level encoder.
     fileprivate var options: _Options {
-        return _Options(userInfo: self.userInfo, ec2: self.ec2)
+        _Options(userInfo: self.userInfo, ec2: self.ec2)
     }
 
     public init() {}
@@ -53,13 +53,14 @@ public struct QueryEncoder {
     static let queryAllowedCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
 
     private static func urlEncodeQueryParam(_ value: String) -> String {
-        return value.addingPercentEncoding(withAllowedCharacters: Self.queryAllowedCharacters) ?? value
+        value.addingPercentEncoding(withAllowedCharacters: Self.queryAllowedCharacters) ?? value
     }
 
     // generate string from
     private static func urlEncodeQueryParams(dictionary: [(key: String, value: String)]) -> String? {
         guard dictionary.count > 0 else { return nil }
-        return dictionary
+        return
+            dictionary
             .sorted { $0.key < $1.key }
             .map { "\($0.key)=\(self.urlEncodeQueryParam(String(describing: $0.value)))" }
             .joined(separator: "&")
@@ -149,7 +150,7 @@ private struct _QueryEncoderStorage {
 
     /// pop a container from the storage
     @discardableResult mutating func popContainer() -> Any {
-        return self.containers.removeLast()
+        self.containers.removeLast()
     }
 }
 
@@ -168,7 +169,7 @@ private class _QueryEncoder: Encoder {
 
     /// Contextual user-provided information for use during encoding.
     public var userInfo: [CodingUserInfoKey: Any] {
-        return self.options.userInfo
+        self.options.userInfo
     }
 
     /// Initialization
@@ -191,7 +192,7 @@ private class _QueryEncoder: Encoder {
     }
 
     struct KEC<Key: CodingKey>: KeyedEncodingContainerProtocol {
-        var codingPath: [CodingKey] { return self.encoder.codingPath }
+        var codingPath: [CodingKey] { self.encoder.codingPath }
         let container: _QueryEncoderKeyedContainer
         let encoder: _QueryEncoder
 
@@ -230,7 +231,8 @@ private class _QueryEncoder: Encoder {
             self.container.addChild(path: self.ec2Encode(key.stringValue), child: childContainer)
         }
 
-        mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey: CodingKey {
+        mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey>
+        where NestedKey: CodingKey {
             self.encoder.codingPath.append(key)
             defer { self.encoder.codingPath.removeLast() }
 
@@ -252,11 +254,11 @@ private class _QueryEncoder: Encoder {
         }
 
         mutating func superEncoder() -> Encoder {
-            return self.encoder
+            self.encoder
         }
 
         mutating func superEncoder(forKey key: Key) -> Encoder {
-            return self.encoder
+            self.encoder
         }
 
         func ec2Encode(_ string: String) -> String {
@@ -273,7 +275,7 @@ private class _QueryEncoder: Encoder {
     }
 
     struct UKEC: UnkeyedEncodingContainer {
-        var codingPath: [CodingKey] { return self.encoder.codingPath }
+        var codingPath: [CodingKey] { self.encoder.codingPath }
         let container: _QueryEncoderUnkeyedContainer
         let encoder: _QueryEncoder
         var count: Int
@@ -338,7 +340,7 @@ private class _QueryEncoder: Encoder {
         }
 
         mutating func superEncoder() -> Encoder {
-            return self.encoder
+            self.encoder
         }
     }
 }
@@ -372,7 +374,7 @@ extension _QueryEncoder: SingleValueEncodingContainer {
     }
 
     func singleValueContainer() -> SingleValueEncodingContainer {
-        return self
+        self
     }
 }
 

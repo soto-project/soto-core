@@ -12,9 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
+import XCTest
+
 @testable import SotoCore
 @testable import SotoXML
-import XCTest
 
 class XMLCoderTests: XCTestCase {
     struct Numbers: AWSDecodableShape & AWSEncodableShape {
@@ -110,21 +111,30 @@ class XMLCoderTests: XCTestCase {
     }
 
     var testShape: Shape {
-        return Shape(
+        Shape(
             numbers: Numbers(bool: true, integer: 45, float: 3.4, double: 7.89234, intEnum: .second),
             stringShape: StringShape(string: "String1", optionalString: "String2", stringEnum: .third),
-            arrays: Arrays(arrayOfNatives: [34, 1, 4098], arrayOfShapes: [Numbers(bool: false, integer: 1, float: 1.2, double: 1.4, intEnum: .first), Numbers(bool: true, integer: 3, float: 2.01, double: 1.01, intEnum: .third)])
+            arrays: Arrays(
+                arrayOfNatives: [34, 1, 4098],
+                arrayOfShapes: [
+                    Numbers(bool: false, integer: 1, float: 1.2, double: 1.4, intEnum: .first),
+                    Numbers(bool: true, integer: 3, float: 2.01, double: 1.01, intEnum: .third),
+                ]
+            )
         )
     }
 
     var testShapeWithDictionaries: ShapeWithDictionaries {
-        return ShapeWithDictionaries(shape: self.testShape, dictionaries: Dictionaries(
-            dictionaryOfNatives: ["first": 1, "second": 2, "third": 3],
-            dictionaryOfShapes: [
-                "strings": StringShape(string: "one", optionalString: "two", stringEnum: .third),
-                "strings2": StringShape(string: "cat", optionalString: nil, stringEnum: .fourth),
-            ]
-        ))
+        ShapeWithDictionaries(
+            shape: self.testShape,
+            dictionaries: Dictionaries(
+                dictionaryOfNatives: ["first": 1, "second": 2, "third": 3],
+                dictionaryOfShapes: [
+                    "strings": StringShape(string: "one", optionalString: "two", stringEnum: .third),
+                    "strings2": StringShape(string: "cat", optionalString: nil, stringEnum: .fourth),
+                ]
+            )
+        )
     }
 
     /// helper test function to use throughout all the decode/encode tests
@@ -296,16 +306,19 @@ class XMLCoderTests: XCTestCase {
         let node = try! XMLEncoder().encode(shape)
 
         let xml = node?.xmlString
-        let xmlToTest = "<Shape><Numbers><b>true</b><i>45</i><s>3.4</s><d>7.89234</d><enum>1</enum><int8>4</int8><uint16>5</uint16><int32>7</int32><uint64>90</uint64></Numbers><Strings><string>String1</string><optionalString>String2</optionalString><stringEnum>third</stringEnum></Strings><Arrays><arrayOfNatives>34</arrayOfNatives><arrayOfNatives>1</arrayOfNatives><arrayOfNatives>4098</arrayOfNatives><arrayOfShapes><b>false</b><i>1</i><s>1.2</s><d>1.4</d><enum>0</enum><int8>4</int8><uint16>5</uint16><int32>7</int32><uint64>90</uint64></arrayOfShapes><arrayOfShapes><b>true</b><i>3</i><s>2.01</s><d>1.01</d><enum>2</enum><int8>4</int8><uint16>5</uint16><int32>7</int32><uint64>90</uint64></arrayOfShapes></Arrays></Shape>"
+        let xmlToTest =
+            "<Shape><Numbers><b>true</b><i>45</i><s>3.4</s><d>7.89234</d><enum>1</enum><int8>4</int8><uint16>5</uint16><int32>7</int32><uint64>90</uint64></Numbers><Strings><string>String1</string><optionalString>String2</optionalString><stringEnum>third</stringEnum></Strings><Arrays><arrayOfNatives>34</arrayOfNatives><arrayOfNatives>1</arrayOfNatives><arrayOfNatives>4098</arrayOfNatives><arrayOfShapes><b>false</b><i>1</i><s>1.2</s><d>1.4</d><enum>0</enum><int8>4</int8><uint16>5</uint16><int32>7</int32><uint64>90</uint64></arrayOfShapes><arrayOfShapes><b>true</b><i>3</i><s>2.01</s><d>1.01</d><enum>2</enum><int8>4</int8><uint16>5</uint16><int32>7</int32><uint64>90</uint64></arrayOfShapes></Arrays></Shape>"
 
         XCTAssertEqual(xmlToTest, xml)
     }
 
     func testDecodeFail() {
-        let missingNative = "<Numbers><b>true</b><i>45</i><s>3.4</s><d>7.89234</d><enum>1</enum><int8>4</int8><uint16>5</uint16><int32>7</int32></Numbers>"
+        let missingNative =
+            "<Numbers><b>true</b><i>45</i><s>3.4</s><d>7.89234</d><enum>1</enum><int8>4</int8><uint16>5</uint16><int32>7</int32></Numbers>"
         let missingEnum = "<Numbers><b>true</b><i>45</i><s>3.4</s><d>7.89234</d></Numbers>"
         let wrongEnum = "<Strings><string>String1</string><optionalString>String2</optionalString><stringEnum>twenty</stringEnum></Strings>"
-        let missingShape = "<Shape><Numbers><b>true</b><i>45</i><s>3.4</s><d>7.89234</d><enum>1</enum><int8>4</int8><uint16>5</uint16><int32>7</int32><uint64>90</uint64></Numbers><Strings><string>String1</string><optionalString>String2</optionalString><stringEnum>third</stringEnum></Strings></Shape>"
+        let missingShape =
+            "<Shape><Numbers><b>true</b><i>45</i><s>3.4</s><d>7.89234</d><enum>1</enum><int8>4</int8><uint16>5</uint16><int32>7</int32><uint64>90</uint64></Numbers><Strings><string>String1</string><optionalString>String2</optionalString><stringEnum>third</stringEnum></Strings></Shape>"
         let stringNotShape = "<Dictionaries><natives></natives><shapes><key>first</key><value>test</value></shapes></Dictionaries>"
         let notANumber = "<Dictionaries><natives><entry><key>first</key><value>test</value></entry></natives><shapes></shapes></Dictionaries>"
 
@@ -350,7 +363,8 @@ class XMLCoderTests: XCTestCase {
             @CustomCoding<StandardArrayCoder> var array: [Int]
             @CustomCoding<StandardDictionaryCoder> var dictionary: [String: Int]
         }
-        let xmldata = "<Shape><array><member>3</member><member>2</member><member>1</member></array><dictionary><entry><key>one</key><value>1</value></entry><entry><key>two</key><value>2</value></entry><entry><key>three</key><value>3</value></entry></dictionary></Shape>"
+        let xmldata =
+            "<Shape><array><member>3</member><member>2</member><member>1</member></array><dictionary><entry><key>one</key><value>1</value></entry><entry><key>two</key><value>2</value></entry><entry><key>three</key><value>3</value></entry></dictionary></Shape>"
         if let shape = testDecode(type: Shape.self, xml: xmldata) {
             XCTAssertEqual(shape.array[0], 3)
             XCTAssertEqual(shape.dictionary["two"], 2)
@@ -374,12 +388,17 @@ class XMLCoderTests: XCTestCase {
         struct Shape: AWSDecodableShape & AWSEncodableShape {
             @CustomCoding<StandardArrayCoder> var array: [Shape2]
         }
-        let xmldata = "<Shape><array><member><value>test</value></member><member><value>test2</value></member><member><value>test3</value></member></array></Shape>"
+        let xmldata =
+            "<Shape><array><member><value>test</value></member><member><value>test2</value></member><member><value>test3</value></member></array></Shape>"
         self.testDecodeEncode(type: Shape.self, xml: xmldata)
     }
 
     func testDictionaryEncodingDecodeEncode() {
-        struct DictionaryItemKeyValue: DictionaryCoderProperties { static let entry: String? = "item"; static let key = "key"; static let value = "value" }
+        struct DictionaryItemKeyValue: DictionaryCoderProperties {
+            static let entry: String? = "item"
+            static let key = "key"
+            static let value = "value"
+        }
         struct Shape: AWSDecodableShape & AWSEncodableShape {
             @CustomCoding<DictionaryCoder<DictionaryItemKeyValue, String, Int>> var d: [String: Int]
         }
@@ -388,7 +407,11 @@ class XMLCoderTests: XCTestCase {
     }
 
     func testDictionaryOfStructuresEncodingDecodeEncode() {
-        struct DictionaryItemKeyValue: DictionaryCoderProperties { static let entry: String? = "item"; static let key = "key"; static let value = "value" }
+        struct DictionaryItemKeyValue: DictionaryCoderProperties {
+            static let entry: String? = "item"
+            static let key = "key"
+            static let value = "value"
+        }
         struct Shape2: AWSDecodableShape & AWSEncodableShape {
             let float: Float
         }
@@ -400,7 +423,11 @@ class XMLCoderTests: XCTestCase {
     }
 
     func testFlatDictionaryEncodingDecodeEncode() {
-        struct DictionaryKeyValue: DictionaryCoderProperties { static let entry: String? = nil; static let key = "key"; static let value = "value" }
+        struct DictionaryKeyValue: DictionaryCoderProperties {
+            static let entry: String? = nil
+            static let key = "key"
+            static let value = "value"
+        }
         struct Shape: AWSDecodableShape & AWSEncodableShape {
             @CustomCoding<DictionaryCoder<DictionaryKeyValue, String, Int>> var d: [String: Int]
         }
@@ -409,7 +436,11 @@ class XMLCoderTests: XCTestCase {
     }
 
     func testEnumDictionaryEncodingDecodeEncode() {
-        struct DictionaryItemKeyValue: DictionaryCoderProperties { static let entry: String? = "item"; static let key = "key"; static let value = "value" }
+        struct DictionaryItemKeyValue: DictionaryCoderProperties {
+            static let entry: String? = "item"
+            static let key = "key"
+            static let value = "value"
+        }
         enum KeyEnum: String, Codable {
             case member
             case member2
@@ -422,7 +453,11 @@ class XMLCoderTests: XCTestCase {
     }
 
     func testEnumShapeDictionaryEncodingDecodeEncode() {
-        struct DictionaryItemKV: DictionaryCoderProperties { static let entry: String? = "item"; static let key = "k"; static let value = "v" }
+        struct DictionaryItemKV: DictionaryCoderProperties {
+            static let entry: String? = "item"
+            static let key = "k"
+            static let value = "v"
+        }
         enum KeyEnum: String, Codable {
             case member
             case member2
@@ -438,7 +473,11 @@ class XMLCoderTests: XCTestCase {
     }
 
     func testEnumFlatDictionaryEncodingDecodeEncode() {
-        struct DictionaryKeyValue: DictionaryCoderProperties { static let entry: String? = nil; static let key = "key"; static let value = "value" }
+        struct DictionaryKeyValue: DictionaryCoderProperties {
+            static let entry: String? = nil
+            static let key = "key"
+            static let value = "value"
+        }
         enum KeyEnum: String, Codable {
             case member
             case member2

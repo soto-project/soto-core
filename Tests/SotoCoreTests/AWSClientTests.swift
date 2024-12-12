@@ -25,9 +25,10 @@ import NIOCore
 import NIOFoundationCompat
 import NIOHTTP1
 import NIOPosix
-@testable @_spi(SotoInternal) import SotoCore
 import SotoTestUtils
 import XCTest
+
+@testable @_spi(SotoInternal) import SotoCore
 
 class AWSClientTests: XCTestCase {
     func testGetCredential() async throws {
@@ -261,7 +262,14 @@ class AWSClientTests: XCTestCase {
 
         let payload = AWSHTTPBody(asyncSequence: byteBuffer.asyncSequence(chunkSize: blockSize), length: bufferSize)
         let input = Input(payload: payload)
-        async let responseTask: Void = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: TestEnvironment.logger)
+        async let responseTask: Void = client.execute(
+            operation: "test",
+            path: "/",
+            httpMethod: .POST,
+            serviceConfig: config,
+            input: input,
+            logger: TestEnvironment.logger
+        )
 
         try? server.processRaw { request in
             let bytes = request.body.getBytes(at: 0, length: request.body.readableBytes)
@@ -333,7 +341,14 @@ class AWSClientTests: XCTestCase {
             XCTAssertNoThrow(try httpClient.syncShutdown())
         }
         let input = Input(payload: payload)
-        async let responseTask: Void = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: TestEnvironment.logger)
+        async let responseTask: Void = client.execute(
+            operation: "test",
+            path: "/",
+            httpMethod: .POST,
+            serviceConfig: config,
+            input: input,
+            logger: TestEnvironment.logger
+        )
         try await responseTask
     }
 
@@ -389,7 +404,14 @@ class AWSClientTests: XCTestCase {
 
             let payload = AWSHTTPBody(asyncSequence: byteBuffer.asyncSequence(chunkSize: blockSize), length: nil)
             let input = Input(payload: payload)
-            async let responseTask: Void = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: TestEnvironment.logger)
+            async let responseTask: Void = client.execute(
+                operation: "test",
+                path: "/",
+                httpMethod: .POST,
+                serviceConfig: config,
+                input: input,
+                logger: TestEnvironment.logger
+            )
 
             try awsServer.processRaw { request in
                 let bytes = request.body.getBytes(at: 0, length: request.body.readableBytes)
@@ -418,7 +440,13 @@ class AWSClientTests: XCTestCase {
                 XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try httpClient.syncShutdown())
             }
-            async let responseTask: Void = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, logger: TestEnvironment.logger)
+            async let responseTask: Void = client.execute(
+                operation: "test",
+                path: "/",
+                httpMethod: .POST,
+                serviceConfig: config,
+                logger: TestEnvironment.logger
+            )
 
             try awsServer.processRaw { _ in
                 let response = AWSTestServer.Response(httpStatus: .temporaryRedirect, headers: ["Location": awsServer.address], body: nil)
@@ -445,7 +473,13 @@ class AWSClientTests: XCTestCase {
                 XCTAssertNoThrow(try client.syncShutdown())
                 XCTAssertNoThrow(try httpClient.syncShutdown())
             }
-            async let responseTask: Void = client.execute(operation: "test", path: "/", httpMethod: .POST, serviceConfig: config, logger: TestEnvironment.logger)
+            async let responseTask: Void = client.execute(
+                operation: "test",
+                path: "/",
+                httpMethod: .POST,
+                serviceConfig: config,
+                logger: TestEnvironment.logger
+            )
 
             var count = 0
             try awsServer.processRaw { _ in
@@ -587,7 +621,7 @@ class AWSClientTests: XCTestCase {
             )
 
             try awsServer.processRaw { _ in
-                return .error(.accessDenied, continueProcessing: false)
+                .error(.accessDenied, continueProcessing: false)
             }
 
             let output = try await responseTask
@@ -622,7 +656,7 @@ class AWSClientTests: XCTestCase {
             )
 
             try awsServer.processRaw { _ in
-                return .result(.ok)
+                .result(.ok)
             }
 
             try await responseTask

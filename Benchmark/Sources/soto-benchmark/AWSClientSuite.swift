@@ -69,13 +69,25 @@ let awsClientSuite = BenchmarkSuite(name: "AWSClient", settings: Iterations(1000
         middlewares: [RequestThrowMiddleware()]
     )
     let jsonService = AWSServiceConfig(
-        region: .useast1, partition: .aws, service: "test-service", serviceProtocol: .json(version: "1.1"), apiVersion: "10-10-2010"
+        region: .useast1,
+        partition: .aws,
+        service: "test-service",
+        serviceProtocol: .json(version: "1.1"),
+        apiVersion: "10-10-2010"
     )
     let xmlService = AWSServiceConfig(
-        region: .useast1, partition: .aws, service: "test-service", serviceProtocol: .restxml, apiVersion: "10-10-2010"
+        region: .useast1,
+        partition: .aws,
+        service: "test-service",
+        serviceProtocol: .restxml,
+        apiVersion: "10-10-2010"
     )
     let queryService = AWSServiceConfig(
-        region: .useast1, partition: .aws, service: "test-service", serviceProtocol: .query, apiVersion: "10-10-2010"
+        region: .useast1,
+        partition: .aws,
+        service: "test-service",
+        serviceProtocol: .query,
+        apiVersion: "10-10-2010"
     )
 
     suite.benchmark("empty-request") {

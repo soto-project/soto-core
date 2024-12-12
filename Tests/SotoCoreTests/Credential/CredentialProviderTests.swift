@@ -17,9 +17,10 @@ import Atomics
 import Logging
 import NIOCore
 import NIOPosix
-@testable import SotoCore
 import SotoTestUtils
 import XCTest
+
+@testable import SotoCore
 
 final class CredentialProviderTests: XCTestCase {
     func testCredentialProvider() async throws {
@@ -78,10 +79,10 @@ final class CredentialProviderTests: XCTestCase {
 
     func testConfigFileSuccess() async throws {
         let credentials = """
-        [default]
-        aws_access_key_id = AWSACCESSKEYID
-        aws_secret_access_key = AWSSECRETACCESSKEY
-        """
+            [default]
+            aws_access_key_id = AWSACCESSKEYID
+            aws_secret_access_key = AWSSECRETACCESSKEY
+            """
         let filename = "credentials"
         let filenameURL = URL(fileURLWithPath: filename)
         XCTAssertNoThrow(try Data(credentials.utf8).write(to: filenameURL))
@@ -128,7 +129,7 @@ final class CredentialProviderTests: XCTestCase {
             init() {}
 
             func getCredential(logger: Logger) async throws -> Credential {
-                return StaticCredential(accessKeyId: "", secretAccessKey: "")
+                StaticCredential(accessKeyId: "", secretAccessKey: "")
             }
 
             func shutdown() async throws {

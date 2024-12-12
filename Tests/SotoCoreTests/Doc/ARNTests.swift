@@ -12,10 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if compiler(>=6.0)
+
 import SotoCore
 import Testing
 
-#if compiler(>=6.0)
 struct ARNTests {
     @Test
     func testValidARNWithoutResourceType() throws {

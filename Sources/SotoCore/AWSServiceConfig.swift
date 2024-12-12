@@ -298,8 +298,10 @@ public final class AWSServiceConfig {
         service: AWSServiceConfig,
         with patch: Patch
     ) {
-        let region = patch.region ?? service.region
-        let options = patch.options ?? service.options
+        self.region = patch.region ?? service.region
+        self.options = patch.options ?? service.options
+        self.serviceIdentifier = service.serviceIdentifier
+        self.signingName = service.signingName
 
         if let endpoint = patch.endpoint {
             self.endpoint = endpoint
@@ -308,9 +310,9 @@ public final class AWSServiceConfig {
                 patch.endpoint
                 ?? Self.getEndpoint(
                     endpoint: service.providedEndpoint,
-                    region: region,
-                    serviceIdentifier: service.serviceIdentifier,
-                    options: options,
+                    region: self.region,
+                    serviceIdentifier: self.serviceIdentifier,
+                    options: self.options,
                     serviceEndpoints: service.serviceEndpoints,
                     partitionEndpoints: service.partitionEndpoints,
                     variantEndpoints: service.variantEndpoints
@@ -318,13 +320,9 @@ public final class AWSServiceConfig {
         } else {
             self.endpoint = service.endpoint
         }
-        self.region = region
-        self.options = options
 
         self.amzTarget = service.amzTarget
         self.serviceName = service.serviceName
-        self.serviceIdentifier = service.serviceIdentifier
-        self.signingName = service.signingName
         self.serviceProtocol = service.serviceProtocol
         self.apiVersion = service.apiVersion
         self.providedEndpoint = service.providedEndpoint

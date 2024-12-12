@@ -13,8 +13,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import Stencil  // soto-project/Stencil
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 extension String {
     public func lowerFirst() -> String {

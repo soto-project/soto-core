@@ -12,9 +12,14 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import Logging
 import NIOHTTP1
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// Middleware that outputs the contents of requests being sent to AWS and the contents of the responses received.
 public struct AWSLoggingMiddleware: AWSMiddlewareProtocol {

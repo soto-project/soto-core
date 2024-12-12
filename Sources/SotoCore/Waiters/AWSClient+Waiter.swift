@@ -13,8 +13,21 @@
 //===----------------------------------------------------------------------===//
 
 import Dispatch
-import Foundation
 import NIOCore
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
+
+#if canImport(Darwin)
+import Darwin.C
+#elseif canImport(Musl)
+import Musl
+#elseif canImport(Glibc)
+import Glibc
+#endif
 
 // MARK: Waiters
 

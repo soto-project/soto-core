@@ -13,7 +13,11 @@
 //===----------------------------------------------------------------------===//
 
 import Crypto
+import SotoUtils
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import struct Foundation.CharacterSet
 import struct Foundation.Data
 import struct Foundation.Date
@@ -22,6 +26,7 @@ import struct Foundation.Locale
 import struct Foundation.TimeZone
 import struct Foundation.URL
 import struct Foundation.URLComponents
+#endif
 
 /// Amazon Web Services V4 Signer
 public struct AWSSigner: Sendable {
@@ -34,7 +39,9 @@ public struct AWSSigner: Sendable {
 
     static let hashedEmptyBody = SHA256.hash(data: [UInt8]()).hexDigest()
 
+    #if !canImport(FoundationEssentials)
     private static let timeStampDateFormatter: DateFormatter = createTimeStampDateFormatter()
+    #endif
 
     /// Initialise the Signer class with AWS credentials
     public init(credentials: Credential, name: String, region: String) {
@@ -336,7 +343,7 @@ public struct AWSSigner: Sendable {
         let canonicalHeaders = signingData.headersToSign
             .map { (key: $0.key.lowercased(), value: $0.value) }
             .sorted { $0.key < $1.key }
-            .map { return "\($0.key):\($0.value.trimmingCharacters(in: CharacterSet.whitespaces).removeSequentialWhitespace())" }
+            .map { return "\($0.key):\($0.value.trimming(while: { $0.isWhitespace }).removeSequentialWhitespace())" }
             .joined(separator: "\n")
         let canonicalPath: String
         let urlComps = URLComponents(url: signingData.unsignedURL, resolvingAgainstBaseURL: false)!
@@ -399,6 +406,7 @@ public struct AWSSigner: Sendable {
         }
     }
 
+    #if !canImport(FoundationEssentials)
     /// create timestamp dateformatter
     private static func createTimeStampDateFormatter() -> DateFormatter {
         let formatter = DateFormatter()
@@ -407,11 +415,19 @@ public struct AWSSigner: Sendable {
         formatter.locale = Locale(identifier: "en_US_POSIX")
         return formatter
     }
+    #endif
 
+    #if canImport(FoundationEssentials)
     /// return a timestamp formatted for signing requests
     static func timestamp(_ date: Date) -> String {
-        self.timeStampDateFormatter.string(from: date)
+        date.formatted(Date.ISO8601FormatStyle(dateSeparator: .omitted, timeSeparator: .omitted))
     }
+    #else
+    /// return a timestamp formatted for signing requests
+    static func timestamp(_ date: Date) -> String {
+        timeStampDateFormatter.string(from: date)
+    }
+    #endif
 
     /// returns port from URL. If port is set to 80 on an http url or 443 on an https url nil is returned
     private static func port(from url: URL) -> Int? {
@@ -424,29 +440,6 @@ public struct AWSSigner: Sendable {
     private static func hostname(from url: URL) -> String {
         "\(url.host ?? "")\(self.port(from: url).map { ":\($0)" } ?? "")"
     }
-}
-
-extension String {
-    func queryEncode() -> String {
-        addingPercentEncoding(withAllowedCharacters: String.queryAllowedCharacters) ?? self
-    }
-
-    func s3PathEncode() -> String {
-        addingPercentEncoding(withAllowedCharacters: String.s3PathAllowedCharacters) ?? self
-    }
-
-    func uriEncode() -> String {
-        addingPercentEncoding(withAllowedCharacters: String.uriAllowedCharacters) ?? self
-    }
-
-    func uriEncodeWithSlash() -> String {
-        addingPercentEncoding(withAllowedCharacters: String.uriAllowedWithSlashCharacters) ?? self
-    }
-
-    static let s3PathAllowedCharacters = CharacterSet.urlPathAllowed.subtracting(.init(charactersIn: "+@()&$=:,'!*"))
-    static let uriAllowedWithSlashCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~/")
-    static let uriAllowedCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
-    static let queryAllowedCharacters = CharacterSet(charactersIn: "/;+").inverted
 }
 
 @_spi(SotoInternal)
@@ -485,7 +478,7 @@ extension URL {
     }
 }
 
-extension String {
+extension StringProtocol {
     fileprivate func removeSequentialWhitespace() -> String {
         reduce(into: "") { result, character in
             if result.last?.isWhitespace != true || character.isWhitespace == false {

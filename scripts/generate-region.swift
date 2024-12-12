@@ -14,10 +14,15 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient  // swift-server/async-http-client
-import Foundation
 import NIOCore  // apple/swift-nio
 import NIOFoundationCompat
 import Stencil  // soto-project/Stencil
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 struct Endpoints: Decodable {
     struct CredentialScope: Decodable {

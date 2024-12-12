@@ -20,6 +20,7 @@ import XCTest
 class MiddlewareTests: XCTestCase {
     struct CatchRequestError: Error {
         let request: AWSHTTPRequest
+        let context: AWSMiddlewareContext
     }
 
     struct CatchRequestMiddleware: AWSMiddlewareProtocol {
@@ -28,7 +29,7 @@ class MiddlewareTests: XCTestCase {
             context: AWSMiddlewareContext,
             next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse
         ) async throws -> AWSHTTPResponse {
-            throw CatchRequestError(request: request)
+            throw CatchRequestError(request: request, context: context)
         }
     }
 
@@ -37,7 +38,7 @@ class MiddlewareTests: XCTestCase {
         serviceName: String = "service",
         serviceOptions: AWSServiceConfig.Options = [],
         uri: String = "/",
-        test: (AWSHTTPRequest) -> Void
+        test: (AWSHTTPRequest, AWSMiddlewareContext) -> Void
     ) async throws {
         let client = createAWSClient(credentialProvider: .empty)
         let config = createServiceConfig(
@@ -54,7 +55,7 @@ class MiddlewareTests: XCTestCase {
             XCTFail("Should not get here")
         } catch {
             let error = try XCTUnwrap(error as? CatchRequestError)
-            test(error.request)
+            test(error.request, error.context)
         }
         try await client.shutdown()
     }
@@ -104,7 +105,7 @@ class MiddlewareTests: XCTestCase {
             .add(name: "testAdd", value: "testValue"),
             .add(name: "user-agent", value: "testEditHeaderMiddleware")
         )
-        try await self.testMiddleware(middleware) { request in
+        try await self.testMiddleware(middleware) { request, _ in
             XCTAssertEqual(request.headers["testAdd"].first, "testValue")
             XCTAssertEqual(request.headers["user-agent"].joined(separator: ","), "Soto/6.0,testEditHeaderMiddleware")
         }
@@ -115,15 +116,29 @@ class MiddlewareTests: XCTestCase {
         let middleware = AWSEditHeadersMiddleware(
             .replace(name: "user-agent", value: "testEditHeaderMiddleware")
         )
-        try await self.testMiddleware(middleware) { request in
+        try await self.testMiddleware(middleware) { request, _ in
             XCTAssertEqual(request.headers["user-agent"].first, "testEditHeaderMiddleware")
         }
     }
 
     func testS3MiddlewareVirtualAddress() async throws {
         // Test virual address
-        try await self.testMiddleware(S3Middleware(), uri: "/bucket/file") { request in
+        try await self.testMiddleware(S3Middleware(), uri: "/bucket/file") { request, _ in
             XCTAssertEqual(request.url.absoluteString, "https://bucket.service.us-east-1.amazonaws.com/file")
+        }
+    }
+
+    func testS3MiddlewareVirtualAddressWithSlash() async throws {
+        // Test virual address
+        try await self.testMiddleware(S3Middleware(), uri: "/bucket/file/sdf/") { request, _ in
+            XCTAssertEqual(request.url.absoluteString, "https://bucket.service.us-east-1.amazonaws.com/file/sdf/")
+        }
+    }
+
+    func testS3MiddlewareVirtualAddressWithPercentEncoding() async throws {
+        // Test virual address
+        try await self.testMiddleware(S3Middleware(), uri: "/bucket/file%26") { request, _ in
+            XCTAssertEqual(request.url.absoluteString, "https://bucket.service.us-east-1.amazonaws.com/file%26")
         }
     }
 
@@ -134,7 +149,7 @@ class MiddlewareTests: XCTestCase {
             serviceName: "s3",
             serviceOptions: .s3UseTransferAcceleratedEndpoint,
             uri: "/bucket/file"
-        ) { request in
+        ) { request, _ in
             XCTAssertEqual(request.url.absoluteString, "https://bucket.s3-accelerate.amazonaws.com/file")
         }
     }
@@ -167,6 +182,40 @@ class MiddlewareTests: XCTestCase {
             XCTFail("Throwing wrong error: \(error)")
         }
         try await client.shutdown()
+    }
+
+    func testS3MiddlewareAccessPointArn() async throws {
+        // Test virual address
+        try await self.testMiddleware(
+            S3Middleware(),
+            serviceName: "s3",
+            serviceOptions: .s3UseTransferAcceleratedEndpoint,
+            uri: "/arn:aws:s3:us-west-2:111122223333:accesspoint/test-accesspoint"
+        ) { request, context in
+            XCTAssertEqual(
+                request.url.absoluteString,
+                "https://test-accesspoint-111122223333.s3-accesspoint.us-west-2.amazonaws.com/"
+            )
+            XCTAssertEqual(context.serviceConfig.serviceIdentifier, "s3-accesspoint")
+            XCTAssertEqual(context.serviceConfig.region, .uswest2)
+        }
+    }
+
+    func testS3MiddlewareObjectLambdaArn() async throws {
+        // Test virual address
+        try await self.testMiddleware(
+            S3Middleware(),
+            serviceName: "s3",
+            serviceOptions: .s3UseTransferAcceleratedEndpoint,
+            uri: "/arn:aws:s3-object-lambda:us-west-2:111122223333:accesspoint/tutorial-object-lambda-accesspoint/file"
+        ) { request, context in
+            XCTAssertEqual(
+                request.url.absoluteString,
+                "https://tutorial-object-lambda-accesspoint-111122223333.s3-object-lambda.us-west-2.amazonaws.com/file"
+            )
+            XCTAssertEqual(context.serviceConfig.serviceIdentifier, "s3-object-lambda")
+            XCTAssertEqual(context.serviceConfig.region, .uswest2)
+        }
     }
 
     // create a buffer of random values. Will always create the same given you supply the same z and w values

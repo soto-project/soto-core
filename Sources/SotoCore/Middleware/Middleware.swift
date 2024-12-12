@@ -15,7 +15,7 @@
 import Logging
 
 /// Context object sent to `AWSMiddlewareProtocol` `handle` functions
-public struct AWSMiddlewareContext {
+public struct AWSMiddlewareContext: Sendable {
     public var operation: String
     public var serviceConfig: AWSServiceConfig
     public var logger: Logger

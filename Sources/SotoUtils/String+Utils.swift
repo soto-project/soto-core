@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) YEARS the Soto project authors
+// Copyright (c) 2024 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -23,19 +23,24 @@ extension String {
     package func addingPercentEncoding(utf8Buffer: some Collection<UInt8>, allowedCharacters: Set<UInt8>) -> String {
         let maxLength = utf8Buffer.count * 3
         let result = withUnsafeTemporaryAllocation(of: UInt8.self, capacity: maxLength + 1) { _buffer in
-            var buffer = OutputBuffer(initializing: _buffer.baseAddress!, capacity: _buffer.count)
+            var idx = 0
+            func append(_ v: UInt8) {
+                precondition(idx < _buffer.count)
+                _buffer[idx] = v
+                idx += 1
+            }
+
             for v in utf8Buffer {
                 if allowedCharacters.contains(v) {
-                    buffer.appendElement(v)
+                    append(v)
                 } else {
-                    buffer.appendElement(UInt8(ascii: "%"))
-                    buffer.appendElement(hexToAscii(v >> 4))
-                    buffer.appendElement(hexToAscii(v & 0xF))
+                    append(UInt8(ascii: "%"))
+                    append(hexToAscii(v >> 4))
+                    append(hexToAscii(v & 0xF))
                 }
             }
-            buffer.appendElement(0)  // NULL-terminated
-            let initialized = buffer.relinquishBorrowedMemory()
-            return String(cString: initialized.baseAddress!)
+            append(0)
+            return String(cString: _buffer.baseAddress!)
         }
         return result
     }
@@ -150,4 +155,31 @@ extension String {
     package static let uriAllowedWithSlashCharacters: Set<UInt8> = Set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~/".utf8)
     package static let uriAllowedCharacters: Set<UInt8> = Set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~".utf8)
     package static let queryAllowedCharacters: Set<UInt8> = Set(0 ... .max).subtracting("/;+".utf8)
+}
+
+
+extension RangeReplaceableCollection {
+    package func trimming(while predicate: (Element) -> Bool) -> SubSequence {
+        var idx = startIndex
+        while idx < endIndex && predicate(self[idx]) {
+            formIndex(after: &idx)
+        }
+
+        let startOfNonTrimmedRange = idx  // Points at the first char not in the set
+        guard startOfNonTrimmedRange != endIndex else {
+            return self[endIndex...]
+        }
+
+        let beforeEnd = index(endIndex, offsetBy: -1)
+        guard startOfNonTrimmedRange < beforeEnd else {
+            return self[startOfNonTrimmedRange..<endIndex]
+        }
+
+        var backIdx = beforeEnd
+        // No need to bound-check because we've already trimmed from the beginning, so we'd definitely break off of this loop before `backIdx` rewinds before `startIndex`
+        while predicate(self[backIdx]) {
+            formIndex(&backIdx, offsetBy: -1)
+        }
+        return self[startOfNonTrimmedRange...backIdx]
+    }
 }

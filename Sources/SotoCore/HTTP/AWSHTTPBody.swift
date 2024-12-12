@@ -12,14 +12,15 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Logging
+import NIOCore
+import NIOHTTP1
+
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else
 import Foundation
 #endif
-import Logging
-import NIOCore
-import NIOHTTP1
 
 /// Storage for HTTP body which can be either a ByteBuffer or an AsyncSequence of
 /// ByteBuffers

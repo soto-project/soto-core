@@ -13,14 +13,15 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+import Logging
+import SotoCore
+import XCTest
+
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else
 import Foundation
 #endif
-import Logging
-import SotoCore
-import XCTest
 
 @propertyWrapper public struct EnvironmentVariable<Value: LosslessStringConvertible> {
     var defaultValue: Value

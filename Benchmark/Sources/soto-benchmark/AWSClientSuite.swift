@@ -14,13 +14,14 @@
 
 import Benchmark
 import Dispatch
+import NIO
+import SotoCore
+
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else
 import Foundation
 #endif
-import NIO
-import SotoCore
 
 struct RequestThrowMiddleware: AWSServiceMiddleware {
     struct Error: Swift.Error {}

@@ -12,14 +12,15 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SotoCore
+import SotoTestUtils
+import XCTest
+
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else
 import Foundation
 #endif
-import SotoCore
-import SotoTestUtils
-import XCTest
 
 final class CRCTests: XCTestCase {
     func testCRC32() {

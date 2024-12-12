@@ -13,6 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 import Crypto
+import SotoUtils
+
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else
@@ -25,8 +27,6 @@ import struct Foundation.TimeZone
 import struct Foundation.URL
 import struct Foundation.URLComponents
 #endif
-
-import SotoUtils
 
 /// Amazon Web Services V4 Signer
 public struct AWSSigner: Sendable {
@@ -420,12 +420,12 @@ public struct AWSSigner: Sendable {
     #if canImport(FoundationEssentials)
     /// return a timestamp formatted for signing requests
     static func timestamp(_ date: Date) -> String {
-        return date.formatted(Date.ISO8601FormatStyle(dateSeparator: .omitted, timeSeparator: .omitted))
+        date.formatted(Date.ISO8601FormatStyle(dateSeparator: .omitted, timeSeparator: .omitted))
     }
     #else
     /// return a timestamp formatted for signing requests
     static func timestamp(_ date: Date) -> String {
-        return timeStampDateFormatter.string(from: date)
+        timeStampDateFormatter.string(from: date)
     }
     #endif
 
@@ -440,18 +440,6 @@ public struct AWSSigner: Sendable {
     private static func hostname(from url: URL) -> String {
         "\(url.host ?? "")\(self.port(from: url).map { ":\($0)" } ?? "")"
     }
-}
-
-
-
-    func uriEncodeWithSlash() -> String {
-        addingPercentEncoding(withAllowedCharacters: String.uriAllowedWithSlashCharacters) ?? self
-    }
-
-    static let s3PathAllowedCharacters = CharacterSet.urlPathAllowed.subtracting(.init(charactersIn: "+@()&$=:,'!*"))
-    static let uriAllowedWithSlashCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~/")
-    static let uriAllowedCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
-    static let queryAllowedCharacters = CharacterSet(charactersIn: "/;+").inverted
 }
 
 @_spi(SotoInternal)
@@ -492,7 +480,7 @@ extension URL {
 
 extension StringProtocol {
     fileprivate func removeSequentialWhitespace() -> String {
-        return reduce(into: "") { result, character in
+        reduce(into: "") { result, character in
             if result.last?.isWhitespace != true || character.isWhitespace == false {
                 result.append(character)
             }

@@ -14,11 +14,6 @@
 
 import AsyncHTTPClient
 import Atomics
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
@@ -29,6 +24,12 @@ import SotoTestUtils
 import XCTest
 
 @testable @_spi(SotoInternal) import SotoCore
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 class AWSClientTests: XCTestCase {
     func testGetCredential() async throws {

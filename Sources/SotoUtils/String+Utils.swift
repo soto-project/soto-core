@@ -19,7 +19,7 @@ extension String {
                     buffer.appendElement(hexToAscii(v & 0xF))
                 }
             }
-            buffer.appendElement(0) // NULL-terminated
+            buffer.appendElement(0)  // NULL-terminated
             let initialized = buffer.relinquishBorrowedMemory()
             return String(cString: initialized.baseAddress!)
         }
@@ -115,27 +115,27 @@ extension String {
     }
 
     package func queryEncode() -> String {
-        let result =  addingPercentEncoding(allowedCharacters: String.queryAllowedCharacters)
+        let result = addingPercentEncoding(allowedCharacters: String.queryAllowedCharacters)
         print("queryEncode: \(self) -> \(result)")
         return result
     }
 
     package func s3PathEncode() -> String {
-        return addingPercentEncoding(allowedCharacters: String.s3PathAllowedCharacters)
+        addingPercentEncoding(allowedCharacters: String.s3PathAllowedCharacters)
     }
 
     package func uriEncode() -> String {
-        return addingPercentEncoding(allowedCharacters: String.uriAllowedCharacters)
+        addingPercentEncoding(allowedCharacters: String.uriAllowedCharacters)
     }
 
     package func uriEncodeWithSlash() -> String {
-        return addingPercentEncoding(allowedCharacters: String.uriAllowedWithSlashCharacters)
+        addingPercentEncoding(allowedCharacters: String.uriAllowedWithSlashCharacters)
     }
-    
-    package static let s3PathAllowedCharacters : Set<UInt8> = Set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~/!*'()".utf8)
-    package static let uriAllowedWithSlashCharacters :Set<UInt8> = Set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~/".utf8)
-    package static let uriAllowedCharacters :Set<UInt8> = Set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~".utf8)
-    package static let queryAllowedCharacters : Set<UInt8> = Set(0 ... .max).subtracting("/;+".utf8)
+
+    package static let s3PathAllowedCharacters: Set<UInt8> = Set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~/!*'()".utf8)
+    package static let uriAllowedWithSlashCharacters: Set<UInt8> = Set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~/".utf8)
+    package static let uriAllowedCharacters: Set<UInt8> = Set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~".utf8)
+    package static let queryAllowedCharacters: Set<UInt8> = Set(0 ... .max).subtracting("/;+".utf8)
 }
 
 //===----------------------------------------------------------------------===//
@@ -150,7 +150,7 @@ extension String {
 //
 //===----------------------------------------------------------------------===//
 
-struct OutputBuffer<T>: ~Copyable // ~Escapable
+struct OutputBuffer<T>: ~Copyable  // ~Escapable
 {
     let start: UnsafeMutablePointer<T>
     let capacity: Int
@@ -172,7 +172,7 @@ struct OutputBuffer<T>: ~Copyable // ~Escapable
 }
 
 extension OutputBuffer {
-   mutating func appendElement(_ value: T) {
+    mutating func appendElement(_ value: T) {
         precondition(initialized < capacity, "Output buffer overflow")
         start.advanced(by: initialized).initialize(to: value)
         initialized &+= 1
@@ -271,14 +271,16 @@ extension OutputBuffer {
 extension OutputBuffer<UInt8> /* where T: BitwiseCopyable */ {
 
     mutating func appendBytes<Value /*: BitwiseCopyable */>(
-        of value: borrowing Value, as: Value.Type
+        of value: borrowing Value,
+        as: Value.Type
     ) {
         precondition(_isPOD(Value.self))
-        let (q,r) = MemoryLayout<Value>.stride.quotientAndRemainder(
+        let (q, r) = MemoryLayout<Value>.stride.quotientAndRemainder(
             dividingBy: MemoryLayout<T>.stride
         )
         precondition(
-            r == 0, "Stride of Value must be divisible by stride of Element"
+            r == 0,
+            "Stride of Value must be divisible by stride of Element"
         )
         precondition(
             (capacity &- initialized) >= q,
@@ -337,7 +339,7 @@ extension Data {
         capacity: Int,
         initializingWith initializer: (inout OutputBuffer<UInt8>) throws -> Void
     ) rethrows {
-        self = Data(count: capacity) // initialized with zeroed buffer
+        self = Data(count: capacity)  // initialized with zeroed buffer
         let count = try self.withUnsafeMutableBytes { rawBuffer in
             try rawBuffer.withMemoryRebound(to: UInt8.self) { buffer in
                 buffer.deinitialize()
@@ -363,10 +365,6 @@ extension Data {
     }
 }
 
-
-
-
-
 extension RangeReplaceableCollection {
     package func trimming(while predicate: (Element) -> Bool) -> SubSequence {
         var idx = startIndex
@@ -374,14 +372,14 @@ extension RangeReplaceableCollection {
             formIndex(after: &idx)
         }
 
-        let startOfNonTrimmedRange = idx // Points at the first char not in the set
+        let startOfNonTrimmedRange = idx  // Points at the first char not in the set
         guard startOfNonTrimmedRange != endIndex else {
             return self[endIndex...]
         }
 
         let beforeEnd = index(endIndex, offsetBy: -1)
         guard startOfNonTrimmedRange < beforeEnd else {
-            return self[startOfNonTrimmedRange ..< endIndex]
+            return self[startOfNonTrimmedRange..<endIndex]
         }
 
         var backIdx = beforeEnd
@@ -389,6 +387,6 @@ extension RangeReplaceableCollection {
         while predicate(self[backIdx]) {
             formIndex(&backIdx, offsetBy: -1)
         }
-        return self[startOfNonTrimmedRange ... backIdx]
+        return self[startOfNonTrimmedRange...backIdx]
     }
 }

@@ -27,15 +27,16 @@
 //===----------------------------------------------------------------------===//
 
 import Dispatch
+import Instrumentation
+import NIOConcurrencyHelpers
+import ServiceContextModule
+import Tracing
+
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else
 import Foundation
 #endif
-import Instrumentation
-import NIOConcurrencyHelpers
-import ServiceContextModule
-import Tracing
 
 final class TestTracer: Tracer, Sendable {
     let spans = NIOLockedValueBox<[TestSpan]>([])

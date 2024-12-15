@@ -402,9 +402,15 @@ extension AWSClient {
             try Task.checkCancellation()
             // combine service and client middleware stacks
             let middlewareStack = config.middleware.map { AWSDynamicMiddlewareStack($0, self.middleware) } ?? self.middleware
+            let credential = try await self.credentialProvider.getCredential(logger: logger)
             let middlewareContext = AWSMiddlewareContext(
                 operation: operationName,
                 serviceConfig: config,
+                credential: StaticCredential(
+                    accessKeyId: credential.accessKeyId,
+                    secretAccessKey: credential.secretAccessKey,
+                    sessionToken: credential.sessionToken
+                ),
                 logger: logger
             )
             // run middleware stack with httpClient execute at the end

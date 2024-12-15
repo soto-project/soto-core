@@ -12,14 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SotoSignerV4
+/// Empty credentials
+public struct EmptyCredential: CredentialProvider, Credential {
+    public var accessKeyId: String { "" }
+    public var secretAccessKey: String { "" }
+    public var sessionToken: String? { nil }
 
-extension Credential {
-    func isEmpty() -> Bool {
-        self.accessKeyId.isEmpty || self.secretAccessKey.isEmpty
-    }
-
-    func getStaticCredential() -> StaticCredential {
-        .init(accessKeyId: accessKeyId, secretAccessKey: secretAccessKey, sessionToken: sessionToken)
+    public func getCredential(logger: Logger) async throws -> any Credential {
+        self
     }
 }

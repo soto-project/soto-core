@@ -129,7 +129,12 @@ class AWSServiceTests: XCTestCase {
         let service = TestService(client: client, config: createServiceConfig())
         let service2 = service.with(middleware: TestMiddleware())
         let request = AWSHTTPRequest(url: URL(string: "http://testurl.com")!, method: .GET, headers: [:], body: .init())
-        let context = AWSMiddlewareContext(operation: "TestURL", serviceConfig: service2.config, logger: TestEnvironment.logger)
+        let context = AWSMiddlewareContext(
+            operation: "TestURL",
+            serviceConfig: service2.config,
+            credential: EmptyCredential().getStaticCredential(),
+            logger: TestEnvironment.logger
+        )
         let response = try await service2.config.middleware!.handle(request, context: context) { request, _ in
             .init(status: .ok, headers: request.headers, body: request.body)
         }

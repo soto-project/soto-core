@@ -24,10 +24,12 @@ struct SigningMiddleware: AWSMiddlewareProtocol {
     @inlinable
     func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse {
         var request = request
-        // get credentials
-        let credential = try await self.credentialProvider.getCredential(logger: context.logger)
         // construct signer
-        let signer = AWSSigner(credentials: credential, name: context.serviceConfig.signingName, region: context.serviceConfig.region.rawValue)
+        let signer = AWSSigner(
+            credentials: context.credential,
+            name: context.serviceConfig.signingName,
+            region: context.serviceConfig.region.rawValue
+        )
         request.signHeaders(signer: signer, serviceConfig: context.serviceConfig)
         return try await next(request, context)
     }

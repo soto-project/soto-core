@@ -170,7 +170,7 @@ extension CredentialProviderFactory {
     /// Don't supply any credentials
     public static var empty: CredentialProviderFactory {
         Self { _ in
-            StaticCredential(accessKeyId: "", secretAccessKey: "")
+            EmptyCredential()
         }
     }
 

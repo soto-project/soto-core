@@ -43,7 +43,7 @@ class MiddlewareTests: XCTestCase {
         let client = createAWSClient(credentialProvider: .empty)
         let config = createServiceConfig(
             region: .useast1,
-            endpoint: "https://\(serviceName).us-east-1.amazonaws.com",
+            service: serviceName,
             middlewares: AWSMiddlewareStack {
                 middleware
                 CatchRequestMiddleware()

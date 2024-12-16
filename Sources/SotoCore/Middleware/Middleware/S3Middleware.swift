@@ -133,7 +133,7 @@ public struct S3Middleware: AWSMiddlewareProtocol {
                 urlHost = host
             }
         }
-        let request = Self.updateRequestURL(request, host: urlHost, path: urlPath)
+        let request = try Self.updateRequestURL(request, host: urlHost, path: urlPath)
         return try await next(request, context)
     }
 
@@ -166,7 +166,7 @@ public struct S3Middleware: AWSMiddlewareProtocol {
         let service = String(arn.service)
         let serviceIdentifier = service != "s3" ? service : "s3-accesspoint"
         let urlHost = "\(bucket)-\(accountId).\(serviceIdentifier).\(region).\(context.serviceConfig.region.partition.dnsSuffix)"
-        let request = Self.updateRequestURL(request, host: urlHost, path: path)
+        let request = try Self.updateRequestURL(request, host: urlHost, path: path)
 
         var context = context
         context.serviceConfig = AWSServiceConfig(
@@ -213,7 +213,7 @@ public struct S3Middleware: AWSMiddlewareProtocol {
         } else {
             urlHost = "\(bucket).s3express-\(zone).\(context.serviceConfig.region).\(context.serviceConfig.region.partition.dnsSuffix)"
         }
-        let request = Self.updateRequestURL(request, host: urlHost, path: path)
+        let request = try Self.updateRequestURL(request, host: urlHost, path: path)
         var context = context
         context.serviceConfig = AWSServiceConfig(
             region: context.serviceConfig.region,
@@ -239,7 +239,7 @@ public struct S3Middleware: AWSMiddlewareProtocol {
     ///   - host: new host name
     ///   - path: new path (without forward slash prefix)
     /// - Returns: new request
-    static func updateRequestURL(_ request: AWSHTTPRequest, host: some StringProtocol, path: String) -> AWSHTTPRequest {
+    static func updateRequestURL(_ request: AWSHTTPRequest, host: some StringProtocol, path: String) throws -> AWSHTTPRequest {
         var path = path
         // add trailing "/" back if it was present, no need to check for single slash path here
         if request.url.pathWithSlash.hasSuffix("/"), path.count > 0 {
@@ -252,7 +252,10 @@ public struct S3Middleware: AWSMiddlewareProtocol {
             urlString += "?\(query)"
         }
         var request = request
-        request.url = URL(string: urlString)!
+        guard let url = URL(string: urlString) else {
+            throw AWSClient.ClientError.invalidURL
+        }
+        request.url = url
         return request
     }
 

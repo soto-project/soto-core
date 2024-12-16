@@ -22,6 +22,18 @@ internal import SotoXML
 @_implementationOnly import SotoXML
 #endif
 
+extension S3Middleware {
+    @TaskLocal public static var executionContext: ExecutionContext?
+
+    /// Task local execution context for operation
+    public struct ExecutionContext: Sendable {
+        public init(useS3ExpressControlEndpoint: Bool) {
+            self.useS3ExpressControlEndpoint = useS3ExpressControlEndpoint
+        }
+        public let useS3ExpressControlEndpoint: Bool
+    }
+}
+
 /// Middleware applied to S3 service
 ///
 /// This middleware does a number of request and response fixups for the S3 service.
@@ -82,9 +94,16 @@ public struct S3Middleware: AWSMiddlewareProtocol {
 
         // if bucket has suffix "-x-s3" then it must be an s3 express directory bucket and the endpoint needs set up
         // to use s3express
-        if bucket.hasSuffix("--x-s3"), let host = getS3ExpressBucketEndpoint(bucket: bucket, path: path, context: context) {
-            urlHost = host
-            urlPath = path
+        if bucket.hasSuffix("--x-s3"),
+            let response = try await handleS3ExpressBucketEndpoint(
+                request: request,
+                bucket: bucket,
+                path: path,
+                context: context,
+                next: next
+            )
+        {
+            return response
         } else {
 
             // Should we use accelerated endpoint
@@ -174,16 +193,44 @@ public struct S3Middleware: AWSMiddlewareProtocol {
     ///   - context: request context
     ///   - next: next handler
     /// - Returns: returns response from next handler
-    func getS3ExpressBucketEndpoint(
+    func handleS3ExpressBucketEndpoint(
+        request: AWSHTTPRequest,
         bucket: Substring,
         path: String,
-        context: AWSMiddlewareContext
-    ) -> String? {
+        context: AWSMiddlewareContext,
+        next: AWSMiddlewareNextHandler
+    ) async throws -> AWSHTTPResponse? {
         // Note this uses my own version of split (as the Swift one requires macOS 13)
         let split = bucket.split(separator: "--")
         guard split.count > 2, split.last == "x-s3" else { return nil }
         let zone = split[split.count - 2]
-        return "\(bucket).s3express-\(zone).\(context.serviceConfig.region).\(context.serviceConfig.region.partition.dnsSuffix)"
+        let urlHost: String
+        // should we use a control endpoint or a zone endpoint
+        if let executionContext = Self.executionContext,
+            executionContext.useS3ExpressControlEndpoint
+        {
+            urlHost = "s3express-control.\(context.serviceConfig.region).\(context.serviceConfig.region.partition.dnsSuffix)/\(bucket)"
+        } else {
+            urlHost = "\(bucket).s3express-\(zone).\(context.serviceConfig.region).\(context.serviceConfig.region.partition.dnsSuffix)"
+        }
+        let request = Self.updateRequestURL(request, host: urlHost, path: path)
+        var context = context
+        context.serviceConfig = AWSServiceConfig(
+            region: context.serviceConfig.region,
+            partition: context.serviceConfig.region.partition,
+            serviceName: "S3",
+            serviceIdentifier: "s3",
+            signingName: "s3express",
+            serviceProtocol: context.serviceConfig.serviceProtocol,
+            apiVersion: context.serviceConfig.apiVersion,
+            errorType: context.serviceConfig.errorType,
+            xmlNamespace: context.serviceConfig.xmlNamespace,
+            middleware: context.serviceConfig.middleware,
+            timeout: context.serviceConfig.timeout,
+            byteBufferAllocator: context.serviceConfig.byteBufferAllocator,
+            options: context.serviceConfig.options
+        )
+        return try await next(request, context)
     }
 
     ///  Update request with new host and path
@@ -195,7 +242,7 @@ public struct S3Middleware: AWSMiddlewareProtocol {
     static func updateRequestURL(_ request: AWSHTTPRequest, host: some StringProtocol, path: String) -> AWSHTTPRequest {
         var path = path
         // add trailing "/" back if it was present, no need to check for single slash path here
-        if request.url.pathWithSlash.hasSuffix("/") {
+        if request.url.pathWithSlash.hasSuffix("/"), path.count > 0 {
             path += "/"
         }
         // add percent encoding back into path as converting from URL to String has removed it

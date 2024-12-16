@@ -223,10 +223,25 @@ class MiddlewareTests: XCTestCase {
         try await self.testMiddleware(
             S3Middleware(),
             serviceName: "s3",
-            serviceOptions: .s3UseTransferAcceleratedEndpoint,
             uri: "/s3express--bucket--use1-az6--x-s3/file"
         ) { request, _ in
             XCTAssertEqual(request.url.absoluteString, "https://s3express--bucket--use1-az6--x-s3.s3express-use1-az6.us-east-1.amazonaws.com/file")
+        }
+    }
+
+    func testS3MiddlewareS3ExpressControlEndpoint() async throws {
+        // Test virual address
+        try await S3Middleware.$executionContext.withValue(.init(useS3ExpressControlEndpoint: true)) {
+            try await self.testMiddleware(
+                S3Middleware(),
+                serviceName: "s3",
+                uri: "/s3express--bucket--use1-az6--x-s3/"
+            ) { request, _ in
+                XCTAssertEqual(
+                    request.url.absoluteString,
+                    "https://s3express-control.us-east-1.amazonaws.com/s3express--bucket--use1-az6--x-s3/"
+                )
+            }
         }
     }
 

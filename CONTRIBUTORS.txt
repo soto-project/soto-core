@@ -9,13 +9,17 @@ needs to be listed here.
 
 ### Contributors
 
+- AbdelAli <153457962+AbdAlAlii@users.noreply.github.com>
 - Adam Fowler <adamfowler71@gmail.com>
 - Eneko Alonso <eneko.alonso@gmail.com>
 - Fabian Fett <fabianfett@mac.com>
+- Iceman <side.junktown@gmail.com>
+- Jeff <jeffdav@users.noreply.github.com>
 - Joe Smith <yasumoto7@gmail.com>
 - Jonathan McAllister <jonny.mcallister@leagueheads.com>
 - Kyle Ishie <kyle@kyleishie.com>
 - Luis Padron <heyluispadron@gmail.com>
+- Mahdi Bahrami <github@mahdibm.com>
 - Martin Redington <mildm8nnered@gmail.com>
 - Oliver O'Neill <oliveroneill@users.noreply.github.com>
 - Roland Möller <moeller.rol@gmail.com>
@@ -23,6 +27,7 @@ needs to be listed here.
 - Tim Condon <0xtimc@gmail.com>
 - Yifei Teng <tengyifei@users.noreply.github.com>
 - Yuki Takei <yuki@miketokyo.com>
+- dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
 - giginet <giginet.net@gmail.com>
 
 **Updating this list**

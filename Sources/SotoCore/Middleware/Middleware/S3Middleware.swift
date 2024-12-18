@@ -22,6 +22,18 @@ internal import SotoXML
 @_implementationOnly import SotoXML
 #endif
 
+extension S3Middleware {
+    @TaskLocal public static var executionContext: ExecutionContext?
+
+    /// Task local execution context for operation
+    public struct ExecutionContext: Sendable {
+        public init(useS3ExpressControlEndpoint: Bool) {
+            self.useS3ExpressControlEndpoint = useS3ExpressControlEndpoint
+        }
+        public let useS3ExpressControlEndpoint: Bool
+    }
+}
+
 /// Middleware applied to S3 service
 ///
 /// This middleware does a number of request and response fixups for the S3 service.
@@ -68,62 +80,60 @@ public struct S3Middleware: AWSMiddlewareProtocol {
         if request.url.path.hasPrefix("/arn:") {
             return try await handleARNBucket(request, context: context, next: next)
         }
-        /// process URL into form ${bucket}.s3.amazon.com
+        /// split path into components. Drop first as it is an empty string
         let paths = request.url.path.split(separator: "/", maxSplits: 2, omittingEmptySubsequences: false).dropFirst()
         guard let bucket = paths.first, var host = request.url.host else { return try await next(request, context) }
+        let path = paths.dropFirst().first.flatMap { String($0) } ?? ""
 
         if let port = request.url.port {
             host = "\(host):\(port)"
         }
         var urlPath: String
         var urlHost: String
-        let isAmazonUrl = host.hasSuffix("amazonaws.com")
+        let isAmazonUrl = host.hasSuffix(context.serviceConfig.region.partition.dnsSuffix)
 
-        var hostComponents = host.split(separator: ".")
-        if isAmazonUrl, context.serviceConfig.options.contains(.s3UseTransferAcceleratedEndpoint) {
-            if let s3Index = hostComponents.firstIndex(where: { $0 == "s3" }) {
-                var s3 = "s3"
-                s3 += "-accelerate"
-                // assume next host component is region
-                let regionIndex = s3Index + 1
-                hostComponents.remove(at: regionIndex)
-                hostComponents[s3Index] = Substring(s3)
-                host = hostComponents.joined(separator: ".")
-            }
-        }
-
-        // Is bucket an ARN
-        if bucket.hasPrefix("arn:") {
-            guard let arn = ARN(string: bucket),
-                let resourceType = arn.resourceType,
-                let region = arn.region,
-                let accountId = arn.accountId
-            else {
-                throw AWSClient.ClientError.invalidARN
-            }
-            guard resourceType == "accesspoint", arn.service == "s3-object-lambda" || arn.service == "s3-outposts" else {
-                throw AWSClient.ClientError.invalidARN
-            }
-            urlPath = "/"
-            // https://tutorial-object-lambda-accesspoint-123456789012.s3-object-lambda.us-west-2.amazonaws.com:443
-            urlHost = "\(arn.resourceId)-\(resourceType)-\(accountId).\(arn.service).\(region).amazonaws.com"
-
-            // if host name contains amazonaws.com and bucket name doesn't contain a period do virtual address look up
-        } else if isAmazonUrl || context.serviceConfig.options.contains(.s3ForceVirtualHost), !bucket.contains(".") {
-            let pathsWithoutBucket = paths.dropFirst()  // bucket
-            urlPath = pathsWithoutBucket.first.flatMap { String($0) } ?? ""
-
-            if hostComponents.first == bucket {
-                // Bucket name is part of host. No need to append bucket
-                urlHost = host
-            } else {
-                urlHost = "\(bucket).\(host)"
-            }
+        // if bucket has suffix "-x-s3" then it must be an s3 express directory bucket and the endpoint needs set up
+        // to use s3express
+        if bucket.hasSuffix("--x-s3"),
+            let response = try await handleS3ExpressBucketEndpoint(
+                request: request,
+                bucket: bucket,
+                path: path,
+                context: context,
+                next: next
+            )
+        {
+            return response
         } else {
-            urlPath = paths.joined(separator: "/")
-            urlHost = host
+
+            // Should we use accelerated endpoint
+            var hostComponents = host.split(separator: ".")
+            if isAmazonUrl, context.serviceConfig.options.contains(.s3UseTransferAcceleratedEndpoint) {
+                if let s3Index = hostComponents.firstIndex(where: { $0 == "s3" }) {
+                    var s3 = "s3"
+                    s3 += "-accelerate"
+                    // assume next host component is region
+                    let regionIndex = s3Index + 1
+                    hostComponents.remove(at: regionIndex)
+                    hostComponents[s3Index] = Substring(s3)
+                    host = hostComponents.joined(separator: ".")
+                }
+            }
+
+            if isAmazonUrl || context.serviceConfig.options.contains(.s3ForceVirtualHost), !bucket.contains(".") {
+                urlPath = path
+                if hostComponents.first == bucket {
+                    // Bucket name is part of host. No need to append bucket
+                    urlHost = host
+                } else {
+                    urlHost = "\(bucket).\(host)"
+                }
+            } else {
+                urlPath = paths.joined(separator: "/")
+                urlHost = host
+            }
         }
-        let request = Self.updateRequestURL(request, host: urlHost, path: urlPath)
+        let request = try Self.updateRequestURL(request, host: urlHost, path: urlPath)
         return try await next(request, context)
     }
 
@@ -155,8 +165,8 @@ public struct S3Middleware: AWSMiddlewareProtocol {
         let path = String(resourceIDSplit.dropFirst().first ?? "")
         let service = String(arn.service)
         let serviceIdentifier = service != "s3" ? service : "s3-accesspoint"
-        let urlHost = "\(bucket)-\(accountId).\(serviceIdentifier).\(region).amazonaws.com"
-        let request = Self.updateRequestURL(request, host: urlHost, path: path)
+        let urlHost = "\(bucket)-\(accountId).\(serviceIdentifier).\(region).\(context.serviceConfig.region.partition.dnsSuffix)"
+        let request = try Self.updateRequestURL(request, host: urlHost, path: path)
 
         var context = context
         context.serviceConfig = AWSServiceConfig(
@@ -177,16 +187,62 @@ public struct S3Middleware: AWSMiddlewareProtocol {
         return try await next(request, context)
     }
 
+    ///  Handle bucket names in the form of an ARN
+    /// - Parameters:
+    ///   - request: request
+    ///   - context: request context
+    ///   - next: next handler
+    /// - Returns: returns response from next handler
+    func handleS3ExpressBucketEndpoint(
+        request: AWSHTTPRequest,
+        bucket: Substring,
+        path: String,
+        context: AWSMiddlewareContext,
+        next: AWSMiddlewareNextHandler
+    ) async throws -> AWSHTTPResponse? {
+        // Note this uses my own version of split (as the Swift one requires macOS 13)
+        let split = bucket.split(separator: "--")
+        guard split.count > 2, split.last == "x-s3" else { return nil }
+        let zone = split[split.count - 2]
+        let urlHost: String
+        // should we use a control endpoint or a zone endpoint
+        if let executionContext = Self.executionContext,
+            executionContext.useS3ExpressControlEndpoint
+        {
+            urlHost = "s3express-control.\(context.serviceConfig.region).\(context.serviceConfig.region.partition.dnsSuffix)/\(bucket)"
+        } else {
+            urlHost = "\(bucket).s3express-\(zone).\(context.serviceConfig.region).\(context.serviceConfig.region.partition.dnsSuffix)"
+        }
+        let request = try Self.updateRequestURL(request, host: urlHost, path: path)
+        var context = context
+        context.serviceConfig = AWSServiceConfig(
+            region: context.serviceConfig.region,
+            partition: context.serviceConfig.region.partition,
+            serviceName: "S3",
+            serviceIdentifier: "s3",
+            signingName: "s3express",
+            serviceProtocol: context.serviceConfig.serviceProtocol,
+            apiVersion: context.serviceConfig.apiVersion,
+            errorType: context.serviceConfig.errorType,
+            xmlNamespace: context.serviceConfig.xmlNamespace,
+            middleware: context.serviceConfig.middleware,
+            timeout: context.serviceConfig.timeout,
+            byteBufferAllocator: context.serviceConfig.byteBufferAllocator,
+            options: context.serviceConfig.options
+        )
+        return try await next(request, context)
+    }
+
     ///  Update request with new host and path
     /// - Parameters:
     ///   - request: request
     ///   - host: new host name
-    ///   - path: new path
+    ///   - path: new path (without forward slash prefix)
     /// - Returns: new request
-    static func updateRequestURL(_ request: AWSHTTPRequest, host: some StringProtocol, path: String) -> AWSHTTPRequest {
+    static func updateRequestURL(_ request: AWSHTTPRequest, host: some StringProtocol, path: String) throws -> AWSHTTPRequest {
         var path = path
         // add trailing "/" back if it was present, no need to check for single slash path here
-        if request.url.pathWithSlash.hasSuffix("/") {
+        if request.url.pathWithSlash.hasSuffix("/"), path.count > 0 {
             path += "/"
         }
         // add percent encoding back into path as converting from URL to String has removed it
@@ -196,7 +252,10 @@ public struct S3Middleware: AWSMiddlewareProtocol {
             urlString += "?\(query)"
         }
         var request = request
-        request.url = URL(string: urlString)!
+        guard let url = URL(string: urlString) else {
+            throw AWSClient.ClientError.invalidURL
+        }
+        request.url = url
         return request
     }
 
@@ -210,16 +269,18 @@ public struct S3Middleware: AWSMiddlewareProtocol {
         switch context.operation {
         // fixup CreateBucket to include location
         case "CreateBucket":
-            var xml = ""
-            if context.serviceConfig.region != .useast1 {
-                xml += "<CreateBucketConfiguration xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">"
-                xml += "<LocationConstraint>"
-                xml += context.serviceConfig.region.rawValue
-                xml += "</LocationConstraint>"
-                xml += "</CreateBucketConfiguration>"
+            if request.body.isEmpty {
+                var xml = ""
+                if context.serviceConfig.region != .useast1 {
+                    xml += "<CreateBucketConfiguration xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">"
+                    xml += "<LocationConstraint>"
+                    xml += context.serviceConfig.region.rawValue
+                    xml += "</LocationConstraint>"
+                    xml += "</CreateBucketConfiguration>"
+                }
+                // TODO: pass service config down so we can use the ByteBufferAllocator
+                request.body = .init(string: xml)
             }
-            // TODO: pass service config down so we can use the ByteBufferAllocator
-            request.body = .init(string: xml)
 
         default:
             break
@@ -261,5 +322,37 @@ public struct S3Middleware: AWSMiddlewareProtocol {
             }
         }
         return error
+    }
+}
+
+extension StringProtocol {
+    func split(separator: some StringProtocol) -> [Self.SubSequence] {
+        var split: [Self.SubSequence] = []
+        var index: Self.Index = self.startIndex
+        var startSplit: Self.Index = self.startIndex
+        while index != self.endIndex {
+            if let end = self[index...].prefixEnd(separator) {
+                split.append(self[startSplit..<index])
+                startSplit = end
+                index = end
+            } else {
+                index = self.index(after: index)
+            }
+        }
+        split.append(self[startSplit..<index])
+        return split
+    }
+
+    func prefixEnd(_ prefix: some StringProtocol) -> Self.Index? {
+        var prefixIndex = prefix.startIndex
+        var index = self.startIndex
+        while prefixIndex != prefix.endIndex {
+            if self[index] != prefix[prefixIndex] {
+                return nil
+            }
+            index = self.index(after: index)
+            prefixIndex = prefix.index(after: prefixIndex)
+        }
+        return index
     }
 }

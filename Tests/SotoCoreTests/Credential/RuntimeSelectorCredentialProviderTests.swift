@@ -81,7 +81,7 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
         XCTAssertEqual(credential.secretAccessKey, "")
         XCTAssertEqual(credential.sessionToken, nil)
         let internalProvider = try await (client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getCredentialProviderTask()
-        XCTAssert(internalProvider is StaticCredential)
+        XCTAssert(internalProvider is EmptyCredential)
     }
 
     func testFoundSelectorWithOneProvider() async throws {
@@ -90,7 +90,7 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let credential = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
         XCTAssert(credential.isEmpty())
-        XCTAssert(client.credentialProvider is StaticCredential)
+        XCTAssert(client.credentialProvider is EmptyCredential)
     }
 
     func testECSProvider() async throws {
@@ -188,7 +188,6 @@ class RuntimeSelectorCredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         _ = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)
         let internalProvider = try await (client.credentialProvider as? RuntimeSelectorCredentialProvider)?.getCredentialProviderTask()
-        XCTAssert(internalProvider is StaticCredential)
-        XCTAssert((internalProvider as? StaticCredential)?.isEmpty() == true)
+        XCTAssert(internalProvider is EmptyCredential)
     }
 }

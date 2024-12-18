@@ -43,7 +43,7 @@ class MiddlewareTests: XCTestCase {
         let client = createAWSClient(credentialProvider: .empty)
         let config = createServiceConfig(
             region: .useast1,
-            endpoint: "https://\(serviceName).us-east-1.amazonaws.com",
+            service: serviceName,
             middlewares: AWSMiddlewareStack {
                 middleware
                 CatchRequestMiddleware()
@@ -215,6 +215,33 @@ class MiddlewareTests: XCTestCase {
             )
             XCTAssertEqual(context.serviceConfig.serviceIdentifier, "s3-object-lambda")
             XCTAssertEqual(context.serviceConfig.region, .uswest2)
+        }
+    }
+
+    func testS3MiddlewareS3ExpressEndpoint() async throws {
+        // Test virual address
+        try await self.testMiddleware(
+            S3Middleware(),
+            serviceName: "s3",
+            uri: "/s3express--bucket--use1-az6--x-s3/file"
+        ) { request, _ in
+            XCTAssertEqual(request.url.absoluteString, "https://s3express--bucket--use1-az6--x-s3.s3express-use1-az6.us-east-1.amazonaws.com/file")
+        }
+    }
+
+    func testS3MiddlewareS3ExpressControlEndpoint() async throws {
+        // Test virual address
+        try await S3Middleware.$executionContext.withValue(.init(useS3ExpressControlEndpoint: true)) {
+            try await self.testMiddleware(
+                S3Middleware(),
+                serviceName: "s3",
+                uri: "/s3express--bucket--use1-az6--x-s3/"
+            ) { request, _ in
+                XCTAssertEqual(
+                    request.url.absoluteString,
+                    "https://s3express-control.us-east-1.amazonaws.com/s3express--bucket--use1-az6--x-s3/"
+                )
+            }
         }
     }
 

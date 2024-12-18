@@ -48,7 +48,7 @@ public final class AWSClient: Sendable {
     /// HTTP client used by AWSClient
     public let httpClient: AWSHTTPClient
     /// Logger used for non-request based output
-    let clientLogger: Logger
+    public let logger: Logger
     /// client options
     let options: Options
 
@@ -71,13 +71,13 @@ public final class AWSClient: Sendable {
         middleware: some AWSMiddlewareProtocol,
         options: Options = Options(),
         httpClient: AWSHTTPClient = HTTPClient.shared,
-        logger clientLogger: Logger = AWSClient.loggingDisabled
+        logger: Logger = AWSClient.loggingDisabled
     ) {
         self.httpClient = httpClient
         let credentialProvider = credentialProviderFactory.createProvider(
             context: .init(
                 httpClient: self.httpClient,
-                logger: clientLogger,
+                logger: logger,
                 options: options
             )
         )
@@ -88,7 +88,7 @@ public final class AWSClient: Sendable {
             RetryMiddleware(retryPolicy: retryPolicyFactory.retryPolicy)
             ErrorHandlingMiddleware(options: options)
         }
-        self.clientLogger = clientLogger
+        self.logger = logger
         self.options = options
     }
 
@@ -105,13 +105,13 @@ public final class AWSClient: Sendable {
         retryPolicy retryPolicyFactory: RetryPolicyFactory = .default,
         options: Options = Options(),
         httpClient: AWSHTTPClient = HTTPClient.shared,
-        logger clientLogger: Logger = AWSClient.loggingDisabled
+        logger: Logger = AWSClient.loggingDisabled
     ) {
         self.httpClient = httpClient
         let credentialProvider = credentialProviderFactory.createProvider(
             context: .init(
                 httpClient: self.httpClient,
-                logger: clientLogger,
+                logger: logger,
                 options: options
             )
         )
@@ -121,7 +121,7 @@ public final class AWSClient: Sendable {
             RetryMiddleware(retryPolicy: retryPolicyFactory.retryPolicy)
             ErrorHandlingMiddleware(options: options)
         }
-        self.clientLogger = clientLogger
+        self.logger = logger
         self.options = options
     }
 
@@ -402,9 +402,15 @@ extension AWSClient {
             try Task.checkCancellation()
             // combine service and client middleware stacks
             let middlewareStack = config.middleware.map { AWSDynamicMiddlewareStack($0, self.middleware) } ?? self.middleware
+            let credential = try await self.credentialProvider.getCredential(logger: logger)
             let middlewareContext = AWSMiddlewareContext(
                 operation: operationName,
                 serviceConfig: config,
+                credential: StaticCredential(
+                    accessKeyId: credential.accessKeyId,
+                    secretAccessKey: credential.secretAccessKey,
+                    sessionToken: credential.sessionToken
+                ),
                 logger: logger
             )
             // run middleware stack with httpClient execute at the end

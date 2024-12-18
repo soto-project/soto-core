@@ -74,6 +74,15 @@ public struct AWSHTTPBody: Sendable {
         }
     }
 
+    public var isEmpty: Bool {
+        switch self.storage {
+        case .byteBuffer(let buffer):
+            return buffer.readableBytes == 0
+        case .asyncSequence(_, let length):
+            return length == 0
+        }
+    }
+
     public var isStreaming: Bool {
         switch self.storage {
         case .byteBuffer:

@@ -63,7 +63,7 @@ public class RequestEncodingContainer {
         if queryParams.count > 0 {
             let urlQueryString =
                 queryParams
-                .map { (key: $0.key, value: "\($0.value)") }
+                .map { (key: $0.key, value: $0.value) }
                 .sorted {
                     // sort by key. if key are equal then sort by value
                     if $0.key < $1.key { return true }
@@ -113,10 +113,18 @@ public class RequestEncodingContainer {
         }
     }
 
-    /// Write dictionary key value pairs to headers with prefix added to the keys
+    /// Write date to headers
     @inlinable
     public func encodeHeader(_ value: Date, key: String) {
         self.encodeHeader(HTTPHeaderDateCoder.string(from: value), key: key)
+    }
+
+    /// Write date to headers
+    @inlinable
+    public func encodeHeader(_ value: Date?, key: String) {
+        if let value {
+            self.encodeHeader(value, key: key)
+        }
     }
 
     /// Write dictionary key value pairs to headers with prefix added to the keys
@@ -167,6 +175,20 @@ public class RequestEncodingContainer {
         }
     }
 
+    /// Write date to query
+    @inlinable
+    public func encodeQuery(_ value: Date, key: String) {
+        self.encodeQuery(UnixEpochDateCoder.string(from: value), key: key)
+    }
+
+    /// Write optional date to query
+    @inlinable
+    public func encodeQuery(_ value: Date?, key: String) {
+        if let value {
+            self.encodeQuery(value, key: key)
+        }
+    }
+
     /// Write array as a series of query values
     @inlinable
     public func encodeQuery(_ value: [some Any], key: String) {
@@ -198,6 +220,8 @@ public class RequestEncodingContainer {
             self.encodeQuery(value)
         }
     }
+
+    // MARK: Path encoding
 
     /// Write value into URI path
     @inlinable

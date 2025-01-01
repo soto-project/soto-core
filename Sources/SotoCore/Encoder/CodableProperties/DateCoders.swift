@@ -126,4 +126,8 @@ public struct UnixEpochDateCoder: CustomDecoder, CustomEncoder {
         var container = encoder.singleValueContainer()
         try container.encode(value.timeIntervalSince1970)
     }
+
+    public static func string(from value: Date) -> String? {
+        Int(value.timeIntervalSince1970).description
+    }
 }

@@ -328,6 +328,24 @@ class AWSRequestTests: XCTestCase {
         XCTAssertEqual(request?.url.absoluteString, "https://myservice.us-east-2.amazonaws.com/?one=1&two=2")
     }
 
+    func testQueryDate() {
+        struct Input: AWSEncodableShape {
+            let d: Date?
+            func encode(to encoder: Encoder) throws {
+                _ = encoder.container(keyedBy: CodingKeys.self)
+                let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
+                requestContainer.encodeQuery(self.d, key: "d")
+            }
+
+            private enum CodingKeys: CodingKey {}
+        }
+        let input = Input(d: Date(timeIntervalSince1970: 1_000_000))
+        let config = createServiceConfig(region: .useast2, service: "myservice")
+        var request: AWSHTTPRequest?
+        XCTAssertNoThrow(request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config))
+        XCTAssertEqual(request?.url.absoluteString, "https://myservice.us-east-2.amazonaws.com/?d=1000000")
+    }
+
     func testQueryInPath() {
         struct Input: AWSEncodableShape {
             let q: String

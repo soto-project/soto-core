@@ -18,7 +18,11 @@
 //  Licensed under Apache License v2.0 http://www.apache.org/licenses/LICENSE-2.0.html
 //
 
+#if compiler(>=6.0)
+internal import CSotoExpat
+#else
 @_implementationOnly import CSotoExpat
+#endif
 
 #if canImport(Glibc)
 import Glibc

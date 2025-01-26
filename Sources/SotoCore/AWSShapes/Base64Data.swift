@@ -24,7 +24,7 @@ public struct AWSBase64Data: Sendable, Codable, Equatable {
 
     /// construct `AWSBase64Data` from raw data
     public static func data(_ data: some Collection<UInt8>) -> Self {
-        .init(base64String: String(base64Encoding: data))
+        .init(base64String: String(_base64Encoding: data, options: []))
     }
 
     /// construct `AWSBase64Data` from base64 encoded data
@@ -51,6 +51,6 @@ public struct AWSBase64Data: Sendable, Codable, Equatable {
 
     /// return blob as Data
     public func decoded() -> [UInt8]? {
-        try? self.base64String.base64decoded()
+        try? self.base64String._base64Decoded()
     }
 }

@@ -71,11 +71,11 @@
 // MARK: - Extensions -
 
 extension String {
-    init(base64Encoding bytes: some Collection<UInt8>, options: Base64.EncodingOptions = []) {
+    init(_base64Encoding bytes: some Collection<UInt8>, options: Base64.EncodingOptions = []) {
         self = Base64.encodeString(bytes: bytes, options: options)
     }
 
-    func base64decoded(options: Base64.DecodingOptions = []) throws -> [UInt8] {
+    func _base64Decoded(options: Base64.DecodingOptions = []) throws -> [UInt8] {
         try Base64.decode(string: self, options: options)
     }
 }

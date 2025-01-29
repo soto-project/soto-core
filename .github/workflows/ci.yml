@@ -43,6 +43,7 @@ jobs:
           - 'swift:5.9'
           - 'swift:5.10'
           - 'swift:6.0'
+          - 'swiftlang/swift:nightly-6.1-jammy'
     container:
       image: ${{ matrix.image }}
     steps:

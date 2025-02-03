@@ -4,6 +4,9 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "codecov/codecov-action"
+        update-types: ["version-update:semver-major"]
     groups:
       dependencies:
         patterns:

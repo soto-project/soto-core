@@ -44,6 +44,10 @@ public struct Region: Sendable, RawRepresentable, Equatable {
     public static var apsoutheast3: Region { .init(rawValue: "ap-southeast-3") }
     // Asia Pacific (Melbourne)
     public static var apsoutheast4: Region { .init(rawValue: "ap-southeast-4") }
+    // Asia Pacific (Malaysia)
+    public static var apsoutheast5: Region { .init(rawValue: "ap-southeast-5") }
+    // Asia Pacific (Thailand)
+    public static var apsoutheast7: Region { .init(rawValue: "ap-southeast-7") }
     // Canada (Central)
     public static var cacentral1: Region { .init(rawValue: "ca-central-1") }
     // Canada West (Calgary)
@@ -56,6 +60,8 @@ public struct Region: Sendable, RawRepresentable, Equatable {
     public static var eucentral1: Region { .init(rawValue: "eu-central-1") }
     // Europe (Zurich)
     public static var eucentral2: Region { .init(rawValue: "eu-central-2") }
+    // EU ISOE West
+    public static var euisoewest1: Region { .init(rawValue: "eu-isoe-west-1") }
     // Europe (Stockholm)
     public static var eunorth1: Region { .init(rawValue: "eu-north-1") }
     // Europe (Milan)
@@ -68,10 +74,14 @@ public struct Region: Sendable, RawRepresentable, Equatable {
     public static var euwest2: Region { .init(rawValue: "eu-west-2") }
     // Europe (Paris)
     public static var euwest3: Region { .init(rawValue: "eu-west-3") }
+    // Israel (Tel Aviv)
+    public static var ilcentral1: Region { .init(rawValue: "il-central-1") }
     // Middle East (UAE)
     public static var mecentral1: Region { .init(rawValue: "me-central-1") }
     // Middle East (Bahrain)
     public static var mesouth1: Region { .init(rawValue: "me-south-1") }
+    // Mexico (Central)
+    public static var mxcentral1: Region { .init(rawValue: "mx-central-1") }
     // South America (Sao Paulo)
     public static var saeast1: Region { .init(rawValue: "sa-east-1") }
     // US East (N. Virginia)
@@ -88,6 +98,10 @@ public struct Region: Sendable, RawRepresentable, Equatable {
     public static var usisowest1: Region { .init(rawValue: "us-iso-west-1") }
     // US ISOB East (Ohio)
     public static var usisobeast1: Region { .init(rawValue: "us-isob-east-1") }
+    // US ISOF EAST
+    public static var usisofeast1: Region { .init(rawValue: "us-isof-east-1") }
+    // US ISOF SOUTH
+    public static var usisofsouth1: Region { .init(rawValue: "us-isof-south-1") }
     // US West (N. California)
     public static var uswest1: Region { .init(rawValue: "us-west-1") }
     // US West (Oregon)
@@ -110,20 +124,25 @@ extension Region {
         case .apsoutheast2: return .aws
         case .apsoutheast3: return .aws
         case .apsoutheast4: return .aws
+        case .apsoutheast5: return .aws
+        case .apsoutheast7: return .aws
         case .cacentral1: return .aws
         case .cawest1: return .aws
         case .cnnorth1: return .awscn
         case .cnnorthwest1: return .awscn
         case .eucentral1: return .aws
         case .eucentral2: return .aws
+        case .euisoewest1: return .awsisoe
         case .eunorth1: return .aws
         case .eusouth1: return .aws
         case .eusouth2: return .aws
         case .euwest1: return .aws
         case .euwest2: return .aws
         case .euwest3: return .aws
+        case .ilcentral1: return .aws
         case .mecentral1: return .aws
         case .mesouth1: return .aws
+        case .mxcentral1: return .aws
         case .saeast1: return .aws
         case .useast1: return .aws
         case .useast2: return .aws
@@ -132,6 +151,8 @@ extension Region {
         case .usisoeast1: return .awsiso
         case .usisowest1: return .awsiso
         case .usisobeast1: return .awsisob
+        case .usisofeast1: return .awsisof
+        case .usisofsouth1: return .awsisof
         case .uswest1: return .aws
         case .uswest2: return .aws
         default: return .aws
@@ -230,20 +251,25 @@ extension Region {
             .apsoutheast2,
             .apsoutheast3,
             .apsoutheast4,
+            .apsoutheast5,
+            .apsoutheast7,
             .cacentral1,
             .cawest1,
             .cnnorth1,
             .cnnorthwest1,
             .eucentral1,
             .eucentral2,
+            .euisoewest1,
             .eunorth1,
             .eusouth1,
             .eusouth2,
             .euwest1,
             .euwest2,
             .euwest3,
+            .ilcentral1,
             .mecentral1,
             .mesouth1,
+            .mxcentral1,
             .saeast1,
             .useast1,
             .useast2,
@@ -252,6 +278,8 @@ extension Region {
             .usisoeast1,
             .usisowest1,
             .usisobeast1,
+            .usisofeast1,
+            .usisofsouth1,
             .uswest1,
             .uswest2:
             return

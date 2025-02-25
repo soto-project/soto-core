@@ -9,15 +9,15 @@ package struct SigV4aKeyPair {
         let secretBuffer = Self.makeSecretBuffer(credential: credential)
         let secretKey = SymmetricKey(data: secretBuffer)
 
-        var counter: UInt8 = 1
-        while counter < Self.MAX_KEY_DERIVATION_COUNTER_VALUE {
-            defer { counter += 1 }
+        var inputBuffer = Self.makeFixedInputBuffer(credential: credential, counter: 1)
 
-            let inputBuffer = try! Self.makeFixedInputBuffer(credential: credential, counter: counter)
+        for counter in Self.KEY_DERIVATION_COUNTER_RANGE {
 
-            var hmac = HMAC<SHA256>(key: secretKey)
-            hmac.update(data: inputBuffer)
-            let digest = hmac.finalize()
+            // We reuse the once created buffer here over and over by just changing the counter
+            // value.
+            inputBuffer[inputBuffer.index(inputBuffer.endIndex, offsetBy: -5)] = counter
+
+            let digest = HMAC<SHA256>.authenticationCode(for: inputBuffer, using: secretKey)
 
             let digestAsArray = [UInt8](digest)
 
@@ -41,11 +41,11 @@ package struct SigV4aKeyPair {
         }
     }
 
-    private static let MAX_KEY_DERIVATION_COUNTER_VALUE = 254
+    private static var KEY_DERIVATION_COUNTER_RANGE: ClosedRange<UInt8> { 1...254 }
 
-    static func makeFixedInputBuffer(credential: some Credential, counter: UInt8) throws -> [UInt8] {
-        if counter == 0 || counter > self.MAX_KEY_DERIVATION_COUNTER_VALUE {
-            throw SigV4aError.invalidCounterValue
+    static func makeFixedInputBuffer(credential: some Credential, counter: UInt8) -> [UInt8] {
+        guard Self.KEY_DERIVATION_COUNTER_RANGE.contains(counter) else {
+            fatalError("counter must be in range: \(Self.KEY_DERIVATION_COUNTER_RANGE)")
         }
 
         var result = [UInt8]()
@@ -105,17 +105,13 @@ package struct SigV4aKeyPair {
     package static func makeDerivedKey(bytes: [UInt8]) throws -> DerivedKeyResult {
         assert(bytes.count == 32)
 
-        let comparisonResult = compareConstantTime(lhs: bytes, rhs: s_n_minus_2)
+        let comparisonResult = Self.compareConstantTime(lhs: bytes, rhs: Self.s_n_minus_2)
         if comparisonResult > 0 {
             return .nextCounter
         }
 
         return try .success(P256.Signing.PrivateKey(rawRepresentation: bytes.addingOne()))
     }
-}
-
-enum SigV4aError: Error {
-    case invalidCounterValue
 }
 
 extension Array<UInt8> {

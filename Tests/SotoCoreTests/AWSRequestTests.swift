@@ -837,4 +837,37 @@ class AWSRequestTests: XCTestCase {
         XCTAssertEqual(request?.headers["x-aws-metadata-one"].first, "first")
         XCTAssertEqual(request?.headers["x-aws-metadata-two"].first, "second")
     }
+
+    func testDocument() throws {
+        struct Input: AWSEncodableShape {
+            let doc: AWSDocument
+        }
+        let config = createServiceConfig(region: .useast2, service: "myservice", serviceProtocol: .restjson)
+        var request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: Input(doc: "Hello"), configuration: config)
+        XCTAssertEqual(request.body.asString(), #"{"doc":"Hello"}"#)
+        request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: Input(doc: .integer(4)), configuration: config)
+        XCTAssertEqual(request.body.asString(), #"{"doc":4}"#)
+        request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: Input(doc: .double(5.25)), configuration: config)
+        XCTAssertEqual(request.body.asString(), #"{"doc":5.25}"#)
+        request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: Input(doc: .double(5.25)), configuration: config)
+        XCTAssertEqual(request.body.asString(), #"{"doc":5.25}"#)
+        request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: Input(doc: false), configuration: config)
+        XCTAssertEqual(request.body.asString(), #"{"doc":false}"#)
+        request = try AWSHTTPRequest(
+            operation: "Test",
+            path: "/",
+            method: .GET,
+            input: Input(doc: .array([.string("Hello"), .string("World")])),
+            configuration: config
+        )
+        XCTAssertEqual(request.body.asString(), #"{"doc":["Hello","World"]}"#)
+        request = try AWSHTTPRequest(
+            operation: "Test",
+            path: "/",
+            method: .GET,
+            input: Input(doc: .map(["first": .integer(1), "second": 2])),
+            configuration: config
+        )
+        XCTAssert(request.body.asString() == #"{"doc":{"first":1,"second":2}}"# || request.body.asString() == #"{"doc":{"second":2,"first":1}}"#)
+    }
 }

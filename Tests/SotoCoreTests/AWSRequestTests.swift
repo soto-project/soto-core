@@ -868,6 +868,6 @@ class AWSRequestTests: XCTestCase {
             input: Input(doc: .map(["first": .integer(1), "second": 2])),
             configuration: config
         )
-        XCTAssertEqual(request.body.asString(), #"{"doc":{"first":1,"second":2}}"#)
+        XCTAssert(request.body.asString() == #"{"doc":{"first":1,"second":2}}"# || request.body.asString() == #"{"doc":{"second":2,"first":1}}"#)
     }
 }

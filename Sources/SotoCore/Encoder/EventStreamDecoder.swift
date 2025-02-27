@@ -52,19 +52,25 @@ private struct _EventStreamDecoder: Decoder {
 
     struct KDC<Key: CodingKey>: KeyedDecodingContainerProtocol {
         var codingPath: [CodingKey] { [] }
-        var allKeys: [Key] { self.eventTypeKey.map { [$0] } ?? [] }
-        let eventTypeKey: Key?
+        let allKeys: [Key]
         let headers: [String: String]
         let payload: ByteBuffer
 
         init(headers: [String: String], payload: ByteBuffer) {
             self.headers = headers
             self.payload = payload
-            self.eventTypeKey = self.headers[":event-type"].map { .init(stringValue: $0) } ?? nil
+
+            if let eventTypeKey = headers[":event-type"].flatMap(Key.init) {
+                self.allKeys = [eventTypeKey]
+            } else if let exceptionTypeKey = headers[":exception-type"].flatMap(Key.init) {
+                self.allKeys = [exceptionTypeKey]
+            } else {
+                self.allKeys = []
+            }
         }
 
         func contains(_ key: Key) -> Bool {
-            self.eventTypeKey?.stringValue == key.stringValue
+            self.allKeys.contains { $0.stringValue == key.stringValue }
         }
 
         func decodeNil(forKey key: Key) throws -> Bool {

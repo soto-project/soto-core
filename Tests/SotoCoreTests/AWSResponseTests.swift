@@ -508,6 +508,8 @@ class AWSResponseTests: XCTestCase {
         case payload(PayloadEvent)
         /// Event with codable payload.
         case shape(ShapeEvent)
+        /// Exception event with codable payload.
+        case exception(ShapeEvent)
 
         public init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -528,6 +530,9 @@ class AWSResponseTests: XCTestCase {
             case .shape:
                 let value = try container.decode(ShapeEvent.self, forKey: .shape)
                 self = .shape(value)
+            case .exception:
+                let value = try container.decode(ShapeEvent.self, forKey: .exception)
+                self = .exception(value)
             }
         }
 
@@ -535,6 +540,7 @@ class AWSResponseTests: XCTestCase {
             case empty = "Empty"
             case payload = "Payload"
             case shape = "Shape"
+            case exception = "ShapeException"
         }
     }
 
@@ -609,6 +615,21 @@ class AWSResponseTests: XCTestCase {
         }
         let jsonResult = try await eventIterator.next()
         if case .shape(let shapeResult) = jsonResult {
+            XCTAssertEqual(shapeResult, shape)
+        } else {
+            XCTFail()
+        }
+    }
+
+    func testEventStreamException() async throws {
+        let exceptionHeaders = [":message-type": "exception", ":exception-type": "ShapeException", ":content-type": "application/json"]
+        let shape = TestEventStream.ShapeEvent(string: "Testing", integer: 590)
+        let jsonPayload = try JSONEncoder().encodeAsByteBuffer(shape, allocator: ByteBufferAllocator())
+        var eventByteBuffer = ByteBuffer()
+        self.writeEvent(headers: exceptionHeaders, payload: jsonPayload, to: &eventByteBuffer)
+
+        let jsonResult = try EventStreamDecoder().decode(TestEventStream.self, from: &eventByteBuffer)
+        if case .exception(let shapeResult) = jsonResult {
             XCTAssertEqual(shapeResult, shape)
         } else {
             XCTFail()

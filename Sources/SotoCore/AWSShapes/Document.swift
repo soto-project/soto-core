@@ -56,3 +56,24 @@ public enum AWSDocument: Sendable, Codable, Equatable {
         }
     }
 }
+
+extension AWSDocument: ExpressibleByStringLiteral {
+    public init(stringLiteral value: String) {
+        self = .string(value)
+    }
+}
+extension AWSDocument: ExpressibleByIntegerLiteral {
+    public init(integerLiteral value: Int) {
+        self = .integer(value)
+    }
+}
+extension AWSDocument: ExpressibleByFloatLiteral {
+    public init(floatLiteral value: FloatLiteralType) {
+        self = .double(value)
+    }
+}
+extension AWSDocument: ExpressibleByArrayLiteral {
+    public init(arrayLiteral value: AWSDocument...) {
+        self = .array(value)
+    }
+}

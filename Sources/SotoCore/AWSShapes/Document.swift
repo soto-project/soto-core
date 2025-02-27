@@ -23,36 +23,36 @@ public enum AWSDocument: Sendable, Codable, Equatable {
     case null
 
     public init(from decoder: any Decoder) throws {
-        var container = try decoder.singleValueContainer()
-        if let string = container.decode(String.self) {
+        let container = try decoder.singleValueContainer()
+        if let string = try? container.decode(String.self) {
             self = .string(string)
-        } else if let integer = container.decode(Int.self) {
+        } else if let integer = try? container.decode(Int.self) {
             self = .integer(integer)
-        } else if let double = container.decode(Double.self) {
+        } else if let double = try? container.decode(Double.self) {
             self = .double(double)
-        } else if let boolean = container.decode(Bool.self) {
+        } else if let boolean = try? container.decode(Bool.self) {
             self = .boolean(boolean)
-        } else if let array = container.decode([AWSDocument].self) {
+        } else if let array = try? container.decode([AWSDocument].self) {
             self = .array(array)
-        } else if let map = container.decode([String: AWSDocument].self) {
+        } else if let map = try? container.decode([String: AWSDocument].self) {
             self = .map(map)
-        } else if let map = container.decodeNil() {
+        } else if container.decodeNil() {
             self = .null
         } else {
-            throw DecodingError.typeMismatch(AWSDocument.self, "Failed to decode")
+            throw DecodingError.typeMismatch(AWSDocument.self, .init(codingPath: decoder.codingPath, debugDescription: "Failed to decode"))
         }
     }
 
     public func encode(to encoder: any Encoder) throws {
-        var container = try encoder.singleValueContainer()
+        var container = encoder.singleValueContainer()
         switch self {
-        case .string(let value): container.encode(value)
-        case .integer(let value): container.encode(value)
-        case .double(let value): container.encode(value)
-        case .boolean(let value): container.encode(value)
-        case .array(let value): container.encode(value)
-        case .dictionary(let value): container.encode(value)
-        case .null: container.encodeNil()
+        case .string(let value): try container.encode(value)
+        case .integer(let value): try container.encode(value)
+        case .double(let value): try container.encode(value)
+        case .boolean(let value): try container.encode(value)
+        case .array(let value): try container.encode(value)
+        case .map(let value): try container.encode(value)
+        case .null: try container.encodeNil()
         }
     }
 }

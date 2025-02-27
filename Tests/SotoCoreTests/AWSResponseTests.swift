@@ -615,6 +615,30 @@ class AWSResponseTests: XCTestCase {
         }
     }
 
+    func testDocument() throws {
+        struct Output: AWSDecodableShape {
+            let doc: AWSDocument
+        }
+        var output: Output = try AWSHTTPResponse(status: .ok, headers: HTTPHeaders(), body: .init(string: #"{"doc":"hello"}"#))
+            .generateOutputShape(operation: "Test", serviceProtocol: .json(version: "1.1"))
+        XCTAssertEqual(output.doc, "hello")
+        output = try AWSHTTPResponse(status: .ok, headers: HTTPHeaders(), body: .init(string: #"{"doc":867}"#))
+            .generateOutputShape(operation: "Test", serviceProtocol: .json(version: "1.1"))
+        XCTAssertEqual(output.doc, 867)
+        output = try AWSHTTPResponse(status: .ok, headers: HTTPHeaders(), body: .init(string: #"{"doc":867.5}"#))
+            .generateOutputShape(operation: "Test", serviceProtocol: .json(version: "1.1"))
+        XCTAssertEqual(output.doc, 867.5)
+        output = try AWSHTTPResponse(status: .ok, headers: HTTPHeaders(), body: .init(string: #"{"doc":true}"#))
+            .generateOutputShape(operation: "Test", serviceProtocol: .json(version: "1.1"))
+        XCTAssertEqual(output.doc, true)
+        output = try AWSHTTPResponse(status: .ok, headers: HTTPHeaders(), body: .init(string: #"{"doc":["hello", "world"]}"#))
+            .generateOutputShape(operation: "Test", serviceProtocol: .json(version: "1.1"))
+        XCTAssertEqual(output.doc, ["hello", "world"])
+        output = try AWSHTTPResponse(status: .ok, headers: HTTPHeaders(), body: .init(string: #"{"doc":{"hello":"world"}}"#))
+            .generateOutputShape(operation: "Test", serviceProtocol: .json(version: "1.1"))
+        XCTAssertEqual(output.doc, ["hello": "world"])
+    }
+
     // MARK: Types used in tests
 
     struct ServiceErrorType: AWSErrorType, Equatable {

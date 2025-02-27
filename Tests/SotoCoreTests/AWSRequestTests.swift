@@ -851,7 +851,7 @@ class AWSRequestTests: XCTestCase {
         XCTAssertEqual(request.body.asString(), #"{"doc":5.25}"#)
         request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: Input(doc: .double(5.25)), configuration: config)
         XCTAssertEqual(request.body.asString(), #"{"doc":5.25}"#)
-        request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: Input(doc: .boolean(false)), configuration: config)
+        request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: Input(doc: false), configuration: config)
         XCTAssertEqual(request.body.asString(), #"{"doc":false}"#)
         request = try AWSHTTPRequest(
             operation: "Test",

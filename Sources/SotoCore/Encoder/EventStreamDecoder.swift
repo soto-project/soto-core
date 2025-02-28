@@ -211,15 +211,51 @@ extension CodingUserInfoKey {
 }
 
 /// Errors thrown while decoding the event stream buffers
-enum AWSEventStreamError: Error {
+public struct AWSEventStreamError: Error {
+    public struct Code: Sendable {
+        enum _Internal {
+            case corruptHeader
+            case missingHeader
+            case corruptPayload
+            case errorMessage
+            case unsupportedContentType
+        }
+
+        private let value: _Internal
+
+        /// The message headers are corrupt
+        public static var corruptHeader: Self { .init(value: .corruptHeader) }
+        /// An event stream message headers is missing
+        public static var missingHeader: Self { .init(value: .missingHeader) }
+        /// The message payload is corrupt
+        public static var corruptPayload: Self { .init(value: .corruptPayload) }
+        /// The message was an error
+        public static var errorMessage: Self { .init(value: .errorMessage) }
+        /// Unsupported content type
+        public static var unsupportedContentType: Self { .init(value: .unsupportedContentType) }
+    }
+    public let code: Code
+    public let message: String?
+
+    init(code: Code, message: String? = nil) {
+        self.code = code
+        self.message = message
+    }
+
     /// The message headers are corrupt
-    case corruptHeader
+    public static var corruptHeader: Self { .init(code: .corruptHeader) }
+    /// An event stream message headers is missing
+    public static func missingHeader(_ header: String) -> Self {
+        .init(code: .missingHeader, message: "Eventstream header '\(header)' is missing")
+    }
     /// The message payload is corrupt
-    case corruptPayload
+    public static var corruptPayload: Self { .init(code: .corruptPayload) }
     /// The message was an error
-    case errorMessage(String)
+    public static func errorMessage(_ message: String) -> Self { .init(code: .errorMessage, message: "Eventstream Error: \(message)") }
     /// Unsupported content type
-    case unsupportedContentType(String)
+    public static func unsupportedContentType(_ contentType: String) -> Self {
+        .init(code: .unsupportedContentType, message: "Unsupported content-type '\(contentType)'")
+    }
 }
 
 /// Internal error used to indicate we need more data to parse this message

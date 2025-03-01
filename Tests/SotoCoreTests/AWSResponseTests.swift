@@ -547,7 +547,7 @@ class AWSResponseTests: XCTestCase {
     func testEventStreamDecoder() throws {
         // test empty buffer
         var eventByteBuffer = ByteBuffer()
-        let emptyHeaders = [":event-type": "Empty"]
+        let emptyHeaders = [":message-type": "event", ":event-type": "Empty"]
         self.writeEvent(headers: emptyHeaders, payload: ByteBuffer(), to: &eventByteBuffer)
         let emptyResult = try EventStreamDecoder().decode(TestEventStream.self, from: &eventByteBuffer)
         if case .empty = emptyResult {
@@ -555,7 +555,7 @@ class AWSResponseTests: XCTestCase {
             XCTFail()
         }
         // test payload buffer
-        let payloadHeaders = [":event-type": "Payload", ":content-type": "application/octet-stream"]
+        let payloadHeaders = [":message-type": "event", ":event-type": "Payload", ":content-type": "application/octet-stream"]
         let payloadBuffer = ByteBuffer(staticString: "Testing payloads")
         self.writeEvent(headers: payloadHeaders, payload: payloadBuffer, to: &eventByteBuffer)
         let payloadResult = try EventStreamDecoder().decode(TestEventStream.self, from: &eventByteBuffer)
@@ -565,7 +565,7 @@ class AWSResponseTests: XCTestCase {
             XCTFail()
         }
         // test JSON buffer
-        let jsonHeaders = [":event-type": "Shape", ":content-type": "application/json"]
+        let jsonHeaders = [":message-type": "event", ":event-type": "Shape", ":content-type": "application/json"]
         let shape = TestEventStream.ShapeEvent(string: "Testing", integer: 590)
         let jsonPayload = try JSONEncoder().encodeAsByteBuffer(shape, allocator: ByteBufferAllocator())
         self.writeEvent(headers: jsonHeaders, payload: jsonPayload, to: &eventByteBuffer)
@@ -576,7 +576,7 @@ class AWSResponseTests: XCTestCase {
             XCTFail()
         }
         // test XML buffer
-        let xmlHeaders = [":event-type": "Shape", ":content-type": "text/xml"]
+        let xmlHeaders = [":message-type": "event", ":event-type": "Shape", ":content-type": "text/xml"]
         let xml = try XMLEncoder().encode(shape)
         let xmlPayload = xml.map { ByteBuffer(string: $0.xmlString) } ?? .init()
         self.writeEvent(headers: xmlHeaders, payload: xmlPayload, to: &eventByteBuffer)
@@ -590,12 +590,12 @@ class AWSResponseTests: XCTestCase {
 
     func testEventStreamStreamer() async throws {
         var eventByteBuffer = ByteBuffer()
-        let emptyHeaders = [":event-type": "Empty"]
+        let emptyHeaders = [":message-type": "event", ":event-type": "Empty"]
         self.writeEvent(headers: emptyHeaders, payload: ByteBuffer(), to: &eventByteBuffer)
-        let payloadHeaders = [":event-type": "Payload", ":content-type": "application/octet-stream"]
+        let payloadHeaders = [":message-type": "event", ":event-type": "Payload", ":content-type": "application/octet-stream"]
         let payloadBuffer = ByteBuffer(staticString: "Testing payloads")
         self.writeEvent(headers: payloadHeaders, payload: payloadBuffer, to: &eventByteBuffer)
-        let jsonHeaders = [":event-type": "Shape", ":content-type": "application/json"]
+        let jsonHeaders = [":message-type": "event", ":event-type": "Shape", ":content-type": "application/json"]
         let shape = TestEventStream.ShapeEvent(string: "Testing", integer: 590)
         let jsonPayload = try JSONEncoder().encodeAsByteBuffer(shape, allocator: ByteBufferAllocator())
         self.writeEvent(headers: jsonHeaders, payload: jsonPayload, to: &eventByteBuffer)
@@ -633,6 +633,16 @@ class AWSResponseTests: XCTestCase {
             XCTAssertEqual(shapeResult, shape)
         } else {
             XCTFail()
+        }
+    }
+
+    func testEventStreamError() async throws {
+        let errorHeaders = [":message-type": "error", ":error-code": "FooError", ":error-message": "Foo encountered an error"]
+        var eventByteBuffer = ByteBuffer()
+        self.writeEvent(headers: errorHeaders, payload: .init(), to: &eventByteBuffer)
+
+        XCTAssertThrowsError(try EventStreamDecoder().decode(TestEventStream.self, from: &eventByteBuffer)) { error in
+            XCTAssert(error is AWSEventStreamError)
         }
     }
 

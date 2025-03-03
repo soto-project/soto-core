@@ -47,24 +47,44 @@ private struct _EventStreamDecoder: Decoder {
     }
 
     func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key: CodingKey {
-        KeyedDecodingContainer(KDC<Key>(headers: self.headers, payload: self.payload))
+        KeyedDecodingContainer(try KDC<Key>(headers: self.headers, payload: self.payload))
     }
 
     struct KDC<Key: CodingKey>: KeyedDecodingContainerProtocol {
         var codingPath: [CodingKey] { [] }
-        var allKeys: [Key] { self.eventTypeKey.map { [$0] } ?? [] }
-        let eventTypeKey: Key?
+        let allKeys: [Key]
         let headers: [String: String]
         let payload: ByteBuffer
 
-        init(headers: [String: String], payload: ByteBuffer) {
+        init(headers: [String: String], payload: ByteBuffer) throws {
             self.headers = headers
             self.payload = payload
-            self.eventTypeKey = self.headers[":event-type"].map { .init(stringValue: $0) } ?? nil
+
+            switch headers[":message-type"] {
+            case "event":
+                guard let eventTypeKey = headers[":event-type"].flatMap(Key.init) else {
+                    throw AWSEventStreamError.missingHeader(":event-type")
+                }
+                self.allKeys = [eventTypeKey]
+            case "exception":
+                guard let exceptionTypeKey = headers[":exception-type"].flatMap(Key.init) else {
+                    throw AWSEventStreamError.missingHeader(":exception-type")
+                }
+                self.allKeys = [exceptionTypeKey]
+            case "error":
+                guard let errorCode = headers[":error-code"] else {
+                    throw AWSEventStreamError.missingHeader(":error-code")
+                }
+                throw AWSEventStreamError.errorMessage(errorCode, headers[":error-message"])
+            case .none:
+                throw AWSEventStreamError.missingHeader(":message-type")
+            case .some(let messageType):
+                throw AWSEventStreamError.unknownMessageType(messageType)
+            }
         }
 
         func contains(_ key: Key) -> Bool {
-            self.eventTypeKey?.stringValue == key.stringValue
+            self.allKeys.contains { $0.stringValue == key.stringValue }
         }
 
         func decodeNil(forKey key: Key) throws -> Bool {
@@ -174,11 +194,6 @@ private struct _EventStreamDecoder: Decoder {
         }
         let headers = try readHeaderValues(headerBuffer)
 
-        // if message type is an error then throw error
-        if headers[":message-type"] == "error" {
-            throw AWSEventStreamError.errorMessage(headers[":error-code"] ?? "Unknown")
-        }
-
         let payloadSize = Int(totalLength - headerLength - 16)
         let payloadBuffer = messageBuffer.readSlice(length: payloadSize)
 
@@ -211,15 +226,60 @@ extension CodingUserInfoKey {
 }
 
 /// Errors thrown while decoding the event stream buffers
-enum AWSEventStreamError: Error {
+public struct AWSEventStreamError: Error {
+    public struct Code: Sendable {
+        enum _Internal {
+            case corruptHeader
+            case missingHeader
+            case corruptPayload
+            case errorMessage
+            case unsupportedContentType
+            case unknownMessageType
+        }
+
+        private let value: _Internal
+
+        /// The message headers are corrupt
+        public static var corruptHeader: Self { .init(value: .corruptHeader) }
+        /// An event stream message headers is missing
+        public static var missingHeader: Self { .init(value: .missingHeader) }
+        /// The message payload is corrupt
+        public static var corruptPayload: Self { .init(value: .corruptPayload) }
+        /// The message was an error
+        public static var errorMessage: Self { .init(value: .errorMessage) }
+        /// Unsupported content type
+        public static var unsupportedContentType: Self { .init(value: .unsupportedContentType) }
+        /// Unknown message type
+        public static var unknownMessageType: Self { .init(value: .unknownMessageType) }
+    }
+    public let code: Code
+    public let message: String?
+
+    init(code: Code, message: String? = nil) {
+        self.code = code
+        self.message = message
+    }
+
     /// The message headers are corrupt
-    case corruptHeader
+    public static var corruptHeader: Self { .init(code: .corruptHeader) }
+    /// An event stream message headers is missing
+    public static func missingHeader(_ header: String) -> Self {
+        .init(code: .missingHeader, message: "Eventstream header '\(header)' is missing")
+    }
     /// The message payload is corrupt
-    case corruptPayload
+    public static var corruptPayload: Self { .init(code: .corruptPayload) }
     /// The message was an error
-    case errorMessage(String)
+    public static func errorMessage(_ errorCode: String, _ errorMessage: String?) -> Self {
+        .init(code: .errorMessage, message: "Eventstream Error: \(errorCode)\(errorMessage.map { " \($0)" } ?? "")")
+    }
     /// Unsupported content type
-    case unsupportedContentType(String)
+    public static func unsupportedContentType(_ contentType: String) -> Self {
+        .init(code: .unsupportedContentType, message: "Unsupported content-type '\(contentType)'")
+    }
+    /// Unknown message type
+    public static func unknownMessageType(_ messageType: String) -> Self {
+        .init(code: .unknownMessageType, message: "Unknown message type '\(messageType)'")
+    }
 }
 
 /// Internal error used to indicate we need more data to parse this message

@@ -466,17 +466,18 @@ public struct AWSSigner: Sendable {
         }
     }
 
+    // Stage 3a Calculating signature as in https://docs.aws.amazon.com/general/latest/gr/sigv4-calculate-signature.html
     func signV4(_ signingData: SigningData) -> String {
         let signingKey = self.signingKey(date: signingData.date)
         let kSignature = HMAC<SHA256>.authenticationCode(for: [UInt8](self.stringToSign(signingData: signingData, algorithm: .sigV4).utf8), using: signingKey)
         return kSignature.hexDigest()
     }
 
-    // Stage 3a Calculating signature as in https://docs.aws.amazon.com/general/latest/gr/sigv4-calculate-signature.html
     func signV4a(_ signingData: SigningData) -> String {
         let signingKey = SigV4aKeyPair(credential: self.credentials)
         let stringToSign = self.stringToSign(signingData: signingData, algorithm: .sigV4a)
-        return try! signingKey.sign(stringToSign)
+        let signature = try! signingKey.sign(stringToSign)
+        return signature
     }
 
     /// Stage 2 Create the string to sign as in https://docs.aws.amazon.com/general/latest/gr/sigv4-create-string-to-sign.html

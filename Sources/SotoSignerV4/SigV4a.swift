@@ -35,8 +35,11 @@ package struct SigV4aKeyPair {
     }
 
     package func sign(_ string: String) throws -> String {
-        let signature = try self.key.signature(for: Data(string.utf8))
-        return signature.withUnsafeBytes {
+        // we want to be explcit about using SHA256 as the hash method
+        let digest = SHA256.hash(data: Data(string.utf8))
+        let signature = try self.key.signature(for: digest)
+
+        return signature.derRepresentation.withUnsafeBytes {
             String(decoding: HexEncoding($0), as: Unicode.UTF8.self)
         }
     }

@@ -167,6 +167,9 @@ public struct AWSSigner: Sendable {
         headers.replaceOrAdd(name: "host", value: Self.hostname(from: url))
         headers.replaceOrAdd(name: "x-amz-date", value: dateString)
         headers.replaceOrAdd(name: "x-amz-content-sha256", value: bodyHash)
+        if algorithm.base == .sigV4a {
+            headers.replaceOrAdd(name: "x-amz-region-set", value: self.region)
+        }
         if !omitSecurityToken, let sessionToken = credentials.sessionToken {
             headers.replaceOrAdd(name: "x-amz-security-token", value: sessionToken)
         }
@@ -181,10 +184,21 @@ public struct AWSSigner: Sendable {
             signer: self
         )
 
+        let credential = switch algorithm.base {
+        case .sigV4:
+            "\(self.credentials.accessKeyId)/\(signingData.date)/\(self.region)/\(self.name)/aws4_request"
+        case .sigV4a:
+            "\(self.credentials.accessKeyId)/\(signingData.date)/\(self.name)/aws4_request"
+        }
+
         // construct authorization string
         let authorization =
-            "\(algorithm.name) " + "Credential=\(credentials.accessKeyId)/\(signingData.date)/\(self.region)/\(self.name)/aws4_request,"
-            + "SignedHeaders=\(signingData.signedHeaders)," + "Signature=\(self.signature(signingData: signingData, algorithm: algorithm))"
+            """
+            \(algorithm.name) \
+            Credential=\(credential), \
+            SignedHeaders=\(signingData.signedHeaders), \
+            Signature=\(self.signature(signingData: signingData, algorithm: algorithm))
+            """
 
         // add Authorization header
         headers.replaceOrAdd(name: "authorization", value: authorization)
@@ -250,6 +264,9 @@ public struct AWSSigner: Sendable {
     ) -> URL {
         var headers = headers
         headers.replaceOrAdd(name: "host", value: Self.hostname(from: url))
+        if algorithm.base == .sigV4a {
+            headers.replaceOrAdd(name: "X-Amz-Region-Set", value: self.region)
+        }
         // Create signing data
         var signingData = AWSSigner.SigningData(url: url, method: method, headers: headers, body: body, date: AWSSigner.timestamp(date), signer: self)
         // Construct query string. Start with original query strings and append all the signing info.
@@ -258,7 +275,14 @@ public struct AWSSigner: Sendable {
             query += "&"
         }
         query += "X-Amz-Algorithm=\(algorithm.name)"
-        query += "&X-Amz-Credential=\(self.credentials.accessKeyId)/\(signingData.date)/\(self.region)/\(self.name)/aws4_request"
+        switch algorithm.base {
+        case .sigV4:
+            query += "&X-Amz-Credential=\(self.credentials.accessKeyId)/\(signingData.date)/\(self.region)/\(self.name)/aws4_request"
+        case .sigV4a:
+            query += "&X-Amz-Credential=\(self.credentials.accessKeyId)/\(signingData.date)/\(self.name)/aws4_request"
+            query += "&X-Amz-Region-Set=\(self.region)"
+        }
+
         query += "&X-Amz-Date=\(signingData.datetime)"
         query += "&X-Amz-Expires=\(expires.nanoseconds / 1_000_000_000)"
         query += "&X-Amz-SignedHeaders=\(signingData.signedHeaders)"
@@ -451,15 +475,29 @@ public struct AWSSigner: Sendable {
     // Stage 3a Calculating signature as in https://docs.aws.amazon.com/general/latest/gr/sigv4-calculate-signature.html
     func signV4a(_ signingData: SigningData) -> String {
         let signingKey = SigV4aKeyPair(credential: self.credentials)
-        return try! signingKey.sign(self.stringToSign(signingData: signingData, algorithm: .sigV4a))
+        let stringToSign = self.stringToSign(signingData: signingData, algorithm: .sigV4a)
+        return try! signingKey.sign(stringToSign)
     }
 
     /// Stage 2 Create the string to sign as in https://docs.aws.amazon.com/general/latest/gr/sigv4-create-string-to-sign.html
     func stringToSign(signingData: SigningData, algorithm: Algorithm) -> String {
-        let stringToSign =
-            "\(algorithm.name)\n" + "\(signingData.datetime)\n" + "\(signingData.date)/\(self.region)/\(self.name)/aws4_request\n"
-            + SHA256.hash(data: [UInt8](self.canonicalRequest(signingData: signingData).utf8)).hexDigest()
-        return stringToSign
+        switch algorithm.base {
+        case .sigV4:
+            """
+            \(algorithm.name)\n\
+            \(signingData.datetime)\n\
+            \(signingData.date)/\(self.region)/\(self.name)/aws4_request\n\
+            \(SHA256.hash(data: [UInt8](self.canonicalRequest(signingData: signingData).utf8)).hexDigest())
+            """
+        case .sigV4a:
+            """
+            \(algorithm.name)\n\
+            \(signingData.datetime)\n\
+            \(signingData.date)/\(self.name)/aws4_request\n\
+            \(SHA256.hash(data: [UInt8](self.canonicalRequest(signingData: signingData).utf8)).hexDigest())
+            """
+        }
+
     }
 
     /// Stage 1 Create the canonical request as in https://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html

@@ -55,4 +55,11 @@ final class SigV4aTests: XCTestCase {
         XCTAssertEqual(String(decoding: HexEncoding(result.key.rawRepresentation), as: Unicode.UTF8.self), expectedPrivateKeyHex)
     }
 
+    func testHexEncoding() {
+        XCTAssertEqual(String(decoding: HexEncoding([0]), as: Unicode.UTF8.self), "00")
+        XCTAssertEqual(String(decoding: HexEncoding([1]), as: Unicode.UTF8.self), "01")
+        XCTAssertEqual(String(decoding: HexEncoding([254]), as: Unicode.UTF8.self), "fe")
+        XCTAssertEqual(String(decoding: HexEncoding([255]), as: Unicode.UTF8.self), "ff")
+        XCTAssertEqual(String(decoding: HexEncoding([254, 255, 0]), as: Unicode.UTF8.self), "feff00")
+    }
 }

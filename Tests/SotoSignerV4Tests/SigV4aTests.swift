@@ -1,6 +1,6 @@
-import XCTest
 import SotoSignerV4
 @_spi(SotoInternal) import SotoSignerV4
+import XCTest
 
 final class SigV4aTests: XCTestCase {
 

@@ -117,7 +117,7 @@ package struct SigV4aKeyPair {
     }
 }
 
-extension Array<UInt8> {
+extension [UInt8] {
 
     package mutating func addOne() {
         var carry: UInt32 = 1
@@ -194,7 +194,7 @@ extension HexEncoding: Collection where Base: Collection {
                 return false
             }
         }
-        
+
         var base: Base.Index
         var first: Bool
     }

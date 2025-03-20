@@ -184,12 +184,13 @@ public struct AWSSigner: Sendable {
             signer: self
         )
 
-        let credential = switch algorithm.base {
-        case .sigV4:
-            "\(self.credentials.accessKeyId)/\(signingData.date)/\(self.region)/\(self.name)/aws4_request"
-        case .sigV4a:
-            "\(self.credentials.accessKeyId)/\(signingData.date)/\(self.name)/aws4_request"
-        }
+        let credential =
+            switch algorithm.base {
+            case .sigV4:
+                "\(self.credentials.accessKeyId)/\(signingData.date)/\(self.region)/\(self.name)/aws4_request"
+            case .sigV4a:
+                "\(self.credentials.accessKeyId)/\(signingData.date)/\(self.name)/aws4_request"
+            }
 
         // construct authorization string
         let authorization =
@@ -374,7 +375,7 @@ public struct AWSSigner: Sendable {
 
         // construct authorization string
         let authorization =
-        "\(algorithm.name) " + "Credential=\(credentials.accessKeyId)/\(signingData.date)/\(self.region)/\(self.name)/aws4_request,"
+            "\(algorithm.name) " + "Credential=\(credentials.accessKeyId)/\(signingData.date)/\(self.region)/\(self.name)/aws4_request,"
             + "SignedHeaders=\(signingData.signedHeaders)," + "Signature=\(signature)"
 
         // add Authorization header
@@ -469,7 +470,10 @@ public struct AWSSigner: Sendable {
     // Stage 3a Calculating signature as in https://docs.aws.amazon.com/general/latest/gr/sigv4-calculate-signature.html
     func signV4(_ signingData: SigningData) -> String {
         let signingKey = self.signingKey(date: signingData.date)
-        let kSignature = HMAC<SHA256>.authenticationCode(for: [UInt8](self.stringToSign(signingData: signingData, algorithm: .sigV4).utf8), using: signingKey)
+        let kSignature = HMAC<SHA256>.authenticationCode(
+            for: [UInt8](self.stringToSign(signingData: signingData, algorithm: .sigV4).utf8),
+            using: signingKey
+        )
         return kSignature.hexDigest()
     }
 

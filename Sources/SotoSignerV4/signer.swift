@@ -196,8 +196,8 @@ public struct AWSSigner: Sendable {
         let authorization =
             """
             \(algorithm.name) \
-            Credential=\(credential), \
-            SignedHeaders=\(signingData.signedHeaders), \
+            Credential=\(credential),\
+            SignedHeaders=\(signingData.signedHeaders),\
             Signature=\(self.signature(signingData: signingData, algorithm: algorithm))
             """
 
@@ -241,7 +241,6 @@ public struct AWSSigner: Sendable {
             algorithm: .sigV4
         )
     }
-
 
     /// Generate a signed URL, for a HTTP request
     /// - Parameters:

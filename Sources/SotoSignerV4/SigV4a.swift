@@ -137,7 +137,7 @@ package struct SigV4aKeyPair {
 
 extension [UInt8] {
 
-    package mutating func addOne() {
+    fileprivate mutating func addOne() {
         var carry: UInt32 = 1
         for index in self.indices.reversed() {
             var digit = UInt32(self[index])
@@ -149,7 +149,7 @@ extension [UInt8] {
         }
     }
 
-    fileprivate consuming func addingOne() -> [UInt8] {
+    package consuming func addingOne() -> [UInt8] {
         var new = consume self
         new.addOne()
         return new

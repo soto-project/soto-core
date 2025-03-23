@@ -143,9 +143,10 @@ extension [UInt8] {
             var digit = UInt32(self[index])
             digit += carry
             carry = (digit >> 8) & 0x01
+            self[index] = UInt8(digit & 0xFF)
+
             // once carry is we will not have any further changes and we can exit early
             if carry == 0 { return }
-            self[index] = UInt8(digit & 0xFF)
         }
     }
 

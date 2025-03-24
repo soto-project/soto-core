@@ -64,6 +64,8 @@ public struct AWSSigner: Sendable {
     public let name: String
     /// AWS region you are working in
     public let region: String
+    /// Signing algorithm
+    public let algorithm: Algorithm
 
     static let hashedEmptyBody = SHA256.hash(data: [UInt8]()).hexDigest()
 
@@ -74,6 +76,15 @@ public struct AWSSigner: Sendable {
         self.credentials = credentials
         self.name = name
         self.region = region
+        self.algorithm = .sigV4
+    }
+
+    /// Initialise the Signer class with AWS credentials
+    public init(credentials: Credential, name: String, region: String, algorithm: Algorithm) {
+        self.credentials = credentials
+        self.name = name
+        self.region = region
+        self.algorithm = algorithm
     }
 
     /// Enum for holding request payload
@@ -129,36 +140,6 @@ public struct AWSSigner: Sendable {
         body: BodyData? = nil,
         omitSecurityToken: Bool = false,
         date: Date = Date()
-    ) -> HTTPHeaders {
-        self.signHeaders(
-            url: url,
-            method: method,
-            headers: headers,
-            body: body,
-            omitSecurityToken: omitSecurityToken,
-            date: date,
-            algorithm: .sigV4
-        )
-    }
-
-    /// Generate signed headers, for an HTTP request
-    /// - Parameters:
-    ///   - url: Request URL
-    ///   - method: Request HTTP method
-    ///   - headers: Request headers
-    ///   - body: Request body
-    ///   - omitSecurityToken: Should we include security token in the query parameters
-    ///   - date: Date that URL is valid from, defaults to now
-    ///   - algorithm: The Algorithm to use for signing the request
-    /// - Returns: Request headers with added "authorization" header that contains request signature
-    public func signHeaders(
-        url: URL,
-        method: HTTPMethod = .GET,
-        headers: HTTPHeaders = HTTPHeaders(),
-        body: BodyData? = nil,
-        omitSecurityToken: Bool = false,
-        date: Date = Date(),
-        algorithm: Algorithm
     ) -> HTTPHeaders {
         let bodyHash = AWSSigner.hashedPayload(body)
         let dateString = AWSSigner.timestamp(date)
@@ -229,38 +210,6 @@ public struct AWSSigner: Sendable {
         expires: TimeAmount,
         omitSecurityToken: Bool = false,
         date: Date = Date()
-    ) -> URL {
-        self.signURL(
-            url: url,
-            method: method,
-            headers: headers,
-            body: body,
-            expires: expires,
-            omitSecurityToken: omitSecurityToken,
-            date: date,
-            algorithm: .sigV4
-        )
-    }
-
-    /// Generate a signed URL, for a HTTP request
-    /// - Parameters:
-    ///   - url: Request URL
-    ///   - method: Request HTTP method
-    ///   - headers: Request headers
-    ///   - body: Request body
-    ///   - expires: How long before the signed URL expires
-    ///   - omitSecurityToken: Should we include security token in the query parameters
-    ///   - date: Date that URL is valid from, defaults to now
-    /// - Returns: Signed URL
-    public func signURL(
-        url: URL,
-        method: HTTPMethod = .GET,
-        headers: HTTPHeaders = HTTPHeaders(),
-        body: BodyData? = nil,
-        expires: TimeAmount,
-        omitSecurityToken: Bool = false,
-        date: Date = Date(),
-        algorithm: Algorithm
     ) -> URL {
         var headers = headers
         headers.replaceOrAdd(name: "host", value: Self.hostname(from: url))
@@ -620,14 +569,6 @@ extension String {
     static let uriAllowedWithSlashCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~/")
     static let uriAllowedCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
     static let queryAllowedCharacters = CharacterSet(charactersIn: "/;+").inverted
-}
-
-@_spi(SotoInternal)
-extension Sequence<UInt8> {
-    /// return a hexEncoded string buffer from an array of bytes
-    public func hexDigest() -> String {
-        self.map { String(format: "%02x", $0) }.joined(separator: "")
-    }
 }
 
 @_spi(SotoInternal)

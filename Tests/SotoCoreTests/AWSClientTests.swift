@@ -51,11 +51,8 @@ class AWSClientTests: XCTestCase {
             let content: String
         }
         let awsServer = AWSTestServer(serviceProtocol: .json)
-        let elg = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(elg))
         let client = createAWSClient(
-            credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
-            httpClient: httpClient
+            credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar")
         )
         try await withTeardown {
             let config = createServiceConfig(
@@ -78,15 +75,48 @@ class AWSClientTests: XCTestCase {
 
             XCTAssertEqual(httpHeaders["content-length"].first, "18")
             XCTAssertEqual(httpHeaders["content-type"].first, "application/x-amz-json-1.1")
-            XCTAssertNotNil(httpHeaders["authorization"].first)
             XCTAssertNotNil(httpHeaders["x-amz-date"].first)
             XCTAssertEqual(httpHeaders["user-agent"].first, "Soto/6.0")
             XCTAssertEqual(httpHeaders["host"].first, "localhost:\(awsServer.serverPort)")
+            XCTAssert(httpHeaders["authorization"].first?.hasPrefix("AWS4-HMAC-SHA256") == true)
         } teardown: {
             try? awsServer.stop()
             try? await client.shutdown()
-            try? await httpClient.shutdown()
-            try? await elg.shutdownGracefully()
+        }
+    }
+
+    func testSigV4aOptions() async throws {
+        struct Input: AWSEncodableShape {
+            let content: String
+        }
+        let awsServer = AWSTestServer(serviceProtocol: .json)
+        let client = createAWSClient(
+            credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),
+            options: .init(signingAlgorithm: .sigV4a)
+        )
+        try await withTeardown {
+            let config = createServiceConfig(
+                serviceProtocol: .json(version: "1.1"),
+                endpoint: awsServer.address
+            )
+            async let responseTask: AWSTestServer.HTTPBinResponse = client.execute(
+                operation: "test",
+                path: "/",
+                httpMethod: .POST,
+                serviceConfig: config,
+                input: Input(content: "test"),
+                logger: TestEnvironment.logger
+            )
+
+            XCTAssertNoThrow(try awsServer.httpBin())
+
+            let httpBinResponse = try await responseTask
+            let httpHeaders = HTTPHeaders(httpBinResponse.headers.map { ($0, $1) })
+
+            XCTAssert(httpHeaders["authorization"].first?.hasPrefix("AWS4-ECDSA-P256-SHA256") == true)
+        } teardown: {
+            try? awsServer.stop()
+            try? await client.shutdown()
         }
     }
 

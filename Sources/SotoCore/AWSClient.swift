@@ -84,7 +84,7 @@ public final class AWSClient: Sendable {
         self.credentialProvider = credentialProvider
         self.middleware = AWSMiddlewareStack {
             middleware
-            SigningMiddleware(credentialProvider: credentialProvider)
+            SigningMiddleware(credentialProvider: credentialProvider, algorithm: options.signingAlgorithm)
             RetryMiddleware(retryPolicy: retryPolicyFactory.retryPolicy)
             ErrorHandlingMiddleware(options: options)
         }
@@ -117,7 +117,7 @@ public final class AWSClient: Sendable {
         )
         self.credentialProvider = credentialProvider
         self.middleware = AWSMiddlewareStack {
-            SigningMiddleware(credentialProvider: credentialProvider)
+            SigningMiddleware(credentialProvider: credentialProvider, algorithm: options.signingAlgorithm)
             RetryMiddleware(retryPolicy: retryPolicyFactory.retryPolicy)
             ErrorHandlingMiddleware(options: options)
         }
@@ -209,17 +209,37 @@ public final class AWSClient: Sendable {
 
     /// Additional options
     public struct Options: Sendable {
+        /// Signing method
+        let signingAlgorithm: AWSSigner.Algorithm
         /// log level used for request logging
         let requestLogLevel: Logger.Level
         /// log level used for error logging
         let errorLogLevel: Logger.Level
 
         /// Initialize AWSClient.Options
-        /// - Parameter requestLogLevel:Log level used for request logging
+        /// - Parameters:
+        //    - requestLogLevel: Log level used for request logging
+        //    - errorLogLevel: Log level used for error logging
         public init(
             requestLogLevel: Logger.Level = .debug,
             errorLogLevel: Logger.Level = .debug
         ) {
+            self.signingAlgorithm = .sigV4
+            self.requestLogLevel = requestLogLevel
+            self.errorLogLevel = errorLogLevel
+        }
+
+        /// Initialize AWSClient.Options
+        /// - Parameters:
+        ///   - signingAlgorithm: Algorithm to use when signing requests
+        //    - requestLogLevel: Log level used for request logging
+        //    - errorLogLevel: Log level used for error logging
+        public init(
+            signingAlgorithm: AWSSigner.Algorithm,
+            requestLogLevel: Logger.Level = .debug,
+            errorLogLevel: Logger.Level = .debug
+        ) {
+            self.signingAlgorithm = signingAlgorithm
             self.requestLogLevel = requestLogLevel
             self.errorLogLevel = errorLogLevel
         }
@@ -523,7 +543,12 @@ extension AWSClient {
 
     func createSigner(serviceConfig: AWSServiceConfig, logger: Logger) async throws -> AWSSigner {
         let credential = try await credentialProvider.getCredential(logger: logger)
-        return AWSSigner(credentials: credential, name: serviceConfig.signingName, region: serviceConfig.region.rawValue)
+        return AWSSigner(
+            credentials: credential,
+            name: serviceConfig.signingName,
+            region: serviceConfig.region.rawValue,
+            algorithm: self.options.signingAlgorithm
+        )
     }
 }
 

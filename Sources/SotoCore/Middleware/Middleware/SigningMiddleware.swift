@@ -20,6 +20,8 @@ import SotoSignerV4
 struct SigningMiddleware: AWSMiddlewareProtocol {
     @usableFromInline
     let credentialProvider: any CredentialProvider
+    @usableFromInline
+    let algorithm: AWSSigner.Algorithm
 
     @inlinable
     func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse {
@@ -28,7 +30,8 @@ struct SigningMiddleware: AWSMiddlewareProtocol {
         let signer = AWSSigner(
             credentials: context.credential,
             name: context.serviceConfig.signingName,
-            region: context.serviceConfig.region.rawValue
+            region: context.serviceConfig.region.rawValue,
+            algorithm: algorithm
         )
         request.signHeaders(signer: signer, serviceConfig: context.serviceConfig)
         return try await next(request, context)

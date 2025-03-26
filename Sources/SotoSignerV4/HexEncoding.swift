@@ -145,6 +145,7 @@ extension ContiguousBytes {
     /// return a hexEncoded string buffer from an array of bytes
     @_disfavoredOverload
     @_spi(SotoInternal)
+    @inlinable
     public func hexDigest() -> String {
         self.withUnsafeBytes { ptr in
             ptr.hexDigest()
@@ -155,6 +156,7 @@ extension ContiguousBytes {
 extension Collection<UInt8> {
     /// return a hexEncoded string buffer from an array of bytes
     @_spi(SotoInternal)
+    @inlinable
     public func hexDigest() -> String {
         String(decoding: HexEncoding(self), as: Unicode.UTF8.self)
     }

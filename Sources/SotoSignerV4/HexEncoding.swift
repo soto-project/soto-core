@@ -43,6 +43,7 @@ extension HexEncoding: Sequence {
         @usableFromInline
         var _next: UInt8?
 
+        @inlinable
         init(base: Base.Iterator) {
             self.base = base
             self._next = nil
@@ -67,7 +68,7 @@ extension HexEncoding: Sequence {
         }
     }
 
-    @usableFromInline
+    @inlinable
     package func makeIterator() -> Iterator {
         Iterator(base: self.base.makeIterator())
     }
@@ -76,7 +77,13 @@ extension HexEncoding: Sequence {
 extension HexEncoding: Collection where Base: Collection {
     @usableFromInline
     package struct Index: Comparable {
-        @usableFromInline
+        @inlinable
+        init(base: Base.Index, first: Bool) {
+            self.base = base
+            self.first = first
+        }
+
+        @inlinable
         package static func < (lhs: HexEncoding<Base>.Index, rhs: HexEncoding<Base>.Index) -> Bool {
             if lhs.base < rhs.base {
                 return true
@@ -89,21 +96,23 @@ extension HexEncoding: Collection where Base: Collection {
             }
         }
 
+        @usableFromInline
         var base: Base.Index
+        @usableFromInline
         var first: Bool
     }
 
-    @usableFromInline
+    @inlinable
     package var startIndex: Index {
         Index(base: self.base.startIndex, first: true)
     }
 
-    @usableFromInline
+    @inlinable
     package var endIndex: Index {
         Index(base: self.base.endIndex, first: true)
     }
 
-    @usableFromInline
+    @inlinable
     package func index(after i: Index) -> Index {
         if i.first {
             return Index(base: i.base, first: false)
@@ -112,7 +121,7 @@ extension HexEncoding: Collection where Base: Collection {
         }
     }
 
-    @usableFromInline
+    @inlinable
     package subscript(position: Index) -> UInt8 {
         let value = self.base[position.base]
         let base16 = position.first ? value >> 4 : value & 0x0F
@@ -121,7 +130,7 @@ extension HexEncoding: Collection where Base: Collection {
 }
 
 extension UInt8 {
-    @usableFromInline
+    @inlinable
     func makeBase16Ascii() -> UInt8 {
         assert(self < 16)
         if self < 10 {

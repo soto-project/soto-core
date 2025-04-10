@@ -356,6 +356,8 @@ class AWSResponseTests: XCTestCase {
         XCTAssertEqual(error?.message, "Don't like it")
         XCTAssertEqual(error?.context?.responseCode, .notFound)
         XCTAssertEqual(error?.context?.additionalFields["fault"], "client")
+        let contextError = try XCTUnwrap(error?.context?.extendedError as? ServiceErrorType.MessageRejected)
+        XCTAssertEqual(contextError.fault, "client")
     }
 
     func testEC2Error() async throws {
@@ -672,7 +674,11 @@ class AWSResponseTests: XCTestCase {
 
     // MARK: Types used in tests
 
-    struct ServiceErrorType: AWSErrorType, Equatable {
+    struct ServiceErrorType: AWSServiceErrorType, Equatable {
+        struct MessageRejected: AWSErrorShape {
+            let message: String?
+            let fault: String?
+        }
         enum Code: String {
             case resourceNotFoundException = "ResourceNotFoundException"
             case noSuchKey = "NoSuchKey"
@@ -681,6 +687,8 @@ class AWSResponseTests: XCTestCase {
 
         let error: Code
         let context: AWSErrorContext?
+
+        static let errorCodeMap: [String: AWSErrorShape.Type] = ["MessageRejected": MessageRejected.self]
 
         init?(errorCode: String, context: AWSErrorContext) {
             guard let error = Code(rawValue: errorCode) else { return nil }

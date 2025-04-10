@@ -256,7 +256,7 @@ extension AWSHTTPRequest {
 
     /// Add headers standard to all requests "content-type" and "user-agent"
     private mutating func addStandardHeaders(serviceProtocol: ServiceProtocol, raw: Bool) {
-        self.headers.add(name: "user-agent", value: "Soto/6.0")
+        self.headers.add(name: "user-agent", value: "Soto/7.0")
         guard self.headers["content-type"].first == nil else {
             return
         }

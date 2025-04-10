@@ -36,8 +36,9 @@ extension AWSErrorType {
     }
 }
 
+/// Service that has extended error information
 public protocol AWSServiceErrorType: AWSErrorType {
-    static var errorCodeMap: [String: (Decodable & Error).Type] { get }
+    static var errorCodeMap: [String: AWSErrorShape.Type] { get }
 }
 
 /// Additional information about error
@@ -46,20 +47,20 @@ public struct AWSErrorContext {
     public let responseCode: HTTPResponseStatus
     public let headers: HTTPHeaders
     public let additionalFields: [String: String]
-    public let underlyingError: Error?
+    public let extendedError: AWSErrorShape?
 
     internal init(
         message: String,
         responseCode: HTTPResponseStatus,
         headers: HTTPHeaders = [:],
         additionalFields: [String: String] = [:],
-        underlyingError: Error? = nil
+        extendedError: AWSErrorShape? = nil
     ) {
         self.message = message
         self.responseCode = responseCode
         self.headers = headers
         self.additionalFields = additionalFields
-        self.underlyingError = underlyingError
+        self.extendedError = extendedError
     }
 }
 

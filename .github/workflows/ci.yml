@@ -41,10 +41,9 @@ jobs:
     strategy:
       matrix:
         image:
-          - 'swift:5.9'
           - 'swift:5.10'
           - 'swift:6.0'
-          - 'swiftlang/swift:nightly-6.1-jammy'
+          - 'swift:6.1'
     container:
       image: ${{ matrix.image }}
     steps:

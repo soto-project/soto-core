@@ -109,11 +109,7 @@ public struct ISO8601DateCoder: CustomDecoder, CustomEncoder {
 /// Date coder for HTTP header format
 public struct HTTPHeaderDateCoder: DateFormatCoder {
     public static let format = "EEE, d MMM yyy HH:mm:ss z"
-    #if compiler(>=6.1)
-    nonisolated(unsafe) public static let dateFormatter = createDateFormatter()
-    #else
     public static let dateFormatter = createDateFormatter()
-    #endif
 }
 
 /// Unix Epoch Date coder

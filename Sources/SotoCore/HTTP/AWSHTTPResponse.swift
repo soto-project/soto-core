@@ -33,7 +33,7 @@ internal import SotoXML
 #endif
 
 /// Structure encapsulating an HTTP Response
-public struct AWSHTTPResponse {
+public struct AWSHTTPResponse: Sendable {
     /// response status
     public let status: HTTPResponseStatus
     /// response headers

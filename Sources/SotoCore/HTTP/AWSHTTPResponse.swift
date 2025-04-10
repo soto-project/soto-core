@@ -168,7 +168,8 @@ public struct AWSHTTPResponse: Sendable {
                 message: errorMessage.message,
                 responseCode: self.status,
                 headers: self.headers,
-                additionalFields: errorMessage.additionalFields
+                additionalFields: errorMessage.additionalFields,
+                extendedError: errorMessage.extendedError
             )
 
             if let errorType = serviceConfig.errorType {

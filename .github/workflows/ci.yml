@@ -17,7 +17,7 @@ env:
 
 jobs:
   macos:
-    runs-on: macOS-13
+    runs-on: macOS-14
     timeout-minutes: 15
     steps:
     - name: Checkout

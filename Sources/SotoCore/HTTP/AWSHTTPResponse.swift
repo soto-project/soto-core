@@ -17,6 +17,7 @@ import Logging
 import NIOCore
 import NIOFoundationCompat
 import NIOHTTP1
+internal import SotoXML
 
 import struct Foundation.Data
 import struct Foundation.Date
@@ -25,12 +26,6 @@ import class Foundation.JSONDecoder
 import class Foundation.JSONSerialization
 import struct Foundation.Locale
 import struct Foundation.TimeZone
-
-#if compiler(>=5.10)
-internal import SotoXML
-#else
-@_implementationOnly import SotoXML
-#endif
 
 /// Structure encapsulating an HTTP Response
 public struct AWSHTTPResponse: Sendable {

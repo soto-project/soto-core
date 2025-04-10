@@ -14,13 +14,8 @@
 
 import SotoSignerV4
 
-import struct Foundation.TimeInterval
-
-#if compiler(<5.9) && os(Linux)
-@preconcurrency import struct Foundation.Date
-#else
 import struct Foundation.Date
-#endif
+import struct Foundation.TimeInterval
 
 /// Credential provider whose credentials expire over tiem.
 public protocol ExpiringCredential: Credential {

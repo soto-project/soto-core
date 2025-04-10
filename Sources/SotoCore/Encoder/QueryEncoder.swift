@@ -394,19 +394,11 @@ extension _QueryEncoder {
         }
     }
 
-    #if compiler(>=5.10)
     nonisolated(unsafe) static let dateFormatter: ISO8601DateFormatter = {
         let dateFormatter = ISO8601DateFormatter()
         dateFormatter.formatOptions = [.withFullDate, .withFullTime, .withFractionalSeconds]
         return dateFormatter
     }()
-    #else
-    static let dateFormatter: ISO8601DateFormatter = {
-        let dateFormatter = ISO8601DateFormatter()
-        dateFormatter.formatOptions = [.withFullDate, .withFullTime, .withFractionalSeconds]
-        return dateFormatter
-    }()
-    #endif
 }
 
 //===----------------------------------------------------------------------===//

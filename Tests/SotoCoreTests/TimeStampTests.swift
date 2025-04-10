@@ -17,13 +17,9 @@ import SotoTestUtils
 import SotoXML
 import XCTest
 
-@testable @_spi(SotoInternal) import SotoCore
-
-#if compiler(<5.9) && os(Linux)
-@preconcurrency import struct Foundation.Date
-#else
 import struct Foundation.Date
-#endif
+
+@testable @_spi(SotoInternal) import SotoCore
 
 class TimeStampTests: XCTestCase {
     private let dateFormatter: DateFormatter = {

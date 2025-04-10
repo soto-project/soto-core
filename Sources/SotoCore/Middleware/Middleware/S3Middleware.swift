@@ -15,12 +15,7 @@
 import Crypto
 import Foundation
 @_spi(SotoInternal) import SotoSignerV4
-
-#if compiler(>=5.10)
 internal import SotoXML
-#else
-@_implementationOnly import SotoXML
-#endif
 
 extension S3Middleware {
     @TaskLocal public static var executionContext: ExecutionContext?

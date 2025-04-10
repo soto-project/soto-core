@@ -19,13 +19,9 @@ import SotoTestUtils
 import SotoXML
 import XCTest
 
-@testable @_spi(SotoInternal) import SotoCore
-
-#if compiler(<5.9) && os(Linux)
-@preconcurrency import struct Foundation.Data
-#else
 import struct Foundation.Data
-#endif
+
+@testable @_spi(SotoInternal) import SotoCore
 
 extension AWSHTTPBody {
     func asString() -> String? {

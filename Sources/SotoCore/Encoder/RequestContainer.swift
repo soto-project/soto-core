@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import NIOConcurrencyHelpers
+
 import struct Foundation.CharacterSet
 import struct Foundation.Date
 import struct Foundation.URL
@@ -20,24 +22,77 @@ import struct Foundation.URLComponents
 /// Request container used during Codable `encode(to:)` that allows for encoding data into
 /// the request that is not part of standard Codable output
 @_spi(SotoInternal)
-public class RequestEncodingContainer {
+public final class RequestEncodingContainer: Sendable {
+    struct _Internal {
+        @usableFromInline
+        var path: String
+        @usableFromInline
+        var hostPrefix: String?
+        @usableFromInline
+        var headers: HTTPHeaders = .init()
+        @usableFromInline
+        var queryParams: [(key: String, value: String)] = []
+        @usableFromInline
+        var body: AWSHTTPBody?
+
+        init(headers: HTTPHeaders, queryParams: [(key: String, value: String)], path: String, hostPrefix: String?) {
+            self.headers = headers
+            self.queryParams = queryParams
+            self.path = path
+            self.hostPrefix = hostPrefix
+            self.body = nil
+        }
+    }
+    let _internal: NIOLockedValueBox<_Internal>
+
     @usableFromInline
-    var path: String
+    var path: String {
+        get {
+            self._internal.withLockedValue { $0.path }
+        }
+        set {
+            self._internal.withLockedValue { $0.path = newValue }
+        }
+    }
     @usableFromInline
-    var hostPrefix: String?
+    var hostPrefix: String? {
+        get {
+            self._internal.withLockedValue { $0.hostPrefix }
+        }
+        set {
+            self._internal.withLockedValue { $0.hostPrefix = newValue }
+        }
+    }
     @usableFromInline
-    var headers: HTTPHeaders = .init()
+    var headers: HTTPHeaders {
+        get {
+            self._internal.withLockedValue { $0.headers }
+        }
+        set {
+            self._internal.withLockedValue { $0.headers = newValue }
+        }
+    }
     @usableFromInline
-    var queryParams: [(key: String, value: String)] = []
+    var queryParams: [(key: String, value: String)] {
+        get {
+            self._internal.withLockedValue { $0.queryParams }
+        }
+        set {
+            self._internal.withLockedValue { $0.queryParams = newValue }
+        }
+    }
     @usableFromInline
-    var body: AWSHTTPBody?
+    var body: AWSHTTPBody? {
+        get {
+            self._internal.withLockedValue { $0.body }
+        }
+        set {
+            self._internal.withLockedValue { $0.body = newValue }
+        }
+    }
 
     init(headers: HTTPHeaders = .init(), queryParams: [(key: String, value: String)] = [], path: String, hostPrefix: String?) {
-        self.headers = headers
-        self.queryParams = queryParams
-        self.path = path
-        self.hostPrefix = hostPrefix
-        self.body = nil
+        self._internal = .init(.init(headers: headers, queryParams: queryParams, path: path, hostPrefix: hostPrefix))
     }
 
     /// Build URL from Request encoding container values

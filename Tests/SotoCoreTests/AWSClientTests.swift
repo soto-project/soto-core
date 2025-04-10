@@ -76,7 +76,7 @@ class AWSClientTests: XCTestCase {
             XCTAssertEqual(httpHeaders["content-length"].first, "18")
             XCTAssertEqual(httpHeaders["content-type"].first, "application/x-amz-json-1.1")
             XCTAssertNotNil(httpHeaders["x-amz-date"].first)
-            XCTAssertEqual(httpHeaders["user-agent"].first, "Soto/6.0")
+            XCTAssertEqual(httpHeaders["user-agent"].first, "Soto/7.0")
             XCTAssertEqual(httpHeaders["host"].first, "localhost:\(awsServer.serverPort)")
             XCTAssert(httpHeaders["authorization"].first?.hasPrefix("AWS4-HMAC-SHA256") == true)
         } teardown: {

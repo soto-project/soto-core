@@ -17,17 +17,12 @@ import NIOCore
 import NIOFoundationCompat
 import NIOHTTP1
 import SotoSignerV4
+internal import SotoXML
 
 import struct Foundation.Data
 import struct Foundation.Date
 import class Foundation.JSONEncoder
 import struct Foundation.URL
-
-#if compiler(>=5.10)
-internal import SotoXML
-#else
-@_implementationOnly import SotoXML
-#endif
 
 /// Object encapsulating all the information needed to generate a raw HTTP request to AWS
 public struct AWSHTTPRequest: Sendable {
@@ -261,7 +256,7 @@ extension AWSHTTPRequest {
 
     /// Add headers standard to all requests "content-type" and "user-agent"
     private mutating func addStandardHeaders(serviceProtocol: ServiceProtocol, raw: Bool) {
-        self.headers.add(name: "user-agent", value: "Soto/6.0")
+        self.headers.add(name: "user-agent", value: "Soto/7.0")
         guard self.headers["content-type"].first == nil else {
             return
         }

@@ -15,13 +15,8 @@
 import AsyncHTTPClient
 import NIOPosix
 
-import struct Foundation.TimeInterval
-
-#if compiler(<5.9) && os(Linux)
-@preconcurrency import struct Foundation.Date
-#else
 import struct Foundation.Date
-#endif
+import struct Foundation.TimeInterval
 
 struct STSAssumeRoleRequest: AWSEncodableShape {
     /// The Amazon Resource Name (ARN) of the role to assume.

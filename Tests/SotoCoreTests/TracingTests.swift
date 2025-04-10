@@ -22,11 +22,7 @@ import XCTest
 
 final class TracingTests: XCTestCase {
     func wait(for expectations: [XCTestExpectation], timeout: TimeInterval) async {
-        #if os(Linux) && swift(<5.9)
-        super.wait(for: expectations, timeout: timeout)
-        #else
         await fulfillment(of: expectations, timeout: timeout)
-        #endif
     }
 
     func testTracingMiddleware() async throws {

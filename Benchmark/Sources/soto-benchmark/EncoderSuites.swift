@@ -15,12 +15,7 @@
 import Benchmark
 import Foundation
 import SotoCore
-
-#if compiler(>=5.10)
 internal import SotoXML
-#else
-@_implementationOnly import SotoXML
-#endif
 
 protocol EncoderProtocol {
     associatedtype Output

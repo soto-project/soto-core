@@ -12,16 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+import struct Foundation.Date
 import class Foundation.DateFormatter
 import class Foundation.ISO8601DateFormatter
 import struct Foundation.Locale
 import struct Foundation.TimeZone
-
-#if compiler(<5.9) && os(Linux)
-@preconcurrency import struct Foundation.Date
-#else
-import struct Foundation.Date
-#endif
 
 // MARK: TimeStamp Coders
 
@@ -89,31 +84,18 @@ public struct ISO8601DateCoder: CustomDecoder, CustomEncoder {
         self.dateFormatters[0].string(from: value)
     }
 
-    #if compiler(>=5.10)
     nonisolated(unsafe) static let dateFormatters: [ISO8601DateFormatter] = {
         let dateFormatters: [ISO8601DateFormatter] = [ISO8601DateFormatter(), ISO8601DateFormatter()]
         dateFormatters[0].formatOptions = [.withFullDate, .withFullTime, .withFractionalSeconds]
         dateFormatters[1].formatOptions = [.withFullDate, .withFullTime]
         return dateFormatters
     }()
-    #else
-    static let dateFormatters: [ISO8601DateFormatter] = {
-        let dateFormatters: [ISO8601DateFormatter] = [ISO8601DateFormatter(), ISO8601DateFormatter()]
-        dateFormatters[0].formatOptions = [.withFullDate, .withFullTime, .withFractionalSeconds]
-        dateFormatters[1].formatOptions = [.withFullDate, .withFullTime]
-        return dateFormatters
-    }()
-    #endif
 }
 
 /// Date coder for HTTP header format
 public struct HTTPHeaderDateCoder: DateFormatCoder {
     public static let format = "EEE, d MMM yyy HH:mm:ss z"
-    #if compiler(>=6.1)
-    nonisolated(unsafe) public static let dateFormatter = createDateFormatter()
-    #else
     public static let dateFormatter = createDateFormatter()
-    #endif
 }
 
 /// Unix Epoch Date coder

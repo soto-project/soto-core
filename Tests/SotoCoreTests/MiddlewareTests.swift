@@ -121,6 +121,13 @@ class MiddlewareTests: XCTestCase {
         }
     }
 
+    func testS3MiddlewareNoBucket() async throws {
+        // Test virual address
+        try await self.testMiddleware(S3Middleware(), uri: "/") { request, _ in
+            XCTAssertEqual(request.url.absoluteString, "https://service.us-east-1.amazonaws.com/")
+        }
+    }
+
     func testS3MiddlewareVirtualAddress() async throws {
         // Test virual address
         try await self.testMiddleware(S3Middleware(), uri: "/bucket/file") { request, _ in

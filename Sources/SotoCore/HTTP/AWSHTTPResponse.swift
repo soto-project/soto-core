@@ -109,13 +109,17 @@ public struct AWSHTTPResponse {
         case .byteBuffer(let buffer):
             switch serviceConfig.serviceProtocol {
             case .restjson:
-                apiError = try? JSONDecoder().decode(RESTJSONError.self, from: buffer)
+                let jsonDecoder = JSONDecoder()
+                jsonDecoder.userInfo[.awsErrorMap] = serviceConfig.errorType
+                apiError = try? jsonDecoder.decode(RESTJSONError.self, from: buffer)
                 if apiError?.code == nil {
                     apiError?.code = self.headers["x-amzn-errortype"].first
                 }
 
             case .json:
-                apiError = try? JSONDecoder().decode(JSONError.self, from: buffer)
+                let jsonDecoder = JSONDecoder()
+                jsonDecoder.userInfo[.awsErrorMap] = serviceConfig.errorType
+                apiError = try? jsonDecoder.decode(JSONError.self, from: buffer)
 
             case .query:
                 let xmlDocument = try? XML.Document(buffer: buffer)
@@ -124,7 +128,9 @@ public struct AWSHTTPResponse {
                     element = errors
                 }
                 guard let errorElement = element.elements(forName: "Error").first else { break }
-                apiError = try? XMLDecoder().decode(XMLQueryError.self, from: errorElement)
+                var xmlDecoder = XMLDecoder()
+                xmlDecoder.userInfo[.awsErrorMap] = serviceConfig.errorType
+                apiError = try? xmlDecoder.decode(XMLQueryError.self, from: errorElement)
 
             case .restxml:
                 let xmlDocument = try? XML.Document(buffer: buffer)
@@ -132,7 +138,9 @@ public struct AWSHTTPResponse {
                 if let error = element.elements(forName: "Error").first {
                     element = error
                 }
-                apiError = try? XMLDecoder().decode(XMLQueryError.self, from: element)
+                var xmlDecoder = XMLDecoder()
+                xmlDecoder.userInfo[.awsErrorMap] = serviceConfig.errorType
+                apiError = try? xmlDecoder.decode(XMLQueryError.self, from: element)
 
             case .ec2:
                 let xmlDocument = try? XML.Document(buffer: buffer)
@@ -141,7 +149,9 @@ public struct AWSHTTPResponse {
                     element = errors
                 }
                 guard let errorElement = element.elements(forName: "Error").first else { break }
-                apiError = try? XMLDecoder().decode(XMLQueryError.self, from: errorElement)
+                var xmlDecoder = XMLDecoder()
+                xmlDecoder.userInfo[.awsErrorMap] = serviceConfig.errorType
+                apiError = try? xmlDecoder.decode(XMLQueryError.self, from: errorElement)
             }
         }
         if let errorMessage = apiError, var code = errorMessage.code {
@@ -186,16 +196,27 @@ public struct AWSHTTPResponse {
     }
 
     /// Error used by XML output
-    private struct XMLQueryError: Codable, APIError {
+    private struct XMLQueryError: Decodable, APIError {
         var code: String?
         let message: String
         let additionalFields: [String: String]
+        let underlyingError: (Error & Decodable)?
 
         init(from decoder: Decoder) throws {
             // use `ErrorCodingKey` so we get extract additional keys from `container.allKeys`
             let container = try decoder.container(keyedBy: ErrorCodingKey.self)
             self.code = try container.decodeIfPresent(String.self, forKey: .init("Code"))
             self.message = try container.decode(String.self, forKey: .init("Message"))
+
+            if let code = self.code,
+                let errorMapping = decoder.userInfo[.awsErrorMap] as? AWSServiceErrorType.Type,
+                let errorType = errorMapping.errorCodeMap[code]
+            {
+                let container = try decoder.singleValueContainer()
+                self.underlyingError = try? container.decode(errorType)
+            } else {
+                self.underlyingError = nil
+            }
 
             var additionalFields: [String: String] = [:]
             for key in container.allKeys {
@@ -208,11 +229,11 @@ public struct AWSHTTPResponse {
         }
     }
 
-    /// Error used by JSON output
     private struct JSONError: Decodable, APIError {
         var code: String?
         let message: String
         let additionalFields: [String: String]
+        let underlyingError: (Error & Decodable)?
 
         init(from decoder: Decoder) throws {
             // use `ErrorCodingKey` so we get extract additional keys from `container.allKeys`
@@ -221,6 +242,15 @@ public struct AWSHTTPResponse {
             self.message =
                 try container.decodeIfPresent(String.self, forKey: .init("message")) ?? container.decode(String.self, forKey: .init("Message"))
 
+            if let code = self.code,
+                let errorMapping = decoder.userInfo[.awsErrorMap] as? AWSServiceErrorType.Type,
+                let errorType = errorMapping.errorCodeMap[code]
+            {
+                let container = try decoder.singleValueContainer()
+                self.underlyingError = try? container.decode(errorType)
+            } else {
+                self.underlyingError = nil
+            }
             var additionalFields: [String: String] = [:]
             for key in container.allKeys {
                 guard key.stringValue != "__type", key.stringValue != "message", key.stringValue != "Message" else { continue }
@@ -237,6 +267,7 @@ public struct AWSHTTPResponse {
         var code: String?
         let message: String
         let additionalFields: [String: String]
+        let underlyingError: (Error & Decodable)?
 
         init(from decoder: Decoder) throws {
             // use `ErrorCodingKey` so we get extract additional keys from `container.allKeys`
@@ -244,6 +275,16 @@ public struct AWSHTTPResponse {
             self.code = try container.decodeIfPresent(String.self, forKey: .init("code"))
             self.message =
                 try container.decodeIfPresent(String.self, forKey: .init("message")) ?? container.decode(String.self, forKey: .init("Message"))
+
+            if let code = self.code,
+                let errorMapping = decoder.userInfo[.awsErrorMap] as? AWSServiceErrorType.Type,
+                let errorType = errorMapping.errorCodeMap[code]
+            {
+                let container = try decoder.singleValueContainer()
+                self.underlyingError = try? container.decode(errorType)
+            } else {
+                self.underlyingError = nil
+            }
 
             var additionalFields: [String: String] = [:]
             for key in container.allKeys {
@@ -281,6 +322,7 @@ private protocol APIError {
     var code: String? { get set }
     var message: String { get }
     var additionalFields: [String: String] { get }
+    var underlyingError: (Error & Decodable)? { get }
 }
 
 extension XML.Document {
@@ -288,4 +330,8 @@ extension XML.Document {
         let xmlString = String(buffer: buffer)
         try self.init(string: xmlString)
     }
+}
+
+extension CodingUserInfoKey {
+    public static var awsErrorMap: Self { .init(rawValue: "soto.awsErrorMap")! }
 }

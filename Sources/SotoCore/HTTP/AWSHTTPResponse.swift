@@ -195,7 +195,7 @@ public struct AWSHTTPResponse: Sendable {
         var code: String?
         let message: String
         let additionalFields: [String: String]
-        let underlyingError: (Error & Decodable)?
+        let extendedError: AWSErrorShape?
 
         init(from decoder: Decoder) throws {
             // use `ErrorCodingKey` so we get extract additional keys from `container.allKeys`
@@ -208,9 +208,9 @@ public struct AWSHTTPResponse: Sendable {
                 let errorType = errorMapping.errorCodeMap[code]
             {
                 let container = try decoder.singleValueContainer()
-                self.underlyingError = try? container.decode(errorType)
+                self.extendedError = try? container.decode(errorType)
             } else {
-                self.underlyingError = nil
+                self.extendedError = nil
             }
 
             var additionalFields: [String: String] = [:]
@@ -228,7 +228,7 @@ public struct AWSHTTPResponse: Sendable {
         var code: String?
         let message: String
         let additionalFields: [String: String]
-        let underlyingError: (Error & Decodable)?
+        let extendedError: AWSErrorShape?
 
         init(from decoder: Decoder) throws {
             // use `ErrorCodingKey` so we get extract additional keys from `container.allKeys`
@@ -242,9 +242,9 @@ public struct AWSHTTPResponse: Sendable {
                 let errorType = errorMapping.errorCodeMap[code]
             {
                 let container = try decoder.singleValueContainer()
-                self.underlyingError = try? container.decode(errorType)
+                self.extendedError = try? container.decode(errorType)
             } else {
-                self.underlyingError = nil
+                self.extendedError = nil
             }
             var additionalFields: [String: String] = [:]
             for key in container.allKeys {
@@ -262,7 +262,7 @@ public struct AWSHTTPResponse: Sendable {
         var code: String?
         let message: String
         let additionalFields: [String: String]
-        let underlyingError: (Error & Decodable)?
+        let extendedError: AWSErrorShape?
 
         init(from decoder: Decoder) throws {
             // use `ErrorCodingKey` so we get extract additional keys from `container.allKeys`
@@ -276,9 +276,9 @@ public struct AWSHTTPResponse: Sendable {
                 let errorType = errorMapping.errorCodeMap[code]
             {
                 let container = try decoder.singleValueContainer()
-                self.underlyingError = try? container.decode(errorType)
+                self.extendedError = try? container.decode(errorType)
             } else {
-                self.underlyingError = nil
+                self.extendedError = nil
             }
 
             var additionalFields: [String: String] = [:]
@@ -317,7 +317,7 @@ private protocol APIError {
     var code: String? { get set }
     var message: String { get }
     var additionalFields: [String: String] { get }
-    var underlyingError: (Error & Decodable)? { get }
+    var extendedError: AWSErrorShape? { get }
 }
 
 extension XML.Document {

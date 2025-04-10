@@ -77,7 +77,7 @@ public struct S3Middleware: AWSMiddlewareProtocol {
         }
         /// split path into components. Drop first as it is an empty string
         let paths = request.url.path.split(separator: "/", maxSplits: 2, omittingEmptySubsequences: false).dropFirst()
-        guard let bucket = paths.first, var host = request.url.host else { return try await next(request, context) }
+        guard let bucket = paths.first, bucket != "", var host = request.url.host else { return try await next(request, context) }
         let path = paths.dropFirst().first.flatMap { String($0) } ?? ""
 
         if let port = request.url.port {

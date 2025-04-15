@@ -201,7 +201,9 @@ public struct AWSHTTPResponse: Sendable {
         init(from decoder: Decoder) throws {
             // use `ErrorCodingKey` so we get extract additional keys from `container.allKeys`
             let container = try decoder.container(keyedBy: ErrorCodingKey.self)
-            self.code = try container.decodeIfPresent(String.self, forKey: .init("Code"))
+            let code = try container.decodeIfPresent(String.self, forKey: .init("Code"))
+            // Remove namespace from error code
+            self.code = code?.split(separator: "#").last.map { String($0) }
             self.message = try container.decode(String.self, forKey: .init("Message"))
 
             if let code = self.code,
@@ -234,12 +236,15 @@ public struct AWSHTTPResponse: Sendable {
         init(from decoder: Decoder) throws {
             // use `ErrorCodingKey` so we get extract additional keys from `container.allKeys`
             let container = try decoder.container(keyedBy: ErrorCodingKey.self)
-            self.code = try container.decodeIfPresent(String.self, forKey: .init("__type"))
+            let code = try container.decodeIfPresent(String.self, forKey: .init("__type"))
+            // Remove namespace from error code
+            self.code = code?.split(separator: "#").last.map { String($0) }
             self.message =
                 try container.decodeIfPresent(String.self, forKey: .init("message")) ?? container.decode(String.self, forKey: .init("Message"))
 
+            let errorMapping = decoder.userInfo[.awsErrorMap]
             if let code = self.code,
-                let errorMapping = decoder.userInfo[.awsErrorMap] as? AWSServiceErrorType.Type,
+                let errorMapping = errorMapping as? AWSServiceErrorType.Type,
                 let errorType = errorMapping.errorCodeMap[code]
             {
                 let container = try decoder.singleValueContainer()
@@ -268,7 +273,9 @@ public struct AWSHTTPResponse: Sendable {
         init(from decoder: Decoder) throws {
             // use `ErrorCodingKey` so we get extract additional keys from `container.allKeys`
             let container = try decoder.container(keyedBy: ErrorCodingKey.self)
-            self.code = try container.decodeIfPresent(String.self, forKey: .init("code"))
+            let code = try container.decodeIfPresent(String.self, forKey: .init("code"))
+            // Remove namespace from error code
+            self.code = code?.split(separator: "#").last.map { String($0) }
             self.message =
                 try container.decodeIfPresent(String.self, forKey: .init("message")) ?? container.decode(String.self, forKey: .init("Message"))
 

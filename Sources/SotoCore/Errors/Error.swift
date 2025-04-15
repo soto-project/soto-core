@@ -28,12 +28,17 @@ public protocol AWSErrorType: Error, CustomStringConvertible {
 
 extension AWSErrorType {
     public var localizedDescription: String {
-        description
+        "\(self)"
     }
 
     public var message: String? {
         context?.message
     }
+}
+
+/// Service that has extended error information
+public protocol AWSServiceErrorType: AWSErrorType {
+    static var errorCodeMap: [String: AWSErrorShape.Type] { get }
 }
 
 /// Additional information about error
@@ -42,17 +47,20 @@ public struct AWSErrorContext {
     public let responseCode: HTTPResponseStatus
     public let headers: HTTPHeaders
     public let additionalFields: [String: String]
+    public let extendedError: AWSErrorShape?
 
     internal init(
         message: String,
         responseCode: HTTPResponseStatus,
         headers: HTTPHeaders = [:],
-        additionalFields: [String: String] = [:]
+        additionalFields: [String: String] = [:],
+        extendedError: AWSErrorShape? = nil
     ) {
         self.message = message
         self.responseCode = responseCode
         self.headers = headers
         self.additionalFields = additionalFields
+        self.extendedError = extendedError
     }
 }
 

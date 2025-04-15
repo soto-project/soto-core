@@ -193,6 +193,9 @@ extension AWSEncodableShape {
 /// AWSShape that can be decoded from API output
 public protocol AWSDecodableShape: AWSShape & Decodable {}
 
+/// AWSShape that can be decoded as an error
+public protocol AWSErrorShape: AWSShape & Decodable {}
+
 /// AWSShape options.
 public struct AWSShapeOptions: OptionSet, Sendable {
     public var rawValue: Int

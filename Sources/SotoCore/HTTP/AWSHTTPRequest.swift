@@ -128,7 +128,8 @@ extension AWSHTTPRequest {
             encoder.userInfo[.awsRequest] = requestEncoderContainer
             encoder.dateEncodingStrategy = .secondsSince1970
             let buffer = try encoder.encodeAsByteBuffer(input, allocator: configuration.byteBufferAllocator)
-            if method == .GET || method == .HEAD, buffer == ByteBuffer(string: "{}") {
+            // GET, HEAD and DELETE methods should have an empty body
+            if method == .GET || method == .HEAD || method == .DELETE, buffer == ByteBuffer(string: "{}") {
                 body = .init()
             } else {
                 body = .init(buffer: buffer)
@@ -260,6 +261,8 @@ extension AWSHTTPRequest {
         guard self.headers["content-type"].first == nil else {
             return
         }
+        // in theory we don't need this check as the check for an empty body should skip adding
+        // a header and a GET or HEAD request should have an empty body
         guard self.method != .GET, self.method != .HEAD else {
             return
         }

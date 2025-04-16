@@ -501,13 +501,29 @@ class AWSRequestTests: XCTestCase {
     }
 
     /// JSON POST request require a body even if there is no data to POST
-    func testEmptyJsonObject() {
+    func testEmptyPostJsonObject() throws {
         struct Input: AWSEncodableShape {}
         let input = Input()
         let config = createServiceConfig(serviceProtocol: .json(version: "1.0"), endpoint: "https://test.com")
-        var request: AWSHTTPRequest?
-        XCTAssertNoThrow(request = try AWSHTTPRequest(operation: "Test", path: "/", method: .POST, input: input, configuration: config))
-        XCTAssertEqual(request?.body.asString(), "{}")
+        let request = try AWSHTTPRequest(operation: "Test", path: "/", method: .POST, input: input, configuration: config)
+        XCTAssertEqual(request.body.asString(), "{}")
+        XCTAssertEqual(request.headers["content-type"].first, "application/x-amz-json-1.0")
+    }
+
+    /// JSON GET, HEAD, DELETE requests should not output a body if it is empty ie `{}`
+    func testEmptyGetJsonObject() throws {
+        struct Input: AWSEncodableShape {}
+        let input = Input()
+        let config = createServiceConfig(serviceProtocol: .json(version: "1.0"), endpoint: "https://test.com")
+        let request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config)
+        XCTAssertEqual(request.body.asString(), "")
+        XCTAssertNil(request.headers["content-type"].first)
+        let request2 = try AWSHTTPRequest(operation: "Test", path: "/", method: .HEAD, input: input, configuration: config)
+        XCTAssertEqual(request2.body.asString(), "")
+        XCTAssertNil(request2.headers["content-type"].first)
+        let request3 = try AWSHTTPRequest(operation: "Test", path: "/", method: .DELETE, input: input, configuration: config)
+        XCTAssertEqual(request3.body.asString(), "")
+        XCTAssertNil(request3.headers["content-type"].first)
     }
 
     /// Test host prefix

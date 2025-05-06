@@ -47,7 +47,7 @@ class MetaDataCredentialProviderTests: XCTestCase {
         XCTAssertEqual(metaData.accessKeyId, AWSTestServer.ECSMetaData.default.accessKeyId)
         XCTAssertEqual(metaData.secretAccessKey, AWSTestServer.ECSMetaData.default.secretAccessKey)
         XCTAssertEqual(metaData.token, AWSTestServer.ECSMetaData.default.token)
-        XCTAssertEqual(metaData.expiration.description, AWSTestServer.ECSMetaData.default.expiration.description)
+        XCTAssertEqual(metaData.expiration.timeIntervalSinceNow, AWSTestServer.ECSMetaData.default.expiration.timeIntervalSinceNow, accuracy: 1.0)
         XCTAssertEqual(metaData.roleArn, AWSTestServer.ECSMetaData.default.roleArn)
     }
 
@@ -95,7 +95,11 @@ class MetaDataCredentialProviderTests: XCTestCase {
         XCTAssertEqual(metaData.accessKeyId, AWSTestServer.EC2InstanceMetaData.default.accessKeyId)
         XCTAssertEqual(metaData.secretAccessKey, AWSTestServer.EC2InstanceMetaData.default.secretAccessKey)
         XCTAssertEqual(metaData.token, AWSTestServer.EC2InstanceMetaData.default.token)
-        XCTAssertEqual(metaData.expiration.description, AWSTestServer.EC2InstanceMetaData.default.expiration.description)
+        XCTAssertEqual(
+            metaData.expiration.timeIntervalSinceNow,
+            AWSTestServer.EC2InstanceMetaData.default.expiration.timeIntervalSinceNow,
+            accuracy: 1.0
+        )
         XCTAssertEqual(metaData.code, AWSTestServer.EC2InstanceMetaData.default.code)
         XCTAssertEqual(metaData.lastUpdated, AWSTestServer.EC2InstanceMetaData.default.lastUpdated)
         XCTAssertEqual(metaData.type, AWSTestServer.EC2InstanceMetaData.default.type)
@@ -122,7 +126,11 @@ class MetaDataCredentialProviderTests: XCTestCase {
         XCTAssertEqual(metaData.accessKeyId, AWSTestServer.EC2InstanceMetaData.default.accessKeyId)
         XCTAssertEqual(metaData.secretAccessKey, AWSTestServer.EC2InstanceMetaData.default.secretAccessKey)
         XCTAssertEqual(metaData.token, AWSTestServer.EC2InstanceMetaData.default.token)
-        XCTAssertEqual(metaData.expiration.description, AWSTestServer.EC2InstanceMetaData.default.expiration.description)
+        XCTAssertEqual(
+            metaData.expiration.timeIntervalSinceNow,
+            AWSTestServer.EC2InstanceMetaData.default.expiration.timeIntervalSinceNow,
+            accuracy: 1.0
+        )
         XCTAssertEqual(metaData.code, AWSTestServer.EC2InstanceMetaData.default.code)
         XCTAssertEqual(metaData.lastUpdated, AWSTestServer.EC2InstanceMetaData.default.lastUpdated)
         XCTAssertEqual(metaData.type, AWSTestServer.EC2InstanceMetaData.default.type)

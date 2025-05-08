@@ -177,8 +177,8 @@ public struct AWSSigner: Sendable {
         let authorization =
             """
             \(algorithm.name) \
-            Credential=\(credential),\
-            SignedHeaders=\(signingData.signedHeaders),\
+            Credential=\(credential), \
+            SignedHeaders=\(signingData.signedHeaders), \
             Signature=\(self.signature(signingData: signingData, algorithm: algorithm))
             """
 

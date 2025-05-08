@@ -177,8 +177,8 @@ public struct AWSSigner: Sendable {
         let authorization =
             """
             \(algorithm.name) \
-            Credential=\(credential), \
-            SignedHeaders=\(signingData.signedHeaders), \
+            Credential=\(credential),\
+            SignedHeaders=\(signingData.signedHeaders),\
             Signature=\(self.signature(signingData: signingData, algorithm: algorithm))
             """
 
@@ -323,12 +323,9 @@ public struct AWSSigner: Sendable {
 
         // construct authorization string
         let authorization =
-            """
-            \(algorithm.name) \
-            Credential=\(credentials.accessKeyId)/\(signingData.date)/\(self.region)/\(self.name)/aws4_request,\
-            SignedHeaders=\(signingData.signedHeaders),\
-            Signature=\(signature))
-            """
+            "\(algorithm.name) " + "Credential=\(credentials.accessKeyId)/\(signingData.date)/\(self.region)/\(self.name)/aws4_request, "
+            + "SignedHeaders=\(signingData.signedHeaders), " + "Signature=\(signature)"
+
         // add Authorization header
         headers.add(name: "authorization", value: authorization)
 

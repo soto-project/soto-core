@@ -104,6 +104,56 @@ class RotatingCredentialProviderTests: XCTestCase {
         XCTAssertEqual(count.load(ordering: .sequentiallyConsistent), 1)
     }
 
+    func testGetCredentialAndGetNewOnesAsAboutToExpire() async throws {
+        let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
+        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(group))
+        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
+
+        let creds = [
+            TestExpiringCredential(
+                accessKeyId: "abc123",
+                secretAccessKey: "abc123",
+                sessionToken: "abc123",
+                expiration: Date(timeIntervalSinceNow: 10)
+            ),
+            TestExpiringCredential(
+                accessKeyId: "def456",
+                secretAccessKey: "def456",
+                sessionToken: "def456",
+                expiration: Date(timeIntervalSinceNow: 10)
+            ),
+        ]
+
+        let count = ManagedAtomic(0)
+        let client = RotatingCredentialTestClient {
+            let cred = creds[count.load(ordering: .sequentiallyConsistent)]
+            count.wrappingIncrement(ordering: .sequentiallyConsistent)
+            return cred
+        }
+        let context = CredentialProviderFactory.Context(httpClient: httpClient, logger: Logger(label: "soto"), options: .init())
+        let provider = RotatingCredentialProvider(context: context, provider: client)
+
+        // get credentials for first time
+        var returned = try await provider.getCredential(logger: Logger(label: "soto"))
+
+        XCTAssertEqual(returned.accessKeyId, creds[0].accessKeyId)
+        XCTAssertEqual(returned.secretAccessKey, creds[0].secretAccessKey)
+        XCTAssertEqual(returned.sessionToken, creds[0].sessionToken)
+        XCTAssertEqual((returned as? TestExpiringCredential)?.expiration, creds[0].expiration)
+
+        // get credentials a second time, callback must not be hit
+        returned = try await provider.getCredential(logger: Logger(label: "soto"))
+
+        XCTAssertEqual(returned.accessKeyId, creds[1].accessKeyId)
+        XCTAssertEqual(returned.secretAccessKey, creds[1].secretAccessKey)
+        XCTAssertEqual(returned.sessionToken, creds[1].sessionToken)
+        XCTAssertEqual((returned as? TestExpiringCredential)?.expiration, creds[1].expiration)
+
+        // ensure callback was hit twice as we
+        XCTAssertEqual(count.load(ordering: .sequentiallyConsistent), 2)
+    }
+
     func testGetCredentialHighlyConcurrent() async throws {
         let group = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }

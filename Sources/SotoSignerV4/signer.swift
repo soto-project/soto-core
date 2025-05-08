@@ -325,8 +325,8 @@ public struct AWSSigner: Sendable {
         let authorization =
             """
             \(algorithm.name) \
-            Credential=\(credentials.accessKeyId)/\(signingData.date)/\(self.region)/\(self.name)/aws4_request, \
-            SignedHeaders=\(signingData.signedHeaders), \
+            Credential=\(credentials.accessKeyId)/\(signingData.date)/\(self.region)/\(self.name)/aws4_request,\
+            SignedHeaders=\(signingData.signedHeaders),\
             Signature=\(signature))
             """
         // add Authorization header

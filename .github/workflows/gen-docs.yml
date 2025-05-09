@@ -18,6 +18,9 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
+    - name: Install rsync 📚
+      run: |
+        apt-get update && apt-get install -y rsync bc
     - name: Build
       env:
         DOCC: docc

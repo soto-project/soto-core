@@ -8,8 +8,10 @@ on:
 jobs:
   build:
 
-    runs-on: macOS-latest
+    runs-on: ubuntu-latest
     timeout-minutes: 15
+    container:
+      image: swift:latest
 
     steps:
     - name: Checkout

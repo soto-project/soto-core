@@ -22,6 +22,8 @@ import Glibc
 import Musl
 #elseif canImport(Darwin)
 import Darwin.C
+#elseif canImport(Android)
+import Android
 #else
 #error("Unsupported platform")
 #endif

@@ -24,7 +24,7 @@ public protocol AWSService: Sendable {
     var config: AWSServiceConfig { get }
     /// Create new version of service with patch
     ///
-    /// This is required to support ``with(region:middlewares:timeout:byteBufferAllocator:options:)``.
+    /// This is required to support ``with(region:middleware:timeout:byteBufferAllocator:options:)``.
     /// Standard implementation is as follows
     /// ```swift
     /// public init(from: MyService, patch: AWSServiceConfig.Patch) {
@@ -44,7 +44,7 @@ extension AWSService {
     /// Return new version of Service with edited parameters
     /// - Parameters:
     ///   - region: Server region
-    ///   - middlewares: Additional middleware to add
+    ///   - middleware: Additional middleware to add
     ///   - timeout: Time out value for HTTP requests
     ///   - byteBufferAllocator: byte buffer allocator used throughout AWSClient
     ///   - options: options used by client when processing requests
@@ -70,7 +70,7 @@ extension AWSService {
 
     /// Generate a signed URL
     /// - parameters:
-    ///     - url : URL to sign
+    ///     - url: URL to sign
     ///     - httpMethod: HTTP method to use (.GET, .PUT, .PUSH etc)
     ///     - headers: Headers that are to be used with this URL. Be sure to include these headers when you used the returned URL
     ///     - expires: How long before the signed URL expires
@@ -96,7 +96,7 @@ extension AWSService {
 
     /// Generate signed headers
     /// - parameters:
-    ///     - url : URL to sign
+    ///     - url: URL to sign
     ///     - httpMethod: HTTP method to use (.GET, .PUT, .PUSH etc)
     ///     - headers: Headers that are to be used with this URL. Be sure to include these headers when you used the returned URL
     ///     - body: body payload to sign as well. While it is unnecessary to provide the body for S3 other services require it

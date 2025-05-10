@@ -78,21 +78,20 @@ The AWSClient requires you shut it down manually before it is deinitialized. The
 
 ### Initializers
 
-- ``init(credentialProvider:retryPolicy:middleware:options:httpClientProvider:logger:)``
-- ``init(credentialProvider:retryPolicy:options:httpClientProvider:logger:)``
-- ``HTTPClientProvider``
+- ``init(credentialProvider:retryPolicy:middleware:options:httpClient:logger:)``
+- ``init(credentialProvider:retryPolicy:options:httpClient:logger:)``
 - ``Options``
 - ``loggingDisabled``
 
 ### Shutdown
 
 - ``shutdown()``
+- ``syncShutdown()``
 
 ### Instance Properties
 
 - ``credentialProvider``
 - ``middleware``
-- ``retryPolicy``
 - ``httpClient``
 
 ### Credentials

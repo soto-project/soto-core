@@ -21,6 +21,7 @@ SotoCore is the underlying driver for executing requests for the Soto Swift SDK 
 
 - ``AWSService``
 - ``AWSServiceConfig``
+- ``AWSServiceErrorType``
 - ``ServiceProtocol``
 - ``Region``
 - ``AWSPartition``
@@ -32,7 +33,6 @@ SotoCore is the underlying driver for executing requests for the Soto Swift SDK 
 - ``AWSMiddleware``
 - ``AWSMiddlewareBuilder``
 - ``AWSMiddlewareStack(_:)``
-- ``AWSDynamicMiddlewareStack``
 - ``AWSMiddlewareContext``
 - ``AWSMiddlewareNextHandler``
 - ``AWSEditHeadersMiddleware``
@@ -45,7 +45,6 @@ SotoCore is the underlying driver for executing requests for the Soto Swift SDK 
 ### Credentials
 
 - ``CredentialProvider``
-- ``AsyncCredentialProvider``
 - ``NullCredentialProvider``
 - ``ExpiringCredential``
 - ``CredentialProviderFactory``
@@ -53,6 +52,7 @@ SotoCore is the underlying driver for executing requests for the Soto Swift SDK 
 - ``RotatingCredentialProvider``
 - ``RotatingCredential``
 - ``CredentialProviderError``
+- ``EmptyCredential``
 
 ### Retry
 
@@ -64,7 +64,6 @@ SotoCore is the underlying driver for executing requests for the Soto Swift SDK 
 
 - ``AWSEndpoints``
 - ``AWSEndpointStorage``
-- ``AWSEndpointDiscovery``
 
 ### Errors
 
@@ -81,11 +80,10 @@ SotoCore is the underlying driver for executing requests for the Soto Swift SDK 
 - ``AWSShape``
 - ``AWSEncodableShape``
 - ``AWSDecodableShape``
-- ``AWSShapeWithPayload``
+- ``AWSErrorShape``
 - ``AWSShapeOptions``
-- ``AWSPayload``
 - ``AWSBase64Data``
-- ``AWSMemberEncoding``
+- ``AWSDocument``
 - ``AWSPaginateToken``
 
 ### Waiters
@@ -97,12 +95,6 @@ SotoCore is the underlying driver for executing requests for the Soto Swift SDK 
 - ``JMESPathMatcher``
 - ``JMESAllPathMatcher``
 - ``JMESAnyPathMatcher``
-
-### Streaming
-
-- ``StreamReadFunction``
-- ``StreamReaderResult``
-- ``AWSResponseStream``
 
 ### Encoding/Decoding
 
@@ -121,6 +113,9 @@ SotoCore is the underlying driver for executing requests for the Soto Swift SDK 
 - ``StandardDictionaryCoder``
 - ``StandardArrayCoderProperties``
 - ``StandardDictionaryCoderProperties``
+- ``EC2ArrayCoder``
+- ``EC2StandardArrayCoder``
+- ``DateFormatCoder``
 - ``ISO8601DateCoder``
 - ``HTTPHeaderDateCoder``
 - ``UnixEpochDateCoder``
@@ -142,6 +137,7 @@ SotoCore is the underlying driver for executing requests for the Soto Swift SDK 
 
 - ``AWSEventStream``
 - ``AWSEventPayload``
+- ``AWSEventStreamError``
 
 ## See Also
 

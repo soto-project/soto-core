@@ -294,6 +294,7 @@ public struct AWSSigner: Sendable {
     ///   - method: http method
     ///   - headers: original headers
     ///   - date: date to use for signing
+    ///   - algorithm: Signing algorithm (sigV4 or sigV4a)
     /// - Returns: Tuple of updated headers and signing data to use in first call to `signChunk`
     public func startSigningChunks(
         url: URL,

@@ -58,8 +58,8 @@ public final class AWSClient: Sendable {
 
     /// Initialize an AWSClient struct
     /// - parameters:
-    ///     - credentialProvider: An object that returns valid signing credentials for request signing.
-    ///     - retryPolicy: Object returning whether retries should be attempted.
+    ///     - credentialProviderFactory: An object that returns valid signing credentials for request signing.
+    ///     - retryPolicyFactory: Object returning whether retries should be attempted.
     ///         Possible options are `.default`, `.noRetry`, `.exponential` or `.jitter`.
     ///     - middleware: Chain of middlewares to apply to requests and responses
     ///     - options: Configuration flags
@@ -94,8 +94,8 @@ public final class AWSClient: Sendable {
 
     /// Initialize an AWSClient struct
     /// - parameters:
-    ///     - credentialProvider: An object that returns valid signing credentials for request signing.
-    ///     - retryPolicy: Object returning whether retries should be attempted.
+    ///     - credentialProviderFactory: An object that returns valid signing credentials for request signing.
+    ///     - retryPolicyFactory: Object returning whether retries should be attempted.
     ///         Possible options are `.default`, `.noRetry`, `.exponential` or `.jitter`.
     ///     - options: Configuration flags
     ///     - httpClient: HTTPClient to use.
@@ -217,7 +217,7 @@ public final class AWSClient: Sendable {
         let errorLogLevel: Logger.Level
 
         /// Initialize AWSClient.Options
-        /// - Parameters:
+        /// - parameters:
         //    - requestLogLevel: Log level used for request logging
         //    - errorLogLevel: Log level used for error logging
         public init(
@@ -230,10 +230,10 @@ public final class AWSClient: Sendable {
         }
 
         /// Initialize AWSClient.Options
-        /// - Parameters:
-        ///   - signingAlgorithm: Algorithm to use when signing requests
-        //    - requestLogLevel: Log level used for request logging
-        //    - errorLogLevel: Log level used for error logging
+        /// - parameters:
+        ///    - signingAlgorithm: Algorithm to use when signing requests
+        ///    - requestLogLevel: Log level used for request logging
+        ///    - errorLogLevel: Log level used for error logging
         public init(
             signingAlgorithm: AWSSigner.Algorithm,
             requestLogLevel: Logger.Level = .debug,
@@ -476,9 +476,9 @@ extension AWSClient {
 
     /// Generate a signed URL
     /// - parameters:
-    ///     - url : URL to sign
+    ///     - url: URL to sign
     ///     - httpMethod: HTTP method to use (.GET, .PUT, .PUSH etc)
-    ///     - httpHeaders: Headers that are to be used with this URL. Be sure to include these headers when you used the returned URL
+    ///     - headers: Headers that are to be used with this URL. Be sure to include these headers when you used the returned URL
     ///     - expires: How long before the signed URL expires
     ///     - serviceConfig: additional AWS service configuration used to sign the url
     ///     - logger: Logger to output to
@@ -506,7 +506,7 @@ extension AWSClient {
 
     /// Generate signed headers
     /// - parameters:
-    ///     - url : URL to sign
+    ///     - url: URL to sign
     ///     - httpMethod: HTTP method to use (.GET, .PUT, .PUSH etc)
     ///     - headers: Headers that are to be used with this URL.
     ///     - body: Payload to sign as well. While it is unnecessary to provide the body for S3 other services may require it

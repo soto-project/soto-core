@@ -10,7 +10,7 @@ Client managing communication with AWS services
 
 The `AWSClient` is the core of Soto. This is the object that manages your communication with AWS. It manages credential acquisition, takes your request, encodes it, signs it, sends it to AWS and then decodes the response for you. In most situations your application should only require one `AWSClient`. Create this at startup and use it throughout.
 
-When creating an `AWSClient` you need to provide how you are going to acquire AWS credentials, what your policy is on retrying failed requests, a list of middleware you would apply to requests to AWS and responses from AWS, client options, where you get your `HTTPClient` and a `Logger` to log any output not directly linked to a request. There are defaults for most of these parameters. The only one required is the `httpClientProvider`.
+When creating an `AWSClient` you need to provide how you are going to acquire AWS credentials, what your policy is on retrying failed requests, a list of middleware you would apply to requests to AWS and responses from AWS, client options, where you get your `HTTPClient` and a `Logger` to log any output not directly linked to a request.
 
 ```swift
 let awsClient = AWSClient(
@@ -18,7 +18,7 @@ let awsClient = AWSClient(
     retryPolicy: .default,
     middlewares: [],
     options: .init(),
-    httpClientProvider: .createNew,
+    httpClient: HTTPClient.shared,
     logger: AWSClient.loggingDisabled
 )
 ```
@@ -55,20 +55,11 @@ The `retryPolicy` defines how the client reacts to a failed request. There are t
 
 ### Middleware
 
-Middleware allows you to insert your own code just as a request has been constructed or a response has been received. You can use this to edit the request/response or just to view it. SotoCore supplies one middleware — `AWSLoggingMiddleware` — which outputs your request to the console once constructed and the response is received from AWS.
+Middleware allows you to insert your own code just as a request has been constructed or a response has been received. You can use this to edit the request/response or just to view it. SotoCore supplies one middleware — ``AWSLoggingMiddleware`` — which outputs your request to the console once constructed and the response is received from AWS.
 
-### HTTP Client provider
+### HTTP Client
 
-The `HTTPClientProvider` defines where you get your HTTP client from. You have three options:
-
-- Pass `.createNew` which indicates the `AWSClient` should create its own HTTP client. This creates an instance of `HTTPClient` using [`AsyncHTTPClient`](https://github.com/swift-server/async-http.client).
-- Supply your own `EventLoopGroup` with `.createNewWithEventLoopGroup(EventLoopGroup`). This creates a new `HTTPClient` but has it use the supplied `EventLoopGroup`.
-- Supply your own HTTP client with `.shared(HTTPClient)`. 
-
-There are a number of reasons you might want to provide your own client, such as:
-
-- You have one HTTP client you want to use across all your systems.
-- You want to change the configuration for the HTTP client used, perhaps you are running behind a proxy or want to enable response decompression.
+This is the HTTP client that the AWS client uses to communicate with AWS services. This is defined by protocol, as Soto is agnostic about what HTTP client is used. Currently Soto only provides an implementation for [AsyncHTTPClient](https://github.com/swift-server/async-http-client). By default AWSClient uses the `shared` instance of `HTTPClient`. 
 
 ## AWSClient Shutdown
 

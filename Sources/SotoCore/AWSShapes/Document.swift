@@ -12,7 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// Document value that can hold arbitrary data (See https://smithy.io/2.0/spec/simple-types.html#document)
+/// Document value that can hold arbitrary data
+///
+/// (See https://smithy.io/2.0/spec/simple-types.html#document)
 public enum AWSDocument: Sendable, Codable, Equatable {
     case string(String)
     case double(Double)

@@ -56,6 +56,7 @@ public final class AWSServiceConfig {
     ///   - region: Region of server you want to communicate with
     ///   - partition: Amazon endpoint partition. This is ignored if region is set. If no region is set then this is used along side partitionEndpoints to calculate endpoint
     ///   - amzTarget: "x-amz-target" header value
+    ///   - serviceName: Name of service
     ///   - serviceIdentifier: Identifier of service. Used in ARN and endpoint
     ///   - signingName: Name that all AWS requests are signed with
     ///   - serviceProtocol: protocol of service (.json, .xml, .query etc)
@@ -208,7 +209,7 @@ public final class AWSServiceConfig {
     /// Return new version of Service with edited parameters
     /// - Parameters:
     ///   - region: Server region
-    ///   - middlewares: Additional middleware to add
+    ///   - middleware: Additional middleware to add
     ///   - timeout: Time out value for HTTP requests
     ///   - byteBufferAllocator: byte buffer allocator used throughout AWSClient
     ///   - options: options used by client when processing requests

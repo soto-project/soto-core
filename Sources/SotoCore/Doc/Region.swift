@@ -26,6 +26,8 @@ public struct Region: Sendable, RawRepresentable, Equatable {
     public static var afsouth1: Region { .init(rawValue: "af-south-1") }
     // Asia Pacific (Hong Kong)
     public static var apeast1: Region { .init(rawValue: "ap-east-1") }
+    // Asia Pacific (Taipei)
+    public static var apeast2: Region { .init(rawValue: "ap-east-2") }
     // Asia Pacific (Tokyo)
     public static var apnortheast1: Region { .init(rawValue: "ap-northeast-1") }
     // Asia Pacific (Seoul)
@@ -74,6 +76,8 @@ public struct Region: Sendable, RawRepresentable, Equatable {
     public static var euwest2: Region { .init(rawValue: "eu-west-2") }
     // Europe (Paris)
     public static var euwest3: Region { .init(rawValue: "eu-west-3") }
+    // EU (Germany)
+    public static var euscdeeast1: Region { .init(rawValue: "eusc-de-east-1") }
     // Israel (Tel Aviv)
     public static var ilcentral1: Region { .init(rawValue: "il-central-1") }
     // Middle East (UAE)
@@ -115,6 +119,7 @@ extension Region {
         switch self {
         case .afsouth1: return .aws
         case .apeast1: return .aws
+        case .apeast2: return .aws
         case .apnortheast1: return .aws
         case .apnortheast2: return .aws
         case .apnortheast3: return .aws
@@ -139,6 +144,7 @@ extension Region {
         case .euwest1: return .aws
         case .euwest2: return .aws
         case .euwest3: return .aws
+        case .euscdeeast1: return .awseusc
         case .ilcentral1: return .aws
         case .mecentral1: return .aws
         case .mesouth1: return .aws
@@ -176,6 +182,7 @@ public struct AWSPartition: Sendable, RawRepresentable, Equatable, Hashable {
         case awsisob
         case awsisoe
         case awsisof
+        case awseusc
     }
 
     private var partition: InternalPartition
@@ -205,6 +212,8 @@ public struct AWSPartition: Sendable, RawRepresentable, Equatable, Hashable {
     public static var awsisoe: AWSPartition { .init(partition: .awsisoe) }
     // AWS ISOF
     public static var awsisof: AWSPartition { .init(partition: .awsisof) }
+    // AWS EUSC
+    public static var awseusc: AWSPartition { .init(partition: .awseusc) }
 }
 
 extension AWSPartition {
@@ -217,6 +226,7 @@ extension AWSPartition {
         case .awsisob: return "sc2s.sgov.gov"
         case .awsisoe: return "cloud.adc-e.uk"
         case .awsisof: return "csp.hci.ic.gov"
+        case .awseusc: return "amazonaws.eu"
         }
     }
 
@@ -229,6 +239,7 @@ extension AWSPartition {
         case .awsisob: return "\(service).\(region).sc2s.sgov.gov"
         case .awsisoe: return "\(service).\(region).cloud.adc-e.uk"
         case .awsisof: return "\(service).\(region).csp.hci.ic.gov"
+        case .awseusc: return "\(service).\(region).amazonaws.eu"
         }
     }
 }
@@ -242,6 +253,7 @@ extension Region {
         switch self {
         case .afsouth1,
             .apeast1,
+            .apeast2,
             .apnortheast1,
             .apnortheast2,
             .apnortheast3,
@@ -266,6 +278,7 @@ extension Region {
             .euwest1,
             .euwest2,
             .euwest3,
+            .euscdeeast1,
             .ilcentral1,
             .mecentral1,
             .mesouth1,

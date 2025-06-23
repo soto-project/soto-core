@@ -30,8 +30,8 @@ public struct Region: Sendable, RawRepresentable, Equatable {
     public static func other(_ name: String) -> Region { .init(rawValue: name) }
 }
 
-public extension Region {
-    var partition: AWSPartition {
+extension Region {
+    public var partition: AWSPartition {
         switch self {
 {%for region in regions %}
         case .{{region.enum}}: return .{{region.partition}}
@@ -42,7 +42,7 @@ public extension Region {
 }
 
 extension Region: CustomStringConvertible {
-    public var description: String { return self.rawValue }
+    public var description: String { self.rawValue }
 }
 
 extension Region: Codable {}
@@ -57,7 +57,7 @@ public struct AWSPartition: Sendable, RawRepresentable, Equatable, Hashable {
 
     private var partition: InternalPartition
 
-    public var rawValue: String { return self.partition.rawValue }
+    public var rawValue: String { self.partition.rawValue }
 
     public init?(rawValue: String) {
         guard let partition = InternalPartition(rawValue: rawValue) else { return nil }
@@ -74,8 +74,8 @@ public struct AWSPartition: Sendable, RawRepresentable, Equatable, Hashable {
 {%endfor %}
 }
 
-public extension AWSPartition {
-    var dnsSuffix: String {
+extension AWSPartition {
+    public var dnsSuffix: String {
         switch self.partition {
 {%for partition in partitions %}
         case .{{partition.name}}: return "{{partition.dnsSuffix}}"
@@ -83,7 +83,7 @@ public extension AWSPartition {
         }
     }
 
-    func defaultEndpoint(region: Region, service: String) -> String {
+    public func defaultEndpoint(region: Region, service: String) -> String {
         switch self.partition {
 {%for partition in partitions %}
         case .{{partition.name}}: return "{{partition.hostname}}"
@@ -95,8 +95,8 @@ public extension AWSPartition {
 // allows to create a Region from a String
 // it will only create a Region if the provided
 // region name is valid.
-public extension Region {
-    init?(awsRegionName: String) {
+extension Region {
+    public init?(awsRegionName: String) {
         self.init(rawValue: awsRegionName)
         switch self {
 {%for region in regions %}
@@ -104,10 +104,10 @@ public extension Region {
         case .{{region.enum}},
 {%endif %}
 {%if not forloop.first and not forloop.last%}
-             .{{region.enum}},
+            .{{region.enum}},
 {%endif %}
 {%if forloop.last %}
-             .{{region.enum}}:
+            .{{region.enum}}:
 {%endif %}
 {%endfor %}
             return

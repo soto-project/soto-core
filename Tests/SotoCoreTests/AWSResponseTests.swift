@@ -275,6 +275,19 @@ class AWSResponseTests: XCTestCase {
         XCTAssertEqual(error?.context?.responseCode, .notFound)
     }
 
+    func testJSONErrorWithoutMessage() async throws {
+        let response = AWSHTTPResponse(
+            status: .notFound,
+            headers: HTTPHeaders(),
+            body: .init(string: "{\"__type\":\"ResourceNotFoundException\"}")
+        )
+        let service = createServiceConfig(serviceProtocol: .json(version: "1.1"), errorType: ServiceErrorType.self)
+
+        let error = response.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? ServiceErrorType
+        XCTAssertEqual(error, ServiceErrorType.resourceNotFoundException)
+        XCTAssertEqual(error?.context?.responseCode, .notFound)
+    }
+
     func testJSONErrorV2() async throws {
         let response = AWSHTTPResponse(
             status: .notFound,

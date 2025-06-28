@@ -240,7 +240,9 @@ public struct AWSHTTPResponse: Sendable {
             // Remove namespace from error code
             self.code = code?.split(separator: "#").last.map { String($0) }
             self.message =
-                try container.decodeIfPresent(String.self, forKey: .init("message")) ?? container.decode(String.self, forKey: .init("Message"))
+                try container.decodeIfPresent(String.self, forKey: .init("message"))
+                ?? container.decodeIfPresent(String.self, forKey: .init("Message"))
+                ?? ""
 
             let errorMapping = decoder.userInfo[.awsErrorMap]
             if let code = self.code,
@@ -277,7 +279,9 @@ public struct AWSHTTPResponse: Sendable {
             // Remove namespace from error code
             self.code = code?.split(separator: "#").last.map { String($0) }
             self.message =
-                try container.decodeIfPresent(String.self, forKey: .init("message")) ?? container.decode(String.self, forKey: .init("Message"))
+                try container.decodeIfPresent(String.self, forKey: .init("message"))
+                ?? container.decodeIfPresent(String.self, forKey: .init("Message"))
+                ?? ""
 
             if let code = self.code,
                 let errorMapping = decoder.userInfo[.awsErrorMap] as? AWSServiceErrorType.Type,

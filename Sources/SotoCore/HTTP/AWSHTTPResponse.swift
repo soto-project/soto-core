@@ -37,7 +37,7 @@ public struct AWSHTTPResponse: Sendable {
     public var body: AWSHTTPBody
 
     /// Initialize AWSResponse
-    init(status: HTTPResponseStatus, headers: HTTPHeaders, body: AWSHTTPBody = .init()) {
+    public init(status: HTTPResponseStatus, headers: HTTPHeaders, body: AWSHTTPBody = .init()) {
         self.status = status
         self.headers = headers
         self.body = body

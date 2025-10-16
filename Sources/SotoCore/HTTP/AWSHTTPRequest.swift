@@ -231,7 +231,7 @@ extension AWSHTTPRequest {
             let crc = soto_crc32(0, bytes: bufferView)
             var crc32 = UInt32(crc).bigEndian
             let data = withUnsafePointer(to: &crc32) { pointer in
-                return Data(bytes: pointer, count: 4)
+                Data(bytes: pointer, count: 4)
             }
             checksum = data.base64EncodedString()
         case .crc32c:
@@ -239,7 +239,7 @@ extension AWSHTTPRequest {
             let crc = soto_crc32c(0, bytes: bufferView)
             var crc32 = UInt32(crc).bigEndian
             let data = withUnsafePointer(to: &crc32) { pointer in
-                return Data(bytes: pointer, count: 4)
+                Data(bytes: pointer, count: 4)
             }
             checksum = data.base64EncodedString()
         case .sha1:

@@ -459,7 +459,7 @@ public struct AWSSigner: Sendable {
         let canonicalHeaders = signingData.headersToSign
             .map { (key: $0.key.lowercased(), value: $0.value) }
             .sorted { $0.key < $1.key }
-            .map { return "\($0.key):\($0.value.trimmingCharacters(in: CharacterSet.whitespaces).removeSequentialWhitespace())" }
+            .map { "\($0.key):\($0.value.trimmingCharacters(in: CharacterSet.whitespaces).removeSequentialWhitespace())" }
             .joined(separator: "\n")
         let canonicalPath: String
         let urlComps = URLComponents(url: signingData.unsignedURL, resolvingAgainstBaseURL: false)!

@@ -297,7 +297,7 @@ public enum XML {
         override public var stringValue: String? {
             get {
                 let textNodes = children(of: .text)
-                let text = textNodes?.reduce("") { return $0 + ($1.stringValue ?? "") } ?? ""
+                let text = textNodes?.reduce("") { $0 + ($1.stringValue ?? "") } ?? ""
                 return text
             }
             set(value) {

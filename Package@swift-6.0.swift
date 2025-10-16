@@ -18,6 +18,7 @@ import PackageDescription
 let swiftSettings: [SwiftSetting] = [
     .enableExperimentalFeature("StrictConcurrency=complete"),
     .enableExperimentalFeature("AccessLevelOnImport"),
+    .define("ServiceLifecycleSupport"),
 ]
 
 let package = Package(

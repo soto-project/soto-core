@@ -746,3 +746,24 @@ class AWSClientTests: XCTestCase {
         }
     }
 }
+
+#if ServiceLifecycleSupport
+
+import ServiceLifecycle
+
+extension AWSClientTests {
+    func testServiceLifecycle() async throws {
+        var logger = Logger(label: "AWSClient")
+        logger.logLevel = .debug
+        let awsClient = createAWSClient(credentialProvider: .empty, httpClient: HTTPClient.shared, logger: logger)
+        let serviceGroup = ServiceGroup(services: [awsClient], logger: logger)
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            group.addTask {
+                try await serviceGroup.run()
+            }
+            try await Task.sleep(for: .milliseconds(100))
+            await serviceGroup.triggerGracefulShutdown()
+        }
+    }
+}
+#endif  // ServiceLifecycleSupport

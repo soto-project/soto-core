@@ -105,7 +105,7 @@ var partitions: [OutputPartition] = endpoints.partitions.map {
         .replacingOccurrences(of: "{region}", with: "\\(region)")
         .replacingOccurrences(of: "{dnsSuffix}", with: $0.dnsSuffix)
     return OutputPartition(
-        name: $0.partition.filter { return $0.isLetter || $0.isNumber },
+        name: $0.partition.filter { $0.isLetter || $0.isNumber },
         description: $0.partitionName,
         hostname: hostname,
         dnsSuffix: $0.dnsSuffix
@@ -114,11 +114,11 @@ var partitions: [OutputPartition] = endpoints.partitions.map {
 
 for partition in endpoints.partitions {
     let partitionRegionDescs = partition.regions.keys.map { region in
-        return OutputRegionDesc(
-            enum: region.filter { return $0.isLetter || $0.isNumber },
+        OutputRegionDesc(
+            enum: region.filter { $0.isLetter || $0.isNumber },
             name: region,
             description: partition.regions[region]?.description,
-            partition: partition.partition.filter { return $0.isLetter || $0.isNumber }
+            partition: partition.partition.filter { $0.isLetter || $0.isNumber }
         )
     }
     regionDescs += partitionRegionDescs

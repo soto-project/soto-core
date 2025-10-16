@@ -94,7 +94,7 @@ final class ExpiringValueTests: XCTestCase {
             return (1, Date() + 3)
         }
         let value = try await expiringValue.getValue {
-            return (2, Date())
+            (2, Date())
         }
         XCTAssertEqual(value, 1)
     }

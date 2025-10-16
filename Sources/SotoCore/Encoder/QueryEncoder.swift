@@ -69,7 +69,7 @@ public struct QueryEncoder {
     /// Flatten dictionary and array tree into one dictionary
     /// - Parameter container: The root container
     private func flatten(_ container: _QueryEncoderKeyedContainer?) -> [(key: String, value: String)] {
-        var result: [(key: String, value: String)] = self.additionalKeys.map { return $0 }
+        var result: [(key: String, value: String)] = self.additionalKeys.map { $0 }
 
         func flatten(dictionary: [String: Any], path: String) {
             for (key, value) in dictionary {

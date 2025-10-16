@@ -1,4 +1,4 @@
-// swift-tools-version:6.1
+// swift-tools-version:6.0
 //===----------------------------------------------------------------------===//
 //
 // This source file is part of the Soto for AWS open source project
@@ -18,6 +18,7 @@ import PackageDescription
 let swiftSettings: [SwiftSetting] = [
     .enableExperimentalFeature("StrictConcurrency=complete"),
     .enableExperimentalFeature("AccessLevelOnImport"),
+    .define("ServiceLifecycleSupport"),
 ]
 
 let package = Package(
@@ -33,18 +34,10 @@ let package = Package(
         .library(name: "SotoTestUtils", targets: ["SotoTestUtils"]),
         .library(name: "SotoSignerV4", targets: ["SotoSignerV4"]),
     ],
-    traits: [
-        "ServiceLifecycleSupport",
-        .default(
-            enabledTraits: [
-                "ServiceLifecycleSupport"
-            ]
-        ),
-    ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.77.0"),
         .package(url: "https://github.com/apple/swift-atomics.git", from: "1.1.0"),
-        .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0"..<"5.0.0"),
+        .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0"..<"4.0.0"),
         .package(url: "https://github.com/apple/swift-distributed-tracing.git", from: "1.0.1"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.4.0"),
         .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0"..<"3.0.0"),
@@ -73,11 +66,7 @@ let package = Package(
                 .product(name: "NIOFoundationCompat", package: "swift-nio"),
                 .product(name: "JMESPath", package: "jmespath.swift"),
                 .product(name: "Tracing", package: "swift-distributed-tracing"),
-                .product(
-                    name: "ServiceLifecycle",
-                    package: "swift-service-lifecycle",
-                    condition: .when(traits: ["ServiceLifecycleSupport"])
-                ),
+                .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
             ],
             swiftSettings: swiftSettings
         ),

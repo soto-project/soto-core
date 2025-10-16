@@ -20,7 +20,7 @@ import XCTest
 
 class RuntimeSelectorCredentialProviderTests: XCTestCase {
     func testSetupFail() async {
-        let client = createAWSClient(credentialProvider: .selector(.custom { _ in return NullCredentialProvider() }))
+        let client = createAWSClient(credentialProvider: .selector(.custom { _ in NullCredentialProvider() }))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         do {
             _ = try await client.credentialProvider.getCredential(logger: TestEnvironment.logger)

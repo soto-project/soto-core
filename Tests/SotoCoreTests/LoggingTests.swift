@@ -170,7 +170,7 @@ class LoggingTests: XCTestCase {
     func testNoCredentialProvider() async throws {
         let logCollection = LoggingCollector.Logs()
         let logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection, logLevel: .trace) })
-        let client = createAWSClient(credentialProvider: .selector(.custom { _ in return NullCredentialProvider() }))
+        let client = createAWSClient(credentialProvider: .selector(.custom { _ in NullCredentialProvider() }))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let serviceConfig = createServiceConfig()
         do {

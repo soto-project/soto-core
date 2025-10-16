@@ -166,7 +166,7 @@ final class PaginateTests: XCTestCase, @unchecked Sendable {
 
         let finalArray = try await withThrowingTaskGroup(of: [Int].self) { group -> [Int] in
             group.addTask {
-                return try await self.asyncCounterPaginator(input).reduce([]) { return $0 + $1.array }
+                try await self.asyncCounterPaginator(input).reduce([]) { $0 + $1.array }
             }
             try self.awsServer.process { (input: CounterInput) throws -> AWSTestServer.Result<CounterOutput> in
                 // send part of array of numbers based on input startIndex and pageSize

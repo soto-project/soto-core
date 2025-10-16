@@ -1,4 +1,4 @@
-// swift-tools-version:6.1
+// swift-tools-version:6.0
 //===----------------------------------------------------------------------===//
 //
 // This source file is part of the Soto for AWS open source project
@@ -33,14 +33,6 @@ let package = Package(
         .library(name: "SotoTestUtils", targets: ["SotoTestUtils"]),
         .library(name: "SotoSignerV4", targets: ["SotoSignerV4"]),
     ],
-    traits: [
-        "ServiceLifecycleSupport",
-        .default(
-            enabledTraits: [
-                "ServiceLifecycleSupport"
-            ]
-        ),
-    ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.77.0"),
         .package(url: "https://github.com/apple/swift-atomics.git", from: "1.1.0"),
@@ -73,11 +65,7 @@ let package = Package(
                 .product(name: "NIOFoundationCompat", package: "swift-nio"),
                 .product(name: "JMESPath", package: "jmespath.swift"),
                 .product(name: "Tracing", package: "swift-distributed-tracing"),
-                .product(
-                    name: "ServiceLifecycle",
-                    package: "swift-service-lifecycle",
-                    condition: .when(traits: ["ServiceLifecycleSupport"])
-                ),
+                .product(name: "ServiceLifecycle", package: "swift-service-lifecycle"),
             ],
             swiftSettings: swiftSettings
         ),

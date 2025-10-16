@@ -757,11 +757,11 @@ extension AWSClientTests {
         logger.logLevel = .debug
         let awsClient = createAWSClient(credentialProvider: .empty, httpClient: HTTPClient.shared, logger: logger)
         let serviceGroup = ServiceGroup(services: [awsClient], logger: logger)
-        await withThrowingTaskGroup(of: Void.self) { group in
+        try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask {
                 try await serviceGroup.run()
             }
-            await Task.yield()
+            try await Task.sleep(for: .milliseconds(100))
             await serviceGroup.triggerGracefulShutdown()
         }
     }

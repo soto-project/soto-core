@@ -18,7 +18,8 @@ import ServiceLifecycle
 
 extension AWSClient: Service {
     public func run() async throws {
-        // Ignore cancellation error
+        // Wait until graceful shutdown has been triggered, ignoring any
+        // cancellation errors
         try? await gracefulShutdown()
         try await self.shutdown()
     }

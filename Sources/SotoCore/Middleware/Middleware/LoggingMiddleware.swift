@@ -19,13 +19,16 @@ import NIOHTTP1
 /// Middleware that outputs the contents of requests being sent to AWS and the contents of the responses received.
 public struct AWSLoggingMiddleware: AWSMiddlewareProtocol {
     @usableFromInline
+    let outputBody: Bool
+    @usableFromInline
     let log: @Sendable (@autoclosure () -> String) -> Void
 
     public typealias LoggingFunction = @Sendable (String) -> Void
     /// initialize AWSLoggingMiddleware
     /// - parameters:
     ///     - log: Function to call with logging output
-    public init(log: @escaping LoggingFunction = { print($0) }) {
+    public init(outputBody: Bool = true, log: @escaping LoggingFunction = { print($0) }) {
+        self.outputBody = outputBody
         self.log = { log($0()) }
     }
 
@@ -33,21 +36,29 @@ public struct AWSLoggingMiddleware: AWSMiddlewareProtocol {
     /// - Parameters:
     ///   - logger: Logger to use
     ///   - logLevel: Log level to output at
-    public init(logger: Logger, logLevel: Logger.Level = .info) {
+    public init(outputBody: Bool = true, logger: Logger, logLevel: Logger.Level = .info) {
+        self.outputBody = outputBody
         self.log = { logger.log(level: logLevel, "\($0())") }
     }
 
     @inlinable
     public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse {
         self.log(
-            "Request:\n" + "  \(context.operation)\n" + "  \(request.method) \(request.url)\n"
-                + "  Headers: \(self.getHeadersOutput(request.headers))\n" + "  Body: \(self.getBodyOutput(request.body))"
+            """
+            Request:
+              \(request.method) \(request.url)\(context.operation)
+              Headers: \(self.getHeadersOutput(request.headers))
+            \(self.outputBody ? "  Body: \(self.getBodyOutput(request.body))" : "")
+            """
         )
         let response = try await next(request, context)
         self.log(
-            "Response:\n" + "  Status : \(response.status.code)\n"
-                + "  Headers: \(self.getHeadersOutput(HTTPHeaders(response.headers.map { ($0, "\($1)") })))\n"
-                + "  Body: \(self.getBodyOutput(response.body))"
+            """
+            Response:
+              Status : \(response.status.code)
+              Headers: \(self.getHeadersOutput(response.headers)))
+            \(self.outputBody ? "  Body: \(self.getBodyOutput(response.body))" : "")
+            """
         )
         return response
     }
@@ -57,7 +68,6 @@ public struct AWSLoggingMiddleware: AWSMiddlewareProtocol {
         var output = ""
         switch body.storage {
         case .byteBuffer(let buffer):
-            output += "\n  "
             output += "\(String(buffer: buffer))"
         default:
             output += "binary data"

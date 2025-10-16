@@ -761,6 +761,7 @@ extension AWSClientTests {
             group.addTask {
                 try await serviceGroup.run()
             }
+            await Task.yield()
             await serviceGroup.triggerGracefulShutdown()
         }
     }

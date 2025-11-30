@@ -91,7 +91,7 @@ private struct _EventStreamDecoder: Decoder {
             case "application/json":
                 let jsonDecoder = JSONDecoder()
                 jsonDecoder.dateDecodingStrategy = .secondsSince1970
-                jsonDecoder.userInfo[.awsEvent] = EventDecodingContainer(payload: self.payload)
+                jsonDecoder.userInfo[.awsEvent] = EventDecodingContainer(headers: self.headers, payload: self.payload)
                 return try jsonDecoder.decode(T.self, from: self.payload)
 
             case "text/xml", "application/xml":
@@ -99,7 +99,7 @@ private struct _EventStreamDecoder: Decoder {
                 let xmlElement = xmlDocument.rootElement() ?? .init(name: "__empty_element")
 
                 var xmlDecoder = XMLDecoder()
-                xmlDecoder.userInfo[.awsEvent] = EventDecodingContainer(payload: self.payload)
+                xmlDecoder.userInfo[.awsEvent] = EventDecodingContainer(headers: self.headers, payload: self.payload)
                 return try xmlDecoder.decode(T.self, from: xmlElement)
 
             case "application/octet-stream":
@@ -107,7 +107,7 @@ private struct _EventStreamDecoder: Decoder {
                 // via the user info`
                 let jsonDecoder = JSONDecoder()
                 jsonDecoder.dateDecodingStrategy = .secondsSince1970
-                jsonDecoder.userInfo[.awsEvent] = EventDecodingContainer(payload: self.payload)
+                jsonDecoder.userInfo[.awsEvent] = EventDecodingContainer(headers: self.headers, payload: self.payload)
                 return try jsonDecoder.decode(T.self, from: .init(staticString: "{}"))
 
             case .none:
@@ -205,8 +205,80 @@ private struct _EventStreamDecoder: Decoder {
 }
 
 /// Container used for passed event payload to decoders
-struct EventDecodingContainer {
+public struct EventDecodingContainer: Sendable {
+    /// Event headers
+    @usableFromInline
+    let headers: [String: String]
+    /// Event payload
     let payload: ByteBuffer
+
+    /// Decode header to type conforming to RawRepresentable
+    @inlinable
+    public func decodeHeader<Value: RawRepresentable>(_ type: Value.Type = Value.self, key header: String) throws -> Value
+    where Value.RawValue == String {
+        guard let value = try decodeHeaderIfPresent(type, key: header) else {
+            throw HeaderDecodingError.headerNotFound(header)
+        }
+        return value
+    }
+
+    /// Decode header to type conforming to LosslessStringConvertible
+    @inlinable
+    public func decodeHeader<Value: LosslessStringConvertible>(_ type: Value.Type = Value.self, key header: String) throws -> Value {
+        guard let value = try decodeHeaderIfPresent(type, key: header) else {
+            throw HeaderDecodingError.headerNotFound(header)
+        }
+        return value
+    }
+    /// Decode header to Date. Assumes the date format is HTTP date time
+    @inlinable
+    public func decodeHeader(_ type: Date.Type = Date.self, key header: String) throws -> Date {
+        guard let date = try decodeHeaderIfPresent(type, key: header) else {
+            throw HeaderDecodingError.headerNotFound(header)
+        }
+        return date
+    }
+
+    /// Decode header if present to type conforming to RawRepresentable
+    @inlinable
+    public func decodeHeaderIfPresent<Value: RawRepresentable>(
+        _ type: Value.Type = Value.self,
+        key header: String
+    ) throws -> Value? where Value.RawValue == String {
+        guard let headerValue = self.headers[header] else { return nil }
+        if let result = Value(rawValue: headerValue) {
+            return result
+        } else {
+            throw HeaderDecodingError.typeMismatch(header, expectedType: "\(Value.self)")
+        }
+    }
+
+    /// Decode header if present to type conforming to LosslessStringConvertible
+    @inlinable
+    public func decodeHeaderIfPresent<Value: LosslessStringConvertible>(_ type: Value.Type = Value.self, key header: String) throws -> Value? {
+        guard let headerValue = self.headers[header] else { return nil }
+        if let result = Value(headerValue) {
+            return result
+        } else {
+            throw HeaderDecodingError.typeMismatch(header, expectedType: "\(Value.self)")
+        }
+    }
+
+    /// Decode header if present to Date. Assumes the date format is HTTP date time
+    @inlinable
+    public func decodeHeaderIfPresent(_ type: Date.Type = Date.self, key header: String) throws -> Date? {
+        guard let headerValue = self.headers[header] else { return nil }
+        // TODO: // Don't keep creating a DateFormatter
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.dateFormat = "EEE, d MMM yyy HH:mm:ss z"
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        if let result = dateFormatter.date(from: headerValue) {
+            return result
+        } else {
+            throw HeaderDecodingError.typeMismatch(header, expectedType: "Date")
+        }
+    }
 
     /// Return payload from EventStream payload
     /// - Returns: Payload as ByteBuffer

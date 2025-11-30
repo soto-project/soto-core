@@ -514,10 +514,12 @@ class AWSResponseTests: XCTestCase {
 
         struct HeaderEvent: AWSDecodableShape {
             let test: String
+            let test2: String?
 
             init(from decoder: Decoder) throws {
                 let response = decoder.userInfo[.awsEvent]! as! EventDecodingContainer
                 self.test = try response.decodeHeader(key: "test")
+                self.test2 = try response.decodeHeaderIfPresent(key: "test2")
             }
         }
 
@@ -600,6 +602,7 @@ class AWSResponseTests: XCTestCase {
         let headerResult = try EventStreamDecoder().decode(TestEventStream.self, from: &eventByteBuffer)
         if case .header(let header) = headerResult {
             XCTAssertEqual(header.test, "Hello")
+            XCTAssertEqual(header.test2, nil)
         } else {
             XCTFail()
         }

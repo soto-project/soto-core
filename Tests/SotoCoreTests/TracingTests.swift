@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import InMemoryTracing
 import NIOPosix
 import SotoCore
 import SotoTestUtils
@@ -26,11 +27,8 @@ final class TracingTests: XCTestCase {
     }
 
     func testTracingMiddleware() async throws {
-        let expectation = expectation(description: "Expected span to be ended.")
+        let tracer = InMemoryTracer()
 
-        let tracer = TestTracer {
-            _ in expectation.fulfill()
-        }
         InstrumentationSystem.bootstrapInternal(tracer)
 
         let awsServer = AWSTestServer(serviceProtocol: .json)
@@ -62,14 +60,11 @@ final class TracingTests: XCTestCase {
 
         _ = try await response
 
-        await self.wait(for: [expectation], timeout: 1.0)
-
-        let span = try tracer.spans.withLockedValue {
-            try XCTUnwrap($0.first)
-        }
+        let spans = tracer.popFinishedSpans()
+        let span = try XCTUnwrap(spans.first)
 
         XCTAssertEqual(span.operationName, "TestService.TestOperation")
-        XCTAssertTrue(span.recordedErrors.isEmpty)
+        XCTAssertTrue(span.errors.isEmpty)
 
         XCTAssertSpanAttributesEqual(
             span.attributes,

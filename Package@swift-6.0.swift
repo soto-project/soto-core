@@ -38,12 +38,12 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.77.0"),
         .package(url: "https://github.com/apple/swift-atomics.git", from: "1.1.0"),
         .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0"..<"4.0.0"),
-        .package(url: "https://github.com/apple/swift-distributed-tracing.git", from: "1.0.1"),
+        .package(url: "https://github.com/apple/swift-distributed-tracing.git", from: "1.3.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.4.0"),
         .package(url: "https://github.com/apple/swift-metrics.git", "1.0.0"..<"3.0.0"),
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.7.2"),
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", from: "1.13.1"),
-        .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.23.0"),
+        .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.30.0"),
         .package(url: "https://github.com/jmespath/jmespath.swift.git", from: "1.0.2"),
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.8.0"),
     ],
@@ -111,6 +111,7 @@ let package = Package(
                 .byName(name: "SotoCore"),
                 .byName(name: "SotoTestUtils"),
                 .product(name: "NIOPosix", package: "swift-nio"),
+                .product(name: "InMemoryTracing", package: "swift-distributed-tracing"),
             ]
         ),
         .testTarget(

@@ -512,6 +512,15 @@ class AWSResponseTests: XCTestCase {
             }
         }
 
+        struct HeaderEvent: AWSDecodableShape {
+            let test: String
+
+            init(from decoder: Decoder) throws {
+                let response = decoder.userInfo[.awsEvent]! as! EventDecodingContainer
+                self.test = try response.decodeHeader(key: "test")
+            }
+        }
+
         struct ShapeEvent: AWSDecodableShape, Encodable, Equatable {
             let string: String
             let integer: Int
@@ -525,6 +534,8 @@ class AWSResponseTests: XCTestCase {
         case shape(ShapeEvent)
         /// Exception event with codable payload.
         case exception(ShapeEvent)
+        /// Exception event with codable payload.
+        case header(HeaderEvent)
 
         public init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -548,6 +559,9 @@ class AWSResponseTests: XCTestCase {
             case .exception:
                 let value = try container.decode(ShapeEvent.self, forKey: .exception)
                 self = .exception(value)
+            case .header:
+                let value = try container.decode(HeaderEvent.self, forKey: .header)
+                self = .header(value)
             }
         }
 
@@ -556,6 +570,7 @@ class AWSResponseTests: XCTestCase {
             case payload = "Payload"
             case shape = "Shape"
             case exception = "ShapeException"
+            case header = "Header"
         }
     }
 
@@ -576,6 +591,15 @@ class AWSResponseTests: XCTestCase {
         let payloadResult = try EventStreamDecoder().decode(TestEventStream.self, from: &eventByteBuffer)
         if case .payload(let payload) = payloadResult {
             XCTAssertEqual(payload.payload.buffer, payloadBuffer)
+        } else {
+            XCTFail()
+        }
+        // test event header
+        let headerHeaders = [":message-type": "event", ":event-type": "Header", ":content-type": "application/octet-stream", "test": "Hello"]
+        self.writeEvent(headers: headerHeaders, payload: ByteBuffer(), to: &eventByteBuffer)
+        let headerResult = try EventStreamDecoder().decode(TestEventStream.self, from: &eventByteBuffer)
+        if case .header(let header) = headerResult {
+            XCTAssertEqual(header.test, "Hello")
         } else {
             XCTFail()
         }

@@ -61,7 +61,8 @@ final class TracingTests: XCTestCase {
         _ = try await response
 
         let spans = tracer.popFinishedSpans()
-        let span = try XCTUnwrap(spans.first)
+        // We should get two spans. One from AsyncHTTPClient and one from Soto. The second one is the Soto one
+        let span = try XCTUnwrap(spans.last)
 
         XCTAssertEqual(span.operationName, "TestService.TestOperation")
         XCTAssertTrue(span.errors.isEmpty)

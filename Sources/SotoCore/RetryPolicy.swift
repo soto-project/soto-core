@@ -22,6 +22,11 @@ import NIOPosix  // Needed for NIOConnectionError
 public struct RetryPolicyFactory {
     public let retryPolicy: RetryPolicy
 
+    /// Initialize a RetryPolicyFactory
+    public init(retryPolicy: RetryPolicy) {
+        self.retryPolicy = retryPolicy
+    }
+
     /// The default RetryPolicy returned by RetryPolicyFactory
     public static var `default`: RetryPolicyFactory { .jitter() }
 

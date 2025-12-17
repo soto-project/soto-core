@@ -17,6 +17,7 @@ import INIParser
 import Logging
 import NIOCore
 import NIOPosix
+import _NIOFileSystem
 
 /// Load settings from AWS credentials and profile configuration files
 /// https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
@@ -91,13 +92,13 @@ enum ConfigFileLoader {
         profile: String,
         threadPool: NIOThreadPool = .singleton
     ) async throws -> SharedCredentials {
-        let fileIO = NonBlockingFileIO(threadPool: threadPool)
+        let fileSystem = FileSystem(threadPool: threadPool)
         let credentialsByteBuffer: ByteBuffer
         do {
             // Load credentials file
             credentialsByteBuffer = try await self.loadFile(
                 path: credentialsFilePath,
-                fileIO: fileIO
+                fileSystem: fileSystem
             )
         } catch {
             // Throw `.noProvider` error if credential file cannot be loaded
@@ -108,7 +109,7 @@ enum ConfigFileLoader {
             // Load profile config file
             configByteBuffer = try await self.loadFile(
                 path: configFilePath,
-                fileIO: fileIO
+                fileSystem: fileSystem
             )
         } catch {
             configByteBuffer = nil
@@ -122,10 +123,10 @@ enum ConfigFileLoader {
     ///   - eventLoop: event loop to run everything on
     ///   - fileIO: non-blocking file IO
     /// - Returns: Event loop future with file contents in a byte-buffer
-    static func loadFile(path: String, fileIO: NonBlockingFileIO) async throws -> ByteBuffer {
+    static func loadFile(path: String, fileSystem: FileSystem) async throws -> ByteBuffer {
         let path = self.expandTildeInFilePath(path)
-        return try await fileIO.withFileRegion(path: path) { fileRegion in
-            try await fileIO.read(fileHandle: fileRegion.fileHandle, byteCount: fileRegion.readableBytes, allocator: ByteBufferAllocator())
+        return try await fileSystem.withFileHandle(forReadingAt: .init(path)) { read in
+            try await read.readToEnd(maximumSizeAllowed: .megabytes(1))
         }
     }
 

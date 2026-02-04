@@ -26,14 +26,14 @@ import Testing
 
 @Suite("Login Error Handling Tests", .serialized)
 final class LoginErrorHandlingTests {
-    
+
     // Helper to create a unique temp directory for each test
     func createTempDirectory() throws -> URL {
         let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         return tempDir
     }
-    
+
     // Helper to clean up temp directory
     func removeTempDirectory(_ url: URL) {
         try? FileManager.default.removeItem(at: url)
@@ -168,7 +168,7 @@ final class LoginErrorHandlingTests {
     func handleInsufficientPermissionsError() async throws {
         let tempDirectory = try createTempDirectory()
         defer { removeTempDirectory(tempDirectory) }
-        
+
         let privateKey = P256.Signing.PrivateKey()
         let pemKey = privateKey.pemRepresentation
         let escapedPemKey = pemKey.replacingOccurrences(of: "\n", with: "\\n")

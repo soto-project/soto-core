@@ -25,22 +25,24 @@ import Testing
 
 @Suite("Login Credentials Provider", .serialized)
 final class LoginCredentialsProviderTests {
-    var tempDirectory: URL!
-
-    init() async throws {
-        // Create temp directory
-        tempDirectory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
+    
+    // Helper to create a unique temp directory for each test
+    func createTempDirectory() throws -> URL {
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        return tempDir
     }
-
-    deinit {
-        if let tempDirectory = tempDirectory {
-            try? FileManager.default.removeItem(at: tempDirectory)
-        }
+    
+    // Helper to clean up temp directory
+    func removeTempDirectory(_ url: URL) {
+        try? FileManager.default.removeItem(at: url)
     }
 
     @Test("Get credentials successfully with full flow")
     func getCredentialsSuccess() async throws {
+        let tempDirectory = try createTempDirectory()
+        defer { removeTempDirectory(tempDirectory) }
+        
         // Setup token file
         let privateKey = P256.Signing.PrivateKey()
         let pemKey = privateKey.pemRepresentation
@@ -142,6 +144,9 @@ final class LoginCredentialsProviderTests {
 
     @Test("Get credentials with HTTP error returns proper error")
     func getCredentialsHTTPError() async throws {
+        let tempDirectory = try createTempDirectory()
+        defer { removeTempDirectory(tempDirectory) }
+        
         // Setup token file
         let privateKey = P256.Signing.PrivateKey()
         let pemKey = privateKey.pemRepresentation
@@ -196,6 +201,8 @@ final class LoginCredentialsProviderTests {
 
     @Test("Get credentials with invalid response throws decoding error")
     func getCredentialsInvalidResponse() async throws {
+        let tempDirectory = try createTempDirectory()
+        defer { removeTempDirectory(tempDirectory) }
 
         // Setup token file
         let privateKey = P256.Signing.PrivateKey()
@@ -251,6 +258,9 @@ final class LoginCredentialsProviderTests {
 
     @Test("Get credentials with missing token file throws error")
     func getCredentialsTokenFileNotFound() async throws {
+        let tempDirectory = try createTempDirectory()
+        defer { removeTempDirectory(tempDirectory) }
+        
         // Create provider without token file
         let provider = try LoginCredentialsProvider.create(
             loginSession: "nonexistent-session",
@@ -268,6 +278,9 @@ final class LoginCredentialsProviderTests {
 
     @Test("Get credentials returns cached token when not expired")
     func getCredentialsCachedToken() async throws {
+        let tempDirectory = try createTempDirectory()
+        defer { removeTempDirectory(tempDirectory) }
+        
         // Setup token file with future expiration
         let privateKey = P256.Signing.PrivateKey()
         let pemKey = privateKey.pemRepresentation
@@ -329,6 +342,9 @@ final class LoginCredentialsProviderTests {
 
     @Test("Token validation fails when clientId is missing")
     func tokenValidationMissingClientId() async throws {
+        let tempDirectory = try createTempDirectory()
+        defer { removeTempDirectory(tempDirectory) }
+        
         let privateKey = P256.Signing.PrivateKey()
         let pemKey = privateKey.pemRepresentation
         let escapedPemKey = pemKey.replacingOccurrences(of: "\n", with: "\\n")
@@ -373,6 +389,9 @@ final class LoginCredentialsProviderTests {
 
     @Test("Token validation fails when refreshToken is missing")
     func tokenValidationMissingRefreshToken() async throws {
+        let tempDirectory = try createTempDirectory()
+        defer { removeTempDirectory(tempDirectory) }
+        
         let privateKey = P256.Signing.PrivateKey()
         let pemKey = privateKey.pemRepresentation
         let escapedPemKey = pemKey.replacingOccurrences(of: "\n", with: "\\n")
@@ -416,6 +435,9 @@ final class LoginCredentialsProviderTests {
 
     @Test("Token validation fails when dpopKey is missing")
     func tokenValidationMissingDpopKey() async throws {
+        let tempDirectory = try createTempDirectory()
+        defer { removeTempDirectory(tempDirectory) }
+        
         let tokenData = """
             {
                 "accessToken": {
@@ -455,6 +477,9 @@ final class LoginCredentialsProviderTests {
 
     @Test("Provider is immutable")
     func providerIsImmutable() throws {
+        let tempDirectory = try createTempDirectory()
+        defer { removeTempDirectory(tempDirectory) }
+        
         let provider = try LoginCredentialsProvider.create(
             loginSession: "test-session",
             loginRegion: .useast1,

@@ -22,23 +22,25 @@ import Testing
 
 @Suite("Token File Manager")
 final class TokenFileManagerTests {
-    var tempDirectory: URL!
-    var manager: TokenFileManager!
-
-    init() throws {
-        tempDirectory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
-        manager = TokenFileManager()
+    let manager = TokenFileManager()
+    
+    // Helper to create a unique temp directory for each test
+    func createTempDirectory() throws -> URL {
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        return tempDir
     }
-
-    deinit {
-        if let tempDirectory = tempDirectory {
-            try? FileManager.default.removeItem(at: tempDirectory)
-        }
+    
+    // Helper to clean up temp directory
+    func removeTempDirectory(_ url: URL) {
+        try? FileManager.default.removeItem(at: url)
     }
 
     @Test("Construct token path with custom directory")
     func constructTokenPath() throws {
+        let tempDirectory = try createTempDirectory()
+        defer { removeTempDirectory(tempDirectory) }
+        
         let path = try manager.constructTokenPath(
             loginSession: "test-session",
             cacheDirectory: tempDirectory.path
@@ -71,6 +73,9 @@ final class TokenFileManagerTests {
 
     @Test("Load and save token preserves all fields including idToken")
     func loadAndSaveToken() throws {
+        let tempDirectory = try createTempDirectory()
+        defer { removeTempDirectory(tempDirectory) }
+        
         // Create a test token file
         let privateKey = P256.Signing.PrivateKey()
         let pemKey = privateKey.pemRepresentation
@@ -142,6 +147,9 @@ final class TokenFileManagerTests {
 
     @Test("Load token with invalid JSON throws error")
     func loadTokenInvalidJSON() throws {
+        let tempDirectory = try createTempDirectory()
+        defer { removeTempDirectory(tempDirectory) }
+        
         let invalidJSON = "{ invalid json }"
         let tokenPath = tempDirectory.appendingPathComponent("invalid.json").path
         try invalidJSON.write(toFile: tokenPath, atomically: true, encoding: .utf8)

@@ -45,7 +45,6 @@ final class TokenFileManagerTests {
         )
 
         // Should use SHA256 hash of "test-session"
-        let expectedHash = "c5f8fa7f7c154e0c5e4f0e0e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e"
         let sessionData = Data("test-session".utf8)
         let hash = SHA256.hash(data: sessionData)
         let hashString = hash.compactMap { String(format: "%02x", $0) }.joined()

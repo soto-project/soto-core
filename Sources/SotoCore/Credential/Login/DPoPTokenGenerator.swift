@@ -18,15 +18,15 @@ import Crypto
 import Foundation
 
 @available(macOS 13.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
-struct DPoPTokenGenerator {
+struct DPoPTokenGenerator<JTI: JTIGenerator, Time: TimeProvider> {
 
     // allow to inject these two values during the tests
-    private let jtiGenerator: @Sendable () -> String
-    private let timeProvider: @Sendable () -> Int
+    private let jtiGenerator: JTI
+    private let timeProvider: Time
 
     init(
-        jtiGenerator: @escaping @Sendable () -> String = { UUID().uuidString },
-        timeProvider: @escaping @Sendable () -> Int = { Int(Date().timeIntervalSince1970) }
+        jtiGenerator: JTI = DefaultJTIGenerator(),
+        timeProvider: Time = DefaultTimeProvider()
     ) {
         self.jtiGenerator = jtiGenerator
         self.timeProvider = timeProvider
@@ -116,10 +116,10 @@ struct DPoPTokenGenerator {
 
         // JWT payload
         let payload = JWTPayload(
-            jti: jtiGenerator(),
+            jti: jtiGenerator.generate(),
             htm: httpMethod,
             htu: endpoint,
-            iat: timeProvider()
+            iat: timeProvider.generate()
         )
 
         let headerData = try encoder.encode(header)
@@ -136,5 +136,25 @@ struct DPoPTokenGenerator {
         let signatureB64 = base64URLEncode(signatureData)
 
         return "\(message).\(signatureB64)"
+    }
+}
+
+protocol JTIGenerator: Sendable {
+    func generate() -> String
+}
+
+struct DefaultJTIGenerator: JTIGenerator {
+    func generate() -> String {
+        UUID().uuidString
+    }
+}
+
+protocol TimeProvider: Sendable {
+    func generate() -> Int
+}
+
+struct DefaultTimeProvider: TimeProvider {
+    func generate() -> Int {
+        Int(Date().timeIntervalSince1970)
     }
 }

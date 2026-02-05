@@ -23,6 +23,14 @@ import Testing
 @Suite("DPoP Token Generator")
 struct DPoPTokenGeneratorTests {
 
+    struct TestTimeProvider: TimeProvider {
+        func generate() -> Int { 1_234_567_890 }
+    }
+
+    struct TestJTIGenerator: JTIGenerator {
+        func generate() -> String { "test-jti-123" }
+    }
+
     @Test("Generate DPoP header with valid EC key")
     func generateDPoPHeaderWithValidKey() throws {
         // Generate a test EC key
@@ -31,8 +39,8 @@ struct DPoPTokenGeneratorTests {
 
         // Create generator with fixed values for testing
         let generator = DPoPTokenGenerator(
-            jtiGenerator: { "test-jti-123" },
-            timeProvider: { 1_234_567_890 }
+            jtiGenerator: TestJTIGenerator(),
+            timeProvider: TestTimeProvider()
         )
 
         // Generate DPoP header

@@ -22,15 +22,17 @@ struct ProfileConfigurationLoader {
     /// - Parameters:
     ///   - profileName: Name of the profile (defaults to "default")
     ///   - cacheDirectoryOverride: Optional override for cache directory
+    ///   - configPath: Optional path to config file (defaults to ~/.aws/config)
     /// - Returns: LoginConfiguration
     func loadConfiguration(
         profileName: String? = nil,
-        cacheDirectoryOverride: String? = nil
+        cacheDirectoryOverride: String? = nil,
+        configPath: String? = nil
     ) throws -> LoginConfiguration {
         let profile = profileName ?? "default"
 
-        // Load profile from ~/.aws/config
-        let profileData = try loadProfile(name: profile)
+        // Load profile from config file
+        let profileData = try loadProfile(name: profile, configPath: configPath)
 
         // login_session is mandatory
         guard let loginSession = profileData["login_session"] else {
@@ -60,14 +62,19 @@ struct ProfileConfigurationLoader {
         )
     }
 
-    private func loadProfile(name: String) throws -> [String: String] {
-        // Construct path to ~/.aws/config
-        let homeDir = FileManager.default.homeDirectoryForCurrentUser
-        let configPath = homeDir.appendingPathComponent(".aws").appendingPathComponent("config")
+    private func loadProfile(name: String, configPath: String?) throws -> [String: String] {
+        // Use provided path or construct default path to ~/.aws/config
+        let path: String
+        if let configPath = configPath {
+            path = configPath
+        } else {
+            let homeDir = FileManager.default.homeDirectoryForCurrentUser
+            path = homeDir.appendingPathComponent(".aws").appendingPathComponent("config").path
+        }
 
         // Read config file
-        guard let configContent = try? String(contentsOf: configPath, encoding: .utf8) else {
-            throw LoginError.configFileNotFound(configPath.path)
+        guard let configContent = try? String(contentsOfFile: path, encoding: .utf8) else {
+            throw LoginError.configFileNotFound(path)
         }
 
         // Parse INI file

@@ -48,7 +48,7 @@ final class LoginCredentialsProviderTests {
         let pemKey = privateKey.pemRepresentation
 
         // Properly escape the PEM key for JSON
-        let escapedPemKey = pemKey.replacingOccurrences(of: "\n", with: "\\n")
+        let escapedPemKey = pemKey.replacing("\n", with: "\\n")
 
         let tokenData = """
             {
@@ -152,7 +152,7 @@ final class LoginCredentialsProviderTests {
         let pemKey = privateKey.pemRepresentation
 
         // Properly escape the PEM key for JSON
-        let escapedPemKey = pemKey.replacingOccurrences(of: "\n", with: "\\n")
+        let escapedPemKey = pemKey.replacing("\n", with: "\\n")
 
         let tokenData = """
             {
@@ -209,7 +209,7 @@ final class LoginCredentialsProviderTests {
         let pemKey = privateKey.pemRepresentation
 
         // Properly escape the PEM key for JSON
-        let escapedPemKey = pemKey.replacingOccurrences(of: "\n", with: "\\n")
+        let escapedPemKey = pemKey.replacing("\n", with: "\\n")
 
         let tokenData = """
             {
@@ -284,7 +284,7 @@ final class LoginCredentialsProviderTests {
         // Setup token file with future expiration
         let privateKey = P256.Signing.PrivateKey()
         let pemKey = privateKey.pemRepresentation
-        let escapedPemKey = pemKey.replacingOccurrences(of: "\n", with: "\\n")
+        let escapedPemKey = pemKey.replacing("\n", with: "\\n")
 
         // Set expiration to 1 hour in the future
         let futureDate = Date(timeIntervalSinceNow: 3600)
@@ -347,7 +347,7 @@ final class LoginCredentialsProviderTests {
 
         let privateKey = P256.Signing.PrivateKey()
         let pemKey = privateKey.pemRepresentation
-        let escapedPemKey = pemKey.replacingOccurrences(of: "\n", with: "\\n")
+        let escapedPemKey = pemKey.replacing("\n", with: "\\n")
 
         let tokenData = """
             {
@@ -394,7 +394,7 @@ final class LoginCredentialsProviderTests {
 
         let privateKey = P256.Signing.PrivateKey()
         let pemKey = privateKey.pemRepresentation
-        let escapedPemKey = pemKey.replacingOccurrences(of: "\n", with: "\\n")
+        let escapedPemKey = pemKey.replacing("\n", with: "\\n")
 
         let tokenData = """
             {

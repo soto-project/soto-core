@@ -17,6 +17,7 @@
 import Crypto
 import Foundation
 
+@available(macOS 13.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
 struct DPoPTokenGenerator {
 
     // allow to inject these two values during the tests
@@ -53,12 +54,11 @@ struct DPoPTokenGenerator {
 
     private func base64URLEncode(_ data: Data) -> String {
         data.base64EncodedString()
-            .replacingOccurrences(of: "+", with: "-")
-            .replacingOccurrences(of: "/", with: "_")
-            .replacingOccurrences(of: "=", with: "")
+            .replacing("+", with: "-")
+            .replacing("/", with: "_")
+            .replacing("=", with: "")
     }
 
-    @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
     private func extractPublicKeyCoordinates(from pemKey: String) -> (x: String, y: String)? {
         // Use swift-crypto's built-in PEM support to load the key
         guard let privateKey = try? P256.Signing.PrivateKey(pemRepresentation: pemKey) else {
@@ -83,7 +83,6 @@ struct DPoPTokenGenerator {
         )
     }
 
-    @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
     private func signWithEC(message: Data, pemKey: String) throws -> Data {
         // Use swift-crypto's built-in PEM support
         let privateKey = try P256.Signing.PrivateKey(pemRepresentation: pemKey)
@@ -95,7 +94,6 @@ struct DPoPTokenGenerator {
         return signature.rawRepresentation
     }
 
-    @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
     func generateDPoPHeader(
         endpoint: String,
         httpMethod: String = "POST",

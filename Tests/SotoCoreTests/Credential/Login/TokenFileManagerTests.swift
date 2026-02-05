@@ -81,7 +81,7 @@ final class TokenFileManagerTests {
         let pemKey = privateKey.pemRepresentation
 
         // Properly escape the PEM key for JSON
-        let escapedPemKey = pemKey.replacingOccurrences(of: "\n", with: "\\n")
+        let escapedPemKey = pemKey.replacing("\n", with: "\\n")
 
         let tokenData = """
             {

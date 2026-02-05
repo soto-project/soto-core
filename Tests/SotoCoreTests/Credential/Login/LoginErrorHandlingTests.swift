@@ -46,7 +46,7 @@ final class LoginErrorHandlingTests {
 
         let privateKey = P256.Signing.PrivateKey()
         let pemKey = privateKey.pemRepresentation
-        let escapedPemKey = pemKey.replacingOccurrences(of: "\n", with: "\\n")
+        let escapedPemKey = pemKey.replacing("\n", with: "\\n")
 
         let tokenData = """
             {
@@ -110,7 +110,7 @@ final class LoginErrorHandlingTests {
 
         let privateKey = P256.Signing.PrivateKey()
         let pemKey = privateKey.pemRepresentation
-        let escapedPemKey = pemKey.replacingOccurrences(of: "\n", with: "\\n")
+        let escapedPemKey = pemKey.replacing("\n", with: "\\n")
 
         let tokenData = """
             {
@@ -171,7 +171,7 @@ final class LoginErrorHandlingTests {
 
         let privateKey = P256.Signing.PrivateKey()
         let pemKey = privateKey.pemRepresentation
-        let escapedPemKey = pemKey.replacingOccurrences(of: "\n", with: "\\n")
+        let escapedPemKey = pemKey.replacing("\n", with: "\\n")
 
         let tokenData = """
             {

@@ -20,35 +20,9 @@ import NIOCore
 import NIOFoundationCompat
 import SotoSignerV4
 
-// MARK: - HTTP Request/Response Models
-
-private struct TokenRequest: Codable {
-    let clientId: String
-    let refreshToken: String
-    let grantType: String
-}
-
-private struct AccessTokenResponse: Codable {
-    let accessKeyId: String
-    let secretAccessKey: String
-    let sessionToken: String
-}
-
-private struct TokenResponse: Codable {
-    let accessToken: AccessTokenResponse
-    let tokenType: String
-    let expiresIn: Int
-    let refreshToken: String
-}
-
-private struct ErrorResponse: Codable {
-    let error: String
-    let message: String
-}
-
 // MARK: - Login Credentials Provider
 
-@available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
+@available(macOS 13.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
 public struct LoginCredentialsProvider: CredentialProvider {
     private let configuration: LoginConfiguration
     private let dpopGenerator = DPoPTokenGenerator()
@@ -155,8 +129,8 @@ public struct LoginCredentialsProvider: CredentialProvider {
         headers.add(name: "DPoP", value: dpopHeader)
         // Extract host from endpoint (remove protocol if present)
         let host = configuration.endpoint
-            .replacingOccurrences(of: "https://", with: "")
-            .replacingOccurrences(of: "http://", with: "")
+            .replacing("https://", with: "")
+            .replacing("http://", with: "")
         headers.add(name: "Host", value: host)
         headers.add(name: "Content-Length", value: "\(bodyData.count)")
 
@@ -241,7 +215,7 @@ public struct LoginCredentialsProvider: CredentialProvider {
 
 // MARK: - Factory
 
-@available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
+@available(macOS 13.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
 extension LoginCredentialsProvider {
     /// Create a LoginCredentialsProvider from profile configuration
     /// - Parameters:
@@ -306,7 +280,7 @@ extension CredentialProviderFactory {
     ///   - profileName: Name of the profile in ~/.aws/config (defaults to "default")
     ///   - cacheDirectoryOverride: Optional override for token cache directory
     /// - Returns: A credential provider factory
-    @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
+    @available(macOS 13.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
     public static func login(
         profileName: String? = nil,
         cacheDirectoryOverride: String? = nil
@@ -325,4 +299,30 @@ extension CredentialProviderFactory {
             return RotatingCredentialProvider(context: context, provider: provider)
         }
     }
+}
+
+// MARK: - HTTP Request/Response Models
+
+private struct TokenRequest: Codable {
+    let clientId: String
+    let refreshToken: String
+    let grantType: String
+}
+
+private struct AccessTokenResponse: Codable {
+    let accessKeyId: String
+    let secretAccessKey: String
+    let sessionToken: String
+}
+
+private struct TokenResponse: Codable {
+    let accessToken: AccessTokenResponse
+    let tokenType: String
+    let expiresIn: Int
+    let refreshToken: String
+}
+
+private struct ErrorResponse: Codable {
+    let error: String
+    let message: String
 }

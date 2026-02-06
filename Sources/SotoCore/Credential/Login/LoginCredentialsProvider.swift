@@ -18,6 +18,7 @@ import Foundation
 import Logging
 import NIOCore
 import NIOFoundationCompat
+import NIOPosix
 import SotoSignerV4
 
 // MARK: - Login Credentials Provider
@@ -27,10 +28,12 @@ public struct LoginCredentialsProvider: CredentialProvider {
     private let configuration: LoginConfiguration
     private let dpopGenerator = DPoPTokenGenerator()
     private let httpClient: AWSHTTPClient
+    private let threadPool: NIOThreadPool
 
-    init(configuration: LoginConfiguration, httpClient: AWSHTTPClient) {
+    init(configuration: LoginConfiguration, httpClient: AWSHTTPClient, threadPool: NIOThreadPool = .singleton) {
         self.configuration = configuration
         self.httpClient = httpClient
+        self.threadPool = threadPool
     }
 
     public func getCredential(logger: Logger) async throws -> Credential {
@@ -41,7 +44,8 @@ public struct LoginCredentialsProvider: CredentialProvider {
             cacheDirectory: configuration.cacheDirectory
         )
 
-        let token = try tokenFileManager.loadToken(from: tokenPath)
+        let fileIO = NonBlockingFileIO(threadPool: threadPool)
+        let token = try await tokenFileManager.loadToken(from: tokenPath, fileIO: fileIO)
 
         // Check if token is still valid per spec
         if let expiresAt = token.expiresAt, expiresAt > Date() {
@@ -72,7 +76,8 @@ public struct LoginCredentialsProvider: CredentialProvider {
         // MUST reload token from disk before refreshing per spec
         // This ensures we don't refresh if another process already did
         let tokenFileManager = TokenFileManager()
-        let reloadedToken = try tokenFileManager.loadToken(from: tokenPath)
+        let fileIO = NonBlockingFileIO(threadPool: threadPool)
+        let reloadedToken = try await tokenFileManager.loadToken(from: tokenPath, fileIO: fileIO)
 
         // Check again if it was refreshed by another process
         if let expiresAt = reloadedToken.expiresAt, expiresAt > Date() {

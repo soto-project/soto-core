@@ -16,6 +16,8 @@
 
 import Crypto
 import Foundation
+import NIOCore
+import NIOPosix
 import Testing
 
 @testable import SotoCore
@@ -72,7 +74,7 @@ final class TokenFileManagerTests {
     }
 
     @Test("Load and save token preserves all fields including idToken")
-    func loadAndSaveToken() throws {
+    func loadAndSaveToken() async throws {
         let tempDirectory = try createTempDirectory()
         defer { removeTempDirectory(tempDirectory) }
 
@@ -104,7 +106,8 @@ final class TokenFileManagerTests {
         try tokenData.write(toFile: tokenPath, atomically: true, encoding: .utf8)
 
         // Load token
-        let token = try manager.loadToken(from: tokenPath)
+        let fileIO = NonBlockingFileIO(threadPool: .singleton)
+        let token = try await manager.loadToken(from: tokenPath, fileIO: fileIO)
 
         // Verify loaded values
         #expect(token.refreshToken == "refresh123")
@@ -139,14 +142,15 @@ final class TokenFileManagerTests {
     }
 
     @Test("Load token from nonexistent file throws error")
-    func loadTokenFileNotFound() throws {
-        #expect(throws: LoginError.self) {
-            try manager.loadToken(from: "/nonexistent/path/token.json")
+    func loadTokenFileNotFound() async throws {
+        let fileIO = NonBlockingFileIO(threadPool: .singleton)
+        await #expect(throws: LoginError.self) {
+            try await manager.loadToken(from: "/nonexistent/path/token.json", fileIO: fileIO)
         }
     }
 
     @Test("Load token with invalid JSON throws error")
-    func loadTokenInvalidJSON() throws {
+    func loadTokenInvalidJSON() async throws {
         let tempDirectory = try createTempDirectory()
         defer { removeTempDirectory(tempDirectory) }
 
@@ -154,8 +158,9 @@ final class TokenFileManagerTests {
         let tokenPath = tempDirectory.appendingPathComponent("invalid.json").path
         try invalidJSON.write(toFile: tokenPath, atomically: true, encoding: .utf8)
 
-        #expect(throws: LoginError.tokenParseFailed) {
-            try manager.loadToken(from: tokenPath)
+        let fileIO = NonBlockingFileIO(threadPool: .singleton)
+        await #expect(throws: LoginError.tokenParseFailed) {
+            try await manager.loadToken(from: tokenPath, fileIO: fileIO)
         }
     }
 }

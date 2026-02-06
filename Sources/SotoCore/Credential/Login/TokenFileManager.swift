@@ -16,6 +16,8 @@
 
 import Crypto
 import Foundation
+import NIOCore
+import NIOPosix
 
 struct TokenFileManager {
     private let fileManager = FileManager.default
@@ -56,8 +58,17 @@ struct TokenFileManager {
         return "\(baseDir)/\(hashString).json"
     }
 
-    func loadToken(from path: String) throws -> LoginToken {
-        guard let data = try? Data(contentsOf: URL(fileURLWithPath: path)) else {
+    func loadToken(from path: String, fileIO: NonBlockingFileIO) async throws -> LoginToken {
+        let byteBuffer: ByteBuffer
+        do {
+            byteBuffer = try await fileIO.withFileRegion(path: path) { fileRegion in
+                try await fileIO.read(fileHandle: fileRegion.fileHandle, byteCount: fileRegion.readableBytes, allocator: ByteBufferAllocator())
+            }
+        } catch {
+            throw LoginError.tokenLoadFailed("Cannot read token file at \(path). Please authenticate with `aws login`.")
+        }
+
+        guard let data = byteBuffer.getData(at: 0, length: byteBuffer.readableBytes) else {
             throw LoginError.tokenLoadFailed("Cannot read token file at \(path). Please authenticate with `aws login`.")
         }
 

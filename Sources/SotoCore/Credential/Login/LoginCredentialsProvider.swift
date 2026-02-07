@@ -209,7 +209,7 @@ public struct LoginCredentialsProvider: CredentialProvider {
     }
 }
 
-// MARK: - Factory
+// MARK: - Initializers
 
 @available(macOS 13.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
 extension LoginCredentialsProvider {
@@ -218,19 +218,19 @@ extension LoginCredentialsProvider {
     ///   - profileName: Name of the profile in ~/.aws/config (defaults to "default")
     ///   - cacheDirectoryOverride: Optional override for token cache directory
     ///   - httpClient: HTTP client for making requests
-    /// - Returns: LoginCredentialsProvider instance
-    public static func create(
+    /// - Throws: AWSLoginCredentialError if configuration cannot be loaded
+    public init(
         profileName: String? = nil,
         cacheDirectoryOverride: String? = nil,
         httpClient: AWSHTTPClient
-    ) throws -> LoginCredentialsProvider {
+    ) throws {
         let loader = ProfileConfigurationLoader()
         let configuration = try loader.loadConfiguration(
             profileName: profileName,
             cacheDirectoryOverride: cacheDirectoryOverride
         )
 
-        return LoginCredentialsProvider(
+        self.init(
             configuration: configuration,
             httpClient: httpClient
         )
@@ -256,7 +256,7 @@ extension CredentialProviderFactory {
     ) -> CredentialProviderFactory {
         .custom { context in
             guard
-                let provider = try? LoginCredentialsProvider.create(
+                let provider = try? LoginCredentialsProvider(
                     profileName: profileName,
                     cacheDirectoryOverride: cacheDirectoryOverride,
                     httpClient: context.httpClient

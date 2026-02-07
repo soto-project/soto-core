@@ -22,68 +22,68 @@ public struct AWSLoginCredentialError: Error, Equatable, CustomStringConvertible
     public let code: String
     /// Human-readable error message
     public let message: String
-    
+
     private init(code: String, message: String) {
         self.code = code
         self.message = message
     }
-    
+
     public var description: String {
         "\(code): \(message)"
     }
-    
+
     // MARK: - Predefined Error Types
-    
+
     /// Login session is missing from configuration
     public static var loginSessionMissing: AWSLoginCredentialError {
         AWSLoginCredentialError(code: "loginSessionMissing", message: "Login session is missing from configuration")
     }
-    
+
     /// Region is missing from configuration
     public static var regionMissing: AWSLoginCredentialError {
         AWSLoginCredentialError(code: "regionMissing", message: "Region is missing from configuration")
     }
-    
+
     /// Profile not found in configuration file
     public static func profileNotFound(_ profile: String) -> AWSLoginCredentialError {
         AWSLoginCredentialError(code: "profileNotFound", message: "Profile '\(profile)' not found in configuration file")
     }
-    
+
     /// Configuration file not found at specified path
     public static func configFileNotFound(_ path: String) -> AWSLoginCredentialError {
         AWSLoginCredentialError(code: "configFileNotFound", message: "Configuration file not found at path: \(path)")
     }
-    
+
     /// Token could not be loaded from disk
     public static func tokenLoadFailed(_ reason: String) -> AWSLoginCredentialError {
         AWSLoginCredentialError(code: "tokenLoadFailed", message: reason)
     }
-    
+
     /// Token parsing failed
     public static var tokenParseFailed: AWSLoginCredentialError {
         AWSLoginCredentialError(code: "tokenParseFailed", message: "Failed to parse token data")
     }
-    
+
     /// Endpoint URL construction failed
     public static var endpointConstructionFailed: AWSLoginCredentialError {
         AWSLoginCredentialError(code: "endpointConstructionFailed", message: "Failed to construct endpoint URL")
     }
-    
+
     /// HTTP request failed
     public static func httpRequestFailed(_ reason: String) -> AWSLoginCredentialError {
         AWSLoginCredentialError(code: "httpRequestFailed", message: reason)
     }
-    
+
     /// Token refresh operation failed
     public static func tokenRefreshFailed(_ reason: String) -> AWSLoginCredentialError {
         AWSLoginCredentialError(code: "tokenRefreshFailed", message: reason)
     }
-    
+
     /// Invalid response received from server
     public static var invalidResponse: AWSLoginCredentialError {
         AWSLoginCredentialError(code: "invalidResponse", message: "Invalid response received from server")
     }
-    
+
     /// Token write operation failed
     public static var tokenWriteFailed: AWSLoginCredentialError {
         AWSLoginCredentialError(code: "tokenWriteFailed", message: "Failed to write token to disk")

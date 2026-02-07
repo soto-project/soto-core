@@ -35,17 +35,17 @@ struct AWSLoginCredentialErrorTests {
         #expect(httpError.code == "httpRequestFailed")
         #expect(httpError.message == "500")
     }
-    
+
     @Test("Errors are equatable")
     func errorsAreEquatable() {
         let error1 = AWSLoginCredentialError.profileNotFound("test")
         let error2 = AWSLoginCredentialError.profileNotFound("test")
         let error3 = AWSLoginCredentialError.profileNotFound("other")
-        
+
         #expect(error1 == error2)
         #expect(error1 != error3)
     }
-    
+
     @Test("Error description includes code and message")
     func errorDescription() {
         let error = AWSLoginCredentialError.tokenLoadFailed("test message")

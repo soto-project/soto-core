@@ -142,14 +142,14 @@ struct TokenFileManager {
         let encoder = JSONEncoder()
         encoder.outputFormatting = .prettyPrinted
         let data = try encoder.encode(tokenData)
-        
+
         // Write using NonBlockingFileIO
         var buffer = ByteBufferAllocator().buffer(capacity: data.count)
         buffer.writeBytes(data)
-        
+
         // Delete file if it exists to ensure clean write
         try? FileManager.default.removeItem(atPath: path)
-        
+
         try await fileIO.withFileHandle(
             path: path,
             mode: .write,

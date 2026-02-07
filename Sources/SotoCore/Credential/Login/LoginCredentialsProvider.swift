@@ -150,7 +150,7 @@ public struct LoginCredentialsProvider: CredentialProvider {
             // Try to parse error response per spec
             let body = try? await response.body.collect(upTo: 1024 * 10)
             if let body,
-               let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: Data(buffer: body))
+                let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: Data(buffer: body))
             {
                 // Handle specific error cases per spec
                 switch errorResponse.error {

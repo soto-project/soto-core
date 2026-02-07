@@ -148,28 +148,26 @@ public struct LoginCredentialsProvider: CredentialProvider {
 
         guard (200...299).contains(response.status.code) else {
             // Try to parse error response per spec
-            if let body = try? await response.body.collect(upTo: 1024 * 10) {
-                let bodyData = Data(buffer: body)
-
-                // Try to decode error response
-                if let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: bodyData) {
-                    // Handle specific error cases per spec
-                    switch errorResponse.error {
-                    case "TOKEN_EXPIRED":
-                        throw LoginError.tokenRefreshFailed("Your session has expired. Please reauthenticate with `aws login`.")
-                    case "USER_CREDENTIALS_CHANGED":
-                        throw LoginError.tokenRefreshFailed(
-                            "Unable to refresh credentials because of a change in your password. Please reauthenticate with your new password."
-                        )
-                    case "INSUFFICIENT_PERMISSIONS":
-                        throw LoginError.tokenRefreshFailed(
-                            "Unable to refresh credentials due to insufficient permissions. You may be missing permission for the 'signin:CreateOAuth2Token' action."
-                        )
-                    default:
-                        throw LoginError.httpRequestFailed(
-                            "HTTP status: \(response.status.code), error: \(errorResponse.error), message: \(errorResponse.message)"
-                        )
-                    }
+            let body = try? await response.body.collect(upTo: 1024 * 10)
+            if let body,
+               let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: Data(buffer: body))
+            {
+                // Handle specific error cases per spec
+                switch errorResponse.error {
+                case "TOKEN_EXPIRED":
+                    throw LoginError.tokenRefreshFailed("Your session has expired. Please reauthenticate with `aws login`.")
+                case "USER_CREDENTIALS_CHANGED":
+                    throw LoginError.tokenRefreshFailed(
+                        "Unable to refresh credentials because of a change in your password. Please reauthenticate with your new password."
+                    )
+                case "INSUFFICIENT_PERMISSIONS":
+                    throw LoginError.tokenRefreshFailed(
+                        "Unable to refresh credentials due to insufficient permissions. You may be missing permission for the 'signin:CreateOAuth2Token' action."
+                    )
+                default:
+                    throw LoginError.httpRequestFailed(
+                        "HTTP status: \(response.status.code), error: \(errorResponse.error), message: \(errorResponse.message)"
+                    )
                 }
             }
 

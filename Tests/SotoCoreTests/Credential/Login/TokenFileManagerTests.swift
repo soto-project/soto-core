@@ -144,8 +144,14 @@ final class TokenFileManagerTests {
     @Test("Load token from nonexistent file throws error")
     func loadTokenFileNotFound() async throws {
         let fileIO = NonBlockingFileIO(threadPool: .singleton)
-        await #expect(throws: LoginError.self) {
-            try await manager.loadToken(from: "/nonexistent/path/token.json", fileIO: fileIO)
+        do {
+            _ = try await manager.loadToken(from: "/nonexistent/path/token.json", fileIO: fileIO)
+            Issue.record("Expected tokenLoadFailed error")
+        } catch let error as AWSLoginCredentialError {
+            #expect(error.code == "tokenLoadFailed")
+            #expect(error.message.contains("Cannot read token file"))
+        } catch {
+            Issue.record("Unexpected error type: \(error)")
         }
     }
 
@@ -159,8 +165,13 @@ final class TokenFileManagerTests {
         try invalidJSON.write(toFile: tokenPath, atomically: true, encoding: .utf8)
 
         let fileIO = NonBlockingFileIO(threadPool: .singleton)
-        await #expect(throws: LoginError.tokenParseFailed) {
-            try await manager.loadToken(from: tokenPath, fileIO: fileIO)
+        do {
+            _ = try await manager.loadToken(from: tokenPath, fileIO: fileIO)
+            Issue.record("Expected tokenParseFailed error")
+        } catch let error as AWSLoginCredentialError {
+            #expect(error.code == "tokenParseFailed")
+        } catch {
+            Issue.record("Unexpected error type: \(error)")
         }
     }
 }

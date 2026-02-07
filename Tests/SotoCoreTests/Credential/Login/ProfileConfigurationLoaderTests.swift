@@ -49,13 +49,19 @@ struct ProfileConfigurationLoaderTests {
 
         let loader = ProfileConfigurationLoader()
 
-        // Trying to load a non-existent profile should throw
-        #expect(throws: LoginError.profileNotFound("nonexistent")) {
-            try loader.loadConfiguration(
+        // Trying to load a non-existent profile should throw profileNotFound error
+        do {
+            _ = try loader.loadConfiguration(
                 profileName: "nonexistent",
                 cacheDirectoryOverride: nil,
                 configPath: configPath
             )
+            Issue.record("Expected profileNotFound error")
+        } catch let error as AWSLoginCredentialError {
+            #expect(error.code == "profileNotFound")
+            #expect(error.message.contains("nonexistent"))
+        } catch {
+            Issue.record("Unexpected error type: \(error)")
         }
     }
 
@@ -120,12 +126,18 @@ struct ProfileConfigurationLoaderTests {
 
         let loader = ProfileConfigurationLoader()
 
-        #expect(throws: LoginError.loginSessionMissing) {
-            try loader.loadConfiguration(
+        // Should throw loginSessionMissing error
+        do {
+            _ = try loader.loadConfiguration(
                 profileName: nil,
                 cacheDirectoryOverride: nil,
                 configPath: configPath
             )
+            Issue.record("Expected loginSessionMissing error")
+        } catch let error as AWSLoginCredentialError {
+            #expect(error.code == "loginSessionMissing")
+        } catch {
+            Issue.record("Unexpected error type: \(error)")
         }
     }
 
@@ -243,12 +255,19 @@ struct ProfileConfigurationLoaderTests {
     func loadConfigurationFileNotFound() {
         let loader = ProfileConfigurationLoader()
 
-        #expect(throws: LoginError.configFileNotFound("/nonexistent/config")) {
-            try loader.loadConfiguration(
+        // Should throw configFileNotFound error
+        do {
+            _ = try loader.loadConfiguration(
                 profileName: nil,
                 cacheDirectoryOverride: nil,
                 configPath: "/nonexistent/config"
             )
+            Issue.record("Expected configFileNotFound error")
+        } catch let error as AWSLoginCredentialError {
+            #expect(error.code == "configFileNotFound")
+            #expect(error.message.contains("/nonexistent/config"))
+        } catch {
+            Issue.record("Unexpected error type: \(error)")
         }
     }
 

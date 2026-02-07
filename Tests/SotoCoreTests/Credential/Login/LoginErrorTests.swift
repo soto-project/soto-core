@@ -18,30 +18,37 @@ import Testing
 
 @testable import SotoCore
 
-@Suite("Login Errors")
-struct LoginErrorTests {
+@Suite("AWS Login Credential Errors")
+struct AWSLoginCredentialErrorTests {
 
-    @Test("Error with associated values can be extracted")
-    func errorWithAssociatedValues() {
-        let profileError = LoginError.profileNotFound("my-profile")
-        if case .profileNotFound(let profile) = profileError {
-            #expect(profile == "my-profile")
-        } else {
-            Issue.record("Expected profileNotFound error")
-        }
+    @Test("Error codes and messages are accessible")
+    func errorCodesAndMessages() {
+        let profileError = AWSLoginCredentialError.profileNotFound("my-profile")
+        #expect(profileError.code == "profileNotFound")
+        #expect(profileError.message.contains("my-profile"))
 
-        let tokenError = LoginError.tokenLoadFailed("file not found")
-        if case .tokenLoadFailed(let message) = tokenError {
-            #expect(message == "file not found")
-        } else {
-            Issue.record("Expected tokenLoadFailed error")
-        }
+        let tokenError = AWSLoginCredentialError.tokenLoadFailed("file not found")
+        #expect(tokenError.code == "tokenLoadFailed")
+        #expect(tokenError.message == "file not found")
 
-        let httpError = LoginError.httpRequestFailed("500")
-        if case .httpRequestFailed(let status) = httpError {
-            #expect(status == "500")
-        } else {
-            Issue.record("Expected httpRequestFailed error")
-        }
+        let httpError = AWSLoginCredentialError.httpRequestFailed("500")
+        #expect(httpError.code == "httpRequestFailed")
+        #expect(httpError.message == "500")
+    }
+    
+    @Test("Errors are equatable")
+    func errorsAreEquatable() {
+        let error1 = AWSLoginCredentialError.profileNotFound("test")
+        let error2 = AWSLoginCredentialError.profileNotFound("test")
+        let error3 = AWSLoginCredentialError.profileNotFound("other")
+        
+        #expect(error1 == error2)
+        #expect(error1 != error3)
+    }
+    
+    @Test("Error description includes code and message")
+    func errorDescription() {
+        let error = AWSLoginCredentialError.tokenLoadFailed("test message")
+        #expect(error.description == "tokenLoadFailed: test message")
     }
 }

@@ -36,7 +36,7 @@ struct ProfileConfigurationLoader {
 
         // login_session is mandatory
         guard let loginSession = profileData["login_session"] else {
-            throw LoginError.loginSessionMissing
+            throw AWSLoginCredentialError.loginSessionMissing
         }
 
         // region is optional - check profile, then AWS_REGION env var, then default to us-east-1
@@ -74,7 +74,7 @@ struct ProfileConfigurationLoader {
 
         // Read config file
         guard let configContent = try? String(contentsOfFile: path, encoding: .utf8) else {
-            throw LoginError.configFileNotFound(path)
+            throw AWSLoginCredentialError.configFileNotFound(path)
         }
 
         // Parse INI file
@@ -85,7 +85,7 @@ struct ProfileConfigurationLoader {
         let profileKey = name == "default" ? name : "profile \(name)"
 
         guard let profileSection = parser.sections[profileKey] else {
-            throw LoginError.profileNotFound(name)
+            throw AWSLoginCredentialError.profileNotFound(name)
         }
 
         return profileSection

@@ -194,7 +194,7 @@ final class LoginCredentialsProviderTests {
 
         // Expect error - use await with throws expectation
         let logger = Logger(label: "test")
-        await #expect(throws: LoginError.self) {
+        await #expect(throws: AWSLoginCredentialError.self) {
             try await provider.getCredential(logger: logger)
         }
     }
@@ -269,10 +269,16 @@ final class LoginCredentialsProviderTests {
             httpClient: MockAWSHTTPClient()
         )
 
-        // Expect error - use await with throws expectation for the error type
+        // Should throw tokenLoadFailed error
         let logger = Logger(label: "test")
-        await #expect(throws: LoginError.self) {
-            try await provider.getCredential(logger: logger)
+        do {
+            _ = try await provider.getCredential(logger: logger)
+            Issue.record("Expected tokenLoadFailed error")
+        } catch let error as AWSLoginCredentialError {
+            #expect(error.code == "tokenLoadFailed")
+            #expect(error.message.contains("Cannot read token file"))
+        } catch {
+            Issue.record("Unexpected error type: \(error)")
         }
     }
 
@@ -382,8 +388,14 @@ final class LoginCredentialsProviderTests {
         )
 
         let logger = Logger(label: "test")
-        await #expect(throws: LoginError.self) {
-            try await provider.getCredential(logger: logger)
+        do {
+            _ = try await provider.getCredential(logger: logger)
+            Issue.record("Expected tokenLoadFailed error")
+        } catch let error as AWSLoginCredentialError {
+            #expect(error.code == "tokenLoadFailed")
+            #expect(error.message.contains("clientId"))
+        } catch {
+            Issue.record("Unexpected error type: \(error)")
         }
     }
 
@@ -428,8 +440,14 @@ final class LoginCredentialsProviderTests {
         )
 
         let logger = Logger(label: "test")
-        await #expect(throws: LoginError.self) {
-            try await provider.getCredential(logger: logger)
+        do {
+            _ = try await provider.getCredential(logger: logger)
+            Issue.record("Expected tokenLoadFailed error")
+        } catch let error as AWSLoginCredentialError {
+            #expect(error.code == "tokenLoadFailed")
+            #expect(error.message.contains("refreshToken"))
+        } catch {
+            Issue.record("Unexpected error type: \(error)")
         }
     }
 
@@ -470,8 +488,14 @@ final class LoginCredentialsProviderTests {
         )
 
         let logger = Logger(label: "test")
-        await #expect(throws: LoginError.self) {
-            try await provider.getCredential(logger: logger)
+        do {
+            _ = try await provider.getCredential(logger: logger)
+            Issue.record("Expected tokenLoadFailed error")
+        } catch let error as AWSLoginCredentialError {
+            #expect(error.code == "tokenLoadFailed")
+            #expect(error.message.contains("dpopKey"))
+        } catch {
+            Issue.record("Unexpected error type: \(error)")
         }
     }
 

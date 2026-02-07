@@ -104,7 +104,7 @@ struct DPoPTokenGenerator<JTI: JTIGenerator, Time: TimeProvider> {
 
         // Extract public key coordinates from PEM
         guard let (x, y) = extractPublicKeyCoordinates(from: pemKey) else {
-            throw LoginError.tokenParseFailed
+            throw AWSLoginCredentialError.tokenParseFailed
         }
 
         // JWT header

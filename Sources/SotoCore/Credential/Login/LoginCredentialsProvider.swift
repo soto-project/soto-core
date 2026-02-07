@@ -54,7 +54,7 @@ public struct LoginCredentialsProvider: CredentialProvider {
                 let secretAccessKey = token.secretAccessKey,
                 let sessionToken = token.sessionToken
             else {
-                throw LoginError.tokenLoadFailed("Token missing credentials")
+                throw AWSLoginCredentialError.tokenLoadFailed("Token missing credentials")
             }
 
             logger.trace("Returning cached credentials")
@@ -85,7 +85,7 @@ public struct LoginCredentialsProvider: CredentialProvider {
                 let secretAccessKey = reloadedToken.secretAccessKey,
                 let sessionToken = reloadedToken.sessionToken
             else {
-                throw LoginError.tokenLoadFailed("Token missing credentials")
+                throw AWSLoginCredentialError.tokenLoadFailed("Token missing credentials")
             }
 
             return RotatingCredential(
@@ -111,7 +111,7 @@ public struct LoginCredentialsProvider: CredentialProvider {
         // Construct endpoint URL
         let endpointURL = "https://\(configuration.endpoint)\(LoginConfiguration.loginEndpointPath)"
         guard let url = URL(string: endpointURL) else {
-            throw LoginError.endpointConstructionFailed
+            throw AWSLoginCredentialError.endpointConstructionFailed
         }
 
         // Generate DPoP header
@@ -155,29 +155,29 @@ public struct LoginCredentialsProvider: CredentialProvider {
                 // Handle specific error cases per spec
                 switch errorResponse.error {
                 case "TOKEN_EXPIRED":
-                    throw LoginError.tokenRefreshFailed("Your session has expired. Please reauthenticate with `aws login`.")
+                    throw AWSLoginCredentialError.tokenRefreshFailed("Your session has expired. Please reauthenticate with `aws login`.")
                 case "USER_CREDENTIALS_CHANGED":
-                    throw LoginError.tokenRefreshFailed(
+                    throw AWSLoginCredentialError.tokenRefreshFailed(
                         "Unable to refresh credentials because of a change in your password. Please reauthenticate with your new password."
                     )
                 case "INSUFFICIENT_PERMISSIONS":
-                    throw LoginError.tokenRefreshFailed(
+                    throw AWSLoginCredentialError.tokenRefreshFailed(
                         "Unable to refresh credentials due to insufficient permissions. You may be missing permission for the 'signin:CreateOAuth2Token' action."
                     )
                 default:
-                    throw LoginError.httpRequestFailed(
+                    throw AWSLoginCredentialError.httpRequestFailed(
                         "HTTP status: \(response.status.code), error: \(errorResponse.error), message: \(errorResponse.message)"
                     )
                 }
             }
 
-            throw LoginError.httpRequestFailed("HTTP status: \(response.status.code)")
+            throw AWSLoginCredentialError.httpRequestFailed("HTTP status: \(response.status.code)")
         }
 
         // Collect response body
         let body = try await response.body.collect(upTo: 1024 * 1024)
         guard body.readableBytes > 0 else {
-            throw LoginError.httpRequestFailed("Empty response body")
+            throw AWSLoginCredentialError.httpRequestFailed("Empty response body")
         }
 
         // Parse response

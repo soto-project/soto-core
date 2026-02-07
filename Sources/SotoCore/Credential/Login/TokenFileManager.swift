@@ -46,7 +46,7 @@ struct TokenFileManager {
         } else if let homeDir = ProcessInfo.processInfo.environment["HOME"] {
             baseDir = "\(homeDir)/.aws/login/cache"
         } else {
-            throw LoginError.tokenLoadFailed("Cannot determine cache directory")
+            throw AWSLoginCredentialError.tokenLoadFailed("Cannot determine cache directory")
         }
 
         // SHA256 hash the login_session (after trimming whitespace) per spec
@@ -65,27 +65,27 @@ struct TokenFileManager {
                 try await fileIO.read(fileHandle: fileRegion.fileHandle, byteCount: fileRegion.readableBytes, allocator: ByteBufferAllocator())
             }
         } catch {
-            throw LoginError.tokenLoadFailed("Cannot read token file at \(path). Please authenticate with `aws login`.")
+            throw AWSLoginCredentialError.tokenLoadFailed("Cannot read token file at \(path). Please authenticate with `aws login`.")
         }
 
         guard let data = byteBuffer.getData(at: 0, length: byteBuffer.readableBytes) else {
-            throw LoginError.tokenLoadFailed("Cannot read token file at \(path). Please authenticate with `aws login`.")
+            throw AWSLoginCredentialError.tokenLoadFailed("Cannot read token file at \(path). Please authenticate with `aws login`.")
         }
 
         let decoder = JSONDecoder()
         guard let tokenData = try? decoder.decode(TokenFileData.self, from: data) else {
-            throw LoginError.tokenParseFailed
+            throw AWSLoginCredentialError.tokenParseFailed
         }
 
         // Validate required fields are present per spec
         guard !tokenData.clientId.isEmpty else {
-            throw LoginError.tokenLoadFailed("Token missing required field: clientId")
+            throw AWSLoginCredentialError.tokenLoadFailed("Token missing required field: clientId")
         }
         guard !tokenData.refreshToken.isEmpty else {
-            throw LoginError.tokenLoadFailed("Token missing required field: refreshToken")
+            throw AWSLoginCredentialError.tokenLoadFailed("Token missing required field: refreshToken")
         }
         guard !tokenData.dpopKey.isEmpty else {
-            throw LoginError.tokenLoadFailed("Token missing required field: dpopKey")
+            throw AWSLoginCredentialError.tokenLoadFailed("Token missing required field: dpopKey")
         }
 
         // Extract public/private key from dpopKey (EC key in PEM format)

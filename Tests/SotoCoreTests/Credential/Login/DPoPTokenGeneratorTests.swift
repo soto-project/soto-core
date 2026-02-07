@@ -82,12 +82,17 @@ struct DPoPTokenGeneratorTests {
         let generator = DPoPTokenGenerator()
         let invalidPemKey = "invalid-pem-key"
 
-        #expect(throws: LoginError.tokenParseFailed) {
-            try generator.generateDPoPHeader(
+        do {
+            _ = try generator.generateDPoPHeader(
                 endpoint: "https://test.com",
                 httpMethod: "POST",
                 pemKey: invalidPemKey
             )
+            Issue.record("Expected tokenParseFailed error")
+        } catch let error as AWSLoginCredentialError {
+            #expect(error.code == "tokenParseFailed")
+        } catch {
+            Issue.record("Unexpected error type: \(error)")
         }
     }
 

@@ -93,13 +93,12 @@ final class LoginErrorHandlingTests {
         do {
             _ = try await provider.getCredential(logger: logger)
             Issue.record("Expected tokenRefreshFailed error")
-        } catch let error as LoginError {
-            if case .tokenRefreshFailed(let message) = error {
-                #expect(message.contains("expired"))
-                #expect(message.contains("reauthenticate"))
-            } else {
-                Issue.record("Expected tokenRefreshFailed, got \(error)")
-            }
+        } catch let error as AWSLoginCredentialError {
+            #expect(error.code == "tokenRefreshFailed")
+            #expect(error.message.contains("expired"))
+            #expect(error.message.contains("reauthenticate"))
+        } catch {
+            Issue.record("Unexpected error type: \(error)")
         }
     }
 
@@ -155,12 +154,11 @@ final class LoginErrorHandlingTests {
         do {
             _ = try await provider.getCredential(logger: logger)
             Issue.record("Expected tokenRefreshFailed error")
-        } catch let error as LoginError {
-            if case .tokenRefreshFailed(let message) = error {
-                #expect(message.contains("password"))
-            } else {
-                Issue.record("Expected tokenRefreshFailed, got \(error)")
-            }
+        } catch let error as AWSLoginCredentialError {
+            #expect(error.code == "tokenRefreshFailed")
+            #expect(error.message.contains("password"))
+        } catch {
+            Issue.record("Unexpected error type: \(error)")
         }
     }
 
@@ -216,13 +214,12 @@ final class LoginErrorHandlingTests {
         do {
             _ = try await provider.getCredential(logger: logger)
             Issue.record("Expected tokenRefreshFailed error")
-        } catch let error as LoginError {
-            if case .tokenRefreshFailed(let message) = error {
-                #expect(message.contains("permissions"))
-                #expect(message.contains("CreateOAuth2Token"))
-            } else {
-                Issue.record("Expected tokenRefreshFailed, got \(error)")
-            }
+        } catch let error as AWSLoginCredentialError {
+            #expect(error.code == "tokenRefreshFailed")
+            #expect(error.message.contains("permissions"))
+            #expect(error.message.contains("CreateOAuth2Token"))
+        } catch {
+            Issue.record("Unexpected error type: \(error)")
         }
     }
 }

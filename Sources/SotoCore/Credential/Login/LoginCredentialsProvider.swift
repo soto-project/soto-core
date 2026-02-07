@@ -109,14 +109,7 @@ public struct LoginCredentialsProvider: CredentialProvider {
         let bodyData = try encoder.encode(requestBody)
 
         // Construct endpoint URL
-        let endpointURL: String
-        if configuration.endpoint.starts(with: "http://") || configuration.endpoint.starts(with: "https://") {
-            // Full URL provided (for testing)
-            endpointURL = "\(configuration.endpoint)\(LoginConfiguration.loginEndpointPath)"
-        } else {
-            // Just hostname provided (production)
-            endpointURL = "https://\(configuration.endpoint)\(LoginConfiguration.loginEndpointPath)"
-        }
+        let endpointURL = "https://\(configuration.endpoint)\(LoginConfiguration.loginEndpointPath)"
         guard let url = URL(string: endpointURL) else {
             throw LoginError.endpointConstructionFailed
         }

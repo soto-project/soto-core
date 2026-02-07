@@ -235,33 +235,6 @@ extension LoginCredentialsProvider {
             httpClient: httpClient
         )
     }
-
-    /// Create a LoginCredentialsProvider with explicit configuration (for testing)
-    /// - Parameters:
-    ///   - loginSession: The login session ARN
-    ///   - loginRegion: The AWS region
-    ///   - cacheDirectoryOverride: Optional override for token cache directory
-    ///   - httpClient: HTTP client for making requests
-    /// - Returns: LoginCredentialsProvider instance
-    internal static func create(
-        loginSession: String,
-        loginRegion: Region,
-        cacheDirectoryOverride: String? = nil,
-        httpClient: AWSHTTPClient
-    ) throws -> LoginCredentialsProvider {
-        let endpoint = "\(loginRegion.rawValue).\(LoginConfiguration.loginServiceHostPrefix).aws.amazon.com"
-        let configuration = LoginConfiguration(
-            endpoint: endpoint,
-            loginSession: loginSession,
-            region: loginRegion,
-            cacheDirectory: cacheDirectoryOverride
-        )
-
-        return LoginCredentialsProvider(
-            configuration: configuration,
-            httpClient: httpClient
-        )
-    }
 }
 
 // MARK: - CredentialProviderFactory Extension

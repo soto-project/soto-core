@@ -112,7 +112,7 @@ struct TokenFileManager {
         )
     }
 
-    func saveToken(_ token: LoginToken, to path: String) throws {
+    func saveToken(_ token: LoginToken, to path: String, fileIO: NonBlockingFileIO) async throws {
         // Parse ISO8601 date if we have expiresAt
         let expiresAtString: String
         if let expiresAt = token.expiresAt {
@@ -142,6 +142,20 @@ struct TokenFileManager {
         let encoder = JSONEncoder()
         encoder.outputFormatting = .prettyPrinted
         let data = try encoder.encode(tokenData)
-        try data.write(to: URL(fileURLWithPath: path))
+        
+        // Write using NonBlockingFileIO
+        var buffer = ByteBufferAllocator().buffer(capacity: data.count)
+        buffer.writeBytes(data)
+        
+        // Delete file if it exists to ensure clean write
+        try? FileManager.default.removeItem(atPath: path)
+        
+        try await fileIO.withFileHandle(
+            path: path,
+            mode: .write,
+            flags: .allowFileCreation(posixMode: 0o600)
+        ) { fileHandle in
+            try await fileIO.write(fileHandle: fileHandle, buffer: buffer)
+        }
     }
 }

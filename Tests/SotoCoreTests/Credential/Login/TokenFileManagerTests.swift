@@ -127,7 +127,7 @@ final class TokenFileManagerTests {
 
         // Save updated token
         let newTokenPath = tempDirectory.appendingPathComponent("updated-token.json").path
-        try manager.saveToken(updatedToken, to: newTokenPath)
+        try await manager.saveToken(updatedToken, to: newTokenPath, fileIO: fileIO)
 
         // Verify saved file
         let savedData = try Data(contentsOf: URL(fileURLWithPath: newTokenPath))

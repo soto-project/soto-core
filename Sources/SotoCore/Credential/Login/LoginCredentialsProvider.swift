@@ -197,7 +197,7 @@ public struct LoginCredentialsProvider: CredentialProvider {
         )
 
         // Save updated token to disk
-        try tokenFileManager.saveToken(updatedToken, to: tokenPath)
+        try await tokenFileManager.saveToken(updatedToken, to: tokenPath, fileIO: fileIO)
 
         // Return expiring credential
         return RotatingCredential(

@@ -15,6 +15,7 @@
 // Login Credentials Provider - Main Provider
 
 import Foundation
+import INIParser
 import Logging
 import NIOCore
 import NIOFoundationCompat
@@ -25,18 +26,39 @@ import SotoSignerV4
 
 @available(macOS 13.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
 public struct LoginCredentialsProvider: CredentialProvider {
-    private let configuration: LoginConfiguration
+    private let configurationTask: Task<LoginConfiguration, Error>?
+    private let configuration: LoginConfiguration?
     private let dpopGenerator = DPoPTokenGenerator()
     private let httpClient: AWSHTTPClient
     private let threadPool: NIOThreadPool
 
     init(configuration: LoginConfiguration, httpClient: AWSHTTPClient, threadPool: NIOThreadPool = .singleton) {
         self.configuration = configuration
+        self.configurationTask = nil
         self.httpClient = httpClient
         self.threadPool = threadPool
     }
 
+    private init(configurationTask: Task<LoginConfiguration, Error>, httpClient: AWSHTTPClient, threadPool: NIOThreadPool = .singleton) {
+        self.configuration = nil
+        self.configurationTask = configurationTask
+        self.httpClient = httpClient
+        self.threadPool = threadPool
+    }
+
+    private func getConfiguration() async throws -> LoginConfiguration {
+        if let configuration = configuration {
+            return configuration
+        }
+        guard let configurationTask = configurationTask else {
+            throw AWSLoginCredentialError.loginSessionMissing
+        }
+        return try await configurationTask.value
+    }
+
     public func getCredential(logger: Logger) async throws -> Credential {
+        let configuration = try await getConfiguration()
+
         // Load token from disk
         let tokenFileManager = TokenFileManager()
         let tokenPath = try tokenFileManager.constructTokenPath(
@@ -73,6 +95,8 @@ public struct LoginCredentialsProvider: CredentialProvider {
     }
 
     private func refreshToken(tokenPath: String, logger: Logger) async throws -> Credential {
+        let configuration = try await getConfiguration()
+
         // MUST reload token from disk before refreshing per spec
         // This ensures we don't refresh if another process already did
         let tokenFileManager = TokenFileManager()
@@ -223,16 +247,77 @@ extension LoginCredentialsProvider {
         profileName: String? = nil,
         cacheDirectoryOverride: String? = nil,
         httpClient: AWSHTTPClient
-    ) throws {
-        let loader = ProfileConfigurationLoader()
-        let configuration = try loader.loadConfiguration(
-            profileName: profileName,
-            cacheDirectoryOverride: cacheDirectoryOverride
-        )
+    ) {
+        // Defer async configuration loading to first credential request
+        let configTask = Task {
+            try await Self.loadConfiguration(
+                profileName: profileName,
+                cacheDirectoryOverride: cacheDirectoryOverride
+            )
+        }
 
         self.init(
-            configuration: configuration,
+            configurationTask: configTask,
             httpClient: httpClient
+        )
+    }
+
+    /// Load configuration from profile
+    /// - Parameters:
+    ///   - profileName: Name of the profile (defaults to "default")
+    ///   - cacheDirectoryOverride: Optional override for cache directory
+    ///   - configPath: Optional path to config file (defaults to ~/.aws/config)
+    /// - Returns: LoginConfiguration
+    private static func loadConfiguration(
+        profileName: String? = nil,
+        cacheDirectoryOverride: String? = nil,
+        configPath: String? = nil
+    ) async throws -> LoginConfiguration {
+        let profile = profileName ?? "default"
+        let path = configPath ?? ConfigFileLoader.defaultProfileConfigPath
+
+        // Load INI file using ConfigFileLoader
+        let fileIO = NonBlockingFileIO(threadPool: .singleton)
+        let parser: INIParser
+        do {
+            parser = try await ConfigFileLoader.loadINIFile(path: path, fileIO: fileIO)
+        } catch {
+            throw AWSLoginCredentialError.configFileNotFound(path)
+        }
+
+        // Look for profile - try both "profile name" and "name" formats
+        // AWS config uses [default] for default profile and [profile name] for others
+        let profileKey = profile == "default" ? profile : "profile \(profile)"
+
+        guard let profileSection = parser.sections[profileKey] else {
+            throw AWSLoginCredentialError.profileNotFound(profile)
+        }
+
+        // login_session is mandatory
+        guard let loginSession = profileSection["login_session"] else {
+            throw AWSLoginCredentialError.loginSessionMissing
+        }
+
+        // region is optional - check profile, then AWS_REGION env var, then default to us-east-1
+        let region: Region
+        if let regionString = profileSection["region"] {
+            region = Region(rawValue: regionString)
+        } else if let envRegion = ProcessInfo.processInfo.environment["AWS_REGION"] {
+            region = Region(rawValue: envRegion)
+        } else {
+            region = .useast1
+        }
+
+        // Check environment for cache directory override
+        let cacheDir = cacheDirectoryOverride ?? ProcessInfo.processInfo.environment[LoginConfiguration.cacheEnvVar]
+
+        let endpoint = "\(region.rawValue).\(LoginConfiguration.loginServiceHostPrefix).aws.amazon.com"
+
+        return LoginConfiguration(
+            endpoint: endpoint,
+            loginSession: loginSession,
+            region: region,
+            cacheDirectory: cacheDir
         )
     }
 }
@@ -255,15 +340,11 @@ extension CredentialProviderFactory {
         cacheDirectoryOverride: String? = nil
     ) -> CredentialProviderFactory {
         .custom { context in
-            guard
-                let provider = try? LoginCredentialsProvider(
-                    profileName: profileName,
-                    cacheDirectoryOverride: cacheDirectoryOverride,
-                    httpClient: context.httpClient
-                )
-            else {
-                return NullCredentialProvider()
-            }
+            let provider = LoginCredentialsProvider(
+                profileName: profileName,
+                cacheDirectoryOverride: cacheDirectoryOverride,
+                httpClient: context.httpClient
+            )
             // Wrap in RotatingCredentialProvider for automatic credential rotation
             return RotatingCredentialProvider(context: context, provider: provider)
         }

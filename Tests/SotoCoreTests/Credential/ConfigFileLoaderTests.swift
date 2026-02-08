@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+import INIParser
 import NIOCore
 import NIOPosix
 import SotoTestUtils
@@ -172,7 +173,7 @@ class ConfigFileLoadersTests: XCTestCase {
                     configFilePath: "/dev/null",
                     profile: profile
                 )
-            } catch ConfigFileLoader.ConfigFileError.missingAccessKeyId {
+            } catch let error as ConfigFileLoader.ConfigFileError where error == .missingAccessKeyId {
                 // Pass
             } catch {
                 XCTFail("Expected ConfigFileLoader.ConfigFileError.missingAccessKeyId, got \(error.localizedDescription)")
@@ -201,7 +202,7 @@ class ConfigFileLoadersTests: XCTestCase {
                     configFilePath: "/dev/null",
                     profile: profile
                 )
-            } catch ConfigFileLoader.ConfigFileError.missingSecretAccessKey {
+            } catch let error as ConfigFileLoader.ConfigFileError where error == .missingSecretAccessKey {
                 // Pass
             } catch {
                 XCTFail("Expected ConfigFileLoader.ConfigFileError.missingSecretAccessKey, got \(error.localizedDescription)")
@@ -235,7 +236,7 @@ class ConfigFileLoadersTests: XCTestCase {
                     configFilePath: "/dev/null",
                     profile: profile
                 )
-            } catch ConfigFileLoader.ConfigFileError.missingAccessKeyId {
+            } catch let error as ConfigFileLoader.ConfigFileError where error == .missingAccessKeyId {
                 // Pass
             } catch {
                 XCTFail("Expected ConfigFileLoader.ConfigFileError.missingAccessKeyId, got \(error.localizedDescription)")
@@ -269,7 +270,7 @@ class ConfigFileLoadersTests: XCTestCase {
                     configFilePath: "/dev/null",
                     profile: profile
                 )
-            } catch ConfigFileLoader.ConfigFileError.missingSecretAccessKey {
+            } catch let error as ConfigFileLoader.ConfigFileError where error == .missingSecretAccessKey {
                 // Pass
             } catch {
                 XCTFail("Expected ConfigFileLoader.ConfigFileError.missingSecretAccessKey, got \(error.localizedDescription)")
@@ -298,10 +299,10 @@ class ConfigFileLoadersTests: XCTestCase {
                     configFilePath: "/dev/null",
                     profile: profile
                 )
-            } catch ConfigFileLoader.ConfigFileError.invalidCredentialFile {
+            } catch let error as ConfigFileLoader.ConfigFileError where error == .invalidINIFile {
                 // Pass
             } catch {
-                XCTFail("Expected ConfigFileLoader.ConfigFileError.invalidCredentialFile, got \(error.localizedDescription)")
+                XCTFail("Expected ConfigFileLoader.ConfigFileError.invalidINIFile, got \(error.localizedDescription)")
             }
         } teardown: {
             try? FileManager.default.removeItem(atPath: credentialsPath)
@@ -324,7 +325,7 @@ class ConfigFileLoadersTests: XCTestCase {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
         byteBuffer.writeString(content)
 
-        let config = try ConfigFileLoader.parseProfileConfig(from: byteBuffer, for: ConfigFileLoader.defaultProfile)
+        let config = try ConfigFileLoader.parseProfileConfig(from: try! INIParser(content), for: ConfigFileLoader.defaultProfile)
         XCTAssertEqual(config?.roleArn, roleArn)
         XCTAssertEqual(config?.sourceProfile, sourceProfile)
         XCTAssertEqual(config?.region, .uswest2)
@@ -342,10 +343,8 @@ class ConfigFileLoadersTests: XCTestCase {
             role_session_name = foo@example.com
             region = us-west-1
             """
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
-        byteBuffer.writeString(content)
 
-        let config = try ConfigFileLoader.parseProfileConfig(from: byteBuffer, for: "marketingadmin")
+        let config = try ConfigFileLoader.parseProfileConfig(from: try! INIParser(content), for: "marketingadmin")
         XCTAssertEqual(config?.roleArn, "arn:aws:iam::123456789012:role/marketingadminrole")
         XCTAssertEqual(config?.sourceProfile, "user1")
         XCTAssertEqual(config?.roleSessionName, "foo@example.com")
@@ -358,10 +357,8 @@ class ConfigFileLoadersTests: XCTestCase {
             role_arn = arn:aws:iam::123456789012:role/marketingadminrole
             credential_source = Ec2InstanceMetadata
             """
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
-        byteBuffer.writeString(content)
 
-        let config = try ConfigFileLoader.parseProfileConfig(from: byteBuffer, for: "marketingadmin")
+        let config = try ConfigFileLoader.parseProfileConfig(from: try! INIParser(content), for: "marketingadmin")
         XCTAssertEqual(config?.credentialSource, .ec2Instance)
     }
 
@@ -371,10 +368,8 @@ class ConfigFileLoadersTests: XCTestCase {
             role_arn = arn:aws:iam::123456789012:role/marketingadminrole
             credential_source = EcsContainer
             """
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
-        byteBuffer.writeString(content)
 
-        let config = try ConfigFileLoader.parseProfileConfig(from: byteBuffer, for: "marketingadmin")
+        let config = try ConfigFileLoader.parseProfileConfig(from: try! INIParser(content), for: "marketingadmin")
         XCTAssertEqual(config?.credentialSource, .ecsContainer)
     }
 
@@ -384,10 +379,8 @@ class ConfigFileLoadersTests: XCTestCase {
             role_arn = arn:aws:iam::123456789012:role/marketingadminrole
             credential_source = Environment
             """
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
-        byteBuffer.writeString(content)
 
-        let config = try ConfigFileLoader.parseProfileConfig(from: byteBuffer, for: "marketingadmin")
+        let config = try ConfigFileLoader.parseProfileConfig(from: try! INIParser(content), for: "marketingadmin")
         XCTAssertEqual(config?.credentialSource, .environment)
     }
 
@@ -396,32 +389,12 @@ class ConfigFileLoadersTests: XCTestCase {
             [profile foo]
             bar = foo
             """
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
-        byteBuffer.writeString(content)
 
         do {
-            _ = try ConfigFileLoader.parseProfileConfig(from: byteBuffer, for: "bar")
-        } catch ConfigFileLoader.ConfigFileError.missingProfile(let profile) {
-            XCTAssertEqual(profile, "profile bar")
+            _ = try ConfigFileLoader.parseProfileConfig(from: try! INIParser(content), for: "bar")
+        } catch let error as ConfigFileLoader.ConfigFileError where error == .missingProfile {
         } catch {
             XCTFail("Expected missingProfile error, got \(error.localizedDescription)")
-        }
-    }
-
-    func testParseInvalidConfig() {
-        let content = """
-            [profile
-            = foo
-            """
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
-        byteBuffer.writeString(content)
-
-        do {
-            _ = try ConfigFileLoader.parseProfileConfig(from: byteBuffer, for: ConfigFileLoader.defaultProfile)
-        } catch ConfigFileLoader.ConfigFileError.invalidCredentialFile {
-            // pass
-        } catch {
-            XCTFail("Expected invalidCredentialFileSyntax error, got \(error.localizedDescription)")
         }
     }
 
@@ -439,10 +412,7 @@ class ConfigFileLoadersTests: XCTestCase {
             aws_session_token =\(sessionToken)
             """
 
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
-        byteBuffer.writeString(credential)
-
-        let cred = try ConfigFileLoader.parseCredentials(from: byteBuffer, for: profile, sourceProfile: nil)
+        let cred = try ConfigFileLoader.parseCredentials(from: try! INIParser(credential), for: profile, sourceProfile: nil)
         XCTAssertEqual(cred.accessKey, accessKey)
         XCTAssertEqual(cred.secretAccessKey, secretKey)
         XCTAssertEqual(cred.sessionToken, sessionToken)
@@ -458,10 +428,7 @@ class ConfigFileLoadersTests: XCTestCase {
             aws_secret_access_key=\(secretKey)
             """
 
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: credential.utf8.count)
-        byteBuffer.writeString(credential)
-
-        let cred = try ConfigFileLoader.parseCredentials(from: byteBuffer, for: profile, sourceProfile: nil)
+        let cred = try ConfigFileLoader.parseCredentials(from: try! INIParser(credential), for: profile, sourceProfile: nil)
         XCTAssertEqual(cred.accessKey, accessKey)
         XCTAssertEqual(cred.secretAccessKey, secretKey)
         XCTAssertNil(cred.sessionToken)
@@ -482,10 +449,8 @@ class ConfigFileLoadersTests: XCTestCase {
             aws_access_key_id=\(profileAccessKey)
             aws_secret_access_key=\(profileSecretKey)
             """
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
-        byteBuffer.writeString(content)
 
-        let config = try ConfigFileLoader.parseCredentials(from: byteBuffer, for: profile, sourceProfile: nil)
+        let config = try ConfigFileLoader.parseCredentials(from: try! INIParser(content), for: profile, sourceProfile: nil)
         XCTAssertEqual(config.accessKey, profileAccessKey)
         XCTAssertEqual(config.secretAccessKey, profileSecretKey)
     }
@@ -501,10 +466,8 @@ class ConfigFileLoadersTests: XCTestCase {
             source_profile = default
             role_session_name = foo@example.com
             """
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
-        byteBuffer.writeString(content)
 
-        let config = try ConfigFileLoader.parseCredentials(from: byteBuffer, for: "user1", sourceProfile: nil)
+        let config = try ConfigFileLoader.parseCredentials(from: try! INIParser(content), for: "user1", sourceProfile: nil)
         XCTAssertEqual(config.accessKey, "AKIAIOSFODNN7EXAMPLE")
         XCTAssertEqual(config.secretAccessKey, "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
         XCTAssertEqual(config.roleArn, "arn:aws:iam::123456789012:role/marketingadminrole")
@@ -517,13 +480,10 @@ class ConfigFileLoadersTests: XCTestCase {
             aws_access_key_id=AKIAIOSFODNN7EXAMPLE
             aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
             """
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
-        byteBuffer.writeString(content)
 
         do {
-            _ = try ConfigFileLoader.parseCredentials(from: byteBuffer, for: "user1", sourceProfile: nil)
-        } catch ConfigFileLoader.ConfigFileError.missingProfile(let profile) {
-            XCTAssertEqual(profile, "user1")
+            _ = try ConfigFileLoader.parseCredentials(from: try! INIParser(content), for: "user1", sourceProfile: nil)
+        } catch let error as ConfigFileLoader.ConfigFileError where error == .missingProfile {
         } catch {
             XCTFail("Expected missingProfile error, got \(error.localizedDescription)")
         }
@@ -535,13 +495,10 @@ class ConfigFileLoadersTests: XCTestCase {
             aws_access_key_id=AKIAIOSFODNN7EXAMPLE
             aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
             """
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
-        byteBuffer.writeString(content)
 
         do {
-            _ = try ConfigFileLoader.parseCredentials(from: byteBuffer, for: "foo", sourceProfile: ConfigFileLoader.defaultProfile)
-        } catch ConfigFileLoader.ConfigFileError.missingProfile(let profile) {
-            XCTAssertEqual(profile, ConfigFileLoader.defaultProfile)
+            _ = try ConfigFileLoader.parseCredentials(from: try! INIParser(content), for: "foo", sourceProfile: ConfigFileLoader.defaultProfile)
+        } catch let error as ConfigFileLoader.ConfigFileError where error == .missingProfile {
         } catch {
             XCTFail("Expected missingProfile error, got \(error.localizedDescription)")
         }
@@ -552,12 +509,10 @@ class ConfigFileLoadersTests: XCTestCase {
             [foo]
             aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
             """
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
-        byteBuffer.writeString(content)
 
         do {
-            _ = try ConfigFileLoader.parseCredentials(from: byteBuffer, for: "foo", sourceProfile: nil)
-        } catch ConfigFileLoader.ConfigFileError.missingAccessKeyId {
+            _ = try ConfigFileLoader.parseCredentials(from: try! INIParser(content), for: "foo", sourceProfile: nil)
+        } catch let error as ConfigFileLoader.ConfigFileError where error == .missingAccessKeyId {
             // pass
         } catch {
             XCTFail("Expected missingProfile error, got \(error.localizedDescription)")
@@ -569,12 +524,10 @@ class ConfigFileLoadersTests: XCTestCase {
             [foo]
             aws_access_key_id=AKIAIOSFODNN7EXAMPLE
             """
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
-        byteBuffer.writeString(content)
 
         do {
-            _ = try ConfigFileLoader.parseCredentials(from: byteBuffer, for: "foo", sourceProfile: nil)
-        } catch ConfigFileLoader.ConfigFileError.missingSecretAccessKey {
+            _ = try ConfigFileLoader.parseCredentials(from: try! INIParser(content), for: "foo", sourceProfile: nil)
+        } catch let error as ConfigFileLoader.ConfigFileError where error == .missingSecretAccessKey {
             // pass
         } catch {
             XCTFail("Expected missingProfile error, got \(error.localizedDescription)")
@@ -589,12 +542,10 @@ class ConfigFileLoadersTests: XCTestCase {
             role_arn = arn:aws:iam::123456789012:role/marketingadminrole
             source_profile = foo
             """
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
-        byteBuffer.writeString(content)
 
         do {
-            _ = try ConfigFileLoader.parseCredentials(from: byteBuffer, for: "bar", sourceProfile: "foo")
-        } catch ConfigFileLoader.ConfigFileError.missingAccessKeyId {
+            _ = try ConfigFileLoader.parseCredentials(from: try! INIParser(content), for: "bar", sourceProfile: "foo")
+        } catch let error as ConfigFileLoader.ConfigFileError where error == .missingAccessKeyId {
             // pass
         } catch {
             XCTFail("Expected missingProfile error, got \(error.localizedDescription)")
@@ -609,12 +560,10 @@ class ConfigFileLoadersTests: XCTestCase {
             role_arn = arn:aws:iam::123456789012:role/marketingadminrole
             source_profile = foo
             """
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
-        byteBuffer.writeString(content)
 
         do {
-            _ = try ConfigFileLoader.parseCredentials(from: byteBuffer, for: "bar", sourceProfile: "foo")
-        } catch ConfigFileLoader.ConfigFileError.missingSecretAccessKey {
+            _ = try ConfigFileLoader.parseCredentials(from: try! INIParser(content), for: "bar", sourceProfile: "foo")
+        } catch let error as ConfigFileLoader.ConfigFileError where error == .missingSecretAccessKey {
             // pass
         } catch {
             XCTFail("Expected missingProfile error, got \(error.localizedDescription)")
@@ -630,10 +579,12 @@ class ConfigFileLoadersTests: XCTestCase {
             role_arn = arn:aws:iam::123456789012:role/marketingadminrole
             credential_source = Ec2InstanceMetadata
             """
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
-        byteBuffer.writeString(content)
 
-        let config = try ConfigFileLoader.parseCredentials(from: byteBuffer, for: "marketingadmin", sourceProfile: ConfigFileLoader.defaultProfile)
+        let config = try ConfigFileLoader.parseCredentials(
+            from: try! INIParser(content),
+            for: "marketingadmin",
+            sourceProfile: ConfigFileLoader.defaultProfile
+        )
         XCTAssertEqual(config.credentialSource, .ec2Instance)
     }
 
@@ -646,10 +597,12 @@ class ConfigFileLoadersTests: XCTestCase {
             role_arn = arn:aws:iam::123456789012:role/marketingadminrole
             credential_source = EcsContainer
             """
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
-        byteBuffer.writeString(content)
 
-        let config = try ConfigFileLoader.parseCredentials(from: byteBuffer, for: "marketingadmin", sourceProfile: ConfigFileLoader.defaultProfile)
+        let config = try ConfigFileLoader.parseCredentials(
+            from: try! INIParser(content),
+            for: "marketingadmin",
+            sourceProfile: ConfigFileLoader.defaultProfile
+        )
         XCTAssertEqual(config.credentialSource, .ecsContainer)
     }
 
@@ -662,28 +615,13 @@ class ConfigFileLoadersTests: XCTestCase {
             role_arn = arn:aws:iam::123456789012:role/marketingadminrole
             credential_source = Environment
             """
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
-        byteBuffer.writeString(content)
 
-        let config = try ConfigFileLoader.parseCredentials(from: byteBuffer, for: "marketingadmin", sourceProfile: ConfigFileLoader.defaultProfile)
+        let config = try ConfigFileLoader.parseCredentials(
+            from: try! INIParser(content),
+            for: "marketingadmin",
+            sourceProfile: ConfigFileLoader.defaultProfile
+        )
         XCTAssertEqual(config.credentialSource, .environment)
-    }
-
-    func testParseInvalidCredentials() {
-        let content = """
-            [profile
-            = foo
-            """
-        var byteBuffer = ByteBufferAllocator().buffer(capacity: content.utf8.count)
-        byteBuffer.writeString(content)
-
-        do {
-            _ = try ConfigFileLoader.parseCredentials(from: byteBuffer, for: ConfigFileLoader.defaultProfile, sourceProfile: nil)
-        } catch ConfigFileLoader.ConfigFileError.invalidCredentialFile {
-            // pass
-        } catch {
-            XCTFail("Expected invalidCredentialFileSyntax error, got \(error.localizedDescription)")
-        }
     }
 
     // MARK: - Config file path expansion

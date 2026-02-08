@@ -69,13 +69,24 @@ enum ConfigFileLoader {
     /// - missingProfile: If the profile requested was not found
     /// - missingAccessKeyId: If the access key ID was not found
     /// - missingSecretAccessKey: If the secret access key was not found
-    enum ConfigFileError: Error, Equatable {
-        case invalidCredentialFile
-        case missingProfile(String)
-        case missingAccessKeyId
-        case missingSecretAccessKey
-    }
+    public struct ConfigFileError: Error, Equatable {
+        enum Internal: Equatable {
+            case invalidINIFile
+            case missingProfile
+            case missingAccessKeyId
+            case missingSecretAccessKey
+        }
+        let value: Internal
 
+        /// Credentials or profile ini file failed to load
+        public static var invalidINIFile: Self { .init(value: .invalidINIFile) }
+        /// Cannot find profile in ini file
+        public static var missingProfile: Self { .init(value: .missingProfile) }
+        /// access key id is missing from credentials file
+        public static var missingAccessKeyId: Self { .init(value: .missingAccessKeyId) }
+        /// secret access key id missing from credentials file
+        public static var missingSecretAccessKey: Self { .init(value: .missingSecretAccessKey) }
+    }
     // MARK: - File IO
 
     /// Load credentials from disk
@@ -92,10 +103,10 @@ enum ConfigFileLoader {
         threadPool: NIOThreadPool = .singleton
     ) async throws -> SharedCredentials {
         let fileIO = NonBlockingFileIO(threadPool: threadPool)
-        let credentialsByteBuffer: ByteBuffer
+        let credentialsINIParser: INIParser
         do {
             // Load credentials file
-            credentialsByteBuffer = try await self.loadFile(
+            credentialsINIParser = try await self.loadINIFile(
                 path: credentialsFilePath,
                 fileIO: fileIO
             )
@@ -103,30 +114,43 @@ enum ConfigFileLoader {
             // Throw `.noProvider` error if credential file cannot be loaded
             throw CredentialProviderError.noProvider
         }
-        let configByteBuffer: ByteBuffer?
+        let configINIParser: INIParser?
         do {
             // Load profile config file
-            configByteBuffer = try await self.loadFile(
+            configINIParser = try await self.loadINIFile(
                 path: configFilePath,
                 fileIO: fileIO
             )
         } catch {
-            configByteBuffer = nil
+            configINIParser = nil
         }
-        return try self.parseSharedCredentials(from: credentialsByteBuffer, configByteBuffer: configByteBuffer, for: profile)
+        return try self.parseSharedCredentials(from: credentialsINIParser, configINIParser: configINIParser, for: profile)
     }
 
     /// Load a file from disk without blocking the current thread
     /// - Parameters:
     ///   - path: path for the file to load
-    ///   - eventLoop: event loop to run everything on
     ///   - fileIO: non-blocking file IO
-    /// - Returns: Event loop future with file contents in a byte-buffer
+    /// - Returns: buffer containing file contents
     static func loadFile(path: String, fileIO: NonBlockingFileIO) async throws -> ByteBuffer {
         let path = self.expandTildeInFilePath(path)
         return try await fileIO.withFileRegion(path: path) { fileRegion in
             try await fileIO.read(fileHandle: fileRegion.fileHandle, byteCount: fileRegion.readableBytes, allocator: ByteBufferAllocator())
         }
+    }
+
+    /// Load an INI file from disk without blocking the current thread
+    /// - Parameters:
+    ///   - path: path for the file to load
+    ///   - fileIO: non-blocking file IO
+    /// - Returns: INIParser
+    static func loadINIFile(path: String, fileIO: NonBlockingFileIO) async throws -> INIParser {
+        let buffer = try await loadFile(path: path, fileIO: fileIO)
+        let content = String(buffer: buffer)
+        guard let parser = try? INIParser(content) else {
+            throw ConfigFileError.invalidINIFile
+        }
+        return parser
     }
 
     // MARK: - Byte Buffer parsing (INIParser)
@@ -143,12 +167,12 @@ enum ConfigFileLoader {
     ///   - profile: named profile to load (optional)
     /// - Returns: Parsed SharedCredentials
     static func parseSharedCredentials(
-        from credentialsByteBuffer: ByteBuffer,
-        configByteBuffer: ByteBuffer?,
+        from credentialsINIParser: INIParser,
+        configINIParser: INIParser?,
         for profile: String
     ) throws -> SharedCredentials {
-        let config = try configByteBuffer.flatMap { try self.parseProfileConfig(from: $0, for: profile) }
-        let credentials = try parseCredentials(from: credentialsByteBuffer, for: profile, sourceProfile: config?.sourceProfile)
+        let config = try configINIParser.flatMap { try self.parseProfileConfig(from: $0, for: profile) }
+        let credentials = try parseCredentials(from: credentialsINIParser, for: profile, sourceProfile: config?.sourceProfile)
 
         // If `role_arn` is defined, check for source profile or credential source
         if let roleArn = credentials.roleArn ?? config?.roleArn {
@@ -183,7 +207,7 @@ enum ConfigFileLoader {
                 return .assumeRole(roleArn: roleArn, sessionName: sessionName, region: region, sourceCredentialProvider: provider)
             }
             // Invalid configuration
-            throw ConfigFileError.invalidCredentialFile
+            throw ConfigFileError.invalidINIFile
         }
 
         // Return static credentials
@@ -203,13 +227,7 @@ enum ConfigFileLoader {
     ///   - byteBuffer: contents of the file to parse
     ///   - profile: AWS named profile to load (usually `default`)
     /// - Returns: Combined profile settings
-    static func parseProfileConfig(from byteBuffer: ByteBuffer, for profile: String) throws -> ProfileConfig? {
-        guard let content = byteBuffer.getString(at: 0, length: byteBuffer.readableBytes),
-            let parser = try? INIParser(content)
-        else {
-            throw ConfigFileError.invalidCredentialFile
-        }
-
+    static func parseProfileConfig(from iniParser: INIParser, for profile: String) throws -> ProfileConfig? {
         // The credentials file uses a different naming format than the CLI config file for named profiles. Include
         // the prefix word "profile" only when configuring a named profile in the config file. Do not use the word
         // profile when creating an entry in the credentials file.
@@ -217,7 +235,7 @@ enum ConfigFileLoader {
         let loadedProfile = profile == Self.defaultProfile ? profile : "profile \(profile)"
 
         // Gracefully fail if there is no configuration for the given profile
-        guard let settings = parser.sections[loadedProfile] else {
+        guard let settings = iniParser.sections[loadedProfile] else {
             return nil
         }
 
@@ -238,15 +256,9 @@ enum ConfigFileLoader {
     ///   - profile: AWS named profile to load (usually `default`)
     ///   - sourceProfile: specifies a named profile with long-term credentials that the AWS CLI can use to assume a role that you specified with the `role_arn` parameter.
     /// - Returns: Combined profile credentials
-    static func parseCredentials(from byteBuffer: ByteBuffer, for profile: String, sourceProfile: String?) throws -> ProfileCredentials {
-        guard let content = byteBuffer.getString(at: 0, length: byteBuffer.readableBytes),
-            let parser = try? INIParser(content)
-        else {
-            throw ConfigFileError.invalidCredentialFile
-        }
-
-        guard let settings = parser.sections[profile] else {
-            throw ConfigFileError.missingProfile(profile)
+    static func parseCredentials(from iniParser: INIParser, for profile: String, sourceProfile: String?) throws -> ProfileCredentials {
+        guard let settings = iniParser.sections[profile] else {
+            throw ConfigFileError.missingProfile
         }
 
         var accessKey = settings["aws_access_key_id"]
@@ -256,8 +268,8 @@ enum ConfigFileLoader {
         // If a source profile is indicated, load credentials for STS Assume Role operation.
         // Credentials file settings have precedence over profile configuration settings.
         if let sourceProfile = settings["source_profile"] ?? sourceProfile {
-            guard let sourceSettings = parser.sections[sourceProfile] else {
-                throw ConfigFileError.missingProfile(sourceProfile)
+            guard let sourceSettings = iniParser.sections[sourceProfile] else {
+                throw ConfigFileError.missingProfile
             }
             accessKey = sourceSettings["aws_access_key_id"]
             secretAccessKey = sourceSettings["aws_secret_access_key"]

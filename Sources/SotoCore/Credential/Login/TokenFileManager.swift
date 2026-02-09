@@ -110,7 +110,7 @@ struct TokenFileManager {
         )
     }
 
-    func saveToken(_ token: LoginToken, to path: String, fileIO: NonBlockingFileIO) async throws {
+    func saveToken(_ token: LoginToken, to path: String, fileIO: NonBlockingFileIO, threadPool: NIOThreadPool) async throws {
         // Parse ISO8601 date if we have expiresAt
         let expiresAtString: String
         if let expiresAt = token.expiresAt {
@@ -146,8 +146,8 @@ struct TokenFileManager {
         buffer.writeBytes(data)
 
         // Delete file if it exists to ensure clean write
-        // Using unlink() through NonBlockingFileIO's thread pool
-        try? await fileIO.threadPool.runIfActive { try unlink(path) }
+        // Using unlink() through thread pool for non-blocking operation
+        _ = try? await threadPool.runIfActive { unlink(path) }
 
         try await fileIO.withFileHandle(
             path: path,

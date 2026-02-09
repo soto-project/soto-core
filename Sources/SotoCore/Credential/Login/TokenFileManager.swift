@@ -20,8 +20,6 @@ import NIOCore
 import NIOPosix
 
 struct TokenFileManager {
-    private let fileManager = FileManager.default
-
     private struct AccessToken: Codable {
         let accessKeyId: String
         let secretAccessKey: String
@@ -148,7 +146,8 @@ struct TokenFileManager {
         buffer.writeBytes(data)
 
         // Delete file if it exists to ensure clean write
-        try? FileManager.default.removeItem(atPath: path)
+        // Using unlink() through NonBlockingFileIO's thread pool
+        try? await fileIO.threadPool.runIfActive { try unlink(path) }
 
         try await fileIO.withFileHandle(
             path: path,

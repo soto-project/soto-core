@@ -41,12 +41,21 @@ public struct LoginCredentialsProvider: CredentialProvider {
         self.threadPool = threadPool
     }
 
-    private init(profileName: String?, cacheDirectoryOverride: String?, httpClient: AWSHTTPClient, threadPool: NIOThreadPool = .singleton) {
+    /// Create a LoginCredentialsProvider from profile configuration
+    /// - Parameters:
+    ///   - profileName: Name of the profile in ~/.aws/config (defaults to "default")
+    ///   - cacheDirectoryOverride: Optional override for token cache directory
+    ///   - httpClient: HTTP client for making requests
+    public init(
+        profileName: String? = nil,
+        cacheDirectoryOverride: String? = nil,
+        httpClient: AWSHTTPClient
+    ) {
         self.configuration = nil
         self.profileName = profileName
         self.cacheDirectoryOverride = cacheDirectoryOverride
         self.httpClient = httpClient
-        self.threadPool = threadPool
+        self.threadPool = .singleton
     }
 
     private func getConfiguration() async throws -> LoginConfiguration {
@@ -233,28 +242,6 @@ public struct LoginCredentialsProvider: CredentialProvider {
             sessionToken: tokenResponse.accessToken.sessionToken,
             expiration: expiresAt
         )
-    }
-}
-
-// MARK: - Initializers
-
-@available(macOS 13.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
-extension LoginCredentialsProvider {
-    /// Create a LoginCredentialsProvider from profile configuration
-    /// - Parameters:
-    ///   - profileName: Name of the profile in ~/.aws/config (defaults to "default")
-    ///   - cacheDirectoryOverride: Optional override for token cache directory
-    ///   - httpClient: HTTP client for making requests
-    public init(
-        profileName: String? = nil,
-        cacheDirectoryOverride: String? = nil,
-        httpClient: AWSHTTPClient
-    ) {
-        self.configuration = nil
-        self.profileName = profileName
-        self.cacheDirectoryOverride = cacheDirectoryOverride
-        self.httpClient = httpClient
-        self.threadPool = .singleton
     }
 
     /// Load configuration from profile

@@ -26,22 +26,25 @@ import SotoSignerV4
 
 @available(macOS 13.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
 public struct LoginCredentialsProvider: CredentialProvider {
-    private let configurationTask: Task<LoginConfiguration, Error>?
     private let configuration: LoginConfiguration?
+    private let profileName: String?
+    private let cacheDirectoryOverride: String?
     private let dpopGenerator = DPoPTokenGenerator()
     private let httpClient: AWSHTTPClient
     private let threadPool: NIOThreadPool
 
     init(configuration: LoginConfiguration, httpClient: AWSHTTPClient, threadPool: NIOThreadPool = .singleton) {
         self.configuration = configuration
-        self.configurationTask = nil
+        self.profileName = nil
+        self.cacheDirectoryOverride = nil
         self.httpClient = httpClient
         self.threadPool = threadPool
     }
 
-    private init(configurationTask: Task<LoginConfiguration, Error>, httpClient: AWSHTTPClient, threadPool: NIOThreadPool = .singleton) {
+    private init(profileName: String?, cacheDirectoryOverride: String?, httpClient: AWSHTTPClient, threadPool: NIOThreadPool = .singleton) {
         self.configuration = nil
-        self.configurationTask = configurationTask
+        self.profileName = profileName
+        self.cacheDirectoryOverride = cacheDirectoryOverride
         self.httpClient = httpClient
         self.threadPool = threadPool
     }
@@ -50,10 +53,10 @@ public struct LoginCredentialsProvider: CredentialProvider {
         if let configuration = configuration {
             return configuration
         }
-        guard let configurationTask = configurationTask else {
-            throw AWSLoginCredentialError.loginSessionMissing
-        }
-        return try await configurationTask.value
+        return try await self.loadConfiguration(
+            profileName: profileName,
+            cacheDirectoryOverride: cacheDirectoryOverride
+        )
     }
 
     public func getCredential(logger: Logger) async throws -> Credential {
@@ -242,24 +245,16 @@ extension LoginCredentialsProvider {
     ///   - profileName: Name of the profile in ~/.aws/config (defaults to "default")
     ///   - cacheDirectoryOverride: Optional override for token cache directory
     ///   - httpClient: HTTP client for making requests
-    /// - Throws: AWSLoginCredentialError if configuration cannot be loaded
     public init(
         profileName: String? = nil,
         cacheDirectoryOverride: String? = nil,
         httpClient: AWSHTTPClient
     ) {
-        // Defer async configuration loading to first credential request
-        let configTask = Task {
-            try await Self.loadConfiguration(
-                profileName: profileName,
-                cacheDirectoryOverride: cacheDirectoryOverride
-            )
-        }
-
-        self.init(
-            configurationTask: configTask,
-            httpClient: httpClient
-        )
+        self.configuration = nil
+        self.profileName = profileName
+        self.cacheDirectoryOverride = cacheDirectoryOverride
+        self.httpClient = httpClient
+        self.threadPool = .singleton
     }
 
     /// Load configuration from profile
@@ -268,7 +263,7 @@ extension LoginCredentialsProvider {
     ///   - cacheDirectoryOverride: Optional override for cache directory
     ///   - configPath: Optional path to config file (defaults to ~/.aws/config)
     /// - Returns: LoginConfiguration
-    private static func loadConfiguration(
+    private func loadConfiguration(
         profileName: String? = nil,
         cacheDirectoryOverride: String? = nil,
         configPath: String? = nil

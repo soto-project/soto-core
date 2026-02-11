@@ -33,7 +33,7 @@ public struct LoginCredentialProvider: CredentialProvider {
     private let httpClient: AWSHTTPClient
     private let threadPool: NIOThreadPool
 
-    // This initializer is used for unit test, allowing to bypass 
+    // This initializer is used for unit test, allowing to bypass
     // the configuration file
     init(configuration: LoginConfiguration, httpClient: AWSHTTPClient, threadPool: NIOThreadPool = .singleton) {
         self.configuration = configuration

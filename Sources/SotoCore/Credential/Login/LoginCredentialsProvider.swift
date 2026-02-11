@@ -71,19 +71,20 @@ public struct LoginCredentialsProvider: CredentialProvider {
     public func getCredential(logger: Logger) async throws -> Credential {
         let configuration = try await getConfiguration()
 
-        // Load token from disk
+        // Construct token path
         let tokenFileManager = TokenFileManager()
         let tokenPath = try tokenFileManager.constructTokenPath(
             loginSession: configuration.loginSession,
             cacheDirectory: configuration.cacheDirectory
         )
 
+        // Load token from disk per spec
+        // This ensures we don't refresh if another process already did
         let fileIO = NonBlockingFileIO(threadPool: threadPool)
         let token = try await tokenFileManager.loadToken(from: tokenPath, fileIO: fileIO)
 
-        // Check if token is still valid per spec
+        // Check if token is still valid
         if let expiresAt = token.expiresAt, expiresAt > Date() {
-            // Token is still valid, return cached credentials
             guard let accessKeyId = token.accessKeyId,
                 let secretAccessKey = token.secretAccessKey,
                 let sessionToken = token.sessionToken
@@ -102,38 +103,7 @@ public struct LoginCredentialsProvider: CredentialProvider {
 
         logger.trace("Credentials expired - refreshing")
 
-        // Token expired or missing, refresh it
-        return try await refreshToken(tokenPath: tokenPath, logger: logger)
-    }
-
-    private func refreshToken(tokenPath: String, logger: Logger) async throws -> Credential {
-        let configuration = try await getConfiguration()
-
-        // MUST reload token from disk before refreshing per spec
-        // This ensures we don't refresh if another process already did
-        let tokenFileManager = TokenFileManager()
-        let fileIO = NonBlockingFileIO(threadPool: threadPool)
-        let reloadedToken = try await tokenFileManager.loadToken(from: tokenPath, fileIO: fileIO)
-
-        // Check again if it was refreshed by another process
-        if let expiresAt = reloadedToken.expiresAt, expiresAt > Date() {
-            guard let accessKeyId = reloadedToken.accessKeyId,
-                let secretAccessKey = reloadedToken.secretAccessKey,
-                let sessionToken = reloadedToken.sessionToken
-            else {
-                throw AWSLoginCredentialError.tokenLoadFailed("Token missing credentials")
-            }
-
-            return RotatingCredential(
-                accessKeyId: accessKeyId,
-                secretAccessKey: secretAccessKey,
-                sessionToken: sessionToken,
-                expiration: expiresAt
-            )
-        }
-
         // Proceed with refresh
-        let token = reloadedToken
 
         // Create request body
         let requestBody = TokenRequest(

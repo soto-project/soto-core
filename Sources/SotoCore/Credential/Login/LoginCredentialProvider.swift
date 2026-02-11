@@ -33,6 +33,8 @@ public struct LoginCredentialProvider: CredentialProvider {
     private let httpClient: AWSHTTPClient
     private let threadPool: NIOThreadPool
 
+    // This initializer is used for unit test, allowing to bypass 
+    // the configuration file
     init(configuration: LoginConfiguration, httpClient: AWSHTTPClient, threadPool: NIOThreadPool = .singleton) {
         self.configuration = configuration
         self.profileName = nil
@@ -56,16 +58,6 @@ public struct LoginCredentialProvider: CredentialProvider {
         self.cacheDirectoryOverride = cacheDirectoryOverride
         self.httpClient = httpClient
         self.threadPool = .singleton
-    }
-
-    private func getConfiguration() async throws -> LoginConfiguration {
-        if let configuration = configuration {
-            return configuration
-        }
-        return try await self.loadConfiguration(
-            profileName: profileName,
-            cacheDirectoryOverride: cacheDirectoryOverride
-        )
     }
 
     public func getCredential(logger: Logger) async throws -> Credential {
@@ -211,6 +203,17 @@ public struct LoginCredentialProvider: CredentialProvider {
             secretAccessKey: tokenResponse.accessToken.secretAccessKey,
             sessionToken: tokenResponse.accessToken.sessionToken,
             expiration: expiresAt
+        )
+    }
+
+    /// Return configuration, either from initializer or by loading from file
+    private func getConfiguration() async throws -> LoginConfiguration {
+        if let configuration = configuration {
+            return configuration
+        }
+        return try await self.loadConfiguration(
+            profileName: profileName,
+            cacheDirectoryOverride: cacheDirectoryOverride
         )
     }
 

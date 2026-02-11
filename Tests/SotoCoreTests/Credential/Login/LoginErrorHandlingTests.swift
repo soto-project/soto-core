@@ -80,7 +80,7 @@ final class LoginErrorHandlingTests {
             return (.forbidden, errorResponse.data(using: .utf8)!)
         }
 
-        let provider = try LoginCredentialsProvider.create(
+        let provider = try LoginCredentialProvider.create(
             loginSession: "test-session",
             loginRegion: .useast1,
             cacheDirectoryOverride: tempDirectory.path,
@@ -142,7 +142,7 @@ final class LoginErrorHandlingTests {
             return (.forbidden, errorResponse.data(using: .utf8)!)
         }
 
-        let provider = try LoginCredentialsProvider.create(
+        let provider = try LoginCredentialProvider.create(
             loginSession: "test-session",
             loginRegion: .useast1,
             cacheDirectoryOverride: tempDirectory.path,
@@ -202,7 +202,7 @@ final class LoginErrorHandlingTests {
             return (.forbidden, errorResponse.data(using: .utf8)!)
         }
 
-        let provider = try LoginCredentialsProvider.create(
+        let provider = try LoginCredentialProvider.create(
             loginSession: "test-session",
             loginRegion: .useast1,
             cacheDirectoryOverride: tempDirectory.path,

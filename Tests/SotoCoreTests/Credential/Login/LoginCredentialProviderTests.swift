@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-// Login Credentials Provider Tests
+// Login Credential Provider Tests
 
 import Crypto
 import Foundation
@@ -23,8 +23,8 @@ import Testing
 
 @testable import SotoCore
 
-@Suite("Login Credentials Provider", .serialized)
-final class LoginCredentialsProviderTests {
+@Suite("Login Credential Provider", .serialized)
+final class LoginCredentialProviderTests {
 
     // Helper to create a unique temp directory for each test
     func createTempDirectory() throws -> URL {
@@ -109,7 +109,7 @@ final class LoginCredentialsProviderTests {
         }
 
         // Create provider
-        let provider = try LoginCredentialsProvider.create(
+        let provider = try LoginCredentialProvider.create(
             loginSession: "test-session",
             loginRegion: .useast1,
             cacheDirectoryOverride: tempDirectory.path,
@@ -185,7 +185,7 @@ final class LoginCredentialsProviderTests {
         }
 
         // Create provider
-        let provider = try LoginCredentialsProvider.create(
+        let provider = try LoginCredentialProvider.create(
             loginSession: "test-session",
             loginRegion: .useast1,
             cacheDirectoryOverride: tempDirectory.path,
@@ -242,7 +242,7 @@ final class LoginCredentialsProviderTests {
         }
 
         // Create provider
-        let provider = try LoginCredentialsProvider.create(
+        let provider = try LoginCredentialProvider.create(
             loginSession: "test-session",
             loginRegion: .useast1,
             cacheDirectoryOverride: tempDirectory.path,
@@ -262,7 +262,7 @@ final class LoginCredentialsProviderTests {
         defer { removeTempDirectory(tempDirectory) }
 
         // Create provider without token file
-        let provider = try LoginCredentialsProvider.create(
+        let provider = try LoginCredentialProvider.create(
             loginSession: "nonexistent-session",
             loginRegion: .useast1,
             cacheDirectoryOverride: tempDirectory.path,
@@ -329,7 +329,7 @@ final class LoginCredentialsProviderTests {
         }
 
         // Create provider
-        let provider = try LoginCredentialsProvider.create(
+        let provider = try LoginCredentialProvider.create(
             loginSession: "test-session",
             loginRegion: .useast1,
             cacheDirectoryOverride: tempDirectory.path,
@@ -380,7 +380,7 @@ final class LoginCredentialsProviderTests {
         try tokenData.write(to: tokenPath, atomically: true, encoding: .utf8)
 
         // Setup mock HTTP client
-        let provider = try LoginCredentialsProvider.create(
+        let provider = try LoginCredentialProvider.create(
             loginSession: "test-session",
             loginRegion: .useast1,
             cacheDirectoryOverride: tempDirectory.path,
@@ -432,7 +432,7 @@ final class LoginCredentialsProviderTests {
         let tokenPath = tempDirectory.appendingPathComponent("\(hashString).json")
         try tokenData.write(to: tokenPath, atomically: true, encoding: .utf8)
 
-        let provider = try LoginCredentialsProvider.create(
+        let provider = try LoginCredentialProvider.create(
             loginSession: "test-session",
             loginRegion: .useast1,
             cacheDirectoryOverride: tempDirectory.path,
@@ -480,7 +480,7 @@ final class LoginCredentialsProviderTests {
         let tokenPath = tempDirectory.appendingPathComponent("\(hashString).json")
         try tokenData.write(to: tokenPath, atomically: true, encoding: .utf8)
 
-        let provider = try LoginCredentialsProvider.create(
+        let provider = try LoginCredentialProvider.create(
             loginSession: "test-session",
             loginRegion: .useast1,
             cacheDirectoryOverride: tempDirectory.path,
@@ -504,7 +504,7 @@ final class LoginCredentialsProviderTests {
         let tempDirectory = try createTempDirectory()
         defer { removeTempDirectory(tempDirectory) }
 
-        let provider = try LoginCredentialsProvider.create(
+        let provider = try LoginCredentialProvider.create(
             loginSession: "test-session",
             loginRegion: .useast1,
             cacheDirectoryOverride: tempDirectory.path,
@@ -513,14 +513,14 @@ final class LoginCredentialsProviderTests {
 
         // Provider should be immutable - no var properties, no mutating methods
         // This test just verifies the provider can be created and used without mutation
-        #expect(provider.description.contains("LoginCredentialsProvider"))
+        #expect(provider.description.contains("LoginCredentialProvider"))
     }
 }
 
 // MARK: - Test Helpers
 
 @available(macOS 13.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
-extension LoginCredentialsProvider {
+extension LoginCredentialProvider {
     /// Create a LoginCredentialsProvider with explicit configuration (for testing)
     /// - Parameters:
     ///   - loginSession: The login session ARN
@@ -533,7 +533,7 @@ extension LoginCredentialsProvider {
         loginRegion: Region,
         cacheDirectoryOverride: String? = nil,
         httpClient: AWSHTTPClient
-    ) throws -> LoginCredentialsProvider {
+    ) throws -> LoginCredentialProvider {
         let endpoint = "\(loginRegion.rawValue).\(LoginConfiguration.loginServiceHostPrefix).aws.amazon.com"
         let configuration = LoginConfiguration(
             endpoint: endpoint,
@@ -542,7 +542,7 @@ extension LoginCredentialsProvider {
             cacheDirectory: cacheDirectoryOverride
         )
 
-        return LoginCredentialsProvider(
+        return LoginCredentialProvider(
             configuration: configuration,
             httpClient: httpClient
         )

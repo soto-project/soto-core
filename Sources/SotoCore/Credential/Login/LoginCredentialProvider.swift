@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-// Login Credentials Provider - Main Provider
+// Login Credential Provider - Main Provider
 
 import Foundation
 import INIParser
@@ -22,10 +22,10 @@ import NIOFoundationCompat
 import NIOPosix
 import SotoSignerV4
 
-// MARK: - Login Credentials Provider
+// MARK: - Login Credential Provider
 
 @available(macOS 13.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
-public struct LoginCredentialsProvider: CredentialProvider {
+public struct LoginCredentialProvider: CredentialProvider {
     private let configuration: LoginConfiguration?
     private let profileName: String?
     private let cacheDirectoryOverride: String?
@@ -277,7 +277,7 @@ public struct LoginCredentialsProvider: CredentialProvider {
 // MARK: - CredentialProviderFactory Extension
 
 extension CredentialProviderFactory {
-    /// Use AWS Login credentials provider
+    /// Use AWS Login credential provider
     ///
     /// This provider uses AWS Login session tokens to obtain temporary credentials.
     /// Credentials are automatically rotated when they expire.
@@ -292,7 +292,7 @@ extension CredentialProviderFactory {
         cacheDirectoryOverride: String? = nil
     ) -> CredentialProviderFactory {
         .custom { context in
-            let provider = LoginCredentialsProvider(
+            let provider = LoginCredentialProvider(
                 profileName: profileName,
                 cacheDirectoryOverride: cacheDirectoryOverride,
                 httpClient: context.httpClient

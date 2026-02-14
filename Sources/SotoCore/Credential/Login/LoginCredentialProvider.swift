@@ -24,7 +24,7 @@ import SotoSignerV4
 
 // MARK: - Login Credential Provider
 
-@available(macOS 13.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
+@available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
 public struct LoginCredentialProvider: CredentialProvider {
     private let configuration: LoginConfiguration?
     private let profileName: String?
@@ -124,9 +124,17 @@ public struct LoginCredentialProvider: CredentialProvider {
         headers.add(name: "Content-Type", value: "application/json")
         headers.add(name: "DPoP", value: dpopHeader)
         // Extract host from endpoint (remove protocol if present)
-        let host = configuration.endpoint
-            .replacing("https://", with: "")
-            .replacing("http://", with: "")
+        let host =
+            if #available(macOS 13.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *) {
+                configuration.endpoint
+                    .replacing("https://", with: "")
+                    .replacing("http://", with: "")
+            } else {
+                configuration.endpoint
+                    .replacingOccurrences(of: "https://", with: "")
+                    .replacingOccurrences(of: "http://", with: "")
+            }
+
         headers.add(name: "Host", value: host)
         headers.add(name: "Content-Length", value: "\(bodyData.count)")
 
@@ -289,7 +297,7 @@ extension CredentialProviderFactory {
     ///   - profileName: Name of the profile in ~/.aws/config (defaults to "default")
     ///   - cacheDirectoryOverride: Optional override for token cache directory
     /// - Returns: A credential provider factory
-    @available(macOS 13.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
+    @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
     public static func login(
         profileName: String? = nil,
         cacheDirectoryOverride: String? = nil

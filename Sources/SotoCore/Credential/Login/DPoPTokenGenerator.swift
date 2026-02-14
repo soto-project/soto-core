@@ -17,7 +17,7 @@
 import Crypto
 import Foundation
 
-@available(macOS 13.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
+@available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
 struct DPoPTokenGenerator<JTI: JTIGenerator, Time: TimeProvider> {
 
     // allow to inject these two values during the tests
@@ -53,10 +53,17 @@ struct DPoPTokenGenerator<JTI: JTIGenerator, Time: TimeProvider> {
     }
 
     private func base64URLEncode(_ data: Data) -> String {
-        data.base64EncodedString()
-            .replacing("+", with: "-")
-            .replacing("/", with: "_")
-            .replacing("=", with: "")
+        if #available(macOS 13.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *) {
+            data.base64EncodedString()
+                .replacing("+", with: "-")
+                .replacing("/", with: "_")
+                .replacing("=", with: "")
+        } else {
+            data.base64EncodedString()
+                .replacingOccurrences(of: "+", with: "-")
+                .replacingOccurrences(of: "/", with: "_")
+                .replacingOccurrences(of: "=", with: "")
+        }
     }
 
     private func extractPublicKeyCoordinates(from pemKey: String) -> (x: String, y: String)? {

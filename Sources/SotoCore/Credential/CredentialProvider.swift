@@ -70,9 +70,13 @@ extension CredentialProviderFactory {
     /// files. On macOS is looks in the environment and then the config file.
     public static var `default`: CredentialProviderFactory {
         #if os(Linux)
-        return .selector(.environment, .ecs, .ec2, .configFile())
+        return .selector(.environment, .ecs, .ec2, .configFile(), .login())
         #else
-        return .selector(.environment, .configFile())
+        if #available(macOS 13.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *) {
+            return .selector(.environment, .configFile(), .login())
+        } else {
+            return .selector(.environment, .configFile())
+        }
         #endif
     }
 

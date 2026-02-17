@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2023 the Soto project authors
+// Copyright (c) 2017-2026 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -15,7 +15,6 @@
 // Test proper error handling for expired tokens
 
 import Crypto
-import Foundation
 import Logging
 import NIOCore
 import NIOHTTP1
@@ -23,6 +22,12 @@ import SotoCore
 import Testing
 
 @testable import SotoCore
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 @Suite("Login Error Handling Tests", .serialized)
 final class LoginErrorHandlingTests {

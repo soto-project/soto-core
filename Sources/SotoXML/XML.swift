@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the Soto project authors
+// Copyright (c) 2017-2026 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -12,7 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct Foundation.Data
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// Implemented to replace the XML Foundation classes. This was initially required as there is no implementation of the Foundation XMLNode classes in iOS. This is also here because the implementation of XMLNode in Linux Swift 4.2 was causing crashes. Whenever an XMLDocument was deleted all the underlying CoreFoundation objects were deleted. This meant if you still had a reference to a XMLElement from that document, while it was still valid the underlying CoreFoundation object had been deleted.
 ///

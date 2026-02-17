@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2023 the Soto project authors
+// Copyright (c) 2017-2026 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -294,8 +294,7 @@ final class LoginCredentialProviderTests {
 
         // Set expiration to 1 hour in the future
         let futureDate = Date(timeIntervalSinceNow: 3600)
-        let formatter = ISO8601DateFormatter()
-        let expiresAtString = formatter.string(from: futureDate)
+        let expiresAtString = futureDate.formatted(.iso8601)
 
         let tokenData = """
             {

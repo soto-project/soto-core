@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the Soto project authors
+// Copyright (c) 2017-2026 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -12,11 +12,16 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import INIParser
 import Logging
 import NIOCore
 import NIOPosix
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// Load settings from AWS credentials and profile configuration files
 /// https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html

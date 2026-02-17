@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the Soto project authors
+// Copyright (c) 2017-2026 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -12,10 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct Foundation.Data
-import struct Foundation.Date
-import class Foundation.ISO8601DateFormatter
-import struct Foundation.URL
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// The wrapper class for encoding Codable classes to XMLElements
 public struct XMLEncoder {
@@ -537,7 +538,7 @@ extension _XMLEncoder {
     }
 
     func box(_ date: Date) throws -> XML.Element? {
-        XML.Element(name: self.currentKey, stringValue: Self.dateFormatter.string(from: date))
+        XML.Element(name: self.currentKey, stringValue: date.formatted(Date.ISO8601FormatStyle(includingFractionalSeconds: true)))
     }
 
     func box(_ data: Data) throws -> XML.Element? {
@@ -562,12 +563,6 @@ extension _XMLEncoder {
             return self.storage.popContainer()
         }
     }
-
-    nonisolated(unsafe) static let dateFormatter: ISO8601DateFormatter = {
-        let dateFormatter = ISO8601DateFormatter()
-        dateFormatter.formatOptions = [.withFullDate, .withFullTime, .withFractionalSeconds]
-        return dateFormatter
-    }()
 }
 
 // MARK: - _XMLReferencingEncoder

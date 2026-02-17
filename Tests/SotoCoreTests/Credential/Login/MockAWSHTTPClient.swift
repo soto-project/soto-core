@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2023 the Soto project authors
+// Copyright (c) 2017-2026 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -14,11 +14,16 @@
 
 // Mock AWS HTTP Client for testing
 
-import Foundation
 import Logging
 import NIOCore
 import NIOHTTP1
 import SotoCore
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 final class MockAWSHTTPClient: AWSHTTPClient {
     private let requestHandler: @Sendable (AWSHTTPRequest) async throws -> (HTTPResponseStatus, Data)

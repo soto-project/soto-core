@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2022 the Soto project authors
+// Copyright (c) 2017-2026 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -12,10 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import var Foundation.NSNotFound
-import struct Foundation.NSRange
-import class Foundation.NSRegularExpression
-import struct Foundation.UUID
+// TODO: FoundationEssentials
+import Foundation
 
 /// Protocol for the input and output objects for all AWS service commands.
 ///

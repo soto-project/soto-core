@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2022 the Soto project authors
+// Copyright (c) 2017-2026 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -19,9 +19,13 @@ import SotoTestUtils
 import SotoXML
 import XCTest
 
-import struct Foundation.Data
-
 @testable @_spi(SotoInternal) import SotoCore
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 extension AWSHTTPBody {
     func asString() -> String? {

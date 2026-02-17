@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2023 the Soto project authors
+// Copyright (c) 2017-2026 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -15,9 +15,14 @@
 // Token File Management - Disk I/O for tokens
 
 import Crypto
-import Foundation
 import NIOCore
 import NIOPosix
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 struct TokenFileManager {
     private struct AccessToken: Codable {
@@ -92,8 +97,7 @@ struct TokenFileManager {
         // Parse expiresAt if present
         var expiresAt: Date?
         if let accessToken = tokenData.accessToken, !accessToken.expiresAt.isEmpty {
-            let formatter = ISO8601DateFormatter()
-            expiresAt = formatter.date(from: accessToken.expiresAt)
+            expiresAt = try? Date(accessToken.expiresAt, strategy: .iso8601)
         }
 
         return LoginToken(
@@ -114,8 +118,7 @@ struct TokenFileManager {
         // Parse ISO8601 date if we have expiresAt
         let expiresAtString: String
         if let expiresAt = token.expiresAt {
-            let formatter = ISO8601DateFormatter()
-            expiresAtString = formatter.string(from: expiresAt)
+            expiresAtString = expiresAt.formatted(.iso8601)
         } else {
             expiresAtString = ""
         }

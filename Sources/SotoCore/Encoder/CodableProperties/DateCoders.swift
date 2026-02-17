@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2020-2022 the Soto project authors
+// Copyright (c) 2020-2026 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -12,11 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct Foundation.Date
-import class Foundation.DateFormatter
-import class Foundation.ISO8601DateFormatter
-import struct Foundation.Locale
-import struct Foundation.TimeZone
+// TODO: FoundationEssentials
+import Foundation
 
 // MARK: TimeStamp Coders
 

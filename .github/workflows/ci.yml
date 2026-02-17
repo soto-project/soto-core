@@ -52,7 +52,7 @@ jobs:
       uses: actions/checkout@v6
     - name: Xcodebuild
       run: |
-        xcodebuild build -scheme soto-core -destination 'platform=iOS Simulator,name=iPhone 17'
+        xcodebuild build -scheme soto-core-Package -destination 'platform=iOS Simulator,name=iPhone 17'
 
   linux:
     name: Linux unit tests

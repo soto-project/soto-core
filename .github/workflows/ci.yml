@@ -17,6 +17,7 @@ env:
 
 jobs:
   macos:
+    name: macOS unit tests
     runs-on: macOS-latest
     timeout-minutes: 15
     steps:
@@ -37,7 +38,24 @@ jobs:
       with:
         files: info.lcov
         token: ${{ secrets.CODECOV_TOKEN }}
+
+  ios:
+    name: iOS Build
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+    - name: Select appropriate Xcode version
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+    - name: Checkout
+      uses: actions/checkout@v6
+    - name: Xcodebuild
+      run: |
+        xcodebuild build -scheme mqtt-nio -destination 'platform=iOS Simulator,name=iPhone 17'
+
   linux:
+    name: Linux unit tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
@@ -66,8 +84,9 @@ jobs:
       with:
         files: info.lcov
         token: ${{ secrets.CODECOV_TOKEN }}
+
   android:
-    name: Android
+    name: Android build
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:

@@ -191,13 +191,15 @@ final class SSOCredentialProviderTests {
 
     @Test("Profile not found throws profileNotFound error")
     func profileNotFound() async throws {
-        try await withConfigFile("""
+        try await withConfigFile(
+            """
             [profile existing]
             sso_start_url = https://test.awsapps.com/start
             sso_region = us-east-1
             sso_account_id = 123456789012
             sso_role_name = TestRole
-            """) { configPath in
+            """
+        ) { configPath in
             let provider = SSOCredentialProvider(profileName: "nonexistent", configPath: configPath, httpClient: MockAWSHTTPClient())
 
             await #expect {
@@ -210,12 +212,14 @@ final class SSOCredentialProviderTests {
 
     @Test("Missing sso-session section throws ssoSessionNotFound error")
     func ssoSessionNotFound() async throws {
-        try await withConfigFile("""
+        try await withConfigFile(
+            """
             [profile broken]
             sso_session = nonexistent-session
             sso_account_id = 123456789012
             sso_role_name = TestRole
-            """) { configPath in
+            """
+        ) { configPath in
             let provider = SSOCredentialProvider(profileName: "broken", configPath: configPath, httpClient: MockAWSHTTPClient())
 
             await #expect {
@@ -229,7 +233,8 @@ final class SSOCredentialProviderTests {
     @Test("Missing required SSO fields throws ssoConfigMissing error")
     func ssoConfigMissingFields() async throws {
         // Session section missing sso_start_url
-        try await withConfigFile("""
+        try await withConfigFile(
+            """
             [profile incomplete]
             sso_session = my-sso
             sso_account_id = 123456789012
@@ -237,7 +242,8 @@ final class SSOCredentialProviderTests {
 
             [sso-session my-sso]
             sso_region = us-east-1
-            """) { configPath in
+            """
+        ) { configPath in
             let provider = SSOCredentialProvider(profileName: "incomplete", configPath: configPath, httpClient: MockAWSHTTPClient())
 
             await #expect {
@@ -251,12 +257,14 @@ final class SSOCredentialProviderTests {
     @Test("Legacy profile missing required fields throws ssoConfigMissing error")
     func legacyConfigMissingFields() async throws {
         // Legacy profile missing sso_role_name
-        try await withConfigFile("""
+        try await withConfigFile(
+            """
             [profile partial]
             sso_start_url = https://test.awsapps.com/start
             sso_region = us-east-1
             sso_account_id = 123456789012
-            """) { configPath in
+            """
+        ) { configPath in
             let provider = SSOCredentialProvider(profileName: "partial", configPath: configPath, httpClient: MockAWSHTTPClient())
 
             await #expect {
@@ -363,7 +371,11 @@ final class SSOCredentialProviderTests {
                     return Self.makeCreateTokenResponse()
                 } else {
                     #expect(request.headers["x-amz-sso_bearer_token"].first == "refreshed-access-token")
-                    return Self.makeRoleCredentialsResponse(accessKeyId: "AKIAREFRESHED", secretAccessKey: "refreshedsecret", sessionToken: "refreshedsession")
+                    return Self.makeRoleCredentialsResponse(
+                        accessKeyId: "AKIAREFRESHED",
+                        secretAccessKey: "refreshedsecret",
+                        sessionToken: "refreshedsession"
+                    )
                 }
             }
 

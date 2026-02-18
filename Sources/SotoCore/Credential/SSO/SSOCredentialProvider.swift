@@ -34,6 +34,7 @@ import struct Foundation.URL
 public struct SSOCredentialProvider: CredentialProvider {
     private let configuration: SSOConfiguration?
     private let profileName: String?
+    private let configPath: String?
     private let httpClient: AWSHTTPClient
     private let threadPool: NIOThreadPool
 
@@ -41,6 +42,21 @@ public struct SSOCredentialProvider: CredentialProvider {
     init(configuration: SSOConfiguration, httpClient: AWSHTTPClient, threadPool: NIOThreadPool = .singleton) {
         self.configuration = configuration
         self.profileName = nil
+        self.configPath = nil
+        self.httpClient = httpClient
+        self.threadPool = threadPool
+    }
+
+    /// Create an SSOCredentialProvider with explicit config file path (for testing)
+    init(
+        profileName: String? = nil,
+        configPath: String,
+        httpClient: AWSHTTPClient,
+        threadPool: NIOThreadPool = .singleton
+    ) {
+        self.configuration = nil
+        self.profileName = profileName
+        self.configPath = configPath
         self.httpClient = httpClient
         self.threadPool = threadPool
     }
@@ -55,6 +71,7 @@ public struct SSOCredentialProvider: CredentialProvider {
     ) {
         self.configuration = nil
         self.profileName = profileName
+        self.configPath = nil
         self.httpClient = httpClient
         self.threadPool = .singleton
     }
@@ -103,7 +120,7 @@ public struct SSOCredentialProvider: CredentialProvider {
         if let configuration = configuration {
             return configuration
         }
-        return try await loadConfiguration(profileName: profileName)
+        return try await loadConfiguration(profileName: profileName, configPath: configPath)
     }
 
     private func loadConfiguration(

@@ -182,6 +182,416 @@ final class SSOCredentialProviderTests {
         }
     }
 
+    // MARK: - Config File Parsing Tests
+
+    @Test("Load modern SSO config from config file")
+    func loadModernConfigFromFile() async throws {
+        try await withTempDirectory { tempDirectory in
+            let configContent = """
+                [profile dev]
+                sso_session = my-sso
+                sso_account_id = 111122223333
+                sso_role_name = DevRole
+                region = eu-west-1
+
+                [sso-session my-sso]
+                sso_start_url = https://myorg.awsapps.com/start
+                sso_region = us-west-2
+                """
+
+            let configPath = tempDirectory.appendingPathComponent("config")
+            try configContent.write(to: configPath, atomically: true, encoding: .utf8)
+
+            let futureDate = ISO8601DateFormatter().string(from: Date(timeIntervalSinceNow: 3600))
+            let tokenJSON = """
+                {
+                    "accessToken": "config-test-token",
+                    "expiresAt": "\(futureDate)"
+                }
+                """
+
+            let cacheDir = tempDirectory.appendingPathComponent(".aws/sso/cache")
+            try FileManager.default.createDirectory(at: cacheDir, withIntermediateDirectories: true)
+            _ = try createTokenFile(cacheKey: "my-sso", tokenJSON: tokenJSON, inDirectory: cacheDir)
+
+            let mockHTTPClient = MockAWSHTTPClient { request in
+                // Verify the parsed config was used correctly
+                let urlString = request.url.absoluteString
+                #expect(urlString.contains("portal.sso.us-west-2.amazonaws.com"))
+                #expect(urlString.contains("role_name=DevRole"))
+                #expect(urlString.contains("account_id=111122223333"))
+                #expect(request.headers["x-amz-sso_bearer_token"].first == "config-test-token")
+
+                let responseJSON = """
+                    {
+                        "roleCredentials": {
+                            "accessKeyId": "AKIACONFIG",
+                            "secretAccessKey": "configsecret",
+                            "sessionToken": "configsession",
+                            "expiration": \(Int64(Date(timeIntervalSinceNow: 3600).timeIntervalSince1970 * 1000))
+                        }
+                    }
+                    """
+                return (.ok, responseJSON.data(using: .utf8)!)
+            }
+
+            try await withEnvironmentVariables(["HOME": tempDirectory.path]) {
+                let provider = SSOCredentialProvider(
+                    profileName: "dev",
+                    configPath: configPath.path,
+                    httpClient: mockHTTPClient
+                )
+
+                let logger = Logger(label: "test")
+                let credential = try await provider.getCredential(logger: logger)
+                #expect(credential.accessKeyId == "AKIACONFIG")
+                #expect(credential.secretAccessKey == "configsecret")
+            }
+        }
+    }
+
+    @Test("Load legacy SSO config from config file")
+    func loadLegacyConfigFromFile() async throws {
+        try await withTempDirectory { tempDirectory in
+            let configContent = """
+                [profile legacy]
+                sso_start_url = https://legacy.awsapps.com/start
+                sso_region = eu-central-1
+                sso_account_id = 444455556666
+                sso_role_name = LegacyRole
+                region = eu-central-1
+                """
+
+            let configPath = tempDirectory.appendingPathComponent("config")
+            try configContent.write(to: configPath, atomically: true, encoding: .utf8)
+
+            let futureDate = ISO8601DateFormatter().string(from: Date(timeIntervalSinceNow: 3600))
+            let tokenJSON = """
+                {
+                    "accessToken": "legacy-config-token",
+                    "expiresAt": "\(futureDate)"
+                }
+                """
+
+            let cacheDir = tempDirectory.appendingPathComponent(".aws/sso/cache")
+            try FileManager.default.createDirectory(at: cacheDir, withIntermediateDirectories: true)
+            _ = try createTokenFile(
+                cacheKey: "https://legacy.awsapps.com/start",
+                tokenJSON: tokenJSON,
+                inDirectory: cacheDir
+            )
+
+            let mockHTTPClient = MockAWSHTTPClient { request in
+                let urlString = request.url.absoluteString
+                #expect(urlString.contains("portal.sso.eu-central-1.amazonaws.com"))
+                #expect(urlString.contains("role_name=LegacyRole"))
+                #expect(urlString.contains("account_id=444455556666"))
+
+                let responseJSON = """
+                    {
+                        "roleCredentials": {
+                            "accessKeyId": "AKIALEGACYCFG",
+                            "secretAccessKey": "legacycfgsecret",
+                            "sessionToken": "legacycfgsession",
+                            "expiration": \(Int64(Date(timeIntervalSinceNow: 3600).timeIntervalSince1970 * 1000))
+                        }
+                    }
+                    """
+                return (.ok, responseJSON.data(using: .utf8)!)
+            }
+
+            try await withEnvironmentVariables(["HOME": tempDirectory.path]) {
+                let provider = SSOCredentialProvider(
+                    profileName: "legacy",
+                    configPath: configPath.path,
+                    httpClient: mockHTTPClient
+                )
+
+                let logger = Logger(label: "test")
+                let credential = try await provider.getCredential(logger: logger)
+                #expect(credential.accessKeyId == "AKIALEGACYCFG")
+            }
+        }
+    }
+
+    @Test("Default profile uses 'default' key without 'profile' prefix")
+    func defaultProfileConfig() async throws {
+        try await withTempDirectory { tempDirectory in
+            let configContent = """
+                [default]
+                sso_start_url = https://default.awsapps.com/start
+                sso_region = us-east-1
+                sso_account_id = 777788889999
+                sso_role_name = DefaultRole
+                """
+
+            let configPath = tempDirectory.appendingPathComponent("config")
+            try configContent.write(to: configPath, atomically: true, encoding: .utf8)
+
+            let futureDate = ISO8601DateFormatter().string(from: Date(timeIntervalSinceNow: 3600))
+            let tokenJSON = """
+                {
+                    "accessToken": "default-token",
+                    "expiresAt": "\(futureDate)"
+                }
+                """
+
+            let cacheDir = tempDirectory.appendingPathComponent(".aws/sso/cache")
+            try FileManager.default.createDirectory(at: cacheDir, withIntermediateDirectories: true)
+            _ = try createTokenFile(
+                cacheKey: "https://default.awsapps.com/start",
+                tokenJSON: tokenJSON,
+                inDirectory: cacheDir
+            )
+
+            let mockHTTPClient = MockAWSHTTPClient { request in
+                let urlString = request.url.absoluteString
+                #expect(urlString.contains("role_name=DefaultRole"))
+
+                let responseJSON = """
+                    {
+                        "roleCredentials": {
+                            "accessKeyId": "AKIADEFAULT",
+                            "secretAccessKey": "defaultsecret",
+                            "sessionToken": "defaultsession",
+                            "expiration": \(Int64(Date(timeIntervalSinceNow: 3600).timeIntervalSince1970 * 1000))
+                        }
+                    }
+                    """
+                return (.ok, responseJSON.data(using: .utf8)!)
+            }
+
+            try await withEnvironmentVariables(["HOME": tempDirectory.path]) {
+                // No profileName = defaults to "default"
+                let provider = SSOCredentialProvider(
+                    configPath: configPath.path,
+                    httpClient: mockHTTPClient
+                )
+
+                let logger = Logger(label: "test")
+                let credential = try await provider.getCredential(logger: logger)
+                #expect(credential.accessKeyId == "AKIADEFAULT")
+            }
+        }
+    }
+
+    @Test("Config file not found throws configFileNotFound error")
+    func configFileNotFound() async throws {
+        try await withTempDirectory { tempDirectory in
+            let nonexistentPath = tempDirectory.appendingPathComponent("nonexistent_config")
+
+            let provider = SSOCredentialProvider(
+                profileName: "test",
+                configPath: nonexistentPath.path,
+                httpClient: MockAWSHTTPClient()
+            )
+
+            let logger = Logger(label: "test")
+            await #expect {
+                try await provider.getCredential(logger: logger)
+            } throws: { error in
+                (error as? AWSSSOCredentialError)?.code == "configFileNotFound"
+            }
+        }
+    }
+
+    @Test("Profile not found throws profileNotFound error")
+    func profileNotFound() async throws {
+        try await withTempDirectory { tempDirectory in
+            let configContent = """
+                [profile existing]
+                sso_start_url = https://test.awsapps.com/start
+                sso_region = us-east-1
+                sso_account_id = 123456789012
+                sso_role_name = TestRole
+                """
+
+            let configPath = tempDirectory.appendingPathComponent("config")
+            try configContent.write(to: configPath, atomically: true, encoding: .utf8)
+
+            let provider = SSOCredentialProvider(
+                profileName: "nonexistent",
+                configPath: configPath.path,
+                httpClient: MockAWSHTTPClient()
+            )
+
+            let logger = Logger(label: "test")
+            await #expect {
+                try await provider.getCredential(logger: logger)
+            } throws: { error in
+                (error as? AWSSSOCredentialError)?.code == "profileNotFound"
+            }
+        }
+    }
+
+    @Test("Missing sso-session section throws ssoSessionNotFound error")
+    func ssoSessionNotFound() async throws {
+        try await withTempDirectory { tempDirectory in
+            let configContent = """
+                [profile broken]
+                sso_session = nonexistent-session
+                sso_account_id = 123456789012
+                sso_role_name = TestRole
+                """
+
+            let configPath = tempDirectory.appendingPathComponent("config")
+            try configContent.write(to: configPath, atomically: true, encoding: .utf8)
+
+            let provider = SSOCredentialProvider(
+                profileName: "broken",
+                configPath: configPath.path,
+                httpClient: MockAWSHTTPClient()
+            )
+
+            let logger = Logger(label: "test")
+            await #expect {
+                try await provider.getCredential(logger: logger)
+            } throws: { error in
+                (error as? AWSSSOCredentialError)?.code == "ssoSessionNotFound"
+            }
+        }
+    }
+
+    @Test("Missing required SSO fields throws ssoConfigMissing error")
+    func ssoConfigMissingFields() async throws {
+        try await withTempDirectory { tempDirectory in
+            // Profile with sso_session but session section missing sso_start_url
+            let configContent = """
+                [profile incomplete]
+                sso_session = my-sso
+                sso_account_id = 123456789012
+                sso_role_name = TestRole
+
+                [sso-session my-sso]
+                sso_region = us-east-1
+                """
+
+            let configPath = tempDirectory.appendingPathComponent("config")
+            try configContent.write(to: configPath, atomically: true, encoding: .utf8)
+
+            let provider = SSOCredentialProvider(
+                profileName: "incomplete",
+                configPath: configPath.path,
+                httpClient: MockAWSHTTPClient()
+            )
+
+            let logger = Logger(label: "test")
+            await #expect {
+                try await provider.getCredential(logger: logger)
+            } throws: { error in
+                (error as? AWSSSOCredentialError)?.code == "ssoConfigMissing"
+            }
+        }
+    }
+
+    @Test("Legacy profile missing required fields throws ssoConfigMissing error")
+    func legacyConfigMissingFields() async throws {
+        try await withTempDirectory { tempDirectory in
+            // Legacy profile missing sso_role_name
+            let configContent = """
+                [profile partial]
+                sso_start_url = https://test.awsapps.com/start
+                sso_region = us-east-1
+                sso_account_id = 123456789012
+                """
+
+            let configPath = tempDirectory.appendingPathComponent("config")
+            try configContent.write(to: configPath, atomically: true, encoding: .utf8)
+
+            let provider = SSOCredentialProvider(
+                profileName: "partial",
+                configPath: configPath.path,
+                httpClient: MockAWSHTTPClient()
+            )
+
+            let logger = Logger(label: "test")
+            await #expect {
+                try await provider.getCredential(logger: logger)
+            } throws: { error in
+                (error as? AWSSSOCredentialError)?.code == "ssoConfigMissing"
+            }
+        }
+    }
+
+    @Test("Invalid token JSON throws invalidTokenFormat error")
+    func invalidTokenJSON() async throws {
+        try await withTempDirectory { tempDirectory in
+            let cacheDir = tempDirectory.appendingPathComponent(".aws/sso/cache")
+            try FileManager.default.createDirectory(at: cacheDir, withIntermediateDirectories: true)
+            _ = try createTokenFile(
+                cacheKey: "https://test.awsapps.com/start",
+                tokenJSON: "{ not valid json",
+                inDirectory: cacheDir
+            )
+
+            try await withEnvironmentVariables(["HOME": tempDirectory.path]) {
+                let config = SSOConfiguration(
+                    ssoStartUrl: "https://test.awsapps.com/start",
+                    ssoRegion: .useast1,
+                    ssoAccountId: "123456789012",
+                    ssoRoleName: "TestRole",
+                    region: .useast1,
+                    sessionName: nil
+                )
+
+                let provider = SSOCredentialProvider(
+                    configuration: config,
+                    httpClient: MockAWSHTTPClient()
+                )
+
+                let logger = Logger(label: "test")
+                await #expect {
+                    try await provider.getCredential(logger: logger)
+                } throws: { error in
+                    (error as? AWSSSOCredentialError)?.code == "invalidTokenFormat"
+                }
+            }
+        }
+    }
+
+    @Test("Invalid expiresAt date format throws invalidTokenFormat error")
+    func invalidExpiresAtFormat() async throws {
+        try await withTempDirectory { tempDirectory in
+            let tokenJSON = """
+                {
+                    "accessToken": "test-token",
+                    "expiresAt": "not-a-date"
+                }
+                """
+
+            let cacheDir = tempDirectory.appendingPathComponent(".aws/sso/cache")
+            try FileManager.default.createDirectory(at: cacheDir, withIntermediateDirectories: true)
+            _ = try createTokenFile(
+                cacheKey: "https://test.awsapps.com/start",
+                tokenJSON: tokenJSON,
+                inDirectory: cacheDir
+            )
+
+            try await withEnvironmentVariables(["HOME": tempDirectory.path]) {
+                let config = SSOConfiguration(
+                    ssoStartUrl: "https://test.awsapps.com/start",
+                    ssoRegion: .useast1,
+                    ssoAccountId: "123456789012",
+                    ssoRoleName: "TestRole",
+                    region: .useast1,
+                    sessionName: nil
+                )
+
+                let provider = SSOCredentialProvider(
+                    configuration: config,
+                    httpClient: MockAWSHTTPClient()
+                )
+
+                let logger = Logger(label: "test")
+                await #expect {
+                    try await provider.getCredential(logger: logger)
+                } throws: { error in
+                    (error as? AWSSSOCredentialError)?.code == "invalidTokenFormat"
+                }
+            }
+        }
+    }
+
     // MARK: - Token Cache Tests
 
     @Test("Token cache not found throws tokenCacheNotFound error")

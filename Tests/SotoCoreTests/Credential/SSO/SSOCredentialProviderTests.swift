@@ -13,6 +13,13 @@
 //===----------------------------------------------------------------------===//
 
 // SSO Credential Provider Tests
+//
+// Note: The ideal pattern for error assertions in Swift Testing is:
+//   let error = await #expect(throws: AWSSSOCredentialError.self) { ... }
+//   #expect(error?.code == "expectedCode")
+// However, the return-value variant of #expect(throws:) was introduced in Swift 6.1.
+// On Swift 6.0 it returns Void, so we use the closure-based validation pattern instead:
+//   await #expect { ... } throws: { error in (error as? AWSSSOCredentialError)?.code == "expectedCode" }
 
 import Crypto
 import Foundation
@@ -200,10 +207,11 @@ final class SSOCredentialProviderTests {
                 )
 
                 let logger = Logger(label: "test")
-                let error = await #expect(throws: AWSSSOCredentialError.self) {
+                await #expect {
                     try await provider.getCredential(logger: logger)
+                } throws: { error in
+                    (error as? AWSSSOCredentialError)?.code == "tokenCacheNotFound"
                 }
-                #expect(error?.code == "tokenCacheNotFound")
             }
         }
     }
@@ -243,10 +251,11 @@ final class SSOCredentialProviderTests {
                 )
 
                 let logger = Logger(label: "test")
-                let error = await #expect(throws: AWSSSOCredentialError.self) {
+                await #expect {
                     try await provider.getCredential(logger: logger)
+                } throws: { error in
+                    (error as? AWSSSOCredentialError)?.code == "tokenExpired"
                 }
-                #expect(error?.code == "tokenExpired")
             }
         }
     }
@@ -403,10 +412,11 @@ final class SSOCredentialProviderTests {
                 )
 
                 let logger = Logger(label: "test")
-                let error = await #expect(throws: AWSSSOCredentialError.self) {
+                await #expect {
                     try await provider.getCredential(logger: logger)
+                } throws: { error in
+                    (error as? AWSSSOCredentialError)?.code == "tokenRefreshFailed"
                 }
-                #expect(error?.code == "tokenRefreshFailed")
             }
         }
     }
@@ -451,10 +461,11 @@ final class SSOCredentialProviderTests {
                 )
 
                 let logger = Logger(label: "test")
-                let error = await #expect(throws: AWSSSOCredentialError.self) {
+                await #expect {
                     try await provider.getCredential(logger: logger)
+                } throws: { error in
+                    (error as? AWSSSOCredentialError)?.code == "clientRegistrationExpired"
                 }
-                #expect(error?.code == "clientRegistrationExpired")
             }
         }
     }
@@ -500,11 +511,12 @@ final class SSOCredentialProviderTests {
                 )
 
                 let logger = Logger(label: "test")
-                let error = await #expect(throws: AWSSSOCredentialError.self) {
+                await #expect {
                     try await provider.getCredential(logger: logger)
+                } throws: { error in
+                    guard let error = error as? AWSSSOCredentialError else { return false }
+                    return error.code == "getRoleCredentialsFailed" && error.message.contains("403")
                 }
-                #expect(error?.code == "getRoleCredentialsFailed")
-                #expect(error?.message.contains("403") == true)
             }
         }
     }

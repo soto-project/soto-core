@@ -53,7 +53,7 @@ struct DPoPTokenGenerator<JTI: JTIGenerator, Time: TimeProvider> {
     }
 
     private func base64URLEncode(_ data: Data) -> String {
-        if #available(macOS 13.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *) {
+        if #available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *) {
             data.base64EncodedString()
                 .replacing("+", with: "-")
                 .replacing("/", with: "_")

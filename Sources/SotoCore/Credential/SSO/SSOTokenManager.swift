@@ -133,7 +133,7 @@ struct SSOTokenManager {
         var token = try await loadToken(from: tokenPath, profileName: profileName, fileIO: fileIO)
 
         // Parse expiration (try with fractional seconds first, then without)
-        guard let expiration = Self.parseISO8601Date(token.expiresAt) else {
+        guard let expiration = parseISO8601Date(token.expiresAt) else {
             throw AWSSSOCredentialError.invalidTokenFormat("Invalid expiresAt date format: \(token.expiresAt)")
         }
 
@@ -154,7 +154,7 @@ struct SSOTokenManager {
 
             // Check client registration hasn't expired
             if let regExpiry = token.registrationExpiresAt {
-                if let registrationExpiration = Self.parseISO8601Date(regExpiry) {
+                if let registrationExpiration = parseISO8601Date(regExpiry) {
                     guard registrationExpiration > Date() else {
                         throw AWSSSOCredentialError.clientRegistrationExpired(profileName)
                     }
@@ -253,7 +253,11 @@ struct SSOTokenManager {
 
     /// Parse an ISO8601 date string, handling both with and without fractional seconds.
     /// AWS CLI writes dates with fractional seconds (e.g., "2026-02-18T16:59:23.216Z").
-    static func parseISO8601Date(_ string: String) -> Date? {
+    /// but not all token files have them.
+    /// Date.ISO8601FormatStyle(includingFractionalSeconds:true) only parses strings with fractional seconds
+    /// it rejects 2026-02-18T16:59:23Z. And .iso8601 only parses strings without fractional seconds.                  
+    /// So we try fractional first (most common from AWS CLI), fall back to without.                                                                                       
+    func parseISO8601Date(_ string: String) -> Date? {
         #if canImport(FoundationEssentials)
         if let date = try? Date(string, strategy: Date.ISO8601FormatStyle(includingFractionalSeconds: true)) {
             return date

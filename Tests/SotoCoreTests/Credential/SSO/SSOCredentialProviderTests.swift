@@ -288,13 +288,13 @@ final class SSOCredentialProviderTests {
                 if request.url.absoluteString.contains("oidc.") {
                     // SSO-OIDC CreateToken refresh request
                     #expect(request.method == .POST)
-                    #expect(request.headers["Content-Type"].first == "application/x-www-form-urlencoded")
+                    #expect(request.headers["Content-Type"].first == "application/json")
 
                     let bodyBuffer = try await request.body.collect(upTo: 1024 * 1024)
-                    let bodyString = String(buffer: bodyBuffer)
-                    #expect(bodyString.contains("grant_type=refresh_token"))
-                    #expect(bodyString.contains("client_id=client-id"))
-                    #expect(bodyString.contains("refresh_token=refresh-token-value"))
+                    let bodyJSON = try JSONSerialization.jsonObject(with: Data(buffer: bodyBuffer)) as! [String: String]
+                    #expect(bodyJSON["grantType"] == "refresh_token")
+                    #expect(bodyJSON["clientId"] == "client-id")
+                    #expect(bodyJSON["refreshToken"] == "refresh-token-value")
 
                     let responseJSON = """
                         {

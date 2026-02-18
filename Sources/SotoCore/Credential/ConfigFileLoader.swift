@@ -307,7 +307,7 @@ enum ConfigFileLoader {
     // MARK: - Path Expansion
 
     static func expandTildeInFilePath(_ filePath: String) -> String {
-        #if os(Linux) || os(Android)
+        #if os(Linux)
         // We don't want to add more dependencies on Foundation than needed.
         // For this reason we get the expanded filePath on Linux from libc.
         // Since `wordexp` and `wordfree` are not available on iOS we stay
@@ -327,8 +327,9 @@ enum ConfigFileLoader {
 
             return pth
         }
-        #elseif os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+        #elseif os(macOS) || os(iOS) || os(tvOS) || os(watchOS) || os(Android)
         // can not use wordexp on Apple OS's because for sandboxed application wexp.we_wordv == nil
+        // wordexp does not exist on Android
         guard let home = getpwuid(getuid())?.pointee.pw_dir,
             let homePath = String(cString: home, encoding: .utf8)
         else {

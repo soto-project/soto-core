@@ -17,6 +17,18 @@ import Logging
 import NIOCore
 import NIOPosix
 
+#if canImport(Glibc)
+import Glibc
+#elseif canImport(Musl)
+import Musl
+#elseif canImport(Darwin)
+import Darwin.C
+#elseif canImport(Android)
+import Android
+#else
+#error("Unsupported platform")
+#endif
+
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else

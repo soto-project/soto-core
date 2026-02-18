@@ -254,24 +254,7 @@ struct SSOTokenManager {
     /// Parse an ISO8601 date string, handling both with and without fractional seconds.
     /// AWS CLI writes dates with fractional seconds (e.g., "2026-02-18T16:59:23.216Z").
     /// but not all token files have them.
-    /// Date.ISO8601FormatStyle(includingFractionalSeconds:true) only parses strings with fractional seconds
-    /// it rejects 2026-02-18T16:59:23Z. And .iso8601 only parses strings without fractional seconds.                  
-    /// So we try fractional first (most common from AWS CLI), fall back to without.                                                                                       
     func parseISO8601Date(_ string: String) -> Date? {
-        #if canImport(FoundationEssentials)
-        if let date = try? Date(string, strategy: Date.ISO8601FormatStyle(includingFractionalSeconds: true)) {
-            return date
-        }
-        return try? Date(string, strategy: .iso8601)
-        #else
-        if #available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) {
-            if let date = try? Date(string, strategy: Date.ISO8601FormatStyle(includingFractionalSeconds: true)) {
-                return date
-            }
-            return try? Date(string, strategy: .iso8601)
-        } else {
-            return ISO8601DateCoder.dateFormatters.lazy.compactMap { $0.date(from: string) }.first
-        }
-        #endif
+        ISO8601DateCoder.dateFormatters.lazy.compactMap { $0.date(from: string) }.first
     }
 }

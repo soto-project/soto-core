@@ -62,7 +62,7 @@ struct SSOTokenManager {
 
     // MARK: - Token Loading
 
-    func loadToken(from path: String, fileIO: NonBlockingFileIO) async throws -> SSOToken {
+    func loadToken(from path: String, profileName: String, fileIO: NonBlockingFileIO) async throws -> SSOToken {
         let byteBuffer: ByteBuffer
         do {
             byteBuffer = try await fileIO.withFileRegion(path: path) { fileRegion in
@@ -73,7 +73,7 @@ struct SSOTokenManager {
                 )
             }
         } catch {
-            throw AWSSSOCredentialError.invalidTokenFormat("Cannot read token file at \(path)")
+            throw AWSSSOCredentialError.tokenCacheNotFound(profileName)
         }
 
         guard let data = byteBuffer.getData(at: 0, length: byteBuffer.readableBytes) else {
@@ -121,11 +121,10 @@ struct SSOTokenManager {
         threadPool: NIOThreadPool,
         logger: Logger
     ) async throws -> SSOToken {
-        var token = try await loadToken(from: tokenPath, fileIO: fileIO)
+        var token = try await loadToken(from: tokenPath, profileName: profileName, fileIO: fileIO)
 
-        // Parse expiration
-        let formatter = ISO8601DateFormatter()
-        guard let expiration = formatter.date(from: token.expiresAt) else {
+        // Parse expiration (try with fractional seconds first, then without)
+        guard let expiration = Self.parseISO8601Date(token.expiresAt) else {
             throw AWSSSOCredentialError.invalidTokenFormat("Invalid expiresAt date format: \(token.expiresAt)")
         }
 
@@ -146,7 +145,7 @@ struct SSOTokenManager {
 
             // Check client registration hasn't expired
             if let regExpiry = token.registrationExpiresAt {
-                if let registrationExpiration = formatter.date(from: regExpiry) {
+                if let registrationExpiration = Self.parseISO8601Date(regExpiry) {
                     guard registrationExpiration > Date() else {
                         throw AWSSSOCredentialError.clientRegistrationExpired(profileName)
                     }
@@ -186,20 +185,18 @@ struct SSOTokenManager {
     ) async throws -> SSOToken {
         let endpoint = "oidc.\(region.rawValue).amazonaws.com"
 
-        // Build form-encoded body manually
-        let formParams = [
-            "grant_type=refresh_token",
-            "client_id=\(RequestEncodingContainer.urlEncodeQueryParam(clientId))",
-            "client_secret=\(RequestEncodingContainer.urlEncodeQueryParam(clientSecret))",
-            "refresh_token=\(RequestEncodingContainer.urlEncodeQueryParam(refreshToken))",
+        // Build JSON body per SSO-OIDC CreateToken API spec
+        let requestBody: [String: String] = [
+            "grantType": "refresh_token",
+            "clientId": clientId,
+            "clientSecret": clientSecret,
+            "refreshToken": refreshToken,
         ]
-        let bodyString = formParams.joined(separator: "&")
-        let bodyData = Data(bodyString.utf8)
+        let bodyData = try JSONEncoder().encode(requestBody)
 
         // Create HTTP request
         var headers = HTTPHeaders()
-        headers.add(name: "Content-Type", value: "application/x-www-form-urlencoded")
-        headers.add(name: "Accept", value: "application/json")
+        headers.add(name: "Content-Type", value: "application/json")
         headers.add(name: "Host", value: endpoint)
         headers.add(name: "Content-Length", value: "\(bodyData.count)")
 
@@ -244,4 +241,24 @@ struct SSOTokenManager {
         )
     }
 
+    // MARK: - Date Parsing
+
+    /// Parse an ISO8601 date string, trying with fractional seconds first then without.
+    /// AWS CLI writes dates with fractional seconds (e.g., "2026-02-18T16:59:23.216Z").
+    nonisolated(unsafe) private static let iso8601Formatters: [ISO8601DateFormatter] = {
+        let withFractional = ISO8601DateFormatter()
+        withFractional.formatOptions = [.withFullDate, .withFullTime, .withFractionalSeconds]
+        let withoutFractional = ISO8601DateFormatter()
+        withoutFractional.formatOptions = [.withFullDate, .withFullTime]
+        return [withFractional, withoutFractional]
+    }()
+
+    static func parseISO8601Date(_ string: String) -> Date? {
+        for formatter in iso8601Formatters {
+            if let date = formatter.date(from: string) {
+                return date
+            }
+        }
+        return nil
+    }
 }

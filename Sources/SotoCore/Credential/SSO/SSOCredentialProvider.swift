@@ -69,19 +69,14 @@ public struct SSOCredentialProvider: CredentialProvider {
         let tokenPath = try tokenManager.constructTokenPath(config: config)
 
         // Load token from cache (with automatic refresh if modern format)
-        let token: SSOToken
-        do {
-            token = try await tokenManager.getToken(
-                from: tokenPath,
-                config: config,
-                profileName: profile,
-                fileIO: fileIO,
-                threadPool: threadPool,
-                logger: logger
-            )
-        } catch let error as AWSSSOCredentialError where error.code == "invalidTokenFormat" {
-            throw AWSSSOCredentialError.tokenCacheNotFound(profile)
-        }
+        let token = try await tokenManager.getToken(
+            from: tokenPath,
+            config: config,
+            profileName: profile,
+            fileIO: fileIO,
+            threadPool: threadPool,
+            logger: logger
+        )
 
         // Call SSO GetRoleCredentials API
         let credentials = try await getRoleCredentials(

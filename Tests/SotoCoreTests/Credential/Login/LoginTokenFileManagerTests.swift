@@ -24,7 +24,7 @@ import Testing
 
 @Suite("Token File Manager")
 final class TokenFileManagerTests {
-    let manager = TokenFileManager()
+    let manager = LoginTokenFileManager()
 
     // Helper to create a unique temp directory for each test
     func createTempDirectory() throws -> URL {

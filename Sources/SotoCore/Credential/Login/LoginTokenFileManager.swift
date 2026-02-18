@@ -19,7 +19,7 @@ import Foundation
 import NIOCore
 import NIOPosix
 
-struct TokenFileManager {
+struct LoginTokenFileManager {
     private struct AccessToken: Codable {
         let accessKeyId: String
         let secretAccessKey: String

@@ -538,6 +538,9 @@ extension _XMLEncoder {
     }
 
     func box(_ date: Date) throws -> XML.Element? {
+        #if canImport(FoundationEssentials)
+        return XML.Element(name: self.currentKey, stringValue: date.formatted(Date.ISO8601FormatStyle(includingFractionalSeconds: true)))
+        #else
         if #available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) {
             return XML.Element(name: self.currentKey, stringValue: date.formatted(Date.ISO8601FormatStyle(includingFractionalSeconds: true)))
         } else {
@@ -545,6 +548,7 @@ extension _XMLEncoder {
             formatterWithSeconds.formatOptions = [.withFullDate, .withFullTime, .withFractionalSeconds]
             return XML.Element(name: self.currentKey, stringValue: formatterWithSeconds.string(from: date))
         }
+        #endif
     }
 
     func box(_ data: Data) throws -> XML.Element? {

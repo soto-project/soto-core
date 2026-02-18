@@ -97,11 +97,15 @@ struct TokenFileManager {
         // Parse expiresAt if present
         var expiresAt: Date?
         if let accessToken = tokenData.accessToken, !accessToken.expiresAt.isEmpty {
+            #if canImport(FoundationEssentials)
+            expiresAt = try? Date(accessToken.expiresAt, strategy: .iso8601)
+            #else
             if #available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) {
                 expiresAt = try? Date(accessToken.expiresAt, strategy: .iso8601)
             } else {
                 expiresAt = ISO8601DateFormatter().date(from: accessToken.expiresAt)
             }
+            #endif
         }
 
         return LoginToken(
@@ -122,11 +126,15 @@ struct TokenFileManager {
         // Parse ISO8601 date if we have expiresAt
         let expiresAtString: String
         if let expiresAt = token.expiresAt {
+            #if canImport(FoundationEssentials)
+            expiresAtString = expiresAt.formatted(.iso8601)
+            #else
             if #available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) {
                 expiresAtString = expiresAt.formatted(.iso8601)
             } else {
                 expiresAtString = ISO8601DateFormatter().string(from: expiresAt)
             }
+            #endif
         } else {
             expiresAtString = ""
         }

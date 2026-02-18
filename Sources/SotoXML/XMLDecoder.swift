@@ -652,6 +652,14 @@ private class _XMLDecoder: Decoder {
         }
 
         let string = try self.unbox(element, as: String.self)
+        #if canImport(FoundationEssentials)
+        if let date = try? Date(string, strategy: .iso8601) {
+            return date
+        }
+        if let date = try? Date(string, strategy: Date.ISO8601FormatStyle(includingFractionalSeconds: true)) {
+            return date
+        }
+        #else
         if #available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) {
             if let date = try? Date(string, strategy: .iso8601) {
                 return date
@@ -671,6 +679,7 @@ private class _XMLDecoder: Decoder {
                 return date
             }
         }
+        #endif
         throw DecodingError.dataCorrupted(
             DecodingError.Context(codingPath: self.codingPath, debugDescription: "Date string does not match format expected")
         )

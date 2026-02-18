@@ -22,13 +22,30 @@
 //   await #expect { ... } throws: { error in (error as? AWSSSOCredentialError)?.code == "expectedCode" }
 
 import Crypto
-import Foundation
 import Logging
 import NIOCore
 import NIOHTTP1
 import Testing
 
 @testable import SotoCore
+
+#if canImport(Glibc)
+import Glibc
+#elseif canImport(Musl)
+import Musl
+#elseif canImport(Darwin)
+import Darwin.C
+#elseif canImport(Android)
+import Android
+#else
+#error("Unsupported platform")
+#endif
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 @Suite("SSO Credential Provider", .serialized)
 final class SSOCredentialProviderTests {
@@ -362,11 +379,16 @@ final class SSOCredentialProviderTests {
                     #expect(request.method == .POST)
                     #expect(request.headers["Content-Type"].first == "application/json")
 
+                    struct CreateTokenRequest: Decodable {
+                        let grantType: String
+                        let clientId: String
+                        let refreshToken: String
+                    }
                     let bodyBuffer = try await request.body.collect(upTo: 1024 * 1024)
-                    let bodyJSON = try JSONSerialization.jsonObject(with: Data(buffer: bodyBuffer)) as! [String: String]
-                    #expect(bodyJSON["grantType"] == "refresh_token")
-                    #expect(bodyJSON["clientId"] == "client-id")
-                    #expect(bodyJSON["refreshToken"] == "refresh-token-value")
+                    let body = try JSONDecoder().decode(CreateTokenRequest.self, from: Data(buffer: bodyBuffer))
+                    #expect(body.grantType == "refresh_token")
+                    #expect(body.clientId == "client-id")
+                    #expect(body.refreshToken == "refresh-token-value")
 
                     return Self.makeCreateTokenResponse()
                 } else {
@@ -716,7 +738,7 @@ final class SSOCredentialProviderTests {
     // MARK: - Low-Level Helpers
 
     private func iso8601(offsetFromNow seconds: TimeInterval) -> String {
-        ISO8601DateFormatter().string(from: Date(timeIntervalSinceNow: seconds))
+        ISO8601DateCoder.string(from: Date(timeIntervalSinceNow: seconds)) ?? ""
     }
 
     private func withTempDirectory<T>(_ body: (URL) async throws -> T) async throws -> T {

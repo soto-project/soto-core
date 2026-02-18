@@ -20,14 +20,23 @@ import NIOCore
 import NIOFoundationCompat
 import NIOPosix
 
-import struct Foundation.Data
-import struct Foundation.Date
-import class Foundation.ISO8601DateFormatter
-import class Foundation.JSONDecoder
-import class Foundation.JSONEncoder
-import class Foundation.ProcessInfo
-import struct Foundation.TimeInterval
-import struct Foundation.URL
+#if canImport(Glibc)
+import Glibc
+#elseif canImport(Musl)
+import Musl
+#elseif canImport(Darwin)
+import Darwin.C
+#elseif canImport(Android)
+import Android
+#else
+#error("Unsupported platform")
+#endif
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 struct SSOTokenManager {
     private let httpClient: AWSHTTPClient
@@ -226,12 +235,11 @@ struct SSOTokenManager {
 
         // Calculate new expiration
         let newExpiration = Date(timeIntervalSinceNow: TimeInterval(tokenResponse.expiresIn))
-        let formatter = ISO8601DateFormatter()
 
         // Return updated token, preserving original fields where new values not provided
         return SSOToken(
             accessToken: tokenResponse.accessToken,
-            expiresAt: formatter.string(from: newExpiration),
+            expiresAt: ISO8601DateCoder.string(from: newExpiration) ?? "",
             refreshToken: tokenResponse.refreshToken ?? refreshToken,
             clientId: clientId,
             clientSecret: clientSecret,
@@ -243,22 +251,23 @@ struct SSOTokenManager {
 
     // MARK: - Date Parsing
 
-    /// Parse an ISO8601 date string, trying with fractional seconds first then without.
+    /// Parse an ISO8601 date string, handling both with and without fractional seconds.
     /// AWS CLI writes dates with fractional seconds (e.g., "2026-02-18T16:59:23.216Z").
-    nonisolated(unsafe) private static let iso8601Formatters: [ISO8601DateFormatter] = {
-        let withFractional = ISO8601DateFormatter()
-        withFractional.formatOptions = [.withFullDate, .withFullTime, .withFractionalSeconds]
-        let withoutFractional = ISO8601DateFormatter()
-        withoutFractional.formatOptions = [.withFullDate, .withFullTime]
-        return [withFractional, withoutFractional]
-    }()
-
     static func parseISO8601Date(_ string: String) -> Date? {
-        for formatter in iso8601Formatters {
-            if let date = formatter.date(from: string) {
+        #if canImport(FoundationEssentials)
+        if let date = try? Date(string, strategy: Date.ISO8601FormatStyle(includingFractionalSeconds: true)) {
+            return date
+        }
+        return try? Date(string, strategy: .iso8601)
+        #else
+        if #available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) {
+            if let date = try? Date(string, strategy: Date.ISO8601FormatStyle(includingFractionalSeconds: true)) {
                 return date
             }
+            return try? Date(string, strategy: .iso8601)
+        } else {
+            return ISO8601DateCoder.dateFormatters.lazy.compactMap { $0.date(from: string) }.first
         }
-        return nil
+        #endif
     }
 }

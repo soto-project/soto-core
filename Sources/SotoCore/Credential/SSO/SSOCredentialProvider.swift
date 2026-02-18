@@ -21,13 +21,11 @@ import NIOFoundationCompat
 import NIOPosix
 import SotoSignerV4
 
-import struct Foundation.Data
-import struct Foundation.Date
-import class Foundation.ISO8601DateFormatter
-import class Foundation.JSONDecoder
-import class Foundation.ProcessInfo
-import struct Foundation.TimeInterval
-import struct Foundation.URL
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 // MARK: - SSO Credential Provider
 

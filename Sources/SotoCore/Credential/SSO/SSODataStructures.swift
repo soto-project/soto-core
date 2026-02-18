@@ -14,14 +14,11 @@
 
 // SSO Configuration, Token, and Error Types
 
-import struct Foundation.CharacterSet
-import struct Foundation.Data
-import struct Foundation.Date
-import class Foundation.ISO8601DateFormatter
-import class Foundation.JSONDecoder
-import class Foundation.JSONEncoder
-import struct Foundation.TimeInterval
-import struct Foundation.URL
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 // MARK: - SSO Configuration
 

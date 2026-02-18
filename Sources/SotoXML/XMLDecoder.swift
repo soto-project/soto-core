@@ -652,11 +652,24 @@ private class _XMLDecoder: Decoder {
         }
 
         let string = try self.unbox(element, as: String.self)
-        if let date = try? Date(string, strategy: .iso8601) {
-            return date
-        }
-        if let date = try? Date(string, strategy: Date.ISO8601FormatStyle(includingFractionalSeconds: true)) {
-            return date
+        if #available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) {
+            if let date = try? Date(string, strategy: .iso8601) {
+                return date
+            }
+            if let date = try? Date(string, strategy: Date.ISO8601FormatStyle(includingFractionalSeconds: true)) {
+                return date
+            }
+        } else {
+            let formatterWithSeconds = ISO8601DateFormatter()
+            formatterWithSeconds.formatOptions = [.withFullDate, .withFullTime, .withFractionalSeconds]
+            if let date = formatterWithSeconds.date(from: string) {
+                return date
+            }
+            let formatterWithoutSeconds = ISO8601DateFormatter()
+            formatterWithoutSeconds.formatOptions = [.withFullDate, .withFullTime]
+            if let date = formatterWithoutSeconds.date(from: string) {
+                return date
+            }
         }
         throw DecodingError.dataCorrupted(
             DecodingError.Context(codingPath: self.codingPath, debugDescription: "Date string does not match format expected")

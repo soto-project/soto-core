@@ -125,7 +125,7 @@ public struct LoginCredentialProvider: CredentialProvider {
         headers.add(name: "DPoP", value: dpopHeader)
         // Extract host from endpoint (remove protocol if present)
         let host =
-            if #available(macOS 13.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *) {
+            if #available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *) {
                 configuration.endpoint
                     .replacing("https://", with: "")
                     .replacing("http://", with: "")

@@ -15,12 +15,17 @@
 // Token File Manager Tests
 
 import Crypto
-import Foundation
 import NIOCore
 import NIOPosix
 import Testing
 
 @testable import SotoCore
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 @Suite("Token File Manager")
 final class TokenFileManagerTests {
@@ -131,14 +136,17 @@ final class TokenFileManagerTests {
 
         // Verify saved file
         let savedData = try Data(contentsOf: URL(fileURLWithPath: newTokenPath))
-        let savedJSON = try JSONSerialization.jsonObject(with: savedData) as! [String: Any]
-
-        let accessToken = savedJSON["accessToken"] as! [String: Any]
-        #expect(accessToken["accessKeyId"] as? String == "AKIANEW456")
-        #expect(accessToken["secretAccessKey"] as? String == "newsecret456")
-        #expect(accessToken["sessionToken"] as? String == "newsession456")
-        #expect(savedJSON["refreshToken"] as? String == "newrefresh456")
-        #expect(savedJSON["idToken"] as? String == "idtoken123")  // Preserved
+        struct RequestValues: Decodable {
+            let accessToken: [String: String]
+            let idToken: String
+            let refreshToken: String
+        }
+        let request = try JSONDecoder().decode(RequestValues.self, from: savedData)
+        #expect(request.accessToken["accessKeyId"] == "AKIANEW456")
+        #expect(request.accessToken["secretAccessKey"] == "newsecret456")
+        #expect(request.accessToken["sessionToken"] == "newsession456")
+        #expect(request.idToken == "idtoken123")  // Preserved
+        #expect(request.refreshToken == "newrefresh456")
     }
 
     @Test("Load token from nonexistent file throws error")

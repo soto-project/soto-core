@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Crypto
-// TODO: Need to replace percent encode
+// TODO: FoundationEssentials (percent encode)
 import Foundation
 @_spi(SotoInternal) import SotoSignerV4
 internal import SotoXML

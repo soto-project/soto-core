@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-// TODO: FoundationEssentials
+// TODO: FoundationEssentials. (NSRegularExpression)
 import Foundation
 
 /// Protocol for the input and output objects for all AWS service commands.

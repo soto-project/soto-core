@@ -15,13 +15,18 @@
 // Login Credential Provider Tests
 
 import Crypto
-import Foundation
 import Logging
 import NIOCore
 import NIOHTTP1
 import Testing
 
 @testable import SotoCore
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 @Suite("Login Credential Provider", .serialized)
 final class LoginCredentialProviderTests {
@@ -86,10 +91,15 @@ final class LoginCredentialProviderTests {
             // Verify request body
             let bodyBuffer = try await request.body.collect(upTo: 1024 * 1024)
             let bodyData = Data(buffer: bodyBuffer)
-            let json = try JSONSerialization.jsonObject(with: bodyData) as! [String: String]
-            #expect(json["clientId"] == "client-id-123")
-            #expect(json["refreshToken"] == "refresh-token-123")
-            #expect(json["grantType"] == "refresh_token")
+            struct RequestValues: Decodable {
+                let clientId: String
+                let refreshToken: String
+                let grantType: String
+            }
+            let request = try JSONDecoder().decode(RequestValues.self, from: bodyData)
+            #expect(request.clientId == "client-id-123")
+            #expect(request.refreshToken == "refresh-token-123")
+            #expect(request.grantType == "refresh_token")
 
             // Return mock response
             let responseJSON = """
@@ -134,12 +144,15 @@ final class LoginCredentialProviderTests {
 
         // Verify token file was updated
         let updatedTokenData = try Data(contentsOf: tokenPath)
-        let updatedJSON = try JSONSerialization.jsonObject(with: updatedTokenData) as! [String: Any]
-        #expect(updatedJSON["refreshToken"] as? String == "new-refresh-token-456")
-        #expect(updatedJSON["idToken"] as? String == "id-token-123")  // Preserved
-
-        let updatedAccessToken = updatedJSON["accessToken"] as! [String: Any]
-        #expect(updatedAccessToken["accessKeyId"] as? String == "AKIANEW456")
+        struct RequestValues: Decodable {
+            let accessToken: [String: String]
+            let idToken: String
+            let refreshToken: String
+        }
+        let request = try JSONDecoder().decode(RequestValues.self, from: updatedTokenData)
+        #expect(request.accessToken["accessKeyId"] == "AKIANEW456")
+        #expect(request.idToken == "id-token-123")  // Preserved
+        #expect(request.refreshToken == "new-refresh-token-456")
     }
 
     @Test("Get credentials with HTTP error returns proper error")

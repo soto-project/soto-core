@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Crypto
-// TODO: Use FoundationEssentials
+// TODO: FoundationEssentials (percent encoding)
 import Foundation
 
 /// Amazon Web Services V4 Signer

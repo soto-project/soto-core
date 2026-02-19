@@ -21,25 +21,12 @@
 // On Swift 6.0 it returns Void, so we use the closure-based validation pattern instead:
 //   await #expect { ... } throws: { error in (error as? AWSSSOCredentialError)?.code == "expectedCode" }
 
-import Crypto
 import Logging
 import NIOCore
 import NIOHTTP1
 import Testing
 
 @testable import SotoCore
-
-#if canImport(Glibc)
-import Glibc
-#elseif canImport(Musl)
-import Musl
-#elseif canImport(Darwin)
-import Darwin.C
-#elseif canImport(Android)
-import Android
-#else
-#error("Unsupported platform")
-#endif
 
 #if canImport(FoundationEssentials)
 import FoundationEssentials
@@ -76,7 +63,7 @@ final class SSOCredentialProviderTests: Sendable {
             )
 
             let provider = SSOCredentialProvider(configuration: config, httpClient: mockHTTPClient)
-            let credential = try await provider.getCredential(logger: logger)
+            let credential = try await provider.getCredential(logger: self.logger)
 
             #expect(credential.accessKeyId == "AKIATEST123")
             #expect(credential.secretAccessKey == "testsecret")
@@ -94,7 +81,7 @@ final class SSOCredentialProviderTests: Sendable {
             }
 
             let provider = SSOCredentialProvider(configuration: self.makeLegacyConfig(), httpClient: mockHTTPClient)
-            let credential = try await provider.getCredential(logger: logger)
+            let credential = try await provider.getCredential(logger: self.logger)
 
             #expect(credential.accessKeyId == "AKIALEGACY")
             #expect(credential.secretAccessKey == "legacysecret")
@@ -129,7 +116,7 @@ final class SSOCredentialProviderTests: Sendable {
             }
 
             let provider = SSOCredentialProvider(profileName: "dev", configPath: env.configPath!, httpClient: mockHTTPClient)
-            let credential = try await provider.getCredential(logger: logger)
+            let credential = try await provider.getCredential(logger: self.logger)
             #expect(credential.accessKeyId == "AKIACONFIG")
         }
     }
@@ -158,7 +145,7 @@ final class SSOCredentialProviderTests: Sendable {
             }
 
             let provider = SSOCredentialProvider(profileName: "legacy", configPath: env.configPath!, httpClient: mockHTTPClient)
-            let credential = try await provider.getCredential(logger: logger)
+            let credential = try await provider.getCredential(logger: self.logger)
             #expect(credential.accessKeyId == "AKIALEGACYCFG")
         }
     }
@@ -184,7 +171,7 @@ final class SSOCredentialProviderTests: Sendable {
 
             // No profileName = defaults to "default"
             let provider = SSOCredentialProvider(configPath: env.configPath!, httpClient: mockHTTPClient)
-            let credential = try await provider.getCredential(logger: logger)
+            let credential = try await provider.getCredential(logger: self.logger)
             #expect(credential.accessKeyId == "AKIADEFAULT")
         }
     }
@@ -292,159 +279,6 @@ final class SSOCredentialProviderTests: Sendable {
         }
     }
 
-    // MARK: - Token Cache Tests
-
-    @Test("Invalid token JSON throws invalidTokenFormat error")
-    func invalidTokenJSON() async throws {
-        try await withSSOEnvironment(cacheKey: "https://test.awsapps.com/start", tokenJSON: "{ not valid json") { env in
-            let provider = SSOCredentialProvider(configuration: self.makeLegacyConfig(), httpClient: MockAWSHTTPClient())
-
-            await #expect {
-                try await provider.getCredential(logger: self.logger)
-            } throws: { error in
-                (error as? AWSSSOCredentialError)?.code == "invalidTokenFormat"
-            }
-        }
-    }
-
-    @Test("Invalid expiresAt date format throws invalidTokenFormat error")
-    func invalidExpiresAtFormat() async throws {
-        let tokenJSON = """
-            {
-                "accessToken": "test-token",
-                "expiresAt": "not-a-date"
-            }
-            """
-
-        try await withSSOEnvironment(cacheKey: "https://test.awsapps.com/start", tokenJSON: tokenJSON) { env in
-            let provider = SSOCredentialProvider(configuration: self.makeLegacyConfig(), httpClient: MockAWSHTTPClient())
-
-            await #expect {
-                try await provider.getCredential(logger: self.logger)
-            } throws: { error in
-                (error as? AWSSSOCredentialError)?.code == "invalidTokenFormat"
-            }
-        }
-    }
-
-    @Test("Token cache not found throws tokenCacheNotFound error")
-    func tokenCacheNotFound() async throws {
-        try await withTempCacheDirectory { cacheDirectory in
-            // Use a cache directory but no token file
-            let provider = SSOCredentialProvider(
-                configuration: self.makeLegacyConfig(startUrl: "https://nonexistent.awsapps.com/start"),
-                httpClient: MockAWSHTTPClient()
-            )
-
-            await #expect {
-                try await provider.getCredential(logger: self.logger)
-            } throws: { error in
-                (error as? AWSSSOCredentialError)?.code == "tokenCacheNotFound"
-            }
-        }
-    }
-
-    @Test("Expired legacy token without refresh throws tokenExpired error")
-    func expiredLegacyToken() async throws {
-        let startUrl = "https://test.awsapps.com/start"
-        try await withSSOEnvironment(cacheKey: startUrl, expiresIn: -3600, accessToken: "expired-token") { env in
-            let provider = SSOCredentialProvider(configuration: self.makeLegacyConfig(), httpClient: MockAWSHTTPClient())
-
-            await #expect {
-                try await provider.getCredential(logger: self.logger)
-            } throws: { error in
-                (error as? AWSSSOCredentialError)?.code == "tokenExpired"
-            }
-        }
-    }
-
-    // MARK: - Token Refresh Tests (Modern Format)
-
-    @Test("Modern token within refresh window triggers refresh")
-    func modernTokenRefresh() async throws {
-        try await withSSOEnvironment(
-            cacheKey: "my-sso",
-            tokenJSON: makeModernTokenJSON(accessToken: "expiring-soon-token")
-        ) { env in
-            let requestCounter = RequestCounter()
-            let mockHTTPClient = MockAWSHTTPClient { request in
-                await requestCounter.record(request.url.absoluteString)
-
-                if request.url.absoluteString.contains("oidc.") {
-                    #expect(request.method == .POST)
-                    #expect(request.headers["Content-Type"].first == "application/json")
-
-                    struct CreateTokenRequest: Decodable {
-                        let grantType: String
-                        let clientId: String
-                        let refreshToken: String
-                    }
-                    let bodyBuffer = try await request.body.collect(upTo: 1024 * 1024)
-                    let body = try JSONDecoder().decode(CreateTokenRequest.self, from: Data(buffer: bodyBuffer))
-                    #expect(body.grantType == "refresh_token")
-                    #expect(body.clientId == "client-id")
-                    #expect(body.refreshToken == "refresh-token-value")
-
-                    return self.makeCreateTokenResponse()
-                } else {
-                    #expect(request.headers["x-amz-sso_bearer_token"].first == "refreshed-access-token")
-                    return self.makeRoleCredentialsResponse(
-                        accessKeyId: "AKIAREFRESHED",
-                        secretAccessKey: "refreshedsecret",
-                        sessionToken: "refreshedsession"
-                    )
-                }
-            }
-
-            let provider = SSOCredentialProvider(configuration: self.makeModernConfig(), httpClient: mockHTTPClient)
-            let credential = try await provider.getCredential(logger: self.logger)
-
-            let refreshUrls = await requestCounter.urls
-            #expect(refreshUrls.count == 2)
-            #expect(credential.accessKeyId == "AKIAREFRESHED")
-            #expect(credential.secretAccessKey == "refreshedsecret")
-            #expect(credential.sessionToken == "refreshedsession")
-
-            // Verify token file was updated
-            let updatedTokenData = try Data(contentsOf: env.tokenPath!)
-            let updatedToken = try JSONDecoder().decode(SSOToken.self, from: updatedTokenData)
-            #expect(updatedToken.accessToken == "refreshed-access-token")
-            #expect(updatedToken.refreshToken == "new-refresh-token")
-            #expect(updatedToken.clientId == "client-id")
-            #expect(updatedToken.clientSecret == "client-secret")
-        }
-    }
-
-    @Test("Token refresh failure throws tokenRefreshFailed error")
-    func tokenRefreshFailure() async throws {
-        try await withSSOEnvironment(cacheKey: "my-sso", tokenJSON: makeModernTokenJSON()) { env in
-            let mockHTTPClient = MockAWSHTTPClient { _ in (.badRequest, Data()) }
-            let provider = SSOCredentialProvider(configuration: self.makeModernConfig(), httpClient: mockHTTPClient)
-
-            await #expect {
-                try await provider.getCredential(logger: self.logger)
-            } throws: { error in
-                (error as? AWSSSOCredentialError)?.code == "tokenRefreshFailed"
-            }
-        }
-    }
-
-    @Test("Client registration expired throws clientRegistrationExpired error")
-    func clientRegistrationExpired() async throws {
-        try await withSSOEnvironment(
-            cacheKey: "my-sso",
-            tokenJSON: makeModernTokenJSON(registrationExpiresIn: -3600)
-        ) { env in
-            let provider = SSOCredentialProvider(configuration: self.makeModernConfig(), httpClient: MockAWSHTTPClient())
-
-            await #expect {
-                try await provider.getCredential(logger: self.logger)
-            } throws: { error in
-                (error as? AWSSSOCredentialError)?.code == "clientRegistrationExpired"
-            }
-        }
-    }
-
     // MARK: - GetRoleCredentials API Tests
 
     @Test("GetRoleCredentials HTTP error throws getRoleCredentialsFailed")
@@ -476,30 +310,6 @@ final class SSOCredentialProviderTests: Sendable {
         }
     }
 
-    // MARK: - Token Path Construction Tests
-
-    @Test("Token path uses SHA-1 hash of session name for modern format")
-    func tokenPathModernFormat() throws {
-        let tokenManager = SSOTokenManager(httpClient: MockAWSHTTPClient())
-        let path = try tokenManager.constructTokenPath(config: makeModernConfig())
-
-        let expectedHash = Insecure.SHA1.hash(data: Data("my-sso".utf8))
-            .compactMap { String(format: "%02x", $0) }.joined()
-        #expect(path.hasSuffix("\(expectedHash).json"))
-        #expect(path.contains(ssoCacheDirectory))
-    }
-
-    @Test("Token path uses SHA-1 hash of start URL for legacy format")
-    func tokenPathLegacyFormat() throws {
-        let tokenManager = SSOTokenManager(httpClient: MockAWSHTTPClient())
-        let path = try tokenManager.constructTokenPath(config: makeLegacyConfig())
-
-        let expectedHash = Insecure.SHA1.hash(data: Data("https://test.awsapps.com/start".utf8))
-            .compactMap { String(format: "%02x", $0) }.joined()
-        #expect(path.hasSuffix("\(expectedHash).json"))
-        #expect(path.contains(ssoCacheDirectory))
-    }
-
     // MARK: - Valid Token (No Refresh Needed) Tests
 
     @Test("Valid token does not trigger refresh or HTTP call for token")
@@ -524,256 +334,5 @@ final class SSOCredentialProviderTests: Sendable {
             #expect(!urls[0].contains("oidc"))
             #expect(credential.accessKeyId == "AKIAVALID")
         }
-    }
-
-    // MARK: - Error Type Tests
-
-    @Test("AWSSSOCredentialError is Equatable")
-    func errorEquatable() {
-        let error1 = AWSSSOCredentialError.profileNotFound("test")
-        let error2 = AWSSSOCredentialError.profileNotFound("test")
-        let error3 = AWSSSOCredentialError.tokenExpired("test")
-
-        #expect(error1 == error2)
-        #expect(error1 != error3)
-    }
-
-    @Test("AWSSSOCredentialError description format")
-    func errorDescription() {
-        let error = AWSSSOCredentialError.profileNotFound("dev")
-        #expect(error.description.contains("profileNotFound"))
-        #expect(error.description.contains("dev"))
-    }
-
-    @Test("Provider is immutable")
-    func providerIsImmutable() throws {
-        let provider = SSOCredentialProvider(profileName: "test", httpClient: MockAWSHTTPClient())
-        #expect(provider.description.contains("SSOCredentialProvider"))
-    }
-
-    // MARK: - Fixture Builders
-
-    /// Build a legacy SSOConfiguration (no session name, no refresh)
-    private func makeLegacyConfig(
-        startUrl: String = "https://test.awsapps.com/start",
-        ssoRegion: Region = .useast1,
-        accountId: String = "123456789012",
-        roleName: String = "TestRole"
-    ) -> SSOConfiguration {
-        SSOConfiguration(
-            ssoStartUrl: startUrl,
-            ssoRegion: ssoRegion,
-            ssoAccountId: accountId,
-            ssoRoleName: roleName,
-            region: ssoRegion,
-            sessionName: nil
-        )
-    }
-
-    /// Build a modern SSOConfiguration (with session name, supports refresh)
-    private func makeModernConfig(
-        startUrl: String = "https://test.awsapps.com/start",
-        ssoRegion: Region = .useast1,
-        accountId: String = "123456789012",
-        roleName: String = "TestRole",
-        sessionName: String = "my-sso"
-    ) -> SSOConfiguration {
-        SSOConfiguration(
-            ssoStartUrl: startUrl,
-            ssoRegion: ssoRegion,
-            ssoAccountId: accountId,
-            ssoRoleName: roleName,
-            region: ssoRegion,
-            sessionName: sessionName
-        )
-    }
-
-    /// Build a modern token JSON with refresh fields.
-    /// Token expires within the 15-min refresh window by default (triggers refresh).
-    private func makeModernTokenJSON(
-        accessToken: String = "test-access-token",
-        expiresIn: TimeInterval = 10 * 60,
-        refreshToken: String = "refresh-token-value",
-        clientId: String = "client-id",
-        clientSecret: String = "client-secret",
-        registrationExpiresIn: TimeInterval = 90 * 24 * 3600
-    ) -> String {
-        """
-        {
-            "accessToken": "\(accessToken)",
-            "expiresAt": "\(iso8601(offsetFromNow: expiresIn))",
-            "refreshToken": "\(refreshToken)",
-            "clientId": "\(clientId)",
-            "clientSecret": "\(clientSecret)",
-            "registrationExpiresAt": "\(iso8601(offsetFromNow: registrationExpiresIn))",
-            "startUrl": "https://test.awsapps.com/start",
-            "region": "us-east-1"
-        }
-        """
-    }
-
-    /// Build a successful GetRoleCredentials response
-    private func makeRoleCredentialsResponse(
-        accessKeyId: String = "AKIATEST123",
-        secretAccessKey: String = "testsecret",
-        sessionToken: String = "testsession"
-    ) -> (HTTPResponseStatus, Data) {
-        let json = """
-            {
-                "roleCredentials": {
-                    "accessKeyId": "\(accessKeyId)",
-                    "secretAccessKey": "\(secretAccessKey)",
-                    "sessionToken": "\(sessionToken)",
-                    "expiration": \(Int64(Date(timeIntervalSinceNow: 3600).timeIntervalSince1970 * 1000))
-                }
-            }
-            """
-        return (.ok, json.data(using: .utf8)!)
-    }
-
-    /// Build a successful SSO-OIDC CreateToken refresh response
-    private func makeCreateTokenResponse(
-        accessToken: String = "refreshed-access-token",
-        refreshToken: String = "new-refresh-token"
-    ) -> (HTTPResponseStatus, Data) {
-        let json = """
-            {
-                "accessToken": "\(accessToken)",
-                "expiresIn": 28800,
-                "tokenType": "Bearer",
-                "refreshToken": "\(refreshToken)"
-            }
-            """
-        return (.ok, json.data(using: .utf8)!)
-    }
-
-    // MARK: - Test Environment Helpers
-
-    private let ssoCacheDirectory = ".aws/sso/cache"
-
-    /// Context passed to test closures by `withSSOEnvironment`
-    struct TestEnvironment {
-        let tempDirectory: URL
-        let tokenPath: URL?
-        let configPath: String?
-    }
-
-    /// Set up a temp directory with a token cache file and HOME override.
-    /// Optionally writes a config file.
-    private func withSSOEnvironment<T>(
-        cacheKey: String,
-        expiresIn: TimeInterval = 3600,
-        accessToken: String = "test-access-token",
-        configContent: String? = nil,
-        body: (TestEnvironment) async throws -> T
-    ) async throws -> T {
-        let tokenJSON = """
-            {
-                "accessToken": "\(accessToken)",
-                "expiresAt": "\(iso8601(offsetFromNow: expiresIn))"
-            }
-            """
-        return try await withSSOEnvironment(
-            cacheKey: cacheKey,
-            tokenJSON: tokenJSON,
-            configContent: configContent,
-            body: body
-        )
-    }
-
-    /// Core environment setup: temp directory + token cache + HOME override + optional config file.
-    private func withSSOEnvironment<T>(
-        cacheKey: String,
-        tokenJSON: String,
-        configContent: String? = nil,
-        body: (TestEnvironment) async throws -> T
-    ) async throws -> T {
-        try await withTempCacheDirectory { cacheDir in
-            let tokenPath = try self.createTokenFile(cacheKey: cacheKey, tokenJSON: tokenJSON, inDirectory: cacheDir)
-
-            var configPath: String?
-            if let configContent {
-                let configURL = cacheDir.appendingPathComponent("config")
-                try configContent.write(to: configURL, atomically: true, encoding: .utf8)
-                configPath = configURL.path
-            }
-
-            let env = TestEnvironment(tempDirectory: cacheDir, tokenPath: tokenPath, configPath: configPath)
-            return try await body(env)
-        }
-    }
-
-    /// Create a `.aws/sso/cache` directory in a temporary directory
-    /// and set the HOME env variable with the new temporary directory
-    private func withTempCacheDirectory<T>(body: (URL) async throws -> T) async throws -> T {
-        try await withTempDirectory { tempDirectory in
-            let cacheDir = tempDirectory.appendingPathComponent(ssoCacheDirectory)
-            try FileManager.default.createDirectory(at: cacheDir, withIntermediateDirectories: true)
-            return try await withEnvironmentVariables(["HOME": tempDirectory.path]) {
-                try await body(cacheDir)
-            }
-        }
-    }
-
-    /// Write a config file to a temp directory and pass its path to the body.
-    private func withConfigFile<T>(_ content: String, body: (String) async throws -> T) async throws -> T {
-        try await withTempDirectory { tempDirectory in
-            let configURL = tempDirectory.appendingPathComponent("config")
-            try content.write(to: configURL, atomically: true, encoding: .utf8)
-            return try await body(configURL.path)
-        }
-    }
-
-    // MARK: - Low-Level Helpers
-
-    private func iso8601(offsetFromNow seconds: TimeInterval) -> String {
-        ISO8601DateCoder.string(from: Date(timeIntervalSinceNow: seconds)) ?? ""
-    }
-
-    private func withTempDirectory<T>(_ body: (URL) async throws -> T) async throws -> T {
-        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: tempDir) }
-        return try await body(tempDir)
-    }
-
-    /// Create a token file at the expected cache path for the given cache key (session name or start URL)
-    @discardableResult
-    private func createTokenFile(cacheKey: String, tokenJSON: String, inDirectory directory: URL) throws -> URL {
-        let hash = Insecure.SHA1.hash(data: Data(cacheKey.utf8))
-            .compactMap { String(format: "%02x", $0) }.joined()
-        let tokenPath = directory.appendingPathComponent("\(hash).json")
-        try tokenJSON.write(to: tokenPath, atomically: true, encoding: .utf8)
-        return tokenPath
-    }
-
-    /// Sets environment variables for the duration of `body`, then restores originals.
-    private func withEnvironmentVariables<T>(_ env: [String: String], body: () async throws -> T) async throws -> T {
-        var saved: [String: String?] = [:]
-        for key in env.keys {
-            saved[key] = ProcessInfo.processInfo.environment[key]
-        }
-        for (key, value) in env {
-            setenv(key, value, 1)
-        }
-        defer {
-            for (key, original) in saved {
-                if let original {
-                    setenv(key, original, 1)
-                } else {
-                    unsetenv(key)
-                }
-            }
-        }
-        return try await body()
-    }
-}
-
-/// Thread-safe request counter for use in @Sendable closures
-private actor RequestCounter {
-    var urls: [String] = []
-
-    func record(_ url: String) {
-        urls.append(url)
     }
 }

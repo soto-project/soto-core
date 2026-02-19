@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 // SSO Credential Provider Tests
-//
+
 // Note: The ideal pattern for error assertions in Swift Testing is:
 //   let error = await #expect(throws: AWSSSOCredentialError.self) { ... }
 //   #expect(error?.code == "expectedCode")
@@ -48,7 +48,7 @@ import Foundation
 #endif
 
 @Suite("SSO Credential Provider", .serialized)
-final class SSOCredentialProviderTests {
+final class SSOCredentialProviderTests: Sendable {
 
     let logger = Logger(label: "test")
 
@@ -63,7 +63,7 @@ final class SSOCredentialProviderTests {
                 #expect(urlString.contains("role_name=TestRole"))
                 #expect(urlString.contains("account_id=123456789012"))
                 #expect(urlString.contains("portal.sso.us-west-2.amazonaws.com"))
-                return Self.makeRoleCredentialsResponse()
+                return self.makeRoleCredentialsResponse()
             }
 
             let config = SSOConfiguration(
@@ -90,7 +90,7 @@ final class SSOCredentialProviderTests {
         try await withSSOEnvironment(cacheKey: startUrl, accessToken: "legacy-access-token") { env in
             let mockHTTPClient = MockAWSHTTPClient { request in
                 #expect(request.headers["x-amz-sso_bearer_token"].first == "legacy-access-token")
-                return Self.makeRoleCredentialsResponse(accessKeyId: "AKIALEGACY", secretAccessKey: "legacysecret", sessionToken: "legacysession")
+                return self.makeRoleCredentialsResponse(accessKeyId: "AKIALEGACY", secretAccessKey: "legacysecret", sessionToken: "legacysession")
             }
 
             let provider = SSOCredentialProvider(configuration: self.makeLegacyConfig(), httpClient: mockHTTPClient)
@@ -125,7 +125,7 @@ final class SSOCredentialProviderTests {
                 #expect(urlString.contains("role_name=DevRole"))
                 #expect(urlString.contains("account_id=111122223333"))
                 #expect(request.headers["x-amz-sso_bearer_token"].first == "config-test-token")
-                return Self.makeRoleCredentialsResponse(accessKeyId: "AKIACONFIG")
+                return self.makeRoleCredentialsResponse(accessKeyId: "AKIACONFIG")
             }
 
             let provider = SSOCredentialProvider(profileName: "dev", configPath: env.configPath!, httpClient: mockHTTPClient)
@@ -154,7 +154,7 @@ final class SSOCredentialProviderTests {
                 #expect(urlString.contains("portal.sso.eu-central-1.amazonaws.com"))
                 #expect(urlString.contains("role_name=LegacyRole"))
                 #expect(urlString.contains("account_id=444455556666"))
-                return Self.makeRoleCredentialsResponse(accessKeyId: "AKIALEGACYCFG")
+                return self.makeRoleCredentialsResponse(accessKeyId: "AKIALEGACYCFG")
             }
 
             let provider = SSOCredentialProvider(profileName: "legacy", configPath: env.configPath!, httpClient: mockHTTPClient)
@@ -179,7 +179,7 @@ final class SSOCredentialProviderTests {
         ) { env in
             let mockHTTPClient = MockAWSHTTPClient { request in
                 #expect(request.url.absoluteString.contains("role_name=DefaultRole"))
-                return Self.makeRoleCredentialsResponse(accessKeyId: "AKIADEFAULT")
+                return self.makeRoleCredentialsResponse(accessKeyId: "AKIADEFAULT")
             }
 
             // No profileName = defaults to "default"
@@ -296,7 +296,7 @@ final class SSOCredentialProviderTests {
 
     @Test("Invalid token JSON throws invalidTokenFormat error")
     func invalidTokenJSON() async throws {
-        try await withSSOEnvironment(cacheKey: "https://test.awsapps.com/start", rawTokenJSON: "{ not valid json") { env in
+        try await withSSOEnvironment(cacheKey: "https://test.awsapps.com/start", tokenJSON: "{ not valid json") { env in
             let provider = SSOCredentialProvider(configuration: self.makeLegacyConfig(), httpClient: MockAWSHTTPClient())
 
             await #expect {
@@ -316,7 +316,7 @@ final class SSOCredentialProviderTests {
             }
             """
 
-        try await withSSOEnvironment(cacheKey: "https://test.awsapps.com/start", rawTokenJSON: tokenJSON) { env in
+        try await withSSOEnvironment(cacheKey: "https://test.awsapps.com/start", tokenJSON: tokenJSON) { env in
             let provider = SSOCredentialProvider(configuration: self.makeLegacyConfig(), httpClient: MockAWSHTTPClient())
 
             await #expect {
@@ -329,22 +329,17 @@ final class SSOCredentialProviderTests {
 
     @Test("Token cache not found throws tokenCacheNotFound error")
     func tokenCacheNotFound() async throws {
-        try await withTempDirectory { tempDirectory in
-            // Create cache directory but no token file
-            let cacheDir = tempDirectory.appendingPathComponent(".aws/sso/cache")
-            try FileManager.default.createDirectory(at: cacheDir, withIntermediateDirectories: true)
+        try await withTempCacheDirectory { cacheDirectory in
+            // Use a cache directory but no token file
+            let provider = SSOCredentialProvider(
+                configuration: self.makeLegacyConfig(startUrl: "https://nonexistent.awsapps.com/start"),
+                httpClient: MockAWSHTTPClient()
+            )
 
-            try await self.withEnvironmentVariables(["HOME": tempDirectory.path]) {
-                let provider = SSOCredentialProvider(
-                    configuration: self.makeLegacyConfig(startUrl: "https://nonexistent.awsapps.com/start"),
-                    httpClient: MockAWSHTTPClient()
-                )
-
-                await #expect {
-                    try await provider.getCredential(logger: self.logger)
-                } throws: { error in
-                    (error as? AWSSSOCredentialError)?.code == "tokenCacheNotFound"
-                }
+            await #expect {
+                try await provider.getCredential(logger: self.logger)
+            } throws: { error in
+                (error as? AWSSSOCredentialError)?.code == "tokenCacheNotFound"
             }
         }
     }
@@ -390,10 +385,10 @@ final class SSOCredentialProviderTests {
                     #expect(body.clientId == "client-id")
                     #expect(body.refreshToken == "refresh-token-value")
 
-                    return Self.makeCreateTokenResponse()
+                    return self.makeCreateTokenResponse()
                 } else {
                     #expect(request.headers["x-amz-sso_bearer_token"].first == "refreshed-access-token")
-                    return Self.makeRoleCredentialsResponse(
+                    return self.makeRoleCredentialsResponse(
                         accessKeyId: "AKIAREFRESHED",
                         secretAccessKey: "refreshedsecret",
                         sessionToken: "refreshedsession"
@@ -491,7 +486,7 @@ final class SSOCredentialProviderTests {
         let expectedHash = Insecure.SHA1.hash(data: Data("my-sso".utf8))
             .compactMap { String(format: "%02x", $0) }.joined()
         #expect(path.hasSuffix("\(expectedHash).json"))
-        #expect(path.contains(".aws/sso/cache"))
+        #expect(path.contains(ssoCacheDirectory))
     }
 
     @Test("Token path uses SHA-1 hash of start URL for legacy format")
@@ -502,7 +497,7 @@ final class SSOCredentialProviderTests {
         let expectedHash = Insecure.SHA1.hash(data: Data("https://test.awsapps.com/start".utf8))
             .compactMap { String(format: "%02x", $0) }.joined()
         #expect(path.hasSuffix("\(expectedHash).json"))
-        #expect(path.contains(".aws/sso/cache"))
+        #expect(path.contains(ssoCacheDirectory))
     }
 
     // MARK: - Valid Token (No Refresh Needed) Tests
@@ -516,7 +511,7 @@ final class SSOCredentialProviderTests {
             let requestCounter = RequestCounter()
             let mockHTTPClient = MockAWSHTTPClient { request in
                 await requestCounter.record(request.url.absoluteString)
-                return Self.makeRoleCredentialsResponse(accessKeyId: "AKIAVALID")
+                return self.makeRoleCredentialsResponse(accessKeyId: "AKIAVALID")
             }
 
             let provider = SSOCredentialProvider(configuration: self.makeModernConfig(), httpClient: mockHTTPClient)
@@ -618,7 +613,7 @@ final class SSOCredentialProviderTests {
     }
 
     /// Build a successful GetRoleCredentials response
-    private static func makeRoleCredentialsResponse(
+    private func makeRoleCredentialsResponse(
         accessKeyId: String = "AKIATEST123",
         secretAccessKey: String = "testsecret",
         sessionToken: String = "testsession"
@@ -637,7 +632,7 @@ final class SSOCredentialProviderTests {
     }
 
     /// Build a successful SSO-OIDC CreateToken refresh response
-    private static func makeCreateTokenResponse(
+    private func makeCreateTokenResponse(
         accessToken: String = "refreshed-access-token",
         refreshToken: String = "new-refresh-token"
     ) -> (HTTPResponseStatus, Data) {
@@ -653,6 +648,8 @@ final class SSOCredentialProviderTests {
     }
 
     // MARK: - Test Environment Helpers
+
+    private let ssoCacheDirectory = ".aws/sso/cache"
 
     /// Context passed to test closures by `withSSOEnvironment`
     struct TestEnvironment {
@@ -678,23 +675,7 @@ final class SSOCredentialProviderTests {
             """
         return try await withSSOEnvironment(
             cacheKey: cacheKey,
-            rawTokenJSON: tokenJSON,
-            configContent: configContent,
-            body: body
-        )
-    }
-
-    /// Set up a temp directory with an explicit token JSON and HOME override.
-    /// Optionally writes a config file.
-    private func withSSOEnvironment<T>(
-        cacheKey: String,
-        tokenJSON: String,
-        configContent: String? = nil,
-        body: (TestEnvironment) async throws -> T
-    ) async throws -> T {
-        try await withSSOEnvironment(
-            cacheKey: cacheKey,
-            rawTokenJSON: tokenJSON,
+            tokenJSON: tokenJSON,
             configContent: configContent,
             body: body
         )
@@ -703,25 +684,33 @@ final class SSOCredentialProviderTests {
     /// Core environment setup: temp directory + token cache + HOME override + optional config file.
     private func withSSOEnvironment<T>(
         cacheKey: String,
-        rawTokenJSON: String,
+        tokenJSON: String,
         configContent: String? = nil,
         body: (TestEnvironment) async throws -> T
     ) async throws -> T {
-        try await withTempDirectory { tempDirectory in
-            let cacheDir = tempDirectory.appendingPathComponent(".aws/sso/cache")
-            try FileManager.default.createDirectory(at: cacheDir, withIntermediateDirectories: true)
-            let tokenPath = try self.createTokenFile(cacheKey: cacheKey, tokenJSON: rawTokenJSON, inDirectory: cacheDir)
+        try await withTempCacheDirectory { cacheDir in
+            let tokenPath = try self.createTokenFile(cacheKey: cacheKey, tokenJSON: tokenJSON, inDirectory: cacheDir)
 
             var configPath: String?
             if let configContent {
-                let configURL = tempDirectory.appendingPathComponent("config")
+                let configURL = cacheDir.appendingPathComponent("config")
                 try configContent.write(to: configURL, atomically: true, encoding: .utf8)
                 configPath = configURL.path
             }
 
-            return try await self.withEnvironmentVariables(["HOME": tempDirectory.path]) {
-                let env = TestEnvironment(tempDirectory: tempDirectory, tokenPath: tokenPath, configPath: configPath)
-                return try await body(env)
+            let env = TestEnvironment(tempDirectory: cacheDir, tokenPath: tokenPath, configPath: configPath)
+            return try await body(env)
+        }
+    }
+
+    /// Create a `.aws/sso/cache` directory in a temporary directory
+    /// and set the HOME env variable with the new temporary directory
+    private func withTempCacheDirectory<T>(body: (URL) async throws -> T) async throws -> T {
+        try await withTempDirectory { tempDirectory in
+            let cacheDir = tempDirectory.appendingPathComponent(ssoCacheDirectory)
+            try FileManager.default.createDirectory(at: cacheDir, withIntermediateDirectories: true)
+            return try await withEnvironmentVariables(["HOME": tempDirectory.path]) {
+                try await body(cacheDir)
             }
         }
     }

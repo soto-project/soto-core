@@ -16,6 +16,7 @@
 
 import Crypto
 import NIOCore
+import NIOFoundationCompat
 import NIOPosix
 
 #if canImport(FoundationEssentials)

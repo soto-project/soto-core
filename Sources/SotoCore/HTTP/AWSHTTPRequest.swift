@@ -14,6 +14,7 @@
 
 import Crypto
 import NIOCore
+import NIOFoundationCompat
 import NIOHTTP1
 import SotoSignerV4
 internal import SotoXML

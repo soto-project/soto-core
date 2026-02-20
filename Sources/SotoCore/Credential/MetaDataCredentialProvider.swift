@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2023 the Soto project authors
+// Copyright (c) 2017-2026 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -16,15 +16,14 @@ import AsyncHTTPClient
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
-import NIOFoundationCompat
 import NIOHTTP1
 import SotoSignerV4
 
-import struct Foundation.Date
-import class Foundation.ISO8601DateFormatter
-import class Foundation.JSONDecoder
-import struct Foundation.TimeInterval
-import struct Foundation.URL
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// protocol to get Credentials from the Client. With this the AWSClient requests the credentials for request signing from ecs and ec2.
 protocol MetaDataClient: CredentialProvider {

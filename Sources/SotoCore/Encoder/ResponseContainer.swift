@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2023 the Soto project authors
+// Copyright (c) 2023-2026 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -12,12 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
+// TODO: FoundationEssentials (HTTP header date format style)
+import Foundation
 import NIOConcurrencyHelpers
-
-import struct Foundation.Date
-import class Foundation.DateFormatter
-import struct Foundation.Locale
-import struct Foundation.TimeZone
 
 /// Decoding error returned when extracting data out of response headers
 public struct HeaderDecodingError: Error {

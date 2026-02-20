@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2020-2022 the Soto project authors
+// Copyright (c) 2020-2026 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -13,10 +13,15 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
-import Foundation
 import NIOCore
 import NIOHTTP1
 import NIOPosix  // Needed for NIOConnectionError
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// Creates a RetryPolicy for AWSClient to use
 public struct RetryPolicyFactory {

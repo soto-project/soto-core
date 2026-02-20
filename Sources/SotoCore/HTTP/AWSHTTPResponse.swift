@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2024 the Soto project authors
+// Copyright (c) 2017-2026 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -15,17 +15,14 @@
 import AsyncHTTPClient
 import Logging
 import NIOCore
-import NIOFoundationCompat
 import NIOHTTP1
 internal import SotoXML
 
-import struct Foundation.Data
-import struct Foundation.Date
-import class Foundation.DateFormatter
-import class Foundation.JSONDecoder
-import class Foundation.JSONSerialization
-import struct Foundation.Locale
-import struct Foundation.TimeZone
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// Structure encapsulating an HTTP Response
 public struct AWSHTTPResponse: Sendable {

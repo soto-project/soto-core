@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2024 the Soto project authors
+// Copyright (c) 2017-2026 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -19,10 +19,11 @@ import NIOHTTP1
 import SotoSignerV4
 internal import SotoXML
 
-import struct Foundation.Data
-import struct Foundation.Date
-import class Foundation.JSONEncoder
-import struct Foundation.URL
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// Object encapsulating all the information needed to generate a raw HTTP request to AWS
 public struct AWSHTTPRequest: Sendable {

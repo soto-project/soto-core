@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2023 the Soto project authors
+// Copyright (c) 2017-2026 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -14,8 +14,11 @@
 
 import SotoSignerV4
 
-import struct Foundation.Date
-import struct Foundation.TimeInterval
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// Credential provider whose credentials expire over tiem.
 public protocol ExpiringCredential: Credential {

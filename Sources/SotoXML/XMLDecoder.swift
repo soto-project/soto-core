@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the Soto project authors
+// Copyright (c) 2017-2026 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -12,12 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct Foundation.Data
-import struct Foundation.Date
-import class Foundation.ISO8601DateFormatter
-import class Foundation.NSNull
-import class Foundation.NSNumber
-import struct Foundation.URL
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// The wrapper class for decoding Codable classes from XMLNodes
 public struct XMLDecoder {
@@ -653,11 +652,34 @@ private class _XMLDecoder: Decoder {
         }
 
         let string = try self.unbox(element, as: String.self)
-        for formatter in Self.dateFormatters {
-            if let date = formatter.date(from: string) {
+        #if canImport(FoundationEssentials)
+        if let date = try? Date(string, strategy: .iso8601) {
+            return date
+        }
+        if let date = try? Date(string, strategy: Date.ISO8601FormatStyle(includingFractionalSeconds: true)) {
+            return date
+        }
+        #else
+        if #available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) {
+            if let date = try? Date(string, strategy: .iso8601) {
+                return date
+            }
+            if let date = try? Date(string, strategy: Date.ISO8601FormatStyle(includingFractionalSeconds: true)) {
+                return date
+            }
+        } else {
+            let formatterWithSeconds = ISO8601DateFormatter()
+            formatterWithSeconds.formatOptions = [.withFullDate, .withFullTime, .withFractionalSeconds]
+            if let date = formatterWithSeconds.date(from: string) {
+                return date
+            }
+            let formatterWithoutSeconds = ISO8601DateFormatter()
+            formatterWithoutSeconds.formatOptions = [.withFullDate, .withFullTime]
+            if let date = formatterWithoutSeconds.date(from: string) {
                 return date
             }
         }
+        #endif
         throw DecodingError.dataCorrupted(
             DecodingError.Context(codingPath: self.codingPath, debugDescription: "Date string does not match format expected")
         )
@@ -707,13 +729,6 @@ private class _XMLDecoder: Decoder {
             return try type.init(from: self)
         }
     }
-
-    nonisolated(unsafe) static let dateFormatters: [ISO8601DateFormatter] = {
-        let dateFormatters: [ISO8601DateFormatter] = [ISO8601DateFormatter(), ISO8601DateFormatter()]
-        dateFormatters[0].formatOptions = [.withFullDate, .withFullTime, .withFractionalSeconds]
-        dateFormatters[1].formatOptions = [.withFullDate, .withFullTime]
-        return dateFormatters
-    }()
 }
 
 //===----------------------------------------------------------------------===//
@@ -792,13 +807,7 @@ extension DecodingError {
     /// - returns: A string describing `value`.
     /// - precondition: `value` is one of the types below.
     fileprivate static func _typeDescription(of value: Any) -> String {
-        if value is NSNull {
-            return "a null value"
-        } else if value
-            is NSNumber /* FIXME: If swift-corelibs-foundation isn't updated to use NSNumber, this check will be necessary: || value is Int || value is Double */
-        {
-            return "a number"
-        } else if value is String {
+        if value is String {
             return "a string/data"
         } else if value is [Any] {
             return "an array"

@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2021-2022 the Soto project authors
+// Copyright (c) 2021-2026 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -16,8 +16,11 @@ import Logging
 import NIOConcurrencyHelpers
 import NIOCore
 
-import struct Foundation.Date
-import struct Foundation.TimeInterval
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// Endpoint list
 public struct AWSEndpoints {

@@ -15,7 +15,6 @@
 import AsyncHTTPClient
 import Logging
 import NIOCore
-import NIOFoundationCompat
 import NIOHTTP1
 internal import SotoXML
 

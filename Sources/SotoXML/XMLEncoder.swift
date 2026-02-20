@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the Soto project authors
+// Copyright (c) 2017-2026 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -12,10 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct Foundation.Data
-import struct Foundation.Date
-import class Foundation.ISO8601DateFormatter
-import struct Foundation.URL
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// The wrapper class for encoding Codable classes to XMLElements
 public struct XMLEncoder {
@@ -537,7 +538,17 @@ extension _XMLEncoder {
     }
 
     func box(_ date: Date) throws -> XML.Element? {
-        XML.Element(name: self.currentKey, stringValue: Self.dateFormatter.string(from: date))
+        #if canImport(FoundationEssentials)
+        return XML.Element(name: self.currentKey, stringValue: date.formatted(Date.ISO8601FormatStyle(includingFractionalSeconds: true)))
+        #else
+        if #available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) {
+            return XML.Element(name: self.currentKey, stringValue: date.formatted(Date.ISO8601FormatStyle(includingFractionalSeconds: true)))
+        } else {
+            let formatterWithSeconds = ISO8601DateFormatter()
+            formatterWithSeconds.formatOptions = [.withFullDate, .withFullTime, .withFractionalSeconds]
+            return XML.Element(name: self.currentKey, stringValue: formatterWithSeconds.string(from: date))
+        }
+        #endif
     }
 
     func box(_ data: Data) throws -> XML.Element? {
@@ -562,12 +573,6 @@ extension _XMLEncoder {
             return self.storage.popContainer()
         }
     }
-
-    nonisolated(unsafe) static let dateFormatter: ISO8601DateFormatter = {
-        let dateFormatter = ISO8601DateFormatter()
-        dateFormatter.formatOptions = [.withFullDate, .withFullTime, .withFractionalSeconds]
-        return dateFormatter
-    }()
 }
 
 // MARK: - _XMLReferencingEncoder

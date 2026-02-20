@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2023 the Soto project authors
+// Copyright (c) 2017-2026 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -14,7 +14,11 @@
 
 // Login Configuration
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Error type for AWS Login credential operations
 public struct AWSLoginCredentialError: Error, Equatable, CustomStringConvertible {

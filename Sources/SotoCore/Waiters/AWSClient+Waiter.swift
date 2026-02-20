@@ -13,8 +13,25 @@
 //===----------------------------------------------------------------------===//
 
 import Dispatch
-import Foundation
 import NIOCore
+
+#if canImport(Glibc)
+import Glibc
+#elseif canImport(Musl)
+import Musl
+#elseif canImport(Darwin)
+import Darwin.C
+#elseif canImport(Android)
+import Android
+#else
+#error("Unsupported platform")
+#endif
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import protocol Foundation.ContiguousBytes
+#endif
 
 // MARK: Waiters
 

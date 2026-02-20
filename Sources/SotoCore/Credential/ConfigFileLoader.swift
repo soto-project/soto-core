@@ -2,7 +2,7 @@
 //
 // This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) 2017-2020 the Soto project authors
+// Copyright (c) 2017-2026 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -12,11 +12,28 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import INIParser
 import Logging
 import NIOCore
 import NIOPosix
+
+#if canImport(Glibc)
+import Glibc
+#elseif canImport(Musl)
+import Musl
+#elseif canImport(Darwin)
+import Darwin.C
+#elseif canImport(Android)
+import Android
+#else
+#error("Unsupported platform")
+#endif
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// Load settings from AWS credentials and profile configuration files
 /// https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
@@ -310,8 +327,9 @@ enum ConfigFileLoader {
 
             return pth
         }
-        #elseif os(macOS)
-        // can not use wordexp on macOS because for sandboxed application wexp.we_wordv == nil
+        #elseif os(macOS) || os(iOS) || os(tvOS) || os(watchOS) || os(Android)
+        // can not use wordexp on Apple OS's because for sandboxed application wexp.we_wordv == nil
+        // wordexp does not exist on Android
         guard let home = getpwuid(getuid())?.pointee.pw_dir,
             let homePath = String(cString: home, encoding: .utf8)
         else {
@@ -319,7 +337,7 @@ enum ConfigFileLoader {
         }
         return filePath.starts(with: "~") ? homePath + filePath.dropFirst() : filePath
         #else
-        return NSString(string: filePath).expandingTildeInPath
+        #error("Unsupported platform")
         #endif
     }
 }

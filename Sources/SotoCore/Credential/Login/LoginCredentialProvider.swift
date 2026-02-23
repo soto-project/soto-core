@@ -68,7 +68,7 @@ public struct LoginCredentialProvider: CredentialProvider {
         let configuration = try await getConfiguration()
 
         // Construct token path
-        let tokenFileManager = TokenFileManager()
+        let tokenFileManager = LoginTokenManager()
         let tokenPath = try tokenFileManager.constructTokenPath(
             loginSession: configuration.loginSession,
             cacheDirectory: configuration.cacheDirectory

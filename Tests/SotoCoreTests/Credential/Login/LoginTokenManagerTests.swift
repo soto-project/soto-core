@@ -27,9 +27,9 @@ import FoundationEssentials
 import Foundation
 #endif
 
-@Suite("Token File Manager")
-final class TokenFileManagerTests {
-    let manager = TokenFileManager()
+@Suite("Login Token Manager")
+final class LoginTokenManagerTests {
+    let manager = LoginTokenManager()
 
     // Helper to create a unique temp directory for each test
     func createTempDirectory() throws -> URL {

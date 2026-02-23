@@ -240,7 +240,7 @@ struct SSOTokenManager {
         // Return updated token, preserving original fields where new values not provided
         return SSOToken(
             accessToken: tokenResponse.accessToken,
-            expiresAt: ISO8601DateCoder.string(from: newExpiration) ?? "",
+            expiresAt: formatISO8601Date(newExpiration) ?? "",
             refreshToken: tokenResponse.refreshToken ?? refreshToken,
             clientId: clientId,
             clientSecret: clientSecret,
@@ -285,5 +285,19 @@ struct SSOTokenManager {
         }
         #endif
         return nil
+    }
+
+    func formatISO8601Date(_ date: Date) -> String? {
+        #if canImport(FoundationEssentials)
+        return date.formatted(Date.ISO8601FormatStyle(includingFractionalSeconds: true))
+        #else
+        if #available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) {
+            return date.formatted(Date.ISO8601FormatStyle(includingFractionalSeconds: true))
+        } else {
+            let formatterWithSeconds = ISO8601DateFormatter()
+            formatterWithSeconds.formatOptions = [.withFullDate, .withFullTime, .withFractionalSeconds]
+            return formatterWithSeconds.string(from: date)
+        }
+        #endif        
     }
 }

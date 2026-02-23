@@ -25,7 +25,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
-struct TokenFileManager {
+struct LoginTokenManager {
     private struct AccessToken: Codable {
         let accessKeyId: String
         let secretAccessKey: String

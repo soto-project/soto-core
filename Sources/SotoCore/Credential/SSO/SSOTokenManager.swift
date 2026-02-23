@@ -85,12 +85,8 @@ struct SSOTokenManager {
             throw AWSSSOCredentialError.tokenCacheNotFound(profileName)
         }
 
-        guard let data = byteBuffer.getData(at: 0, length: byteBuffer.readableBytes) else {
-            throw AWSSSOCredentialError.invalidTokenFormat("Cannot read token data from \(path)")
-        }
-
         let decoder = JSONDecoder()
-        guard let token = try? decoder.decode(SSOToken.self, from: data) else {
+        guard let token = try? decoder.decode(SSOToken.self, from: byteBuffer) else {
             throw AWSSSOCredentialError.invalidTokenFormat("Failed to parse SSO token JSON at \(path)")
         }
 
@@ -232,7 +228,7 @@ struct SSOTokenManager {
 
         let body = try await response.body.collect(upTo: 1024 * 1024)
         let decoder = JSONDecoder()
-        let tokenResponse = try decoder.decode(CreateTokenResponse.self, from: Data(buffer: body))
+        let tokenResponse = try decoder.decode(CreateTokenResponse.self, from: body)
 
         // Calculate new expiration
         let newExpiration = Date(timeIntervalSinceNow: TimeInterval(tokenResponse.expiresIn))

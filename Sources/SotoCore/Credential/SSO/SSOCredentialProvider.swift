@@ -272,7 +272,7 @@ public struct SSOCredentialProvider: CredentialProvider {
 
         let body = try await response.body.collect(upTo: 1024 * 1024)
         let decoder = JSONDecoder()
-        let apiResponse = try decoder.decode(SSOGetRoleCredentialsResponse.self, from: Data(buffer: body))
+        let apiResponse = try decoder.decode(SSOGetRoleCredentialsResponse.self, from: body)
 
         return apiResponse.roleCredentials
     }

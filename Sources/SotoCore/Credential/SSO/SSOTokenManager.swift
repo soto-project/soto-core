@@ -294,6 +294,6 @@ struct SSOTokenManager {
             formatterWithSeconds.formatOptions = [.withFullDate, .withFullTime, .withFractionalSeconds]
             return formatterWithSeconds.string(from: date)
         }
-        #endif        
+        #endif
     }
 }

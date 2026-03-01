@@ -48,6 +48,8 @@ public struct Region: Sendable, RawRepresentable, Equatable {
     public static var apsoutheast4: Region { .init(rawValue: "ap-southeast-4") }
     // Asia Pacific (Malaysia)
     public static var apsoutheast5: Region { .init(rawValue: "ap-southeast-5") }
+    // Asia Pacific (New Zealand)
+    public static var apsoutheast6: Region { .init(rawValue: "ap-southeast-6") }
     // Asia Pacific (Thailand)
     public static var apsoutheast7: Region { .init(rawValue: "ap-southeast-7") }
     // Canada (Central)
@@ -76,7 +78,7 @@ public struct Region: Sendable, RawRepresentable, Equatable {
     public static var euwest2: Region { .init(rawValue: "eu-west-2") }
     // Europe (Paris)
     public static var euwest3: Region { .init(rawValue: "eu-west-3") }
-    // EU (Germany)
+    // AWS European Sovereign Cloud (Germany)
     public static var euscdeeast1: Region { .init(rawValue: "eusc-de-east-1") }
     // Israel (Tel Aviv)
     public static var ilcentral1: Region { .init(rawValue: "il-central-1") }
@@ -102,6 +104,8 @@ public struct Region: Sendable, RawRepresentable, Equatable {
     public static var usisowest1: Region { .init(rawValue: "us-iso-west-1") }
     // US ISOB East (Ohio)
     public static var usisobeast1: Region { .init(rawValue: "us-isob-east-1") }
+    // US ISOB West
+    public static var usisobwest1: Region { .init(rawValue: "us-isob-west-1") }
     // US ISOF EAST
     public static var usisofeast1: Region { .init(rawValue: "us-isof-east-1") }
     // US ISOF SOUTH
@@ -130,6 +134,7 @@ extension Region {
         case .apsoutheast3: return .aws
         case .apsoutheast4: return .aws
         case .apsoutheast5: return .aws
+        case .apsoutheast6: return .aws
         case .apsoutheast7: return .aws
         case .cacentral1: return .aws
         case .cawest1: return .aws
@@ -157,6 +162,7 @@ extension Region {
         case .usisoeast1: return .awsiso
         case .usisowest1: return .awsiso
         case .usisobeast1: return .awsisob
+        case .usisobwest1: return .awsisob
         case .usisofeast1: return .awsisof
         case .usisofsouth1: return .awsisof
         case .uswest1: return .aws
@@ -264,6 +270,7 @@ extension Region {
             .apsoutheast3,
             .apsoutheast4,
             .apsoutheast5,
+            .apsoutheast6,
             .apsoutheast7,
             .cacentral1,
             .cawest1,
@@ -291,6 +298,7 @@ extension Region {
             .usisoeast1,
             .usisowest1,
             .usisobeast1,
+            .usisobwest1,
             .usisofeast1,
             .usisofsouth1,
             .uswest1,

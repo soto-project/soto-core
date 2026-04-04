@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if compiler(>=6.0)
-
 import SotoCore
 import Testing
 
@@ -66,4 +64,3 @@ struct ARNTests {
     }
 
 }
-#endif

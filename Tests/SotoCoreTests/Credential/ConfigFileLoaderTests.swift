@@ -285,6 +285,181 @@ class ConfigFileLoadersTests: XCTestCase {
         }
     }
 
+    func testLoadFileSSOSourceProfile() async throws {
+        // Assume-role profile lives only in ~/.aws/config and points at an SSO source profile.
+        // This is the standard layout written by `aws configure sso` for multi-account setups.
+        let profile = "dev"
+        let sourceProfile = "sso-base"
+        let roleArn = "arn:aws:iam::222222222222:role/Developer"
+        let credentialsFile = ""
+        let configFile = """
+            [profile \(profile)]
+            role_arn = \(roleArn)
+            source_profile = \(sourceProfile)
+            region = us-west-2
+
+            [profile \(sourceProfile)]
+            sso_session = my-org
+            sso_account_id = 111111111111
+            sso_role_name = SSOAccess
+
+            [sso-session my-org]
+            sso_start_url = https://my-org.awsapps.com/start
+            sso_region = us-east-1
+            """
+
+        let credentialsPath = try save(content: credentialsFile, prefix: "creds-\(#function)")
+        let configPath = try save(content: configFile, prefix: "config-\(#function)")
+        let (context, httpClient) = try makeContext()
+
+        try await withTeardown {
+            let shared = try await ConfigFileLoader.loadSharedCredentials(
+                credentialsFilePath: credentialsPath,
+                configFilePath: configPath,
+                profile: profile
+            )
+
+            switch shared {
+            case .assumeRole(let aRoleArn, _, let region, let sourceFactory):
+                XCTAssertEqual(aRoleArn, roleArn)
+                XCTAssertEqual(region, .uswest2)
+                let sourceProvider = sourceFactory.createProvider(context: context)
+                let rotating = try XCTUnwrap(sourceProvider as? RotatingCredentialProvider)
+                XCTAssert(
+                    rotating.provider is SSOCredentialProvider,
+                    "Expected SSOCredentialProvider as the source, got \(type(of: rotating.provider))"
+                )
+                try await sourceProvider.shutdown()
+            default:
+                XCTFail("Expected .assumeRole with an SSO source provider")
+            }
+        } teardown: {
+            try? FileManager.default.removeItem(atPath: credentialsPath)
+            try? FileManager.default.removeItem(atPath: configPath)
+            try? await httpClient.shutdown()
+        }
+    }
+
+    func testLoadFileMissingCredentialsButConfigHasSSOSource() async throws {
+        // Many SSO-only setups have no ~/.aws/credentials file at all. As long as the config
+        // file fully describes the assume-role chain (and its SSO source), credential loading
+        // should still succeed instead of falling through to .noProvider.
+        let profile = "dev"
+        let sourceProfile = "sso-base"
+        let roleArn = "arn:aws:iam::222222222222:role/Developer"
+        let configFile = """
+            [profile \(profile)]
+            role_arn = \(roleArn)
+            source_profile = \(sourceProfile)
+
+            [profile \(sourceProfile)]
+            sso_session = my-org
+            sso_account_id = 111111111111
+            sso_role_name = SSOAccess
+
+            [sso-session my-org]
+            sso_start_url = https://my-org.awsapps.com/start
+            sso_region = us-east-1
+            """
+
+        let credentialsPath = "missing-credentials-\(UUID().uuidString)"
+        let configPath = try save(content: configFile, prefix: "config-\(#function)")
+        let (context, httpClient) = try makeContext()
+
+        try await withTeardown {
+            let shared = try await ConfigFileLoader.loadSharedCredentials(
+                credentialsFilePath: credentialsPath,
+                configFilePath: configPath,
+                profile: profile
+            )
+
+            switch shared {
+            case .assumeRole(let aRoleArn, _, _, let sourceFactory):
+                XCTAssertEqual(aRoleArn, roleArn)
+                let sourceProvider = sourceFactory.createProvider(context: context)
+                let rotating = try XCTUnwrap(sourceProvider as? RotatingCredentialProvider)
+                XCTAssert(rotating.provider is SSOCredentialProvider)
+                try await sourceProvider.shutdown()
+            default:
+                XCTFail("Expected .assumeRole with an SSO source provider")
+            }
+        } teardown: {
+            try? FileManager.default.removeItem(atPath: configPath)
+            try? await httpClient.shutdown()
+        }
+    }
+
+    func testLoadFileBothFilesMissing() async throws {
+        // Neither file exists at all — provider must still report `.noProvider` so the
+        // credential chain can move on to the next provider.
+        let credentialsPath = "missing-credentials-\(UUID().uuidString)"
+        let configPath = "missing-config-\(UUID().uuidString)"
+        let (_, httpClient) = try makeContext()
+
+        try await withTeardown {
+            do {
+                _ = try await ConfigFileLoader.loadSharedCredentials(
+                    credentialsFilePath: credentialsPath,
+                    configFilePath: configPath,
+                    profile: ConfigFileLoader.defaultProfile
+                )
+                XCTFail("Expected CredentialProviderError.noProvider")
+            } catch let error as CredentialProviderError where error == .noProvider {
+                // pass
+            } catch {
+                XCTFail("Expected CredentialProviderError.noProvider, got \(error.localizedDescription)")
+            }
+        } teardown: {
+            try? await httpClient.shutdown()
+        }
+    }
+
+    func testLoadFileSSOSourceProfileLegacyFormat() async throws {
+        // Same scenario, but the source profile uses the legacy SSO format (direct sso_start_url
+        // rather than an sso_session reference). Both should be detected.
+        let profile = "dev"
+        let sourceProfile = "sso-base"
+        let roleArn = "arn:aws:iam::222222222222:role/Developer"
+        let credentialsFile = ""
+        let configFile = """
+            [profile \(profile)]
+            role_arn = \(roleArn)
+            source_profile = \(sourceProfile)
+
+            [profile \(sourceProfile)]
+            sso_start_url = https://my-org.awsapps.com/start
+            sso_region = us-east-1
+            sso_account_id = 111111111111
+            sso_role_name = SSOAccess
+            """
+
+        let credentialsPath = try save(content: credentialsFile, prefix: "creds-\(#function)")
+        let configPath = try save(content: configFile, prefix: "config-\(#function)")
+        let (context, httpClient) = try makeContext()
+
+        try await withTeardown {
+            let shared = try await ConfigFileLoader.loadSharedCredentials(
+                credentialsFilePath: credentialsPath,
+                configFilePath: configPath,
+                profile: profile
+            )
+
+            switch shared {
+            case .assumeRole(_, _, _, let sourceFactory):
+                let sourceProvider = sourceFactory.createProvider(context: context)
+                let rotating = try XCTUnwrap(sourceProvider as? RotatingCredentialProvider)
+                XCTAssert(rotating.provider is SSOCredentialProvider)
+                try await sourceProvider.shutdown()
+            default:
+                XCTFail("Expected .assumeRole with an SSO source provider")
+            }
+        } teardown: {
+            try? FileManager.default.removeItem(atPath: credentialsPath)
+            try? FileManager.default.removeItem(atPath: configPath)
+            try? await httpClient.shutdown()
+        }
+    }
+
     func testLoadFileRoleArnOnly() async throws {
         let profile = "marketingadmin"
         let roleArn = "arn:aws:iam::123456789012:role/marketingadminrole"

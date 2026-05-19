@@ -135,15 +135,22 @@ class ConfigFileCredentialProviderTests: XCTestCase {
     }
 
     func testConfigFileNotAvailable() async {
-        let filename = #function
-        let filenameURL = URL(fileURLWithPath: filename)
+        let credentialsFilename = "credentials_\(#function)"
+        let credentialsFilenameURL = URL(fileURLWithPath: credentialsFilename)
+
+        let configFilename = "config_\(#function)"
+        let configFilenameURL = URL(fileURLWithPath: configFilename)
 
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         let eventLoop = eventLoopGroup.next()
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoop))
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
-        let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
+
+        let factory = CredentialProviderFactory.configFile(
+            credentialsFilePath: credentialsFilenameURL.path,
+            configFilePath: configFilenameURL.path,
+        )
 
         let provider = factory.createProvider(context: .init(httpClient: httpClient, logger: TestEnvironment.logger, options: .init()))
 

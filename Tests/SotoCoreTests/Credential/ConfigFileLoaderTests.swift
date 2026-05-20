@@ -414,6 +414,37 @@ class ConfigFileLoadersTests: XCTestCase {
         }
     }
 
+    func testLoadFileMissingCredentialsAndConfigHasNoRoleArn() async throws {
+        // Credentials file is unavailable and the config file exists but doesn't supply a
+        // `role_arn` for the requested profile. The provider must signal `.noProvider` so the
+        // credential chain can move on (e.g. to the standalone `.sso()` step).
+        let configFile = """
+            [profile dev]
+            region = us-east-1
+            """
+        let credentialsPath = "missing-credentials-\(#function)"
+        let configPath = try save(content: configFile, prefix: "config-\(#function)")
+        let (_, httpClient) = try makeContext()
+
+        try await withTeardown {
+            do {
+                _ = try await ConfigFileLoader.loadSharedCredentials(
+                    credentialsFilePath: credentialsPath,
+                    configFilePath: configPath,
+                    profile: "dev"
+                )
+                XCTFail("Expected CredentialProviderError.noProvider")
+            } catch let error as CredentialProviderError where error == .noProvider {
+                // pass
+            } catch {
+                XCTFail("Expected CredentialProviderError.noProvider, got \(error.localizedDescription)")
+            }
+        } teardown: {
+            try? FileManager.default.removeItem(atPath: configPath)
+            try? await httpClient.shutdown()
+        }
+    }
+
     func testLoadFileSSOSourceProfileLegacyFormat() async throws {
         // Same scenario, but the source profile uses the legacy SSO format (direct sso_start_url
         // rather than an sso_session reference). Both should be detected.

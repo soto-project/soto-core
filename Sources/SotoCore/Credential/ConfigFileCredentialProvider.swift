@@ -70,7 +70,11 @@ final class ConfigFileCredentialProvider: CredentialProviderSelector {
             profile: profile,
             threadPool: threadPool
         )
-        return try self.credentialProvider(from: sharedCredentials, context: context, endpoint: endpoint)
+        let provider = try self.credentialProvider(from: sharedCredentials, context: context, endpoint: endpoint)
+        // Tag any error surfaced from this provider with the originating profile, so a failure
+        // inside a credential chain (source profile, SSO source, STS AssumeRole, etc.) names
+        // the profile the caller actually asked to resolve.
+        return ProfileScopedCredentialProvider(inner: provider, profile: profile)
     }
 
     /// Generate credential provider based on shared credentials and profile configuration
@@ -102,5 +106,38 @@ final class ConfigFileCredentialProvider: CredentialProviderSelector {
                 endpoint: endpoint
             )
         }
+    }
+}
+
+/// Wraps a credential provider so any error it raises is reported in terms of the profile
+/// the caller asked to resolve. Without this, an error from a source profile, SSO source, or
+/// STS AssumeRole call does not mention the profile that initiated the lookup.
+struct ProfileScopedCredentialProvider: CredentialProvider {
+    let inner: CredentialProvider
+    let profile: String
+
+    var description: String { "\(inner) (profile: \(profile))" }
+
+    func getCredential(logger: Logger) async throws -> Credential {
+        do {
+            return try await self.inner.getCredential(logger: logger)
+        } catch {
+            throw ProfileCredentialError(profile: self.profile, underlying: error)
+        }
+    }
+
+    func shutdown() async throws {
+        try await self.inner.shutdown()
+    }
+}
+
+/// Error thrown when credential resolution for a profile fails. Preserves the underlying
+/// error so callers can still inspect the original cause.
+struct ProfileCredentialError: Error, CustomStringConvertible {
+    let profile: String
+    let underlying: any Error
+
+    var description: String {
+        "Failed to resolve credentials for profile '\(self.profile)': \(self.underlying)"
     }
 }

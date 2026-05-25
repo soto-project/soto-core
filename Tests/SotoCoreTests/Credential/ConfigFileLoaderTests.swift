@@ -445,6 +445,93 @@ class ConfigFileLoadersTests: XCTestCase {
         }
     }
 
+    func testLoadFileMalformedCredentialsFileSurfacesError() async throws {
+        // A credentials file that exists but cannot be parsed must surface `.invalidINIFile`
+        // rather than being silently treated as "no credentials file". Only ENOENT should
+        // degrade to a soft miss.
+        let credentialsPath = try save(content: "this line is not valid ini\n", prefix: "creds-\(#function)")
+        let configPath = "missing-config-\(UUID().uuidString)"
+        let (_, httpClient) = try makeContext()
+
+        try await withTeardown {
+            do {
+                _ = try await ConfigFileLoader.loadSharedCredentials(
+                    credentialsFilePath: credentialsPath,
+                    configFilePath: configPath,
+                    profile: ConfigFileLoader.defaultProfile
+                )
+                XCTFail("Expected ConfigFileError.invalidINIFile")
+            } catch let error as ConfigFileLoader.ConfigFileError where error == .invalidINIFile {
+                // pass
+            } catch {
+                XCTFail("Expected ConfigFileError.invalidINIFile, got \(error.localizedDescription)")
+            }
+        } teardown: {
+            try? FileManager.default.removeItem(atPath: credentialsPath)
+            try? await httpClient.shutdown()
+        }
+    }
+
+    func testLoadFileMalformedConfigFileSurfacesError() async throws {
+        // Same contract for the config file: a parseable credentials file alongside a
+        // malformed config file must propagate the parse error rather than silently
+        // proceeding with the credentials file alone.
+        let credentialsFile = """
+            [\(ConfigFileLoader.defaultProfile)]
+            aws_access_key_id = AKIAIOSFODNN7EXAMPLE
+            aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+            """
+        let credentialsPath = try save(content: credentialsFile, prefix: "creds-\(#function)")
+        let configPath = try save(content: "this line is not valid ini\n", prefix: "config-\(#function)")
+        let (_, httpClient) = try makeContext()
+
+        try await withTeardown {
+            do {
+                _ = try await ConfigFileLoader.loadSharedCredentials(
+                    credentialsFilePath: credentialsPath,
+                    configFilePath: configPath,
+                    profile: ConfigFileLoader.defaultProfile
+                )
+                XCTFail("Expected ConfigFileError.invalidINIFile")
+            } catch let error as ConfigFileLoader.ConfigFileError where error == .invalidINIFile {
+                // pass
+            } catch {
+                XCTFail("Expected ConfigFileError.invalidINIFile, got \(error.localizedDescription)")
+            }
+        } teardown: {
+            try? FileManager.default.removeItem(atPath: credentialsPath)
+            try? FileManager.default.removeItem(atPath: configPath)
+            try? await httpClient.shutdown()
+        }
+    }
+
+    func testLoadFileMissingCredentialsWithMalformedConfigSurfacesError() async throws {
+        // A missing credentials file is fine on its own, but if the config file that we'd
+        // fall back to is malformed, we must surface the parse error rather than reporting
+        // `.noProvider` (which would hide the real problem from the user).
+        let credentialsPath = "missing-credentials-\(UUID().uuidString)"
+        let configPath = try save(content: "this line is not valid ini\n", prefix: "config-\(#function)")
+        let (_, httpClient) = try makeContext()
+
+        try await withTeardown {
+            do {
+                _ = try await ConfigFileLoader.loadSharedCredentials(
+                    credentialsFilePath: credentialsPath,
+                    configFilePath: configPath,
+                    profile: ConfigFileLoader.defaultProfile
+                )
+                XCTFail("Expected ConfigFileError.invalidINIFile")
+            } catch let error as ConfigFileLoader.ConfigFileError where error == .invalidINIFile {
+                // pass
+            } catch {
+                XCTFail("Expected ConfigFileError.invalidINIFile, got \(error.localizedDescription)")
+            }
+        } teardown: {
+            try? FileManager.default.removeItem(atPath: configPath)
+            try? await httpClient.shutdown()
+        }
+    }
+
     func testLoadFileSSOSourceProfileLegacyFormat() async throws {
         // Same scenario, but the source profile uses the legacy SSO format (direct sso_start_url
         // rather than an sso_session reference). Both should be detected.

@@ -120,16 +120,19 @@ enum ConfigFileLoader {
         threadPool: NIOThreadPool = .singleton
     ) async throws -> SharedCredentials {
         let fileIO = NonBlockingFileIO(threadPool: threadPool)
+        // Only treat "file does not exist" as a soft miss. Other failures (permission denied,
+        // I/O errors, malformed INI) propagate so the caller sees why credential lookup failed
+        // instead of silently falling through to the next provider.
         let credentialsINIParser: INIParser?
         do {
             credentialsINIParser = try await self.loadINIFile(path: credentialsFilePath, fileIO: fileIO)
-        } catch {
+        } catch let error as IOError where error.errnoCode == ENOENT {
             credentialsINIParser = nil
         }
         let configINIParser: INIParser?
         do {
             configINIParser = try await self.loadINIFile(path: configFilePath, fileIO: fileIO)
-        } catch {
+        } catch let error as IOError where error.errnoCode == ENOENT {
             configINIParser = nil
         }
 

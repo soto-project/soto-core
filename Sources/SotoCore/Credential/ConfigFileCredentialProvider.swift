@@ -133,11 +133,18 @@ struct ProfileScopedCredentialProvider: CredentialProvider {
 
 /// Error thrown when credential resolution for a profile fails. Preserves the underlying
 /// error so callers can still inspect the original cause.
-struct ProfileCredentialError: Error, CustomStringConvertible {
-    let profile: String
-    let underlying: any Error
+public struct ProfileCredentialError: Error, CustomStringConvertible {
+    /// The profile the caller asked to resolve.
+    public let profile: String
+    /// The error raised somewhere within the credential resolution for `profile`.
+    public let underlying: any Error
 
-    var description: String {
+    public init(profile: String, underlying: any Error) {
+        self.profile = profile
+        self.underlying = underlying
+    }
+
+    public var description: String {
         "Failed to resolve credentials for profile '\(self.profile)': \(self.underlying)"
     }
 }

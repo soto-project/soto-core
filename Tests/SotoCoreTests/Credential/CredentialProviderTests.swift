@@ -103,15 +103,21 @@ final class CredentialProviderTests: XCTestCase {
     }
 
     func testConfigFileNotAvailable() async throws {
-        let filename = "credentials_not_existing"
-        let filenameURL = URL(fileURLWithPath: filename)
+        let credentialsFilename = "credentials_not_existing"
+        let credentialsFilenameURL = URL(fileURLWithPath: credentialsFilename)
+
+        let configFilename = "config_not_existing"
+        let configFilenameURL = URL(fileURLWithPath: configFilename)
 
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         let eventLoop = eventLoopGroup.next()
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoop))
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
-        let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
+        let factory = CredentialProviderFactory.configFile(
+            credentialsFilePath: credentialsFilenameURL.path,
+            configFilePath: configFilenameURL.path,
+        )
 
         let provider = factory.createProvider(context: .init(httpClient: httpClient, logger: TestEnvironment.logger, options: .init()))
 

@@ -88,6 +88,7 @@ enum ConfigFileLoader {
     /// - missingSecretAccessKey: If the secret access key was not found
     public struct ConfigFileError: Error, Equatable {
         enum Internal: Equatable {
+            case fileDoesNotExist
             case invalidINIFile
             case missingProfile
             case missingAccessKeyId
@@ -95,6 +96,8 @@ enum ConfigFileLoader {
         }
         let value: Internal
 
+        /// Credentials or profile ini file does not exist
+        public static var fileDoesNotExist: Self { .init(value: .fileDoesNotExist) }
         /// Credentials or profile ini file failed to load
         public static var invalidINIFile: Self { .init(value: .invalidINIFile) }
         /// Cannot find profile in ini file
@@ -120,28 +123,39 @@ enum ConfigFileLoader {
         threadPool: NIOThreadPool = .singleton
     ) async throws -> SharedCredentials {
         let fileIO = NonBlockingFileIO(threadPool: threadPool)
-        let credentialsINIParser: INIParser
+        // Only treat "file does not exist" as a soft miss. Other failures (permission denied,
+        // I/O errors, malformed INI) propagate so the caller sees why credential lookup failed
+        // instead of silently falling through to the next provider.
+        let credentialsINIParser: INIParser?
         do {
-            // Load credentials file
-            credentialsINIParser = try await self.loadINIFile(
-                path: credentialsFilePath,
-                fileIO: fileIO
-            )
-        } catch {
-            // Throw `.noProvider` error if credential file cannot be loaded
-            throw CredentialProviderError.noProvider
+            credentialsINIParser = try await self.loadINIFile(path: credentialsFilePath, fileIO: fileIO)
+        } catch let error as ConfigFileError where error == ConfigFileError.fileDoesNotExist {
+            credentialsINIParser = nil
         }
         let configINIParser: INIParser?
         do {
-            // Load profile config file
-            configINIParser = try await self.loadINIFile(
-                path: configFilePath,
-                fileIO: fileIO
-            )
-        } catch {
+            configINIParser = try await self.loadINIFile(path: configFilePath, fileIO: fileIO)
+        } catch let error as ConfigFileError where error == ConfigFileError.fileDoesNotExist {
             configINIParser = nil
         }
-        return try self.parseSharedCredentials(from: credentialsINIParser, configINIParser: configINIParser, for: profile)
+
+        // If neither file is available there's nothing to resolve — fall through to the next
+        // provider in the chain, matching the historical contract for a missing credentials file.
+        if credentialsINIParser == nil && configINIParser == nil {
+            throw CredentialProviderError.noProvider
+        }
+
+        do {
+            return try self.parseSharedCredentials(
+                from: credentialsINIParser,
+                configINIParser: configINIParser,
+                for: profile
+            )
+        } catch let error as ConfigFileError where error == .missingProfile && credentialsINIParser == nil {
+            // The credentials file was unavailable and the config file didn't supply the profile
+            // either — preserve the "fall through to the next provider" behavior.
+            throw CredentialProviderError.noProvider
+        }
     }
 
     /// Load a file from disk without blocking the current thread
@@ -162,7 +176,13 @@ enum ConfigFileLoader {
     ///   - fileIO: non-blocking file IO
     /// - Returns: INIParser
     static func loadINIFile(path: String, fileIO: NonBlockingFileIO) async throws -> INIParser {
-        let buffer = try await loadFile(path: path, fileIO: fileIO)
+        let buffer: ByteBuffer
+        do {
+            buffer = try await loadFile(path: path, fileIO: fileIO)
+        } catch let error as IOError where error.errnoCode == ENOENT {
+            throw ConfigFileError.fileDoesNotExist
+        }
+
         let content = String(buffer: buffer)
         guard let parser = try? INIParser(content) else {
             throw ConfigFileError.invalidINIFile
@@ -184,34 +204,58 @@ enum ConfigFileLoader {
     ///   - profile: named profile to load (optional)
     /// - Returns: Parsed SharedCredentials
     static func parseSharedCredentials(
-        from credentialsINIParser: INIParser,
+        from credentialsINIParser: INIParser?,
         configINIParser: INIParser?,
         for profile: String
     ) throws -> SharedCredentials {
         let config = try configINIParser.flatMap { try self.parseProfileConfig(from: $0, for: profile) }
-        let credentials = try parseCredentials(from: credentialsINIParser, for: profile, sourceProfile: config?.sourceProfile)
+
+        // The profile may live only in the config file (typical for assume-role chains whose
+        // source is an SSO profile). Tolerate `.missingProfile` from `parseCredentials` when
+        // the config file already supplies a `role_arn`, and skip the call entirely when
+        // the credentials file is unavailable.
+        let credentials: ProfileCredentials?
+        if let credentialsINIParser {
+            do {
+                credentials = try parseCredentials(from: credentialsINIParser, for: profile, sourceProfile: config?.sourceProfile)
+            } catch let error as ConfigFileError where error == .missingProfile && config?.roleArn != nil {
+                credentials = nil
+            }
+        } else {
+            credentials = nil
+        }
 
         // If `role_arn` is defined, check for source profile or credential source
-        if let roleArn = credentials.roleArn ?? config?.roleArn {
-            let sessionName = credentials.roleSessionName ?? config?.roleSessionName ?? UUID().uuidString
+        if let roleArn = credentials?.roleArn ?? config?.roleArn {
+            let sessionName = credentials?.roleSessionName ?? config?.roleSessionName ?? UUID().uuidString
             let region = config?.region ?? .useast1
             // If `source_profile` is defined, temporary credentials must be loaded via STS AssumeRole operation
-            if let _ = credentials.sourceProfile ?? config?.sourceProfile {
-                guard let accessKey = credentials.accessKey else {
+            if let sourceProfileName = credentials?.sourceProfile ?? config?.sourceProfile {
+                // If the source profile is an SSO profile (per the config file), use SSO to obtain
+                // the source credentials instead of looking up static keys.
+                if let configINIParser, Self.isSSOProfile(in: configINIParser, profile: sourceProfileName) {
+                    return .assumeRole(
+                        roleArn: roleArn,
+                        sessionName: sessionName,
+                        region: region,
+                        sourceCredentialProvider: .sso(profileName: sourceProfileName)
+                    )
+                }
+                guard let accessKey = credentials?.accessKey else {
                     throw ConfigFileError.missingAccessKeyId
                 }
-                guard let secretAccessKey = credentials.secretAccessKey else {
+                guard let secretAccessKey = credentials?.secretAccessKey else {
                     throw ConfigFileError.missingSecretAccessKey
                 }
                 let provider: CredentialProviderFactory = .static(
                     accessKeyId: accessKey,
                     secretAccessKey: secretAccessKey,
-                    sessionToken: credentials.sessionToken
+                    sessionToken: credentials?.sessionToken
                 )
                 return .assumeRole(roleArn: roleArn, sessionName: sessionName, region: region, sourceCredentialProvider: provider)
             }
             // If `credental_source` is defined, temporary credentials must be loaded from source
-            else if let credentialSource = credentials.credentialSource ?? config?.credentialSource {
+            else if let credentialSource = credentials?.credentialSource ?? config?.credentialSource {
                 let provider: CredentialProviderFactory
                 switch credentialSource {
                 case .environment:
@@ -228,6 +272,9 @@ enum ConfigFileLoader {
         }
 
         // Return static credentials
+        guard let credentials else {
+            throw ConfigFileError.missingProfile
+        }
         guard let accessKey = credentials.accessKey else {
             throw ConfigFileError.missingAccessKeyId
         }
@@ -236,6 +283,14 @@ enum ConfigFileLoader {
         }
         let credential = StaticCredential(accessKeyId: accessKey, secretAccessKey: secretAccessKey, sessionToken: credentials.sessionToken)
         return .staticCredential(credential: credential)
+    }
+
+    /// Returns true if the given profile's section in the AWS config file declares SSO
+    /// (either the modern `sso_session` reference or the legacy `sso_start_url` keys).
+    static func isSSOProfile(in configINIParser: INIParser, profile: String) -> Bool {
+        let sectionKey = profile == Self.defaultProfile ? profile : "profile \(profile)"
+        guard let section = configINIParser.sections[sectionKey] else { return false }
+        return section["sso_session"] != nil || section["sso_start_url"] != nil
     }
 
     /// Parse profile configuraton from a file (passed in as byte-buffer), usually `~/.aws/config`

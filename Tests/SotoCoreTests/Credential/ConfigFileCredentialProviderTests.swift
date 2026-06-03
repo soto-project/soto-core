@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+import Logging
 import NIOCore
 import NIOPosix
 import SotoTestUtils
@@ -79,6 +80,57 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         try await httpClient.shutdown()
     }
 
+    func testProfileScopedProviderWrapsErrorWithProfileName() async throws {
+        // Direct unit test for the wrapper: any error from the inner provider must surface as
+        // a `ProfileCredentialError` whose description includes the profile name and whose
+        // `underlying` preserves the original error.
+        struct StubError: Error, Equatable {}
+        struct ThrowingProvider: CredentialProvider {
+            func getCredential(logger: Logger) async throws -> Credential { throw StubError() }
+        }
+        let wrapped = ProfileScopedCredentialProvider(inner: ThrowingProvider(), profile: "dev")
+
+        do {
+            _ = try await wrapped.getCredential(logger: TestEnvironment.logger)
+            XCTFail("Expected ProfileCredentialError")
+        } catch let error as ProfileCredentialError {
+            XCTAssertEqual(error.profile, "dev")
+            XCTAssertTrue(error.underlying is StubError)
+            XCTAssertTrue(error.description.contains("dev"), "Description should name the profile: \(error.description)")
+        } catch {
+            XCTFail("Expected ProfileCredentialError, got \(error)")
+        }
+    }
+
+    func testCredentialProviderTagsErrorsWithProfileFromFile() async throws {
+        // Integration check: loading via the file overload must produce a `ProfileScopedCredentialProvider`
+        // bound to the requested profile, so any failure from inside the chain surfaces with that profile.
+        let profile = "dev"
+        let credentialsFile = """
+            [\(profile)]
+            aws_access_key_id = AKIAIOSFODNN7EXAMPLE
+            aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+            """
+        let credentialsPath = "creds-\(UUID().uuidString)"
+        try credentialsFile.write(toFile: credentialsPath, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(atPath: credentialsPath) }
+        let (context, httpClient) = self.makeContext()
+
+        let provider = try await ConfigFileCredentialProvider.credentialProvider(
+            from: credentialsPath,
+            configFilePath: "/dev/null",
+            for: profile,
+            context: context,
+            endpoint: nil
+        )
+
+        let scoped = try XCTUnwrap(provider as? ProfileScopedCredentialProvider)
+        XCTAssertEqual(scoped.profile, profile)
+
+        try await provider.shutdown()
+        try await httpClient.shutdown()
+    }
+
     // MARK: - Config File Credentials Provider
 
     func testConfigFileSuccess() async throws {
@@ -135,15 +187,22 @@ class ConfigFileCredentialProviderTests: XCTestCase {
     }
 
     func testConfigFileNotAvailable() async {
-        let filename = #function
-        let filenameURL = URL(fileURLWithPath: filename)
+        let credentialsFilename = "credentials_\(#function)"
+        let credentialsFilenameURL = URL(fileURLWithPath: credentialsFilename)
+
+        let configFilename = "config_\(#function)"
+        let configFilenameURL = URL(fileURLWithPath: configFilename)
 
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         let eventLoop = eventLoopGroup.next()
         defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoop))
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
-        let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
+
+        let factory = CredentialProviderFactory.configFile(
+            credentialsFilePath: credentialsFilenameURL.path,
+            configFilePath: configFilenameURL.path,
+        )
 
         let provider = factory.createProvider(context: .init(httpClient: httpClient, logger: TestEnvironment.logger, options: .init()))
 

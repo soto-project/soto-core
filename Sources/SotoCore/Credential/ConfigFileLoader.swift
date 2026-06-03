@@ -88,6 +88,7 @@ enum ConfigFileLoader {
     /// - missingSecretAccessKey: If the secret access key was not found
     public struct ConfigFileError: Error, Equatable {
         enum Internal: Equatable {
+            case fileDoesNotExist
             case invalidINIFile
             case missingProfile
             case missingAccessKeyId
@@ -95,6 +96,8 @@ enum ConfigFileLoader {
         }
         let value: Internal
 
+        /// Credentials or profile ini file does not exist
+        public static var fileDoesNotExist: Self { .init(value: .fileDoesNotExist) }
         /// Credentials or profile ini file failed to load
         public static var invalidINIFile: Self { .init(value: .invalidINIFile) }
         /// Cannot find profile in ini file
@@ -126,13 +129,13 @@ enum ConfigFileLoader {
         let credentialsINIParser: INIParser?
         do {
             credentialsINIParser = try await self.loadINIFile(path: credentialsFilePath, fileIO: fileIO)
-        } catch let error as IOError where error.errnoCode == ENOENT {
+        } catch let error as ConfigFileError where error == ConfigFileError.fileDoesNotExist {
             credentialsINIParser = nil
         }
         let configINIParser: INIParser?
         do {
             configINIParser = try await self.loadINIFile(path: configFilePath, fileIO: fileIO)
-        } catch let error as IOError where error.errnoCode == ENOENT {
+        } catch let error as ConfigFileError where error == ConfigFileError.fileDoesNotExist {
             configINIParser = nil
         }
 
@@ -173,7 +176,13 @@ enum ConfigFileLoader {
     ///   - fileIO: non-blocking file IO
     /// - Returns: INIParser
     static func loadINIFile(path: String, fileIO: NonBlockingFileIO) async throws -> INIParser {
-        let buffer = try await loadFile(path: path, fileIO: fileIO)
+        let buffer: ByteBuffer 
+        do {
+            buffer = try await loadFile(path: path, fileIO: fileIO)
+        } catch let error as IOError where error.errnoCode == ENOENT {
+            throw ConfigFileError.fileDoesNotExist
+        }
+
         let content = String(buffer: buffer)
         guard let parser = try? INIParser(content) else {
             throw ConfigFileError.invalidINIFile

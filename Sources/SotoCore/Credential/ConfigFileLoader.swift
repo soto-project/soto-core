@@ -176,7 +176,7 @@ enum ConfigFileLoader {
     ///   - fileIO: non-blocking file IO
     /// - Returns: INIParser
     static func loadINIFile(path: String, fileIO: NonBlockingFileIO) async throws -> INIParser {
-        let buffer: ByteBuffer 
+        let buffer: ByteBuffer
         do {
             buffer = try await loadFile(path: path, fileIO: fileIO)
         } catch let error as IOError where error.errnoCode == ENOENT {

@@ -26,9 +26,9 @@ import struct Foundation.URL
 import struct Foundation.CharacterSet
 #endif
 
-@available(SotoCore 7.0, *)
 /// Middleware that runs an endpoint discovery function  to set service endpoint
 /// prior to running operation
+@available(SotoCore 7.0, *)
 public struct EndpointDiscoveryMiddleware: AWSMiddlewareProtocol {
     let storage: AWSEndpointStorage
     let discover: @Sendable (Logger) async throws -> AWSEndpoints

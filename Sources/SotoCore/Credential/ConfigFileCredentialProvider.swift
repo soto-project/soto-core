@@ -110,7 +110,6 @@ final class ConfigFileCredentialProvider: CredentialProviderSelector {
     }
 }
 
-@available(SotoCore 7.0, *)
 /// Wraps a credential provider so any error it raises is reported in terms of the profile
 /// the caller asked to resolve. Without this, an error from a source profile, SSO source, or
 /// STS AssumeRole call does not mention the profile that initiated the lookup.

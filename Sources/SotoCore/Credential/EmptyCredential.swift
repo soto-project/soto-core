@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-@available(SotoCore 7.0, *)
 /// Empty credentials
+@available(SotoCore 7.0, *)
 public struct EmptyCredential: CredentialProvider, Credential {
     public var accessKeyId: String { "" }
     public var secretAccessKey: String { "" }

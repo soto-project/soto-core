@@ -114,8 +114,8 @@ public func createRandomBuffer(_ w: UInt, _ z: UInt, size: Int) -> [UInt8] {
     return data
 }
 
-@available(SotoCore 7.0, *)
 /// Provide various test environment variables
+@available(SotoCore 7.0, *)
 public enum TestEnvironment {
     /// current list of middleware
     public static var middlewares: AWSMiddlewareProtocol {
@@ -138,7 +138,6 @@ public enum TestEnvironment {
     }()
 }
 
-@available(SotoCore 7.0, *)
 /// Run closure and then run teardown closure once closure has either returned or throw an error
 public func withTeardown<Value>(_ process: () async throws -> Value, teardown: () async -> Void) async throws -> Value {
     let result: Value

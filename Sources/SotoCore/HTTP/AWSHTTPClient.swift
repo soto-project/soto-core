@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-@available(SotoCore 7.0, *)
 /// Protocol for HTTP clients that work with Soto
+@available(SotoCore 7.0, *)
 public protocol AWSHTTPClient: Sendable {
     /// Execute an HTTP request
     func execute(

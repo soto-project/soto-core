@@ -24,8 +24,8 @@ import FoundationEssentials
 import Foundation
 #endif
 
-@available(SotoCore 7.0, *)
 /// Structure encapsulating an HTTP Response
+@available(SotoCore 7.0, *)
 public struct AWSHTTPResponse: Sendable {
     /// response status
     public let status: HTTPResponseStatus
@@ -323,7 +323,6 @@ public struct AWSHTTPResponse: Sendable {
     }
 }
 
-@available(SotoCore 7.0, *)
 private protocol APIError {
     var code: String? { get set }
     var message: String { get }
@@ -331,7 +330,6 @@ private protocol APIError {
     var extendedError: AWSErrorShape? { get }
 }
 
-@available(SotoCore 7.0, *)
 extension XML.Document {
     internal convenience init(buffer: ByteBuffer) throws {
         let xmlString = String(buffer: buffer)
@@ -339,7 +337,6 @@ extension XML.Document {
     }
 }
 
-@available(SotoCore 7.0, *)
 extension CodingUserInfoKey {
     public static var awsErrorMap: Self { .init(rawValue: "soto.awsErrorMap")! }
 }

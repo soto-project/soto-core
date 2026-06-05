@@ -29,7 +29,6 @@ import FoundationEssentials
 import Foundation
 #endif
 
-@available(SotoCore 7.0, *)
 /// Client managing communication with AWS services
 ///
 /// This is the workhorse of SotoCore. You provide it with a ``AWSShape`` Input object, it converts it to
@@ -37,6 +36,7 @@ import Foundation
 /// the response from AWS is received if it is successful it is converted to a ``AWSHTTPResponse`` which is
 /// then decoded to generate a ``AWSShape`` Output object. If it is not successful then `AWSClient` will
 /// throw an ``AWSErrorType``.
+@available(SotoCore 7.0, *)
 public final class AWSClient: Sendable {
     // MARK: Member variables
 

@@ -25,8 +25,8 @@ import FoundationEssentials
 import Foundation
 #endif
 
-@available(SotoCore 7.0, *)
 /// protocol to get Credentials from the Client. With this the AWSClient requests the credentials for request signing from ecs and ec2.
+@available(SotoCore 7.0, *)
 protocol MetaDataClient: CredentialProvider {
     associatedtype MetaData: ExpiringCredential & Decodable
 
@@ -40,7 +40,6 @@ extension MetaDataClient {
     }
 }
 
-@available(SotoCore 7.0, *)
 enum MetaDataClientError: Error {
     case failedToDecode(underlyingError: Error)
     case unexpectedTokenResponseStatus(status: HTTPResponseStatus)
@@ -60,7 +59,6 @@ extension MetaDataClient {
     }
 }
 
-@available(SotoCore 7.0, *)
 struct MetadataHTTPResponse {
     public var status: HTTPResponseStatus
     public var headers: HTTPHeaders
@@ -128,8 +126,8 @@ struct ECSMetaDataClient: MetaDataClient {
 
 // MARK: InstanceMetaDataServiceProvider
 
-@available(SotoCore 7.0, *)
 /// Provide AWS credentials for EC2 instances
+@available(SotoCore 7.0, *)
 struct InstanceMetaDataClient: MetaDataClient {
     typealias MetaData = InstanceMetaData
 

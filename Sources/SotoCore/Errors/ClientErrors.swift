@@ -16,7 +16,6 @@
 
 import NIOHTTP1
 
-@available(SotoCore 7.0, *)
 public struct AWSClientError: AWSErrorType {
     enum Code: String {
         case accessDenied = "AccessDenied"
@@ -100,14 +99,12 @@ public struct AWSClientError: AWSErrorType {
     public static var validationError: AWSClientError { .init(.validationError) }
 }
 
-@available(SotoCore 7.0, *)
 extension AWSClientError: Equatable {
     public static func == (lhs: AWSClientError, rhs: AWSClientError) -> Bool {
         lhs.error == rhs.error
     }
 }
 
-@available(SotoCore 7.0, *)
 extension AWSClientError: CustomStringConvertible {
     public var description: String {
         "\(self.error.rawValue): \(message ?? "")"

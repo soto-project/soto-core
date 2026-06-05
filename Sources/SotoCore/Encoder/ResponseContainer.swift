@@ -16,7 +16,6 @@
 import Foundation
 import NIOConcurrencyHelpers
 
-@available(SotoCore 7.0, *)
 /// Decoding error returned when extracting data out of response headers
 public struct HeaderDecodingError: Error {
     let header: String
@@ -28,9 +27,9 @@ public struct HeaderDecodingError: Error {
     }
 }
 
-@available(SotoCore 7.0, *)
 /// Response container used during Codable `init(from:)` that allows for extracting data from
 /// the full response and not only its body
+@available(SotoCore 7.0, *)
 @_spi(SotoInternal)
 public struct ResponseDecodingContainer: Sendable {
     @usableFromInline

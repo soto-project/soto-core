@@ -16,12 +16,12 @@ import Logging
 import NIOConcurrencyHelpers
 import NIOCore
 
-@available(SotoCore 7.0, *)
 /// Wrap and store result from another credential provider.
 ///
 /// Used for wrapping another credential provider whose `getCredential` method doesn't return instantly and
 /// is only needed to be called once. After the wrapped `CredentialProvider` has generated a credential this is
 /// returned instead of calling the wrapped `CredentialProvider's` `getCredentials` again.
+@available(SotoCore 7.0, *)
 public final class DeferredCredentialProvider: CredentialProvider {
     private let getCredentialTask: Task<Credential, Error>
     private let provider: CredentialProvider

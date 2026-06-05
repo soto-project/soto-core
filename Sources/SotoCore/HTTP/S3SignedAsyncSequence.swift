@@ -21,10 +21,10 @@ private let endOfLineLength = 2
 private let bufferSizeInHex = String(bufferSize, radix: 16)
 private let maxHeaderSize: Int = bufferSizeInHex.count + chunkSignatureLength + endOfLineLength
 
-@available(SotoCore 7.0, *)
 /// AsyncSequence that S3 signs the data returned from a base sequence
 ///
 /// See https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-streaming.html for details
+@available(SotoCore 7.0, *)
 struct S3SignedAsyncSequence<Base: AsyncSequence & Sendable>: AsyncSequence, Sendable where Base.Element == ByteBuffer {
     typealias Element = ByteBuffer
 

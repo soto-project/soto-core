@@ -21,8 +21,8 @@ import FoundationEssentials
 import Foundation
 #endif
 
-@available(SotoCore 7.0, *)
 /// Middleware that outputs the contents of requests being sent to AWS and the contents of the responses received.
+@available(SotoCore 7.0, *)
 public struct AWSLoggingMiddleware: AWSMiddlewareProtocol {
     @usableFromInline
     let outputBody: Bool

@@ -22,9 +22,9 @@ import FoundationEssentials
 import Foundation
 #endif
 
-@available(SotoCore 7.0, *)
 /// Storage for HTTP body which can be either a ByteBuffer or an AsyncSequence of
 /// ByteBuffers
+@available(SotoCore 7.0, *)
 public struct AWSHTTPBody: Sendable {
     enum Storage {
         case byteBuffer(ByteBuffer)

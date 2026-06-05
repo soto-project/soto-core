@@ -20,8 +20,8 @@ import FoundationEssentials
 import Foundation
 #endif
 
-@available(SotoCore 7.0, *)
 /// Services object protocol. Contains a client to communicate with AWS and configuration for defining how to communicate.
+@available(SotoCore 7.0, *)
 public protocol AWSService: Sendable {
     /// Client used to communicate with AWS
     var client: AWSClient { get }

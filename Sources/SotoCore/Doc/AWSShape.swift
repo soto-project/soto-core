@@ -15,7 +15,6 @@
 // TODO: FoundationEssentials. (NSRegularExpression)
 import Foundation
 
-@available(SotoCore 7.0, *)
 /// Protocol for the input and output objects for all AWS service commands.
 ///
 /// They need to be Codable so they can be serialized. They also need to provide details
@@ -24,12 +23,10 @@ public protocol AWSShape: Sendable {
     static var _options: AWSShapeOptions { get }
 }
 
-@available(SotoCore 7.0, *)
 extension AWSShape {
     public static var _options: AWSShapeOptions { .init() }
 }
 
-@available(SotoCore 7.0, *)
 extension AWSShape {
     /// Return an idempotencyToken
     public static func idempotencyToken() -> String {
@@ -37,7 +34,6 @@ extension AWSShape {
     }
 }
 
-@available(SotoCore 7.0, *)
 /// AWSShape that can be encoded into API input
 public protocol AWSEncodableShape: AWSShape & Encodable {
     /// Return XML root name
@@ -49,7 +45,6 @@ public protocol AWSEncodableShape: AWSShape & Encodable {
     func validate(name: String) throws
 }
 
-@available(SotoCore 7.0, *)
 extension AWSEncodableShape {
     /// Return XML root name
     public static var _xmlRootNodeName: String? { nil }
@@ -57,7 +52,6 @@ extension AWSEncodableShape {
     public static var _xmlNamespace: String? { nil }
 }
 
-@available(SotoCore 7.0, *)
 /// Validation code to add to AWSEncodableShape
 extension AWSEncodableShape {
     public func validate() throws {
@@ -112,22 +106,6 @@ extension AWSEncodableShape {
         }
     }
 
-    public func validate(_ value: AWSHTTPBody, name: String, parent: String, min: Int) throws {
-        if let size = value.length {
-            guard size >= min else {
-                throw Self.validationError("Length of \(parent).\(name) (\(size)) is less than minimum allowed value \(min).")
-            }
-        }
-    }
-
-    public func validate(_ value: AWSHTTPBody, name: String, parent: String, max: Int) throws {
-        if let size = value.length {
-            guard size <= max else {
-                throw Self.validationError("Length of \(parent).\(name) (\(size)) is greater than the maximum allowed value \(max).")
-            }
-        }
-    }
-
     public func validate(_ value: String, name: String, parent: String, pattern: String) throws {
         let regularExpression = try NSRegularExpression(pattern: pattern, options: [])
         let nsRange = NSRange(value.startIndex..<value.endIndex, in: value)
@@ -178,6 +156,30 @@ extension AWSEncodableShape {
         try self.validate(value, name: name, parent: parent, max: max)
     }
 
+    public func validate(_ value: String?, name: String, parent: String, pattern: String) throws {
+        guard let value else { return }
+        try self.validate(value, name: name, parent: parent, pattern: pattern)
+    }
+}
+
+@available(SotoCore 7.0, *)
+extension AWSEncodableShape {
+    public func validate(_ value: AWSHTTPBody, name: String, parent: String, min: Int) throws {
+        if let size = value.length {
+            guard size >= min else {
+                throw Self.validationError("Length of \(parent).\(name) (\(size)) is less than minimum allowed value \(min).")
+            }
+        }
+    }
+
+    public func validate(_ value: AWSHTTPBody, name: String, parent: String, max: Int) throws {
+        if let size = value.length {
+            guard size <= max else {
+                throw Self.validationError("Length of \(parent).\(name) (\(size)) is greater than the maximum allowed value \(max).")
+            }
+        }
+    }
+
     public func validate(_ value: AWSHTTPBody?, name: String, parent: String, min: Int) throws {
         guard let value else { return }
         try self.validate(value, name: name, parent: parent, min: min)
@@ -187,22 +189,14 @@ extension AWSEncodableShape {
         guard let value else { return }
         try self.validate(value, name: name, parent: parent, max: max)
     }
-
-    public func validate(_ value: String?, name: String, parent: String, pattern: String) throws {
-        guard let value else { return }
-        try self.validate(value, name: name, parent: parent, pattern: pattern)
-    }
 }
 
-@available(SotoCore 7.0, *)
 /// AWSShape that can be decoded from API output
 public protocol AWSDecodableShape: AWSShape & Decodable {}
 
-@available(SotoCore 7.0, *)
 /// AWSShape that can be decoded as an error
 public protocol AWSErrorShape: AWSShape & Decodable {}
 
-@available(SotoCore 7.0, *)
 /// AWSShape options.
 public struct AWSShapeOptions: OptionSet, Sendable {
     public var rawValue: Int

@@ -21,7 +21,6 @@ import FoundationEssentials
 import Foundation
 #endif
 
-@available(SotoCore 7.0, *)
 struct STSAssumeRoleRequest: AWSEncodableShape {
     /// The Amazon Resource Name (ARN) of the role to assume.
     let roleArn: String
@@ -53,7 +52,6 @@ struct STSAssumeRoleRequest: AWSEncodableShape {
     }
 }
 
-@available(SotoCore 7.0, *)
 struct STSAssumeRoleResponse: AWSDecodableShape {
     /// The temporary security credentials, which include an access key ID, a secret access key, and a security (or session) token.  The size of the security token that STS API operations return is not fixed. We strongly recommend that you make no assumptions about the maximum size.
     let credentials: STSCredentials?
@@ -63,7 +61,6 @@ struct STSAssumeRoleResponse: AWSDecodableShape {
     }
 }
 
-@available(SotoCore 7.0, *)
 struct STSAssumeRoleWithWebIdentityRequest: AWSEncodableShape {
     /// The Amazon Resource Name (ARN) of the role that the caller is assuming.
     let roleArn: String
@@ -101,7 +98,6 @@ struct STSAssumeRoleWithWebIdentityRequest: AWSEncodableShape {
     }
 }
 
-@available(SotoCore 7.0, *)
 struct STSAssumeRoleWithWebIdentityResponse: AWSDecodableShape {
     /// The temporary security credentials, which include an access key ID, a secret access key, and a security token.  The size of the security token that STS API operations return is not fixed. We strongly recommend that you make no assumptions about the maximum size.
     let credentials: STSCredentials?
@@ -111,7 +107,6 @@ struct STSAssumeRoleWithWebIdentityResponse: AWSDecodableShape {
     }
 }
 
-@available(SotoCore 7.0, *)
 struct STSCredentials: AWSDecodableShape, ExpiringCredential {
     /// The access key ID that identifies the temporary security credentials.
     let accessKeyId: String
@@ -141,8 +136,8 @@ struct STSCredentials: AWSDecodableShape, ExpiringCredential {
     }
 }
 
-@available(SotoCore 7.0, *)
 /// Credential Provider that holds an AWSClient
+@available(SotoCore 7.0, *)
 protocol CredentialProviderWithClient: CredentialProvider {
     var client: AWSClient { get }
 }
@@ -155,8 +150,8 @@ extension CredentialProviderWithClient {
     }
 }
 
-@available(SotoCore 7.0, *)
 /// Internal version of AssumeRole credential provider used by ConfigFileCredentialProvider
+@available(SotoCore 7.0, *)
 struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
     enum Request {
         case assumeRole(arn: String, sessionName: String)

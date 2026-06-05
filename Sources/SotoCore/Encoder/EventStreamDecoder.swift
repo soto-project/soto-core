@@ -19,7 +19,7 @@ internal import SotoXML
 
 /// Event stream decoder. Decodes top level `:event-type` header and then passes the payload
 /// to another decoder based off the `:content-type` header
-@available(SotoCore 7.0, *)
+
 struct EventStreamDecoder {
     init() {}
 
@@ -30,7 +30,7 @@ struct EventStreamDecoder {
     }
 }
 
-@available(SotoCore 7.0, *)
+
 /// Internal implementation of `EventStreamDecoder`
 private struct _EventStreamDecoder: Decoder {
     var codingPath: [CodingKey] { [] }
@@ -207,7 +207,7 @@ private struct _EventStreamDecoder: Decoder {
     }
 }
 
-@available(SotoCore 7.0, *)
+
 /// Container used for passed event payload to decoders
 public struct EventDecodingContainer: Sendable {
     /// Event headers

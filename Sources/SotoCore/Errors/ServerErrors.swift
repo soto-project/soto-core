@@ -16,7 +16,7 @@
 
 import NIOHTTP1
 
-@available(SotoCore 7.0, *)
+
 public struct AWSServerError: AWSErrorType {
     enum Code: String {
         case internalFailure = "InternalFailure"
@@ -52,14 +52,14 @@ public struct AWSServerError: AWSErrorType {
     public static var serviceUnavailable: AWSServerError { .init(.serviceUnavailable) }
 }
 
-@available(SotoCore 7.0, *)
+
 extension AWSServerError: Equatable {
     public static func == (lhs: AWSServerError, rhs: AWSServerError) -> Bool {
         lhs.error == rhs.error
     }
 }
 
-@available(SotoCore 7.0, *)
+
 extension AWSServerError: CustomStringConvertible {
     public var description: String {
         "\(self.error.rawValue): \(message ?? "")"

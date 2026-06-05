@@ -321,21 +321,18 @@ extension CredentialProviderFactory {
 
 // MARK: - HTTP Request/Response Models
 
-@available(SotoCore 7.0, *)
 private struct TokenRequest: Codable {
     let clientId: String
     let refreshToken: String
     let grantType: String
 }
 
-@available(SotoCore 7.0, *)
 private struct AccessTokenResponse: Codable {
     let accessKeyId: String
     let secretAccessKey: String
     let sessionToken: String
 }
 
-@available(SotoCore 7.0, *)
 private struct TokenResponse: Codable {
     let accessToken: AccessTokenResponse
     let tokenType: String
@@ -343,7 +340,6 @@ private struct TokenResponse: Codable {
     let refreshToken: String
 }
 
-@available(SotoCore 7.0, *)
 private struct ErrorResponse: Codable {
     let error: String
     let message: String

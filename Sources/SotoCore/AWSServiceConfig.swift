@@ -14,8 +14,8 @@
 
 import NIOCore
 
-@available(SotoCore 7.0, *)
 /// Configuration class defining an AWS service
+@available(SotoCore 7.0, *)
 public final class AWSServiceConfig {
     /// Region where service is running
     public let region: Region

@@ -19,7 +19,6 @@ import NIOCore
 import NIOPosix
 import SotoSignerV4
 
-@available(SotoCore 7.0, *)
 /// Provides AWS credentials
 public protocol CredentialProvider: Sendable, CustomStringConvertible {
     /// Return credential
@@ -31,18 +30,17 @@ public protocol CredentialProvider: Sendable, CustomStringConvertible {
     func shutdown() async throws
 }
 
-@available(SotoCore 7.0, *)
 extension CredentialProvider {
     public func shutdown() async throws {}
 
     public var description: String { "\(type(of: self))" }
 }
 
-@available(SotoCore 7.0, *)
 /// Provides factory functions for `CredentialProvider`s.
 ///
 /// The factory functions are only called once the `AWSClient` has been setup. This means we can supply
 /// things like a `Logger` and `HTTPClient` to the credential provider when we construct it.
+@available(SotoCore 7.0, *)
 public struct CredentialProviderFactory: Sendable {
     /// The initialization context for a `ContextProvider`
     public struct Context: Sendable {
@@ -76,7 +74,7 @@ extension CredentialProviderFactory {
         #if os(Linux)
         return .selector(.environment, .ecs, .ec2, .configFile(), .sso(), .login())
         #else
-        if #available(macOS 13.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *) {
+        if #available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *) {
             return .selector(.environment, .configFile(), .sso(), .login())
         } else {
             return .selector(.environment, .configFile(), .sso())

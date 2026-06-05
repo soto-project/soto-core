@@ -16,8 +16,8 @@ import Logging
 import NIOHTTP1
 import SotoSignerV4
 
-@available(SotoCore 7.0, *)
 /// Middleware that SigV4 signs an HTTP request
+@available(SotoCore 7.0, *)
 struct SigningMiddleware: AWSMiddlewareProtocol {
     @usableFromInline
     let credentialProvider: any CredentialProvider

@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-@available(SotoCore 7.0, *)
 /// Endpoint variant types
+@available(SotoCore 7.0, *)
 public struct EndpointVariantType: OptionSet, Hashable {
     public typealias RawValue = Int
     public let rawValue: Int
@@ -42,8 +42,8 @@ extension EndpointVariantType: CustomStringConvertible {
     }
 }
 
-@available(SotoCore 7.0, *)
 /// extend AWSServiceConfig options to generate endpoint variant options
+@available(SotoCore 7.0, *)
 extension AWSServiceConfig.Options {
     var endpointVariant: EndpointVariantType {
         .init(rawValue: self.rawValue).intersection(EndpointVariantType.all)

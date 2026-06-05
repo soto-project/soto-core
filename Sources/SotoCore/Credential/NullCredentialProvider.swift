@@ -16,8 +16,8 @@ import Logging
 import NIOCore
 import SotoSignerV4
 
-@available(SotoCore 7.0, *)
 /// Credential provider that always fails
+@available(SotoCore 7.0, *)
 public struct NullCredentialProvider: CredentialProvider {
     public init() {}
 

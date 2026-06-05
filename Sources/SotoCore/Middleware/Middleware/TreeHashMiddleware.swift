@@ -17,11 +17,11 @@ import Crypto
 
 let MEGA_BYTE = 1024 * 1024
 
-@available(SotoCore 7.0, *)
 /// Middleware to add tree hash of body to request
 ///
 /// Calculates a tree hash calculated from the SHA256 of each 1MB section of the request body
 /// and adds it to the request as a header value
+@available(SotoCore 7.0, *)
 public struct TreeHashMiddleware: AWSMiddlewareProtocol {
     public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse {
         var request = request

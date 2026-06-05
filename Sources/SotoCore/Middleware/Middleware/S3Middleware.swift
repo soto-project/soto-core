@@ -31,7 +31,6 @@ extension S3Middleware {
     }
 }
 
-@available(SotoCore 7.0, *)
 /// Middleware applied to S3 service
 ///
 /// This middleware does a number of request and response fixups for the S3 service.
@@ -45,6 +44,7 @@ extension S3Middleware {
 /// For responses it
 /// - Fixes up the GetBucketLocation response, so it can be decoded correctly
 /// - Creates error body for notFound responses to HEAD requests
+@available(SotoCore 7.0, *)
 public struct S3Middleware: AWSMiddlewareProtocol {
     public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse {
 
@@ -323,7 +323,6 @@ public struct S3Middleware: AWSMiddlewareProtocol {
     }
 }
 
-@available(SotoCore 7.0, *)
 extension StringProtocol {
     func split(separator: some StringProtocol) -> [Self.SubSequence] {
         var split: [Self.SubSequence] = []

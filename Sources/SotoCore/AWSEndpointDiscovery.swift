@@ -22,7 +22,6 @@ import FoundationEssentials
 import Foundation
 #endif
 
-@available(SotoCore 7.0, *)
 /// Endpoint list
 public struct AWSEndpoints {
     public struct Endpoint {
@@ -44,8 +43,8 @@ public struct AWSEndpoints {
     let endpoints: [Endpoint]
 }
 
-@available(SotoCore 7.0, *)
 /// Endpoint Storage attached to a Service
+@available(SotoCore 7.0, *)
 public struct AWSEndpointStorage: Sendable {
     let endpoint: ExpiringValue<String>
 

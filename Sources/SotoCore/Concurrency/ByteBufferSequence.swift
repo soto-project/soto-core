@@ -15,8 +15,8 @@
 import NIOCore
 import NIOPosix
 
-@available(SotoCore 7.0, *)
 /// Provide ByteBuffer as an AsyncSequence of equal size blocks
+@available(SotoCore 7.0, *)
 public struct ByteBufferAsyncSequence: AsyncSequence, Sendable {
     public typealias Element = ByteBuffer
 

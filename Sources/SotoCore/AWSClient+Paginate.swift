@@ -15,6 +15,7 @@
 import Logging
 import NIOCore
 
+@available(SotoCore 7.0, *)
 /// Protocol for all AWSShapes that can be paginated.
 /// Adds an initialiser that does a copy but inserts a new integer based pagination token
 public protocol AWSPaginateToken: AWSShape {
@@ -22,6 +23,7 @@ public protocol AWSPaginateToken: AWSShape {
     func usingPaginationToken(_ token: Token) -> Self
 }
 
+@available(SotoCore 7.0, *)
 extension AWSClient {
     /// Used to access paginated results.
     public struct PaginatorSequence<Input: AWSPaginateToken, Output: AWSShape>: AsyncSequence where Input.Token: Equatable {

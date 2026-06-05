@@ -20,6 +20,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
+@available(SotoCore 7.0, *)
 package struct SigV4aKeyPair {
 
     package let key: P256.Signing.PrivateKey

@@ -38,6 +38,7 @@ import Foundation
     }
 }
 
+@available(SotoCore 7.0, *)
 public func createAWSClient(
     credentialProvider: CredentialProviderFactory = .default,
     retryPolicy: RetryPolicyFactory = .noRetry,
@@ -56,6 +57,7 @@ public func createAWSClient(
     )
 }
 
+@available(SotoCore 7.0, *)
 public func createServiceConfig(
     region: Region? = nil,
     partition: AWSPartition = .aws,
@@ -112,6 +114,7 @@ public func createRandomBuffer(_ w: UInt, _ z: UInt, size: Int) -> [UInt8] {
     return data
 }
 
+@available(SotoCore 7.0, *)
 /// Provide various test environment variables
 public enum TestEnvironment {
     /// current list of middleware
@@ -135,6 +138,7 @@ public enum TestEnvironment {
     }()
 }
 
+@available(SotoCore 7.0, *)
 /// Run closure and then run teardown closure once closure has either returned or throw an error
 public func withTeardown<Value>(_ process: () async throws -> Value, teardown: () async -> Void) async throws -> Value {
     let result: Value

@@ -17,6 +17,7 @@ import Crypto
 
 let MEGA_BYTE = 1024 * 1024
 
+@available(SotoCore 7.0, *)
 /// Middleware to add tree hash of body to request
 ///
 /// Calculates a tree hash calculated from the SHA256 of each 1MB section of the request body

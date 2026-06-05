@@ -35,6 +35,7 @@ import protocol Foundation.ContiguousBytes
 
 // MARK: Waiters
 
+@available(SotoCore 7.0, *)
 extension AWSClient {
     /// Waiter state
     public enum WaiterState: Sendable {

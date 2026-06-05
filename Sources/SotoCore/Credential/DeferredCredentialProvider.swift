@@ -16,6 +16,7 @@ import Logging
 import NIOConcurrencyHelpers
 import NIOCore
 
+@available(SotoCore 7.0, *)
 /// Wrap and store result from another credential provider.
 ///
 /// Used for wrapping another credential provider whose `getCredential` method doesn't return instantly and
@@ -59,6 +60,7 @@ public final class DeferredCredentialProvider: CredentialProvider {
     }
 }
 
+@available(SotoCore 7.0, *)
 extension DeferredCredentialProvider: CustomStringConvertible {
     public var description: String { "\(type(of: self))(\(self.provider.description))" }
 }

@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 @resultBuilder
+@available(SotoCore 7.0, *)
 public enum AWSMiddlewareBuilder {
     public static func buildBlock<M0: AWSMiddlewareProtocol>(_ m0: M0) -> M0 {
         m0
@@ -30,6 +31,7 @@ public enum AWSMiddlewareBuilder {
     }
 }
 
+@available(SotoCore 7.0, *)
 public func AWSMiddlewareStack(@AWSMiddlewareBuilder _ builder: () -> some AWSMiddlewareProtocol) -> some AWSMiddlewareProtocol {
     builder()
 }

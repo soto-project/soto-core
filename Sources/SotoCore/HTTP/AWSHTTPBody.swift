@@ -22,6 +22,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
+@available(SotoCore 7.0, *)
 /// Storage for HTTP body which can be either a ByteBuffer or an AsyncSequence of
 /// ByteBuffers
 public struct AWSHTTPBody: Sendable {
@@ -98,6 +99,7 @@ public struct AWSHTTPBody: Sendable {
     }
 }
 
+@available(SotoCore 7.0, *)
 extension AWSHTTPBody: AsyncSequence {
     public typealias Element = ByteBuffer
     public typealias AsyncIterator = AnyAsyncSequence<ByteBuffer>.AsyncIterator
@@ -112,6 +114,7 @@ extension AWSHTTPBody: AsyncSequence {
     }
 }
 
+@available(SotoCore 7.0, *)
 extension AWSHTTPBody: AWSDecodableShape {
     public init(from decoder: Decoder) throws {
         let responseContainer = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
@@ -119,6 +122,7 @@ extension AWSHTTPBody: AWSDecodableShape {
     }
 }
 
+@available(SotoCore 7.0, *)
 extension AWSHTTPBody: AWSEncodableShape {
     public func encode(to encoder: Encoder) throws {
         enum CodingKeys: CodingKey {}

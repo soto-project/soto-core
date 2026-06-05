@@ -29,6 +29,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
+@available(SotoCore 7.0, *)
 /// Client managing communication with AWS services
 ///
 /// This is the workhorse of SotoCore. You provide it with a ``AWSShape`` Input object, it converts it to
@@ -251,6 +252,7 @@ public final class AWSClient: Sendable {
 
 // MARK: API Calls
 
+@available(SotoCore 7.0, *)
 extension AWSClient {
     /// Execute a request with an input object and an empty response
     /// - parameters:
@@ -556,6 +558,7 @@ extension AWSClient {
 }
 
 // response validator
+@available(SotoCore 7.0, *)
 extension AWSClient {
     /// Generate an AWS Response from  the operation HTTP response and return the output shape from it. This is only every called if the response includes a successful http status code
     internal func processResponse<Output: AWSDecodableShape>(
@@ -568,6 +571,7 @@ extension AWSClient {
     }
 }
 
+@available(SotoCore 7.0, *)
 extension AWSClient.ClientError: CustomStringConvertible {
     /// return human readable description of error
     public var description: String {

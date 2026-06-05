@@ -14,6 +14,7 @@
 
 import NIOHTTP1
 
+@available(SotoCore 7.0, *)
 /// Middleware for editing header values sent to AWS service.
 public struct AWSEditHeadersMiddleware: AWSMiddlewareProtocol {
     public enum HeaderEdit {
@@ -50,5 +51,7 @@ public struct AWSEditHeadersMiddleware: AWSMiddlewareProtocol {
     }
 }
 
+@available(SotoCore 7.0, *)
 extension AWSEditHeadersMiddleware: Sendable {}
+@available(SotoCore 7.0, *)
 extension AWSEditHeadersMiddleware.HeaderEdit: Sendable {}

@@ -16,6 +16,7 @@ import JMESPath
 import NIOCore
 import NIOHTTP1
 
+@available(SotoCore 7.0, *)
 /// Protocol for matchers used in waiters.
 ///
 /// A matcher returns whether the returned value from an AWS API call matches a certain state
@@ -23,6 +24,7 @@ public protocol AWSWaiterMatcher: Sendable {
     func match(result: Result<Any, Error>) -> Bool
 }
 
+@available(SotoCore 7.0, *)
 /// Match whether the value indicated by JMESPath matches an expected value
 public struct JMESPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatcher {
     let expression: JMESExpression
@@ -51,6 +53,7 @@ public struct JMESPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatcher 
     }
 }
 
+@available(SotoCore 7.0, *)
 /// Match whether any of the values indicated by JMESPath matches an expected value
 public struct JMESAnyPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatcher {
     let expression: JMESExpression
@@ -79,6 +82,7 @@ public struct JMESAnyPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatch
     }
 }
 
+@available(SotoCore 7.0, *)
 /// Match whether all of the values indicated by JMESPath matches an expected value
 public struct JMESAllPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatcher {
     let expression: JMESExpression
@@ -107,6 +111,7 @@ public struct JMESAllPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatch
     }
 }
 
+@available(SotoCore 7.0, *)
 /// Match whether an AWS API call was successful
 public struct AWSSuccessMatcher: AWSWaiterMatcher {
     public init() {}
@@ -120,6 +125,7 @@ public struct AWSSuccessMatcher: AWSWaiterMatcher {
     }
 }
 
+@available(SotoCore 7.0, *)
 /// Match whether an AWS API call returns a specific HTTP response code
 public struct AWSErrorStatusMatcher: AWSWaiterMatcher {
     let expectedStatus: Int
@@ -146,6 +152,7 @@ public struct AWSErrorStatusMatcher: AWSWaiterMatcher {
     }
 }
 
+@available(SotoCore 7.0, *)
 /// Match whether an AWS API call returns a specific error code
 public struct AWSErrorCodeMatcher: AWSWaiterMatcher {
     let expectedCode: String

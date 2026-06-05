@@ -23,6 +23,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
+@available(SotoCore 7.0, *)
 /// Wrap a credential provider that returns an `ExpiringCredential`
 ///
 /// Used for wrapping another credential provider whose `getCredential` method returns an `ExpiringCredential`.
@@ -117,6 +118,7 @@ public final class RotatingCredentialProvider: CredentialProvider {
     }
 }
 
+@available(SotoCore 7.0, *)
 extension RotatingCredentialProvider: CustomStringConvertible {
     public var description: String { "\(type(of: self))(\(self.provider.description))" }
 }

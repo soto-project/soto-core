@@ -20,6 +20,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
+@available(SotoCore 7.0, *)
 /// Type holding a value and an expiration value.
 ///
 /// When accessing the value you have to provide a closure that will update the

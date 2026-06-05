@@ -18,6 +18,7 @@ import struct Foundation.Data
 import class Foundation.JSONSerialization
 
 // AWS HAL services I know of are APIGateway, Pinpoint, Greengrass
+@available(SotoCore 7.0, *)
 extension AWSHTTPResponse {
     /// return if body is hypertext application language
     var isHypertextApplicationLanguage: Bool {

@@ -19,6 +19,7 @@ import NIOCore
 import NIOPosix
 import SotoSignerV4
 
+@available(SotoCore 7.0, *)
 /// Provides AWS credentials
 public protocol CredentialProvider: Sendable, CustomStringConvertible {
     /// Return credential
@@ -30,12 +31,14 @@ public protocol CredentialProvider: Sendable, CustomStringConvertible {
     func shutdown() async throws
 }
 
+@available(SotoCore 7.0, *)
 extension CredentialProvider {
     public func shutdown() async throws {}
 
     public var description: String { "\(type(of: self))" }
 }
 
+@available(SotoCore 7.0, *)
 /// Provides factory functions for `CredentialProvider`s.
 ///
 /// The factory functions are only called once the `AWSClient` has been setup. This means we can supply
@@ -62,6 +65,7 @@ public struct CredentialProviderFactory: Sendable {
     }
 }
 
+@available(SotoCore 7.0, *)
 extension CredentialProviderFactory {
     /// The default CredentialProvider used to access credentials
     ///

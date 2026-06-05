@@ -25,6 +25,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
+@available(SotoCore 7.0, *)
 /// Object encapsulating all the information needed to generate a raw HTTP request to AWS
 public struct AWSHTTPRequest: Sendable {
     /// request URL
@@ -77,6 +78,7 @@ public struct AWSHTTPRequest: Sendable {
     }
 }
 
+@available(SotoCore 7.0, *)
 extension AWSHTTPRequest {
     internal init(operation operationName: String, path: String, method: HTTPMethod, configuration: AWSServiceConfig) throws {
         var headers = HTTPHeaders()
@@ -312,34 +314,41 @@ extension AWSHTTPRequest {
     ]
 }
 
+@available(SotoCore 7.0, *)
 private protocol AWSRequestEncodableArray {
     var encoded: [String] { get }
 }
 
+@available(SotoCore 7.0, *)
 extension Array: AWSRequestEncodableArray {
     var encoded: [String] { self.map { "\($0)" } }
 }
 
+@available(SotoCore 7.0, *)
 private protocol AWSRequestEncodableDictionary {
     var encoded: [(key: String, value: String)] { get }
 }
 
+@available(SotoCore 7.0, *)
 extension Dictionary: AWSRequestEncodableDictionary {
     var encoded: [(key: String, value: String)] {
         self.map { (key: "\($0.key)", value: "\($0.value)") }
     }
 }
 
+@available(SotoCore 7.0, *)
 private protocol AWSRequestEncodableString {
     var encoded: String? { get }
 }
 
+@available(SotoCore 7.0, *)
 extension CustomCoding: AWSRequestEncodableString where Coder: CustomEncoder {
     var encoded: String? {
         Coder.string(from: self.wrappedValue)
     }
 }
 
+@available(SotoCore 7.0, *)
 extension OptionalCustomCoding: AWSRequestEncodableString where Coder: CustomEncoder {
     var encoded: String? {
         guard let value = self.wrappedValue else { return nil }

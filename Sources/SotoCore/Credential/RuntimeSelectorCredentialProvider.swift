@@ -17,6 +17,7 @@ import NIOConcurrencyHelpers
 import NIOCore
 import SotoSignerV4
 
+@available(SotoCore 7.0, *)
 /// get credentials from a list of possible credential providers. Goes through list of providers from start to end
 /// attempting to get credentials. Once it finds a `CredentialProvider` that supplies credentials use that
 /// one

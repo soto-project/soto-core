@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+@available(SotoCore 7.0, *)
 /// Endpoint variant types
 public struct EndpointVariantType: OptionSet, Hashable {
     public typealias RawValue = Int
@@ -27,6 +28,7 @@ public struct EndpointVariantType: OptionSet, Hashable {
     public static let all: Self = [.fips, .dualstack]
 }
 
+@available(SotoCore 7.0, *)
 extension EndpointVariantType: CustomStringConvertible {
     public var description: String {
         var elements: [String] = []
@@ -40,6 +42,7 @@ extension EndpointVariantType: CustomStringConvertible {
     }
 }
 
+@available(SotoCore 7.0, *)
 /// extend AWSServiceConfig options to generate endpoint variant options
 extension AWSServiceConfig.Options {
     var endpointVariant: EndpointVariantType {
@@ -47,4 +50,5 @@ extension AWSServiceConfig.Options {
     }
 }
 
+@available(SotoCore 7.0, *)
 extension EndpointVariantType: Sendable {}

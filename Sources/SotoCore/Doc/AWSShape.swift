@@ -15,6 +15,7 @@
 // TODO: FoundationEssentials. (NSRegularExpression)
 import Foundation
 
+@available(SotoCore 7.0, *)
 /// Protocol for the input and output objects for all AWS service commands.
 ///
 /// They need to be Codable so they can be serialized. They also need to provide details
@@ -23,10 +24,12 @@ public protocol AWSShape: Sendable {
     static var _options: AWSShapeOptions { get }
 }
 
+@available(SotoCore 7.0, *)
 extension AWSShape {
     public static var _options: AWSShapeOptions { .init() }
 }
 
+@available(SotoCore 7.0, *)
 extension AWSShape {
     /// Return an idempotencyToken
     public static func idempotencyToken() -> String {
@@ -34,6 +37,7 @@ extension AWSShape {
     }
 }
 
+@available(SotoCore 7.0, *)
 /// AWSShape that can be encoded into API input
 public protocol AWSEncodableShape: AWSShape & Encodable {
     /// Return XML root name
@@ -45,6 +49,7 @@ public protocol AWSEncodableShape: AWSShape & Encodable {
     func validate(name: String) throws
 }
 
+@available(SotoCore 7.0, *)
 extension AWSEncodableShape {
     /// Return XML root name
     public static var _xmlRootNodeName: String? { nil }
@@ -52,6 +57,7 @@ extension AWSEncodableShape {
     public static var _xmlNamespace: String? { nil }
 }
 
+@available(SotoCore 7.0, *)
 /// Validation code to add to AWSEncodableShape
 extension AWSEncodableShape {
     public func validate() throws {
@@ -188,12 +194,15 @@ extension AWSEncodableShape {
     }
 }
 
+@available(SotoCore 7.0, *)
 /// AWSShape that can be decoded from API output
 public protocol AWSDecodableShape: AWSShape & Decodable {}
 
+@available(SotoCore 7.0, *)
 /// AWSShape that can be decoded as an error
 public protocol AWSErrorShape: AWSShape & Decodable {}
 
+@available(SotoCore 7.0, *)
 /// AWSShape options.
 public struct AWSShapeOptions: OptionSet, Sendable {
     public var rawValue: Int

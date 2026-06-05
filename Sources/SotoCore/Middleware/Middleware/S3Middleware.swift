@@ -18,6 +18,7 @@ import Foundation
 @_spi(SotoInternal) import SotoSignerV4
 internal import SotoXML
 
+@available(SotoCore 7.0, *)
 extension S3Middleware {
     @TaskLocal public static var executionContext: ExecutionContext?
 
@@ -30,6 +31,7 @@ extension S3Middleware {
     }
 }
 
+@available(SotoCore 7.0, *)
 /// Middleware applied to S3 service
 ///
 /// This middleware does a number of request and response fixups for the S3 service.
@@ -321,6 +323,7 @@ public struct S3Middleware: AWSMiddlewareProtocol {
     }
 }
 
+@available(SotoCore 7.0, *)
 extension StringProtocol {
     func split(separator: some StringProtocol) -> [Self.SubSequence] {
         var split: [Self.SubSequence] = []

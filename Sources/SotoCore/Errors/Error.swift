@@ -14,6 +14,7 @@
 
 import NIOHTTP1
 
+@available(SotoCore 7.0, *)
 /// Standard Error type returned by Soto.
 ///
 /// Initialized with error code and message.
@@ -26,6 +27,7 @@ public protocol AWSErrorType: Error, CustomStringConvertible {
     var context: AWSErrorContext? { get }
 }
 
+@available(SotoCore 7.0, *)
 extension AWSErrorType {
     public var localizedDescription: String {
         "\(self)"
@@ -36,11 +38,13 @@ extension AWSErrorType {
     }
 }
 
+@available(SotoCore 7.0, *)
 /// Service that has extended error information
 public protocol AWSServiceErrorType: AWSErrorType {
     static var errorCodeMap: [String: AWSErrorShape.Type] { get }
 }
 
+@available(SotoCore 7.0, *)
 /// Additional information about error
 public struct AWSErrorContext {
     public let message: String
@@ -64,6 +68,7 @@ public struct AWSErrorContext {
     }
 }
 
+@available(SotoCore 7.0, *)
 /// Response Error type returned by Soto if the error code is unrecognised
 public struct AWSResponseError: AWSErrorType {
     public let errorCode: String
@@ -84,6 +89,7 @@ public struct AWSResponseError: AWSErrorType {
     }
 }
 
+@available(SotoCore 7.0, *)
 /// Raw unprocessed error.
 ///
 /// Used when we cannot extract an error code from the AWS response. Returns full body of error response
@@ -101,4 +107,5 @@ public struct AWSRawError: Error, CustomStringConvertible {
     }
 }
 
+@available(SotoCore 7.0, *)
 extension AWSErrorContext: Sendable {}

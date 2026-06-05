@@ -38,6 +38,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
+@available(SotoCore 7.0, *)
 struct SSOTokenManager {
     private let httpClient: AWSHTTPClient
 

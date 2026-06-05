@@ -14,6 +14,7 @@
 
 import Tracing
 
+@available(SotoCore 7.0, *)
 /// Middleware for adding tracing to AWS calls.
 ///
 /// This currently only adds attributes for the basic common attributes as detailed
@@ -44,6 +45,7 @@ public struct AWSTracingMiddleware: AWSMiddlewareProtocol {
     }
 }
 
+@available(SotoCore 7.0, *)
 extension Span {
     /// Update Span attributes in a block instead of individually
     ///

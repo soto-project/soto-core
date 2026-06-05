@@ -20,6 +20,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
+@available(SotoCore 7.0, *)
 /// AsyncSequence of Event stream events
 public struct AWSEventStream<Event: Sendable>: Sendable {
     let base: AnyAsyncSequence<ByteBuffer>
@@ -30,6 +31,7 @@ public struct AWSEventStream<Event: Sendable>: Sendable {
     }
 }
 
+@available(SotoCore 7.0, *)
 extension AWSEventStream: Decodable where Event: Decodable {
     public init(from decoder: Decoder) throws {
         let responseContainer = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
@@ -37,12 +39,14 @@ extension AWSEventStream: Decodable where Event: Decodable {
     }
 }
 
+@available(SotoCore 7.0, *)
 extension AWSEventStream: Encodable where Event: Encodable {
     public func encode(to encoder: Encoder) throws {
         preconditionFailure("Encoding EventStreams is unsupported")
     }
 }
 
+@available(SotoCore 7.0, *)
 /// If Event is decodable then conform AWSEventStream to AsyncSequence
 extension AWSEventStream: AsyncSequence where Event: Decodable {
     public typealias Element = Event

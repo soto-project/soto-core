@@ -25,6 +25,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+@available(SotoCore 7.0, *)
 public struct AnyAsyncSequence<Element>: Sendable, AsyncSequence {
     public typealias AsyncIteratorNextCallback = () async throws -> Element?
 

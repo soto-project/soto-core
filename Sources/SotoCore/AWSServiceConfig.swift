@@ -14,6 +14,7 @@
 
 import NIOCore
 
+@available(SotoCore 7.0, *)
 /// Configuration class defining an AWS service
 public final class AWSServiceConfig {
     /// Region where service is running
@@ -347,6 +348,9 @@ public final class AWSServiceConfig {
     }
 }
 
+@available(SotoCore 7.0, *)
 extension AWSServiceConfig: Sendable {}
+@available(SotoCore 7.0, *)
 extension AWSServiceConfig.Options: Sendable {}
+@available(SotoCore 7.0, *)
 extension AWSServiceConfig.EndpointVariant: Sendable {}

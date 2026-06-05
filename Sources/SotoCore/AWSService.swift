@@ -20,6 +20,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
+@available(SotoCore 7.0, *)
 /// Services object protocol. Contains a client to communicate with AWS and configuration for defining how to communicate.
 public protocol AWSService: Sendable {
     /// Client used to communicate with AWS
@@ -39,6 +40,7 @@ public protocol AWSService: Sendable {
     init(from: Self, patch: AWSServiceConfig.Patch)
 }
 
+@available(SotoCore 7.0, *)
 extension AWSService {
     /// Region where service is running
     public var region: Region { config.region }

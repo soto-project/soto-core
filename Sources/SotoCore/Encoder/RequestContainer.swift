@@ -19,6 +19,7 @@ import struct Foundation.Date
 import struct Foundation.URL
 import struct Foundation.URLComponents
 
+@available(SotoCore 7.0, *)
 /// Request container used during Codable `encode(to:)` that allows for encoding data into
 /// the request that is not part of standard Codable output
 @_spi(SotoInternal)

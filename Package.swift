@@ -15,19 +15,23 @@
 
 import PackageDescription
 
-let swiftSettings: [SwiftSetting] = [
+var swiftSettings: [SwiftSetting] = [
     .enableExperimentalFeature("StrictConcurrency=complete"),
     .enableExperimentalFeature("AccessLevelOnImport"),
 ]
 
+#if compiler(>=6.3)
+swiftSettings.append(contentsOf: [
+    .enableExperimentalFeature("AvailabilityMacro=SotoCore 7.0:macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, Android 28"),
+])
+#else
+swiftSettings.append(contentsOf: [
+    .enableExperimentalFeature("AvailabilityMacro=SotoCore 7.0:macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0"),
+])
+#endif
+
 let package = Package(
     name: "soto-core",
-    platforms: [
-        .macOS(.v10_15),
-        .iOS(.v13),
-        .tvOS(.v13),
-        .watchOS(.v6),
-    ],
     products: [
         .library(name: "SotoCore", targets: ["SotoCore"]),
         .library(name: "SotoTestUtils", targets: ["SotoTestUtils"]),
@@ -101,7 +105,8 @@ let package = Package(
                 .product(name: "NIOHTTP1", package: "swift-nio"),
                 .product(name: "NIOPosix", package: "swift-nio"),
                 .product(name: "NIOTestUtils", package: "swift-nio"),
-            ]
+            ],
+            swiftSettings: swiftSettings
         ),
         .target(
             name: "SotoXML",

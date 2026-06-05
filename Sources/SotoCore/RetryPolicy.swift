@@ -23,6 +23,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
+@available(SotoCore 7.0, *)
 /// Creates a RetryPolicy for AWSClient to use
 public struct RetryPolicyFactory {
     public let retryPolicy: RetryPolicy
@@ -59,6 +60,7 @@ public enum RetryStatus {
     case dontRetry
 }
 
+@available(SotoCore 7.0, *)
 /// Protocol for Retry strategy. Has function returning amount of time before the next retry after an HTTP error
 public protocol RetryPolicy: Sendable {
     /// Returns whether we should retry and how long we should wait before retrying
@@ -68,6 +70,7 @@ public protocol RetryPolicy: Sendable {
     func getRetryWaitTime(error: Error, attempt: Int) -> RetryStatus?
 }
 
+@available(SotoCore 7.0, *)
 /// Retry controller that never returns a retry wait time
 private struct NoRetry: RetryPolicy {
     init() {}
@@ -76,12 +79,14 @@ private struct NoRetry: RetryPolicy {
     }
 }
 
+@available(SotoCore 7.0, *)
 /// Protocol for standard retry response. Will attempt to retry on 5xx errors, 429 (tooManyRequests).
 protocol StandardRetryPolicy: RetryPolicy {
     var maxRetries: Int { get }
     func calculateRetryWaitTime(attempt: Int) -> TimeAmount
 }
 
+@available(SotoCore 7.0, *)
 extension StandardRetryPolicy {
     /// default version of getRetryWaitTime for StandardRetryController
     func getRetryWaitTime(error: Error, attempt: Int) -> RetryStatus? {
@@ -112,6 +117,7 @@ extension StandardRetryPolicy {
     }
 }
 
+@available(SotoCore 7.0, *)
 /// Retry with an exponentially increasing wait time between wait times
 struct ExponentialRetry: StandardRetryPolicy {
     let base: TimeAmount
@@ -128,6 +134,7 @@ struct ExponentialRetry: StandardRetryPolicy {
     }
 }
 
+@available(SotoCore 7.0, *)
 /// Exponential jitter retry. Instead of returning an exponentially increasing retry time it returns a jittered version. In a heavy load situation
 /// where a large number of clients all hit the servers at the same time, jitter helps to smooth out the server response. See
 /// https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/ for details.

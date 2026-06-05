@@ -16,6 +16,7 @@ import Logging
 import NIOHTTP1
 import SotoSignerV4
 
+@available(SotoCore 7.0, *)
 /// Middleware that performs retries of the next middleware whenever it throws errors based on a retry policy
 struct RetryMiddleware: AWSMiddlewareProtocol {
     @usableFromInline

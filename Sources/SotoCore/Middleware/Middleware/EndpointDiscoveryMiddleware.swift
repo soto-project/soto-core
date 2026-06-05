@@ -26,6 +26,7 @@ import struct Foundation.URL
 import struct Foundation.CharacterSet
 #endif
 
+@available(SotoCore 7.0, *)
 /// Middleware that runs an endpoint discovery function  to set service endpoint
 /// prior to running operation
 public struct EndpointDiscoveryMiddleware: AWSMiddlewareProtocol {

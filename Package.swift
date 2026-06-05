@@ -22,11 +22,11 @@ var swiftSettings: [SwiftSetting] = [
 
 #if compiler(>=6.3)
 swiftSettings.append(contentsOf: [
-    .enableExperimentalFeature("AvailabilityMacro=SotoCore 7.0:macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, Android 28"),
+    .enableExperimentalFeature("AvailabilityMacro=SotoCore 7.0:macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, Android 28")
 ])
 #else
 swiftSettings.append(contentsOf: [
-    .enableExperimentalFeature("AvailabilityMacro=SotoCore 7.0:macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0"),
+    .enableExperimentalFeature("AvailabilityMacro=SotoCore 7.0:macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0")
 ])
 #endif
 

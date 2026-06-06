@@ -105,6 +105,8 @@ final class ConfigFileCredentialProvider: CredentialProviderSelector {
                 httpClient: context.httpClient,
                 endpoint: endpoint
             )
+        case .credentialProcess(let command):
+            return CredentialProcessProvider(command: command)
         }
     }
 }

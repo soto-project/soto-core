@@ -46,6 +46,7 @@ enum ConfigFileLoader {
     enum SharedCredentials {
         case staticCredential(credential: StaticCredential)
         case assumeRole(roleArn: String, sessionName: String, region: Region?, sourceCredentialProvider: CredentialProviderFactory)
+        case credentialProcess(command: String)
     }
 
     /// Credentials file – The credentials and config file are updated when you run the command aws configure. The credentials file is located
@@ -59,6 +60,7 @@ enum ConfigFileLoader {
         let roleSessionName: String?
         let sourceProfile: String?
         let credentialSource: CredentialSource?
+        let credentialProcess: String?
     }
 
     /// The credentials and config file are updated when you run the command aws configure. The config file is located at `~/.aws/config` on Linux
@@ -69,6 +71,7 @@ enum ConfigFileLoader {
         let roleSessionName: String?
         let sourceProfile: String?
         let credentialSource: CredentialSource?
+        let credentialProcess: String?
     }
 
     /// Profile credential source `credential_source`
@@ -211,14 +214,14 @@ enum ConfigFileLoader {
         let config = try configINIParser.flatMap { try self.parseProfileConfig(from: $0, for: profile) }
 
         // The profile may live only in the config file (typical for assume-role chains whose
-        // source is an SSO profile). Tolerate `.missingProfile` from `parseCredentials` when
-        // the config file already supplies a `role_arn`, and skip the call entirely when
-        // the credentials file is unavailable.
+        // source is an SSO profile, or credential_process profiles). Tolerate `.missingProfile`
+        // from `parseCredentials` when the config file already supplies a `role_arn` or
+        // `credential_process`, and skip the call entirely when the credentials file is unavailable.
         let credentials: ProfileCredentials?
         if let credentialsINIParser {
             do {
                 credentials = try parseCredentials(from: credentialsINIParser, for: profile, sourceProfile: config?.sourceProfile)
-            } catch let error as ConfigFileError where error == .missingProfile && config?.roleArn != nil {
+            } catch let error as ConfigFileError where error == .missingProfile && (config?.roleArn != nil || config?.credentialProcess != nil) {
                 credentials = nil
             }
         } else {
@@ -267,8 +270,18 @@ enum ConfigFileLoader {
                 }
                 return .assumeRole(roleArn: roleArn, sessionName: sessionName, region: region, sourceCredentialProvider: provider)
             }
+            // If `credential_process` is defined, use it as source credentials for assume-role
+            else if let credentialProcess = credentials?.credentialProcess ?? config?.credentialProcess {
+                let provider: CredentialProviderFactory = .credentialProcess(command: credentialProcess)
+                return .assumeRole(roleArn: roleArn, sessionName: sessionName, region: region, sourceCredentialProvider: provider)
+            }
             // Invalid configuration
             throw ConfigFileError.invalidINIFile
+        }
+
+        // If `credential_process` is defined (credentials file takes precedence over config)
+        if let credentialProcess = credentials?.credentialProcess ?? config?.credentialProcess {
+            return .credentialProcess(command: credentialProcess)
         }
 
         // Return static credentials
@@ -317,7 +330,8 @@ enum ConfigFileLoader {
             roleArn: settings["role_arn"],
             roleSessionName: settings["role_session_name"],
             sourceProfile: settings["source_profile"],
-            credentialSource: settings["credential_source"].flatMap(CredentialSource.init(rawValue:))
+            credentialSource: settings["credential_source"].flatMap(CredentialSource.init(rawValue:)),
+            credentialProcess: settings["credential_process"]
         )
     }
 
@@ -355,7 +369,8 @@ enum ConfigFileLoader {
             roleArn: settings["role_arn"],
             roleSessionName: settings["role_session_name"],
             sourceProfile: sourceProfile ?? settings["source_profile"],
-            credentialSource: settings["credential_source"].flatMap(CredentialSource.init(rawValue:))
+            credentialSource: settings["credential_source"].flatMap(CredentialSource.init(rawValue:)),
+            credentialProcess: settings["credential_process"]
         )
     }
 

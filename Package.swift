@@ -116,6 +116,10 @@ let package = Package(
             dependencies: [],
             swiftSettings: swiftSettings
         ),
+        .executableTarget(
+            name: "credential-process-test-helper",
+            path: "Sources/credential-process-test-helper"
+        ),
         .testTarget(
             name: "SotoCoreTests",
             dependencies: [

@@ -191,4 +191,15 @@ extension CredentialProviderFactory {
             }
         }
     }
+
+    /// Use credentials obtained by executing an external process.
+    ///
+    /// The command is executed via `/bin/sh -c` and must output JSON to stdout matching the
+    /// AWS `credential_process` specification.
+    public static func credentialProcess(command: String) -> CredentialProviderFactory {
+        Self { context in
+            let provider = CredentialProcessProvider(command: command)
+            return RotatingCredentialProvider(context: context, provider: provider)
+        }
+    }
 }

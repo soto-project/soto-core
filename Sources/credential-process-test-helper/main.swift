@@ -12,6 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+// This binary has zero dependencies (no Foundation, no SotoCore) so it builds
+// fast and doesn't pull in the rest of the package graph. We construct JSON
+// manually and use libc gmtime_r for ISO8601 dates instead of Codable/JSONEncoder
+// and ISO8601DateFormatter which would require Foundation.
+
 #if canImport(Glibc)
 import Glibc
 #elseif canImport(Musl)

@@ -12,7 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Parse an ISO8601 date string, handling both with and without fractional seconds.
 /// AWS CLI writes dates with fractional seconds (e.g., "2026-02-18T16:59:23.216Z"),

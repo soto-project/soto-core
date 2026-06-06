@@ -246,5 +246,4 @@ struct SSOTokenManager {
         )
     }
 
-
 }

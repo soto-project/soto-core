@@ -103,7 +103,6 @@ public struct CredentialProcessProvider: CredentialProvider {
         }
     }
 
-
 }
 
 // MARK: - Supporting Types

@@ -12,10 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
+#if canImport(Glibc)
+import Glibc
+#elseif canImport(Musl)
+import Musl
+#elseif canImport(Darwin)
+import Darwin.C
 #endif
 
 let arguments = CommandLine.arguments
@@ -36,21 +38,37 @@ let invalidVersion = arguments.contains("--invalid-version")
 let expiring = arguments.contains("--expiring")
 let noSessionToken = arguments.contains("--no-session-token")
 
-var json: [String: Any] = [
-    "Version": invalidVersion ? 2 : 1,
-    "AccessKeyId": "AKID-CREDENTIAL-PROCESS",
-    "SecretAccessKey": "SECRET-CREDENTIAL-PROCESS",
-]
+var fields: [String] = []
+fields.append("\"Version\":\(invalidVersion ? 2 : 1)")
+fields.append("\"AccessKeyId\":\"AKID-CREDENTIAL-PROCESS\"")
+fields.append("\"SecretAccessKey\":\"SECRET-CREDENTIAL-PROCESS\"")
 
 if !noSessionToken {
-    json["SessionToken"] = "TOKEN-CREDENTIAL-PROCESS"
+    fields.append("\"SessionToken\":\"TOKEN-CREDENTIAL-PROCESS\"")
 }
 
 if expiring {
-    let formatter = ISO8601DateFormatter()
-    formatter.formatOptions = [.withInternetDateTime]
-    json["Expiration"] = formatter.string(from: Date().addingTimeInterval(3600))
+    var now = time(nil)
+    now += 3600
+    var tm = tm()
+    gmtime_r(&now, &tm)
+
+    func pad2(_ n: Int) -> String { n < 10 ? "0\(n)" : "\(n)" }
+    func pad4(_ n: Int) -> String {
+        if n < 10 { return "000\(n)" }
+        if n < 100 { return "00\(n)" }
+        if n < 1000 { return "0\(n)" }
+        return "\(n)"
+    }
+
+    let year = pad4(Int(tm.tm_year) + 1900)
+    let month = pad2(Int(tm.tm_mon) + 1)
+    let day = pad2(Int(tm.tm_mday))
+    let hour = pad2(Int(tm.tm_hour))
+    let min = pad2(Int(tm.tm_min))
+    let sec = pad2(Int(tm.tm_sec))
+    let expiration = "\(year)-\(month)-\(day)T\(hour):\(min):\(sec)Z"
+    fields.append("\"Expiration\":\"\(expiration)\"")
 }
 
-let data = try JSONSerialization.data(withJSONObject: json, options: [])
-print(String(data: data, encoding: .utf8)!)
+print("{\(fields.joined(separator: ","))}")

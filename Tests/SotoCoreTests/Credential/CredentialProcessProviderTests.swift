@@ -171,7 +171,9 @@ struct CredentialProcessProviderTests {
         let httpClient = HTTPClient(eventLoopGroupProvider: .singleton)
 
         let context = CredentialProviderFactory.Context(
-            httpClient: httpClient, logger: logger, options: .init()
+            httpClient: httpClient,
+            logger: logger,
+            options: .init()
         )
         let sharedCredentials = ConfigFileLoader.SharedCredentials.credentialProcess(
             command: testHelperPath

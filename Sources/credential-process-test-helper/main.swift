@@ -23,6 +23,8 @@ import Glibc
 import Musl
 #elseif canImport(Darwin)
 import Darwin.C
+#elseif canImport(Android)
+import Android
 #endif
 
 let arguments = CommandLine.arguments

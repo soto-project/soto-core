@@ -192,6 +192,7 @@ extension CredentialProviderFactory {
         }
     }
 
+    #if os(macOS) || os(Linux)
     /// Use credentials obtained by executing an external process.
     ///
     /// The command is executed via `/bin/sh -c` and must output JSON to stdout matching the
@@ -202,4 +203,5 @@ extension CredentialProviderFactory {
             return RotatingCredentialProvider(context: context, provider: provider)
         }
     }
+    #endif
 }

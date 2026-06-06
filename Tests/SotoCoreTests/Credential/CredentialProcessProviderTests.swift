@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if os(macOS) || os(Linux)
+
 import AsyncHTTPClient
 import Logging
 import NIOCore
@@ -349,3 +351,4 @@ struct CredentialProcessProviderTests {
         #expect(expiring.expiration > Date())
     }
 }
+#endif

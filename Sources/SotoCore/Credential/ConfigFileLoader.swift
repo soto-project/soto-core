@@ -46,7 +46,9 @@ enum ConfigFileLoader {
     enum SharedCredentials {
         case staticCredential(credential: StaticCredential)
         case assumeRole(roleArn: String, sessionName: String, region: Region?, sourceCredentialProvider: CredentialProviderFactory)
+        #if os(macOS) || os(Linux)
         case credentialProcess(command: String)
+        #endif
     }
 
     /// Credentials file – The credentials and config file are updated when you run the command aws configure. The credentials file is located
@@ -270,19 +272,25 @@ enum ConfigFileLoader {
                 }
                 return .assumeRole(roleArn: roleArn, sessionName: sessionName, region: region, sourceCredentialProvider: provider)
             }
-            // If `credential_process` is defined, use it as source credentials for assume-role
-            else if let credentialProcess = credentials?.credentialProcess ?? config?.credentialProcess {
-                let provider: CredentialProviderFactory = .credentialProcess(command: credentialProcess)
-                return .assumeRole(roleArn: roleArn, sessionName: sessionName, region: region, sourceCredentialProvider: provider)
+            else {
+                #if os(macOS) || os(Linux)
+                // If `credential_process` is defined, use it as source credentials for assume-role
+                if let credentialProcess = credentials?.credentialProcess ?? config?.credentialProcess {
+                    let provider: CredentialProviderFactory = .credentialProcess(command: credentialProcess)
+                    return .assumeRole(roleArn: roleArn, sessionName: sessionName, region: region, sourceCredentialProvider: provider)
+                }
+                #endif
+                // Invalid configuration
+                throw ConfigFileError.invalidINIFile
             }
-            // Invalid configuration
-            throw ConfigFileError.invalidINIFile
         }
 
+        #if os(macOS) || os(Linux)
         // If `credential_process` is defined (credentials file takes precedence over config)
         if let credentialProcess = credentials?.credentialProcess ?? config?.credentialProcess {
             return .credentialProcess(command: credentialProcess)
         }
+        #endif
 
         // Return static credentials
         guard let credentials else {

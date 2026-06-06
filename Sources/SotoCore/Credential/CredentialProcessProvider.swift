@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if os(macOS) || os(Linux)
+
 import Foundation
 import Logging
 import SotoSignerV4
@@ -155,3 +157,5 @@ public struct CredentialProcessError: Error, Equatable, CustomStringConvertible 
         }
     }
 }
+
+#endif

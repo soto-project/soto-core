@@ -12,14 +12,15 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Crypto
+import NIOCore
+import _CryptoExtras
+
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else
 import Foundation
 #endif
-import Crypto
-import _CryptoExtras
-import NIOCore
 
 /// Generates signed URLs and cookies for Amazon CloudFront private content distribution.
 public struct CloudFrontSigner: Sendable {

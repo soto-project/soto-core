@@ -12,13 +12,14 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Crypto
+import _CryptoExtras
+
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else
 import Foundation
 #endif
-import Crypto
-import _CryptoExtras
 
 extension CloudFrontSigner {
 
@@ -51,7 +52,7 @@ extension CloudFrontSigner {
     ///
     /// Format: `{"Statement":[{"Resource":"<resource>","Condition":{"DateLessThan":{"AWS:EpochTime":<epoch>}}}]}`
     func cannedPolicyStatement(resource: String, expiresEpoch: Int) -> String {
-        return "{\"Statement\":[{\"Resource\":\"\(resource)\",\"Condition\":{\"DateLessThan\":{\"AWS:EpochTime\":\(expiresEpoch)}}}]}"
+        "{\"Statement\":[{\"Resource\":\"\(resource)\",\"Condition\":{\"DateLessThan\":{\"AWS:EpochTime\":\(expiresEpoch)}}}]}"
     }
 
     /// Sign raw data using RSA PKCS#1 v1.5 with the configured hash algorithm.

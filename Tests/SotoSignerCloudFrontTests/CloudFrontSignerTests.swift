@@ -12,18 +12,18 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Crypto
+import NIOCore
+import Testing
+import _CryptoExtras
+
+@testable import SotoSignerCloudFront
+
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else
 import Foundation
 #endif
-
-import Crypto
-import _CryptoExtras
-import NIOCore
-import Testing
-
-@testable import SotoSignerCloudFront
 
 // MARK: - Test RSA Key Pair (2048-bit, generated with openssl genrsa 2048)
 
@@ -115,11 +115,12 @@ struct CloudFrontSignerTests {
         )
 
         let resource = "https://d111111abcdef8.cloudfront.net/image.jpg"
-        let epoch = 1_609_462_800 // Jan 1, 2021 01:00:00 UTC
+        let epoch = 1_609_462_800  // Jan 1, 2021 01:00:00 UTC
 
         let policy = signer.cannedPolicyStatement(resource: resource, expiresEpoch: epoch)
 
-        let expected = "{\"Statement\":[{\"Resource\":\"https://d111111abcdef8.cloudfront.net/image.jpg\",\"Condition\":{\"DateLessThan\":{\"AWS:EpochTime\":1609462800}}}]}"
+        let expected =
+            "{\"Statement\":[{\"Resource\":\"https://d111111abcdef8.cloudfront.net/image.jpg\",\"Condition\":{\"DateLessThan\":{\"AWS:EpochTime\":1609462800}}}]}"
 
         #expect(policy == expected)
         // Verify no whitespace
@@ -144,7 +145,8 @@ struct CloudFrontSignerTests {
             ipAddress: nil
         )
 
-        let expected = "{\"Statement\":[{\"Resource\":\"https://d111111abcdef8.cloudfront.net/*\",\"Condition\":{\"DateLessThan\":{\"AWS:EpochTime\":1609462800}}}]}"
+        let expected =
+            "{\"Statement\":[{\"Resource\":\"https://d111111abcdef8.cloudfront.net/*\",\"Condition\":{\"DateLessThan\":{\"AWS:EpochTime\":1609462800}}}]}"
         #expect(policy == expected)
     }
 
@@ -162,7 +164,8 @@ struct CloudFrontSignerTests {
             ipAddress: nil
         )
 
-        let expected = "{\"Statement\":[{\"Resource\":\"https://d111111abcdef8.cloudfront.net/*\",\"Condition\":{\"DateLessThan\":{\"AWS:EpochTime\":1609462800},\"DateGreaterThan\":{\"AWS:EpochTime\":1609459200}}}]}"
+        let expected =
+            "{\"Statement\":[{\"Resource\":\"https://d111111abcdef8.cloudfront.net/*\",\"Condition\":{\"DateLessThan\":{\"AWS:EpochTime\":1609462800},\"DateGreaterThan\":{\"AWS:EpochTime\":1609459200}}}]}"
         #expect(policy == expected)
     }
 
@@ -180,7 +183,8 @@ struct CloudFrontSignerTests {
             ipAddress: "192.0.2.0/24"
         )
 
-        let expected = "{\"Statement\":[{\"Resource\":\"https://d111111abcdef8.cloudfront.net/*\",\"Condition\":{\"DateLessThan\":{\"AWS:EpochTime\":1609462800},\"IpAddress\":{\"AWS:SourceIp\":\"192.0.2.0/24\"}}}]}"
+        let expected =
+            "{\"Statement\":[{\"Resource\":\"https://d111111abcdef8.cloudfront.net/*\",\"Condition\":{\"DateLessThan\":{\"AWS:EpochTime\":1609462800},\"IpAddress\":{\"AWS:SourceIp\":\"192.0.2.0/24\"}}}]}"
         #expect(policy == expected)
     }
 
@@ -198,7 +202,8 @@ struct CloudFrontSignerTests {
             ipAddress: "192.0.2.0/24"
         )
 
-        let expected = "{\"Statement\":[{\"Resource\":\"https://d111111abcdef8.cloudfront.net/*\",\"Condition\":{\"DateLessThan\":{\"AWS:EpochTime\":1609462800},\"DateGreaterThan\":{\"AWS:EpochTime\":1609459200},\"IpAddress\":{\"AWS:SourceIp\":\"192.0.2.0/24\"}}}]}"
+        let expected =
+            "{\"Statement\":[{\"Resource\":\"https://d111111abcdef8.cloudfront.net/*\",\"Condition\":{\"DateLessThan\":{\"AWS:EpochTime\":1609462800},\"DateGreaterThan\":{\"AWS:EpochTime\":1609459200},\"IpAddress\":{\"AWS:SourceIp\":\"192.0.2.0/24\"}}}]}"
         #expect(policy == expected)
     }
 
@@ -233,13 +238,13 @@ struct CloudFrontSignerTests {
     @Test("CloudFront base64 encoding handles padding characters correctly")
     func testCloudFrontBase64EncodingPadding() throws {
         // 1 byte → 2 base64 chars + 2 padding (==)
-        let data1 = Data([0x41]) // "A" → standard base64: "QQ=="
+        let data1 = Data([0x41])  // "A" → standard base64: "QQ=="
         let encoded1 = CloudFrontSigner.cloudFrontBase64Encode(data1)
         #expect(encoded1 == "QQ__")
         #expect(!encoded1.contains("="))
 
         // 2 bytes → 3 base64 chars + 1 padding (=)
-        let data2 = Data([0x41, 0x42]) // "AB" → standard base64: "QUI="
+        let data2 = Data([0x41, 0x42])  // "AB" → standard base64: "QUI="
         let encoded2 = CloudFrontSigner.cloudFrontBase64Encode(data2)
         #expect(encoded2 == "QUI_")
         #expect(!encoded2.contains("="))

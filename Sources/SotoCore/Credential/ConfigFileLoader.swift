@@ -271,8 +271,7 @@ enum ConfigFileLoader {
                     provider = .ecs
                 }
                 return .assumeRole(roleArn: roleArn, sessionName: sessionName, region: region, sourceCredentialProvider: provider)
-            }
-            else {
+            } else {
                 #if os(macOS) || os(Linux)
                 // If `credential_process` is defined, use it as source credentials for assume-role
                 if let credentialProcess = credentials?.credentialProcess ?? config?.credentialProcess {

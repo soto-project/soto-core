@@ -16,7 +16,6 @@
 
 import NIOHTTP1
 
-
 public struct AWSServerError: AWSErrorType {
     enum Code: String {
         case internalFailure = "InternalFailure"
@@ -52,13 +51,11 @@ public struct AWSServerError: AWSErrorType {
     public static var serviceUnavailable: AWSServerError { .init(.serviceUnavailable) }
 }
 
-
 extension AWSServerError: Equatable {
     public static func == (lhs: AWSServerError, rhs: AWSServerError) -> Bool {
         lhs.error == rhs.error
     }
 }
-
 
 extension AWSServerError: CustomStringConvertible {
     public var description: String {

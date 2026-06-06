@@ -19,7 +19,6 @@ internal import SotoXML
 
 /// Event stream decoder. Decodes top level `:event-type` header and then passes the payload
 /// to another decoder based off the `:content-type` header
-
 struct EventStreamDecoder {
     init() {}
 
@@ -29,7 +28,6 @@ struct EventStreamDecoder {
         return value
     }
 }
-
 
 /// Internal implementation of `EventStreamDecoder`
 private struct _EventStreamDecoder: Decoder {
@@ -206,7 +204,6 @@ private struct _EventStreamDecoder: Decoder {
         preconditionFailure("Single value containers are not supported")
     }
 }
-
 
 /// Container used for passed event payload to decoders
 public struct EventDecodingContainer: Sendable {

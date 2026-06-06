@@ -12,7 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-
 /// Event payload type. To aid encoding and decoding
 public struct AWSEventPayload: Sendable, Codable, Equatable {
     public let buffer: ByteBuffer

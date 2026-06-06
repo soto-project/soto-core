@@ -59,7 +59,6 @@ public enum RetryStatus {
     case dontRetry
 }
 
-
 /// Protocol for Retry strategy. Has function returning amount of time before the next retry after an HTTP error
 public protocol RetryPolicy: Sendable {
     /// Returns whether we should retry and how long we should wait before retrying
@@ -69,7 +68,6 @@ public protocol RetryPolicy: Sendable {
     func getRetryWaitTime(error: Error, attempt: Int) -> RetryStatus?
 }
 
-
 /// Retry controller that never returns a retry wait time
 private struct NoRetry: RetryPolicy {
     init() {}
@@ -78,13 +76,11 @@ private struct NoRetry: RetryPolicy {
     }
 }
 
-
 /// Protocol for standard retry response. Will attempt to retry on 5xx errors, 429 (tooManyRequests).
 protocol StandardRetryPolicy: RetryPolicy {
     var maxRetries: Int { get }
     func calculateRetryWaitTime(attempt: Int) -> TimeAmount
 }
-
 
 extension StandardRetryPolicy {
     /// default version of getRetryWaitTime for StandardRetryController
@@ -116,7 +112,6 @@ extension StandardRetryPolicy {
     }
 }
 
-
 /// Retry with an exponentially increasing wait time between wait times
 struct ExponentialRetry: StandardRetryPolicy {
     let base: TimeAmount
@@ -132,7 +127,6 @@ struct ExponentialRetry: StandardRetryPolicy {
         return .nanoseconds(self.base.nanoseconds * exp)
     }
 }
-
 
 /// Exponential jitter retry. Instead of returning an exponentially increasing retry time it returns a jittered version. In a heavy load situation
 /// where a large number of clients all hit the servers at the same time, jitter helps to smooth out the server response. See

@@ -16,14 +16,12 @@ import JMESPath
 import NIOCore
 import NIOHTTP1
 
-
 /// Protocol for matchers used in waiters.
 ///
 /// A matcher returns whether the returned value from an AWS API call matches a certain state
 public protocol AWSWaiterMatcher: Sendable {
     func match(result: Result<Any, Error>) -> Bool
 }
-
 
 /// Match whether the value indicated by JMESPath matches an expected value
 public struct JMESPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatcher {
@@ -53,7 +51,6 @@ public struct JMESPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatcher 
     }
 }
 
-
 /// Match whether any of the values indicated by JMESPath matches an expected value
 public struct JMESAnyPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatcher {
     let expression: JMESExpression
@@ -81,7 +78,6 @@ public struct JMESAnyPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatch
         }
     }
 }
-
 
 /// Match whether all of the values indicated by JMESPath matches an expected value
 public struct JMESAllPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatcher {
@@ -111,7 +107,6 @@ public struct JMESAllPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatch
     }
 }
 
-
 /// Match whether an AWS API call was successful
 public struct AWSSuccessMatcher: AWSWaiterMatcher {
     public init() {}
@@ -124,7 +119,6 @@ public struct AWSSuccessMatcher: AWSWaiterMatcher {
         }
     }
 }
-
 
 /// Match whether an AWS API call returns a specific HTTP response code
 public struct AWSErrorStatusMatcher: AWSWaiterMatcher {
@@ -151,7 +145,6 @@ public struct AWSErrorStatusMatcher: AWSWaiterMatcher {
         }
     }
 }
-
 
 /// Match whether an AWS API call returns a specific error code
 public struct AWSErrorCodeMatcher: AWSWaiterMatcher {

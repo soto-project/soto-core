@@ -511,6 +511,82 @@ final class LoginCredentialProviderTests {
         }
     }
 
+    @Test("Get credentials succeeds when token file write fails (sandbox)")
+    func getCredentialsDespiteWriteFailure() async throws {
+        let tempDirectory = try createTempDirectory()
+        defer {
+            // Restore permissions so cleanup can succeed
+            try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: tempDirectory.path)
+            removeTempDirectory(tempDirectory)
+        }
+
+        // Setup expired token file
+        let privateKey = P256.Signing.PrivateKey()
+        let pemKey = privateKey.pemRepresentation
+        let escapedPemKey = pemKey.replacing("\n", with: "\\n")
+
+        let tokenData = """
+            {
+                "accessToken": {
+                    "accessKeyId": "AKIAOLD123",
+                    "secretAccessKey": "oldsecret",
+                    "sessionToken": "oldsession",
+                    "accountId": "123456789012",
+                    "expiresAt": "2020-01-01T00:00:00Z"
+                },
+                "refreshToken": "refresh-token-123",
+                "dpopKey": "\(escapedPemKey)",
+                "clientId": "client-id-123",
+                "idToken": "id-token-123",
+                "tokenType": "urn:aws:params:oauth:token-type:access_token_sigv4"
+            }
+            """
+
+        let sessionData = Data("test-session".utf8)
+        let hash = SHA256.hash(data: sessionData)
+        let hashString = hash.compactMap { String(format: "%02x", $0) }.joined()
+
+        let tokenPath = tempDirectory.appendingPathComponent("\(hashString).json")
+        try tokenData.write(to: tokenPath, atomically: true, encoding: .utf8)
+
+        // Make directory read-only AFTER writing the token file (simulates SwiftPM sandbox
+        // where reads are allowed but writes outside the package directory are blocked)
+        try FileManager.default.setAttributes([.posixPermissions: 0o555], ofItemAtPath: tempDirectory.path)
+
+        // Mock HTTP client returns fresh credentials
+        let mockHTTPClient = MockAWSHTTPClient { _ in
+            let responseJSON = """
+                {
+                    "accessToken": {
+                        "accessKeyId": "AKIANEW456",
+                        "secretAccessKey": "newsecret456",
+                        "sessionToken": "newsession456"
+                    },
+                    "tokenType": "urn:aws:params:oauth:token-type:access_token_sigv4",
+                    "expiresIn": 3600,
+                    "refreshToken": "new-refresh-token-456"
+                }
+                """
+            return (.ok, responseJSON.data(using: .utf8)!)
+        }
+
+        let provider = try LoginCredentialProvider.create(
+            loginSession: "test-session",
+            loginRegion: .useast1,
+            cacheDirectoryOverride: tempDirectory.path,
+            httpClient: mockHTTPClient
+        )
+
+        // Even though saveToken will fail (read-only directory), the refresh succeeded
+        // and we should still get the fresh credentials back from the server.
+        let logger = Logger(label: "test")
+        let credential = try await provider.getCredential(logger: logger)
+
+        #expect(credential.accessKeyId == "AKIANEW456")
+        #expect(credential.secretAccessKey == "newsecret456")
+        #expect(credential.sessionToken == "newsession456")
+    }
+
     @Test("Provider is immutable")
     func providerIsImmutable() throws {
         let tempDirectory = try createTempDirectory()

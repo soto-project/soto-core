@@ -206,10 +206,18 @@ public struct LoginCredentialProvider: CredentialProvider {
             refreshToken: tokenResponse.refreshToken
         )
 
-        // Save updated token to disk
-        try await tokenFileManager.saveToken(updatedToken, to: tokenPath, fileIO: fileIO, threadPool: threadPool)
+        // Save updated token to disk (best-effort — may fail in sandboxed environments
+        // such as SwiftPM plugins where writes outside the package directory are blocked)
+        do {
+            try await tokenFileManager.saveToken(updatedToken, to: tokenPath, fileIO: fileIO, threadPool: threadPool)
+        } catch {
+            logger.warning(
+                "Could not persist refreshed credentials to disk. Credentials are valid for this session but will need to be refreshed again next time.",
+                metadata: ["error": .string("\(error)")]
+            )
+        }
 
-        // Return expiring credential
+        // Return expiring credential regardless of whether disk save succeeded
         return RotatingCredential(
             accessKeyId: tokenResponse.accessToken.accessKeyId,
             secretAccessKey: tokenResponse.accessToken.secretAccessKey,

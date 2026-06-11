@@ -67,6 +67,24 @@ public struct CloudFrontSigner: Sendable {
         public let signature: String
         /// `CloudFront-Key-Pair-Id` value
         public let keyPairId: String
+
+        /// The cookie header values as an array of `Set-Cookie` header strings.
+        ///
+        /// Returns the appropriate CloudFront cookie headers:
+        /// `CloudFront-Policy` (if set), `CloudFront-Expires` (if set),
+        /// `CloudFront-Signature`, and `CloudFront-Key-Pair-Id`.
+        public var headerValues: [String] {
+            var headers: [String] = []
+            if let policy {
+                headers.append("CloudFront-Policy=\(policy)")
+            }
+            if let expires {
+                headers.append("CloudFront-Expires=\(expires)")
+            }
+            headers.append("CloudFront-Signature=\(signature)")
+            headers.append("CloudFront-Key-Pair-Id=\(keyPairId)")
+            return headers
+        }
     }
 
     // MARK: - Properties

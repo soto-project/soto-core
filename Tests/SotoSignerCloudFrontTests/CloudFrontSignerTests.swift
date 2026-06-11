@@ -429,6 +429,49 @@ struct CloudFrontSignerTests {
         #expect(!cookies.policy!.isEmpty)
     }
 
+    // MARK: - SignedCookies headerValues Tests
+
+    @Test("Canned policy headerValues contains Expires, Signature, Key-Pair-Id")
+    func testCannedCookiesHeaderValues() throws {
+        let signer = try CloudFrontSigner(
+            keyPairId: testKeyPairId,
+            privateKeyPEM: testPrivateKeyPEM
+        )
+
+        let cookies = try signer.signedCookies(
+            url: "https://d111111abcdef8.cloudfront.net/image.jpg",
+            expires: .hours(1),
+            date: fixedDate
+        )
+
+        let headers = cookies.headerValues
+        #expect(headers.count == 3)
+        #expect(headers[0] == "CloudFront-Expires=1609462800")
+        #expect(headers[1].hasPrefix("CloudFront-Signature="))
+        #expect(headers[2] == "CloudFront-Key-Pair-Id=\(testKeyPairId)")
+    }
+
+    @Test("Custom policy headerValues contains Policy, Signature, Key-Pair-Id")
+    func testCustomCookiesHeaderValues() throws {
+        let signer = try CloudFrontSigner(
+            keyPairId: testKeyPairId,
+            privateKeyPEM: testPrivateKeyPEM
+        )
+
+        let policy = CloudFrontSigner.CustomPolicy(
+            resource: "https://d111111abcdef8.cloudfront.net/*",
+            expires: .hours(2)
+        )
+
+        let cookies = try signer.signedCookies(policy: policy, date: fixedDate)
+
+        let headers = cookies.headerValues
+        #expect(headers.count == 3)
+        #expect(headers[0].hasPrefix("CloudFront-Policy="))
+        #expect(headers[1].hasPrefix("CloudFront-Signature="))
+        #expect(headers[2] == "CloudFront-Key-Pair-Id=\(testKeyPairId)")
+    }
+
     // MARK: - Error Cases Tests
 
     @Test("Invalid PEM key data throws invalidPrivateKey")

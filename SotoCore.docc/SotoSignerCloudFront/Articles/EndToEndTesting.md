@@ -248,7 +248,7 @@ let privateKeyPEM = try String(contentsOfFile: "/tmp/cf-test/private-key.pem")
 
 // --- Test 1: Canned policy signed URL (SHA-1) ---
 print("=== Test 1: Canned Policy Signed URL (SHA-1) ===")
-let signerSHA1 = try CloudFrontSigner(keyPairId: keyPairId, privateKey: privateKeyPEM)
+let signerSHA1 = try CloudFrontSigner(keyPairId: keyPairId, privateKeyPEM: privateKeyPEM)
 let cannedURL = try signerSHA1.signedURL(
     url: "https://\(domain)/test.txt",
     expires: .minutes(5)
@@ -259,7 +259,7 @@ print("URL: \(cannedURL)\n")
 print("=== Test 2: Canned Policy Signed URL (SHA-256) ===")
 let signerSHA256 = try CloudFrontSigner(
     keyPairId: keyPairId,
-    privateKey: privateKeyPEM,
+    privateKeyPEM: privateKeyPEM,
     hashAlgorithm: .sha256
 )
 let sha256URL = try signerSHA256.signedURL(

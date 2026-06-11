@@ -82,27 +82,29 @@ struct CloudFrontSignerTests {
 
     // MARK: - Initializer Tests
 
-    @Test("String PEM and Data PEM initializers produce identical signer behavior")
+    @Test("PEM and DER initializers produce identical signer behavior")
     func testBothInitializersProduceIdenticalBehavior() throws {
-        let signerFromString = try CloudFrontSigner(
+        let signerFromPEM = try CloudFrontSigner(
             keyPairId: testKeyPairId,
-            privateKey: testPrivateKeyPEM
+            privateKeyPEM: testPrivateKeyPEM
         )
 
-        let pemData = Data(testPrivateKeyPEM.utf8)
-        let signerFromData = try CloudFrontSigner(
+        // Create DER representation from the same key
+        let pemKey = try _RSA.Signing.PrivateKey(pemRepresentation: testPrivateKeyPEM)
+        let derData = Data(pemKey.derRepresentation)
+        let signerFromDER = try CloudFrontSigner(
             keyPairId: testKeyPairId,
-            privateKey: pemData
+            privateKeyDER: derData
         )
 
         // Both signers should produce identical signed URLs
         let url = "https://d111111abcdef8.cloudfront.net/image.jpg"
         let expires: TimeAmount = .hours(1)
 
-        let signedURLFromString = try signerFromString.signedURL(url: url, expires: expires, date: fixedDate)
-        let signedURLFromData = try signerFromData.signedURL(url: url, expires: expires, date: fixedDate)
+        let signedURLFromPEM = try signerFromPEM.signedURL(url: url, expires: expires, date: fixedDate)
+        let signedURLFromDER = try signerFromDER.signedURL(url: url, expires: expires, date: fixedDate)
 
-        #expect(signedURLFromString == signedURLFromData)
+        #expect(signedURLFromPEM == signedURLFromDER)
     }
 
     // MARK: - Canned Policy JSON Construction Tests
@@ -111,7 +113,7 @@ struct CloudFrontSignerTests {
     func testCannedPolicyConstruction() throws {
         let signer = try CloudFrontSigner(
             keyPairId: testKeyPairId,
-            privateKey: testPrivateKeyPEM
+            privateKeyPEM: testPrivateKeyPEM
         )
 
         let resource = "https://d111111abcdef8.cloudfront.net/image.jpg"
@@ -135,7 +137,7 @@ struct CloudFrontSignerTests {
     func testCustomPolicyNeither() throws {
         let signer = try CloudFrontSigner(
             keyPairId: testKeyPairId,
-            privateKey: testPrivateKeyPEM
+            privateKeyPEM: testPrivateKeyPEM
         )
 
         let policy = signer.customPolicyStatement(
@@ -154,7 +156,7 @@ struct CloudFrontSignerTests {
     func testCustomPolicyActiveFromOnly() throws {
         let signer = try CloudFrontSigner(
             keyPairId: testKeyPairId,
-            privateKey: testPrivateKeyPEM
+            privateKeyPEM: testPrivateKeyPEM
         )
 
         let policy = signer.customPolicyStatement(
@@ -173,7 +175,7 @@ struct CloudFrontSignerTests {
     func testCustomPolicyIpAddressOnly() throws {
         let signer = try CloudFrontSigner(
             keyPairId: testKeyPairId,
-            privateKey: testPrivateKeyPEM
+            privateKeyPEM: testPrivateKeyPEM
         )
 
         let policy = signer.customPolicyStatement(
@@ -192,7 +194,7 @@ struct CloudFrontSignerTests {
     func testCustomPolicyBoth() throws {
         let signer = try CloudFrontSigner(
             keyPairId: testKeyPairId,
-            privateKey: testPrivateKeyPEM
+            privateKeyPEM: testPrivateKeyPEM
         )
 
         let policy = signer.customPolicyStatement(
@@ -256,7 +258,7 @@ struct CloudFrontSignerTests {
     func testSignedURLCannedStructure() throws {
         let signer = try CloudFrontSigner(
             keyPairId: testKeyPairId,
-            privateKey: testPrivateKeyPEM
+            privateKeyPEM: testPrivateKeyPEM
         )
 
         let url = "https://d111111abcdef8.cloudfront.net/image.jpg"
@@ -284,7 +286,7 @@ struct CloudFrontSignerTests {
     func testSignedURLCustomStructure() throws {
         let signer = try CloudFrontSigner(
             keyPairId: testKeyPairId,
-            privateKey: testPrivateKeyPEM
+            privateKeyPEM: testPrivateKeyPEM
         )
 
         let url = "https://d111111abcdef8.cloudfront.net/video.mp4"
@@ -313,7 +315,7 @@ struct CloudFrontSignerTests {
     func testCustomPolicyResourceDiffersFromURL() throws {
         let signer = try CloudFrontSigner(
             keyPairId: testKeyPairId,
-            privateKey: testPrivateKeyPEM
+            privateKeyPEM: testPrivateKeyPEM
         )
 
         let specificURL = "https://d111111abcdef8.cloudfront.net/videos/movie.mp4"
@@ -340,7 +342,7 @@ struct CloudFrontSignerTests {
     func testSignedURLSHA256() throws {
         let signer = try CloudFrontSigner(
             keyPairId: testKeyPairId,
-            privateKey: testPrivateKeyPEM,
+            privateKeyPEM: testPrivateKeyPEM,
             hashAlgorithm: .sha256
         )
 
@@ -354,7 +356,7 @@ struct CloudFrontSignerTests {
     func testSignedURLSHA1NoHashAlgorithm() throws {
         let signer = try CloudFrontSigner(
             keyPairId: testKeyPairId,
-            privateKey: testPrivateKeyPEM,
+            privateKeyPEM: testPrivateKeyPEM,
             hashAlgorithm: .sha1
         )
 
@@ -370,7 +372,7 @@ struct CloudFrontSignerTests {
     func testSignedURLWithExistingQueryParams() throws {
         let signer = try CloudFrontSigner(
             keyPairId: testKeyPairId,
-            privateKey: testPrivateKeyPEM
+            privateKeyPEM: testPrivateKeyPEM
         )
 
         let url = "https://d111111abcdef8.cloudfront.net/image.jpg?size=large&format=webp"
@@ -389,7 +391,7 @@ struct CloudFrontSignerTests {
     func testSignedCookiesCanned() throws {
         let signer = try CloudFrontSigner(
             keyPairId: testKeyPairId,
-            privateKey: testPrivateKeyPEM
+            privateKeyPEM: testPrivateKeyPEM
         )
 
         let url = "https://d111111abcdef8.cloudfront.net/image.jpg"
@@ -408,7 +410,7 @@ struct CloudFrontSignerTests {
     func testSignedCookiesCustom() throws {
         let signer = try CloudFrontSigner(
             keyPairId: testKeyPairId,
-            privateKey: testPrivateKeyPEM
+            privateKeyPEM: testPrivateKeyPEM
         )
 
         let policy = CloudFrontSigner.CustomPolicy(
@@ -434,7 +436,7 @@ struct CloudFrontSignerTests {
         #expect(throws: CloudFrontSignerError.invalidPrivateKey) {
             _ = try CloudFrontSigner(
                 keyPairId: testKeyPairId,
-                privateKey: "not a valid PEM key"
+                privateKeyPEM: "not a valid PEM key"
             )
         }
     }
@@ -449,7 +451,7 @@ struct CloudFrontSignerTests {
         #expect(throws: CloudFrontSignerError.invalidPrivateKey) {
             _ = try CloudFrontSigner(
                 keyPairId: testKeyPairId,
-                privateKey: malformedPEM
+                privateKeyPEM: malformedPEM
             )
         }
     }
@@ -466,18 +468,18 @@ struct CloudFrontSignerTests {
         #expect(throws: CloudFrontSignerError.invalidPrivateKey) {
             _ = try CloudFrontSigner(
                 keyPairId: testKeyPairId,
-                privateKey: encryptedPEM
+                privateKeyPEM: encryptedPEM
             )
         }
     }
 
-    @Test("Invalid PEM Data (bytes) throws invalidPrivateKey")
-    func testInvalidPEMData() throws {
+    @Test("Invalid DER data throws invalidPrivateKey")
+    func testInvalidDERData() throws {
         let invalidData = Data("garbage data".utf8)
         #expect(throws: CloudFrontSignerError.invalidPrivateKey) {
             _ = try CloudFrontSigner(
                 keyPairId: testKeyPairId,
-                privateKey: invalidData
+                privateKeyDER: invalidData
             )
         }
     }
@@ -488,7 +490,7 @@ struct CloudFrontSignerTests {
     func testURLWithSpecialCharacters() throws {
         let signer = try CloudFrontSigner(
             keyPairId: testKeyPairId,
-            privateKey: testPrivateKeyPEM
+            privateKeyPEM: testPrivateKeyPEM
         )
 
         let url = "https://d111111abcdef8.cloudfront.net/path/with%20spaces/image%23file.jpg"
@@ -504,7 +506,7 @@ struct CloudFrontSignerTests {
     func testWildcardResourcePath() throws {
         let signer = try CloudFrontSigner(
             keyPairId: testKeyPairId,
-            privateKey: testPrivateKeyPEM
+            privateKeyPEM: testPrivateKeyPEM
         )
 
         let url = "https://d111111abcdef8.cloudfront.net/*"
@@ -518,7 +520,7 @@ struct CloudFrontSignerTests {
     func testVeryLongURL() throws {
         let signer = try CloudFrontSigner(
             keyPairId: testKeyPairId,
-            privateKey: testPrivateKeyPEM
+            privateKeyPEM: testPrivateKeyPEM
         )
 
         let longPath = String(repeating: "a", count: 2000)
@@ -537,7 +539,7 @@ struct CloudFrontSignerTests {
     func testIPv4CIDRPassthrough() throws {
         let signer = try CloudFrontSigner(
             keyPairId: testKeyPairId,
-            privateKey: testPrivateKeyPEM
+            privateKeyPEM: testPrivateKeyPEM
         )
 
         let cidr = "192.168.1.0/24"
@@ -555,7 +557,7 @@ struct CloudFrontSignerTests {
     func testIPv6CIDRPassthrough() throws {
         let signer = try CloudFrontSigner(
             keyPairId: testKeyPairId,
-            privateKey: testPrivateKeyPEM
+            privateKeyPEM: testPrivateKeyPEM
         )
 
         let cidr = "2001:db8::/32"
@@ -573,7 +575,7 @@ struct CloudFrontSignerTests {
     func testSingleIPv4Passthrough() throws {
         let signer = try CloudFrontSigner(
             keyPairId: testKeyPairId,
-            privateKey: testPrivateKeyPEM
+            privateKeyPEM: testPrivateKeyPEM
         )
 
         let ip = "203.0.113.1/32"
@@ -593,7 +595,7 @@ struct CloudFrontSignerTests {
     func testSignatureDeterminism() throws {
         let signer = try CloudFrontSigner(
             keyPairId: testKeyPairId,
-            privateKey: testPrivateKeyPEM
+            privateKeyPEM: testPrivateKeyPEM
         )
 
         let url = "https://d111111abcdef8.cloudfront.net/image.jpg"
@@ -608,11 +610,11 @@ struct CloudFrontSignerTests {
     func testSignatureDeterminismAcrossInstances() throws {
         let signer1 = try CloudFrontSigner(
             keyPairId: testKeyPairId,
-            privateKey: testPrivateKeyPEM
+            privateKeyPEM: testPrivateKeyPEM
         )
         let signer2 = try CloudFrontSigner(
             keyPairId: testKeyPairId,
-            privateKey: testPrivateKeyPEM
+            privateKeyPEM: testPrivateKeyPEM
         )
 
         let url = "https://d111111abcdef8.cloudfront.net/image.jpg"
@@ -629,7 +631,7 @@ struct CloudFrontSignerTests {
     func testSignatureVerificationSHA1() throws {
         let signer = try CloudFrontSigner(
             keyPairId: testKeyPairId,
-            privateKey: testPrivateKeyPEM,
+            privateKeyPEM: testPrivateKeyPEM,
             hashAlgorithm: .sha1
         )
 
@@ -650,7 +652,7 @@ struct CloudFrontSignerTests {
     func testSignatureVerificationSHA256() throws {
         let signer = try CloudFrontSigner(
             keyPairId: testKeyPairId,
-            privateKey: testPrivateKeyPEM,
+            privateKeyPEM: testPrivateKeyPEM,
             hashAlgorithm: .sha256
         )
 
@@ -671,7 +673,7 @@ struct CloudFrontSignerTests {
     func testSignedURLSignatureVerification() throws {
         let signer = try CloudFrontSigner(
             keyPairId: testKeyPairId,
-            privateKey: testPrivateKeyPEM,
+            privateKeyPEM: testPrivateKeyPEM,
             hashAlgorithm: .sha1
         )
 
@@ -699,7 +701,7 @@ struct CloudFrontSignerTests {
     func testCustomPolicySHA256() throws {
         let signer = try CloudFrontSigner(
             keyPairId: testKeyPairId,
-            privateKey: testPrivateKeyPEM,
+            privateKeyPEM: testPrivateKeyPEM,
             hashAlgorithm: .sha256
         )
 
@@ -726,7 +728,7 @@ struct CloudFrontSignerTests {
     func testCustomPolicyExistingQueryParams() throws {
         let signer = try CloudFrontSigner(
             keyPairId: testKeyPairId,
-            privateKey: testPrivateKeyPEM
+            privateKeyPEM: testPrivateKeyPEM
         )
 
         let url = "https://d111111abcdef8.cloudfront.net/video.mp4?quality=high"

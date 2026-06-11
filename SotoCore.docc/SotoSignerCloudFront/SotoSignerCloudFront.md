@@ -17,15 +17,15 @@ let privateKeyPEM = try String(contentsOfFile: "/path/to/private-key.pem")
 
 let signer = try CloudFrontSigner(
     keyPairId: "K2JCJMDEHXQW5F",
-    privateKey: privateKeyPEM
+    privateKeyPEM: privateKeyPEM
 )
 ```
 
-You can also pass the key as `Data`:
+You can also pass the key as DER-encoded `Data`:
 
 ```swift
-let keyData = try Data(contentsOf: URL(fileURLWithPath: "/path/to/private-key.pem"))
-let signer = try CloudFrontSigner(keyPairId: "K2JCJMDEHXQW5F", privateKey: keyData)
+let keyData = try Data(contentsOf: URL(fileURLWithPath: "/path/to/private-key.der"))
+let signer = try CloudFrontSigner(keyPairId: "K2JCJMDEHXQW5F", privateKeyDER: keyData)
 ```
 
 By default SHA-1 is used (for backward compatibility with existing CloudFront distributions). For new deployments, use SHA-256:
@@ -33,7 +33,7 @@ By default SHA-1 is used (for backward compatibility with existing CloudFront di
 ```swift
 let signer = try CloudFrontSigner(
     keyPairId: "K2JCJMDEHXQW5F",
-    privateKey: privateKeyPEM,
+    privateKeyPEM: privateKeyPEM,
     hashAlgorithm: .sha256
 )
 ```
@@ -109,7 +109,7 @@ The initializer throws `CloudFrontSignerError.invalidPrivateKey` if the PEM data
 
 ```swift
 do {
-    let signer = try CloudFrontSigner(keyPairId: "KXXX", privateKey: "bad data")
+    let signer = try CloudFrontSigner(keyPairId: "KXXX", privateKeyPEM: "bad data")
 } catch CloudFrontSignerError.invalidPrivateKey {
     // Handle invalid key
 }

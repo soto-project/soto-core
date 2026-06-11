@@ -80,25 +80,30 @@ public struct CloudFrontSigner: Sendable {
     /// Initialize a CloudFront signer with a key pair ID and PEM-encoded private key (String).
     /// - Parameters:
     ///   - keyPairId: The CloudFront key pair ID (e.g., "K2JCJMDEHXQW5F")
-    ///   - privateKey: PEM-encoded RSA private key as a String
+    ///   - privateKeyPEM: PEM-encoded RSA private key as a String
     ///   - hashAlgorithm: Hash algorithm to use (defaults to `.sha1`)
-    public init(keyPairId: String, privateKey: String, hashAlgorithm: HashAlgorithm = .sha1) throws {
+    public init(keyPairId: String, privateKeyPEM: String, hashAlgorithm: HashAlgorithm = .sha1) throws {
         self.keyPairId = keyPairId
         self.hashAlgorithm = hashAlgorithm
         do {
-            self.privateKey = try _RSA.Signing.PrivateKey(pemRepresentation: privateKey)
+            self.privateKey = try _RSA.Signing.PrivateKey(pemRepresentation: privateKeyPEM)
         } catch {
             throw CloudFrontSignerError.invalidPrivateKey
         }
     }
 
-    /// Initialize a CloudFront signer with a key pair ID and PEM-encoded private key (Data).
+    /// Initialize a CloudFront signer with a key pair ID and DER-encoded private key.
     /// - Parameters:
     ///   - keyPairId: The CloudFront key pair ID (e.g., "K2JCJMDEHXQW5F")
-    ///   - privateKey: PEM-encoded RSA private key as Data
+    ///   - privateKeyDER: DER-encoded RSA private key
     ///   - hashAlgorithm: Hash algorithm to use (defaults to `.sha1`)
-    public init(keyPairId: String, privateKey: Data, hashAlgorithm: HashAlgorithm = .sha1) throws {
-        let pemString = String(decoding: privateKey, as: UTF8.self)
-        try self.init(keyPairId: keyPairId, privateKey: pemString, hashAlgorithm: hashAlgorithm)
+    public init(keyPairId: String, privateKeyDER: Data, hashAlgorithm: HashAlgorithm = .sha1) throws {
+        self.keyPairId = keyPairId
+        self.hashAlgorithm = hashAlgorithm
+        do {
+            self.privateKey = try _RSA.Signing.PrivateKey(derRepresentation: privateKeyDER)
+        } catch {
+            throw CloudFrontSignerError.invalidPrivateKey
+        }
     }
 }

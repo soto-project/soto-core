@@ -4,8 +4,8 @@
 
 ### Initializers
 
-- ``init(keyPairId:privateKey:hashAlgorithm:)-swift.init-1``
-- ``init(keyPairId:privateKey:hashAlgorithm:)-swift.init-2``
+- ``init(keyPairId:privateKeyPEM:hashAlgorithm:)``
+- ``init(keyPairId:privateKeyDER:hashAlgorithm:)``
 
 ### Nested Types
 

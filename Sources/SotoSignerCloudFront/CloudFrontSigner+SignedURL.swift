@@ -22,13 +22,24 @@ import Foundation
 
 extension CloudFrontSigner {
 
-    /// Generate a signed URL using a canned policy.
+    /// Generate a signed URL for the given policy.
     /// - Parameters:
     ///   - url: The CloudFront URL to sign
-    ///   - expires: How long before the signed URL expires
+    ///   - policy: The signing policy (canned or custom)
     ///   - date: Date that URL is valid from, defaults to now
     /// - Returns: The complete signed URL
-    public func signedURL(url: String, expires: TimeAmount, date: Date = Date()) throws -> String {
+    public func signedURL(url: String, policy: Policy, date: Date = Date()) throws -> String {
+        switch policy {
+        case .canned(let expires):
+            return try signedURLCanned(url: url, expires: expires, date: date)
+        case .custom(let customPolicy):
+            return try signedURLCustom(url: url, policy: customPolicy, date: date)
+        }
+    }
+
+    // MARK: - Private
+
+    private func signedURLCanned(url: String, expires: TimeAmount, date: Date) throws -> String {
         // 1. Compute expiration epoch
         let epoch = Int(date.timeIntervalSince1970) + Int(expires.nanoseconds / 1_000_000_000)
 
@@ -55,13 +66,7 @@ extension CloudFrontSigner {
         return signedURL
     }
 
-    /// Generate a signed URL using a custom policy.
-    /// - Parameters:
-    ///   - url: The CloudFront URL to sign
-    ///   - policy: Custom policy specifying access conditions
-    ///   - date: Date that URL is valid from, defaults to now
-    /// - Returns: The complete signed URL
-    public func signedURL(url: String, policy: CustomPolicy, date: Date = Date()) throws -> String {
+    private func signedURLCustom(url: String, policy: CustomPolicy, date: Date) throws -> String {
         // 1. Compute expiration epoch
         let expiresEpoch = Int(date.timeIntervalSince1970) + Int(policy.expires.nanoseconds / 1_000_000_000)
 

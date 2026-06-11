@@ -10,15 +10,14 @@
 ### Nested Types
 
 - ``HashAlgorithm``
+- ``Policy``
 - ``CustomPolicy``
 - ``SignedCookies``
 
 ### Signed URLs
 
-- ``signedURL(url:expires:date:)``
 - ``signedURL(url:policy:date:)``
 
 ### Signed Cookies
 
-- ``signedCookies(url:expires:date:)``
-- ``signedCookies(policy:date:)``
+- ``signedCookies(url:policy:date:)``

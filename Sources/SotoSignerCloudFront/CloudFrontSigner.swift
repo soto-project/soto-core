@@ -57,6 +57,14 @@ public struct CloudFrontSigner: Sendable {
         }
     }
 
+    /// The signing policy to use for URL or cookie generation.
+    public enum Policy: Sendable {
+        /// A canned policy that restricts access to a single resource with an expiration.
+        case canned(expires: TimeAmount)
+        /// A custom policy supporting wildcards, IP restrictions, and optional start times.
+        case custom(CustomPolicy)
+    }
+
     /// The cookie values needed for CloudFront signed cookies
     public struct SignedCookies: Sendable {
         /// `CloudFront-Policy` value (custom policy only)

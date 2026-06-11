@@ -101,8 +101,8 @@ struct CloudFrontSignerTests {
         let url = "https://d111111abcdef8.cloudfront.net/image.jpg"
         let expires: TimeAmount = .hours(1)
 
-        let signedURLFromPEM = try signerFromPEM.signedURL(url: url, expires: expires, date: fixedDate)
-        let signedURLFromDER = try signerFromDER.signedURL(url: url, expires: expires, date: fixedDate)
+        let signedURLFromPEM = try signerFromPEM.signedURL(url: url, policy: .canned(expires: expires), date: fixedDate)
+        let signedURLFromDER = try signerFromDER.signedURL(url: url, policy: .canned(expires: expires), date: fixedDate)
 
         #expect(signedURLFromPEM == signedURLFromDER)
     }
@@ -262,7 +262,7 @@ struct CloudFrontSignerTests {
         )
 
         let url = "https://d111111abcdef8.cloudfront.net/image.jpg"
-        let signedURL = try signer.signedURL(url: url, expires: .hours(1), date: fixedDate)
+        let signedURL = try signer.signedURL(url: url, policy: .canned(expires: .hours(1)), date: fixedDate)
 
         // Verify the signed URL starts with the original URL
         #expect(signedURL.hasPrefix(url))
@@ -290,12 +290,12 @@ struct CloudFrontSignerTests {
         )
 
         let url = "https://d111111abcdef8.cloudfront.net/video.mp4"
-        let policy = CloudFrontSigner.CustomPolicy(
+        let customPolicy = CloudFrontSigner.CustomPolicy(
             resource: "https://d111111abcdef8.cloudfront.net/*",
             expires: .hours(2)
         )
 
-        let signedURL = try signer.signedURL(url: url, policy: policy, date: fixedDate)
+        let signedURL = try signer.signedURL(url: url, policy: .custom(customPolicy), date: fixedDate)
 
         // Verify the signed URL starts with the original URL
         #expect(signedURL.hasPrefix(url))
@@ -321,12 +321,12 @@ struct CloudFrontSignerTests {
         let specificURL = "https://d111111abcdef8.cloudfront.net/videos/movie.mp4"
         let wildcardResource = "https://d111111abcdef8.cloudfront.net/videos/*"
 
-        let policy = CloudFrontSigner.CustomPolicy(
+        let customPolicy = CloudFrontSigner.CustomPolicy(
             resource: wildcardResource,
             expires: .hours(1)
         )
 
-        let signedURL = try signer.signedURL(url: specificURL, policy: policy, date: fixedDate)
+        let signedURL = try signer.signedURL(url: specificURL, policy: .custom(customPolicy), date: fixedDate)
 
         // The signed URL should start with the specific URL, not the wildcard
         #expect(signedURL.hasPrefix(specificURL))
@@ -347,7 +347,7 @@ struct CloudFrontSignerTests {
         )
 
         let url = "https://d111111abcdef8.cloudfront.net/image.jpg"
-        let signedURL = try signer.signedURL(url: url, expires: .hours(1), date: fixedDate)
+        let signedURL = try signer.signedURL(url: url, policy: .canned(expires: .hours(1)), date: fixedDate)
 
         #expect(signedURL.contains("Hash-Algorithm=SHA256"))
     }
@@ -361,7 +361,7 @@ struct CloudFrontSignerTests {
         )
 
         let url = "https://d111111abcdef8.cloudfront.net/image.jpg"
-        let signedURL = try signer.signedURL(url: url, expires: .hours(1), date: fixedDate)
+        let signedURL = try signer.signedURL(url: url, policy: .canned(expires: .hours(1)), date: fixedDate)
 
         #expect(!signedURL.contains("Hash-Algorithm"))
     }
@@ -376,7 +376,7 @@ struct CloudFrontSignerTests {
         )
 
         let url = "https://d111111abcdef8.cloudfront.net/image.jpg?size=large&format=webp"
-        let signedURL = try signer.signedURL(url: url, expires: .hours(1), date: fixedDate)
+        let signedURL = try signer.signedURL(url: url, policy: .canned(expires: .hours(1)), date: fixedDate)
 
         // Should use & since URL already has query params
         #expect(signedURL.hasPrefix("https://d111111abcdef8.cloudfront.net/image.jpg?size=large&format=webp&"))
@@ -395,7 +395,7 @@ struct CloudFrontSignerTests {
         )
 
         let url = "https://d111111abcdef8.cloudfront.net/image.jpg"
-        let cookies = try signer.signedCookies(url: url, expires: .hours(1), date: fixedDate)
+        let cookies = try signer.signedCookies(url: url, policy: .canned(expires: .hours(1)), date: fixedDate)
 
         // Canned policy: has expires, no policy
         #expect(cookies.expires == 1_609_462_800)
@@ -413,13 +413,13 @@ struct CloudFrontSignerTests {
             privateKeyPEM: testPrivateKeyPEM
         )
 
-        let policy = CloudFrontSigner.CustomPolicy(
+        let customPolicy = CloudFrontSigner.CustomPolicy(
             resource: "https://d111111abcdef8.cloudfront.net/*",
             expires: .hours(2),
             ipAddress: "10.0.0.0/8"
         )
 
-        let cookies = try signer.signedCookies(policy: policy, date: fixedDate)
+        let cookies = try signer.signedCookies(url: customPolicy.resource, policy: .custom(customPolicy), date: fixedDate)
 
         // Custom policy: has policy, no expires
         #expect(cookies.policy != nil)
@@ -440,7 +440,7 @@ struct CloudFrontSignerTests {
 
         let cookies = try signer.signedCookies(
             url: "https://d111111abcdef8.cloudfront.net/image.jpg",
-            expires: .hours(1),
+            policy: .canned(expires: .hours(1)),
             date: fixedDate
         )
 
@@ -458,12 +458,12 @@ struct CloudFrontSignerTests {
             privateKeyPEM: testPrivateKeyPEM
         )
 
-        let policy = CloudFrontSigner.CustomPolicy(
+        let customPolicy = CloudFrontSigner.CustomPolicy(
             resource: "https://d111111abcdef8.cloudfront.net/*",
             expires: .hours(2)
         )
 
-        let cookies = try signer.signedCookies(policy: policy, date: fixedDate)
+        let cookies = try signer.signedCookies(url: customPolicy.resource, policy: .custom(customPolicy), date: fixedDate)
 
         let headers = cookies.headerValues
         #expect(headers.count == 3)
@@ -537,7 +537,7 @@ struct CloudFrontSignerTests {
         )
 
         let url = "https://d111111abcdef8.cloudfront.net/path/with%20spaces/image%23file.jpg"
-        let signedURL = try signer.signedURL(url: url, expires: .hours(1), date: fixedDate)
+        let signedURL = try signer.signedURL(url: url, policy: .canned(expires: .hours(1)), date: fixedDate)
 
         #expect(signedURL.hasPrefix(url))
         #expect(signedURL.contains("Expires="))
@@ -553,7 +553,7 @@ struct CloudFrontSignerTests {
         )
 
         let url = "https://d111111abcdef8.cloudfront.net/*"
-        let signedURL = try signer.signedURL(url: url, expires: .hours(1), date: fixedDate)
+        let signedURL = try signer.signedURL(url: url, policy: .canned(expires: .hours(1)), date: fixedDate)
 
         #expect(signedURL.hasPrefix("https://d111111abcdef8.cloudfront.net/*?"))
         #expect(signedURL.contains("Expires="))
@@ -568,7 +568,7 @@ struct CloudFrontSignerTests {
 
         let longPath = String(repeating: "a", count: 2000)
         let url = "https://d111111abcdef8.cloudfront.net/\(longPath)"
-        let signedURL = try signer.signedURL(url: url, expires: .hours(1), date: fixedDate)
+        let signedURL = try signer.signedURL(url: url, policy: .canned(expires: .hours(1)), date: fixedDate)
 
         #expect(signedURL.hasPrefix(url))
         #expect(signedURL.contains("Expires="))
@@ -643,8 +643,8 @@ struct CloudFrontSignerTests {
 
         let url = "https://d111111abcdef8.cloudfront.net/image.jpg"
 
-        let signedURL1 = try signer.signedURL(url: url, expires: .hours(1), date: fixedDate)
-        let signedURL2 = try signer.signedURL(url: url, expires: .hours(1), date: fixedDate)
+        let signedURL1 = try signer.signedURL(url: url, policy: .canned(expires: .hours(1)), date: fixedDate)
+        let signedURL2 = try signer.signedURL(url: url, policy: .canned(expires: .hours(1)), date: fixedDate)
 
         #expect(signedURL1 == signedURL2)
     }
@@ -662,8 +662,8 @@ struct CloudFrontSignerTests {
 
         let url = "https://d111111abcdef8.cloudfront.net/image.jpg"
 
-        let signedURL1 = try signer1.signedURL(url: url, expires: .hours(1), date: fixedDate)
-        let signedURL2 = try signer2.signedURL(url: url, expires: .hours(1), date: fixedDate)
+        let signedURL1 = try signer1.signedURL(url: url, policy: .canned(expires: .hours(1)), date: fixedDate)
+        let signedURL2 = try signer2.signedURL(url: url, policy: .canned(expires: .hours(1)), date: fixedDate)
 
         #expect(signedURL1 == signedURL2)
     }
@@ -748,14 +748,14 @@ struct CloudFrontSignerTests {
             hashAlgorithm: .sha256
         )
 
-        let policy = CloudFrontSigner.CustomPolicy(
+        let customPolicy = CloudFrontSigner.CustomPolicy(
             resource: "https://d111111abcdef8.cloudfront.net/*",
             expires: .hours(1)
         )
 
         let signedURL = try signer.signedURL(
             url: "https://d111111abcdef8.cloudfront.net/video.mp4",
-            policy: policy,
+            policy: .custom(customPolicy),
             date: fixedDate
         )
 
@@ -775,12 +775,12 @@ struct CloudFrontSignerTests {
         )
 
         let url = "https://d111111abcdef8.cloudfront.net/video.mp4?quality=high"
-        let policy = CloudFrontSigner.CustomPolicy(
+        let customPolicy = CloudFrontSigner.CustomPolicy(
             resource: "https://d111111abcdef8.cloudfront.net/*",
             expires: .hours(1)
         )
 
-        let signedURL = try signer.signedURL(url: url, policy: policy, date: fixedDate)
+        let signedURL = try signer.signedURL(url: url, policy: .custom(customPolicy), date: fixedDate)
 
         #expect(signedURL.hasPrefix("https://d111111abcdef8.cloudfront.net/video.mp4?quality=high&"))
         #expect(signedURL.contains("&Policy="))

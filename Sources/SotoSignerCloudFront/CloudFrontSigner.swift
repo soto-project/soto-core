@@ -57,7 +57,7 @@ public struct CloudFrontSigner: Sendable {
         }
     }
 
-    /// The three cookie values needed for CloudFront signed cookies
+    /// The cookie values needed for CloudFront signed cookies
     public struct SignedCookies: Sendable {
         /// `CloudFront-Policy` value (custom policy only)
         public let policy: String?

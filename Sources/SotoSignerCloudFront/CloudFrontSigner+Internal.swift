@@ -31,8 +31,10 @@ extension CloudFrontSigner {
     /// - `/` → `~`
     ///
     /// Note: This is NOT standard base64url (RFC 4648 §5) — CloudFront uses `~` for `/`
-    /// and `_` for padding `=`, which differs from base64url's `_` for `/` with stripped padding.
-    /// Therefore `base64EncodedString(options: .base64URLAlphabet)` cannot be used here.
+    /// and `_` for padding `=`, which differs from base64url's `_` for `/` with padding kept.
+    /// While `.base64URLAlphabet` (macOS 26.4+) could be used as a starting point with
+    /// two additional replacements (`_` → `~`, `=` → `_`), it offers no simplification
+    /// over the current approach and requires a newer deployment target.
     static func cloudFrontBase64Encode(_ data: Data) -> String {
         let base64 = data.base64EncodedString()
         var result = ""

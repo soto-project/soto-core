@@ -22,11 +22,7 @@ import Testing
 
 @testable import SotoCore
 
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
 import Foundation
-#endif
 
 @Suite("Credential Process Provider")
 struct CredentialProcessProviderTests {

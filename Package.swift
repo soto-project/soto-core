@@ -116,10 +116,6 @@ let package = Package(
             dependencies: [],
             swiftSettings: swiftSettings
         ),
-        .executableTarget(
-            name: "credential-process-test-helper",
-            path: "Sources/credential-process-test-helper"
-        ),
         .testTarget(
             name: "SotoCoreTests",
             dependencies: [
@@ -127,6 +123,9 @@ let package = Package(
                 .byName(name: "SotoTestUtils"),
                 .product(name: "NIOPosix", package: "swift-nio"),
                 .product(name: "InMemoryTracing", package: "swift-distributed-tracing"),
+            ],
+            resources: [
+                .copy("Resources/credential-process-test-helper.sh")
             ]
         ),
         .testTarget(

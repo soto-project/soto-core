@@ -30,9 +30,20 @@ import Foundation
 
 @Suite("Credential Process Provider")
 struct CredentialProcessProviderTests {
-    /// swift test always runs from the project root directory.
-    let testHelperPath = ".build/debug/credential-process-test-helper"
+    /// Path to the test helper shell script bundled as a test resource.
+    let testHelperPath: String
     let logger = Logger(label: "test")
+
+    init() throws {
+        guard let resourcePath = Bundle.module.path(forResource: "credential-process-test-helper", ofType: "sh") else {
+            throw TestHelperError.resourceNotFound
+        }
+        testHelperPath = resourcePath
+    }
+
+    enum TestHelperError: Error {
+        case resourceNotFound
+    }
 
     func save(content: String, prefix: String) throws -> String {
         let filepath = "\(prefix)-\(UUID().uuidString)"
@@ -314,9 +325,8 @@ struct CredentialProcessProviderTests {
     func endToEndExpiringWithConfigFile() async throws {
         // The INI parser strips spaces from values, so we use a wrapper script
         // to pass arguments to the test helper.
+        let scriptContent = "#!/bin/sh\nexec \"\(testHelperPath)\" --expiring\n"
         let cwd = FileManager.default.currentDirectoryPath
-        let absoluteHelperPath = "\(cwd)/\(testHelperPath)"
-        let scriptContent = "#!/bin/sh\nexec \"\(absoluteHelperPath)\" --expiring\n"
         let scriptPath = "\(cwd)/" + (try save(content: scriptContent, prefix: "expiring-script"))
         try FileManager.default.setAttributes(
             [.posixPermissions: 0o755],

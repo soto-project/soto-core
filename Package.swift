@@ -32,6 +32,7 @@ let package = Package(
         .library(name: "SotoCore", targets: ["SotoCore"]),
         .library(name: "SotoTestUtils", targets: ["SotoTestUtils"]),
         .library(name: "SotoSignerV4", targets: ["SotoSignerV4"]),
+        .library(name: "SotoSignerCloudFront", targets: ["SotoSignerCloudFront"]),
     ],
     traits: [
         "ServiceLifecycleSupport",
@@ -91,6 +92,15 @@ let package = Package(
             swiftSettings: swiftSettings
         ),
         .target(
+            name: "SotoSignerCloudFront",
+            dependencies: [
+                .product(name: "Crypto", package: "swift-crypto"),
+                .product(name: "_CryptoExtras", package: "swift-crypto"),
+                .product(name: "NIOCore", package: "swift-nio"),
+            ],
+            swiftSettings: swiftSettings
+        ),
+        .target(
             name: "SotoTestUtils",
             dependencies: [
                 .byName(name: "SotoCore"),
@@ -132,6 +142,15 @@ let package = Package(
             name: "SotoSignerV4Tests",
             dependencies: [
                 .byName(name: "SotoSignerV4")
+            ]
+        ),
+        .testTarget(
+            name: "SotoSignerCloudFrontTests",
+            dependencies: [
+                .byName(name: "SotoSignerCloudFront"),
+                .product(name: "Crypto", package: "swift-crypto"),
+                .product(name: "_CryptoExtras", package: "swift-crypto"),
+                .product(name: "NIOCore", package: "swift-nio"),
             ]
         ),
         .testTarget(

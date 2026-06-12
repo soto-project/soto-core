@@ -142,3 +142,4 @@ SotoCore is the underlying driver for executing requests for the Soto Swift SDK 
 ## See Also
 
 - ``SotoSignerV4``
+- ``SotoSignerCloudFront``

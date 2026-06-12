@@ -26,6 +26,7 @@ import Foundation
 #endif
 
 /// Object encapsulating all the information needed to generate a raw HTTP request to AWS
+@available(SotoCore 7.0, *)
 public struct AWSHTTPRequest: Sendable {
     /// request URL
     public var url: URL
@@ -77,6 +78,7 @@ public struct AWSHTTPRequest: Sendable {
     }
 }
 
+@available(SotoCore 7.0, *)
 extension AWSHTTPRequest {
     internal init(operation operationName: String, path: String, method: HTTPMethod, configuration: AWSServiceConfig) throws {
         var headers = HTTPHeaders()

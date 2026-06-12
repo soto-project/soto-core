@@ -25,6 +25,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
+@available(SotoCore 7.0, *)
 struct LoginTokenManager {
     private struct AccessToken: Codable {
         let accessKeyId: String

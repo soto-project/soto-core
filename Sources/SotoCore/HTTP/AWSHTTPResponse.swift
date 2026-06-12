@@ -25,6 +25,7 @@ import Foundation
 #endif
 
 /// Structure encapsulating an HTTP Response
+@available(SotoCore 7.0, *)
 public struct AWSHTTPResponse: Sendable {
     /// response status
     public let status: HTTPResponseStatus

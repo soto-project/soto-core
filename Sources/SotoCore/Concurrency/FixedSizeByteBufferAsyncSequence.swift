@@ -15,6 +15,7 @@
 import NIOCore
 
 /// An AsyncSequence that returns fixed size ByteBuffers from an AsyncSequence of ByteBuffers
+@available(SotoCore 7.0, *)
 public struct FixedSizeByteBufferAsyncSequence<Base: AsyncSequence>: AsyncSequence where Base.Element == ByteBuffer {
     public typealias Element = ByteBuffer
 
@@ -80,8 +81,10 @@ public struct FixedSizeByteBufferAsyncSequence<Base: AsyncSequence>: AsyncSequen
     }
 }
 
+@available(SotoCore 7.0, *)
 extension FixedSizeByteBufferAsyncSequence: Sendable where Base: Sendable {}
 
+@available(SotoCore 7.0, *)
 extension AsyncSequence where Element == ByteBuffer {
     /// Return an AsyncSequence that returns ByteBuffers of a fixed size
     /// - Parameter chunkSize: Size of each chunk

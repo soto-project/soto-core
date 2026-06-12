@@ -106,22 +106,6 @@ extension AWSEncodableShape {
         }
     }
 
-    public func validate(_ value: AWSHTTPBody, name: String, parent: String, min: Int) throws {
-        if let size = value.length {
-            guard size >= min else {
-                throw Self.validationError("Length of \(parent).\(name) (\(size)) is less than minimum allowed value \(min).")
-            }
-        }
-    }
-
-    public func validate(_ value: AWSHTTPBody, name: String, parent: String, max: Int) throws {
-        if let size = value.length {
-            guard size <= max else {
-                throw Self.validationError("Length of \(parent).\(name) (\(size)) is greater than the maximum allowed value \(max).")
-            }
-        }
-    }
-
     public func validate(_ value: String, name: String, parent: String, pattern: String) throws {
         let regularExpression = try NSRegularExpression(pattern: pattern, options: [])
         let nsRange = NSRange(value.startIndex..<value.endIndex, in: value)
@@ -172,6 +156,30 @@ extension AWSEncodableShape {
         try self.validate(value, name: name, parent: parent, max: max)
     }
 
+    public func validate(_ value: String?, name: String, parent: String, pattern: String) throws {
+        guard let value else { return }
+        try self.validate(value, name: name, parent: parent, pattern: pattern)
+    }
+}
+
+@available(SotoCore 7.0, *)
+extension AWSEncodableShape {
+    public func validate(_ value: AWSHTTPBody, name: String, parent: String, min: Int) throws {
+        if let size = value.length {
+            guard size >= min else {
+                throw Self.validationError("Length of \(parent).\(name) (\(size)) is less than minimum allowed value \(min).")
+            }
+        }
+    }
+
+    public func validate(_ value: AWSHTTPBody, name: String, parent: String, max: Int) throws {
+        if let size = value.length {
+            guard size <= max else {
+                throw Self.validationError("Length of \(parent).\(name) (\(size)) is greater than the maximum allowed value \(max).")
+            }
+        }
+    }
+
     public func validate(_ value: AWSHTTPBody?, name: String, parent: String, min: Int) throws {
         guard let value else { return }
         try self.validate(value, name: name, parent: parent, min: min)
@@ -180,11 +188,6 @@ extension AWSEncodableShape {
     public func validate(_ value: AWSHTTPBody?, name: String, parent: String, max: Int) throws {
         guard let value else { return }
         try self.validate(value, name: name, parent: parent, max: max)
-    }
-
-    public func validate(_ value: String?, name: String, parent: String, pattern: String) throws {
-        guard let value else { return }
-        try self.validate(value, name: name, parent: parent, pattern: pattern)
     }
 }
 

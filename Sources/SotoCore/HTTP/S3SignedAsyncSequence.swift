@@ -24,6 +24,7 @@ private let maxHeaderSize: Int = bufferSizeInHex.count + chunkSignatureLength + 
 /// AsyncSequence that S3 signs the data returned from a base sequence
 ///
 /// See https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-streaming.html for details
+@available(SotoCore 7.0, *)
 struct S3SignedAsyncSequence<Base: AsyncSequence & Sendable>: AsyncSequence, Sendable where Base.Element == ByteBuffer {
     typealias Element = ByteBuffer
 
@@ -101,6 +102,7 @@ struct S3SignedAsyncSequence<Base: AsyncSequence & Sendable>: AsyncSequence, Sen
     }
 }
 
+@available(SotoCore 7.0, *)
 extension AsyncSequence where Element == ByteBuffer, Self: Sendable {
     /// create S3 signed sequence of data
     func s3Signed(signer: AWSSigner, seedSigningData: AWSSigner.ChunkedSigningData) -> S3SignedAsyncSequence<Self> {

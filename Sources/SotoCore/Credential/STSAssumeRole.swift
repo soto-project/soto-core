@@ -137,10 +137,12 @@ struct STSCredentials: AWSDecodableShape, ExpiringCredential {
 }
 
 /// Credential Provider that holds an AWSClient
+@available(SotoCore 7.0, *)
 protocol CredentialProviderWithClient: CredentialProvider {
     var client: AWSClient { get }
 }
 
+@available(SotoCore 7.0, *)
 extension CredentialProviderWithClient {
     /// shutdown credential provider and client
     func shutdown() async throws {
@@ -149,6 +151,7 @@ extension CredentialProviderWithClient {
 }
 
 /// Internal version of AssumeRole credential provider used by ConfigFileCredentialProvider
+@available(SotoCore 7.0, *)
 struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
     enum Request {
         case assumeRole(arn: String, sessionName: String)
@@ -258,6 +261,7 @@ struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
     }
 }
 
+@available(SotoCore 7.0, *)
 extension STSAssumeRoleCredentialProvider {
     static func fromEnvironment(
         context: CredentialProviderFactory.Context,

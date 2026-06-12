@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 /// Protocol for HTTP clients that work with Soto
+@available(SotoCore 7.0, *)
 public protocol AWSHTTPClient: Sendable {
     /// Execute an HTTP request
     func execute(
@@ -24,6 +25,7 @@ public protocol AWSHTTPClient: Sendable {
     func shutdown() async throws
 }
 
+@available(SotoCore 7.0, *)
 extension AWSHTTPClient {
     public func shutdown() async throws {}
 }

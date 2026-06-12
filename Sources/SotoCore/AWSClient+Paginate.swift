@@ -22,6 +22,7 @@ public protocol AWSPaginateToken: AWSShape {
     func usingPaginationToken(_ token: Token) -> Self
 }
 
+@available(SotoCore 7.0, *)
 extension AWSClient {
     /// Used to access paginated results.
     public struct PaginatorSequence<Input: AWSPaginateToken, Output: AWSShape>: AsyncSequence where Input.Token: Equatable {

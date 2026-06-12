@@ -29,6 +29,7 @@ import Foundation
 /// If no credential is available, or the current credentials are going to expire in the near future  the wrapped credential provider
 /// `getCredential` is called again. If current credentials have not expired (within a threshold) they are returned otherwise we wait on new
 /// credentials being provided.
+@available(SotoCore 7.0, *)
 public final class RotatingCredentialProvider: CredentialProvider {
     let expiringCredential: ExpiringValue<Credential>
     let validCredentialThreshold: TimeInterval
@@ -117,6 +118,7 @@ public final class RotatingCredentialProvider: CredentialProvider {
     }
 }
 
+@available(SotoCore 7.0, *)
 extension RotatingCredentialProvider: CustomStringConvertible {
     public var description: String { "\(type(of: self))(\(self.provider.description))" }
 }

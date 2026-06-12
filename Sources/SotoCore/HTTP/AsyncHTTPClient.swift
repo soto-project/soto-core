@@ -17,6 +17,7 @@ import Logging
 import NIOCore
 import NIOHTTP1
 
+@available(SotoCore 7.0, *)
 extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
     /// Execute HTTP request
     /// - Parameters:

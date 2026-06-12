@@ -15,6 +15,7 @@
 import Logging
 import SotoSignerV4
 
+@available(SotoCore 7.0, *)
 extension StaticCredential: CredentialProvider {
     /// Return static credential
     public func getCredential(logger: Logger) async throws -> Credential {

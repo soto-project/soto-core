@@ -29,6 +29,7 @@ import Foundation
 
 // MARK: - SSO Credential Provider
 
+@available(SotoCore 7.0, *)
 public struct SSOCredentialProvider: CredentialProvider {
     private let configuration: SSOConfiguration?
     private let profileName: String?
@@ -281,6 +282,7 @@ public struct SSOCredentialProvider: CredentialProvider {
 
 // MARK: - CredentialProviderFactory Extension
 
+@available(SotoCore 7.0, *)
 extension CredentialProviderFactory {
     /// Use AWS IAM Identity Center (SSO) credential provider
     ///

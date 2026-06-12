@@ -26,6 +26,7 @@ import Foundation
 /// value if it has expired or is about to expire. The type ensures there is only
 /// ever one value update running at any one time. If an update is already running
 /// when you call `getValue` it will wait on the current update function to finish.
+@available(SotoCore 7.0, *)
 actor ExpiringValue<T: Sendable> {
     enum State {
         /// No value is stored

@@ -26,12 +26,14 @@ import Foundation
 #endif
 
 /// protocol to get Credentials from the Client. With this the AWSClient requests the credentials for request signing from ecs and ec2.
+@available(SotoCore 7.0, *)
 protocol MetaDataClient: CredentialProvider {
     associatedtype MetaData: ExpiringCredential & Decodable
 
     func getMetaData(logger: Logger) async throws -> MetaData
 }
 
+@available(SotoCore 7.0, *)
 extension MetaDataClient {
     func getCredential(logger: Logger) async throws -> Credential {
         try await self.getMetaData(logger: logger)
@@ -47,6 +49,7 @@ enum MetaDataClientError: Error {
     case missingMetaData
 }
 
+@available(SotoCore 7.0, *)
 extension MetaDataClient {
     static func createJSONDecoder() -> JSONDecoder {
         let decoder = JSONDecoder()
@@ -62,6 +65,7 @@ struct MetadataHTTPResponse {
     public var body: ByteBuffer?
 }
 
+@available(SotoCore 7.0, *)
 struct ECSMetaDataClient: MetaDataClient {
     typealias MetaData = ECSMetaData
 
@@ -123,6 +127,7 @@ struct ECSMetaDataClient: MetaDataClient {
 // MARK: InstanceMetaDataServiceProvider
 
 /// Provide AWS credentials for EC2 instances
+@available(SotoCore 7.0, *)
 struct InstanceMetaDataClient: MetaDataClient {
     typealias MetaData = InstanceMetaData
 

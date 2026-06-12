@@ -15,6 +15,7 @@
 import Logging
 
 /// Context object sent to `AWSMiddlewareProtocol` `handle` functions
+@available(SotoCore 7.0, *)
 public struct AWSMiddlewareContext: Sendable {
     public var operation: String
     public var serviceConfig: AWSServiceConfig
@@ -23,14 +24,17 @@ public struct AWSMiddlewareContext: Sendable {
 }
 
 /// Function to call next middleware in the chain
+@available(SotoCore 7.0, *)
 public typealias AWSMiddlewareNextHandler = (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse
 
 /// Middleware protocol, with function that takes a request, context and the next function to call
+@available(SotoCore 7.0, *)
 public protocol AWSMiddlewareProtocol: Sendable {
     func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse
 }
 
 /// Middleware initialized with a middleware handle
+@available(SotoCore 7.0, *)
 public struct AWSMiddleware: AWSMiddlewareProtocol {
     @usableFromInline
     var middleware: @Sendable (AWSHTTPRequest, AWSMiddlewareContext, _ next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse
@@ -48,6 +52,7 @@ public struct AWSMiddleware: AWSMiddlewareProtocol {
 }
 
 /// Build middleware from combining two middleware
+@available(SotoCore 7.0, *)
 struct AWSMiddleware2<M0: AWSMiddlewareProtocol, M1: AWSMiddlewareProtocol>: AWSMiddlewareProtocol {
     @usableFromInline let m0: M0
     @usableFromInline let m1: M1
@@ -67,6 +72,7 @@ struct AWSMiddleware2<M0: AWSMiddlewareProtocol, M1: AWSMiddlewareProtocol>: AWS
 }
 
 /// Build middleware from array of existential middleware
+@available(SotoCore 7.0, *)
 struct AWSDynamicMiddlewareStack: AWSMiddlewareProtocol {
     @usableFromInline
     typealias Stack = [(String, any AWSMiddlewareProtocol)]

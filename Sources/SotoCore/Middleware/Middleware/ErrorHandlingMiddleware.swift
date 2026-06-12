@@ -17,6 +17,7 @@ import NIOHTTP1
 import SotoSignerV4
 
 /// Middleware that throws errors for non 2xx responses from AWS
+@available(SotoCore 7.0, *)
 struct ErrorHandlingMiddleware: AWSMiddlewareProtocol {
     let options: AWSClient.Options
 

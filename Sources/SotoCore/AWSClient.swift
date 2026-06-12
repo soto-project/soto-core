@@ -36,6 +36,7 @@ import Foundation
 /// the response from AWS is received if it is successful it is converted to a ``AWSHTTPResponse`` which is
 /// then decoded to generate a ``AWSShape`` Output object. If it is not successful then `AWSClient` will
 /// throw an ``AWSErrorType``.
+@available(SotoCore 7.0, *)
 public final class AWSClient: Sendable {
     // MARK: Member variables
 
@@ -251,6 +252,7 @@ public final class AWSClient: Sendable {
 
 // MARK: API Calls
 
+@available(SotoCore 7.0, *)
 extension AWSClient {
     /// Execute a request with an input object and an empty response
     /// - parameters:
@@ -556,6 +558,7 @@ extension AWSClient {
 }
 
 // response validator
+@available(SotoCore 7.0, *)
 extension AWSClient {
     /// Generate an AWS Response from  the operation HTTP response and return the output shape from it. This is only every called if the response includes a successful http status code
     internal func processResponse<Output: AWSDecodableShape>(
@@ -568,6 +571,7 @@ extension AWSClient {
     }
 }
 
+@available(SotoCore 7.0, *)
 extension AWSClient.ClientError: CustomStringConvertible {
     /// return human readable description of error
     public var description: String {

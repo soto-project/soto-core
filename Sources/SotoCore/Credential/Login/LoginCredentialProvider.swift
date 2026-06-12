@@ -299,6 +299,7 @@ public struct LoginCredentialProvider: CredentialProvider {
 
 // MARK: - CredentialProviderFactory Extension
 
+@available(SotoCore 7.0, *)
 extension CredentialProviderFactory {
     /// Use AWS Login credential provider
     ///

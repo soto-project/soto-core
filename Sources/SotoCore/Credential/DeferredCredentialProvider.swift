@@ -21,6 +21,7 @@ import NIOCore
 /// Used for wrapping another credential provider whose `getCredential` method doesn't return instantly and
 /// is only needed to be called once. After the wrapped `CredentialProvider` has generated a credential this is
 /// returned instead of calling the wrapped `CredentialProvider's` `getCredentials` again.
+@available(SotoCore 7.0, *)
 public final class DeferredCredentialProvider: CredentialProvider {
     private let getCredentialTask: Task<Credential, Error>
     private let provider: CredentialProvider
@@ -59,6 +60,7 @@ public final class DeferredCredentialProvider: CredentialProvider {
     }
 }
 
+@available(SotoCore 7.0, *)
 extension DeferredCredentialProvider: CustomStringConvertible {
     public var description: String { "\(type(of: self))(\(self.provider.description))" }
 }

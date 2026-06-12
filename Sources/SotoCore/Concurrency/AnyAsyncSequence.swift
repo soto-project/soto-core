@@ -42,6 +42,7 @@ public struct AnyAsyncSequence<Element>: Sendable, AsyncSequence {
 
     @usableFromInline var makeAsyncIteratorCallback: @Sendable () -> AsyncIteratorNextCallback
 
+    @available(SotoCore 7.0, *)
     @inlinable public init<SequenceOfBytes>(
         _ asyncSequence: SequenceOfBytes
     ) where SequenceOfBytes: AsyncSequence & Sendable, SequenceOfBytes.Element == Element {

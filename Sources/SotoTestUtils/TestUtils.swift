@@ -38,6 +38,7 @@ import Foundation
     }
 }
 
+@available(SotoCore 7.0, *)
 public func createAWSClient(
     credentialProvider: CredentialProviderFactory = .default,
     retryPolicy: RetryPolicyFactory = .noRetry,
@@ -56,6 +57,7 @@ public func createAWSClient(
     )
 }
 
+@available(SotoCore 7.0, *)
 public func createServiceConfig(
     region: Region? = nil,
     partition: AWSPartition = .aws,
@@ -113,6 +115,7 @@ public func createRandomBuffer(_ w: UInt, _ z: UInt, size: Int) -> [UInt8] {
 }
 
 /// Provide various test environment variables
+@available(SotoCore 7.0, *)
 public enum TestEnvironment {
     /// current list of middleware
     public static var middlewares: AWSMiddlewareProtocol {

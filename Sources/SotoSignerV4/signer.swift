@@ -17,6 +17,7 @@ import Crypto
 import Foundation
 
 /// Amazon Web Services V4 Signer
+@available(SotoCore 7.0, *)
 public struct AWSSigner: Sendable {
 
     /// The algorithm used to create the hash of the canonical request

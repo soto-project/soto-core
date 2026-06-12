@@ -44,6 +44,7 @@ public struct AWSEndpoints {
 }
 
 /// Endpoint Storage attached to a Service
+@available(SotoCore 7.0, *)
 public struct AWSEndpointStorage: Sendable {
     let endpoint: ExpiringValue<String>
 

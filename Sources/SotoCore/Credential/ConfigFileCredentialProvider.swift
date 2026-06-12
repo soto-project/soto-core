@@ -18,6 +18,7 @@ import NIOCore
 import NIOPosix
 import SotoSignerV4
 
+@available(SotoCore 7.0, *)
 final class ConfigFileCredentialProvider: CredentialProviderSelector {
     private let getProviderTask: Task<CredentialProvider, Error>
     init(

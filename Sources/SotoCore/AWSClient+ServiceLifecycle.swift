@@ -16,6 +16,7 @@
 
 import ServiceLifecycle
 
+@available(SotoCore 7.0, *)
 extension AWSClient: Service {
     public func run() async throws {
         // Wait until graceful shutdown has been triggered, ignoring any

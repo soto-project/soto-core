@@ -29,6 +29,7 @@ public struct HeaderDecodingError: Error {
 
 /// Response container used during Codable `init(from:)` that allows for extracting data from
 /// the full response and not only its body
+@available(SotoCore 7.0, *)
 @_spi(SotoInternal)
 public struct ResponseDecodingContainer: Sendable {
     @usableFromInline

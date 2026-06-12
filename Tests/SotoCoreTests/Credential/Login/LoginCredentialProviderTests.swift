@@ -607,7 +607,7 @@ final class LoginCredentialProviderTests {
 
 // MARK: - Test Helpers
 
-@available(macOS 13.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
+@available(SotoCore 7.0, *)
 extension LoginCredentialProvider {
     /// Create a LoginCredentialsProvider with explicit configuration (for testing)
     /// - Parameters:

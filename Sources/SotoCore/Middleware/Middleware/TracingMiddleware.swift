@@ -18,6 +18,7 @@ import Tracing
 ///
 /// This currently only adds attributes for the basic common attributes as detailed
 /// in https://github.com/open-telemetry/semantic-conventions/blob/main/docs/cloud-providers/aws-sdk.md
+@available(SotoCore 7.0, *)
 public struct AWSTracingMiddleware: AWSMiddlewareProtocol {
     public init() {}
 

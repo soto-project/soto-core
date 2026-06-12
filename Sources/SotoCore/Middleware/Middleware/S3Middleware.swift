@@ -18,6 +18,7 @@ import Foundation
 @_spi(SotoInternal) import SotoSignerV4
 internal import SotoXML
 
+@available(SotoCore 7.0, *)
 extension S3Middleware {
     @TaskLocal public static var executionContext: ExecutionContext?
 
@@ -43,6 +44,7 @@ extension S3Middleware {
 /// For responses it
 /// - Fixes up the GetBucketLocation response, so it can be decoded correctly
 /// - Creates error body for notFound responses to HEAD requests
+@available(SotoCore 7.0, *)
 public struct S3Middleware: AWSMiddlewareProtocol {
     public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse {
 

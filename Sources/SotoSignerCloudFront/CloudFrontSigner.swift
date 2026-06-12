@@ -123,7 +123,7 @@ public struct CloudFrontSigner: Sendable {
     ///   - keyPairId: The CloudFront key pair ID (e.g., "K2JCJMDEHXQW5F")
     ///   - privateKeyDER: DER-encoded RSA private key
     ///   - hashAlgorithm: Hash algorithm to use (defaults to `.sha1`)
-    public init(keyPairId: String, privateKeyDER: Data, hashAlgorithm: HashAlgorithm = .sha1) throws {
+    public init<Bytes: DataProtocol>(keyPairId: String, privateKeyDER: Bytes, hashAlgorithm: HashAlgorithm = .sha1) throws {
         self.keyPairId = keyPairId
         self.hashAlgorithm = hashAlgorithm
         do {

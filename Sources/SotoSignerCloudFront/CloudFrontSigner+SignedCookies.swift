@@ -29,7 +29,7 @@ extension CloudFrontSigner {
     ///   - date: Date that cookies are valid from, defaults to now
     /// - Returns: The cookie values to set in `Set-Cookie` headers
     public func signedCookies(url: String, policy: Policy, date: Date = Date()) throws -> SignedCookies {
-        switch policy {
+        switch policy._wrapped {
         case .canned(let expires):
             return try signedCookiesCanned(url: url, expires: expires, date: date)
         case .custom(let customPolicy):

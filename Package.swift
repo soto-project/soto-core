@@ -123,6 +123,9 @@ let package = Package(
                 .byName(name: "SotoTestUtils"),
                 .product(name: "NIOPosix", package: "swift-nio"),
                 .product(name: "InMemoryTracing", package: "swift-distributed-tracing"),
+            ],
+            resources: [
+                .copy("Resources/credential-process-test-helper.sh")
             ]
         ),
         .testTarget(

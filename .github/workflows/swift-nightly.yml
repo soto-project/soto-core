@@ -19,6 +19,6 @@ jobs:
       image: swiftlang/swift:${{ matrix.tag }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Test
       run: swift test --enable-test-discovery

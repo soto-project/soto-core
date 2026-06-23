@@ -36,9 +36,11 @@ let package = Package(
     ],
     traits: [
         "ServiceLifecycleSupport",
+        "CBORSupport",
         .default(
             enabledTraits: [
-                "ServiceLifecycleSupport"
+                "ServiceLifecycleSupport",
+                "CBORSupport",
             ]
         ),
     ],
@@ -54,6 +56,7 @@ let package = Package(
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.30.0"),
         .package(url: "https://github.com/jmespath/jmespath.swift.git", from: "1.0.2"),
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.8.0"),
+        .package(url: "https://github.com/edgeengineer/cbor", from: "0.0.6"),
     ],
     targets: [
         .target(
@@ -74,6 +77,7 @@ let package = Package(
                 .product(name: "NIOFoundationCompat", package: "swift-nio"),
                 .product(name: "JMESPath", package: "jmespath.swift"),
                 .product(name: "Tracing", package: "swift-distributed-tracing"),
+                .product(name: "CBOR", package: "cbor", condition: .when(traits: ["CBORSupport"])),
                 .product(
                     name: "ServiceLifecycle",
                     package: "swift-service-lifecycle",

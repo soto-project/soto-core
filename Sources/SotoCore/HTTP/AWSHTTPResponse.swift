@@ -88,6 +88,9 @@ public struct AWSHTTPResponse: Sendable {
             var xmlDecoder = XMLDecoder()
             xmlDecoder.userInfo[.awsResponse] = ResponseDecodingContainer(response: self)
             return try xmlDecoder.decode(Output.self, from: xmlElement)
+
+        case .rpcv2cbor:
+            preconditionFailure("Unsupported")
         }
     }
 
@@ -144,6 +147,9 @@ public struct AWSHTTPResponse: Sendable {
                 var xmlDecoder = XMLDecoder()
                 xmlDecoder.userInfo[.awsErrorMap] = serviceConfig.errorType
                 apiError = try? xmlDecoder.decode(XMLQueryError.self, from: errorElement)
+
+            case .rpcv2cbor:
+                preconditionFailure("Unsupported")
             }
         }
         if let errorMessage = apiError, var code = errorMessage.code {

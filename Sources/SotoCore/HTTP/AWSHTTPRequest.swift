@@ -19,6 +19,10 @@ import NIOHTTP1
 import SotoSignerV4
 internal import SotoXML
 
+#if CBORSupport
+import CBOR
+#endif
+
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else
@@ -117,6 +121,9 @@ extension AWSHTTPRequest {
         hostPrefix: String? = nil,
         configuration: AWSServiceConfig
     ) throws {
+        #if CBORSupport
+        var method = method
+        #endif
         // validate input parameters
         try input.validate()
 
@@ -171,6 +178,16 @@ extension AWSHTTPRequest {
             } else {
                 body = .init()
             }
+
+        case .rpcv2cbor:
+            let encoder = CBOREncoder()
+            encoder.userInfo[.awsRequest] = requestEncoderContainer
+            let buffer = try encoder.encode(input)
+            body = .init(buffer: configuration.byteBufferAllocator.buffer(bytes: buffer))
+            // For RPC v2 CBOR setup see https://smithy.io/2.0/additional-specs/protocols/smithy-rpc-v2-cbor.html
+            method = .POST
+            requestEncoderContainer.headers.add(name: "smithy-protocol", value: "rpc-v2-cbor")
+            requestEncoderContainer.path = "/service/\(configuration.serviceName)/operation/\(operationName)"
         }
         body = requestEncoderContainer.body ?? body
         var headers = Self.calculateChecksumHeader(

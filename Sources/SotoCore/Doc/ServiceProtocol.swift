@@ -19,6 +19,9 @@ public enum ServiceProtocol {
     case restxml
     case query
     case ec2
+    #if CBORSupport
+    case rpcv2cbor
+    #endif
 }
 
 extension ServiceProtocol {
@@ -32,6 +35,8 @@ extension ServiceProtocol {
             return "application/octet-stream"
         case .query, .ec2:
             return "application/x-www-form-urlencoded; charset=utf-8"
+        case .rpcv2cbor:
+            return "application/cbor"
         }
     }
 }

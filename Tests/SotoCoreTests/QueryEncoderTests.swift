@@ -12,22 +12,23 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 import SotoTestUtils
-import XCTest
+import Testing
 
 @testable import SotoCore
 
-class QueryEncoderTests: XCTestCase {
+class QueryEncoderTests {
     func testQuery(_ value: some Encodable, query: String) {
         do {
             let query2 = try QueryEncoder().encode(value)
-            XCTAssertEqual(query2, query)
+            #expect(query2 == query)
         } catch {
-            XCTFail("\(error)")
+            Issue.record("\(error)")
         }
     }
 
-    func testSimpleStructureEncode() {
+    @Test func testSimpleStructureEncode() {
         struct Test: AWSEncodableShape {
             let a: String
             let b: Int
@@ -41,7 +42,7 @@ class QueryEncoderTests: XCTestCase {
         self.testQuery(test, query: "A=Testing&B=42")
     }
 
-    func testContainingStructureEncode() {
+    @Test func testContainingStructureEncode() {
         struct Test: AWSEncodableShape {
             let a: Int
             let b: String
@@ -62,7 +63,7 @@ class QueryEncoderTests: XCTestCase {
         self.testQuery(test, query: "T.A=42&T.B=Life")
     }
 
-    func testEnumEncode() {
+    @Test func testEnumEncode() {
         struct Test: AWSEncodableShape {
             enum TestEnum: String, Codable {
                 case first
@@ -80,7 +81,7 @@ class QueryEncoderTests: XCTestCase {
         self.testQuery(test, query: "A=second")
     }
 
-    func testArrayEncode() {
+    @Test func testArrayEncode() {
         struct Test: AWSEncodableShape {
             let a: [Int]
 
@@ -92,7 +93,7 @@ class QueryEncoderTests: XCTestCase {
         self.testQuery(test, query: "A.1=9&A.2=8&A.3=7&A.4=6")
     }
 
-    func testArrayOfStructuresEncode() {
+    @Test func testArrayOfStructuresEncode() {
         struct ArrayM: ArrayCoderProperties { static let member = "m" }
         struct Test2: AWSEncodableShape {
             let b: String
@@ -112,7 +113,7 @@ class QueryEncoderTests: XCTestCase {
         self.testQuery(test, query: "A.m.1.B=first&A.m.2.B=second")
     }
 
-    func testDictionaryEncode() {
+    @Test func testDictionaryEncode() {
         struct Test: AWSEncodableShape {
             @CustomCoding<StandardDictionaryCoder> var a: [String: Int]
 
@@ -124,7 +125,7 @@ class QueryEncoderTests: XCTestCase {
         self.testQuery(test, query: "A.entry.1.key=first&A.entry.1.value=1")
     }
 
-    func testDictionaryEnumKeyEncode() {
+    @Test func testDictionaryEnumKeyEncode() {
         struct Test2: AWSEncodableShape {
             let b: String
 
@@ -148,7 +149,7 @@ class QueryEncoderTests: XCTestCase {
         self.testQuery(test, query: "A.entry.1.key=first&A.entry.1.value.B=1st")
     }
 
-    func testArrayEncodingEncode() {
+    @Test func testArrayEncodingEncode() {
         struct ArrayItem: ArrayCoderProperties { static let member = "item" }
         struct Test: AWSEncodableShape {
             @CustomCoding<ArrayCoder<ArrayItem, Int>> var a: [Int]
@@ -157,7 +158,7 @@ class QueryEncoderTests: XCTestCase {
         self.testQuery(test, query: "a.item.1=9&a.item.2=8&a.item.3=7&a.item.4=6")
     }
 
-    func testDictionaryEncodingEncode() {
+    @Test func testDictionaryEncodingEncode() {
         struct DictionaryItemKV: DictionaryCoderProperties {
             static let entry: String? = "item"
             static let key = "k"
@@ -174,7 +175,7 @@ class QueryEncoderTests: XCTestCase {
         self.testQuery(test, query: "A.item.1.k=first&A.item.1.v=1")
     }
 
-    func testDictionaryEncodingEncode2() {
+    @Test func testDictionaryEncodingEncode2() {
         struct DictionaryNameEntry: DictionaryCoderProperties {
             static let entry: String? = nil
             static let key = "name"
@@ -191,7 +192,7 @@ class QueryEncoderTests: XCTestCase {
         self.testQuery(test, query: "A.1.entry=1&A.1.name=first")
     }
 
-    func testBase64DataEncode() {
+    @Test func testBase64DataEncode() {
         struct Test: AWSEncodableShape {
             let a: AWSBase64Data
         }
@@ -200,7 +201,7 @@ class QueryEncoderTests: XCTestCase {
         self.testQuery(test, query: "a=VGVzdGluZw%3D%3D")
     }
 
-    func testEC2Encode() {
+    @Test func testEC2Encode() {
         struct Test2: AWSEncodableShape {
             let data: String
         }
@@ -213,9 +214,9 @@ class QueryEncoderTests: XCTestCase {
             queryEncoder.ec2 = true
             let query = try queryEncoder.encode(value)
 
-            XCTAssertEqual(query, "Object.Data=Hello")
+            #expect(query == "Object.Data=Hello")
         } catch {
-            XCTFail("\(error)")
+            Issue.record("\(error)")
         }
     }
 }

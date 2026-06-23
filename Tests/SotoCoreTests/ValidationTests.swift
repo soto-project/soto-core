@@ -12,20 +12,20 @@
 //
 //===----------------------------------------------------------------------===//
 
-import XCTest
+import Testing
 
 @testable import SotoCore
 
-class ValidationTests: XCTestCase {
+class ValidationTests {
     /// test validation
     func testValidationFail(_ shape: any AWSEncodableShape) {
         do {
             try shape.validate()
-            XCTFail()
+            Issue.record()
         } catch let error as AWSClientError where error == AWSClientError.validationError {
             print(error.message ?? "")
         } catch {
-            XCTFail(error.localizedDescription)
+            Issue.record(error)
         }
     }
 
@@ -33,11 +33,11 @@ class ValidationTests: XCTestCase {
         do {
             try shape.validate()
         } catch {
-            XCTFail(error.localizedDescription)
+            Issue.record(error)
         }
     }
 
-    func testNumericMinMaxValidation() {
+    @Test func testNumericMinMaxValidation() {
         struct A: AWSEncodableShape {
             let size: Int?
 
@@ -54,7 +54,7 @@ class ValidationTests: XCTestCase {
         self.testValidationFail(a3)
     }
 
-    func testFloatingPointMinMaxValidation() {
+    @Test func testFloatingPointMinMaxValidation() {
         struct A: AWSEncodableShape {
             let size: Float?
 
@@ -71,7 +71,7 @@ class ValidationTests: XCTestCase {
         self.testValidationFail(a3)
     }
 
-    func testStringLengthMinMaxValidation() {
+    @Test func testStringLengthMinMaxValidation() {
         struct A: AWSEncodableShape {
             let string: String?
 
@@ -88,7 +88,7 @@ class ValidationTests: XCTestCase {
         self.testValidationFail(a3)
     }
 
-    func testArrayLengthMinMaxValidation() {
+    @Test func testArrayLengthMinMaxValidation() {
         struct A: AWSEncodableShape {
             let numbers: [Int]?
 
@@ -105,7 +105,7 @@ class ValidationTests: XCTestCase {
         self.testValidationFail(a3)
     }
 
-    func testStringPatternValidation() {
+    @Test func testStringPatternValidation() {
         struct A: AWSEncodableShape {
             let string: String?
 
@@ -121,7 +121,7 @@ class ValidationTests: XCTestCase {
         self.testValidationFail(a3)
     }
 
-    func testStringPattern2Validation() {
+    @Test func testStringPattern2Validation() {
         struct A: AWSEncodableShape {
             let path: String
 

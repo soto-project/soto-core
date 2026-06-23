@@ -16,16 +16,16 @@
 
 import SotoCore
 import SotoTestUtils
-import XCTest
+import Testing
 
-class RegionTests: XCTestCase {
+class RegionTests {
     private func testStringToOneRegion(regionName: String, regionEnum: Region) {
         let region = Region(awsRegionName: regionName)
-        XCTAssertNotNil(region)
-        XCTAssert(region! == regionEnum)
+        #expect(region != nil)
+        #expect(region! == regionEnum)
     }
 
-    func testStringToRegion() {
+    @Test func testStringToRegion() {
         self.testStringToOneRegion(regionName: "af-south-1", regionEnum: Region.afsouth1)
         self.testStringToOneRegion(regionName: "ap-east-1", regionEnum: Region.apeast1)
         self.testStringToOneRegion(regionName: "ap-northeast-1", regionEnum: Region.apnortheast1)
@@ -48,160 +48,160 @@ class RegionTests: XCTestCase {
         self.testStringToOneRegion(regionName: "us-west-2", regionEnum: Region.uswest2)
     }
 
-    func testStringToInvalidRegion() {
-        XCTAssertNil(Region(awsRegionName: "xxx"))
+    @Test func testStringToInvalidRegion() {
+        #expect(Region(awsRegionName: "xxx") == nil)
     }
 
-    func testRegionEnumRawValue() {
+    @Test func testRegionEnumRawValue() {
         let region = Region(rawValue: "my-region")
         if Region.other("my-region") == region {
-            XCTAssertEqual(region.rawValue, "my-region")
+            #expect(region.rawValue == "my-region")
         } else {
-            XCTFail("Did not construct Region.other()")
+            Issue.record("Did not construct Region.other()")
         }
     }
 
-    func testRegionEnumExistingRegion() {
+    @Test func testRegionEnumExistingRegion() {
         var region: Region
 
         region = Region(rawValue: "af-south-1")
         if Region.afsouth1 == region {
-            XCTAssertEqual(region.rawValue, "af-south-1")
+            #expect(region.rawValue == "af-south-1")
         } else {
-            XCTFail("Did not construct Region(rawValue:) for af-south-1")
+            Issue.record("Did not construct Region(rawValue:) for af-south-1")
         }
 
         region = Region(rawValue: "ap-east-1")
         if Region.apeast1 == region {
-            XCTAssertEqual(region.rawValue, "ap-east-1")
+            #expect(region.rawValue == "ap-east-1")
         } else {
-            XCTFail("Did not construct Region(rawValue:) for ap-east-1")
+            Issue.record("Did not construct Region(rawValue:) for ap-east-1")
         }
 
         region = Region(rawValue: "ap-northeast-1")
         if Region.apnortheast1 == region {
-            XCTAssertEqual(region.rawValue, "ap-northeast-1")
+            #expect(region.rawValue == "ap-northeast-1")
         } else {
-            XCTFail("Did not construct Region(rawValue:) for ap-northeast-1")
+            Issue.record("Did not construct Region(rawValue:) for ap-northeast-1")
         }
 
         region = Region(rawValue: "ap-northeast-3")
         if Region.apnortheast3 == region {
-            XCTAssertEqual(region.rawValue, "ap-northeast-3")
+            #expect(region.rawValue == "ap-northeast-3")
         } else {
-            XCTFail("Did not construct Region(rawValue:) for ap-northeast-3")
+            Issue.record("Did not construct Region(rawValue:) for ap-northeast-3")
         }
 
         region = Region(rawValue: "ap-south-1")
         if Region.apsouth1 == region {
-            XCTAssertEqual(region.rawValue, "ap-south-1")
+            #expect(region.rawValue == "ap-south-1")
         } else {
-            XCTFail("Did not construct Region(rawValue:) for ap-south-1")
+            Issue.record("Did not construct Region(rawValue:) for ap-south-1")
         }
 
         region = Region(rawValue: "ap-southeast-1")
         if Region.apsoutheast1 == region {
-            XCTAssertEqual(region.rawValue, "ap-southeast-1")
+            #expect(region.rawValue == "ap-southeast-1")
         } else {
-            XCTFail("Did not construct Region(rawValue:) for ap-southeast-1")
+            Issue.record("Did not construct Region(rawValue:) for ap-southeast-1")
         }
 
         region = Region(rawValue: "ap-southeast-2")
         if Region.apsoutheast2 == region {
-            XCTAssertEqual(region.rawValue, "ap-southeast-2")
+            #expect(region.rawValue == "ap-southeast-2")
         } else {
-            XCTFail("Did not construct Region(rawValue:) for ap-southeast-2")
+            Issue.record("Did not construct Region(rawValue:) for ap-southeast-2")
         }
 
         region = Region(rawValue: "ca-central-1")
         if Region.cacentral1 == region {
-            XCTAssertEqual(region.rawValue, "ca-central-1")
+            #expect(region.rawValue == "ca-central-1")
         } else {
-            XCTFail("Did not construct Region(rawValue:) for ca-central-1")
+            Issue.record("Did not construct Region(rawValue:) for ca-central-1")
         }
 
         region = Region(rawValue: "cn-northwest-1")
         if Region.cnnorthwest1 == region {
-            XCTAssertEqual(region.rawValue, "cn-northwest-1")
+            #expect(region.rawValue == "cn-northwest-1")
         } else {
-            XCTFail("Did not construct Region(rawValue:) for cn-northwest-1")
+            Issue.record("Did not construct Region(rawValue:) for cn-northwest-1")
         }
 
         region = Region(rawValue: "eu-central-1")
         if Region.eucentral1 == region {
-            XCTAssertEqual(region.rawValue, "eu-central-1")
+            #expect(region.rawValue == "eu-central-1")
         } else {
-            XCTFail("Did not construct Region(rawValue:) for eu-central-1")
+            Issue.record("Did not construct Region(rawValue:) for eu-central-1")
         }
 
         region = Region(rawValue: "eu-north-1")
         if Region.eunorth1 == region {
-            XCTAssertEqual(region.rawValue, "eu-north-1")
+            #expect(region.rawValue == "eu-north-1")
         } else {
-            XCTFail("Did not construct Region(rawValue:) for eu-north-1")
+            Issue.record("Did not construct Region(rawValue:) for eu-north-1")
         }
 
         region = Region(rawValue: "eu-west-1")
         if Region.euwest1 == region {
-            XCTAssertEqual(region.rawValue, "eu-west-1")
+            #expect(region.rawValue == "eu-west-1")
         } else {
-            XCTFail("Did not construct Region(rawValue:) for eu-west-1")
+            Issue.record("Did not construct Region(rawValue:) for eu-west-1")
         }
 
         region = Region(rawValue: "eu-west-2")
         if Region.euwest2 == region {
-            XCTAssertEqual(region.rawValue, "eu-west-2")
+            #expect(region.rawValue == "eu-west-2")
         } else {
-            XCTFail("Did not construct Region(rawValue:) for eu-west-2")
+            Issue.record("Did not construct Region(rawValue:) for eu-west-2")
         }
 
         region = Region(rawValue: "eu-west-3")
         if Region.euwest3 == region {
-            XCTAssertEqual(region.rawValue, "eu-west-3")
+            #expect(region.rawValue == "eu-west-3")
         } else {
-            XCTFail("Did not construct Region(rawValue:) for eu-west-3")
+            Issue.record("Did not construct Region(rawValue:) for eu-west-3")
         }
 
         region = Region(rawValue: "me-south-1")
         if Region.mesouth1 == region {
-            XCTAssertEqual(region.rawValue, "me-south-1")
+            #expect(region.rawValue == "me-south-1")
         } else {
-            XCTFail("Did not construct Region(rawValue:) for me-south-1")
+            Issue.record("Did not construct Region(rawValue:) for me-south-1")
         }
 
         region = Region(rawValue: "sa-east-1")
         if Region.saeast1 == region {
-            XCTAssertEqual(region.rawValue, "sa-east-1")
+            #expect(region.rawValue == "sa-east-1")
         } else {
-            XCTFail("Did not construct Region(rawValue:) for sa-east-1")
+            Issue.record("Did not construct Region(rawValue:) for sa-east-1")
         }
 
         region = Region(rawValue: "us-east-2")
         if Region.useast2 == region {
-            XCTAssertEqual(region.rawValue, "us-east-2")
+            #expect(region.rawValue == "us-east-2")
         } else {
-            XCTFail("Did not construct Region(rawValue:) for us-east-2")
+            Issue.record("Did not construct Region(rawValue:) for us-east-2")
         }
 
         region = Region(rawValue: "us-gov-east-1")
         if Region.usgoveast1 == region {
-            XCTAssertEqual(region.rawValue, "us-gov-east-1")
+            #expect(region.rawValue == "us-gov-east-1")
         } else {
-            XCTFail("Did not construct Region(rawValue:) for us-gov-east-1")
+            Issue.record("Did not construct Region(rawValue:) for us-gov-east-1")
         }
 
         region = Region(rawValue: "us-west-1")
         if Region.uswest1 == region {
-            XCTAssertEqual(region.rawValue, "us-west-1")
+            #expect(region.rawValue == "us-west-1")
         } else {
-            XCTFail("Did not construct Region(rawValue:) for us-west-1")
+            Issue.record("Did not construct Region(rawValue:) for us-west-1")
         }
 
         region = Region(rawValue: "us-west-2")
         if Region.uswest2 == region {
-            XCTAssertEqual(region.rawValue, "us-west-2")
+            #expect(region.rawValue == "us-west-2")
         } else {
-            XCTFail("Did not construct Region(rawValue:) for us-west-2")
+            Issue.record("Did not construct Region(rawValue:) for us-west-2")
         }
     }
 }

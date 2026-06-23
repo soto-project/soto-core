@@ -15,9 +15,9 @@
 import NIOCore
 import SotoCore
 import SotoTestUtils
-import XCTest
+import Testing
 
-final class AsyncSequenceTests: XCTestCase {
+final class AsyncSequenceTests {
     func testFixedSizeByteBufferSequence(
         bufferSize: Int,
         generatedByteBufferSizeRange: Range<Int>,
@@ -32,37 +32,37 @@ final class AsyncSequenceTests: XCTestCase {
         for try await chunk in chunkedSequence {
             // doing this so I don't check the length of the last chunk
             if let prevChunk {
-                XCTAssertEqual(prevChunk.readableBytes, fixedChunkSize)
+                #expect(prevChunk.readableBytes == fixedChunkSize)
             }
             result.writeImmutableBuffer(chunk)
             prevChunk = chunk
         }
-        XCTAssertEqual(buffer, result)
+        #expect(buffer == result)
     }
 
-    func testFixedSizeByteBufferLargerChunkSize() async throws {
+    @Test func testFixedSizeByteBufferLargerChunkSize() async throws {
         try await self.testFixedSizeByteBufferSequence(bufferSize: 16000, generatedByteBufferSizeRange: 1..<1000, fixedChunkSize: 4096)
     }
 
-    func testFixedSizeByteBufferSmallerChunkSize() async throws {
+    @Test func testFixedSizeByteBufferSmallerChunkSize() async throws {
         try await self.testFixedSizeByteBufferSequence(bufferSize: 16000, generatedByteBufferSizeRange: 500..<1000, fixedChunkSize: 256)
     }
 
-    func testFixedSizeByteBufferSimilarSizedChunkSize() async throws {
+    @Test func testFixedSizeByteBufferSimilarSizedChunkSize() async throws {
         try await self.testFixedSizeByteBufferSequence(bufferSize: 16000, generatedByteBufferSizeRange: 1..<1000, fixedChunkSize: 500)
     }
 
-    func testFixedSizeByteBufferBufferSizeIsMultipleOfChunkSize() async throws {
+    @Test func testFixedSizeByteBufferBufferSizeIsMultipleOfChunkSize() async throws {
         try await self.testFixedSizeByteBufferSequence(bufferSize: 1000, generatedByteBufferSizeRange: 1..<200, fixedChunkSize: 250)
         try await self.testFixedSizeByteBufferSequence(bufferSize: 1000, generatedByteBufferSizeRange: 500..<1000, fixedChunkSize: 250)
     }
 
-    func testFixedSizeByteBufferBufferSizeIsEqualToChunkSize() async throws {
+    @Test func testFixedSizeByteBufferBufferSizeIsEqualToChunkSize() async throws {
         try await self.testFixedSizeByteBufferSequence(bufferSize: 1000, generatedByteBufferSizeRange: 500..<1000, fixedChunkSize: 1000)
         try await self.testFixedSizeByteBufferSequence(bufferSize: 1000, generatedByteBufferSizeRange: 1000..<1001, fixedChunkSize: 1000)
     }
 
-    func testFixedSizeByteBufferShortSequence() async throws {
+    @Test func testFixedSizeByteBufferShortSequence() async throws {
         try await self.testFixedSizeByteBufferSequence(bufferSize: 250, generatedByteBufferSizeRange: 500..<1000, fixedChunkSize: 1000)
     }
 }

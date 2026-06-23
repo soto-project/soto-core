@@ -13,30 +13,30 @@
 //===----------------------------------------------------------------------===//
 
 import SotoCore
-import XCTest
+import Testing
 
-final class MapTests: XCTestCase {
-    func testConcurrentMap() async throws {
+final class MapTests {
+    @Test func testConcurrentMap() async throws {
         let array = Array(0..<800)
         let result = try await array.concurrentMap { value -> Int in
             try await Task.sleep(nanoseconds: UInt64.random(in: 1000..<100_000))
             return value
         }
 
-        XCTAssertEqual(result, array)
+        #expect(result == array)
     }
 
-    func testConcurrentMapWithString() async throws {
+    @Test func testConcurrentMapWithString() async throws {
         let array = Array(0..<800)
         let result = try await array.concurrentMap { value -> String in
             try await Task.sleep(nanoseconds: UInt64.random(in: 1000..<100_000))
             return String(value)
         }
 
-        XCTAssertEqual(result, array.map { String($0) })
+        #expect(result == array.map { String($0) })
     }
 
-    func testConcurrentMapConcurrency() async throws {
+    @Test func testConcurrentMapConcurrency() async throws {
         let count = Count(0)
         let maxCount = Count(0)
 
@@ -49,12 +49,12 @@ final class MapTests: XCTestCase {
             return value
         }
 
-        XCTAssertEqual(result, array)
+        #expect(result == array)
         let maxValue = await maxCount.value
-        XCTAssertGreaterThan(maxValue, 1)
+        #expect(maxValue > 1)
     }
 
-    func testConcurrentMapConcurrencyWithMaxTasks() async throws {
+    @Test func testConcurrentMapConcurrencyWithMaxTasks() async throws {
         let count = Count(0)
         let maxCount = Count(0)
 
@@ -67,13 +67,13 @@ final class MapTests: XCTestCase {
             return value
         }
 
-        XCTAssertEqual(result, array)
+        #expect(result == array)
         let maxValue = await maxCount.value
-        XCTAssertLessThanOrEqual(maxValue, 4)
-        XCTAssertGreaterThan(maxValue, 1)
+        #expect(maxValue <= 4)
+        #expect(maxValue > 1)
     }
 
-    func testConcurrentMapErrorThrowing() async throws {
+    @Test func testConcurrentMapErrorThrowing() async throws {
         struct TaskError: Error {}
 
         do {
@@ -83,14 +83,14 @@ final class MapTests: XCTestCase {
                 }
                 return element
             }
-            XCTFail("Should have failed")
+            Issue.record("Should have failed")
         } catch is TaskError {
         } catch {
-            XCTFail("Error: \(error)")
+            Issue.record("Error: \(error)")
         }
     }
 
-    func testConcurrentMapCancellation() async throws {
+    @Test func testConcurrentMapCancellation() async throws {
         let count = Count(1)
 
         let array = Array((1...8).reversed())
@@ -104,6 +104,6 @@ final class MapTests: XCTestCase {
         try await Task.sleep(nanoseconds: 1 * 1000 * 100)
         task.cancel()
         let value = await count.value
-        XCTAssertNotEqual(value, 1 * 2 * 3 * 4 * 5 * 6 * 7 * 8)
+        #expect(value != 1 * 2 * 3 * 4 * 5 * 6 * 7 * 8)
     }
 }

@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 import NIOHTTP1
 import SotoTestUtils
 import SotoXML

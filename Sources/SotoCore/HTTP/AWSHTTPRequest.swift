@@ -215,7 +215,7 @@ extension AWSHTTPRequest {
             if Input._options.contains(.checksumRequired)
                 || (Input._options.contains(.md5ChecksumHeader) && configuration.options.contains(.calculateMD5))
             {
-                checksumType = .md5
+                checksumType = .defaultMD5
             }
         }
 
@@ -247,7 +247,9 @@ extension AWSHTTPRequest {
             checksum = self.calculateChecksum(buffer, function: Insecure.SHA1.self)
         case .sha256:
             checksum = self.calculateChecksum(buffer, function: SHA256.self)
-        case .md5:
+        case .sha512:
+            checksum = self.calculateChecksum(buffer, function: SHA512.self)
+        case .md5, .defaultMD5:
             checksum = self.calculateChecksum(buffer, function: Insecure.MD5.self)
         }
         if let checksum {
@@ -300,15 +302,22 @@ extension AWSHTTPRequest {
         case crc32c = "CRC32C"
         case sha1 = "SHA1"
         case sha256 = "SHA256"
+        case sha512 = "SHA512"
         case md5 = "MD5"
+        case defaultMD5 = "_default_md5_"
     }
 
+    // TODO: this should really be defined in the shape files but so far we only have S3 using checksums and
+    // these are it defined headers
     private static let checksumHeaders: [ChecksumType: String] = [
         .crc32: "x-amz-checksum-crc32",
         .crc32c: "x-amz-checksum-crc32c",
         .sha1: "x-amz-checksum-sha1",
         .sha256: "x-amz-checksum-sha256",
-        .md5: "content-md5",
+        .sha512: "x-amz-checksum-sha512",
+        .md5: "x-amz-checksum-md5",
+        // default to content-md5 header if no algorithm header is found and a checksum is required
+        .defaultMD5: "content-md5",
     ]
 }
 

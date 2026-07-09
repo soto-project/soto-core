@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import InMemoryLogging
 import Logging
 import NIOConcurrencyHelpers
 import SotoTestUtils
@@ -21,8 +22,9 @@ import XCTest
 
 class LoggingTests: XCTestCase {
     func testRequestIdIncrements() async throws {
-        let logCollection = LoggingCollector.Logs()
-        let logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection, logLevel: .trace) })
+        let inMemoryLogging = InMemoryLogHandler()
+        var logger = Logger(label: "LoggingTests", factory: { _ in inMemoryLogging })
+        logger.logLevel = .trace
         let server = AWSTestServer(serviceProtocol: .json)
         defer { XCTAssertNoThrow(try server.stop()) }
         let client = AWSClient(
@@ -53,16 +55,16 @@ class LoggingTests: XCTestCase {
 
         try await responseTask
         try await response2Task
-        let requestId1 = logCollection.filter(metadata: "aws-operation", with: "test1").first?.metadata["aws-request-id"]
-        let requestId2 = logCollection.filter(metadata: "aws-operation", with: "test2").first?.metadata["aws-request-id"]
+        let requestId1 = inMemoryLogging.entries.first { $0.metadata["aws-operation"] == "test1" }?.metadata["aws-request-id"]
+        let requestId2 = inMemoryLogging.entries.first { $0.metadata["aws-operation"] == "test2" }?.metadata["aws-request-id"]
         XCTAssertNotNil(requestId1)
         XCTAssertNotNil(requestId2)
         XCTAssertNotEqual(requestId1, requestId2)
     }
 
     func testAWSRequestResponse() async throws {
-        let logCollection = LoggingCollector.Logs()
-        var logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection) })
+        let inMemoryLogging = InMemoryLogHandler()
+        var logger = Logger(label: "LoggingTests", factory: { _ in inMemoryLogging })
         logger.logLevel = .trace
         let traceLogger = logger
         let server = AWSTestServer(serviceProtocol: .json)
@@ -93,19 +95,22 @@ class LoggingTests: XCTestCase {
         )
 
         try await responseTask
-        let requestEntry = try XCTUnwrap(logCollection.filter(message: "AWS Request").first)
-        XCTAssertEqual(requestEntry.level, .debug)
-        XCTAssertEqual(requestEntry.metadata["aws-operation"], "TestOperation")
-        XCTAssertEqual(requestEntry.metadata["aws-service"], "test-service")
-        let responseEntry = try XCTUnwrap(logCollection.filter(message: "AWS Response").first)
-        XCTAssertEqual(responseEntry.level, .trace)
-        XCTAssertEqual(responseEntry.metadata["aws-operation"], "TestOperation")
-        XCTAssertEqual(responseEntry.metadata["aws-service"], "test-service")
+        let requestEntry = inMemoryLogging.entries.first(where: { $0.message == "AWS Request" })
+        XCTAssertNotNil(requestEntry)
+        XCTAssertEqual(requestEntry?.level, .debug)
+        XCTAssertEqual(requestEntry?.metadata["aws-operation"], "TestOperation")
+        XCTAssertEqual(requestEntry?.metadata["aws-service"], "test-service")
+        let responseEntry = inMemoryLogging.entries.first { $0.message == "AWS Response" }
+        XCTAssertNotNil(responseEntry)
+        XCTAssertEqual(responseEntry?.level, .trace)
+        XCTAssertEqual(responseEntry?.metadata["aws-operation"], "TestOperation")
+        XCTAssertEqual(responseEntry?.metadata["aws-service"], "test-service")
     }
 
     func testAWSError() async throws {
-        let logCollection = LoggingCollector.Logs()
-        let logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection) })
+        let inMemoryLogging = InMemoryLogHandler()
+        var logger = Logger(label: "LoggingTests", factory: { _ in inMemoryLogging })
+        logger.logLevel = .trace
         let server = AWSTestServer(serviceProtocol: .json)
         defer { XCTAssertNoThrow(try server.stop()) }
         let client = AWSClient(
@@ -128,13 +133,14 @@ class LoggingTests: XCTestCase {
         )
 
         try? await responseTask
-        XCTAssertEqual(logCollection.filter(metadata: "aws-error-code", with: "AccessDenied").first?.message, "AWS Error")
-        XCTAssertEqual(logCollection.filter(metadata: "aws-error-code", with: "AccessDenied").first?.level, .info)
+        XCTAssertEqual(inMemoryLogging.entries.first { $0.metadata["aws-error-code"] == "AccessDenied" }?.message, "AWS Error")
+        XCTAssertEqual(inMemoryLogging.entries.first { $0.metadata["aws-error-code"] == "AccessDenied" }?.level, .info)
     }
 
     func testRetryRequest() async throws {
-        let logCollection = LoggingCollector.Logs()
-        let logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection, logLevel: .trace) })
+        let inMemoryLogging = InMemoryLogHandler()
+        var logger = Logger(label: "LoggingTests", factory: { _ in inMemoryLogging })
+        logger.logLevel = .trace
         let server = AWSTestServer(serviceProtocol: .json)
         defer { XCTAssertNoThrow(try server.stop()) }
         let client = AWSClient(
@@ -163,13 +169,14 @@ class LoggingTests: XCTestCase {
         )
 
         try await responseTask
-        XCTAssertEqual(logCollection.filter(metadata: "aws-retry-time").first?.message, "Retrying request")
-        XCTAssertEqual(logCollection.filter(metadata: "aws-retry-time").first?.level, .trace)
+        XCTAssertEqual(inMemoryLogging.entries.first { $0.metadata["aws-retry-time"] != nil }?.message, "Retrying request")
+        XCTAssertEqual(inMemoryLogging.entries.first { $0.metadata["aws-retry-time"] != nil }?.level, .trace)
     }
 
     func testNoCredentialProvider() async throws {
-        let logCollection = LoggingCollector.Logs()
-        let logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection, logLevel: .trace) })
+        let inMemoryLogging = InMemoryLogHandler()
+        var logger = Logger(label: "LoggingTests", factory: { _ in inMemoryLogging })
+        logger.logLevel = .trace
         let client = createAWSClient(credentialProvider: .selector(.custom { _ in NullCredentialProvider() }))
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let serviceConfig = createServiceConfig()
@@ -182,12 +189,12 @@ class LoggingTests: XCTestCase {
                 logger: logger
             )
         } catch {}
-        XCTAssertNotNil(logCollection.filter(metadata: "aws-error-message", with: "No credential provider found.").first)
+        XCTAssertNotNil(inMemoryLogging.entries.first { $0.metadata["aws-error-message"] != "No credential provider found." })
     }
 
     func testRequestLogLevel() async throws {
-        let logCollection = LoggingCollector.Logs()
-        var logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection) })
+        let inMemoryLogging = InMemoryLogHandler()
+        var logger = Logger(label: "LoggingTests", factory: { _ in inMemoryLogging })
         logger.logLevel = .trace
         let traceLogger = logger
         let server = AWSTestServer(serviceProtocol: .json)
@@ -219,7 +226,7 @@ class LoggingTests: XCTestCase {
         )
 
         try await responseTask
-        let requestEntry = try XCTUnwrap(logCollection.filter(message: "AWS Request").first)
+        let requestEntry = try XCTUnwrap(inMemoryLogging.entries.first { $0.message == "AWS Request" })
         XCTAssertEqual(requestEntry.level, .trace)
     }
 
@@ -227,8 +234,8 @@ class LoggingTests: XCTestCase {
         struct Output: AWSDecodableShape & Encodable {
             let s: String
         }
-        let logCollection = LoggingCollector.Logs()
-        var logger = Logger(label: "LoggingTests", factory: { _ in LoggingCollector(logCollection) })
+        let inMemoryLogging = InMemoryLogHandler()
+        var logger = Logger(label: "LoggingTests", factory: { _ in inMemoryLogging })
         logger.logLevel = .trace
         let traceLogger = logger
         let server = AWSTestServer(serviceProtocol: .json)
@@ -263,76 +270,7 @@ class LoggingTests: XCTestCase {
         )
 
         _ = try await responseTask
-        XCTAssertNotNil(logCollection.filter { $0.message.hasPrefix("Request") }.first)
-        XCTAssertNotNil(logCollection.filter { $0.message.hasPrefix("Response") }.first)
-    }
-}
-
-struct LoggingCollector: LogHandler {
-    var metadata: Logger.Metadata = [:]
-    var logLevel: Logger.Level
-    var logs: Logs
-    var internalHandler: LogHandler
-
-    struct Logs {
-        struct Entry {
-            var level: Logger.Level
-            var message: String
-            var metadata: [String: String]
-        }
-
-        private let logs: NIOLockedValueBox<[Entry]> = .init([])
-
-        var allEntries: [Entry] { self.logs.withLockedValue { $0 } }
-
-        func append(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?) {
-            self.logs.withLockedValue {
-                $0.append(
-                    Entry(
-                        level: level,
-                        message: message.description,
-                        metadata: metadata?.mapValues { $0.description } ?? [:]
-                    )
-                )
-            }
-        }
-
-        func filter(_ test: (Entry) -> Bool) -> [Entry] {
-            self.allEntries.filter { test($0) }
-        }
-
-        func filter(message: String) -> [Entry] {
-            self.allEntries.filter { $0.message == message }
-        }
-
-        func filter(metadata: String) -> [Entry] {
-            self.allEntries.filter { $0.metadata[metadata] != nil }
-        }
-
-        func filter(metadata: String, with value: String) -> [Entry] {
-            self.allEntries.filter { $0.metadata[metadata] == value }
-        }
-    }
-
-    init(_ logCollection: LoggingCollector.Logs, logLevel: Logger.Level = .info) {
-        self.logLevel = logLevel
-        self.logs = logCollection
-        self.internalHandler = StreamLogHandler.standardOutput(label: "_internal_")
-        self.internalHandler.logLevel = logLevel
-    }
-
-    func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, source: String, file: String, function: String, line: UInt) {
-        let metadata = self.metadata.merging(metadata ?? [:]) { $1 }
-        self.internalHandler.log(level: level, message: message, metadata: metadata, source: source, file: file, function: function, line: line)
-        self.logs.append(level: level, message: message, metadata: metadata)
-    }
-
-    subscript(metadataKey key: String) -> Logger.Metadata.Value? {
-        get {
-            self.metadata[key]
-        }
-        set {
-            self.metadata[key] = newValue
-        }
+        XCTAssertNotNil(inMemoryLogging.entries.first { $0.message.description.hasPrefix("Request") })
+        XCTAssertNotNil(inMemoryLogging.entries.first { $0.message.description.hasPrefix("Response") })
     }
 }

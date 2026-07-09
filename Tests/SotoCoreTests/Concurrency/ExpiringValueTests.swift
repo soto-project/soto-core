@@ -13,34 +13,35 @@
 //===----------------------------------------------------------------------===//
 
 import Atomics
-import XCTest
+import Foundation
+import Testing
 
 @testable import SotoCore
 
-final class ExpiringValueTests: XCTestCase {
+final class ExpiringValueTests {
     /// Test value returned from closure is given back
-    func testValue() async throws {
+    @Test func testValue() async throws {
         let expiringValue = ExpiringValue<Int>()
         let value = try await expiringValue.getValue {
             try await Task.sleep(nanoseconds: 1000)
             return (1, Date())
         }
-        XCTAssertEqual(value, 1)
+        #expect(value == 1)
     }
 
     /// Test an expired value is updated
-    func testExpiredValue() async throws {
+    @Test func testExpiredValue() async throws {
         let expiringValue = ExpiringValue<Int>(0, expires: Date())
         let value = try await expiringValue.getValue {
             try await Task.sleep(nanoseconds: 1000)
             return (1, Date())
         }
-        XCTAssertEqual(value, 1)
+        #expect(value == 1)
     }
 
     /// Test when a value is just about to expire it returns current value and kicks off
     /// new task to get new value
-    func testJustAboutToExpireValue() async throws {
+    @Test func testJustAboutToExpireValue() async throws {
         let expiringValue = ExpiringValue<Int>(0, expires: Date() + 1, threshold: 3)
         let (stream, source) = AsyncStream<Void>.makeStream()
         let value = try await expiringValue.getValue {
@@ -50,11 +51,11 @@ final class ExpiringValueTests: XCTestCase {
         }
         await stream.first { _ in true }
         // test it return current value
-        XCTAssertEqual(value, 0)
+        #expect(value == 0)
     }
 
     /// Test closure is not called if value has not expired
-    func testClosureNotCalled() async throws {
+    @Test func testClosureNotCalled() async throws {
         let called = ManagedAtomic(false)
         let expiringValue = ExpiringValue<Int>(0, expires: Date.distantFuture, threshold: 1)
         let value = try await expiringValue.getValue {
@@ -62,12 +63,12 @@ final class ExpiringValueTests: XCTestCase {
             try await Task.sleep(nanoseconds: 1000)
             return (1, Date())
         }
-        XCTAssertEqual(value, 0)
-        XCTAssertEqual(called.load(ordering: .relaxed), false)
+        #expect(value == 0)
+        #expect(called.load(ordering: .relaxed) == false)
     }
 
     /// Test closure is only called once even though we asked for value 100 times
-    func testClosureCalledOnce() async throws {
+    @Test func testClosureCalledOnce() async throws {
         let callCount = ManagedAtomic(0)
         let expiringValue = ExpiringValue<Int>()
         try await withThrowingTaskGroup(of: Int.self) { group in
@@ -81,14 +82,14 @@ final class ExpiringValueTests: XCTestCase {
                 }
             }
             for try await result in group {
-                XCTAssertEqual(result, 123)
+                #expect(result == 123)
             }
         }
-        XCTAssertEqual(callCount.load(ordering: .relaxed), 1)
+        #expect(callCount.load(ordering: .relaxed) == 1)
     }
 
     /// Test value returned from closure is given back
-    func testInitialClosure() async throws {
+    @Test func testInitialClosure() async throws {
         let expiringValue = ExpiringValue<Int> {
             try await Task.sleep(nanoseconds: 1000)
             return (1, Date() + 3)
@@ -96,6 +97,6 @@ final class ExpiringValueTests: XCTestCase {
         let value = try await expiringValue.getValue {
             (2, Date())
         }
-        XCTAssertEqual(value, 1)
+        #expect(value == 1)
     }
 }

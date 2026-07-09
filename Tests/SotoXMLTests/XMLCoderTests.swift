@@ -12,12 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-import XCTest
+import Foundation
+import Testing
 
 @testable import SotoCore
 @testable import SotoXML
 
-class XMLCoderTests: XCTestCase {
+class XMLCoderTests {
     struct Numbers: AWSDecodableShape & AWSEncodableShape {
         init(bool: Bool, integer: Int, float: Float, double: Double, intEnum: IntEnum) {
             self.bool = bool
@@ -142,12 +143,12 @@ class XMLCoderTests: XCTestCase {
         do {
             let xmlDocument = try XML.Document(data: xml.data(using: .utf8)!)
             let rootElement = xmlDocument.rootElement()
-            XCTAssertNotNil(rootElement)
+            #expect(rootElement != nil)
             return try XMLDecoder().decode(T.self, from: rootElement!)
             // let xmlElement = try XMLEncoder().encode(instance)
-            // XCTAssertEqual(xml, xmlElement.xmlString)
+            // #expect(xml == xmlElement.xmlString)
         } catch {
-            XCTFail("\(error)")
+            Issue.record("\(error)")
         }
         return nil
     }
@@ -157,16 +158,16 @@ class XMLCoderTests: XCTestCase {
         do {
             let xmlDocument = try XML.Document(data: xml.data(using: .utf8)!)
             let rootElement = xmlDocument.rootElement()
-            XCTAssertNotNil(rootElement)
+            #expect(rootElement != nil)
             let instance = try XMLDecoder().decode(T.self, from: rootElement!)
             let xmlElement = try XMLEncoder().encode(instance)
-            XCTAssertEqual(xml, xmlElement?.xmlString)
+            #expect(xml == xmlElement?.xmlString)
         } catch {
-            XCTFail("\(error)")
+            Issue.record("\(error)")
         }
     }
 
-    func testArrayUserProperty() {
+    @Test func testArrayUserProperty() {
         struct ArrayMember2: ArrayCoderProperties { static let member = "member2" }
         struct Test: Codable {
             @CustomCoding<ArrayCoder<ArrayMember2, String>> var a: [String]
@@ -174,15 +175,15 @@ class XMLCoderTests: XCTestCase {
         let test = Test(a: ["one", "two", "three"])
         do {
             let xml = try XMLEncoder().encode(test)?.xmlString
-            XCTAssertEqual(xml, "<Test><a><member2>one</member2><member2>two</member2><member2>three</member2></a></Test>")
+            #expect(xml == "<Test><a><member2>one</member2><member2>two</member2><member2>three</member2></a></Test>")
         } catch {
-            XCTFail("\(error)")
+            Issue.record("\(error)")
         }
         let xml = "<Test><a><member2>one</member2><member2>two</member2><member2>three</member2></a></Test>"
         self.testDecodeEncode(type: Test.self, xml: xml)
     }
 
-    func testOptionalDictionary() {
+    @Test func testOptionalDictionary() {
         struct Test: Codable {
             @OptionalCustomCoding<StandardDictionaryCoder> var a: [String: Int]?
         }
@@ -192,7 +193,7 @@ class XMLCoderTests: XCTestCase {
         self.testDecodeEncode(type: Test.self, xml: xml2)
     }
 
-    func testNoUserProperty() {
+    @Test func testNoUserProperty() {
         struct Test: Codable {
             var a: [String]
         }
@@ -200,7 +201,7 @@ class XMLCoderTests: XCTestCase {
         self.testDecodeEncode(type: Test.self, xml: xml)
     }
 
-    func testSimpleStructureDecodeEncode() {
+    @Test func testSimpleStructureDecodeEncode() {
         struct Test: Codable {
             let a: Int
             let b: String
@@ -209,7 +210,7 @@ class XMLCoderTests: XCTestCase {
         self.testDecodeEncode(type: Test.self, xml: xml)
     }
 
-    func testContainingStructureDecodeEncode() {
+    @Test func testContainingStructureDecodeEncode() {
         struct Test: Codable {
             let a: Int
             let b: String
@@ -221,7 +222,7 @@ class XMLCoderTests: XCTestCase {
         self.testDecodeEncode(type: Test2.self, xml: xml)
     }
 
-    func testEnumDecodeEncode() {
+    @Test func testEnumDecodeEncode() {
         struct Test: Codable {
             enum TestEnum: String, Codable {
                 case first = "First"
@@ -234,7 +235,7 @@ class XMLCoderTests: XCTestCase {
         self.testDecodeEncode(type: Test.self, xml: xml)
     }
 
-    func testArrayDecodeEncode() {
+    @Test func testArrayDecodeEncode() {
         struct Test: Codable {
             let a: [Int]
         }
@@ -242,7 +243,7 @@ class XMLCoderTests: XCTestCase {
         self.testDecodeEncode(type: Test.self, xml: xml)
     }
 
-    func testEmptyArrayDecodeEncode() {
+    @Test func testEmptyArrayDecodeEncode() {
         struct Test: Codable {
             let a: [Int]
         }
@@ -250,7 +251,7 @@ class XMLCoderTests: XCTestCase {
         self.testDecodeEncode(type: Test.self, xml: xml)
     }
 
-    func testArrayOfStructuresDecodeEncode() {
+    @Test func testArrayOfStructuresDecodeEncode() {
         struct Test2: Codable {
             let b: String
         }
@@ -261,7 +262,7 @@ class XMLCoderTests: XCTestCase {
         self.testDecodeEncode(type: Test.self, xml: xml)
     }
 
-    func testDictionaryDecodeEncode() {
+    @Test func testDictionaryDecodeEncode() {
         struct Test: Codable {
             let a: [String: Int]
         }
@@ -269,7 +270,7 @@ class XMLCoderTests: XCTestCase {
         self.testDecodeEncode(type: Test.self, xml: xml)
     }
 
-    func testDataDecodeEncode() {
+    @Test func testDataDecodeEncode() {
         struct Test: Codable {
             let data: Data
         }
@@ -278,16 +279,16 @@ class XMLCoderTests: XCTestCase {
         self.testDecodeEncode(type: Test.self, xml: xml)
     }
 
-    func testAttributeDecode() {
+    @Test func testAttributeDecode() {
         struct Test: Codable {
             let type: String
         }
         let xml = "<Test type=\"Hello\" />"
         let value = self.testDecode(type: Test.self, xml: xml)
-        XCTAssertEqual(value?.type, "Hello")
+        #expect(value?.type == "Hello")
     }
 
-    func testEnumAttributeDecode() {
+    @Test func testEnumAttributeDecode() {
         enum Answer: String, Codable {
             case yes
             case no
@@ -298,10 +299,10 @@ class XMLCoderTests: XCTestCase {
         }
         let xml = "<Test type=\"yes\" />"
         let value = self.testDecode(type: Test.self, xml: xml)
-        XCTAssertEqual(value?.type, .yes)
+        #expect(value?.type == .yes)
     }
 
-    func testSerializeToXML() {
+    @Test func testSerializeToXML() {
         let shape = self.testShape
         let node = try! XMLEncoder().encode(shape)
 
@@ -309,10 +310,10 @@ class XMLCoderTests: XCTestCase {
         let xmlToTest =
             "<Shape><Numbers><b>true</b><i>45</i><s>3.4</s><d>7.89234</d><enum>1</enum><int8>4</int8><uint16>5</uint16><int32>7</int32><uint64>90</uint64></Numbers><Strings><string>String1</string><optionalString>String2</optionalString><stringEnum>third</stringEnum></Strings><Arrays><arrayOfNatives>34</arrayOfNatives><arrayOfNatives>1</arrayOfNatives><arrayOfNatives>4098</arrayOfNatives><arrayOfShapes><b>false</b><i>1</i><s>1.2</s><d>1.4</d><enum>0</enum><int8>4</int8><uint16>5</uint16><int32>7</int32><uint64>90</uint64></arrayOfShapes><arrayOfShapes><b>true</b><i>3</i><s>2.01</s><d>1.01</d><enum>2</enum><int8>4</int8><uint16>5</uint16><int32>7</int32><uint64>90</uint64></arrayOfShapes></Arrays></Shape>"
 
-        XCTAssertEqual(xmlToTest, xml)
+        #expect(xmlToTest == xml)
     }
 
-    func testDecodeFail() {
+    @Test func testDecodeFail() {
         let missingNative =
             "<Numbers><b>true</b><i>45</i><s>3.4</s><d>7.89234</d><enum>1</enum><int8>4</int8><uint16>5</uint16><int32>7</int32></Numbers>"
         let missingEnum = "<Numbers><b>true</b><i>45</i><s>3.4</s><d>7.89234</d></Numbers>"
@@ -324,41 +325,41 @@ class XMLCoderTests: XCTestCase {
 
         do {
             var xmlDocument = try XML.Document(data: missingNative.data(using: .utf8)!)
-            XCTAssertNotNil(xmlDocument.rootElement())
+            #expect(xmlDocument.rootElement() != nil)
             let result = try? XMLDecoder().decode(Numbers.self, from: xmlDocument.rootElement()!)
-            XCTAssertNil(result)
+            #expect(result == nil)
 
             xmlDocument = try XML.Document(data: missingEnum.data(using: .utf8)!)
-            XCTAssertNotNil(xmlDocument.rootElement())
+            #expect(xmlDocument.rootElement() != nil)
             let result2 = try? XMLDecoder().decode(Numbers.self, from: xmlDocument.rootElement()!)
-            XCTAssertNil(result2)
+            #expect(result2 == nil)
 
             xmlDocument = try XML.Document(data: wrongEnum.data(using: .utf8)!)
-            XCTAssertNotNil(xmlDocument.rootElement())
+            #expect(xmlDocument.rootElement() != nil)
             let result3 = try? XMLDecoder().decode(StringShape.self, from: xmlDocument.rootElement()!)
-            XCTAssertNil(result3)
+            #expect(result3 == nil)
 
             xmlDocument = try XML.Document(data: missingShape.data(using: .utf8)!)
-            XCTAssertNotNil(xmlDocument.rootElement())
+            #expect(xmlDocument.rootElement() != nil)
             let result4 = try? XMLDecoder().decode(Shape.self, from: xmlDocument.rootElement()!)
-            XCTAssertNil(result4)
+            #expect(result4 == nil)
 
             xmlDocument = try XML.Document(data: stringNotShape.data(using: .utf8)!)
-            XCTAssertNotNil(xmlDocument.rootElement())
+            #expect(xmlDocument.rootElement() != nil)
             let result5 = try? XMLDecoder().decode(Dictionaries.self, from: xmlDocument.rootElement()!)
-            XCTAssertNil(result5)
+            #expect(result5 == nil)
 
             xmlDocument = try XML.Document(data: notANumber.data(using: .utf8)!)
-            XCTAssertNotNil(xmlDocument.rootElement())
+            #expect(xmlDocument.rootElement() != nil)
             let result6 = try? XMLDecoder().decode(Dictionaries.self, from: xmlDocument.rootElement()!)
-            XCTAssertNil(result6)
+            #expect(result6 == nil)
 
         } catch {
-            XCTFail(error.localizedDescription)
+            Issue.record(error)
         }
     }
 
-    func testDecodeExpandedContainers() {
+    @Test func testDecodeExpandedContainers() {
         struct Shape: AWSDecodableShape {
             @CustomCoding<StandardArrayCoder> var array: [Int]
             @CustomCoding<StandardDictionaryCoder> var dictionary: [String: Int]
@@ -366,14 +367,14 @@ class XMLCoderTests: XCTestCase {
         let xmldata =
             "<Shape><array><member>3</member><member>2</member><member>1</member></array><dictionary><entry><key>one</key><value>1</value></entry><entry><key>two</key><value>2</value></entry><entry><key>three</key><value>3</value></entry></dictionary></Shape>"
         if let shape = testDecode(type: Shape.self, xml: xmldata) {
-            XCTAssertEqual(shape.array[0], 3)
-            XCTAssertEqual(shape.dictionary["two"], 2)
+            #expect(shape.array[0] == 3)
+            #expect(shape.dictionary["two"] == 2)
         } else {
-            XCTFail("Failed to decode")
+            Issue.record("Failed to decode")
         }
     }
 
-    func testArrayEncodingDecodeEncode() {
+    @Test func testArrayEncodingDecodeEncode() {
         struct Shape: AWSDecodableShape & AWSEncodableShape {
             @CustomCoding<StandardArrayCoder> var array: [Int]
         }
@@ -381,7 +382,7 @@ class XMLCoderTests: XCTestCase {
         self.testDecodeEncode(type: Shape.self, xml: xmldata)
     }
 
-    func testArrayOfStructuresEncodingDecodeEncode() {
+    @Test func testArrayOfStructuresEncodingDecodeEncode() {
         struct Shape2: AWSDecodableShape & AWSEncodableShape {
             let value: String
         }
@@ -393,7 +394,7 @@ class XMLCoderTests: XCTestCase {
         self.testDecodeEncode(type: Shape.self, xml: xmldata)
     }
 
-    func testDictionaryEncodingDecodeEncode() {
+    @Test func testDictionaryEncodingDecodeEncode() {
         struct DictionaryItemKeyValue: DictionaryCoderProperties {
             static let entry: String? = "item"
             static let key = "key"
@@ -406,7 +407,7 @@ class XMLCoderTests: XCTestCase {
         self.testDecodeEncode(type: Shape.self, xml: xmldata)
     }
 
-    func testDictionaryOfStructuresEncodingDecodeEncode() {
+    @Test func testDictionaryOfStructuresEncodingDecodeEncode() {
         struct DictionaryItemKeyValue: DictionaryCoderProperties {
             static let entry: String? = "item"
             static let key = "key"
@@ -422,7 +423,7 @@ class XMLCoderTests: XCTestCase {
         self.testDecodeEncode(type: Shape.self, xml: xmldata)
     }
 
-    func testFlatDictionaryEncodingDecodeEncode() {
+    @Test func testFlatDictionaryEncodingDecodeEncode() {
         struct DictionaryKeyValue: DictionaryCoderProperties {
             static let entry: String? = nil
             static let key = "key"
@@ -435,7 +436,7 @@ class XMLCoderTests: XCTestCase {
         self.testDecodeEncode(type: Shape.self, xml: xmldata)
     }
 
-    func testEnumDictionaryEncodingDecodeEncode() {
+    @Test func testEnumDictionaryEncodingDecodeEncode() {
         struct DictionaryItemKeyValue: DictionaryCoderProperties {
             static let entry: String? = "item"
             static let key = "key"
@@ -452,7 +453,7 @@ class XMLCoderTests: XCTestCase {
         self.testDecodeEncode(type: Shape.self, xml: xmldata)
     }
 
-    func testEnumShapeDictionaryEncodingDecodeEncode() {
+    @Test func testEnumShapeDictionaryEncodingDecodeEncode() {
         struct DictionaryItemKV: DictionaryCoderProperties {
             static let entry: String? = "item"
             static let key = "k"
@@ -472,7 +473,7 @@ class XMLCoderTests: XCTestCase {
         self.testDecodeEncode(type: Shape.self, xml: xmldata)
     }
 
-    func testEnumFlatDictionaryEncodingDecodeEncode() {
+    @Test func testEnumFlatDictionaryEncodingDecodeEncode() {
         struct DictionaryKeyValue: DictionaryCoderProperties {
             static let entry: String? = nil
             static let key = "key"
@@ -492,37 +493,37 @@ class XMLCoderTests: XCTestCase {
         self.testDecodeEncode(type: Shape.self, xml: xmldata)
     }
 
-    func testEncodeDecodeXML() {
+    @Test func testEncodeDecodeXML() {
         do {
             if let xml = try XMLEncoder().encode(self.testShape) {
                 let testShape2 = try XMLDecoder().decode(Shape.self, from: xml)
                 let xml2 = try XMLEncoder().encode(testShape2)
 
-                XCTAssertEqual(xml.xmlString, xml2?.xmlString)
+                #expect(xml.xmlString == xml2?.xmlString)
             } else {
-                XCTFail("Failed to create any XML")
+                Issue.record("Failed to create any XML")
             }
         } catch {
-            XCTFail(error.localizedDescription)
+            Issue.record(error)
         }
     }
 
-    func testEncodeDecodeDictionariesXML() {
+    @Test func testEncodeDecodeDictionariesXML() {
         do {
             if let xml = try XMLEncoder().encode(self.testShapeWithDictionaries) {
                 let testShape2 = try XMLDecoder().decode(ShapeWithDictionaries.self, from: xml)
 
-                XCTAssertEqual(testShape2.dictionaries.dictionaryOfNatives["second"], 2)
-                XCTAssertEqual(testShape2.dictionaries.dictionaryOfShapes["strings2"]?.stringEnum, .fourth)
+                #expect(testShape2.dictionaries.dictionaryOfNatives["second"] == 2)
+                #expect(testShape2.dictionaries.dictionaryOfShapes["strings2"]?.stringEnum == .fourth)
             } else {
-                XCTFail("Failed to create any XML")
+                Issue.record("Failed to create any XML")
             }
         } catch {
-            XCTFail(error.localizedDescription)
+            Issue.record(error)
         }
     }
 
-    func testSingleValueContainer() {
+    @Test func testSingleValueContainer() {
         struct Test2: Codable {
             var a: [String]
         }
@@ -543,7 +544,7 @@ class XMLCoderTests: XCTestCase {
         self.testDecodeEncode(type: Test.self, xml: xml)
     }
 
-    func testSingleValueContainerEncode() throws {
+    @Test func testSingleValueContainerEncode() throws {
         struct Test2: Encodable {
             var a: [String]
         }
@@ -556,6 +557,6 @@ class XMLCoderTests: XCTestCase {
             }
         }
         let xml = try XMLEncoder().encode(Test(t: nil))
-        XCTAssertNil(xml)
+        #expect(xml == nil)
     }
 }

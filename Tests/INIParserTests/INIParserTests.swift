@@ -12,12 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-import XCTest
+import Testing
 
 @testable import INIParser
 
-class INIParserTests: XCTestCase {
-    func testExample() {
+struct INIParserTests {
+    @Test func testExample() {
         let raw = """
             ; last modified 1 April 2017 by Rockford Wei
             ## This is another comment
@@ -40,18 +40,18 @@ class INIParserTests: XCTestCase {
             """
 
         var ini: INIParser?
-        XCTAssertNoThrow(ini = try INIParser(raw))
+        #expect(throws: Never.self) { ini = try INIParser(raw) }
 
-        XCTAssertEqual(ini?.anonymousSection["freeVar1"] ?? "", "1")
-        XCTAssertEqual(ini?.anonymousSection["freeVar2"] ?? "", "2")
-        XCTAssertEqual(ini?.anonymousSection["url"] ?? "", "http://example.com/results?limit=10")
-        XCTAssertEqual(ini?.sections["owner"]?["name"] ?? "", "Rocky")
-        XCTAssertEqual(ini?.sections["owner"]?["organization"] ?? "", "PerfectlySoft")
-        XCTAssertEqual(ini?.sections["database"]?["server"] ?? "", "192.0.2.42")
-        XCTAssertEqual(ini?.sections["database"]?["port"] ?? "", "143")
-        XCTAssertEqual(ini?.sections["database"]?["file"] ?? "", "\"中文.dat  \' \' \"")
-        XCTAssertEqual(ini?.sections["汉化"]?["变量1"] ?? "", "🇨🇳")
-        XCTAssertEqual(ini?.sections["汉化"]?["变量2"] ?? "", "加拿大。")
-        XCTAssertNotNil(ini?.sections[" 乱死了 "])
+        #expect(ini?.anonymousSection["freeVar1"] ?? "" == "1")
+        #expect(ini?.anonymousSection["freeVar2"] ?? "" == "2")
+        #expect(ini?.anonymousSection["url"] ?? "" == "http://example.com/results?limit=10")
+        #expect(ini?.sections["owner"]?["name"] ?? "" == "Rocky")
+        #expect(ini?.sections["owner"]?["organization"] ?? "" == "PerfectlySoft")
+        #expect(ini?.sections["database"]?["server"] ?? "" == "192.0.2.42")
+        #expect(ini?.sections["database"]?["port"] ?? "" == "143")
+        #expect(ini?.sections["database"]?["file"] ?? "" == "\"中文.dat  \' \' \"")
+        #expect(ini?.sections["汉化"]?["变量1"] ?? "" == "🇨🇳")
+        #expect(ini?.sections["汉化"]?["变量2"] ?? "" == "加拿大。")
+        #expect(ini?.sections[" 乱死了 "] != nil)
     }
 }

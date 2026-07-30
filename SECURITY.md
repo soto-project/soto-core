@@ -6,7 +6,7 @@ Currently we support versions 6.0 and above of Soto. These will receive security
 
 ## Reporting a Vulnerability
 
-If you believe you have found a security vulnerability in Soto please do not post this in a public forum, do not create a GitHub Issue. Instead you should email [security@soto.codes](mailto:security@soto.codes) with details of the issue.
+If you believe you have found a security vulnerability in Soto please do not post this in a public forum, do not create a GitHub Issue. Instead you should submit a security advisory via [GitHub](https://github.com/soto-project/soto-core/security/advisories/new) with details of the issue.
 
 #### What happens next?
 

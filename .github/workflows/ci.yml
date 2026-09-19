@@ -69,21 +69,16 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
+    - name: Install curl
+      run: apt-get update -yq && apt-get install -y curl
     - name: Test
       run: |
         swift --version
         swift test --enable-code-coverage
-    - name: Convert coverage files
-      run: |
-        llvm-cov export -format="lcov" \
-          .build/debug/soto-corePackageTests.xctest \
-          -ignore-filename-regex="\/Tests\/" \
-          -instr-profile .build/debug/codecov/default.profdata > info.lcov
-    - name: Upload to codecov.io
-      uses: codecov/codecov-action@v4
+    - name: Upload coverage data
+      uses: vapor/swift-codecov-action@v0.3.6
       with:
-        files: info.lcov
-        token: ${{ secrets.CODECOV_TOKEN }}
+        codecov_token: ${{ secrets.CODECOV_TOKEN }}
 
   android:
     name: Android build

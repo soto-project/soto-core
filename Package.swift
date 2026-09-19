@@ -53,7 +53,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio-transport-services.git", from: "1.13.1"),
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.30.0"),
         .package(url: "https://github.com/jmespath/jmespath.swift.git", from: "1.0.2"),
-        .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.8.0"),
+        .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.12.0"),
     ],
     targets: [
         .target(

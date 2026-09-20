@@ -45,7 +45,7 @@ public final class AWSServiceConfig {
     /// options
     public let options: Options
     /// values used to create endpoint
-    private let providedEndpoint: String?
+    private let endpointOverride: String?
     private let serviceEndpoints: [String: String]
     private let partitionEndpoints: [AWSPartition: (endpoint: String, region: Region)]
     private let variantEndpoints: [EndpointVariantType: EndpointVariant]
@@ -61,7 +61,7 @@ public final class AWSServiceConfig {
     ///   - signingName: Name that all AWS requests are signed with
     ///   - serviceProtocol: protocol of service (.json, .xml, .query etc)
     ///   - apiVersion: "Version" header value
-    ///   - endpoint: Custom endpoint URL to use instead of standard AWS servers
+    ///   - endpoint: Custom endpoint URL to use instead of AWS_ENDPOINT_URL or standard AWS servers
     ///   - serviceEndpoints: Dictionary of endpoints to URLs
     ///   - partitionEndpoints: Default endpoint to use, if no region endpoint is supplied
     ///   - variantEndpoints: Variant endpoints (FIPS, dualstack)
@@ -116,13 +116,14 @@ public final class AWSServiceConfig {
         self.byteBufferAllocator = byteBufferAllocator
         self.options = options
 
-        self.providedEndpoint = endpoint
+        let endpointOverride = endpoint ?? Environment["AWS_ENDPOINT_URL"]
+        self.endpointOverride = endpointOverride
         self.serviceEndpoints = serviceEndpoints
         self.partitionEndpoints = partitionEndpoints
         self.variantEndpoints = variantEndpoints
 
         self.endpoint = Self.getEndpoint(
-            endpoint: endpoint,
+            endpoint: endpointOverride,
             region: self.region,
             serviceIdentifier: serviceIdentifier,
             options: options,
@@ -310,7 +311,7 @@ public final class AWSServiceConfig {
             self.endpoint =
                 patch.endpoint
                 ?? Self.getEndpoint(
-                    endpoint: service.providedEndpoint,
+                    endpoint: service.endpointOverride,
                     region: self.region,
                     serviceIdentifier: self.serviceIdentifier,
                     options: self.options,
@@ -326,7 +327,7 @@ public final class AWSServiceConfig {
         self.serviceName = service.serviceName
         self.serviceProtocol = service.serviceProtocol
         self.apiVersion = service.apiVersion
-        self.providedEndpoint = service.providedEndpoint
+        self.endpointOverride = service.endpointOverride
         self.serviceEndpoints = service.serviceEndpoints
         self.partitionEndpoints = service.partitionEndpoints
         self.variantEndpoints = service.variantEndpoints

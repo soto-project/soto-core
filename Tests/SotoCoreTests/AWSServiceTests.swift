@@ -51,6 +51,25 @@ class AWSServiceTests: XCTestCase {
         XCTAssertEqual(service.endpoint, "https://my-endpoint.com")
     }
 
+    func testEnvironmentEndpoint() {
+        Environment.set("http://localhost:4566", for: "AWS_ENDPOINT_URL")
+        defer { Environment.unset(name: "AWS_ENDPOINT_URL") }
+
+        let config = createServiceConfig()
+        XCTAssertEqual(config.endpoint, "http://localhost:4566")
+        Environment.set("http://localhost:1234", for: "AWS_ENDPOINT_URL")
+        XCTAssertEqual(config.with(region: .uswest2).endpoint, "http://localhost:4566")
+    }
+
+    func testExplicitEndpointOverridesEnvironment() {
+        Environment.set("http://localhost:4566", for: "AWS_ENDPOINT_URL")
+        defer { Environment.unset(name: "AWS_ENDPOINT_URL") }
+
+        let config = createServiceConfig(endpoint: "https://my-endpoint.com")
+        XCTAssertEqual(config.endpoint, "https://my-endpoint.com")
+        XCTAssertEqual(config.with(region: .uswest2).endpoint, "https://my-endpoint.com")
+    }
+
     func testPartitionEndpoint() {
         let client = createAWSClient(credentialProvider: .empty)
         defer { XCTAssertNoThrow(try client.syncShutdown()) }

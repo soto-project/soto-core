@@ -14,6 +14,12 @@
 
 import NIOCore
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
+
 /// Configuration class defining an AWS service
 public final class AWSServiceConfig {
     /// Region where service is running
@@ -45,7 +51,8 @@ public final class AWSServiceConfig {
     /// options
     public let options: Options
     /// values used to create endpoint
-    private let endpointOverride: String?
+    private let providedEndpoint: String?
+    private let sdkId: String?
     private let serviceEndpoints: [String: String]
     private let partitionEndpoints: [AWSPartition: (endpoint: String, region: Region)]
     private let variantEndpoints: [EndpointVariantType: EndpointVariant]
@@ -57,11 +64,12 @@ public final class AWSServiceConfig {
     ///   - partition: Amazon endpoint partition. This is ignored if region is set. If no region is set then this is used along side partitionEndpoints to calculate endpoint
     ///   - amzTarget: "x-amz-target" header value
     ///   - serviceName: Name of service
+    ///   - sdkId: AWS SDK ID used for service-specific endpoint environment overrides
     ///   - serviceIdentifier: Identifier of service. Used in ARN and endpoint
     ///   - signingName: Name that all AWS requests are signed with
     ///   - serviceProtocol: protocol of service (.json, .xml, .query etc)
     ///   - apiVersion: "Version" header value
-    ///   - endpoint: Custom endpoint URL to use instead of AWS_ENDPOINT_URL or standard AWS servers
+    ///   - endpoint: Custom endpoint URL to use instead of environment overrides or standard AWS servers
     ///   - serviceEndpoints: Dictionary of endpoints to URLs
     ///   - partitionEndpoints: Default endpoint to use, if no region endpoint is supplied
     ///   - variantEndpoints: Variant endpoints (FIPS, dualstack)
@@ -76,6 +84,7 @@ public final class AWSServiceConfig {
         partition: AWSPartition,
         amzTarget: String? = nil,
         serviceName: String,
+        sdkId: String? = nil,
         serviceIdentifier: String,
         signingName: String? = nil,
         serviceProtocol: ServiceProtocol,
@@ -116,14 +125,15 @@ public final class AWSServiceConfig {
         self.byteBufferAllocator = byteBufferAllocator
         self.options = options
 
-        let endpointOverride = endpoint ?? Environment["AWS_ENDPOINT_URL"]
-        self.endpointOverride = endpointOverride
+        self.providedEndpoint = endpoint
+        self.sdkId = sdkId
         self.serviceEndpoints = serviceEndpoints
         self.partitionEndpoints = partitionEndpoints
         self.variantEndpoints = variantEndpoints
 
         self.endpoint = Self.getEndpoint(
-            endpoint: endpointOverride,
+            endpoint: endpoint,
+            sdkId: sdkId,
             region: self.region,
             serviceIdentifier: serviceIdentifier,
             options: options,
@@ -136,6 +146,7 @@ public final class AWSServiceConfig {
     /// Calculate endpoint
     private static func getEndpoint(
         endpoint: String?,
+        sdkId: String?,
         region: Region,
         serviceIdentifier: String,
         options: Options,
@@ -143,34 +154,42 @@ public final class AWSServiceConfig {
         partitionEndpoints: [AWSPartition: (endpoint: String, region: Region)],
         variantEndpoints: [EndpointVariantType: EndpointVariant]
     ) -> String {
-        // work out endpoint, if provided use that otherwise
         if let endpoint {
             return endpoint
-        } else {
-            let serviceHost: String
-            if let variantEndpoints = variantEndpoints[options.endpointVariant] {
-                if let endpoint = variantEndpoints.endpoints[region.rawValue] {
-                    serviceHost = endpoint
-                } else if let partitionEndpoint = partitionEndpoints[region.partition],
-                    let endpoint = variantEndpoints.endpoints[partitionEndpoint.endpoint]
-                {
-                    serviceHost = endpoint
-                } else if let host = variantEndpoints.defaultEndpoint?(region.rawValue) {
-                    serviceHost = host
-                } else {
-                    preconditionFailure("\(options.endpointVariant) endpoint for \(serviceIdentifier) in \(region) does not exist")
-                }
-            } else if let serviceEndpoint = serviceEndpoints[region.rawValue] {
-                serviceHost = serviceEndpoint
-            } else if let partitionEndpoint = partitionEndpoints[region.partition],
-                let globalEndpoint = serviceEndpoints[partitionEndpoint.endpoint]
-            {
-                serviceHost = globalEndpoint
-            } else {
-                serviceHost = region.partition.defaultEndpoint(region: region, service: serviceIdentifier)
-            }
-            return "https://\(serviceHost)"
         }
+        if let sdkId {
+            let normalizedSdkId = sdkId.replacingOccurrences(of: " ", with: "_").uppercased()
+            if let endpoint = Environment["AWS_ENDPOINT_URL_\(normalizedSdkId)"] {
+                return endpoint
+            }
+        }
+        if let endpoint = Environment["AWS_ENDPOINT_URL"] {
+            return endpoint
+        }
+
+        let serviceHost: String
+        if let variantEndpoints = variantEndpoints[options.endpointVariant] {
+            if let endpoint = variantEndpoints.endpoints[region.rawValue] {
+                serviceHost = endpoint
+            } else if let partitionEndpoint = partitionEndpoints[region.partition],
+                let endpoint = variantEndpoints.endpoints[partitionEndpoint.endpoint]
+            {
+                serviceHost = endpoint
+            } else if let host = variantEndpoints.defaultEndpoint?(region.rawValue) {
+                serviceHost = host
+            } else {
+                preconditionFailure("\(options.endpointVariant) endpoint for \(serviceIdentifier) in \(region) does not exist")
+            }
+        } else if let serviceEndpoint = serviceEndpoints[region.rawValue] {
+            serviceHost = serviceEndpoint
+        } else if let partitionEndpoint = partitionEndpoints[region.partition],
+            let globalEndpoint = serviceEndpoints[partitionEndpoint.endpoint]
+        {
+            serviceHost = globalEndpoint
+        } else {
+            serviceHost = region.partition.defaultEndpoint(region: region, service: serviceIdentifier)
+        }
+        return "https://\(serviceHost)"
     }
 
     /// Return new version of serviceConfig with a modified parameters
@@ -311,7 +330,8 @@ public final class AWSServiceConfig {
             self.endpoint =
                 patch.endpoint
                 ?? Self.getEndpoint(
-                    endpoint: service.endpointOverride,
+                    endpoint: service.providedEndpoint,
+                    sdkId: service.sdkId,
                     region: self.region,
                     serviceIdentifier: self.serviceIdentifier,
                     options: self.options,
@@ -327,7 +347,8 @@ public final class AWSServiceConfig {
         self.serviceName = service.serviceName
         self.serviceProtocol = service.serviceProtocol
         self.apiVersion = service.apiVersion
-        self.endpointOverride = service.endpointOverride
+        self.providedEndpoint = service.providedEndpoint
+        self.sdkId = service.sdkId
         self.serviceEndpoints = service.serviceEndpoints
         self.partitionEndpoints = service.partitionEndpoints
         self.variantEndpoints = service.variantEndpoints

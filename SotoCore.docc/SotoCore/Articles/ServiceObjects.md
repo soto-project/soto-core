@@ -43,7 +43,7 @@ Endpoints are selected in this order:
 
 The service-specific variable uses the AWS SDK ID, uppercased with spaces replaced by underscores. For example, API Gateway uses `AWS_ENDPOINT_URL_API_GATEWAY`.
 
-Environment overrides are read when the service is initialized. Changing the environment afterward does not change an existing service's override, including when its region or options are changed.
+Environment overrides are read when the service is initialized and again when creating a copy using `with(region: ...)` or `with(options: ...)`. Changing the environment alone does not change an existing service's endpoint.
 
 #### Time out
 

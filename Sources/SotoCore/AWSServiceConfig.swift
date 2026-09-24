@@ -158,7 +158,11 @@ public final class AWSServiceConfig {
             return endpoint
         }
         if let sdkId {
-            let normalizedSdkId = sdkId.replacingOccurrences(of: " ", with: "_").uppercased()
+            let normalizedSdkId = if #available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *) {
+                sdkId.replacing(" ", with: "_").uppercased()
+            } else {
+                sdkId.replacingOccurrences(of: " ", with: "_").uppercased()
+            }
             if let endpoint = Environment["AWS_ENDPOINT_URL_\(normalizedSdkId)"] {
                 return endpoint
             }

@@ -34,6 +34,17 @@ Some services do not have a `region` parameter in their initializer, such as IAM
 
 If you want to communicate with non-AWS servers you can provide an endpoint which replaces the `amazonaws.com` web address. You may want to do this if you are using an AWS mocking service for debugging purposes for example, or you are communicating with a non-AWS service that replicates AWS functionality.
 
+Endpoints are selected in this order:
+
+1. The `endpoint` passed to the service initializer.
+2. The service-specific `AWS_ENDPOINT_URL_<SERVICE>` environment variable.
+3. The global `AWS_ENDPOINT_URL` environment variable.
+4. The default AWS endpoint for the service, region, and options.
+
+The service-specific variable uses the AWS SDK ID, uppercased with spaces replaced by underscores. For example, API Gateway uses `AWS_ENDPOINT_URL_API_GATEWAY`.
+
+Environment overrides are read when the service is initialized and again when creating a copy using `with(region: ...)` or `with(options: ...)`. Changing the environment alone does not change an existing service's endpoint.
+
 #### Time out
 
 Time out defines how long the HTTP client will wait until it cancels a request. This value defaults to 20 seconds. If you are planning on downloading/uploading large objects you should probably increase this value. `AsyncHTTPClient` allows you to set an additional connection timeout value. If you are extending your general timeout, use an `HTTPClient` configured with a shorter connection timeout to avoid waiting for long periods when a connection fails.

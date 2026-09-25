@@ -404,7 +404,7 @@ enum ConfigFileLoader {
 
             return pth
         }
-        #elseif os(macOS) || os(iOS) || os(tvOS) || os(watchOS) || os(Android)
+        #elseif os(macOS) || os(iOS) || os(tvOS) || os(watchOS) || os(visionOS) || os(Android)
         // can not use wordexp on Apple OS's because for sandboxed application wexp.we_wordv == nil
         // wordexp does not exist on Android
         guard let home = getpwuid(getuid())?.pointee.pw_dir,

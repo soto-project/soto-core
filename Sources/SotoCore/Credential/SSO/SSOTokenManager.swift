@@ -19,6 +19,7 @@ import Logging
 import NIOCore
 import NIOFoundationCompat
 import NIOPosix
+import _NIOFileSystem
 
 #if canImport(Glibc)
 import Glibc
@@ -71,15 +72,11 @@ struct SSOTokenManager {
 
     // MARK: - Token Loading
 
-    func loadToken(from path: String, profileName: String, fileIO: NonBlockingFileIO) async throws -> SSOToken {
+    func loadToken(from path: String, profileName: String, fileSystem: FileSystem) async throws -> SSOToken {
         let byteBuffer: ByteBuffer
         do {
-            byteBuffer = try await fileIO.withFileRegion(path: path) { fileRegion in
-                try await fileIO.read(
-                    fileHandle: fileRegion.fileHandle,
-                    byteCount: fileRegion.readableBytes,
-                    allocator: ByteBufferAllocator()
-                )
+            byteBuffer = try await fileSystem.withFileHandle(forReadingAt: .init(path)) { read in
+                try await read.readToEnd(maximumSizeAllowed: .megabytes(1))
             }
         } catch {
             throw AWSSSOCredentialError.tokenCacheNotFound(profileName)
@@ -95,7 +92,7 @@ struct SSOTokenManager {
 
     // MARK: - Token Saving
 
-    func saveToken(_ token: SSOToken, to path: String, fileIO: NonBlockingFileIO, threadPool: NIOThreadPool) async throws {
+    func saveToken(_ token: SSOToken, to path: String, fileSystem: FileSystem, threadPool: NIOThreadPool) async throws {
         let encoder = JSONEncoder()
         encoder.outputFormatting = .prettyPrinted
         let data = try encoder.encode(token)
@@ -106,12 +103,8 @@ struct SSOTokenManager {
         // Delete file if it exists to ensure clean write
         _ = try? await threadPool.runIfActive { unlink(path) }
 
-        try await fileIO.withFileHandle(
-            path: path,
-            mode: .write,
-            flags: .allowFileCreation(posixMode: 0o600)
-        ) { fileHandle in
-            try await fileIO.write(fileHandle: fileHandle, buffer: buffer)
+        _ = try await fileSystem.withFileHandle(forWritingAt: .init(path), options: .newFile(replaceExisting: true)) { file in
+            try await file.write(contentsOf: buffer, toAbsoluteOffset: 0)
         }
     }
 
@@ -122,11 +115,11 @@ struct SSOTokenManager {
         from tokenPath: String,
         config: SSOConfiguration,
         profileName: String,
-        fileIO: NonBlockingFileIO,
+        fileSystem: FileSystem,
         threadPool: NIOThreadPool,
         logger: Logger
     ) async throws -> SSOToken {
-        var token = try await loadToken(from: tokenPath, profileName: profileName, fileIO: fileIO)
+        var token = try await loadToken(from: tokenPath, profileName: profileName, fileSystem: fileSystem)
 
         // Parse expiration (try with fractional seconds first, then without)
         guard let expiration = parseISO8601Date(token.expiresAt) else {
@@ -171,7 +164,7 @@ struct SSOTokenManager {
             )
 
             // Save updated token to cache
-            try await saveToken(newToken, to: tokenPath, fileIO: fileIO, threadPool: threadPool)
+            try await saveToken(newToken, to: tokenPath, fileSystem: fileSystem, threadPool: threadPool)
 
             token = newToken
         }

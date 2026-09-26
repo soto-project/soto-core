@@ -18,6 +18,7 @@ import NIOPosix
 import SotoTestUtils
 import SotoXML
 import XCTest
+import _NIOFileSystem
 
 @testable import SotoCore
 
@@ -68,11 +69,11 @@ class STSAssumeRoleTests: XCTestCase {
             Environment.unset(name: "AWS_ROLE_SESSION_NAME")
             Environment.unset(name: "AWS_WEB_IDENTITY_TOKEN_FILE")
         }
-        let fileIO = NonBlockingFileIO(threadPool: .singleton)
+        let fileSystem = FileSystem(threadPool: .singleton)
         let webIdentityToken = "TestThis"
         // Write token to file referenced by AWS_WEB_IDENTITY_TOKEN_FILE env variable
-        try await fileIO.withFileHandle(path: "temp_webidentity_token", mode: .write, flags: .allowFileCreation()) { fileHandle in
-            try await fileIO.write(fileHandle: fileHandle, buffer: ByteBuffer(string: webIdentityToken))
+        _ = try await fileSystem.withFileHandle(forWritingAt: .init("temp_webidentity_token"), options: .newFile(replaceExisting: true)) { write in
+            try await write.write(contentsOf: ByteBuffer(string: webIdentityToken), toAbsoluteOffset: 0)
         }
         try await withTeardown {
             let testServer = AWSTestServer(serviceProtocol: .xml)
@@ -104,7 +105,7 @@ class STSAssumeRoleTests: XCTestCase {
             let stsCredentials = try XCTUnwrap(credential as? STSCredentials)
             XCTAssertEqual(stsCredentials.sessionToken, "WebIdentityToken=TestThis")
         } teardown: {
-            try? await fileIO.remove(path: "temp_webidentity_token")
+            _ = try? await fileSystem.removeItem(at: .init("temp_webidentity_token"))
         }
     }
 

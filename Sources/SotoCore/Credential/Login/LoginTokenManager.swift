@@ -18,6 +18,7 @@ import Crypto
 import NIOCore
 import NIOFoundationCompat
 import NIOPosix
+import _NIOFileSystem
 
 #if canImport(FoundationEssentials)
 import FoundationEssentials
@@ -62,11 +63,11 @@ struct LoginTokenManager {
         return "\(baseDir)/\(hashString).json"
     }
 
-    func loadToken(from path: String, fileIO: NonBlockingFileIO) async throws -> LoginToken {
+    func loadToken(from path: String, fileSystem: FileSystem) async throws -> LoginToken {
         let byteBuffer: ByteBuffer
         do {
-            byteBuffer = try await fileIO.withFileRegion(path: path) { fileRegion in
-                try await fileIO.read(fileHandle: fileRegion.fileHandle, byteCount: fileRegion.readableBytes, allocator: ByteBufferAllocator())
+            byteBuffer = try await fileSystem.withFileHandle(forReadingAt: .init(path)) { read in
+                try await read.readToEnd(maximumSizeAllowed: .megabytes(1))
             }
         } catch {
             throw AWSLoginCredentialError.tokenLoadFailed("Cannot read token file at \(path). Please authenticate with `aws login`.")
@@ -123,7 +124,7 @@ struct LoginTokenManager {
         )
     }
 
-    func saveToken(_ token: LoginToken, to path: String, fileIO: NonBlockingFileIO, threadPool: NIOThreadPool) async throws {
+    func saveToken(_ token: LoginToken, to path: String, fileSystem: FileSystem, threadPool: NIOThreadPool) async throws {
         // Parse ISO8601 date if we have expiresAt
         let expiresAtString: String
         if let expiresAt = token.expiresAt {
@@ -161,7 +162,7 @@ struct LoginTokenManager {
         encoder.outputFormatting = .prettyPrinted
         let data = try encoder.encode(tokenData)
 
-        // Write using NonBlockingFileIO
+        // Write using NIOFileSystem
         var buffer = ByteBufferAllocator().buffer(capacity: data.count)
         buffer.writeBytes(data)
 
@@ -169,12 +170,8 @@ struct LoginTokenManager {
         // Using unlink() through thread pool for non-blocking operation
         _ = try? await threadPool.runIfActive { unlink(path) }
 
-        try await fileIO.withFileHandle(
-            path: path,
-            mode: .write,
-            flags: .allowFileCreation(posixMode: 0o600)
-        ) { fileHandle in
-            try await fileIO.write(fileHandle: fileHandle, buffer: buffer)
+        _ = try await fileSystem.withFileHandle(forWritingAt: .init(path), options: .newFile(replaceExisting: true)) { file in
+            try await file.write(contentsOf: buffer, toAbsoluteOffset: 0)
         }
     }
 }

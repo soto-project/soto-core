@@ -185,7 +185,8 @@ enum ConfigFileLoader {
         let buffer: ByteBuffer
         do {
             buffer = try await loadFile(path: path, fileSystem: fileSystem)
-        } catch let error as IOError where error.errnoCode == ENOENT {
+        } catch is FileSystemError {
+            // currently we assume any file system error implies we cannot access the file
             throw ConfigFileError.fileDoesNotExist
         }
 

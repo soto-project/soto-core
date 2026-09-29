@@ -72,7 +72,6 @@ struct LoginTokenManager {
         } catch {
             throw AWSLoginCredentialError.tokenLoadFailed("Cannot read token file at \(path). Please authenticate with `aws login`.")
         }
-
         guard let data = byteBuffer.getData(at: 0, length: byteBuffer.readableBytes) else {
             throw AWSLoginCredentialError.tokenLoadFailed("Cannot read token file at \(path). Please authenticate with `aws login`.")
         }

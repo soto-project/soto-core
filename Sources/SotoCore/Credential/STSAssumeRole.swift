@@ -14,6 +14,7 @@
 
 import AsyncHTTPClient
 import NIOPosix
+import _NIOFileSystem
 
 #if canImport(FoundationEssentials)
 import FoundationEssentials
@@ -217,10 +218,10 @@ struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
             credentials = try await self.assumeRole(request, logger: logger).credentials
         case .assumeRoleWithWebIdentity(let arn, let sessioName, let tokenFile, let threadPool):
             // load token id file
-            let fileIO = NonBlockingFileIO(threadPool: threadPool)
+            let fileSystem = FileSystem(threadPool: threadPool)
             let token: String
             do {
-                let tokenBuffer = try await ConfigFileLoader.loadFile(path: tokenFile, fileIO: fileIO)
+                let tokenBuffer = try await ConfigFileLoader.loadFile(path: tokenFile, fileSystem: fileSystem)
                 token = String(buffer: tokenBuffer)
             } catch {
                 throw CredentialProviderError.tokenIdFileFailedToLoad

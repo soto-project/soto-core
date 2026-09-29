@@ -16,6 +16,7 @@ import INIParser
 import Logging
 import NIOCore
 import NIOPosix
+import _NIOFileSystem
 
 #if canImport(Glibc)
 import Glibc
@@ -127,19 +128,19 @@ enum ConfigFileLoader {
         profile: String,
         threadPool: NIOThreadPool = .singleton
     ) async throws -> SharedCredentials {
-        let fileIO = NonBlockingFileIO(threadPool: threadPool)
+        let fileSystem = FileSystem(threadPool: threadPool)
         // Only treat "file does not exist" as a soft miss. Other failures (permission denied,
         // I/O errors, malformed INI) propagate so the caller sees why credential lookup failed
         // instead of silently falling through to the next provider.
         let credentialsINIParser: INIParser?
         do {
-            credentialsINIParser = try await self.loadINIFile(path: credentialsFilePath, fileIO: fileIO)
+            credentialsINIParser = try await self.loadINIFile(path: credentialsFilePath, fileSystem: fileSystem)
         } catch let error as ConfigFileError where error == ConfigFileError.fileDoesNotExist {
             credentialsINIParser = nil
         }
         let configINIParser: INIParser?
         do {
-            configINIParser = try await self.loadINIFile(path: configFilePath, fileIO: fileIO)
+            configINIParser = try await self.loadINIFile(path: configFilePath, fileSystem: fileSystem)
         } catch let error as ConfigFileError where error == ConfigFileError.fileDoesNotExist {
             configINIParser = nil
         }
@@ -166,25 +167,26 @@ enum ConfigFileLoader {
     /// Load a file from disk without blocking the current thread
     /// - Parameters:
     ///   - path: path for the file to load
-    ///   - fileIO: non-blocking file IO
+    ///   - fileSystem: File System
     /// - Returns: buffer containing file contents
-    static func loadFile(path: String, fileIO: NonBlockingFileIO) async throws -> ByteBuffer {
+    static func loadFile(path: String, fileSystem: FileSystem) async throws -> ByteBuffer {
         let path = self.expandTildeInFilePath(path)
-        return try await fileIO.withFileRegion(path: path) { fileRegion in
-            try await fileIO.read(fileHandle: fileRegion.fileHandle, byteCount: fileRegion.readableBytes, allocator: ByteBufferAllocator())
+        return try await fileSystem.withFileHandle(forReadingAt: .init(path)) { read in
+            try await read.readToEnd(maximumSizeAllowed: .megabytes(1))
         }
     }
 
     /// Load an INI file from disk without blocking the current thread
     /// - Parameters:
     ///   - path: path for the file to load
-    ///   - fileIO: non-blocking file IO
+    ///   - fileSystem: File System
     /// - Returns: INIParser
-    static func loadINIFile(path: String, fileIO: NonBlockingFileIO) async throws -> INIParser {
+    static func loadINIFile(path: String, fileSystem: FileSystem) async throws -> INIParser {
         let buffer: ByteBuffer
         do {
-            buffer = try await loadFile(path: path, fileIO: fileIO)
-        } catch let error as IOError where error.errnoCode == ENOENT {
+            buffer = try await loadFile(path: path, fileSystem: fileSystem)
+        } catch is FileSystemError {
+            // currently we assume any file system error implies we cannot access the file
             throw ConfigFileError.fileDoesNotExist
         }
 

@@ -164,10 +164,11 @@ struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
         roleSessionName: String,
         credentialProvider: CredentialProviderFactory,
         region: Region,
+        retryPolicy: RetryPolicyFactory,
         httpClient: AWSHTTPClient,
         endpoint: String? = nil
     ) {
-        self.client = AWSClient(credentialProvider: credentialProvider, httpClient: httpClient)
+        self.client = AWSClient(credentialProvider: credentialProvider, retryPolicy: retryPolicy, httpClient: httpClient)
         self.request = .assumeRole(arn: roleArn, sessionName: roleSessionName)
         self.config = AWSServiceConfig(
             region: region,
@@ -186,11 +187,12 @@ struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
         roleSessionName: String,
         webIdentityTokenFile: String,
         region: Region,
+        retryPolicy: RetryPolicyFactory,
         httpClient: AWSHTTPClient,
         endpoint: String? = nil,
         threadPool: NIOThreadPool = .singleton
     ) {
-        self.client = AWSClient(credentialProvider: .empty, httpClient: httpClient)
+        self.client = AWSClient(credentialProvider: .empty, retryPolicy: retryPolicy, httpClient: httpClient)
         self.request = .assumeRoleWithWebIdentity(
             arn: roleArn,
             sessionName: roleSessionName,
@@ -262,6 +264,7 @@ extension STSAssumeRoleCredentialProvider {
     static func fromEnvironment(
         context: CredentialProviderFactory.Context,
         endpoint: String? = nil,
+        retryPolicy: RetryPolicyFactory,
         threadPool: NIOThreadPool = .singleton
     ) -> Self? {
         guard let roleArn = Environment["AWS_ROLE_ARN"],
@@ -274,6 +277,7 @@ extension STSAssumeRoleCredentialProvider {
             roleSessionName: roleSessionName,
             webIdentityTokenFile: webIdentityTokenFile,
             region: region,
+            retryPolicy: retryPolicy,
             httpClient: context.httpClient,
             endpoint: endpoint,
             threadPool: threadPool

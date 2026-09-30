@@ -95,12 +95,22 @@ extension CredentialProviderFactory {
     /// Get `CredentialProvider` details from the environment
     /// Looks in environment variables `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_SESSION_TOKEN`
     /// and then checks `AWS_ROLE_ARN`, `AWS_ROLE_SESSION_NAME` and `AWS_WEB_IDENTITY_TOKEN_FILE`.
-    public static func environment(endpoint: String? = nil, threadPool: NIOThreadPool = .singleton) -> CredentialProviderFactory {
+    ///
+    /// - Parameters
+    ///     - endpoint: Optional override for STS override
+    ///     - retryPolicy: Retry policy for any requests to AWS services
+    ///     - threadPool: Thread Pool used for file loading
+    public static func environment(
+        endpoint: String? = nil,
+        retryPolicy: RetryPolicyFactory = .default,
+        threadPool: NIOThreadPool = .singleton
+    ) -> CredentialProviderFactory {
         Self { context -> CredentialProvider in
             StaticCredential.fromEnvironment()
                 ?? STSAssumeRoleCredentialProvider.fromEnvironment(
                     context: context,
                     endpoint: endpoint,
+                    retryPolicy: retryPolicy,
                     threadPool: threadPool
                 )
                 ?? NullCredentialProvider()
@@ -140,19 +150,26 @@ extension CredentialProviderFactory {
 
     /// Use credentials loaded from your AWS config
     ///
-    /// Uses AWS cli credentials and optional profile configuration files, normally located at
-    ///  `~/.aws/credentials` and `~/.aws/config`.
+    /// Uses AWS cli credentials and optional profile configuration files
+    ///
+    /// - Parameters
+    ///     - credentialsFilePath: Path to credentials file (normally `~/.aws/credentials`)
+    ///     - configFilePath: Path to config file (normally `~/.aws/config`)
+    ///     - profile: Profile to use from config and credential file
+    ///     - retryPolicy: Retry policy for any requests to AWS services
     public static func configFile(
         credentialsFilePath: String? = nil,
         configFilePath: String? = nil,
-        profile: String? = nil
+        profile: String? = nil,
+        retryPolicy: RetryPolicyFactory = .default
     ) -> CredentialProviderFactory {
         Self { context in
             let provider = ConfigFileCredentialProvider(
                 credentialsFilePath: credentialsFilePath ?? ConfigFileLoader.defaultCredentialsPath,
                 configFilePath: configFilePath ?? ConfigFileLoader.defaultProfileConfigPath,
                 profile: profile,
-                context: context
+                context: context,
+                retryPolicy: retryPolicy
             )
             return RotatingCredentialProvider(context: context, provider: provider)
         }
@@ -160,11 +177,12 @@ extension CredentialProviderFactory {
 
     /// Return credential provider for AWS_ROLE_ARN, AWS_ROLE_SESSION_NAME,
     /// AWS_WEB_IDENTITY_TOKEN_FILE environment variables
+    @available(*, deprecated, message: "Use CredentialProviderFactory.stsWebIdentityTokenFile() from SotoSTS")
     public static func stsRoleARN(
         credentialProvider: CredentialProviderFactory
     ) -> CredentialProviderFactory {
         Self { context in
-            guard let provider = STSAssumeRoleCredentialProvider.fromEnvironment(context: context) else {
+            guard let provider = STSAssumeRoleCredentialProvider.fromEnvironment(context: context, retryPolicy: .default) else {
                 return NullCredentialProvider()
             }
             return RotatingCredentialProvider(context: context, provider: provider)

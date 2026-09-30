@@ -51,6 +51,47 @@ class AWSServiceTests: XCTestCase {
         XCTAssertEqual(service.endpoint, "https://my-endpoint.com")
     }
 
+    func testEnvironmentEndpoint() {
+        Environment.set("http://localhost:4566", for: "AWS_ENDPOINT_URL")
+        defer { Environment.unset(name: "AWS_ENDPOINT_URL") }
+
+        let config = createServiceConfig()
+        XCTAssertEqual(config.endpoint, "http://localhost:4566")
+        Environment.set("http://localhost:1234", for: "AWS_ENDPOINT_URL")
+        XCTAssertEqual(config.endpoint, "http://localhost:4566")
+        XCTAssertEqual(config.with(region: .uswest2).endpoint, "http://localhost:1234")
+    }
+
+    func testServiceEnvironmentEndpoint() {
+        Environment.set("http://localhost:1234", for: "AWS_ENDPOINT_URL")
+        Environment.set("http://localhost:4566", for: "AWS_ENDPOINT_URL_API_GATEWAY")
+        defer {
+            Environment.unset(name: "AWS_ENDPOINT_URL")
+            Environment.unset(name: "AWS_ENDPOINT_URL_API_GATEWAY")
+        }
+
+        let config = createServiceConfig(sdkId: "API Gateway")
+        XCTAssertEqual(config.endpoint, "http://localhost:4566")
+        Environment.set("http://localhost:7890", for: "AWS_ENDPOINT_URL_API_GATEWAY")
+        let updatedConfig = config.with(options: .useFipsEndpoint)
+        XCTAssertEqual(updatedConfig.endpoint, "http://localhost:7890")
+        Environment.unset(name: "AWS_ENDPOINT_URL_API_GATEWAY")
+        XCTAssertEqual(updatedConfig.with(region: .uswest2).endpoint, "http://localhost:1234")
+    }
+
+    func testExplicitEndpointOverridesEnvironment() {
+        Environment.set("http://localhost:4566", for: "AWS_ENDPOINT_URL")
+        Environment.set("http://localhost:1234", for: "AWS_ENDPOINT_URL_API_GATEWAY")
+        defer {
+            Environment.unset(name: "AWS_ENDPOINT_URL")
+            Environment.unset(name: "AWS_ENDPOINT_URL_API_GATEWAY")
+        }
+
+        let config = createServiceConfig(sdkId: "API Gateway", endpoint: "https://my-endpoint.com")
+        XCTAssertEqual(config.endpoint, "https://my-endpoint.com")
+        XCTAssertEqual(config.with(region: .uswest2).endpoint, "https://my-endpoint.com")
+    }
+
     func testPartitionEndpoint() {
         let client = createAWSClient(credentialProvider: .empty)
         defer { XCTAssertNoThrow(try client.syncShutdown()) }

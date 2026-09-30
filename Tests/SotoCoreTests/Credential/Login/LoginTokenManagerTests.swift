@@ -18,6 +18,7 @@ import Crypto
 import NIOCore
 import NIOPosix
 import Testing
+import _NIOFileSystem
 
 @testable import SotoCore
 
@@ -111,8 +112,8 @@ final class LoginTokenManagerTests {
         try tokenData.write(toFile: tokenPath, atomically: true, encoding: .utf8)
 
         // Load token
-        let fileIO = NonBlockingFileIO(threadPool: .singleton)
-        let token = try await manager.loadToken(from: tokenPath, fileIO: fileIO)
+        let fileSystem = FileSystem(threadPool: .singleton)
+        let token = try await manager.loadToken(from: tokenPath, fileSystem: fileSystem)
 
         // Verify loaded values
         #expect(token.refreshToken == "refresh123")
@@ -132,7 +133,7 @@ final class LoginTokenManagerTests {
 
         // Save updated token
         let newTokenPath = tempDirectory.appendingPathComponent("updated-token.json").path
-        try await manager.saveToken(updatedToken, to: newTokenPath, fileIO: fileIO, threadPool: .singleton)
+        try await manager.saveToken(updatedToken, to: newTokenPath, fileSystem: fileSystem, threadPool: .singleton)
 
         // Verify saved file
         let savedData = try Data(contentsOf: URL(fileURLWithPath: newTokenPath))
@@ -151,9 +152,9 @@ final class LoginTokenManagerTests {
 
     @Test("Load token from nonexistent file throws error")
     func loadTokenFileNotFound() async throws {
-        let fileIO = NonBlockingFileIO(threadPool: .singleton)
+        let fileSystem = FileSystem(threadPool: .singleton)
         do {
-            _ = try await manager.loadToken(from: "/nonexistent/path/token.json", fileIO: fileIO)
+            _ = try await manager.loadToken(from: "/nonexistent/path/token.json", fileSystem: fileSystem)
             Issue.record("Expected tokenLoadFailed error")
         } catch let error as AWSLoginCredentialError {
             #expect(error.code == "tokenLoadFailed")
@@ -172,9 +173,9 @@ final class LoginTokenManagerTests {
         let tokenPath = tempDirectory.appendingPathComponent("invalid.json").path
         try invalidJSON.write(toFile: tokenPath, atomically: true, encoding: .utf8)
 
-        let fileIO = NonBlockingFileIO(threadPool: .singleton)
+        let fileSystem = FileSystem(threadPool: .singleton)
         do {
-            _ = try await manager.loadToken(from: tokenPath, fileIO: fileIO)
+            _ = try await manager.loadToken(from: tokenPath, fileSystem: fileSystem)
             Issue.record("Expected tokenParseFailed error")
         } catch let error as AWSLoginCredentialError {
             #expect(error.code == "tokenParseFailed")

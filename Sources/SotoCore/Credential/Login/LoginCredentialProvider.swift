@@ -19,6 +19,7 @@ import Logging
 import NIOCore
 import NIOPosix
 import SotoSignerV4
+import _NIOFileSystem
 
 #if canImport(FoundationEssentials)
 import FoundationEssentials
@@ -76,8 +77,8 @@ public struct LoginCredentialProvider: CredentialProvider {
 
         // Load token from disk per spec
         // This ensures we don't refresh if another process already did
-        let fileIO = NonBlockingFileIO(threadPool: threadPool)
-        let token = try await tokenFileManager.loadToken(from: tokenPath, fileIO: fileIO)
+        let fileSystem = FileSystem(threadPool: threadPool)
+        let token = try await tokenFileManager.loadToken(from: tokenPath, fileSystem: fileSystem)
 
         // Check if token is still valid
         if let expiresAt = token.expiresAt, expiresAt > Date() {
@@ -209,7 +210,7 @@ public struct LoginCredentialProvider: CredentialProvider {
         // Save updated token to disk (best-effort — may fail in sandboxed environments
         // such as SwiftPM plugins where writes outside the package directory are blocked)
         do {
-            try await tokenFileManager.saveToken(updatedToken, to: tokenPath, fileIO: fileIO, threadPool: threadPool)
+            try await tokenFileManager.saveToken(updatedToken, to: tokenPath, fileSystem: fileSystem, threadPool: threadPool)
         } catch {
             logger.warning(
                 "Could not persist refreshed credentials to disk. Credentials are valid for this session but will need to be refreshed again next time.",
@@ -252,10 +253,10 @@ public struct LoginCredentialProvider: CredentialProvider {
         let path = configPath ?? ConfigFileLoader.defaultProfileConfigPath
 
         // Load INI file using ConfigFileLoader
-        let fileIO = NonBlockingFileIO(threadPool: .singleton)
+        let fileSystem = FileSystem(threadPool: .singleton)
         let parser: INIParser
         do {
-            parser = try await ConfigFileLoader.loadINIFile(path: path, fileIO: fileIO)
+            parser = try await ConfigFileLoader.loadINIFile(path: path, fileSystem: fileSystem)
         } catch {
             throw AWSLoginCredentialError.configFileNotFound(path)
         }

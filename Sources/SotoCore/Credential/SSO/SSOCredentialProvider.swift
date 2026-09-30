@@ -20,6 +20,7 @@ import NIOCore
 import NIOFoundationCompat
 import NIOPosix
 import SotoSignerV4
+import _NIOFileSystem
 
 #if canImport(FoundationEssentials)
 import FoundationEssentials
@@ -78,7 +79,7 @@ public struct SSOCredentialProvider: CredentialProvider {
         let profile = profileName ?? "default"
         let config = try await getConfiguration()
         let tokenManager = SSOTokenManager(httpClient: httpClient)
-        let fileIO = NonBlockingFileIO(threadPool: threadPool)
+        let fileSystem = FileSystem(threadPool: threadPool)
 
         // Construct token cache path
         let tokenPath = try tokenManager.constructTokenPath(config: config)
@@ -88,7 +89,7 @@ public struct SSOCredentialProvider: CredentialProvider {
             from: tokenPath,
             config: config,
             profileName: profile,
-            fileIO: fileIO,
+            fileSystem: fileSystem,
             threadPool: threadPool,
             logger: logger
         )
@@ -129,10 +130,10 @@ public struct SSOCredentialProvider: CredentialProvider {
         let path = configPath ?? ConfigFileLoader.defaultProfileConfigPath
 
         // Load INI file using ConfigFileLoader
-        let fileIO = NonBlockingFileIO(threadPool: .singleton)
+        let fileSystem = FileSystem(threadPool: .singleton)
         let parser: INIParser
         do {
-            parser = try await ConfigFileLoader.loadINIFile(path: path, fileIO: fileIO)
+            parser = try await ConfigFileLoader.loadINIFile(path: path, fileSystem: fileSystem)
         } catch {
             throw AWSSSOCredentialError.configFileNotFound(path)
         }

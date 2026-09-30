@@ -206,6 +206,7 @@ extension CredentialProviderFactory {
                 roleSessionName: roleSessionName,
                 credentialProvider: credentialProvider,
                 region: region,
+                retryPolicy: .default,
                 httpClient: context.httpClient,
                 endpoint: endpoint
             )

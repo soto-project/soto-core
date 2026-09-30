@@ -190,7 +190,8 @@ struct CredentialProcessProviderTests {
         let provider = try ConfigFileCredentialProvider.credentialProvider(
             from: sharedCredentials,
             context: context,
-            endpoint: nil
+            endpoint: nil,
+            retryPolicy: .default
         )
         #expect(provider is CredentialProcessProvider)
         try await httpClient.shutdown()

@@ -53,7 +53,7 @@ public final class AWSClient: Sendable {
     /// Logger used for non-request based output
     public let logger: Logger
     /// client options
-    let options: Options
+    public let options: Options
 
     internal let isShutdown = ManagedAtomic<Bool>(false)
 
@@ -213,11 +213,11 @@ public final class AWSClient: Sendable {
     /// Additional options
     public struct Options: Sendable {
         /// Signing method
-        let signingAlgorithm: AWSSigner.Algorithm
+        public var signingAlgorithm: AWSSigner.Algorithm
         /// log level used for request logging
-        let requestLogLevel: Logger.Level
+        public var requestLogLevel: Logger.Level
         /// log level used for error logging
-        let errorLogLevel: Logger.Level
+        public var errorLogLevel: Logger.Level
 
         /// Initialize AWSClient.Options
         /// - parameters:

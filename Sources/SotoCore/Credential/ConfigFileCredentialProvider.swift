@@ -25,7 +25,8 @@ final class ConfigFileCredentialProvider: CredentialProviderSelector {
         configFilePath: String,
         profile: String? = nil,
         context: CredentialProviderFactory.Context,
-        endpoint: String? = nil
+        endpoint: String? = nil,
+        retryPolicy: RetryPolicyFactory
     ) {
         self.getProviderTask = Task {
             let profile = profile ?? Environment["AWS_PROFILE"] ?? ConfigFileLoader.defaultProfile
@@ -34,7 +35,8 @@ final class ConfigFileCredentialProvider: CredentialProviderSelector {
                 configFilePath: configFilePath,
                 for: profile,
                 context: context,
-                endpoint: endpoint
+                endpoint: endpoint,
+                retryPolicy: retryPolicy
             )
         }
     }
@@ -62,6 +64,7 @@ final class ConfigFileCredentialProvider: CredentialProviderSelector {
         for profile: String,
         context: CredentialProviderFactory.Context,
         endpoint: String?,
+        retryPolicy: RetryPolicyFactory,
         threadPool: NIOThreadPool = .singleton
     ) async throws -> CredentialProvider {
         let sharedCredentials = try await ConfigFileLoader.loadSharedCredentials(
@@ -70,7 +73,7 @@ final class ConfigFileCredentialProvider: CredentialProviderSelector {
             profile: profile,
             threadPool: threadPool
         )
-        let provider = try self.credentialProvider(from: sharedCredentials, context: context, endpoint: endpoint)
+        let provider = try self.credentialProvider(from: sharedCredentials, context: context, endpoint: endpoint, retryPolicy: retryPolicy)
         // Tag any error surfaced from this provider with the originating profile, so a failure
         // inside a credential chain (source profile, SSO source, STS AssumeRole, etc.) names
         // the profile the caller actually asked to resolve.
@@ -90,7 +93,8 @@ final class ConfigFileCredentialProvider: CredentialProviderSelector {
     static func credentialProvider(
         from sharedCredentials: ConfigFileLoader.SharedCredentials,
         context: CredentialProviderFactory.Context,
-        endpoint: String?
+        endpoint: String?,
+        retryPolicy: RetryPolicyFactory
     ) throws -> CredentialProvider {
         switch sharedCredentials {
         case .staticCredential(let staticCredential):
@@ -102,6 +106,7 @@ final class ConfigFileCredentialProvider: CredentialProviderSelector {
                 roleSessionName: sessionName,
                 credentialProvider: sourceCredentialProvider,
                 region: region,
+                retryPolicy: retryPolicy,
                 httpClient: context.httpClient,
                 endpoint: endpoint
             )

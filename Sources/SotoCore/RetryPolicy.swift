@@ -24,7 +24,7 @@ import Foundation
 #endif
 
 /// Creates a RetryPolicy for AWSClient to use
-public struct RetryPolicyFactory {
+public struct RetryPolicyFactory: Sendable {
     public let retryPolicy: RetryPolicy
 
     /// Initialize a RetryPolicyFactory

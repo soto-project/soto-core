@@ -45,7 +45,8 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         let provider = try ConfigFileCredentialProvider.credentialProvider(
             from: credentials,
             context: context,
-            endpoint: nil
+            endpoint: nil,
+            retryPolicy: .default
         )
         XCTAssertEqual((provider as? StaticCredential)?.accessKeyId, "foo")
         XCTAssertEqual((provider as? StaticCredential)?.secretAccessKey, "bar")
@@ -66,7 +67,8 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         let provider = try ConfigFileCredentialProvider.credentialProvider(
             from: credentials,
             context: context,
-            endpoint: nil
+            endpoint: nil,
+            retryPolicy: .default
         )
         let stsProvider = try XCTUnwrap(provider as? STSAssumeRoleCredentialProvider)
         switch stsProvider.request {
@@ -121,7 +123,8 @@ class ConfigFileCredentialProviderTests: XCTestCase {
             configFilePath: "/dev/null",
             for: profile,
             context: context,
-            endpoint: nil
+            endpoint: nil,
+            retryPolicy: .default
         )
 
         let scoped = try XCTUnwrap(provider as? ProfileScopedCredentialProvider)
@@ -315,7 +318,8 @@ class ConfigFileCredentialProviderTests: XCTestCase {
                     configFilePath: configFilePath,
                     profile: profile,
                     context: context,
-                    endpoint: testServer.address
+                    endpoint: testServer.address,
+                    retryPolicy: .default
                 )
             },
             httpClient: httpClient

@@ -12,10 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 import NIOCore
-
-import struct Foundation.Data
-import class Foundation.JSONSerialization
 
 // AWS HAL services I know of are APIGateway, Pinpoint, Greengrass
 extension AWSHTTPResponse {

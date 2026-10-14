@@ -104,7 +104,7 @@ public struct AWSSigner: Sendable {
                 guard let value1 = $0.value, let value2 = $1.value else { return false }
                 return value1 < value2
             }
-            .map { item in item.value.map { "\(item.name)=\($0.queryItemEncode())" } ?? "\(item.name)=" }
+            .map { item in item.value.map { "\(item.name)=\($0.uriEncode())" } ?? "\(item.name)=" }
             .joined(separator: "&")
         urlComponents.percentEncodedQuery = urlQueryString
         // S3 requires "+" encoded in the URL
@@ -211,7 +211,7 @@ public struct AWSSigner: Sendable {
         // Construct query string. Start with original query strings and append all the signing info.
         var query = url.query ?? ""
         if query.count > 0 {
-            query += "&"
+            query = query.queryEncode() + "&"
         }
         query += "X-Amz-Algorithm=\(algorithm.name)"
         switch algorithm.base {
@@ -226,19 +226,18 @@ public struct AWSSigner: Sendable {
         query += "&X-Amz-Expires=\(expires.nanoseconds / 1_000_000_000)"
         query += "&X-Amz-SignedHeaders=\(signingData.signedHeaders)"
         if !omitSecurityToken, let sessionToken = credentials.sessionToken {
-            query += "&X-Amz-Security-Token=\(sessionToken.queryItemEncode())"
+            query += "&X-Amz-Security-Token=\(sessionToken.uriEncode())"
         }
         // Split the string and sort to ensure the order of query strings is the same as AWS
         query = query.split(separator: "&")
             .sorted()
             .joined(separator: "&")
-            .queryEncode()
 
         // update unsignedURL in the signingData so when the canonical request is constructed it includes all the signing query items
         signingData.unsignedURL = URL(string: url.absoluteString.split(separator: "?")[0] + "?" + query)!  // NEED TO DEAL WITH SITUATION WHERE THIS FAILS
         query += "&X-Amz-Signature=\(self.signature(signingData: signingData, algorithm: algorithm))"
         if omitSecurityToken, let sessionToken = credentials.sessionToken {
-            query += "&X-Amz-Security-Token=\(sessionToken.queryItemEncode())"
+            query += "&X-Amz-Security-Token=\(sessionToken.uriEncode())"
         }
 
         // Add signature to query items and build a new Request
@@ -454,10 +453,10 @@ public struct AWSSigner: Sendable {
         let canonicalPath: String
         let urlComps = URLComponents(url: signingData.unsignedURL, resolvingAgainstBaseURL: false)!
         if self.name == "s3" {
-            canonicalPath = urlComps.path.pathEncode()
+            canonicalPath = urlComps.path.uriPathEncode()
         } else {
             // non S3 paths need to be encoded twice
-            canonicalPath = urlComps.percentEncodedPath.pathEncode()
+            canonicalPath = urlComps.percentEncodedPath.uriPathEncode()
         }
         let canonicalRequest =
             "\(signingData.method.rawValue)\n" + "\(canonicalPath)\n" + "\(signingData.unsignedURL.query ?? "")\n"  // assuming query parameters have are already percent encoded correctly
@@ -539,12 +538,12 @@ extension String {
         self.addingAWSPercentEncoding(forURLComponent: .query)
     }
 
-    func queryItemEncode() -> String {
-        self.addingAWSPercentEncoding(forURLComponent: .queryItem)
+    func uriEncode() -> String {
+        self.addingAWSPercentEncoding(forURLComponent: .uriEncode)
     }
 
-    func pathEncode() -> String {
-        self.addingAWSPercentEncoding(forURLComponent: .path)
+    func uriPathEncode() -> String {
+        self.addingAWSPercentEncoding(forURLComponent: .uriEncodePath)
     }
 
     static let s3PathAllowedCharacters = CharacterSet.urlPathAllowed.subtracting(.init(charactersIn: "+@()&$=:,'!*"))

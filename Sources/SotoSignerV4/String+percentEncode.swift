@@ -194,10 +194,12 @@ package struct AWSURLComponentSet: OptionSet {
         self.rawValue = rawValue
     }
 
-    static var path: AWSURLComponentSet { .init(rawValue: 1 << 0) }
-    static var s3Path: AWSURLComponentSet { .init(rawValue: 1 << 1) }
-    static var query: AWSURLComponentSet { .init(rawValue: 1 << 2) }
-    static var queryItem: AWSURLComponentSet { .init(rawValue: 1 << 3) }
+    static package var path: AWSURLComponentSet { .init(rawValue: 1 << 0) }
+    static package var s3Path: AWSURLComponentSet { .init(rawValue: 1 << 1) }
+    static package var query: AWSURLComponentSet { .init(rawValue: 1 << 2) }
+    static package var queryItem: AWSURLComponentSet { .init(rawValue: 1 << 3) }
+    static package var uriEncode: AWSURLComponentSet { .init(rawValue: 1 << 4) }
+    static package var uriEncodePath: AWSURLComponentSet { .init(rawValue: 1 << 5) }
     //static let s3PathAllowedCharacters = CharacterSet.urlPathAllowed.subtracting(.init(charactersIn: "+@()&$=:,'!*"))
     //static let uriAllowedWithSlashCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~/")
     //static let uriAllowedCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
@@ -229,49 +231,49 @@ extension UTF8.CodeUnit {
     fileprivate var allowedURLComponents: AWSURLComponentSet.RawValue {
         switch self {
         case UInt8(ascii: "!"):
-            return 0b00001111
+            return 0b00001101
         case UInt8(ascii: "$"):
-            return 0b00001111
+            return 0b00001101
         case UInt8(ascii: "&"):
-            return 0b00000111
+            return 0b00000101
         case UInt8(ascii: "'"):
-            return 0b00001111
+            return 0b00001101
         case UInt8(ascii: "("):
-            return 0b00001111
+            return 0b00001101
         case UInt8(ascii: ")"):
-            return 0b00001111
+            return 0b00001101
         case UInt8(ascii: "*"):
-            return 0b00001111
+            return 0b00001101
         case UInt8(ascii: "+"):
             return 0b00001101
         case UInt8(ascii: ","):
-            return 0b00001111
-        case UInt8(ascii: "-"):
-            return 0b00001111
-        case UInt8(ascii: "."):
-            return 0b00001111
-        case UInt8(ascii: "/"):
-            return 0b00001111
-        case UInt8(ascii: "0")...UInt8(ascii: "9"):
-            return 0b00001111
+            return 0b00001101
         case UInt8(ascii: ":"):
             return 0b00000000
         case UInt8(ascii: ";"):
             return 0b00001111
         case UInt8(ascii: "="):
-            return 0b00000111
+            return 0b00000101
         case UInt8(ascii: "?"):
             return 0b00001100
         case UInt8(ascii: "@"):
-            return 0b00001111
+            return 0b00001101
+        case UInt8(ascii: "0")...UInt8(ascii: "9"):
+            return 0b00111111
         case UInt8(ascii: "A")...UInt8(ascii: "Z"):
-            return 0b00001111
-        case UInt8(ascii: "_"):
-            return 0b00001111
+            return 0b00111111
         case UInt8(ascii: "a")...UInt8(ascii: "z"):
-            return 0b00001111
+            return 0b00111111
+        case UInt8(ascii: "."):
+            return 0b00111111
+        case UInt8(ascii: "-"):
+            return 0b00111111
+        case UInt8(ascii: "_"):
+            return 0b00111111
         case UInt8(ascii: "~"):
-            return 0b00001111
+            return 0b00111111
+        case UInt8(ascii: "/"):
+            return 0b00101111
         default:
             return 0
         }

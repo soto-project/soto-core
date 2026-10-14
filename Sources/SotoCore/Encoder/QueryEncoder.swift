@@ -12,9 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import struct Foundation.CharacterSet
-import struct Foundation.Date
-import class Foundation.ISO8601DateFormatter
+import Foundation
 
 /// The wrapper struct for encoding Codable classes to Query dictionary
 public struct QueryEncoder {

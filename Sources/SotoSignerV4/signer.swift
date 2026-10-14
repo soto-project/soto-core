@@ -61,6 +61,8 @@ public struct AWSSigner: Sendable {
 
     static let hashedEmptyBody = SHA256.hash(data: [UInt8]()).hexDigest()
 
+    private static let timeStampDateFormatter: DateFormatter = createTimeStampDateFormatter()
+
     /// Initialise the Signer class with AWS credentials
     public init(credentials: Credential, name: String, region: String) {
         self.credentials = credentials
@@ -512,9 +514,18 @@ public struct AWSSigner: Sendable {
         }
     }
 
+    /// create timestamp dateformatter
+    private static func createTimeStampDateFormatter() -> DateFormatter {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyyMMdd'T'HHmmss'Z'"
+        formatter.timeZone = TimeZone(abbreviation: "UTC")
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter
+    }
+
     /// return a timestamp formatted for signing requests
     static func timestamp(_ date: Date) -> String {
-        Date.ISO8601FormatStyle().dateSeparator(.omitted).timeSeparator(.omitted).format(date)
+        self.timeStampDateFormatter.string(from: date)
     }
 
     /// returns port from URL. If port is set to 80 on an http url or 443 on an https url nil is returned

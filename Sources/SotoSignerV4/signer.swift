@@ -513,9 +513,25 @@ public struct AWSSigner: Sendable {
         }
     }
 
+    private static let timeStampDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyyMMdd'T'HHmmss'Z'"
+        formatter.timeZone = TimeZone(abbreviation: "UTC")
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter
+    }()
+
     /// return a timestamp formatted for signing requests
     static func timestamp(_ date: Date) -> String {
+        #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS) || os(visionOS)
+        if #available(macOS 12, iOS 15, tvOS 15, watchOS 8, *) {
+            Date.ISO8601FormatStyle().dateSeparator(.omitted).timeSeparator(.omitted).format(date)
+        } else {
+            self.timeStampDateFormatter.string(from: date)
+        }
+        #else
         Date.ISO8601FormatStyle().dateSeparator(.omitted).timeSeparator(.omitted).format(date)
+        #endif
     }
 
     /// returns port from URL. If port is set to 80 on an http url or 443 on an https url nil is returned

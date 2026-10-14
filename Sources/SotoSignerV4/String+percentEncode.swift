@@ -200,11 +200,17 @@ package struct AWSURLComponentSet: OptionSet {
         self.rawValue = rawValue
     }
 
+    /// Standard URI path allowed characters
     static package var path: AWSURLComponentSet { .init(rawValue: 1 << 0) }
+    /// S3 path allowed characters (based on allowed characters for S3 bucket)
     static package var s3Path: AWSURLComponentSet { .init(rawValue: 1 << 1) }
+    /// Standard URI query allowed characters
     static package var query: AWSURLComponentSet { .init(rawValue: 1 << 2) }
+    /// Standard URI query item allowed characters
     static package var queryItem: AWSURLComponentSet { .init(rawValue: 1 << 3) }
+    /// AWS signing encoding allowed characters
     static package var uriEncode: AWSURLComponentSet { .init(rawValue: 1 << 4) }
+    /// AWS signing path encoding allowed characters
     static package var uriEncodePath: AWSURLComponentSet { .init(rawValue: 1 << 5) }
     //static let s3PathAllowedCharacters = CharacterSet.urlPathAllowed.subtracting(.init(charactersIn: "+@()&$=:,'!*"))
     //static let uriAllowedWithSlashCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~/")

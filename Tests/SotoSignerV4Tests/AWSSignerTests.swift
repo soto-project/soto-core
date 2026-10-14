@@ -87,6 +87,25 @@ final class AWSSignerTests {
         )
     }
 
+    @Test func testHeadersWithWhitespace() {
+        let signer = AWSSigner(credentials: credentials, name: "sns", region: "eu-west-1")
+        let headers = signer.signHeaders(
+            url: URL(string: "https://sns.eu-west-1.amazonaws.com/")!,
+            method: .GET,
+            headers: ["Header1": "value1", "Header2": "value2", "Header3": "value3"],
+            date: Date(timeIntervalSinceReferenceDate: 200)
+        )
+        let headersWithWhitespace = signer.signHeaders(
+            url: URL(string: "https://sns.eu-west-1.amazonaws.com/")!,
+            method: .GET,
+            headers: ["Header1": " value1", "Header2": "value2 ", "Header3": " value3 "],
+            date: Date(timeIntervalSinceReferenceDate: 200)
+        )
+        #expect(
+            headers["Authorization"].first == headersWithWhitespace["Authorization"].first
+        )
+    }
+
     @Test func testSignS3GetURL() {
         let signer = AWSSigner(credentials: credentials, name: "s3", region: "us-east-1")
         let url = signer.signURL(

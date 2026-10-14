@@ -216,15 +216,15 @@ public struct AWSSigner: Sendable {
         query += "X-Amz-Algorithm=\(algorithm.name)"
         switch algorithm.base {
         case .sigV4:
-            query += "&X-Amz-Credential=\(self.credentials.accessKeyId)/\(signingData.date)/\(self.region)/\(self.name)/aws4_request"
+            query += "&X-Amz-Credential=\(self.credentials.accessKeyId)%2F\(signingData.date)%2F\(self.region)%2F\(self.name)%2Faws4_request"
         case .sigV4a:
-            query += "&X-Amz-Credential=\(self.credentials.accessKeyId)/\(signingData.date)/\(self.name)/aws4_request"
+            query += "&X-Amz-Credential=\(self.credentials.accessKeyId)%2F\(signingData.date)%2F\(self.name)%2Faws4_request"
             query += "&X-Amz-Region-Set=\(self.region)"
         }
 
         query += "&X-Amz-Date=\(signingData.datetime)"
         query += "&X-Amz-Expires=\(expires.nanoseconds / 1_000_000_000)"
-        query += "&X-Amz-SignedHeaders=\(signingData.signedHeaders)"
+        query += "&X-Amz-SignedHeaders=\(signingData.signedHeaders.uriEncode())"
         if !omitSecurityToken, let sessionToken = credentials.sessionToken {
             query += "&X-Amz-Security-Token=\(sessionToken.uriEncode())"
         }
@@ -461,6 +461,7 @@ public struct AWSSigner: Sendable {
         let canonicalRequest =
             "\(signingData.method.rawValue)\n" + "\(canonicalPath)\n" + "\(signingData.unsignedURL.query ?? "")\n"  // assuming query parameters have are already percent encoded correctly
             + "\(canonicalHeaders)\n\n" + "\(signingData.signedHeaders)\n" + signingData.hashedPayload
+        print(canonicalRequest)
         return canonicalRequest
     }
 

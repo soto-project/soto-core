@@ -122,7 +122,7 @@ struct SSOTokenManager {
         var token = try await loadToken(from: tokenPath, profileName: profileName, fileSystem: fileSystem)
 
         // Parse expiration (try with fractional seconds first, then without)
-        guard let expiration = parseISO8601Date(token.expiresAt) else {
+        guard let expiration = Date(iso8601: token.expiresAt) else {
             throw AWSSSOCredentialError.invalidTokenFormat("Invalid expiresAt date format: \(token.expiresAt)")
         }
 
@@ -143,7 +143,7 @@ struct SSOTokenManager {
 
             // Check client registration hasn't expired
             if let regExpiry = token.registrationExpiresAt {
-                guard let registrationExpiration = parseISO8601Date(regExpiry) else {
+                guard let registrationExpiration = Date(iso8601: regExpiry) else {
                     throw AWSSSOCredentialError.invalidTokenFormat("Invalid registrationExpiresAt date format: \(regExpiry)")
                 }
                 guard registrationExpiration > Date() else {
@@ -229,7 +229,7 @@ struct SSOTokenManager {
         // Return updated token, preserving original fields where new values not provided
         return SSOToken(
             accessToken: tokenResponse.accessToken,
-            expiresAt: formatISO8601Date(newExpiration) ?? "",
+            expiresAt: newExpiration.iso8601,
             refreshToken: tokenResponse.refreshToken ?? refreshToken,
             clientId: clientId,
             clientSecret: clientSecret,

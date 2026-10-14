@@ -1,12 +1,12 @@
 //===----------------------------------------------------------------------===//
 //
-// This source file is part of the SwiftAWSLambdaRuntime open source project
+// This source file is part of the Soto for AWS open source project
 //
-// Copyright (c) Apple Inc. and the SwiftAWSLambdaRuntime project authors
+// Copyright (c) 2017-2026 the Soto project authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
-// See CONTRIBUTORS.txt for the list of SwiftAWSLambdaRuntime project authors
+// See CONTRIBUTORS.txt for the list of Soto project authors
 //
 // SPDX-License-Identifier: Apache-2.0
 //

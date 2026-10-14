@@ -20,7 +20,7 @@ import Foundation
 
 extension Date {
     @usableFromInline
-    init?(httpHeader: String) {
+    package init?(httpHeader: String) {
         #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS) || os(visionOS)
         if #available(macOS 13, iOS 16, tvOS 16, watchOS 9, *) {
             try? self.init(httpHeader, strategy: .rfc9110)
@@ -36,7 +36,7 @@ extension Date {
     }
 
     @usableFromInline
-    var httpHeader: String {
+    package var httpHeader: String {
         #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS) || os(visionOS)
         if #available(macOS 13, iOS 16, tvOS 16, watchOS 9, *) {
             self.formatted(.rfc9110)
@@ -51,8 +51,8 @@ extension Date {
     #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS) || os(visionOS)
     private static let httpDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.dateFormat = "yyyyMMdd'T'HHmmss'Z'"
-        formatter.timeZone = TimeZone(abbreviation: "UTC")
+        formatter.dateFormat = "EEE, d MMM yyy HH:mm:ss z"
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
         formatter.locale = Locale(identifier: "en_US_POSIX")
         return formatter
     }()
@@ -78,7 +78,7 @@ extension HTTPHeaderDateFormatStyle: ParseStrategy {
         guard let components = self.components(from: input) else {
             throw HTTPHeaderDateParsingError()
         }
-        guard let date = components.date else {
+        guard components.isValidDate(in: self.calendar), let date = components.date else {
             throw HTTPHeaderDateParsingError()
         }
         return date
@@ -96,7 +96,7 @@ extension HTTPHeaderDateFormatStyle: ParseStrategy {
 
         return s.withUTF8 { buffer -> DateComponents? in
             func parseDay(_ it: inout UnsafeBufferPointer<UInt8>.Iterator) -> Int? {
-                let first = it.next()
+                let first = it.nextAsciiDigit(skippingWhitespace: true)
                 let second = it.next()
                 guard let first = first, let second = second else { return nil }
 
@@ -112,6 +112,18 @@ extension HTTPHeaderDateFormatStyle: ParseStrategy {
                 guard self.calendar.maximumRange(of: .day)!.contains(day) else { return nil }
 
                 return day
+            }
+
+            func parseWeekDay(_ it: inout UnsafeBufferPointer<UInt8>.Iterator) -> Int? {
+                let first = it.nextAsciiLetter()
+                let second = it.nextAsciiLetter()
+                let third = it.nextAsciiLetter()
+                let comma = it.next()
+                guard let first = first, let second = second, let third = third else { return nil }
+                guard comma == UInt8(ascii: ",") else { return nil }
+                guard let weekDay = weekDayMap[[first, second, third]] else { return nil }
+                guard self.calendar.maximumRange(of: .weekday)!.contains(weekDay) else { return nil }
+                return weekDay
             }
 
             func parseMonth(_ it: inout UnsafeBufferPointer<UInt8>.Iterator) -> Int? {
@@ -189,15 +201,7 @@ extension HTTPHeaderDateFormatStyle: ParseStrategy {
 
             var it = buffer.makeIterator()
 
-            // if the 4th character is a comma, then we have a day of the week
-            guard buffer.count > 5 else { return nil }
-
-            if buffer[3] == UInt8(ascii: ",") {
-                for _ in 0..<5 {
-                    _ = it.next()
-                }
-            }
-
+            guard let weekDay = parseWeekDay(&it) else { return nil }
             guard let day = parseDay(&it) else { return nil }
             guard let month = parseMonth(&it) else { return nil }
             guard let year = parseYear(&it) else { return nil }
@@ -218,7 +222,8 @@ extension HTTPHeaderDateFormatStyle: ParseStrategy {
                 day: day,
                 hour: hour,
                 minute: minute,
-                second: second
+                second: second,
+                weekday: weekDay
             )
         }
     }
@@ -299,6 +304,16 @@ let monthMap: [[UInt8]: Int] = [
     Array("Dec".utf8): 12,
 ]
 
+let weekDayMap: [[UInt8]: Int] = [
+    Array("Sun".utf8): 1,
+    Array("Mon".utf8): 2,
+    Array("Tue".utf8): 3,
+    Array("Wed".utf8): 4,
+    Array("Thu".utf8): 5,
+    Array("Fri".utf8): 6,
+    Array("Sat".utf8): 7,
+]
+
 let timezoneOffsetMap: [[UInt8]: Int] = [
     Array("UTC".utf8): 0,
     Array("GMT".utf8): 0,
@@ -310,8 +325,6 @@ let timezoneOffsetMap: [[UInt8]: Int] = [
 
 @available(macOS 13, iOS 16, tvOS 16, watchOS 9, *)
 extension HTTPHeaderDateFormatStyle: FormatStyle {
-    //let calendar: Calendar
-
     func format(_ value: Date) -> String {
         let components = calendar.dateComponents([.weekday, .day, .month, .year, .hour, .minute, .second], from: value)
         var formatted = Self.dayNames[components.weekday! - 1]

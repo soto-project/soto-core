@@ -213,7 +213,7 @@ public struct AWSSigner: Sendable {
         // Construct query string. Start with original query strings and append all the signing info.
         var query = url.query ?? ""
         if query.count > 0 {
-            query = query.queryEncode() + "&"
+            query = query + "&"
         }
         query += "X-Amz-Algorithm=\(algorithm.name)"
         switch algorithm.base {

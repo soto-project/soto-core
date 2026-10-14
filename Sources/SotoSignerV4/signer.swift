@@ -513,6 +513,7 @@ public struct AWSSigner: Sendable {
         }
     }
 
+    #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS) || os(visionOS)
     private static let timeStampDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyyMMdd'T'HHmmss'Z'"
@@ -520,6 +521,7 @@ public struct AWSSigner: Sendable {
         formatter.locale = Locale(identifier: "en_US_POSIX")
         return formatter
     }()
+    #endif
 
     /// return a timestamp formatted for signing requests
     static func timestamp(_ date: Date) -> String {

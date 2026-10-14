@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 import Crypto
-// TODO: FoundationEssentials (percent encoding)
 import Foundation
 
 /// Amazon Web Services V4 Signer
@@ -62,8 +61,6 @@ public struct AWSSigner: Sendable {
 
     static let hashedEmptyBody = SHA256.hash(data: [UInt8]()).hexDigest()
 
-    private static let timeStampDateFormatter: DateFormatter = createTimeStampDateFormatter()
-
     /// Initialise the Signer class with AWS credentials
     public init(credentials: Credential, name: String, region: String) {
         self.credentials = credentials
@@ -107,7 +104,7 @@ public struct AWSSigner: Sendable {
                 guard let value1 = $0.value, let value2 = $1.value else { return false }
                 return value1 < value2
             }
-            .map { item in item.value.map { "\(item.name)=\($0.uriEncode())" } ?? "\(item.name)=" }
+            .map { item in item.value.map { "\(item.name)=\($0.queryItemEncode())" } ?? "\(item.name)=" }
             .joined(separator: "&")
         urlComponents.percentEncodedQuery = urlQueryString
         // S3 requires "+" encoded in the URL
@@ -135,7 +132,7 @@ public struct AWSSigner: Sendable {
         date: Date = Date()
     ) -> HTTPHeaders {
         let bodyHash = AWSSigner.hashedPayload(body)
-        let dateString = AWSSigner.timestamp(date)
+        let dateString = Self.timestamp(date)
         var headers = headers
         // add date, host, sha256 and if available security token headers
         headers.replaceOrAdd(name: "host", value: Self.hostname(from: url))
@@ -210,7 +207,7 @@ public struct AWSSigner: Sendable {
             headers.replaceOrAdd(name: "X-Amz-Region-Set", value: self.region)
         }
         // Create signing data
-        var signingData = AWSSigner.SigningData(url: url, method: method, headers: headers, body: body, date: AWSSigner.timestamp(date), signer: self)
+        var signingData = AWSSigner.SigningData(url: url, method: method, headers: headers, body: body, date: Self.timestamp(date), signer: self)
         // Construct query string. Start with original query strings and append all the signing info.
         var query = url.query ?? ""
         if query.count > 0 {
@@ -229,7 +226,7 @@ public struct AWSSigner: Sendable {
         query += "&X-Amz-Expires=\(expires.nanoseconds / 1_000_000_000)"
         query += "&X-Amz-SignedHeaders=\(signingData.signedHeaders)"
         if !omitSecurityToken, let sessionToken = credentials.sessionToken {
-            query += "&X-Amz-Security-Token=\(sessionToken.uriEncode())"
+            query += "&X-Amz-Security-Token=\(sessionToken.queryItemEncode())"
         }
         // Split the string and sort to ensure the order of query strings is the same as AWS
         query = query.split(separator: "&")
@@ -241,7 +238,7 @@ public struct AWSSigner: Sendable {
         signingData.unsignedURL = URL(string: url.absoluteString.split(separator: "?")[0] + "?" + query)!  // NEED TO DEAL WITH SITUATION WHERE THIS FAILS
         query += "&X-Amz-Signature=\(self.signature(signingData: signingData, algorithm: algorithm))"
         if omitSecurityToken, let sessionToken = credentials.sessionToken {
-            query += "&X-Amz-Security-Token=\(sessionToken.uriEncode())"
+            query += "&X-Amz-Security-Token=\(sessionToken.queryItemEncode())"
         }
 
         // Add signature to query items and build a new Request
@@ -297,7 +294,7 @@ public struct AWSSigner: Sendable {
         algorithm: Algorithm
     ) -> (headers: HTTPHeaders, signingData: ChunkedSigningData) {
         let bodyHash = AWSSigner.hashedPayload(.s3chunked)
-        let dateString = AWSSigner.timestamp(date)
+        let dateString = Self.timestamp(date)
         var headers = headers
         // add date, host, sha256 and if available security token headers
         headers.add(name: "host", value: Self.hostname(from: url))
@@ -457,10 +454,10 @@ public struct AWSSigner: Sendable {
         let canonicalPath: String
         let urlComps = URLComponents(url: signingData.unsignedURL, resolvingAgainstBaseURL: false)!
         if self.name == "s3" {
-            canonicalPath = urlComps.path.uriEncodeWithSlash()
+            canonicalPath = urlComps.path.pathEncode()
         } else {
             // non S3 paths need to be encoded twice
-            canonicalPath = urlComps.percentEncodedPath.uriEncodeWithSlash()
+            canonicalPath = urlComps.percentEncodedPath.pathEncode()
         }
         let canonicalRequest =
             "\(signingData.method.rawValue)\n" + "\(canonicalPath)\n" + "\(signingData.unsignedURL.query ?? "")\n"  // assuming query parameters have are already percent encoded correctly
@@ -515,18 +512,9 @@ public struct AWSSigner: Sendable {
         }
     }
 
-    /// create timestamp dateformatter
-    private static func createTimeStampDateFormatter() -> DateFormatter {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyyMMdd'T'HHmmss'Z'"
-        formatter.timeZone = TimeZone(abbreviation: "UTC")
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        return formatter
-    }
-
     /// return a timestamp formatted for signing requests
     static func timestamp(_ date: Date) -> String {
-        self.timeStampDateFormatter.string(from: date)
+        Date.ISO8601FormatStyle().dateSeparator(.omitted).timeSeparator(.omitted).format(date)
     }
 
     /// returns port from URL. If port is set to 80 on an http url or 443 on an https url nil is returned
@@ -543,20 +531,20 @@ public struct AWSSigner: Sendable {
 }
 
 extension String {
-    func queryEncode() -> String {
-        addingPercentEncoding(withAllowedCharacters: String.queryAllowedCharacters) ?? self
-    }
-
     func s3PathEncode() -> String {
-        addingPercentEncoding(withAllowedCharacters: String.s3PathAllowedCharacters) ?? self
+        self.addingAWSPercentEncoding(forURLComponent: .s3Path)
     }
 
-    func uriEncode() -> String {
-        addingPercentEncoding(withAllowedCharacters: String.uriAllowedCharacters) ?? self
+    func queryEncode() -> String {
+        self.addingAWSPercentEncoding(forURLComponent: .query)
     }
 
-    func uriEncodeWithSlash() -> String {
-        addingPercentEncoding(withAllowedCharacters: String.uriAllowedWithSlashCharacters) ?? self
+    func queryItemEncode() -> String {
+        self.addingAWSPercentEncoding(forURLComponent: .queryItem)
+    }
+
+    func pathEncode() -> String {
+        self.addingAWSPercentEncoding(forURLComponent: .path)
     }
 
     static let s3PathAllowedCharacters = CharacterSet.urlPathAllowed.subtracting(.init(charactersIn: "+@()&$=:,'!*"))

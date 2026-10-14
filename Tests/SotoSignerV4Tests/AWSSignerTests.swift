@@ -213,7 +213,7 @@ final class AWSSignerTests {
             method: .POST,
             headers: ["Content-Type": "application/json", "host": "localhost"],
             body: .string("{}"),
-            date: AWSSigner.timestamp(Date(timeIntervalSince1970: 234_873)),
+            date: Date(timeIntervalSince1970: 234_873).formatted(.iso8601),
             signer: signer
         )
         let request = signer.canonicalRequest(signingData: signingData)
@@ -238,7 +238,7 @@ final class AWSSignerTests {
             method: .POST,
             headers: ["Content-Type": "application/json", "host": "localhost", "header": "my  header"],
             body: .string("{}"),
-            date: AWSSigner.timestamp(Date(timeIntervalSince1970: 234_873)),
+            date: Date(timeIntervalSince1970: 234_873).formatted(.iso8601),
             signer: signer
         )
         let request = signer.canonicalRequest(signingData: signingData)

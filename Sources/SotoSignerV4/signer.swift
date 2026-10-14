@@ -213,7 +213,7 @@ public struct AWSSigner: Sendable {
         // Construct query string. Start with original query strings and append all the signing info.
         var query = url.query ?? ""
         if query.count > 0 {
-            query = query + "&"
+            query += "&"
         }
         query += "X-Amz-Algorithm=\(algorithm.name)"
         switch algorithm.base {
@@ -295,7 +295,7 @@ public struct AWSSigner: Sendable {
         algorithm: Algorithm
     ) -> (headers: HTTPHeaders, signingData: ChunkedSigningData) {
         let bodyHash = AWSSigner.hashedPayload(.s3chunked)
-        let dateString = Self.timestamp(date)
+        let dateString = AWSSigner.timestamp(date)
         var headers = headers
         // add date, host, sha256 and if available security token headers
         headers.add(name: "host", value: Self.hostname(from: url))
@@ -463,7 +463,6 @@ public struct AWSSigner: Sendable {
         let canonicalRequest =
             "\(signingData.method.rawValue)\n" + "\(canonicalPath)\n" + "\(signingData.unsignedURL.query ?? "")\n"  // assuming query parameters have are already percent encoded correctly
             + "\(canonicalHeaders)\n\n" + "\(signingData.signedHeaders)\n" + signingData.hashedPayload
-        print(canonicalRequest)
         return canonicalRequest
     }
 
@@ -557,20 +556,14 @@ extension String {
     func uriPathEncode() -> String {
         self.addingAWSPercentEncoding(forURLComponent: .uriEncodePath)
     }
-
-    static let s3PathAllowedCharacters = CharacterSet.urlPathAllowed.subtracting(.init(charactersIn: "+@()&$=:,'!*"))
-    static let uriAllowedWithSlashCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~/")
-    static let uriAllowedCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
-    static let queryAllowedCharacters = CharacterSet(charactersIn: "/;+").inverted
 }
 
-@_spi(SotoInternal)
 extension URL {
     /// return URL path, but do not remove the slash at the end if it exists.
     ///
     /// There doesn't seem to be anyway to do this without parsing the path myself
     /// If I could guarantee macOS 10.11 then I could use `hasDirectoryPath`.
-    public var pathWithSlash: String {
+    package var pathWithSlash: String {
         let relativeString = self.relativeString
         let doesPathEndInSlash: Bool
         // does path end in "/"

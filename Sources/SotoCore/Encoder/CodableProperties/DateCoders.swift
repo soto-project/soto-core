@@ -95,6 +95,30 @@ public struct HTTPHeaderDateCoder: DateFormatCoder {
     public static let dateFormatter = createDateFormatter()
 }
 
+/// Date coder for ISO8601 format
+@available(macOS 13.0, *)
+public struct ISO8601DateCoderV2: CustomDecoder, CustomEncoder {
+    public typealias CodableValue = Date
+
+    public static func decode(from decoder: Decoder) throws -> CodableValue {
+        let container = try decoder.singleValueContainer()
+        let value = try container.decode(String.self)
+        guard let date = Date(iso8601: value) else {
+            throw DecodingError.typeMismatch(Date.self, .init(codingPath: decoder.codingPath, debugDescription: "Invalid Date string"))
+        }
+        return date
+    }
+
+    public static func encode(value: CodableValue, to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(value.iso8601)
+    }
+
+    public static func string(from value: Date) -> String? {
+        value.iso8601
+    }
+}
+
 /// Unix Epoch Date coder
 public struct UnixEpochDateCoder: CustomDecoder, CustomEncoder {
     public typealias CodableValue = Date

@@ -57,7 +57,7 @@ public struct CredentialProcessProvider: CredentialProvider {
         }
 
         if let expirationString = decoded.expiration {
-            guard let date = parseISO8601Date(expirationString) else {
+            guard let date = Date(iso8601: expirationString) else {
                 throw CredentialProcessError.invalidExpiration
             }
             return RotatingCredential(

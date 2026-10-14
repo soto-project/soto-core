@@ -32,3 +32,10 @@ This product contains a copy of base64.swift from swift-extras-base64
     * https://github.com/swift-extras/swift-extras-base64/blob/main/LICENSE
   * HOMEPAGE:
     * https://github.com/swift-extras/swift-extras-base64
+
+This product contains code from swift-foundation.
+
+  * LICENSE (MIT):
+    * https://github.com/swiftlang/swift-foundation/blob/main/LICENSE.md
+  * HOMEPAGE:
+    * https://github.com/swiftlang/swift-foundation/

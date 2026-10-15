@@ -208,14 +208,12 @@ package struct AWSURLComponentSet: OptionSet {
     static package var query: AWSURLComponentSet { .init(rawValue: 1 << 2) }
     /// Standard URI query item allowed characters
     static package var queryItem: AWSURLComponentSet { .init(rawValue: 1 << 3) }
+    /// Unreserved characters ALPHA+DIGIT+"-._~"
+    static package var unreserved: AWSURLComponentSet { .init(rawValue: 1 << 4) }
     /// AWS signing encoding allowed characters
-    static package var uriEncode: AWSURLComponentSet { .init(rawValue: 1 << 4) }
+    static package var uriEncode: AWSURLComponentSet { .unreserved }
     /// AWS signing path encoding allowed characters
     static package var uriEncodePath: AWSURLComponentSet { .init(rawValue: 1 << 5) }
-    //static let s3PathAllowedCharacters = CharacterSet.urlPathAllowed.subtracting(.init(charactersIn: "+@()&$=:,'!*"))
-    //static let uriAllowedWithSlashCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~/")
-    //static let uriAllowedCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
-    //static let queryAllowedCharacters = CharacterSet(charactersIn: "/;+").inverted
 }
 
 extension UTF8.CodeUnit {

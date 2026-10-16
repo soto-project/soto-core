@@ -62,8 +62,6 @@ public struct AWSSigner: Sendable {
 
     static let hashedEmptyBody = SHA256.hash(data: [UInt8]()).hexDigest()
 
-    private static let timeStampDateFormatter: DateFormatter = createTimeStampDateFormatter()
-
     /// Initialise the Signer class with AWS credentials
     public init(credentials: Credential, name: String, region: String) {
         self.credentials = credentials
@@ -515,18 +513,27 @@ public struct AWSSigner: Sendable {
         }
     }
 
-    /// create timestamp dateformatter
-    private static func createTimeStampDateFormatter() -> DateFormatter {
+    #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS) || os(visionOS)
+    private static let timeStampDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyyMMdd'T'HHmmss'Z'"
         formatter.timeZone = TimeZone(abbreviation: "UTC")
         formatter.locale = Locale(identifier: "en_US_POSIX")
         return formatter
-    }
+    }()
+    #endif
 
     /// return a timestamp formatted for signing requests
     static func timestamp(_ date: Date) -> String {
-        self.timeStampDateFormatter.string(from: date)
+        #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS) || os(visionOS)
+        if #available(macOS 12, iOS 15, tvOS 15, watchOS 8, *) {
+            Date.ISO8601FormatStyle().dateSeparator(.omitted).timeSeparator(.omitted).format(date)
+        } else {
+            self.timeStampDateFormatter.string(from: date)
+        }
+        #else
+        Date.ISO8601FormatStyle().dateSeparator(.omitted).timeSeparator(.omitted).format(date)
+        #endif
     }
 
     /// returns port from URL. If port is set to 80 on an http url or 443 on an https url nil is returned

@@ -54,9 +54,7 @@ public struct AWSHTTPResponse: Sendable {
         switch serviceProtocol {
         case .json, .restjson:
             let payloadData: Data
-            if self.isHypertextApplicationLanguage {
-                payloadData = try self.getHypertextApplicationLanguageDictionary()
-            } else if let payload, payload.readableBytes > 0 {
+            if let payload, payload.readableBytes > 0 {
                 payloadData = Data(buffer: payload, byteTransferStrategy: .noCopy)
             } else {
                 payloadData = Data("{}".utf8)

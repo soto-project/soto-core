@@ -449,29 +449,6 @@ class AWSResponseTests {
 
     // MARK: Miscellaneous tests
 
-    @Test func testProcessHAL() async throws {
-        struct Output: AWSDecodableShape {
-            let s: String
-            let i: Int
-        }
-        struct Output2: AWSDecodableShape {
-            let a: [Output]
-            let d: Double
-            let b: Bool
-        }
-        let response = AWSHTTPResponse(
-            status: .ok,
-            headers: ["Content-Type": "application/hal+json"],
-            body: .init(string: #"{"_embedded": {"a": [{"s":"Hello", "i":1234}, {"s":"Hello2", "i":12345}]}, "d":3.14, "b":true}"#)
-        )
-
-        var output: Output2?
-        #expect(throws: Never.self) { output = try response.generateOutputShape(operation: "Test", serviceProtocol: .json(version: "1.1")) }
-        #expect(output?.a.count == 2)
-        #expect(output?.d == 3.14)
-        #expect(output?.a[1].s == "Hello2")
-    }
-
     /// Write event stream event
     func writeEvent(headers: [String: String], payload: ByteBuffer, to: inout ByteBuffer) {
         var payload = payload

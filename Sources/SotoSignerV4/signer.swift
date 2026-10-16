@@ -452,7 +452,7 @@ public struct AWSSigner: Sendable {
         let canonicalHeaders = signingData.headersToSign
             .map { (key: $0.key.lowercased(), value: $0.value) }
             .sorted { $0.key < $1.key }
-            .map { "\($0.key):\($0.value.trimmingCharacters(in: CharacterSet.whitespaces).removeSequentialWhitespace())" }
+            .map { "\($0.key):\($0.value._trimming(while: \.isWhitespace).removeSequentialWhitespace())" }
             .joined(separator: "\n")
         let canonicalPath: String
         let urlComps = URLComponents(url: signingData.unsignedURL, resolvingAgainstBaseURL: false)!
@@ -593,12 +593,21 @@ extension URL {
     }
 }
 
-extension String {
+extension StringProtocol {
+    /// Remove whitespace that follows whitespace
     fileprivate func removeSequentialWhitespace() -> String {
         reduce(into: "") { result, character in
             if result.last?.isWhitespace != true || character.isWhitespace == false {
                 result.append(character)
             }
         }
+    }
+
+    /// Version of String.trimmingCharacters which returns a SubSequence
+    fileprivate func _trimming(while predicate: (Element) throws -> Bool) rethrows -> SubSequence {
+        guard let startIndex = try self.firstIndex(where: { try !predicate($0) }) else { return self[self.startIndex..<self.startIndex] }
+        guard try self.last.map(predicate) == true else { return self[startIndex...] }
+        guard let endIndex = try self.lastIndex(where: predicate) else { return self[self.startIndex..<self.startIndex] }
+        return self[startIndex..<endIndex]
     }
 }

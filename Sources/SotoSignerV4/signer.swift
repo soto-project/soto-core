@@ -61,8 +61,6 @@ public struct AWSSigner: Sendable {
 
     static let hashedEmptyBody = SHA256.hash(data: [UInt8]()).hexDigest()
 
-    private static let timeStampDateFormatter: DateFormatter = createTimeStampDateFormatter()
-
     /// Initialise the Signer class with AWS credentials
     public init(credentials: Credential, name: String, region: String) {
         self.credentials = credentials
@@ -450,7 +448,7 @@ public struct AWSSigner: Sendable {
         let canonicalHeaders = signingData.headersToSign
             .map { (key: $0.key.lowercased(), value: $0.value) }
             .sorted { $0.key < $1.key }
-            .map { "\($0.key):\($0.value.trimmingCharacters(in: CharacterSet.whitespaces).removeSequentialWhitespace())" }
+            .map { "\($0.key):\($0.value._trimming(while: \.isWhitespace).removeSequentialWhitespace())" }
             .joined(separator: "\n")
         let canonicalPath: String
         let urlComps = URLComponents(url: signingData.unsignedURL, resolvingAgainstBaseURL: false)!
@@ -513,18 +511,27 @@ public struct AWSSigner: Sendable {
         }
     }
 
-    /// create timestamp dateformatter
-    private static func createTimeStampDateFormatter() -> DateFormatter {
+    #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS) || os(visionOS)
+    private static let timeStampDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyyMMdd'T'HHmmss'Z'"
         formatter.timeZone = TimeZone(abbreviation: "UTC")
         formatter.locale = Locale(identifier: "en_US_POSIX")
         return formatter
-    }
+    }()
+    #endif
 
     /// return a timestamp formatted for signing requests
     static func timestamp(_ date: Date) -> String {
-        self.timeStampDateFormatter.string(from: date)
+        #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS) || os(visionOS)
+        if #available(macOS 12, iOS 15, tvOS 15, watchOS 8, *) {
+            Date.ISO8601FormatStyle().dateSeparator(.omitted).timeSeparator(.omitted).format(date)
+        } else {
+            self.timeStampDateFormatter.string(from: date)
+        }
+        #else
+        Date.ISO8601FormatStyle().dateSeparator(.omitted).timeSeparator(.omitted).format(date)
+        #endif
     }
 
     /// returns port from URL. If port is set to 80 on an http url or 443 on an https url nil is returned
@@ -585,12 +592,21 @@ extension URL {
     }
 }
 
-extension String {
+extension StringProtocol {
+    /// Remove whitespace that follows whitespace
     fileprivate func removeSequentialWhitespace() -> String {
         reduce(into: "") { result, character in
             if result.last?.isWhitespace != true || character.isWhitespace == false {
                 result.append(character)
             }
         }
+    }
+
+    /// Version of String.trimmingCharacters which returns a SubSequence
+    fileprivate func _trimming(while predicate: (Element) throws -> Bool) rethrows -> SubSequence {
+        guard let startIndex = try self.firstIndex(where: { try !predicate($0) }) else { return self[self.startIndex..<self.startIndex] }
+        guard try self.last.map(predicate) == true else { return self[startIndex...] }
+        guard let endIndex = try self.lastIndex(where: predicate) else { return self[self.startIndex..<self.startIndex] }
+        return self[startIndex..<endIndex]
     }
 }

@@ -12,9 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-// TODO: FoundationEssentials (HTTP header date format style)
-import Foundation
 import NIOConcurrencyHelpers
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// Decoding error returned when extracting data out of response headers
 public struct HeaderDecodingError: Error {
@@ -97,12 +101,7 @@ public struct ResponseDecodingContainer: Sendable {
     @inlinable
     public func decodeHeaderIfPresent(_ type: Date.Type = Date.self, key header: String) throws -> Date? {
         guard let headerValue = response.headers[header].first else { return nil }
-        // TODO: // Don't keep creating a DateFormatter
-        let dateFormatter = DateFormatter()
-        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-        dateFormatter.dateFormat = "EEE, d MMM yyy HH:mm:ss z"
-        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-        if let result = dateFormatter.date(from: headerValue) {
+        if let result = Date(httpHeader: headerValue) {
             return result
         } else {
             throw HeaderDecodingError.typeMismatch(header, expectedType: "Date")

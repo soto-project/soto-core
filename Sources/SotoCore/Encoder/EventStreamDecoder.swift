@@ -12,10 +12,14 @@
 //
 //===----------------------------------------------------------------------===//
 
-// TODO: FoundationEssentials (HTTP header date format style)
-import Foundation
 import NIOCore
 internal import SotoXML
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// Event stream decoder. Decodes top level `:event-type` header and then passes the payload
 /// to another decoder based off the `:content-type` header
@@ -269,12 +273,7 @@ public struct EventDecodingContainer: Sendable {
     @inlinable
     public func decodeHeaderIfPresent(_ type: Date.Type = Date.self, key header: String) throws -> Date? {
         guard let headerValue = self.headers[header] else { return nil }
-        // TODO: // Don't keep creating a DateFormatter
-        let dateFormatter = DateFormatter()
-        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-        dateFormatter.dateFormat = "EEE, d MMM yyy HH:mm:ss z"
-        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-        if let result = dateFormatter.date(from: headerValue) {
+        if let result = Date(httpHeader: headerValue) {
             return result
         } else {
             throw HeaderDecodingError.typeMismatch(header, expectedType: "Date")

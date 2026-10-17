@@ -12,8 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-// TODO: FoundationEssentials. (NSRegularExpression)
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Protocol for the input and output objects for all AWS service commands.
 ///
@@ -123,11 +126,29 @@ extension AWSEncodableShape {
     }
 
     public func validate(_ value: String, name: String, parent: String, pattern: String) throws {
-        let regularExpression = try NSRegularExpression(pattern: pattern, options: [])
-        let nsRange = NSRange(value.startIndex..<value.endIndex, in: value)
-        let firstMatch = regularExpression.rangeOfFirstMatch(in: value, options: .anchored, range: nsRange)
-        guard firstMatch.location != NSNotFound, firstMatch.length > 0 else {
-            throw Self.validationError("\(parent).\(name) (\(value)) does not match pattern \(pattern).")
+        #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+        if #available(macOS 13, iOS 16, tvOS 16, watchOS 9, *) {
+            let regex = try Regex(pattern)
+            try self.validate(value, name: name, parent: parent, regex: regex)
+        } else {
+            let regularExpression = try NSRegularExpression(pattern: pattern, options: [])
+            let nsRange = NSRange(value.startIndex..<value.endIndex, in: value)
+            let firstMatch = regularExpression.rangeOfFirstMatch(in: value, options: .anchored, range: nsRange)
+            guard firstMatch.location != NSNotFound, firstMatch.length > 0 else {
+                throw Self.validationError("\(parent).\(name) (\(value)) does not match pattern \(pattern).")
+            }
+        }
+        #else
+        let regex = try Regex(pattern)
+        try self.validate(value, name: name, parent: parent, regex: regex)
+        #endif
+    }
+
+    @available(macOS 13, iOS 16, tvOS 16, watchOS 9, *)
+    public func validate<Output>(_ value: String, name: String, parent: String, regex: Regex<Output>) throws {
+        let match = value.firstMatch(of: regex)
+        guard match != nil else {
+            throw Self.validationError("\(parent).\(name) (\(value)) does not match pattern \(regex).")
         }
     }
 
@@ -185,6 +206,12 @@ extension AWSEncodableShape {
     public func validate(_ value: String?, name: String, parent: String, pattern: String) throws {
         guard let value else { return }
         try self.validate(value, name: name, parent: parent, pattern: pattern)
+    }
+
+    @available(macOS 13, iOS 16, tvOS 16, watchOS 9, *)
+    public func validate<Output>(_ value: String?, name: String, parent: String, regex: Regex<Output>) throws {
+        guard let value else { return }
+        try self.validate(value, name: name, parent: parent, regex: regex)
     }
 }
 

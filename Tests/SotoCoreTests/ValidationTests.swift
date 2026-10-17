@@ -18,22 +18,22 @@ import Testing
 
 class ValidationTests {
     /// test validation
-    func testValidationFail(_ shape: any AWSEncodableShape) {
+    func testValidationFail(_ shape: any AWSEncodableShape, sourceLocation: SourceLocation = #_sourceLocation) {
         do {
             try shape.validate()
-            Issue.record()
+            Issue.record("Validation should fail", sourceLocation: sourceLocation)
         } catch let error as AWSClientError where error == AWSClientError.validationError {
             print(error.message ?? "")
         } catch {
-            Issue.record(error)
+            Issue.record(error, sourceLocation: sourceLocation)
         }
     }
 
-    func testValidationSuccess(_ shape: any AWSEncodableShape) {
+    func testValidationSuccess(_ shape: any AWSEncodableShape, sourceLocation: SourceLocation = #_sourceLocation) {
         do {
             try shape.validate()
         } catch {
-            Issue.record(error)
+            Issue.record(error, sourceLocation: sourceLocation)
         }
     }
 
@@ -126,7 +126,42 @@ class ValidationTests {
             let path: String
 
             public func validate(name: String) throws {
-                try self.validate(self.path, name: "path", parent: name, pattern: "((/[A-Za-z0-9\\.,\\+@=_-]+)*)/")
+                try self.validate(self.path, name: "path", parent: name, pattern: "((/[A-Za-z0-9\\.,\\+@=_-]+)+)/")
+            }
+        }
+        let a1 = A(path: "/hello/test/")
+        self.testValidationSuccess(a1)
+        let a2 = A(path: "hello/test")
+        self.testValidationFail(a2)
+        let a3 = A(path: "hello\\test")
+        self.testValidationFail(a3)
+        // this shouldn't really work but I had to limit it to finding a match, not the whole string matching. MediaConvert seems to assume that is it finding a match
+        let a4 = A(path: "/%hello/test/")
+        self.testValidationSuccess(a4)
+    }
+
+    @Test func testRegexValidation() {
+        struct A: AWSEncodableShape {
+            let string: String?
+
+            public func validate(name: String) throws {
+                try self.validate(self.string, name: "string", parent: name, regex: /^[A-Za-z]{3}$/)
+            }
+        }
+        let a1 = A(string: "abc")
+        self.testValidationSuccess(a1)
+        let a2 = A(string: "abcd")
+        self.testValidationFail(a2)
+        let a3 = A(string: "a-c")
+        self.testValidationFail(a3)
+    }
+
+    @Test func testRegex2Validation() {
+        struct A: AWSEncodableShape {
+            let path: String
+
+            public func validate(name: String) throws {
+                try self.validate(self.path, name: "path", parent: name, regex: /((\/[A-Za-z0-9\\.,\\+@=_-]+)+)\//)
             }
         }
         let a1 = A(path: "/hello/test/")

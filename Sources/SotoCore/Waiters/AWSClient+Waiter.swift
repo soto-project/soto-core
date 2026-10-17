@@ -30,7 +30,7 @@ import Android
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else
-import protocol Foundation.ContiguousBytes
+import Foundation
 #endif
 
 // MARK: Waiters

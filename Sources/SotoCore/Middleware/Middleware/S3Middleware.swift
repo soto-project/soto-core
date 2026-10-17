@@ -13,10 +13,14 @@
 //===----------------------------------------------------------------------===//
 
 import Crypto
-// TODO: FoundationEssentials (percent encode)
-import Foundation
-@_spi(SotoInternal) import SotoSignerV4
+import SotoSignerV4
 internal import SotoXML
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 extension S3Middleware {
     @TaskLocal public static var executionContext: ExecutionContext?
@@ -255,10 +259,10 @@ public struct S3Middleware: AWSMiddlewareProtocol {
         return request
     }
 
-    static let s3PathAllowedCharacters = CharacterSet.urlPathAllowed.subtracting(.init(charactersIn: "+@()&$=:,'!*"))
     /// percent encode path value.
     private static func urlEncodePath(_ value: some StringProtocol) -> String {
-        value.addingPercentEncoding(withAllowedCharacters: Self.s3PathAllowedCharacters) ?? String(value)
+        /// S3Paths can only include reserved characters (ALPHA + DIGIT + "-._~/")
+        value.addingAWSPercentEncoding(forURLComponent: .s3Path)
     }
 
     func createBucketFixup(request: inout AWSHTTPRequest, context: AWSMiddlewareContext) {

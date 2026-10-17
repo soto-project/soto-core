@@ -14,16 +14,12 @@
 
 import Logging
 import NIOHTTP1
-@_spi(SotoInternal) import SotoSignerV4
+import SotoSignerV4
 
-import struct Foundation.Date
-import struct Foundation.TimeInterval
-import struct Foundation.URL
-
-#if os(Linux)
-@preconcurrency import struct Foundation.CharacterSet
+#if canImport(FoundationEssentials)
+import FoundationEssentials
 #else
-import struct Foundation.CharacterSet
+import Foundation
 #endif
 
 /// Middleware that runs an endpoint discovery function  to set service endpoint
@@ -87,9 +83,8 @@ public struct EndpointDiscoveryMiddleware: AWSMiddlewareProtocol {
         }
     }
 
-    let pathAllowedCharacters = CharacterSet.urlPathAllowed.subtracting(.init(charactersIn: "+@()&$=:,'!*"))
     /// percent encode path value.
     private func urlEncodePath(_ value: String) -> String {
-        value.addingPercentEncoding(withAllowedCharacters: self.pathAllowedCharacters) ?? value
+        value.addingAWSPercentEncoding(forURLComponent: .path)
     }
 }

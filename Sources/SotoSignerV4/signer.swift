@@ -13,8 +13,12 @@
 //===----------------------------------------------------------------------===//
 
 import Crypto
-// TODO: FoundationEssentials (percent encoding)
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Amazon Web Services V4 Signer
 public struct AWSSigner: Sendable {
@@ -133,7 +137,7 @@ public struct AWSSigner: Sendable {
         date: Date = Date()
     ) -> HTTPHeaders {
         let bodyHash = AWSSigner.hashedPayload(body)
-        let dateString = AWSSigner.timestamp(date)
+        let dateString = Self.timestamp(date)
         var headers = headers
         // add date, host, sha256 and if available security token headers
         headers.replaceOrAdd(name: "host", value: Self.hostname(from: url))
@@ -208,7 +212,7 @@ public struct AWSSigner: Sendable {
             headers.replaceOrAdd(name: "X-Amz-Region-Set", value: self.region)
         }
         // Create signing data
-        var signingData = AWSSigner.SigningData(url: url, method: method, headers: headers, body: body, date: AWSSigner.timestamp(date), signer: self)
+        var signingData = AWSSigner.SigningData(url: url, method: method, headers: headers, body: body, date: Self.timestamp(date), signer: self)
         // Construct query string. Start with original query strings and append all the signing info.
         var query = url.query ?? ""
         if query.count > 0 {
@@ -217,15 +221,15 @@ public struct AWSSigner: Sendable {
         query += "X-Amz-Algorithm=\(algorithm.name)"
         switch algorithm.base {
         case .sigV4:
-            query += "&X-Amz-Credential=\(self.credentials.accessKeyId)/\(signingData.date)/\(self.region)/\(self.name)/aws4_request"
+            query += "&X-Amz-Credential=\(self.credentials.accessKeyId)%2F\(signingData.date)%2F\(self.region)%2F\(self.name)%2Faws4_request"
         case .sigV4a:
-            query += "&X-Amz-Credential=\(self.credentials.accessKeyId)/\(signingData.date)/\(self.name)/aws4_request"
+            query += "&X-Amz-Credential=\(self.credentials.accessKeyId)%2F\(signingData.date)%2F\(self.name)%2Faws4_request"
             query += "&X-Amz-Region-Set=\(self.region)"
         }
 
         query += "&X-Amz-Date=\(signingData.datetime)"
         query += "&X-Amz-Expires=\(expires.nanoseconds / 1_000_000_000)"
-        query += "&X-Amz-SignedHeaders=\(signingData.signedHeaders)"
+        query += "&X-Amz-SignedHeaders=\(signingData.signedHeaders.uriEncode())"
         if !omitSecurityToken, let sessionToken = credentials.sessionToken {
             query += "&X-Amz-Security-Token=\(sessionToken.uriEncode())"
         }
@@ -233,7 +237,6 @@ public struct AWSSigner: Sendable {
         query = query.split(separator: "&")
             .sorted()
             .joined(separator: "&")
-            .queryEncode()
 
         // update unsignedURL in the signingData so when the canonical request is constructed it includes all the signing query items
         signingData.unsignedURL = URL(string: url.absoluteString.split(separator: "?")[0] + "?" + query)!  // NEED TO DEAL WITH SITUATION WHERE THIS FAILS
@@ -455,10 +458,10 @@ public struct AWSSigner: Sendable {
         let canonicalPath: String
         let urlComps = URLComponents(url: signingData.unsignedURL, resolvingAgainstBaseURL: false)!
         if self.name == "s3" {
-            canonicalPath = urlComps.path.uriEncodeWithSlash()
+            canonicalPath = urlComps.path.uriPathEncode()
         } else {
             // non S3 paths need to be encoded twice
-            canonicalPath = urlComps.percentEncodedPath.uriEncodeWithSlash()
+            canonicalPath = urlComps.percentEncodedPath.uriPathEncode()
         }
         let canonicalRequest =
             "\(signingData.method.rawValue)\n" + "\(canonicalPath)\n" + "\(signingData.unsignedURL.query ?? "")\n"  // assuming query parameters have are already percent encoded correctly
@@ -550,35 +553,29 @@ public struct AWSSigner: Sendable {
 }
 
 extension String {
-    func queryEncode() -> String {
-        addingPercentEncoding(withAllowedCharacters: String.queryAllowedCharacters) ?? self
+    func s3PathEncode() -> String {
+        self.addingAWSPercentEncoding(forURLComponent: .s3Path)
     }
 
-    func s3PathEncode() -> String {
-        addingPercentEncoding(withAllowedCharacters: String.s3PathAllowedCharacters) ?? self
+    func queryEncode() -> String {
+        self.addingAWSPercentEncoding(forURLComponent: .query)
     }
 
     func uriEncode() -> String {
-        addingPercentEncoding(withAllowedCharacters: String.uriAllowedCharacters) ?? self
+        self.addingAWSPercentEncoding(forURLComponent: .uriEncode)
     }
 
-    func uriEncodeWithSlash() -> String {
-        addingPercentEncoding(withAllowedCharacters: String.uriAllowedWithSlashCharacters) ?? self
+    func uriPathEncode() -> String {
+        self.addingAWSPercentEncoding(forURLComponent: .uriEncodePath)
     }
-
-    static let s3PathAllowedCharacters = CharacterSet.urlPathAllowed.subtracting(.init(charactersIn: "+@()&$=:,'!*"))
-    static let uriAllowedWithSlashCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~/")
-    static let uriAllowedCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
-    static let queryAllowedCharacters = CharacterSet(charactersIn: "/;+").inverted
 }
 
-@_spi(SotoInternal)
 extension URL {
     /// return URL path, but do not remove the slash at the end if it exists.
     ///
     /// There doesn't seem to be anyway to do this without parsing the path myself
     /// If I could guarantee macOS 10.11 then I could use `hasDirectoryPath`.
-    public var pathWithSlash: String {
+    package var pathWithSlash: String {
         let relativeString = self.relativeString
         let doesPathEndInSlash: Bool
         // does path end in "/"

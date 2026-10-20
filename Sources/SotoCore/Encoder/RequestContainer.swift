@@ -308,7 +308,7 @@ public final class RequestEncodingContainer: Sendable {
 
     /// percent encode query parameter value.
     internal static func urlEncodeQueryParam(_ value: String) -> String {
-        value.addingAWSPercentEncoding(forURLComponent: .unreserved)
+        value.addingAWSPercentEncoding(forURLComponent: .uriEncode)
     }
 
     /// percent encode path value.
@@ -320,7 +320,7 @@ public final class RequestEncodingContainer: Sendable {
     /// percent encode path component value. ie also encode "/"
     @usableFromInline
     internal static func urlEncodePathComponent(_ value: String) -> String {
-        value.addingAWSPercentEncoding(forURLComponent: .unreserved)
+        value.addingAWSPercentEncoding(forURLComponent: .pathComponent)
     }
 }
 

@@ -43,9 +43,31 @@ struct PercentEncodeTests {
         ("ABC", "ABC"),
         ("8903", "8903"),
         ("~._-", "~._-"),
+        ("!@$%^&*()/", "!@$%25%5E&*()%2F"),
+    ])
+    func pathComponentEncode(original: String, encoded: String) {
+        #expect(original.addingAWSPercentEncoding(forURLComponent: .pathComponent) == encoded)
+    }
+
+    @Test(arguments: [
+        ("abc", "abc"),
+        ("ABC", "ABC"),
+        ("8903", "8903"),
+        ("~._-", "~._-"),
+        ("!@$%^&*()/", "!@$%25%5E&*()/"),
+    ])
+    func pathEncode(original: String, encoded: String) {
+        #expect(original.addingAWSPercentEncoding(forURLComponent: .path) == encoded)
+    }
+
+    @Test(arguments: [
+        ("abc", "abc"),
+        ("ABC", "ABC"),
+        ("8903", "8903"),
+        ("~._-", "~._-"),
         ("!@$%^&*()/", "%21%40%24%25%5E%26%2A%28%29/"),
     ])
     func s3PathEncode(original: String, encoded: String) {
-        #expect(original.addingAWSPercentEncoding(forURLComponent: .uriEncodePath) == encoded)
+        #expect(original.addingAWSPercentEncoding(forURLComponent: .s3Path) == encoded)
     }
 }

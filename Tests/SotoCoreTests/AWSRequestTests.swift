@@ -520,7 +520,7 @@ class AWSRequestTests {
         let config = createServiceConfig(endpoint: "https://test.com")
         var request: AWSHTTPRequest?
         #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config) }
-        #expect(request?.url == URL(string: "https://test.com/?date=Sun%2C%2026%20Apr%201970%2017%3A46%3A40%20GMT")!)
+        #expect(request?.url.absoluteString == "https://test.com/?date=Sun%2C%2026%20Apr%201970%2017%3A46%3A40%20GMT")
     }
 
     /// JSON POST request require a body even if there is no data to POST

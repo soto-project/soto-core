@@ -283,16 +283,27 @@ public final class RequestEncodingContainer: Sendable {
     /// Write value into URI path
     @inlinable
     public func encodePath(_ value: some Any, key: String) {
-        self.path = self.path
-            .replacingOccurrences(of: "{\(key)}", with: Self.urlEncodePathComponent(String(describing: value)))
-            .replacingOccurrences(of: "{\(key)+}", with: Self.urlEncodePath(String(describing: value)))
+        if #available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *) {
+            self.path = self.path
+                .replacing("{\(key)}", with: Self.urlEncodePathComponent(String(describing: value)))
+                .replacing("{\(key)+}", with: Self.urlEncodePath(String(describing: value)))
+        } else {
+            self.path = self.path
+                .replacingOccurrences(of: "{\(key)}", with: Self.urlEncodePathComponent(String(describing: value)))
+                .replacingOccurrences(of: "{\(key)+}", with: Self.urlEncodePath(String(describing: value)))
+        }
     }
 
     /// Write value into hostname
     @inlinable
     public func encodeHostPrefix(_ value: some Any, key: String) {
-        self.hostPrefix = self.hostPrefix?
-            .replacingOccurrences(of: "{\(key)}", with: Self.urlEncodePathComponent(String(describing: value)))
+        if #available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *) {
+            self.hostPrefix = self.hostPrefix?
+                .replacing("{\(key)}", with: Self.urlEncodePathComponent(String(describing: value)))
+        } else {
+            self.hostPrefix = self.hostPrefix?
+                .replacingOccurrences(of: "{\(key)}", with: Self.urlEncodePathComponent(String(describing: value)))
+        }
     }
 
     /// percent encode query parameter value.

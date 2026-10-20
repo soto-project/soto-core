@@ -12,8 +12,14 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import NIOConcurrencyHelpers
+import SotoSignerV4
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// Request container used during Codable `encode(to:)` that allows for encoding data into
 /// the request that is not part of standard Codable output
@@ -291,27 +297,20 @@ public final class RequestEncodingContainer: Sendable {
 
     /// percent encode query parameter value.
     internal static func urlEncodeQueryParam(_ value: String) -> String {
-        value.addingPercentEncoding(withAllowedCharacters: Self.queryAllowedCharacters) ?? value
+        value.addingAWSPercentEncoding(forURLComponent: .unreserved)
     }
 
     /// percent encode path value.
     @usableFromInline
     internal static func urlEncodePath(_ value: String) -> String {
-        value.addingPercentEncoding(withAllowedCharacters: Self.pathAllowedCharacters) ?? value
+        value.addingAWSPercentEncoding(forURLComponent: .path)
     }
 
     /// percent encode path component value. ie also encode "/"
     @usableFromInline
     internal static func urlEncodePathComponent(_ value: String) -> String {
-        value.addingPercentEncoding(withAllowedCharacters: Self.pathComponentAllowedCharacters) ?? value
+        value.addingAWSPercentEncoding(forURLComponent: .unreserved)
     }
-
-    /// this list of query allowed characters comes from https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html
-    static let queryAllowedCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
-    @usableFromInline
-    static let pathAllowedCharacters = CharacterSet.urlPathAllowed.subtracting(.init(charactersIn: "+"))
-    @usableFromInline
-    static let pathComponentAllowedCharacters = CharacterSet.urlPathAllowed.subtracting(.init(charactersIn: "+/"))
 }
 
 extension CodingUserInfoKey {

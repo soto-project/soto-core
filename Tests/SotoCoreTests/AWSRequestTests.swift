@@ -470,17 +470,17 @@ class AWSRequestTests {
 
             private enum CodingKeys: CodingKey {}
         }
-        let input = Input(path: "Test me/once+")
+        let input = Input(path: "Test me/once+?")
         let config = createServiceConfig(endpoint: "https://test.com")
         var request: AWSHTTPRequest?
         #expect(throws: Never.self) {
             request = try AWSHTTPRequest(operation: "Test", path: "/{path+}", method: .GET, input: input, configuration: config)
         }
-        #expect(request?.url == URL(string: "https://test.com/Test%20me/once%2B")!)
+        #expect(request?.url.absoluteString == "https://test.com/Test%20me/once+%3F")
         #expect(throws: Never.self) {
             request = try AWSHTTPRequest(operation: "Test", path: "/{path}", method: .GET, input: input, configuration: config)
         }
-        #expect(request?.url == URL(string: "https://test.com/Test%20me%2Fonce%2B")!)
+        #expect(request?.url.absoluteString == "https://test.com/Test%20me%2Fonce+%3F")
     }
 
     @Test func testSortedArrayQuery() {

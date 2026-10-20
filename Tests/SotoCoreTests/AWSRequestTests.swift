@@ -476,11 +476,11 @@ class AWSRequestTests {
         #expect(throws: Never.self) {
             request = try AWSHTTPRequest(operation: "Test", path: "/{path+}", method: .GET, input: input, configuration: config)
         }
-        #expect(request?.url.absoluteString == "https://test.com/Test%20me/once+%3F")
+        #expect(request?.url.absoluteString == "https://test.com/Test%20me/once%2B%3F")
         #expect(throws: Never.self) {
             request = try AWSHTTPRequest(operation: "Test", path: "/{path}", method: .GET, input: input, configuration: config)
         }
-        #expect(request?.url.absoluteString == "https://test.com/Test%20me%2Fonce+%3F")
+        #expect(request?.url.absoluteString == "https://test.com/Test%20me%2Fonce%2B%3F")
     }
 
     @Test func testSortedArrayQuery() {

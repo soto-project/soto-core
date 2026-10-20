@@ -200,20 +200,26 @@ package struct AWSURLComponentSet: OptionSet {
         self.rawValue = rawValue
     }
 
-    /// Standard URI path allowed characters
-    static package var path: AWSURLComponentSet { .init(rawValue: 1 << 0) }
-    /// S3 path allowed characters (based on allowed characters for S3 bucket)
-    static package var s3Path: AWSURLComponentSet { .init(rawValue: 1 << 1) }
-    /// Standard URI query allowed characters
-    static package var query: AWSURLComponentSet { .init(rawValue: 1 << 2) }
-    /// Standard URI query item allowed characters
-    static package var queryItem: AWSURLComponentSet { .init(rawValue: 1 << 3) }
+    /// Standard URI path component allowed characters
+    static package var pathComponent: AWSURLComponentSet { .init(rawValue: 1 << 0) }
+    /// Standard URI path separator
+    static package var forwardSlash: AWSURLComponentSet { .init(rawValue: 1 << 1) }
     /// Unreserved characters ALPHA+DIGIT+"-._~"
-    static package var unreserved: AWSURLComponentSet { .init(rawValue: 1 << 4) }
+    static package var unreserved: AWSURLComponentSet { .init(rawValue: 1 << 2) }
+    /// Standard URI query grammar characters
+    static package var queryGrammar: AWSURLComponentSet { .init(rawValue: 1 << 3) }
+    /// Standard URI query item allowed characters
+    static package var queryItem: AWSURLComponentSet { .init(rawValue: 1 << 4) }
+    /// Standard URI path allowed characters
+    static package var path: AWSURLComponentSet { [.pathComponent, .forwardSlash] }
+    /// S3 path allowed characters (based on allowed characters for S3 bucket)
+    static package var s3Path: AWSURLComponentSet { [.unreserved, .forwardSlash] }
+    /// Standard URI query allowed characters
+    static package var query: AWSURLComponentSet { [.queryItem, .queryGrammar] }
     /// AWS signing encoding allowed characters
     static package var uriEncode: AWSURLComponentSet { .unreserved }
     /// AWS signing path encoding allowed characters
-    static package var uriEncodePath: AWSURLComponentSet { .init(rawValue: 1 << 5) }
+    static package var uriEncodePath: AWSURLComponentSet { [.uriEncode, .forwardSlash] }
 }
 
 extension UTF8.CodeUnit {
@@ -222,15 +228,13 @@ extension UTF8.CodeUnit {
     }
 
     // ===------------------------------------------------------------------------------------=== //
-    // Grammar from RFC 3986:
+    // Grammar from RFC 3986 with '+' removed from accepted path characters
     //
     // let alpha       = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
     // let digit       = "0123456789"
     // let pct-encoded = DIGIT + "ABCDEFabcdef"
-    // let gen_delims  = ":/?#[]@"
-    // let sub_delims  = "!$&'()*+,;="
+    // let sub_delims  = "!$&'()*,;="
     // let unreserved  = ALPHA + DIGIT + "-._~"
-    // let reserved    = gen_delims + sub_delims
     //
     // let pchar = unreserved + pct-encoded + sub-delims + ":" + "@" + "%"
     // let path = pchar + "/"
@@ -241,49 +245,49 @@ extension UTF8.CodeUnit {
     fileprivate var allowedURLComponents: AWSURLComponentSet.RawValue {
         switch self {
         case UInt8(ascii: "!"):
-            return 0b00001101
+            return 0b00010001
         case UInt8(ascii: "$"):
-            return 0b00001101
+            return 0b00010001
         case UInt8(ascii: "&"):
-            return 0b00000101
+            return 0b00001001
         case UInt8(ascii: "'"):
-            return 0b00001101
+            return 0b00010001
         case UInt8(ascii: "("):
-            return 0b00001101
+            return 0b00010001
         case UInt8(ascii: ")"):
-            return 0b00001101
+            return 0b00010001
         case UInt8(ascii: "*"):
-            return 0b00001101
+            return 0b00010001
         case UInt8(ascii: "+"):
-            return 0b00001101
+            return 0b00000000
         case UInt8(ascii: ","):
-            return 0b00001101
+            return 0b00010001
         case UInt8(ascii: ":"):
             return 0b00000000
         case UInt8(ascii: ";"):
-            return 0b00001111
+            return 0b00010001
         case UInt8(ascii: "="):
-            return 0b00000101
+            return 0b00001001
         case UInt8(ascii: "?"):
-            return 0b00001100
+            return 0b00010000
         case UInt8(ascii: "@"):
-            return 0b00001101
+            return 0b00010001
         case UInt8(ascii: "0")...UInt8(ascii: "9"):
-            return 0b00111111
+            return 0b00110101
         case UInt8(ascii: "A")...UInt8(ascii: "Z"):
-            return 0b00111111
+            return 0b00110101
         case UInt8(ascii: "a")...UInt8(ascii: "z"):
-            return 0b00111111
+            return 0b00110101
         case UInt8(ascii: "."):
-            return 0b00111111
+            return 0b00110101
         case UInt8(ascii: "-"):
-            return 0b00111111
+            return 0b00110101
         case UInt8(ascii: "_"):
-            return 0b00111111
+            return 0b00110101
         case UInt8(ascii: "~"):
-            return 0b00111111
+            return 0b00110101
         case UInt8(ascii: "/"):
-            return 0b00101111
+            return 0b00010010
         default:
             return 0
         }

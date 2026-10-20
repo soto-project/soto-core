@@ -12,7 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// The wrapper struct for encoding Codable classes to Query dictionary
 public struct QueryEncoder {
@@ -47,11 +51,8 @@ public struct QueryEncoder {
         return Self.urlEncodeQueryParams(dictionary: result)
     }
 
-    // this list of query allowed characters comes from https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html
-    static let queryAllowedCharacters = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
-
     private static func urlEncodeQueryParam(_ value: String) -> String {
-        value.addingPercentEncoding(withAllowedCharacters: Self.queryAllowedCharacters) ?? value
+        value.addingAWSPercentEncoding(forURLComponent: .uriEncode)
     }
 
     // generate string from
@@ -378,7 +379,7 @@ extension _QueryEncoder: SingleValueEncodingContainer {
 
 extension _QueryEncoder {
     func box(_ date: Date) throws -> Any {
-        try self.encode(Self.dateFormatter.string(from: date))
+        try self.encode(date.iso8601)
         return self.storage.popContainer()
     }
 
@@ -391,12 +392,6 @@ extension _QueryEncoder {
             return self.storage.popContainer()
         }
     }
-
-    nonisolated(unsafe) static let dateFormatter: ISO8601DateFormatter = {
-        let dateFormatter = ISO8601DateFormatter()
-        dateFormatter.formatOptions = [.withFullDate, .withFullTime, .withFractionalSeconds]
-        return dateFormatter
-    }()
 }
 
 //===----------------------------------------------------------------------===//

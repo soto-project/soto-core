@@ -196,7 +196,7 @@ class TimeStampTests {
         struct A: AWSEncodableShape {
             @CustomCoding<ISO8601DateCoder> var date: Date
         }
-        let a = A(date: dateFormatter.date(from: "2019-05-01T00:00:00.001Z")!)
+        let a = A(date: dateFormatter.date(from: "2019-05-01T00:00:00.052Z")!)
         let request = try AWSHTTPRequest(
             operation: "test",
             path: "/",
@@ -205,7 +205,7 @@ class TimeStampTests {
             configuration: createServiceConfig(serviceProtocol: .restxml)
         )
 
-        #expect(request.body.asString() == "<?xml version=\"1.0\" encoding=\"UTF-8\"?><A><date>2019-05-01T00:00:00.001Z</date></A>")
+        #expect(request.body.asString() == "<?xml version=\"1.0\" encoding=\"UTF-8\"?><A><date>2019-05-01T00:00:00.052Z</date></A>")
     }
 
     @Test func testEncodeHTTPHeaderToJSON() async throws {
@@ -215,7 +215,7 @@ class TimeStampTests {
         let a = A(date: dateFormatter.date(from: "2019-05-01T00:00:00.001Z")!)
         let request = try AWSHTTPRequest(operation: "test", path: "/", method: .GET, input: a, configuration: createServiceConfig())
 
-        #expect(request.body.asString() == "{\"date\":\"Wed, 1 May 2019 00:00:00 GMT\"}")
+        #expect(request.body.asString() == "{\"date\":\"Wed, 01 May 2019 00:00:00 GMT\"}")
     }
 
     @Test func testEncodeUnixEpochToJSON() async throws {

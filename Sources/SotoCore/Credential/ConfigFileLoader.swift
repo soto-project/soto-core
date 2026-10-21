@@ -400,7 +400,7 @@ enum ConfigFileLoader {
                 wordfree(&wexp)
             }
 
-            guard let resolved = we_wordv[0], let pth = String(cString: resolved, encoding: .utf8) else {
+            guard let resolved = we_wordv[0], let pth = String(validatingCString: resolved) else {
                 return filePath
             }
 
@@ -410,7 +410,7 @@ enum ConfigFileLoader {
         // can not use wordexp on Apple OS's because for sandboxed application wexp.we_wordv == nil
         // wordexp does not exist on Android
         guard let home = getpwuid(getuid())?.pointee.pw_dir,
-            let homePath = String(cString: home, encoding: .utf8)
+            let homePath = String(validatingCString: home)
         else {
             return filePath
         }

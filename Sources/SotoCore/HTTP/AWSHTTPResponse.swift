@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+public import HTTPTypes
 import Logging
 import NIOCore
 import NIOFoundationEssentialsCompat
@@ -27,17 +28,13 @@ import Foundation
 
 /// Structure encapsulating an HTTP Response
 public struct AWSHTTPResponse: Sendable {
-    /// response status
-    public let status: HTTPResponseStatus
-    /// response headers
-    public var headers: HTTPHeaders
+    public let response: HTTPResponse
     /// response body
     public var body: AWSHTTPBody
 
     /// Initialize AWSResponse
-    public init(status: HTTPResponseStatus, headers: HTTPHeaders, body: AWSHTTPBody = .init()) {
-        self.status = status
-        self.headers = headers
+    public init(response: HTTPResponse, body: AWSHTTPBody = .init()) {
+        self.response = response
         self.body = body
     }
 
@@ -104,7 +101,7 @@ public struct AWSHTTPResponse: Sendable {
                 jsonDecoder.userInfo[.awsErrorMap] = serviceConfig.errorType
                 apiError = try? jsonDecoder.decode(RESTJSONError.self, from: buffer)
                 if apiError?.code == nil {
-                    apiError?.code = self.headers["x-amzn-errortype"].first
+                    apiError?.code = self.response.headerFields[.xAmznErrorType]
                 }
 
             case .json:
@@ -162,8 +159,7 @@ public struct AWSHTTPResponse: Sendable {
 
             let context = AWSErrorContext(
                 message: errorMessage.message,
-                responseCode: self.status,
-                headers: self.headers,
+                response: self.response,
                 additionalFields: errorMessage.additionalFields,
                 extendedError: errorMessage.extendedError
             )

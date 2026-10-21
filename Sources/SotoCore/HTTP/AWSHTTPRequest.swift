@@ -359,4 +359,9 @@ extension HTTPField.Name {
         .init("X-Amz-Sdk-Checksum-Algorithm")!
     }
 
+    @inlinable
+    static var xAmznErrorType: Self {
+        .init("X-Amzn-Errortype")!
+    }
+
 }

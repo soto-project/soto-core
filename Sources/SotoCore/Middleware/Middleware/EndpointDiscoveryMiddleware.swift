@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HTTPTypes
 import Logging
 import NIOHTTP1
 import SotoSignerV4
@@ -42,18 +43,24 @@ public struct EndpointDiscoveryMiddleware: AWSMiddlewareProtocol {
         }
         if let endpoint = try await getEndpoint(logger: context.logger) {
             var request = request
-            var path = request.url.path
-            // add trailing "/" back if it was present
-            if request.url.pathWithSlash.hasSuffix("/"), path != "/" {
-                path += "/"
+            var path: String
+            if let url = request.request.url {
+                path = url.path
+                // add trailing "/" back if it was present
+                if url.pathWithSlash.hasSuffix("/"), path != "/" {
+                    path += "/"
+                }
+            } else {
+                path = "/"
             }
+
             // add percent encoding back into path as converting from URL to String has removed it
             let percentEncodedUrlPath = self.urlEncodePath(path)
             var urlString = "\(endpoint)\(percentEncodedUrlPath)"
-            if let query = request.url.query {
+            if let query = request.request.url?.query {
                 urlString += "?\(query)"
             }
-            request.url = URL(string: urlString)!
+            request.request.url = URL(string: urlString)!
             return try await next(request, context)
         }
         return try await next(request, context)

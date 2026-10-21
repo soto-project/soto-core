@@ -61,8 +61,8 @@ public struct AWSLoggingMiddleware: AWSMiddlewareProtocol {
         self.log(
             """
             Response:
-              Status : \(response.status.code)
-              Headers: \(self.getHeadersOutput(response.headerFields)))
+              Status : \(response.response.status.code)
+              Headers: \(self.getHeadersOutput(response.response.headerFields)))
             \(self.outputBody ? "  Body: \(self.getBodyOutput(response.body))" : "")
             """
         )

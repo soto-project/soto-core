@@ -67,7 +67,7 @@ public struct LoginCredentialProvider: CredentialProvider {
         self.threadPool = .singleton
     }
 
-    public func getCredential(logger: Logger) async throws -> Credential {
+    public func getCredential(logger: Logger) async throws -> any Credential {
         let configuration = try await getConfiguration()
 
         // Construct token path

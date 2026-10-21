@@ -75,7 +75,7 @@ let package = Package(
                 .product(name: "NIOTransportServices", package: "swift-nio-transport-services"),
                 .product(name: "NIOFoundationCompat", package: "swift-nio"),
                 .product(name: "JMESPath", package: "jmespath.swift"),
-                .product(name: "Subprocess", package: "swift-subprocess"),
+                .product(name: "Subprocess", package: "swift-subprocess", condition: .when(platforms: [.macOS, .linux])),
                 .product(name: "Tracing", package: "swift-distributed-tracing"),
                 .product(
                     name: "ServiceLifecycle",

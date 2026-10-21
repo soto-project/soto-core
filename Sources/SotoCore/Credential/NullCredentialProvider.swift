@@ -20,7 +20,7 @@ import SotoSignerV4
 public struct NullCredentialProvider: CredentialProvider {
     public init() {}
 
-    public func getCredential(logger: Logger) async throws -> Credential {
+    public func getCredential(logger: Logger) async throws -> any Credential {
         throw CredentialProviderError.noProvider
     }
 }

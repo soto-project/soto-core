@@ -20,7 +20,7 @@ import NIOHTTP1
 ///
 /// A matcher returns whether the returned value from an AWS API call matches a certain state
 public protocol AWSWaiterMatcher: Sendable {
-    func match(result: Result<Any, Error>) -> Bool
+    func match(result: Result<Any, any Error>) -> Bool
 }
 
 /// Match whether the value indicated by JMESPath matches an expected value
@@ -33,11 +33,11 @@ public struct JMESPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatcher 
         self.expected = expected.description
     }
 
-    public func match(result: Result<Any, Error>) -> Bool {
+    public func match(result: Result<Any, any Error>) -> Bool {
         switch result {
         case .success(let output):
             do {
-                if let searchResult = try expression.search(object: output, as: CustomStringConvertible.self) {
+                if let searchResult = try expression.search(object: output, as: (any CustomStringConvertible).self) {
                     return self.expected == searchResult.description
                 } else {
                     return false
@@ -61,11 +61,11 @@ public struct JMESAnyPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatch
         self.expected = expected.description
     }
 
-    public func match(result: Result<Any, Error>) -> Bool {
+    public func match(result: Result<Any, any Error>) -> Bool {
         switch result {
         case .success(let output):
             do {
-                if let searchResult = try expression.search(object: output, as: [CustomStringConvertible].self) {
+                if let searchResult = try expression.search(object: output, as: [any CustomStringConvertible].self) {
                     return searchResult.first { self.expected == $0.description } != nil
                 } else {
                     return false
@@ -89,11 +89,11 @@ public struct JMESAllPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatch
         self.expected = expected.description
     }
 
-    public func match(result: Result<Any, Error>) -> Bool {
+    public func match(result: Result<Any, any Error>) -> Bool {
         switch result {
         case .success(let output):
             do {
-                if let searchResult = try expression.search(object: output, as: [CustomStringConvertible].self) {
+                if let searchResult = try expression.search(object: output, as: [any CustomStringConvertible].self) {
                     return searchResult.first { self.expected != $0.description } == nil
                 } else {
                     return false
@@ -110,7 +110,7 @@ public struct JMESAllPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatch
 /// Match whether an AWS API call was successful
 public struct AWSSuccessMatcher: AWSWaiterMatcher {
     public init() {}
-    public func match(result: Result<Any, Error>) -> Bool {
+    public func match(result: Result<Any, any Error>) -> Bool {
         switch result {
         case .success:
             return true
@@ -128,11 +128,11 @@ public struct AWSErrorStatusMatcher: AWSWaiterMatcher {
         self.expectedStatus = status
     }
 
-    public func match(result: Result<Any, Error>) -> Bool {
+    public func match(result: Result<Any, any Error>) -> Bool {
         switch result {
         case .success:
             return false
-        case .failure(let error as AWSErrorType):
+        case .failure(let error as any AWSErrorType):
             if let code = error.context?.responseCode.code {
                 return code == self.expectedStatus
             } else {
@@ -154,12 +154,12 @@ public struct AWSErrorCodeMatcher: AWSWaiterMatcher {
         self.expectedCode = code
     }
 
-    public func match(result: Result<Any, Error>) -> Bool {
+    public func match(result: Result<Any, any Error>) -> Bool {
         switch result {
         case .success:
             return false
         case .failure(let error):
-            return (error as? AWSErrorType)?.errorCode == self.expectedCode
+            return (error as? any AWSErrorType)?.errorCode == self.expectedCode
         }
     }
 }

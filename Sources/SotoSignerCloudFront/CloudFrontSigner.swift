@@ -13,13 +13,13 @@
 //===----------------------------------------------------------------------===//
 
 import Crypto
-import NIOCore
+public import NIOCore
 import _CryptoExtras
 
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 /// Generates signed URLs and cookies for Amazon CloudFront private content distribution.

@@ -16,8 +16,9 @@
 
 import Crypto
 import NIOCore
-import NIOFoundationCompat
+import NIOFoundationEssentialsCompat
 import NIOPosix
+@_spi(SotoInternal) import SotoSignerV4
 import _NIOFileSystem
 
 #if canImport(FoundationEssentials)
@@ -55,10 +56,10 @@ struct LoginTokenManager {
         }
 
         // SHA256 hash the login_session (after trimming whitespace) per spec
-        let trimmedSession = loginSession.trimmingCharacters(in: .whitespaces)
+        let trimmedSession = loginSession._trimming(while: \.isWhitespace)
         let sessionData = Data(trimmedSession.utf8)
         let hash = SHA256.hash(data: sessionData)
-        let hashString = hash.compactMap { String(format: "%02x", $0) }.joined()
+        let hashString = hash.hexDigest()
 
         return "\(baseDir)/\(hashString).json"
     }
@@ -172,5 +173,24 @@ struct LoginTokenManager {
         _ = try await fileSystem.withFileHandle(forWritingAt: .init(path), options: .newFile(replaceExisting: true)) { file in
             try await file.write(contentsOf: buffer, toAbsoluteOffset: 0)
         }
+    }
+}
+
+extension StringProtocol {
+    /// Remove whitespace that follows whitespace
+    fileprivate func removeSequentialWhitespace() -> String {
+        reduce(into: "") { result, character in
+            if result.last?.isWhitespace != true || character.isWhitespace == false {
+                result.append(character)
+            }
+        }
+    }
+
+    /// Version of String.trimmingCharacters which returns a SubSequence
+    fileprivate func _trimming(while predicate: (Element) throws -> Bool) rethrows -> SubSequence {
+        guard let startIndex = try self.firstIndex(where: { try !predicate($0) }) else { return self[self.startIndex..<self.startIndex] }
+        guard try self.last.map(predicate) == true else { return self[startIndex...] }
+        guard let endIndex = try self.lastIndex(where: predicate) else { return self[self.startIndex..<self.startIndex] }
+        return self[startIndex..<endIndex]
     }
 }

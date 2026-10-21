@@ -18,9 +18,9 @@ import NIOCore
 import SotoSignerV4
 
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 /// Wrap a credential provider that returns an `ExpiringCredential`
@@ -30,9 +30,9 @@ import Foundation
 /// `getCredential` is called again. If current credentials have not expired (within a threshold) they are returned otherwise we wait on new
 /// credentials being provided.
 public final class RotatingCredentialProvider: CredentialProvider {
-    let expiringCredential: ExpiringValue<Credential>
+    let expiringCredential: ExpiringValue<any Credential>
     let validCredentialThreshold: TimeInterval
-    public let provider: CredentialProvider
+    public let provider: any CredentialProvider
 
     ///  Initialize RotatingCredentialProvider
     /// - Parameters:
@@ -41,7 +41,7 @@ public final class RotatingCredentialProvider: CredentialProvider {
     ///   - remainingTokenLifetimeForUse: How near to expiration, before we request new credentials
     public init(
         context: CredentialProviderFactory.Context,
-        provider: CredentialProvider,
+        provider: any CredentialProvider,
         remainingTokenLifetimeForUse: TimeInterval? = nil
     ) {
         self.provider = provider
@@ -59,7 +59,7 @@ public final class RotatingCredentialProvider: CredentialProvider {
     ///   - validCredentialThreshold: How near to expiration do we return the current credentials
     public init(
         context: CredentialProviderFactory.Context,
-        provider: CredentialProvider,
+        provider: any CredentialProvider,
         remainingTokenLifetimeForUse: TimeInterval? = nil,
         validCredentialThreshold: TimeInterval
     ) {
@@ -81,7 +81,7 @@ public final class RotatingCredentialProvider: CredentialProvider {
         try await self.provider.shutdown()
     }
 
-    public func getCredential(logger: Logger) async throws -> Credential {
+    public func getCredential(logger: Logger) async throws -> any Credential {
         try await self.expiringCredential.getValue {
             try await Self.getCredentialAndExpiration(
                 provider: self.provider,
@@ -92,10 +92,10 @@ public final class RotatingCredentialProvider: CredentialProvider {
     }
 
     static func getCredentialAndExpiration(
-        provider: CredentialProvider,
+        provider: any CredentialProvider,
         validCredentialThreshold: TimeInterval,
         logger: Logger
-    ) async throws -> (Credential, Date) {
+    ) async throws -> (any Credential, Date) {
         logger.debug(
             "Refeshing AWS credentials",
             metadata: ["aws-credential-provider": .string("\(self)(\(provider.description))")]
@@ -106,7 +106,7 @@ public final class RotatingCredentialProvider: CredentialProvider {
             "AWS credentials ready",
             metadata: ["aws-credential-provider": .string("\(self)(\(provider.description))")]
         )
-        if let expiringCredential = credential as? ExpiringCredential {
+        if let expiringCredential = credential as? any ExpiringCredential {
             return (
                 expiringCredential,
                 expiringCredential.expiration.addingTimeInterval(-validCredentialThreshold)

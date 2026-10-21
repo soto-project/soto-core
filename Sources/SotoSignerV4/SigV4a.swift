@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Crypto
+package import Crypto
 
 #if canImport(FoundationEssentials)
 import FoundationEssentials

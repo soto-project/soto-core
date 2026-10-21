@@ -30,7 +30,7 @@ public struct ArrayCoder<Properties: ArrayCoderProperties, Element: Sendable>: C
 
 /// extend to support decoding
 extension ArrayCoder: CustomDecoder where Element: Decodable {
-    public static func decode(from decoder: Decoder) throws -> CodableValue {
+    public static func decode(from decoder: any Decoder) throws -> CodableValue {
         let topLevelContainer = try decoder.container(keyedBy: EncodingWrapperKey.self)
         var values: [Element] = []
         let memberKey = EncodingWrapperKey(stringValue: Properties.member, intValue: nil)
@@ -46,7 +46,7 @@ extension ArrayCoder: CustomDecoder where Element: Decodable {
 
 /// extend to support encoding
 extension ArrayCoder: CustomEncoder where Element: Encodable {
-    public static func encode(value: CodableValue, to encoder: Encoder) throws {
+    public static func encode(value: CodableValue, to encoder: any Encoder) throws {
         var topLevelContainer = encoder.container(keyedBy: EncodingWrapperKey.self)
         var container = topLevelContainer.nestedUnkeyedContainer(forKey: EncodingWrapperKey(stringValue: Properties.member, intValue: nil))
         for entry in value {
@@ -73,7 +73,7 @@ public struct DictionaryCoder<Properties: DictionaryCoderProperties, Key: Hashab
 
 /// extend to support decoding
 extension DictionaryCoder: CustomDecoder where Key: Decodable, Value: Decodable {
-    public static func decode(from decoder: Decoder) throws -> CodableValue {
+    public static func decode(from decoder: any Decoder) throws -> CodableValue {
         var values: [Key: Value] = [:]
         if let entry = Properties.entry {
             let topLevelContainer = try decoder.container(keyedBy: EncodingWrapperKey.self)
@@ -102,7 +102,7 @@ extension DictionaryCoder: CustomDecoder where Key: Decodable, Value: Decodable 
 
 /// extend to support encoding
 extension DictionaryCoder: CustomEncoder where Key: Encodable, Value: Encodable {
-    public static func encode(value: CodableValue, to encoder: Encoder) throws {
+    public static func encode(value: CodableValue, to encoder: any Encoder) throws {
         if let entry = Properties.entry {
             var topLevelContainter = encoder.container(keyedBy: EncodingWrapperKey.self)
             var container = topLevelContainter.nestedUnkeyedContainer(forKey: EncodingWrapperKey(stringValue: entry, intValue: nil))

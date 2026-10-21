@@ -58,17 +58,10 @@ struct DPoPTokenGenerator<JTI: JTIGenerator, Time: TimeProvider> {
     }
 
     private func base64URLEncode(_ data: Data) -> String {
-        if #available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *) {
-            data.base64EncodedString()
-                .replacing("+", with: "-")
-                .replacing("/", with: "_")
-                .replacing("=", with: "")
-        } else {
-            data.base64EncodedString()
-                .replacingOccurrences(of: "+", with: "-")
-                .replacingOccurrences(of: "/", with: "_")
-                .replacingOccurrences(of: "=", with: "")
-        }
+        data.base64EncodedString()
+            .replacing("+", with: "-")
+            .replacing("/", with: "_")
+            .replacing("=", with: "")
     }
 
     private func extractPublicKeyCoordinates(from pemKey: String) -> (x: String, y: String)? {

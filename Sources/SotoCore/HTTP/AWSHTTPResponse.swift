@@ -15,6 +15,7 @@
 import AsyncHTTPClient
 import Logging
 import NIOCore
+import NIOFoundationEssentialsCompat
 import NIOHTTP1
 internal import SotoXML
 
@@ -90,8 +91,8 @@ public struct AWSHTTPResponse: Sendable {
     }
 
     /// extract error code and message from AWSResponse
-    func generateError(serviceConfig: AWSServiceConfig, logLevel: Logger.Level = .info, logger: Logger) -> Error? {
-        var apiError: APIError?
+    func generateError(serviceConfig: AWSServiceConfig, logLevel: Logger.Level = .info, logger: Logger) -> (any Error)? {
+        var apiError: (any APIError)?
         switch self.body.storage {
         case .asyncSequence:
             break
@@ -191,9 +192,9 @@ public struct AWSHTTPResponse: Sendable {
         var code: String?
         let message: String
         let additionalFields: [String: String]
-        let extendedError: AWSErrorShape?
+        let extendedError: (any AWSErrorShape)?
 
-        init(from decoder: Decoder) throws {
+        init(from decoder: any Decoder) throws {
             // use `ErrorCodingKey` so we get extract additional keys from `container.allKeys`
             let container = try decoder.container(keyedBy: ErrorCodingKey.self)
             let code = try container.decodeIfPresent(String.self, forKey: .init("Code"))
@@ -202,7 +203,7 @@ public struct AWSHTTPResponse: Sendable {
             self.message = try container.decode(String.self, forKey: .init("Message"))
 
             if let code = self.code,
-                let errorMapping = decoder.userInfo[.awsErrorMap] as? AWSServiceErrorType.Type,
+                let errorMapping = decoder.userInfo[.awsErrorMap] as? any AWSServiceErrorType.Type,
                 let errorType = errorMapping.errorCodeMap[code]
             {
                 let container = try decoder.singleValueContainer()
@@ -226,9 +227,9 @@ public struct AWSHTTPResponse: Sendable {
         var code: String?
         let message: String
         let additionalFields: [String: String]
-        let extendedError: AWSErrorShape?
+        let extendedError: (any AWSErrorShape)?
 
-        init(from decoder: Decoder) throws {
+        init(from decoder: any Decoder) throws {
             // use `ErrorCodingKey` so we get extract additional keys from `container.allKeys`
             let container = try decoder.container(keyedBy: ErrorCodingKey.self)
             let code = try container.decodeIfPresent(String.self, forKey: .init("__type"))
@@ -241,7 +242,7 @@ public struct AWSHTTPResponse: Sendable {
 
             let errorMapping = decoder.userInfo[.awsErrorMap]
             if let code = self.code,
-                let errorMapping = errorMapping as? AWSServiceErrorType.Type,
+                let errorMapping = errorMapping as? any AWSServiceErrorType.Type,
                 let errorType = errorMapping.errorCodeMap[code]
             {
                 let container = try decoder.singleValueContainer()
@@ -265,9 +266,9 @@ public struct AWSHTTPResponse: Sendable {
         var code: String?
         let message: String
         let additionalFields: [String: String]
-        let extendedError: AWSErrorShape?
+        let extendedError: (any AWSErrorShape)?
 
-        init(from decoder: Decoder) throws {
+        init(from decoder: any Decoder) throws {
             // use `ErrorCodingKey` so we get extract additional keys from `container.allKeys`
             let container = try decoder.container(keyedBy: ErrorCodingKey.self)
             let code = try container.decodeIfPresent(String.self, forKey: .init("code"))
@@ -279,7 +280,7 @@ public struct AWSHTTPResponse: Sendable {
                 ?? ""
 
             if let code = self.code,
-                let errorMapping = decoder.userInfo[.awsErrorMap] as? AWSServiceErrorType.Type,
+                let errorMapping = decoder.userInfo[.awsErrorMap] as? any AWSServiceErrorType.Type,
                 let errorType = errorMapping.errorCodeMap[code]
             {
                 let container = try decoder.singleValueContainer()
@@ -324,7 +325,7 @@ private protocol APIError {
     var code: String? { get set }
     var message: String { get }
     var additionalFields: [String: String] { get }
-    var extendedError: AWSErrorShape? { get }
+    var extendedError: (any AWSErrorShape)? { get }
 }
 
 extension XML.Document {

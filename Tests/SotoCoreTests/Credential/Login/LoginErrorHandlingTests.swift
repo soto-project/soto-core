@@ -19,6 +19,7 @@ import Logging
 import NIOCore
 import NIOHTTP1
 import SotoCore
+@_spi(SotoInternal) import SotoSignerV4
 import Testing
 
 @testable import SotoCore
@@ -72,7 +73,7 @@ final class LoginErrorHandlingTests {
 
         let sessionData = Data("test-session".utf8)
         let hash = SHA256.hash(data: sessionData)
-        let hashString = hash.compactMap { String(format: "%02x", $0) }.joined()
+        let hashString = hash.hexDigest()
         let tokenPath = tempDirectory.appendingPathComponent("\(hashString).json")
         try tokenData.write(to: tokenPath, atomically: true, encoding: .utf8)
 
@@ -135,7 +136,7 @@ final class LoginErrorHandlingTests {
 
         let sessionData = Data("test-session".utf8)
         let hash = SHA256.hash(data: sessionData)
-        let hashString = hash.compactMap { String(format: "%02x", $0) }.joined()
+        let hashString = hash.hexDigest()
         let tokenPath = tempDirectory.appendingPathComponent("\(hashString).json")
         try tokenData.write(to: tokenPath, atomically: true, encoding: .utf8)
 
@@ -195,7 +196,7 @@ final class LoginErrorHandlingTests {
 
         let sessionData = Data("test-session".utf8)
         let hash = SHA256.hash(data: sessionData)
-        let hashString = hash.compactMap { String(format: "%02x", $0) }.joined()
+        let hashString = hash.hexDigest()
         let tokenPath = tempDirectory.appendingPathComponent("\(hashString).json")
         try tokenData.write(to: tokenPath, atomically: true, encoding: .utf8)
 

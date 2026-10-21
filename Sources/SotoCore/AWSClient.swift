@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import AsyncHTTPClient
+public import AsyncHTTPClient
 import Atomics
 import Dispatch
 import Logging
@@ -24,9 +24,9 @@ import NIOTransportServices
 import SotoSignerV4
 
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 /// Client managing communication with AWS services
@@ -45,11 +45,11 @@ public final class AWSClient: Sendable {
     static let globalRequestID = ManagedAtomic<Int>(0)
 
     /// AWS credentials provider
-    public let credentialProvider: CredentialProvider
+    public let credentialProvider: any CredentialProvider
     /// Middleware code to be applied to requests and responses
-    public let middleware: AWSMiddlewareProtocol
+    public let middleware: any AWSMiddlewareProtocol
     /// HTTP client used by AWSClient
-    public let httpClient: AWSHTTPClient
+    public let httpClient: any AWSHTTPClient
     /// Logger used for non-request based output
     public let logger: Logger
     /// client options
@@ -73,7 +73,7 @@ public final class AWSClient: Sendable {
         retryPolicy retryPolicyFactory: RetryPolicyFactory = .default,
         middleware: some AWSMiddlewareProtocol,
         options: Options = Options(),
-        httpClient: AWSHTTPClient = HTTPClient.shared,
+        httpClient: any AWSHTTPClient = HTTPClient.shared,
         logger: Logger = AWSClient.loggingDisabled
     ) {
         self.httpClient = httpClient
@@ -107,7 +107,7 @@ public final class AWSClient: Sendable {
         credentialProvider credentialProviderFactory: CredentialProviderFactory = .default,
         retryPolicy retryPolicyFactory: RetryPolicyFactory = .default,
         options: Options = Options(),
-        httpClient: AWSHTTPClient = HTTPClient.shared,
+        httpClient: any AWSHTTPClient = HTTPClient.shared,
         logger: Logger = AWSClient.loggingDisabled
     ) {
         self.httpClient = httpClient
@@ -158,7 +158,7 @@ public final class AWSClient: Sendable {
     /// - Throws: AWSClient.ClientError.alreadyShutdown: You have already shutdown the client
     @available(*, noasync, message: "syncShutdown() can block indefinitely, prefer shutdown()", renamed: "shutdown()")
     public func syncShutdown() throws {
-        let errorStorage: NIOLockedValueBox<Error?> = .init(nil)
+        let errorStorage: NIOLockedValueBox<(any Error)?> = .init(nil)
         let semaphore = DispatchSemaphore(value: 0)
         Task {
             do {
@@ -456,7 +456,7 @@ extension AWSClient {
         } catch {
             Counter(label: "aws_request_errors", dimensions: dimensions).increment()
             // AWSErrorTypes have already been logged
-            if error as? AWSErrorType == nil {
+            if error as? (any AWSErrorType) == nil {
                 // log error message
                 logger.error(
                     "AWSClient error",
@@ -473,7 +473,7 @@ extension AWSClient {
     /// - Parameters:
     ///   - logger: optional logger to use
     /// - Returns: Credential
-    public func getCredential(logger: Logger = AWSClient.loggingDisabled) async throws -> Credential {
+    public func getCredential(logger: Logger = AWSClient.loggingDisabled) async throws -> any Credential {
         try await self.credentialProvider.getCredential(logger: logger)
     }
 

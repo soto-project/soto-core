@@ -65,7 +65,7 @@ extension AWSEncodableShape {
     public func validate(name: String) throws {}
 
     /// Return validation error
-    public static func validationError(_ message: String) -> Error {
+    public static func validationError(_ message: String) -> any Error {
         AWSClientError(.validationError, context: .init(message: message, responseCode: .badRequest))
     }
 

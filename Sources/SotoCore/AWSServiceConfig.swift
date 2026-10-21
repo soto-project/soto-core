@@ -39,11 +39,11 @@ public final class AWSServiceConfig {
     /// The url to use in requests
     public let endpoint: String
     /// An array of the possible error types returned by the service
-    public let errorType: AWSErrorType.Type?
+    public let errorType: (any AWSErrorType.Type)?
     /// XML namespace to be applied to all request objects
     public let xmlNamespace: String?
     /// Middleware code specific to the service used to edit requests before they sent and responses before they are decoded
-    public let middleware: AWSMiddlewareProtocol?
+    public let middleware: (any AWSMiddlewareProtocol)?
     /// timeout value for HTTP requests
     public let timeout: TimeAmount
     /// ByteBuffer allocator used by service
@@ -93,9 +93,9 @@ public final class AWSServiceConfig {
         serviceEndpoints: [String: String] = [:],
         partitionEndpoints: [AWSPartition: (endpoint: String, region: Region)] = [:],
         variantEndpoints: [EndpointVariantType: EndpointVariant] = [:],
-        errorType: AWSErrorType.Type? = nil,
+        errorType: (any AWSErrorType.Type)? = nil,
         xmlNamespace: String? = nil,
-        middleware: AWSMiddlewareProtocol? = nil,
+        middleware: (any AWSMiddlewareProtocol)? = nil,
         timeout: TimeAmount? = nil,
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         options: Options = []
@@ -158,12 +158,7 @@ public final class AWSServiceConfig {
             return endpoint
         }
         if let sdkId {
-            let normalizedSdkId =
-                if #available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *) {
-                    sdkId.replacing(" ", with: "_").uppercased()
-                } else {
-                    sdkId.replacingOccurrences(of: " ", with: "_").uppercased()
-                }
+            let normalizedSdkId = sdkId.replacing(" ", with: "_").uppercased()
             if let endpoint = Environment["AWS_ENDPOINT_URL_\(normalizedSdkId)"] {
                 return endpoint
             }
@@ -209,7 +204,7 @@ public final class AWSServiceConfig {
     public struct Patch {
         let region: Region?
         let endpoint: String?
-        let middleware: AWSMiddlewareProtocol?
+        let middleware: (any AWSMiddlewareProtocol)?
         let timeout: TimeAmount?
         let byteBufferAllocator: ByteBufferAllocator?
         let options: Options?
@@ -217,7 +212,7 @@ public final class AWSServiceConfig {
         init(
             region: Region? = nil,
             endpoint: String? = nil,
-            middleware: AWSMiddlewareProtocol? = nil,
+            middleware: (any AWSMiddlewareProtocol)? = nil,
             timeout: TimeAmount? = nil,
             byteBufferAllocator: ByteBufferAllocator? = nil,
             options: AWSServiceConfig.Options? = nil
@@ -241,7 +236,7 @@ public final class AWSServiceConfig {
     /// - Returns: New version of the service
     public func with(
         region: Region? = nil,
-        middleware: AWSMiddlewareProtocol? = nil,
+        middleware: (any AWSMiddlewareProtocol)? = nil,
         timeout: TimeAmount? = nil,
         byteBufferAllocator: ByteBufferAllocator? = nil,
         options: AWSServiceConfig.Options? = nil

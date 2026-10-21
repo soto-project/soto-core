@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Crypto
+public import HTTPTypes
 
 #if canImport(FoundationEssentials)
 public import FoundationEssentials
@@ -130,24 +131,24 @@ public struct AWSSigner: Sendable {
     /// - Returns: Request headers with added "authorization" header that contains request signature
     public func signHeaders(
         url: URL,
-        method: HTTPMethod = .GET,
-        headers: HTTPHeaders = HTTPHeaders(),
+        method: HTTPRequest.Method = .get,
+        headers: HTTPFields = HTTPFields(),
         body: BodyData? = nil,
         omitSecurityToken: Bool = false,
         date: Date = Date()
-    ) -> HTTPHeaders {
+    ) -> HTTPFields {
         let bodyHash = AWSSigner.hashedPayload(body)
         let dateString = Self.timestamp(date)
         var headers = headers
         // add date, host, sha256 and if available security token headers
-        headers.replaceOrAdd(name: "host", value: Self.hostname(from: url))
-        headers.replaceOrAdd(name: "x-amz-date", value: dateString)
-        headers.replaceOrAdd(name: "x-amz-content-sha256", value: bodyHash)
+        headers[.host] = Self.hostname(from: url)
+        headers[.xAmzDate] = dateString
+        headers[.xAmzContentSha256] = bodyHash
         if algorithm.base == .sigV4a {
-            headers.replaceOrAdd(name: "x-amz-region-set", value: self.region)
+            headers[.xAmzRegionSet] = self.region
         }
         if !omitSecurityToken, let sessionToken = credentials.sessionToken {
-            headers.replaceOrAdd(name: "x-amz-security-token", value: sessionToken)
+            headers[.xAmzSecurityToken] = sessionToken
         }
         // construct signing data. Do this after adding the headers as it uses data from the headers
         let signingData = AWSSigner.SigningData(
@@ -178,10 +179,10 @@ public struct AWSSigner: Sendable {
             """
 
         // add Authorization header
-        headers.replaceOrAdd(name: "authorization", value: authorization)
+        headers[.authorization] = authorization
         // now we have signed the request we can add the security token if required
         if omitSecurityToken, let sessionToken = credentials.sessionToken {
-            headers.replaceOrAdd(name: "x-amz-security-token", value: sessionToken)
+            headers[.xAmzSecurityToken] = sessionToken
         }
 
         return headers
@@ -199,17 +200,17 @@ public struct AWSSigner: Sendable {
     /// - Returns: Signed URL
     public func signURL(
         url: URL,
-        method: HTTPMethod = .GET,
-        headers: HTTPHeaders = HTTPHeaders(),
+        method: HTTPRequest.Method = .get,
+        headers: HTTPFields = HTTPFields(),
         body: BodyData? = nil,
         expires: TimeAmount,
         omitSecurityToken: Bool = false,
         date: Date = Date()
     ) -> URL {
         var headers = headers
-        headers.replaceOrAdd(name: "host", value: Self.hostname(from: url))
+        headers[.host] = Self.hostname(from: url)
         if algorithm.base == .sigV4a {
-            headers.replaceOrAdd(name: "X-Amz-Region-Set", value: self.region)
+            headers[.xAmzRegionSet] = self.region
         }
         // Create signing data
         var signingData = AWSSigner.SigningData(url: url, method: method, headers: headers, body: body, date: Self.timestamp(date), signer: self)
@@ -272,10 +273,10 @@ public struct AWSSigner: Sendable {
     /// - Returns: Tuple of updated headers and signing data to use in first call to `signChunk`
     public func startSigningChunks(
         url: URL,
-        method: HTTPMethod = .GET,
-        headers: HTTPHeaders = HTTPHeaders(),
+        method: HTTPRequest.Method = .get,
+        headers: HTTPFields = HTTPFields(),
         date: Date = Date()
-    ) -> (headers: HTTPHeaders, signingData: ChunkedSigningData) {
+    ) -> (headers: HTTPFields, signingData: ChunkedSigningData) {
         self.startSigningChunks(url: url, method: method, headers: headers, date: date, algorithm: .sigV4)
     }
 
@@ -292,23 +293,23 @@ public struct AWSSigner: Sendable {
     /// - Returns: Tuple of updated headers and signing data to use in first call to `signChunk`
     public func startSigningChunks(
         url: URL,
-        method: HTTPMethod = .GET,
-        headers: HTTPHeaders = HTTPHeaders(),
+        method: HTTPRequest.Method,
+        headers: HTTPFields,
         date: Date = Date(),
         algorithm: Algorithm
-    ) -> (headers: HTTPHeaders, signingData: ChunkedSigningData) {
+    ) -> (headers: HTTPFields, signingData: ChunkedSigningData) {
         let bodyHash = AWSSigner.hashedPayload(.s3chunked)
         let dateString = AWSSigner.timestamp(date)
         var headers = headers
         // add date, host, sha256 and if available security token headers
-        headers.add(name: "host", value: Self.hostname(from: url))
-        headers.add(name: "x-amz-date", value: dateString)
-        headers.add(name: "x-amz-content-sha256", value: bodyHash)
+        headers[.host] = Self.hostname(from: url)
+        headers[.xAmzDate] = dateString
+        headers[.xAmzContentSha256] = bodyHash
         if let sessionToken = credentials.sessionToken {
-            headers.add(name: "x-amz-security-token", value: sessionToken)
+            headers[.xAmzSecurityToken] = sessionToken
         }
         // remove content-length header
-        headers.remove(name: "content-length")
+        headers[.contentLength] = nil
 
         // construct signing data. Do this after adding the headers as it uses data from the headers
         let signingData = AWSSigner.SigningData(url: url, method: method, headers: headers, bodyHash: bodyHash, date: dateString, signer: self)
@@ -322,7 +323,7 @@ public struct AWSSigner: Sendable {
             + "SignedHeaders=\(signingData.signedHeaders), " + "Signature=\(signature)"
 
         // add Authorization header
-        headers.add(name: "authorization", value: authorization)
+        headers[.authorization] = authorization
 
         return (headers: headers, signingData: chunkedSigningData)
     }
@@ -341,10 +342,10 @@ public struct AWSSigner: Sendable {
     /// structure used to store data used throughout the signing process
     struct SigningData {
         let url: URL
-        let method: HTTPMethod
+        let method: HTTPRequest.Method
         let hashedPayload: String
         let datetime: String
-        let headersToSign: [String: String]
+        let headersToSign: HTTPFields
         let signedHeaders: String
         var unsignedURL: URL
 
@@ -352,8 +353,8 @@ public struct AWSSigner: Sendable {
 
         init(
             url: URL,
-            method: HTTPMethod = .GET,
-            headers: HTTPHeaders = HTTPHeaders(),
+            method: HTTPRequest.Method,
+            headers: HTTPFields,
             body: BodyData? = nil,
             bodyHash: String? = nil,
             date: String,
@@ -379,24 +380,14 @@ public struct AWSSigner: Sendable {
             // Any x-amz-* headers that you plan to include in your request must also be added. For example, if
             // you are using temporary security credentials, you need to include x-amz-security-token in your request.
             // You must add this header in the list of CanonicalHeaders.
-            let headersNotToSign: Set<String> = [
-                "authorization",
-                "content-length",
-                "expect",
-                "user-agent",
+            let headersNotToSign: Set<HTTPField.Name> = [
+                .authorization,
+                .contentLength,
+                .expect,
+                .userAgent,
             ]
-            var headersToSign: [String: String] = [:]
-            var signedHeadersArray: [String] = []
-            for header in headers {
-                let lowercasedHeaderName = header.name.lowercased()
-                if headersNotToSign.contains(lowercasedHeaderName) {
-                    continue
-                }
-                headersToSign[lowercasedHeaderName] = header.value
-                signedHeadersArray.append(lowercasedHeaderName)
-            }
-            self.headersToSign = headersToSign
-            self.signedHeaders = signedHeadersArray.sorted().joined(separator: ";")
+            self.headersToSign = headers.filter({ !headersNotToSign.contains($0.name) })
+            self.signedHeaders = self.headersToSign.lazy.map { $0.name.canonicalName }.sorted().joined(separator: ";")
         }
     }
 
@@ -451,7 +442,7 @@ public struct AWSSigner: Sendable {
     /// Stage 1 Create the canonical request as in https://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
     func canonicalRequest(signingData: SigningData) -> String {
         let canonicalHeaders = signingData.headersToSign
-            .map { (key: $0.key.lowercased(), value: $0.value) }
+            .map { (key: $0.name.canonicalName, value: $0.value) }
             .sorted { $0.key < $1.key }
             .map { "\($0.key):\($0.value._trimming(while: \.isWhitespace).removeSequentialWhitespace())" }
             .joined(separator: "\n")
@@ -613,5 +604,27 @@ extension StringProtocol {
         guard try self.last.map(predicate) == true else { return self[startIndex...] }
         guard let endIndex = try self.lastIndex(where: predicate) else { return self[self.startIndex..<self.startIndex] }
         return self[startIndex..<endIndex]
+    }
+}
+
+extension HTTPField.Name {
+    @inlinable
+    public static var xAmzDate: Self {
+        .init("X-Amz-Date")!
+    }
+
+    @inlinable
+    public static var xAmzContentSha256: Self {
+        .init("X-Amz-Content-Sha256")!
+    }
+
+    @inlinable
+    public static var xAmzRegionSet: Self {
+        .init("X-Amz-Region-Set")!
+    }
+
+    @inlinable
+    public static var xAmzSecurityToken: Self {
+        .init("X-Amz-Security-Token")!
     }
 }

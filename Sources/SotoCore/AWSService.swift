@@ -55,7 +55,7 @@ extension AWSService {
     /// - Returns: New version of the service
     public func with(
         region: Region? = nil,
-        middleware: any AWSMiddlewareProtocol? = nil,
+        middleware: (any AWSMiddlewareProtocol)? = nil,
         timeout: TimeAmount? = nil,
         byteBufferAllocator: ByteBufferAllocator? = nil,
         options: AWSServiceConfig.Options? = nil

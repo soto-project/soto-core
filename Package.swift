@@ -24,10 +24,10 @@ let swiftSettings: [SwiftSetting] = [
 let package = Package(
     name: "soto-core",
     platforms: [
-        .macOS(.v10_15),
-        .iOS(.v13),
-        .tvOS(.v13),
-        .watchOS(.v6),
+        .macOS(.v13),
+        .iOS(.v16),
+        .tvOS(.v16),
+        .watchOS(.v9),
     ],
     products: [
         .library(name: "SotoCore", targets: ["SotoCore"]),

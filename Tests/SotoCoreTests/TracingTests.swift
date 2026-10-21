@@ -12,21 +12,18 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 import InMemoryTracing
 import NIOPosix
 import SotoCore
 import SotoTestUtils
+import Testing
 import Tracing
-import XCTest
 
 @testable import Instrumentation
 
-final class TracingTests: XCTestCase {
-    func wait(for expectations: [XCTestExpectation], timeout: TimeInterval) async {
-        await fulfillment(of: expectations, timeout: timeout)
-    }
-
-    func testTracingMiddleware() async throws {
+struct TracingTests {
+    @Test func testTracingMiddleware() async throws {
         let tracer = InMemoryTracer()
 
         InstrumentationSystem.bootstrapInternal(tracer)
@@ -42,8 +39,8 @@ final class TracingTests: XCTestCase {
             credentialProvider: .empty
         )
         defer {
-            XCTAssertNoThrow(try client.syncShutdown())
-            XCTAssertNoThrow(try awsServer.stop())
+            #expect(throws: Never.self) { try client.syncShutdown() }
+            #expect(throws: Never.self) { try awsServer.stop() }
         }
         async let response: Void = client.execute(
             operation: "TestOperation",
@@ -62,10 +59,10 @@ final class TracingTests: XCTestCase {
 
         let spans = tracer.popFinishedSpans()
         // We should get two spans. One from AsyncHTTPClient and one from Soto. The second one is the Soto one
-        let span = try XCTUnwrap(spans.last)
+        let span = try #require(spans.last)
 
-        XCTAssertEqual(span.operationName, "TestService.TestOperation")
-        XCTAssertTrue(span.errors.isEmpty)
+        #expect(span.operationName == "TestService.TestOperation")
+        #expect(span.errors.isEmpty)
 
         XCTAssertSpanAttributesEqual(
             span.attributes,
@@ -82,30 +79,27 @@ final class TracingTests: XCTestCase {
 private func XCTAssertSpanAttributesEqual(
     _ lhs: @autoclosure () -> SpanAttributes,
     _ rhs: @autoclosure () -> [String: SpanAttribute],
-    file: StaticString = #filePath,
-    line: UInt = #line
+    sourceLocation: SourceLocation = #_sourceLocation
 ) {
     var rhs = rhs()
 
     lhs().forEach { key, attribute in
         if let rhsValue = rhs.removeValue(forKey: key) {
             if rhsValue != attribute {
-                XCTFail(
+                Issue.record(
                     #""\#(key)" was expected to be "\#(rhsValue)" but is actually "\#(attribute)"."#,
-                    file: file,
-                    line: line
+                    sourceLocation: sourceLocation
                 )
             }
         } else {
-            XCTFail(
+            Issue.record(
                 #"Did not specify expected value for "\#(key)", actual value is "\#(attribute)"."#,
-                file: file,
-                line: line
+                sourceLocation: sourceLocation
             )
         }
     }
 
     if !rhs.isEmpty {
-        XCTFail(#"Expected attributes "\#(rhs.keys)" are not present in actual attributes."#, file: file, line: line)
+        Issue.record(#"Expected attributes "\#(rhs.keys)" are not present in actual attributes."#, sourceLocation: sourceLocation)
     }
 }

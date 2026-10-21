@@ -43,7 +43,7 @@ class STSAssumeRoleTests: XCTestCase {
             logger: TestEnvironment.logger
         )
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
-        async let credentialTask: Credential = client.credentialProvider.getCredential(logger: TestEnvironment.logger)
+        async let credentialTask = client.credentialProvider.getCredential(logger: TestEnvironment.logger)
         XCTAssertNoThrow(
             try testServer.processRaw { _ in
                 let output = STSAssumeRoleResponse(credentials: credentials)
@@ -82,7 +82,7 @@ class STSAssumeRoleTests: XCTestCase {
                 logger: TestEnvironment.logger
             )
             defer { XCTAssertNoThrow(try client.syncShutdown()) }
-            async let credentialTask: Credential = client.credentialProvider.getCredential(logger: TestEnvironment.logger)
+            async let credentialTask = client.credentialProvider.getCredential(logger: TestEnvironment.logger)
             XCTAssertNoThrow(
                 try testServer.processRaw { request in
                     let tokens = String(buffer: request.body).split(separator: "&")
@@ -130,7 +130,7 @@ class STSAssumeRoleTests: XCTestCase {
 
 // Extend STSAssumeRoleRequest so it can be used with the AWSTestServer
 extension STSAssumeRoleRequest: Decodable {
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let roleArn = try container.decode(String.self, forKey: .roleArn)
         let roleSessionName = try container.decode(String.self, forKey: .roleSessionName)
@@ -145,7 +145,7 @@ extension STSAssumeRoleRequest: Decodable {
 
 // Extend STSAssumeRoleResponse so it can be used with the AWSTestServer
 extension STSAssumeRoleResponse: Encodable {
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(credentials, forKey: .credentials)
     }
@@ -157,7 +157,7 @@ extension STSAssumeRoleResponse: Encodable {
 
 // Extend STSAssumeRoleWithWebIdentityResponse so it can be used with the AWSTestServer
 extension STSAssumeRoleWithWebIdentityResponse: Encodable {
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(credentials, forKey: .credentials)
     }
@@ -169,7 +169,7 @@ extension STSAssumeRoleWithWebIdentityResponse: Encodable {
 
 // Extend STSCredentials so it can be used with the AWSTestServer
 extension STSCredentials: Encodable {
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(accessKeyId, forKey: .accessKeyId)
         try container.encode(expiration, forKey: .expiration)

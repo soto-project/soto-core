@@ -17,6 +17,7 @@
 import Crypto
 import Logging
 import NIOCore
+import NIOFoundationEssentialsCompat
 import NIOHTTP1
 @_spi(SotoInternal) import SotoSignerV4
 import Testing
@@ -617,7 +618,7 @@ extension LoginCredentialProvider {
         loginSession: String,
         loginRegion: Region,
         cacheDirectoryOverride: String? = nil,
-        httpClient: AWSHTTPClient
+        httpClient: any AWSHTTPClient
     ) throws -> LoginCredentialProvider {
         let endpoint = "\(loginRegion.rawValue).\(LoginConfiguration.loginServiceHostPrefix).aws.amazon.com"
         let configuration = LoginConfiguration(

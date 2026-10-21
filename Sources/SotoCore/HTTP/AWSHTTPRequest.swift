@@ -13,33 +13,26 @@
 //===----------------------------------------------------------------------===//
 
 import Crypto
+public import HTTPTypes
 import NIOCore
 import NIOFoundationEssentialsCompat
-public import NIOHTTP1
 import SotoSignerV4
 internal import SotoXML
 
 #if canImport(FoundationEssentials)
-public import FoundationEssentials
+import FoundationEssentials
 #else
-public import Foundation
+import Foundation
 #endif
 
 /// Object encapsulating all the information needed to generate a raw HTTP request to AWS
 public struct AWSHTTPRequest: Sendable {
-    /// request URL
-    public var url: URL
-    /// request HTTP method
-    public let method: HTTPMethod
-    /// request headers
-    public var headers: HTTPHeaders
+    public var request: HTTPRequest
     /// request body
     public var body: AWSHTTPBody
 
-    public init(url: URL, method: HTTPMethod, headers: HTTPHeaders, body: AWSHTTPBody) {
-        self.url = url
-        self.method = method
-        self.headers = headers
+    public init(request: HTTPRequest, body: AWSHTTPBody) {
+        self.request = request
         self.body = body
     }
 
@@ -54,32 +47,29 @@ public struct AWSHTTPRequest: Sendable {
         case .asyncSequence(let sequence, let length):
             if signer.name == "s3", !serviceConfig.options.contains(.s3DisableChunkedUploads) {
                 assert(length != nil, "S3 stream requires size")
-                var headers = headers
                 // need to add these headers here as it needs to be included in the signed headers
-                headers.add(name: "x-amz-decoded-content-length", value: length!.description)
-                headers.add(name: "content-encoding", value: "aws-chunked")
+                self.request.headerFields[.xAmzDecodedContentLength] = length!.description
+                self.request.headerFields[.contentEncoding] = "aws-chunked"
                 // get signed headers and seed signing data
-                let (signedHeaders, seedSigningData) = signer.startSigningChunks(url: self.url, method: self.method, headers: headers, date: Date())
+                let seedSigningData = signer.startSigningChunks(request: &self.request, date: Date())!
                 // create s3 signed Sequence
                 let s3Signed = sequence.s3Signed(signer: signer, seedSigningData: seedSigningData)
                 // create new payload and return request
                 let payload = AWSHTTPBody(asyncSequence: s3Signed, length: s3Signed.contentSize(from: length!))
 
-                self.headers = signedHeaders
                 self.body = payload
                 return
             } else {
                 bodyDataForSigning = .unsignedPayload
             }
         }
-        let signedHeaders = signer.signHeaders(url: self.url, method: self.method, headers: self.headers, body: bodyDataForSigning, date: Date())
-        self.headers = signedHeaders
+        signer.signHeaders(request: &self.request, body: bodyDataForSigning, date: Date())
     }
 }
 
 extension AWSHTTPRequest {
-    internal init(operation operationName: String, path: String, method: HTTPMethod, configuration: AWSServiceConfig) throws {
-        var headers = HTTPHeaders()
+    internal init(operation operationName: String, path: String, method: HTTPRequest.Method, configuration: AWSServiceConfig) throws {
+        var headers = HTTPFields()
 
         guard let url = URL(string: "\(configuration.endpoint)\(path)"), let _ = url.host else {
             throw AWSClient.ClientError.invalidURL
@@ -87,12 +77,10 @@ extension AWSHTTPRequest {
 
         // set x-amz-target header
         if let target = configuration.amzTarget {
-            headers.replaceOrAdd(name: "x-amz-target", value: "\(target).\(operationName)")
+            headers[.xAmzTarget] = "\(target).\(operationName)"
         }
 
-        self.url = url
-        self.method = method
-        self.headers = headers
+        self.request = HTTPRequest(method: method, url: url, headerFields: headers)
         // Query and EC2 protocols require the Action and API Version in the body
         switch configuration.serviceProtocol {
         case .query, .ec2:
@@ -112,7 +100,7 @@ extension AWSHTTPRequest {
     internal init<Input: AWSEncodableShape>(
         operation operationName: String,
         path: String,
-        method: HTTPMethod,
+        method: HTTPRequest.Method,
         input: Input,
         hostPrefix: String? = nil,
         configuration: AWSServiceConfig
@@ -130,7 +118,7 @@ extension AWSHTTPRequest {
             encoder.dateEncodingStrategy = .secondsSince1970
             let buffer = try encoder.encodeAsByteBuffer(input, allocator: configuration.byteBufferAllocator)
             // GET, HEAD and DELETE methods should have an empty body
-            if method == .GET || method == .HEAD || method == .DELETE, buffer == ByteBuffer(string: "{}") {
+            if method == .get || method == .head || method == .delete, buffer == ByteBuffer(string: "{}") {
                 body = .init()
             } else {
                 body = .init(buffer: buffer)
@@ -173,8 +161,8 @@ extension AWSHTTPRequest {
             }
         }
         body = requestEncoderContainer.body ?? body
-        var headers = Self.calculateChecksumHeader(
-            headers: requestEncoderContainer.headers,
+        Self.calculateChecksumHeader(
+            headers: &requestEncoderContainer.headers,
             body: body,
             shapeType: Input.self,
             configuration: configuration
@@ -182,12 +170,14 @@ extension AWSHTTPRequest {
 
         // set x-amz-target header
         if let target = configuration.amzTarget {
-            headers.replaceOrAdd(name: "x-amz-target", value: "\(target).\(operationName)")
+            requestEncoderContainer.headers[.xAmzTarget] = "\(target).\(operationName)"
         }
 
-        self.url = try requestEncoderContainer.buildURL(endpoint: configuration.endpoint)
-        self.method = method
-        self.headers = headers
+        self.request = HTTPRequest(
+            method: method,
+            url: try requestEncoderContainer.buildURL(endpoint: configuration.endpoint),
+            headerFields: requestEncoderContainer.headers
+        )
         self.body = body
 
         self.addStandardHeaders(serviceProtocol: configuration.serviceProtocol, raw: requestEncoderContainer.body != nil)
@@ -201,15 +191,14 @@ extension AWSHTTPRequest {
     ///   - configuration: Service configuration
     /// - Returns: New set of headers
     private static func calculateChecksumHeader<Input: AWSEncodableShape>(
-        headers: HTTPHeaders,
+        headers: inout HTTPFields,
         body: AWSHTTPBody,
         shapeType: Input.Type,
         configuration: AWSServiceConfig
-    ) -> HTTPHeaders {
-        var headers = headers
+    ) {
         var checksumType: ChecksumType?
         if shapeType._options.contains(.checksumHeader) {
-            checksumType = headers["x-amz-sdk-checksum-algorithm"].first.map { ChecksumType(rawValue: $0) } ?? nil
+            checksumType = headers[.xAmzSdkChecksumAlgorithm].map { ChecksumType(rawValue: $0) } ?? nil
         }
         if checksumType == nil {
             if Input._options.contains(.checksumRequired)
@@ -222,8 +211,8 @@ extension AWSHTTPRequest {
         guard let checksumType,
             case .byteBuffer(let buffer) = body.storage,
             let checksumHeader = Self.checksumHeaders[checksumType],
-            headers[checksumHeader].first == nil
-        else { return headers }
+            headers[checksumHeader] == nil
+        else { return }
 
         var checksum: String?
         switch checksumType {
@@ -253,29 +242,28 @@ extension AWSHTTPRequest {
             checksum = self.calculateChecksum(buffer, function: Insecure.MD5.self)
         }
         if let checksum {
-            headers.add(name: checksumHeader, value: checksum)
+            headers[checksumHeader] = checksum
         }
-        return headers
     }
 
     /// Add headers standard to all requests "content-type" and "user-agent"
     private mutating func addStandardHeaders(serviceProtocol: ServiceProtocol, raw: Bool) {
-        self.headers.add(name: "user-agent", value: "Soto/7.0")
-        guard self.headers["content-type"].first == nil else {
+        self.request.headerFields[.userAgent] = "Soto/8.0"
+        guard self.request.headerFields[.contentType] == nil else {
             return
         }
         // in theory we don't need this check as the check for an empty body should skip adding
         // a header and a GET or HEAD request should have an empty body
-        guard self.method != .GET, self.method != .HEAD else {
+        guard self.request.method != .get, self.request.method != .head else {
             return
         }
 
         if case .byteBuffer(let buffer) = body.storage, buffer.readableBytes == 0 {
             // don't add a content-type header when there is no content
         } else if case .restjson = serviceProtocol, raw {
-            self.headers.replaceOrAdd(name: "content-type", value: "binary/octet-stream")
+            self.request.headerFields[.contentType] = "binary/octet-stream"
         } else {
-            self.headers.replaceOrAdd(name: "content-type", value: serviceProtocol.contentType)
+            self.request.headerFields[.contentType] = serviceProtocol.contentType
         }
     }
 
@@ -309,15 +297,15 @@ extension AWSHTTPRequest {
 
     // TODO: this should really be defined in the shape files but so far we only have S3 using checksums and
     // these are it defined headers
-    private static let checksumHeaders: [ChecksumType: String] = [
-        .crc32: "x-amz-checksum-crc32",
-        .crc32c: "x-amz-checksum-crc32c",
-        .sha1: "x-amz-checksum-sha1",
-        .sha256: "x-amz-checksum-sha256",
-        .sha512: "x-amz-checksum-sha512",
-        .md5: "x-amz-checksum-md5",
+    private static let checksumHeaders: [ChecksumType: HTTPField.Name] = [
+        .crc32: .init("x-amz-checksum-crc32")!,
+        .crc32c: .init("x-amz-checksum-crc32c")!,
+        .sha1: .init("x-amz-checksum-sha1")!,
+        .sha256: .init("x-amz-checksum-sha256")!,
+        .sha512: .init("x-amz-checksum-sha512")!,
+        .md5: .init("x-amz-checksum-md5")!,
         // default to content-md5 header if no algorithm header is found and a checksum is required
-        .defaultMD5: "content-md5",
+        .defaultMD5: .init("content-md5")!,
     ]
 }
 
@@ -354,4 +342,21 @@ extension OptionalCustomCoding: AWSRequestEncodableString where Coder: CustomEnc
         guard let value = self.wrappedValue else { return nil }
         return Coder.string(from: value)
     }
+}
+
+extension HTTPField.Name {
+    @inlinable
+    static var xAmzTarget: Self {
+        .init("X-Amz-Target")!
+    }
+    @inlinable
+    static var xAmzDecodedContentLength: Self {
+        .init("X-Amz-Decoded-Content-Length")!
+    }
+
+    @inlinable
+    static var xAmzSdkChecksumAlgorithm: Self {
+        .init("X-Amz-Sdk-Checksum-Algorithm")!
+    }
+
 }

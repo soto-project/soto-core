@@ -16,9 +16,9 @@ public import HTTPTypes
 import NIOCore
 
 #if canImport(FoundationEssentials)
-public import FoundationEssentials
+import FoundationEssentials
 #else
-public import Foundation
+import Foundation
 #endif
 
 /// Services object protocol. Contains a client to communicate with AWS and configuration for defining how to communicate.

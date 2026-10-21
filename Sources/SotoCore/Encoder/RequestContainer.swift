@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+public import HTTPTypes
 import NIOConcurrencyHelpers
 import SotoSignerV4
 
@@ -31,13 +32,13 @@ public final class RequestEncodingContainer: Sendable {
         @usableFromInline
         var hostPrefix: String?
         @usableFromInline
-        var headers: HTTPHeaders = .init()
+        var headers: HTTPFields = .init()
         @usableFromInline
         var queryParams: [(key: String, value: String)] = []
         @usableFromInline
         var body: AWSHTTPBody?
 
-        init(headers: HTTPHeaders, queryParams: [(key: String, value: String)], path: String, hostPrefix: String?) {
+        init(headers: HTTPFields, queryParams: [(key: String, value: String)], path: String, hostPrefix: String?) {
             self.headers = headers
             self.queryParams = queryParams
             self.path = path
@@ -66,7 +67,7 @@ public final class RequestEncodingContainer: Sendable {
         }
     }
     @usableFromInline
-    var headers: HTTPHeaders {
+    var headers: HTTPFields {
         get {
             self._internal.withLockedValue { $0.headers }
         }
@@ -93,7 +94,7 @@ public final class RequestEncodingContainer: Sendable {
         }
     }
 
-    init(headers: HTTPHeaders = .init(), queryParams: [(key: String, value: String)] = [], path: String, hostPrefix: String?) {
+    init(headers: HTTPFields = .init(), queryParams: [(key: String, value: String)] = [], path: String, hostPrefix: String?) {
         self._internal = .init(.init(headers: headers, queryParams: queryParams, path: path, hostPrefix: hostPrefix))
     }
 
@@ -143,7 +144,7 @@ public final class RequestEncodingContainer: Sendable {
     /// Write value to header
     @inlinable
     public func encodeHeader(_ value: some Any, key: String) {
-        self.headers.replaceOrAdd(name: key, value: "\(value)")
+        self.headers[.init(key)!] = "\(value)"
     }
 
     /// Write optional value to header
@@ -158,7 +159,7 @@ public final class RequestEncodingContainer: Sendable {
     @inlinable
     public func encodeHeader<Coder: CustomEncoder>(_ value: CustomCoding<Coder>, key: String) {
         if let string = Coder.string(from: value.wrappedValue) {
-            self.headers.replaceOrAdd(name: key, value: string)
+            self.headers[.init(key)!] = string
         }
     }
 
@@ -166,7 +167,7 @@ public final class RequestEncodingContainer: Sendable {
     @inlinable
     public func encodeHeader<Coder: CustomEncoder>(_ value: OptionalCustomCoding<Coder>, key: String) {
         if let wrappedValue = value.wrappedValue, let string = Coder.string(from: wrappedValue) {
-            self.headers.replaceOrAdd(name: key, value: string)
+            self.headers[.init(key)!] = string
         }
     }
 
@@ -188,7 +189,7 @@ public final class RequestEncodingContainer: Sendable {
     @inlinable
     public func encodeHeader(_ value: [String: some Any], key prefix: String) {
         for element in value {
-            self.headers.replaceOrAdd(name: "\(prefix)\(element.key)", value: "\(element.value)")
+            self.headers[.init("\(prefix)\(element.key)")!] = "\(element.value)"
         }
     }
 

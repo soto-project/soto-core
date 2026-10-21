@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+public import HTTPTypes
 import Logging
 import NIOHTTP1
 
@@ -51,8 +52,8 @@ public struct AWSLoggingMiddleware: AWSMiddlewareProtocol {
         self.log(
             """
             Request:
-              \(request.method) \(request.url)\(context.operation)
-              Headers: \(self.getHeadersOutput(request.headers))
+              \(request.request.method) \(request.request.url?.absoluteString ?? "")\(context.operation)
+              Headers: \(self.getHeadersOutput(request.request.headerFields))
             \(self.outputBody ? "  Body: \(self.getBodyOutput(request.body))" : "")
             """
         )
@@ -61,7 +62,7 @@ public struct AWSLoggingMiddleware: AWSMiddlewareProtocol {
             """
             Response:
               Status : \(response.status.code)
-              Headers: \(self.getHeadersOutput(response.headers)))
+              Headers: \(self.getHeadersOutput(response.headerFields)))
             \(self.outputBody ? "  Body: \(self.getBodyOutput(response.body))" : "")
             """
         )
@@ -81,7 +82,7 @@ public struct AWSLoggingMiddleware: AWSMiddlewareProtocol {
     }
 
     @usableFromInline
-    func getHeadersOutput(_ headers: HTTPHeaders) -> String {
+    func getHeadersOutput(_ headers: HTTPFields) -> String {
         if headers.count == 0 {
             return "[]"
         }

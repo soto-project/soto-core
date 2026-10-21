@@ -25,9 +25,9 @@ import NIOTransportServices
 import SotoSignerV4
 
 #if canImport(FoundationEssentials)
-public import FoundationEssentials
+import FoundationEssentials
 #else
-public import Foundation
+import Foundation
 #endif
 
 /// Client managing communication with AWS services
@@ -265,7 +265,7 @@ extension AWSClient {
     public func execute(
         operation operationName: String,
         path: String,
-        httpMethod: HTTPMethod,
+        httpMethod: HTTPRequest.Method,
         serviceConfig: AWSServiceConfig,
         input: some AWSEncodableShape,
         hostPrefix: String? = nil,
@@ -300,7 +300,7 @@ extension AWSClient {
     public func execute(
         operation operationName: String,
         path: String,
-        httpMethod: HTTPMethod,
+        httpMethod: HTTPRequest.Method,
         serviceConfig: AWSServiceConfig,
         logger: Logger = AWSClient.loggingDisabled
     ) async throws {
@@ -333,7 +333,7 @@ extension AWSClient {
     public func execute<Output: AWSDecodableShape>(
         operation operationName: String,
         path: String,
-        httpMethod: HTTPMethod,
+        httpMethod: HTTPRequest.Method,
         serviceConfig: AWSServiceConfig,
         logger: Logger = AWSClient.loggingDisabled
     ) async throws -> Output {
@@ -375,7 +375,7 @@ extension AWSClient {
     public func execute<Output: AWSDecodableShape>(
         operation operationName: String,
         path: String,
-        httpMethod: HTTPMethod,
+        httpMethod: HTTPRequest.Method,
         serviceConfig: AWSServiceConfig,
         input: some AWSEncodableShape,
         hostPrefix: String? = nil,

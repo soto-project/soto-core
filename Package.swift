@@ -23,10 +23,10 @@ let swiftSettings: [SwiftSetting] = [
 let package = Package(
     name: "soto-core",
     platforms: [
-        .macOS(.v10_15),
-        .iOS(.v13),
-        .tvOS(.v13),
-        .watchOS(.v6),
+        .macOS(.v13),
+        .iOS(.v16),
+        .tvOS(.v16),
+        .watchOS(.v9),
     ],
     products: [
         .library(name: "SotoCore", targets: ["SotoCore"]),
@@ -54,6 +54,7 @@ let package = Package(
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.30.0"),
         .package(url: "https://github.com/jmespath/jmespath.swift.git", from: "1.1.1"),
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.12.0"),
+        .package(url: "https://github.com/swiftlang/swift-subprocess", from: "1.0.0"),
     ],
     targets: [
         .target(
@@ -74,6 +75,7 @@ let package = Package(
                 .product(name: "NIOTransportServices", package: "swift-nio-transport-services"),
                 .product(name: "NIOFoundationCompat", package: "swift-nio"),
                 .product(name: "JMESPath", package: "jmespath.swift"),
+                .product(name: "Subprocess", package: "swift-subprocess"),
                 .product(name: "Tracing", package: "swift-distributed-tracing"),
                 .product(
                     name: "ServiceLifecycle",

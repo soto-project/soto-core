@@ -192,7 +192,7 @@ public struct AWSHTTPResponse: Sendable {
         var code: String?
         let message: String
         let additionalFields: [String: String]
-        let extendedError: any AWSErrorShape?
+        let extendedError: (any AWSErrorShape)?
 
         init(from decoder: any Decoder) throws {
             // use `ErrorCodingKey` so we get extract additional keys from `container.allKeys`

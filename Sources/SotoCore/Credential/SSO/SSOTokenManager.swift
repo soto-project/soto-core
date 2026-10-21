@@ -15,6 +15,7 @@
 // SSO Token Cache Management - Disk I/O and Token Refresh
 
 import Crypto
+import HTTPTypes
 import Logging
 import NIOCore
 import NIOFoundationEssentialsCompat
@@ -195,28 +196,26 @@ struct SSOTokenManager {
         let bodyData = try JSONEncoder().encode(requestBody)
 
         // Create HTTP request
-        var headers = HTTPHeaders()
-        headers.add(name: "Content-Type", value: "application/json")
-        headers.add(name: "Host", value: endpoint)
-        headers.add(name: "Content-Length", value: "\(bodyData.count)")
+        let headers: HTTPFields = [
+            .contentType: "application/json",
+            .contentLength: "\(bodyData.count)",
+        ]
 
         guard let url = URL(string: "https://\(endpoint)/token") else {
             throw AWSSSOCredentialError.tokenRefreshFailed("Failed to construct SSO-OIDC endpoint URL")
         }
 
         let request = AWSHTTPRequest(
-            url: url,
-            method: .POST,
-            headers: headers,
+            request: HTTPRequest(method: .post, url: url, headerFields: headers),
             body: .init(bytes: bodyData)
         )
 
         // Execute request (no signing - uses OAUTH client credentials)
         let response = try await httpClient.execute(request: request, timeout: .seconds(30), logger: logger)
 
-        guard (200...299).contains(response.status.code) else {
+        guard (200...299).contains(response.response.status.code) else {
             throw AWSSSOCredentialError.tokenRefreshFailed(
-                "Failed to refresh SSO token: HTTP \(response.status.code)"
+                "Failed to refresh SSO token: HTTP \(response.response.status.code)"
             )
         }
 

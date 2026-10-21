@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+import HTTPTypes
 import NIOPosix
 import _NIOFileSystem
 
@@ -246,7 +247,7 @@ struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
         try await self.client.execute(
             operation: "AssumeRole",
             path: "/",
-            httpMethod: .POST,
+            httpMethod: .post,
             serviceConfig: self.config,
             input: input,
             logger: logger
@@ -258,7 +259,7 @@ struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
         try await self.client.execute(
             operation: "AssumeRoleWithWebIdentity",
             path: "/",
-            httpMethod: .POST,
+            httpMethod: .post,
             serviceConfig: self.config,
             input: input,
             logger: logger

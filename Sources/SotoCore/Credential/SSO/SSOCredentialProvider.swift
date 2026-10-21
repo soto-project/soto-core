@@ -17,9 +17,9 @@
 import INIParser
 import Logging
 import NIOCore
-import NIOFoundationCompat
+import NIOFoundationEssentialsCompat
 import NIOPosix
-import SotoSignerV4
+public import SotoSignerV4
 import _NIOFileSystem
 
 #if canImport(FoundationEssentials)
@@ -34,11 +34,11 @@ public struct SSOCredentialProvider: CredentialProvider {
     private let configuration: SSOConfiguration?
     private let profileName: String?
     private let configPath: String?
-    private let httpClient: AWSHTTPClient
+    private let httpClient: any AWSHTTPClient
     private let threadPool: NIOThreadPool
 
     /// Create an SSOCredentialProvider with explicit configuration (for testing)
-    init(configuration: SSOConfiguration, httpClient: AWSHTTPClient, threadPool: NIOThreadPool = .singleton) {
+    init(configuration: SSOConfiguration, httpClient: any AWSHTTPClient, threadPool: NIOThreadPool = .singleton) {
         self.configuration = configuration
         self.profileName = nil
         self.configPath = nil
@@ -50,7 +50,7 @@ public struct SSOCredentialProvider: CredentialProvider {
     init(
         profileName: String? = nil,
         configPath: String,
-        httpClient: AWSHTTPClient,
+        httpClient: any AWSHTTPClient,
         threadPool: NIOThreadPool = .singleton
     ) {
         self.configuration = nil
@@ -66,7 +66,7 @@ public struct SSOCredentialProvider: CredentialProvider {
     ///   - httpClient: HTTP client for making requests
     public init(
         profileName: String? = nil,
-        httpClient: AWSHTTPClient
+        httpClient: any AWSHTTPClient
     ) {
         self.configuration = nil
         self.profileName = profileName
@@ -75,7 +75,7 @@ public struct SSOCredentialProvider: CredentialProvider {
         self.threadPool = .singleton
     }
 
-    public func getCredential(logger: Logger) async throws -> Credential {
+    public func getCredential(logger: Logger) async throws -> any Credential {
         let profile = profileName ?? "default"
         let config = try await getConfiguration()
         let tokenManager = SSOTokenManager(httpClient: httpClient)

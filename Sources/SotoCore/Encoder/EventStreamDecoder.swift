@@ -13,12 +13,13 @@
 //===----------------------------------------------------------------------===//
 
 import NIOCore
+import NIOFoundationEssentialsCompat
 internal import SotoXML
 
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 /// Event stream decoder. Decodes top level `:event-type` header and then passes the payload
@@ -35,7 +36,7 @@ struct EventStreamDecoder {
 
 /// Internal implementation of `EventStreamDecoder`
 private struct _EventStreamDecoder: Decoder {
-    var codingPath: [CodingKey] { [] }
+    var codingPath: [any CodingKey] { [] }
     var userInfo: [CodingUserInfoKey: Any] { [:] }
     let headers: [String: String]
     let payload: ByteBuffer
@@ -51,7 +52,7 @@ private struct _EventStreamDecoder: Decoder {
     }
 
     struct KDC<Key: CodingKey>: KeyedDecodingContainerProtocol {
-        var codingPath: [CodingKey] { [] }
+        var codingPath: [any CodingKey] { [] }
         let allKeys: [Key]
         let headers: [String: String]
         let payload: ByteBuffer
@@ -129,15 +130,15 @@ private struct _EventStreamDecoder: Decoder {
             preconditionFailure("Nested containers are not supported")
         }
 
-        func nestedUnkeyedContainer(forKey key: Key) throws -> UnkeyedDecodingContainer {
+        func nestedUnkeyedContainer(forKey key: Key) throws -> any UnkeyedDecodingContainer {
             preconditionFailure("Nested unkeyed containers are not supported")
         }
 
-        func superDecoder() throws -> Decoder {
+        func superDecoder() throws -> any Decoder {
             preconditionFailure("Super decoders are not supported")
         }
 
-        func superDecoder(forKey key: Key) throws -> Decoder {
+        func superDecoder(forKey key: Key) throws -> any Decoder {
             preconditionFailure("Super decoders are not supported")
         }
     }
@@ -200,11 +201,11 @@ private struct _EventStreamDecoder: Decoder {
         return (headers, payloadBuffer ?? .init())
     }
 
-    func unkeyedContainer() throws -> UnkeyedDecodingContainer {
+    func unkeyedContainer() throws -> any UnkeyedDecodingContainer {
         preconditionFailure("Unkeyed containers are not supported")
     }
 
-    func singleValueContainer() throws -> SingleValueDecodingContainer {
+    func singleValueContainer() throws -> any SingleValueDecodingContainer {
         preconditionFailure("Single value containers are not supported")
     }
 }

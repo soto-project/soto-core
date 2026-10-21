@@ -18,6 +18,7 @@ import Crypto
 import Logging
 import NIOCore
 import NIOHTTP1
+@_spi(SotoInternal) import SotoSignerV4
 
 @testable import SotoCore
 
@@ -234,7 +235,7 @@ extension SSOCredentialProviderTests {
     @discardableResult
     func createTokenFile(cacheKey: String, tokenJSON: String, inDirectory directory: URL) throws -> URL {
         let hash = Insecure.SHA1.hash(data: Data(cacheKey.utf8))
-            .compactMap { String(format: "%02x", $0) }.joined()
+            .hexDigest()
         let tokenPath = directory.appendingPathComponent("\(hash).json")
         try tokenJSON.write(to: tokenPath, atomically: true, encoding: .utf8)
         return tokenPath

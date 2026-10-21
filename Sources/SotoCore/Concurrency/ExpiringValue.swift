@@ -33,15 +33,15 @@ actor ExpiringValue<T: Sendable> {
         /// Initial call waiting on a value to be generated. Cannot use `waitingOnValue`` in
         /// initial call as it means we would have to setup it up before all stored properties
         /// have been initialized
-        case initialWaitingOnValue(Task<(T, Date), Error>)
+        case initialWaitingOnValue(Task<(T, Date), any Error>)
         /// Waiting on a value to be generated
-        case waitingOnValue(Task<T, Error>)
+        case waitingOnValue(Task<T, any Error>)
         /// Is holding a value
         case withValue(T, Date)
         /// Is holding a value, and there is a task in progress to update it
-        case withValueAndWaiting(T, Date, Task<T, Error>)
+        case withValueAndWaiting(T, Date, Task<T, any Error>)
         /// Error
-        case error(Error)
+        case error(any Error)
     }
 
     var state: State
@@ -66,7 +66,7 @@ actor ExpiringValue<T: Sendable> {
     }
 
     func getValue(getExpiringValue: @escaping @Sendable () async throws -> (T, Date)) async throws -> T {
-        let task: Task<T, Error>
+        let task: Task<T, any Error>
         switch self.state {
         case .noValue:
             task = try self.getValueTask(getExpiringValue)
@@ -132,7 +132,7 @@ actor ExpiringValue<T: Sendable> {
 
     /// Create task that will return a new version of the value and a date it will expire
     /// - Parameter getExpiringValue: Function return value and expiration date
-    func getValueTask(_ getExpiringValue: @escaping @Sendable () async throws -> (T, Date)) throws -> Task<T, Error> {
+    func getValueTask(_ getExpiringValue: @escaping @Sendable () async throws -> (T, Date)) throws -> Task<T, any Error> {
         try Task.checkCancellation()
         return Task {
             let (value, expires) = try await getExpiringValue()

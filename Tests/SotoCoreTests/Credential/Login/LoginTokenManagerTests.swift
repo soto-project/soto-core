@@ -17,6 +17,7 @@
 import Crypto
 import NIOCore
 import NIOPosix
+@_spi(SotoInternal) import SotoSignerV4
 import Testing
 import _NIOFileSystem
 
@@ -57,7 +58,7 @@ final class LoginTokenManagerTests {
         // Should use SHA256 hash of "test-session"
         let sessionData = Data("test-session".utf8)
         let hash = SHA256.hash(data: sessionData)
-        let hashString = hash.compactMap { String(format: "%02x", $0) }.joined()
+        let hashString = hash.hexDigest()
 
         #expect(path.contains("\(hashString).json"))
         #expect(path.hasPrefix(tempDirectory.path))

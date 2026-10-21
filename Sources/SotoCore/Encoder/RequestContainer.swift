@@ -16,9 +16,9 @@ import NIOConcurrencyHelpers
 import SotoSignerV4
 
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 /// Request container used during Codable `encode(to:)` that allows for encoding data into
@@ -283,38 +283,16 @@ public final class RequestEncodingContainer: Sendable {
     /// Write value into URI path
     @inlinable
     public func encodePath(_ value: some Any, key: String) {
-        #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS) || os(visionOS)
-        if #available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *) {
-            self.path = self.path
-                .replacing("{\(key)}", with: Self.urlEncodePathComponent(String(describing: value)))
-                .replacing("{\(key)+}", with: Self.urlEncodePath(String(describing: value)))
-        } else {
-            self.path = self.path
-                .replacingOccurrences(of: "{\(key)}", with: Self.urlEncodePathComponent(String(describing: value)))
-                .replacingOccurrences(of: "{\(key)+}", with: Self.urlEncodePath(String(describing: value)))
-        }
-        #else
         self.path = self.path
             .replacing("{\(key)}", with: Self.urlEncodePathComponent(String(describing: value)))
             .replacing("{\(key)+}", with: Self.urlEncodePath(String(describing: value)))
-        #endif
     }
 
     /// Write value into hostname
     @inlinable
     public func encodeHostPrefix(_ value: some Any, key: String) {
-        #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS) || os(visionOS)
-        if #available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *) {
-            self.hostPrefix = self.hostPrefix?
-                .replacing("{\(key)}", with: Self.urlEncodePathComponent(String(describing: value)))
-        } else {
-            self.hostPrefix = self.hostPrefix?
-                .replacingOccurrences(of: "{\(key)}", with: Self.urlEncodePathComponent(String(describing: value)))
-        }
-        #else
         self.hostPrefix = self.hostPrefix?
             .replacing("{\(key)}", with: Self.urlEncodePathComponent(String(describing: value)))
-        #endif
     }
 
     /// percent encode query parameter value.

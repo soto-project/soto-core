@@ -31,14 +31,14 @@ public struct AWSEventStream<Event: Sendable>: Sendable {
 }
 
 extension AWSEventStream: Decodable where Event: Decodable {
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let responseContainer = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
         self.init(responseContainer.response.body)
     }
 }
 
 extension AWSEventStream: Encodable where Event: Encodable {
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         preconditionFailure("Encoding EventStreams is unsupported")
     }
 }

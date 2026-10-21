@@ -155,7 +155,7 @@ private struct _QueryEncoderStorage {
 
 /// Internal QueryEncoder class. Does all the heavy lifting
 private class _QueryEncoder: Encoder {
-    var codingPath: [CodingKey]
+    var codingPath: [any CodingKey]
 
     /// the encoder's storage
     var storage: _QueryEncoderStorage
@@ -191,7 +191,7 @@ private class _QueryEncoder: Encoder {
     }
 
     struct KEC<Key: CodingKey>: KeyedEncodingContainerProtocol {
-        var codingPath: [CodingKey] { self.encoder.codingPath }
+        var codingPath: [any CodingKey] { self.encoder.codingPath }
         let container: _QueryEncoderKeyedContainer
         let encoder: _QueryEncoder
 
@@ -242,7 +242,7 @@ private class _QueryEncoder: Encoder {
             return KeyedEncodingContainer(kec)
         }
 
-        mutating func nestedUnkeyedContainer(forKey key: Key) -> UnkeyedEncodingContainer {
+        mutating func nestedUnkeyedContainer(forKey key: Key) -> any UnkeyedEncodingContainer {
             self.encoder.codingPath.append(key)
             defer { self.encoder.codingPath.removeLast() }
 
@@ -252,11 +252,11 @@ private class _QueryEncoder: Encoder {
             return UKEC(referencing: self.encoder, container: unkeyedContainer)
         }
 
-        mutating func superEncoder() -> Encoder {
+        mutating func superEncoder() -> any Encoder {
             self.encoder
         }
 
-        mutating func superEncoder(forKey key: Key) -> Encoder {
+        mutating func superEncoder(forKey key: Key) -> any Encoder {
             self.encoder
         }
 
@@ -268,13 +268,13 @@ private class _QueryEncoder: Encoder {
         }
     }
 
-    func unkeyedContainer() -> UnkeyedEncodingContainer {
+    func unkeyedContainer() -> any UnkeyedEncodingContainer {
         let container = self.storage.pushUnkeyedContainer()
         return UKEC(referencing: self, container: container)
     }
 
     struct UKEC: UnkeyedEncodingContainer {
-        var codingPath: [CodingKey] { self.encoder.codingPath }
+        var codingPath: [any CodingKey] { self.encoder.codingPath }
         let container: _QueryEncoderUnkeyedContainer
         let encoder: _QueryEncoder
         var count: Int
@@ -329,7 +329,7 @@ private class _QueryEncoder: Encoder {
             return KeyedEncodingContainer(kec)
         }
 
-        mutating func nestedUnkeyedContainer() -> UnkeyedEncodingContainer {
+        mutating func nestedUnkeyedContainer() -> any UnkeyedEncodingContainer {
             self.count += 1
 
             let unkeyedContainer = _QueryEncoderUnkeyedContainer()
@@ -338,7 +338,7 @@ private class _QueryEncoder: Encoder {
             return UKEC(referencing: self.encoder, container: unkeyedContainer)
         }
 
-        mutating func superEncoder() -> Encoder {
+        mutating func superEncoder() -> any Encoder {
             self.encoder
         }
     }
@@ -372,7 +372,7 @@ extension _QueryEncoder: SingleValueEncodingContainer {
         try value.encode(to: self)
     }
 
-    func singleValueContainer() -> SingleValueEncodingContainer {
+    func singleValueContainer() -> any SingleValueEncodingContainer {
         self
     }
 }
@@ -383,7 +383,7 @@ extension _QueryEncoder {
         return self.storage.popContainer()
     }
 
-    func box(_ value: Encodable) throws -> Any {
+    func box(_ value: some Encodable) throws -> Any {
         let type = Swift.type(of: value)
         if type == Date.self {
             return try self.box(value as! Date)

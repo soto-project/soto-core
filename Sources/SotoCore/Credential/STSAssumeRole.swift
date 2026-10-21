@@ -166,7 +166,7 @@ struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
         credentialProvider: CredentialProviderFactory,
         region: Region,
         retryPolicy: RetryPolicyFactory,
-        httpClient: AWSHTTPClient,
+        httpClient: any AWSHTTPClient,
         endpoint: String? = nil
     ) {
         self.client = AWSClient(credentialProvider: credentialProvider, retryPolicy: retryPolicy, httpClient: httpClient)
@@ -189,7 +189,7 @@ struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
         webIdentityTokenFile: String,
         region: Region,
         retryPolicy: RetryPolicyFactory,
-        httpClient: AWSHTTPClient,
+        httpClient: any AWSHTTPClient,
         endpoint: String? = nil,
         threadPool: NIOThreadPool = .singleton
     ) {
@@ -212,7 +212,7 @@ struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
         )
     }
 
-    func getCredential(logger: Logger) async throws -> Credential {
+    func getCredential(logger: Logger) async throws -> any Credential {
         let credentials: STSCredentials?
         switch self.request {
         case .assumeRole(let arn, let sessioName):

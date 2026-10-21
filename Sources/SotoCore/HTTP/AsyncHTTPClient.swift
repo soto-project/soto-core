@@ -12,10 +12,16 @@
 //
 //===----------------------------------------------------------------------===//
 
-import AsyncHTTPClient
+public import AsyncHTTPClient
 import Logging
 import NIOCore
 import NIOHTTP1
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
     /// Execute HTTP request

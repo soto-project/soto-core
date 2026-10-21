@@ -21,7 +21,7 @@ import SotoSignerV4
 /// attempting to get credentials. Once it finds a `CredentialProvider` that supplies credentials use that
 /// one
 final class RuntimeSelectorCredentialProvider: CredentialProviderSelector {
-    private let getProviderTask: Task<CredentialProvider, Error>
+    private let getProviderTask: Task<any CredentialProvider, any Error>
 
     init(providers: [CredentialProviderFactory], context: CredentialProviderFactory.Context) {
         self.getProviderTask = Task {
@@ -29,7 +29,7 @@ final class RuntimeSelectorCredentialProvider: CredentialProviderSelector {
         }
     }
 
-    func getCredentialProviderTask() async throws -> CredentialProvider {
+    func getCredentialProviderTask() async throws -> any CredentialProvider {
         try await self.getProviderTask.value
     }
 
@@ -42,7 +42,7 @@ final class RuntimeSelectorCredentialProvider: CredentialProviderSelector {
     private static func setupInternalProvider(
         providers: [CredentialProviderFactory],
         context: CredentialProviderFactory.Context
-    ) async throws -> CredentialProvider {
+    ) async throws -> any CredentialProvider {
         for providerFactory in providers {
             let provider = providerFactory.createProvider(context: context)
             do {

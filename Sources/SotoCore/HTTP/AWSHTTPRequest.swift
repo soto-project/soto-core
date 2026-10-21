@@ -14,15 +14,15 @@
 
 import Crypto
 import NIOCore
-import NIOFoundationCompat
-import NIOHTTP1
+import NIOFoundationEssentialsCompat
+public import NIOHTTP1
 import SotoSignerV4
 internal import SotoXML
 
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 /// Object encapsulating all the information needed to generate a raw HTTP request to AWS

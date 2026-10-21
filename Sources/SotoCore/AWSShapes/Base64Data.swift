@@ -33,13 +33,13 @@ public struct AWSBase64Data: Sendable, Codable, Equatable {
     }
 
     /// Codable decode
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
         self.base64String = try container.decode(String.self)
     }
 
     /// Codable encode
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(self.base64String)
     }

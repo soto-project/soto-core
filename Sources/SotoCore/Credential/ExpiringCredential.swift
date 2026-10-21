@@ -12,12 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SotoSignerV4
+public import SotoSignerV4
 
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 /// Credential provider whose credentials expire over tiem.

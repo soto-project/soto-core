@@ -13,9 +13,9 @@
 //===----------------------------------------------------------------------===//
 
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 /// The wrapper class for decoding Codable classes from XMLNodes
@@ -26,7 +26,7 @@ public struct XMLDecoder {
         case base64
 
         /// Decode the `Data` as a custom value decoded by the given closure.
-        case custom((_ decoder: Decoder) throws -> Data)
+        case custom((_ decoder: any Decoder) throws -> Data)
     }
 
     /// The strategy to use for non-JSON-conforming floating-point values (IEEE 754 infinity and NaN).
@@ -78,13 +78,13 @@ extension XML.Node {
         (children ?? []).first(where: { $0.name == string })
     }
 
-    func child(for key: CodingKey) -> XML.Node? {
+    func child(for key: any CodingKey) -> XML.Node? {
         self.child(for: key.stringValue)
     }
 }
 
 extension XML.Element {
-    func attribute(for key: CodingKey) -> XML.Node? {
+    func attribute(for key: any CodingKey) -> XML.Node? {
         self.attribute(forName: key.stringValue)
     }
 }
@@ -116,12 +116,12 @@ private class _XMLDecoder: Decoder {
     let options: XMLDecoder._Options
 
     /// The path to the current point in encoding.
-    var codingPath: [CodingKey]
+    var codingPath: [any CodingKey]
 
     /// Contextual user-provided information for use during encoding.
     public var userInfo: [CodingUserInfoKey: Any] { self.options.userInfo }
 
-    public init(_ element: XML.Node, at codingPath: [CodingKey] = [], options: XMLDecoder._Options) {
+    public init(_ element: XML.Node, at codingPath: [any CodingKey] = [], options: XMLDecoder._Options) {
         self.storage = _XMLDecoderStorage()
         self.storage.push(container: element)
         self.codingPath = codingPath
@@ -139,7 +139,7 @@ private class _XMLDecoder: Decoder {
     }
 
     struct KDC<Key: CodingKey>: KeyedDecodingContainerProtocol {
-        var codingPath: [CodingKey] { self.decoder.codingPath }
+        var codingPath: [any CodingKey] { self.decoder.codingPath }
         var allKeys: [Key] = []
         let element: XML.Node
         let decoder: _XMLDecoder
@@ -164,7 +164,7 @@ private class _XMLDecoder: Decoder {
         }
 
         /// get the XMLElment for a particular key
-        func child(for key: CodingKey) throws -> XML.Node {
+        func child(for key: any CodingKey) throws -> XML.Node {
             if let child = element.child(for: key) {
                 return child
             } else if let attribute = (element as? XML.Element)?.attribute(for: key) {
@@ -174,7 +174,7 @@ private class _XMLDecoder: Decoder {
         }
 
         /// get the XMLElment for a particular key
-        func optionalChild(for key: CodingKey) -> XML.Node? {
+        func optionalChild(for key: any CodingKey) -> XML.Node? {
             if let child = element.child(for: key) {
                 return child
             } else if let attribute = (element as? XML.Element)?.attribute(for: key) {
@@ -277,14 +277,14 @@ private class _XMLDecoder: Decoder {
             return KeyedDecodingContainer(container)
         }
 
-        func nestedUnkeyedContainer(forKey key: Key) throws -> UnkeyedDecodingContainer {
+        func nestedUnkeyedContainer(forKey key: Key) throws -> any UnkeyedDecodingContainer {
             self.decoder.codingPath.append(key)
             defer { self.decoder.codingPath.removeLast() }
 
             return UKDC(self.element, decoder: self.decoder)
         }
 
-        private func _superDecoder(forKey key: __owned CodingKey) throws -> Decoder {
+        private func _superDecoder(forKey key: __owned any CodingKey) throws -> any Decoder {
             self.decoder.codingPath.append(key)
             defer { self.decoder.codingPath.removeLast() }
 
@@ -292,16 +292,16 @@ private class _XMLDecoder: Decoder {
             return _XMLDecoder(child, at: self.decoder.codingPath, options: self.decoder.options)
         }
 
-        func superDecoder() throws -> Decoder {
+        func superDecoder() throws -> any Decoder {
             try self._superDecoder(forKey: _XMLKey.super)
         }
 
-        func superDecoder(forKey key: Key) throws -> Decoder {
+        func superDecoder(forKey key: Key) throws -> any Decoder {
             try self._superDecoder(forKey: key)
         }
     }
 
-    public func unkeyedContainer() throws -> UnkeyedDecodingContainer {
+    public func unkeyedContainer() throws -> any UnkeyedDecodingContainer {
         let top = self.storage.popContainer()
         defer {
             storage.push(container: top)
@@ -316,7 +316,7 @@ private class _XMLDecoder: Decoder {
     }
 
     struct UKDC: UnkeyedDecodingContainer {
-        var codingPath: [CodingKey] { self.decoder.codingPath }
+        var codingPath: [any CodingKey] { self.decoder.codingPath }
         var currentIndex: Int = 0
         let elements: [XML.Node]
         let decoder: _XMLDecoder
@@ -440,7 +440,7 @@ private class _XMLDecoder: Decoder {
             return KeyedDecodingContainer(container)
         }
 
-        mutating func nestedUnkeyedContainer() throws -> UnkeyedDecodingContainer {
+        mutating func nestedUnkeyedContainer() throws -> any UnkeyedDecodingContainer {
             self.decoder.codingPath.append(_XMLKey(index: self.currentIndex))
             defer { self.decoder.codingPath.removeLast() }
 
@@ -449,7 +449,7 @@ private class _XMLDecoder: Decoder {
             return UKDC(self.elements[self.currentIndex], decoder: self.decoder)
         }
 
-        mutating func superDecoder() throws -> Decoder {
+        mutating func superDecoder() throws -> any Decoder {
             self.decoder.codingPath.append(_XMLKey(index: self.currentIndex))
             defer { self.decoder.codingPath.removeLast() }
 
@@ -460,7 +460,7 @@ private class _XMLDecoder: Decoder {
         }
     }
 
-    public func singleValueContainer() throws -> SingleValueDecodingContainer {
+    public func singleValueContainer() throws -> any SingleValueDecodingContainer {
         guard let element = storage.topContainer else {
             throw DecodingError.keyNotFound(
                 self.codingPath.last!,
@@ -471,7 +471,7 @@ private class _XMLDecoder: Decoder {
     }
 
     struct SVDC: SingleValueDecodingContainer {
-        var codingPath: [CodingKey] { self.decoder.codingPath }
+        var codingPath: [any CodingKey] { self.decoder.codingPath }
         let element: XML.Node
         let decoder: _XMLDecoder
 
@@ -718,7 +718,7 @@ private class _XMLDecoder: Decoder {
         try self.unbox_(element, as: T.self) as! T
     }
 
-    func unbox_(_ element: XML.Node?, as type: Decodable.Type) throws -> Any {
+    func unbox_(_ element: XML.Node?, as type: any Decodable.Type) throws -> Any {
         if type == Data.self {
             return try self.unbox(element, as: Data.self)
         } else if type == Date.self {
@@ -773,7 +773,7 @@ extension EncodingError {
     /// - parameter value: The value that was invalid to encode.
     /// - parameter path: The path of `CodingKey`s taken to encode this value.
     /// - returns: An `EncodingError` with the appropriate path and debug description.
-    fileprivate static func _invalidFloatingPointValue<T: FloatingPoint>(_ value: T, at codingPath: [CodingKey]) -> EncodingError {
+    fileprivate static func _invalidFloatingPointValue<T: FloatingPoint>(_ value: T, at codingPath: [any CodingKey]) -> EncodingError {
         let valueDescription: String
         if value == T.infinity {
             valueDescription = "\(T.self).infinity"
@@ -796,7 +796,7 @@ extension DecodingError {
     /// - parameter expectation: The type expected to be encountered.
     /// - parameter reality: The value that was encountered instead of the expected type.
     /// - returns: A `DecodingError` with the appropriate path and debug description.
-    static func _typeMismatch(at path: [CodingKey], expectation: Any.Type, reality: Any) -> DecodingError {
+    static func _typeMismatch(at path: [any CodingKey], expectation: Any.Type, reality: Any) -> DecodingError {
         let description = "Expected to decode \(expectation) but found \(_typeDescription(of: reality)) instead."
         return .typeMismatch(expectation, Context(codingPath: path, debugDescription: description))
     }

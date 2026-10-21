@@ -18,6 +18,7 @@ import Crypto
 import Logging
 import NIOCore
 import NIOHTTP1
+@_spi(SotoInternal) import SotoSignerV4
 import Testing
 
 @testable import SotoCore
@@ -191,7 +192,7 @@ extension SSOCredentialProviderTests {
         let path = try tokenManager.constructTokenPath(config: makeModernConfig())
 
         let expectedHash = Insecure.SHA1.hash(data: Data("my-sso".utf8))
-            .compactMap { String(format: "%02x", $0) }.joined()
+            .hexDigest()
         #expect(path.hasSuffix("\(expectedHash).json"))
         #expect(path.contains(Self.ssoCacheDirectory))
     }
@@ -202,7 +203,7 @@ extension SSOCredentialProviderTests {
         let path = try tokenManager.constructTokenPath(config: makeLegacyConfig())
 
         let expectedHash = Insecure.SHA1.hash(data: Data("https://test.awsapps.com/start".utf8))
-            .compactMap { String(format: "%02x", $0) }.joined()
+            .hexDigest()
         #expect(path.hasSuffix("\(expectedHash).json"))
         #expect(path.contains(Self.ssoCacheDirectory))
     }

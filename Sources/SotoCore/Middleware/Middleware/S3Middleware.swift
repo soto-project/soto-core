@@ -313,7 +313,7 @@ public struct S3Middleware: AWSMiddlewareProtocol {
         }
     }
 
-    func fixupRawError(error: AWSRawError, context: AWSMiddlewareContext) -> Error {
+    func fixupRawError(error: AWSRawError, context: AWSMiddlewareContext) -> any Error {
         if error.context.responseCode == .notFound {
             if let errorType = context.serviceConfig.errorType,
                 let notFoundError = errorType.init(errorCode: "NotFound", context: error.context)

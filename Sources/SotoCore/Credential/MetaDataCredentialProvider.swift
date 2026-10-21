@@ -16,6 +16,7 @@ import AsyncHTTPClient
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
+import NIOFoundationEssentialsCompat
 import NIOHTTP1
 import SotoSignerV4
 
@@ -33,13 +34,13 @@ protocol MetaDataClient: CredentialProvider {
 }
 
 extension MetaDataClient {
-    func getCredential(logger: Logger) async throws -> Credential {
+    func getCredential(logger: Logger) async throws -> any Credential {
         try await self.getMetaData(logger: logger)
     }
 }
 
 enum MetaDataClientError: Error {
-    case failedToDecode(underlyingError: Error)
+    case failedToDecode(underlyingError: any Error)
     case unexpectedTokenResponseStatus(status: HTTPResponseStatus)
     case couldNotReadTokenFromResponse
     case couldNotGetInstanceRoleName
@@ -92,10 +93,10 @@ struct ECSMetaDataClient: MetaDataClient {
         }
     }
 
-    let httpClient: AWSHTTPClient
+    let httpClient: any AWSHTTPClient
     let endpointURL: String
 
-    init?(httpClient: AWSHTTPClient, host: String = ECSMetaDataClient.Host) {
+    init?(httpClient: any AWSHTTPClient, host: String = ECSMetaDataClient.Host) {
         guard let relativeURL = Environment[Self.RelativeURIEnvironmentName] else {
             return nil
         }
@@ -168,10 +169,10 @@ struct InstanceMetaDataClient: MetaDataClient {
         URL(string: "\(self.host)\(Self.CredentialUri)")!
     }
 
-    let httpClient: AWSHTTPClient
+    let httpClient: any AWSHTTPClient
     let host: String
 
-    init(httpClient: AWSHTTPClient, host: String = InstanceMetaDataClient.Host) {
+    init(httpClient: any AWSHTTPClient, host: String = InstanceMetaDataClient.Host) {
         self.httpClient = httpClient
         self.host = host
     }

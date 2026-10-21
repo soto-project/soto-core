@@ -33,7 +33,7 @@ struct ErrorHandlingMiddleware: AWSMiddlewareProtocol {
     }
 
     /// Create error from HTTPResponse. This is only called if we received an unsuccessful http status code.
-    internal func createError(for response: AWSHTTPResponse, context: AWSMiddlewareContext) async -> Error {
+    internal func createError(for response: AWSHTTPResponse, context: AWSMiddlewareContext) async -> any Error {
         // if we can create an AWSResponse and create an error from it return that
         var response = response
         do {

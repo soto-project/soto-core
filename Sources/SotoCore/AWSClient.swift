@@ -482,7 +482,7 @@ extension AWSClient {
     /// - Parameters:
     ///   - logger: optional logger to use
     /// - Returns: Credential
-    public func getCredential(logger: Logger = AWSClient.loggingDisabled) async throws -> Credential {
+    public func getCredential(logger: Logger = AWSClient.loggingDisabled) async throws -> any Credential {
         try await self.credentialProvider.getCredential(logger: logger)
     }
 

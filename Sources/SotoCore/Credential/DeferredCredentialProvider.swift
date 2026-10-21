@@ -50,7 +50,7 @@ public final class DeferredCredentialProvider: CredentialProvider {
     /// Return credentials
     /// - Parameter logger: Logger
     /// - Returns: Credentials
-    public func getCredential(logger: Logger) async throws -> Credential {
+    public func getCredential(logger: Logger) async throws -> any Credential {
         try await withTaskCancellationHandler {
             try await self.getCredentialTask.value
         } onCancel: {

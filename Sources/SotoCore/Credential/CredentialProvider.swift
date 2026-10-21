@@ -24,7 +24,7 @@ public protocol CredentialProvider: Sendable, CustomStringConvertible {
     /// Return credential
     /// - Parameters:
     ///   - logger: Logger to use
-    func getCredential(logger: Logger) async throws -> Credential
+    func getCredential(logger: Logger) async throws -> any Credential
 
     /// Shutdown credential provider
     func shutdown() async throws

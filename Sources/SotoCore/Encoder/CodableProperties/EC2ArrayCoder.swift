@@ -47,7 +47,7 @@ private struct _EncodingWrapperKey: CodingKey {
 
 /// extend to support decoding
 extension EC2ArrayCoder: CustomDecoder where Element: Decodable {
-    public static func decode(from decoder: Decoder) throws -> CodableValue {
+    public static func decode(from decoder: any Decoder) throws -> CodableValue {
         let topLevelContainer = try decoder.container(keyedBy: _EncodingWrapperKey.self)
         var values: [Element] = []
         let memberKey = _EncodingWrapperKey(stringValue: Properties.member, intValue: nil)
@@ -63,7 +63,7 @@ extension EC2ArrayCoder: CustomDecoder where Element: Decodable {
 
 /// extend to support encoding (flatten the array)
 extension EC2ArrayCoder: CustomEncoder where Element: Encodable {
-    public static func encode(value: CodableValue, to encoder: Encoder) throws {
+    public static func encode(value: CodableValue, to encoder: any Encoder) throws {
         try value.encode(to: encoder)
     }
 }

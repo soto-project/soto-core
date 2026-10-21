@@ -25,10 +25,10 @@ import Foundation
 
 /// Creates a RetryPolicy for AWSClient to use
 public struct RetryPolicyFactory: Sendable {
-    public let retryPolicy: RetryPolicy
+    public let retryPolicy: any RetryPolicy
 
     /// Initialize a RetryPolicyFactory
-    public init(retryPolicy: RetryPolicy) {
+    public init(retryPolicy: any RetryPolicy) {
         self.retryPolicy = retryPolicy
     }
 
@@ -65,13 +65,13 @@ public protocol RetryPolicy: Sendable {
     /// - Parameters:
     ///   - error: Error returned by HTTP client
     ///   - attempt: retry attempt number
-    func getRetryWaitTime(error: Error, attempt: Int) -> RetryStatus?
+    func getRetryWaitTime(error: any Error, attempt: Int) -> RetryStatus?
 }
 
 /// Retry controller that never returns a retry wait time
 private struct NoRetry: RetryPolicy {
     init() {}
-    func getRetryWaitTime(error: Error, attempt: Int) -> RetryStatus? {
+    func getRetryWaitTime(error: any Error, attempt: Int) -> RetryStatus? {
         .dontRetry
     }
 }
@@ -84,11 +84,11 @@ protocol StandardRetryPolicy: RetryPolicy {
 
 extension StandardRetryPolicy {
     /// default version of getRetryWaitTime for StandardRetryController
-    func getRetryWaitTime(error: Error, attempt: Int) -> RetryStatus? {
+    func getRetryWaitTime(error: any Error, attempt: Int) -> RetryStatus? {
         guard attempt < maxRetries else { return .dontRetry }
 
         switch error {
-        case let error as AWSErrorType:
+        case let error as any AWSErrorType:
             if let context = error.context {
                 // if response has a "Retry-After" header then use that
                 if let retryAfterString = context.headers["Retry-After"].first, let retryAfter = Int64(retryAfterString) {

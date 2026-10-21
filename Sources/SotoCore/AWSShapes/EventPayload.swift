@@ -23,13 +23,13 @@ public struct AWSEventPayload: Sendable, Codable, Equatable {
     }
 
     /// Codable decode
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let response = decoder.userInfo[.awsEvent]! as! EventDecodingContainer
         self.buffer = response.decodePayload()
     }
 
     /// Codable encode
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         preconditionFailure("Event encoding is not supported yet")
     }
 }

@@ -15,9 +15,9 @@
 import NIOConcurrencyHelpers
 
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 /// Decoding error returned when extracting data out of response headers

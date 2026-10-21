@@ -16,8 +16,9 @@
 import PackageDescription
 
 let swiftSettings: [SwiftSetting] = [
-    .enableExperimentalFeature("StrictConcurrency=complete"),
-    .enableExperimentalFeature("AccessLevelOnImport"),
+    .enableUpcomingFeature("ExistentialAny"),
+    .enableUpcomingFeature("MemberImportVisibility"),
+    .enableUpcomingFeature("InternalImportsByDefault"),
 ]
 
 let package = Package(
@@ -72,7 +73,7 @@ let package = Package(
                 .product(name: "NIOPosix", package: "swift-nio"),
                 .product(name: "NIOSSL", package: "swift-nio-ssl"),
                 .product(name: "NIOTransportServices", package: "swift-nio-transport-services"),
-                .product(name: "NIOFoundationCompat", package: "swift-nio"),
+                .product(name: "NIOFoundationEssentialsCompat", package: "swift-nio"),
                 .product(name: "JMESPath", package: "jmespath.swift"),
                 .product(name: "Tracing", package: "swift-distributed-tracing"),
                 .product(

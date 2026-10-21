@@ -14,9 +14,9 @@
 
 // TODO: FoundationEssentials (DateFormatter)
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 // MARK: TimeStamp Coders
@@ -25,7 +25,7 @@ import Foundation
 public struct ISO8601DateCoder: CustomDecoder, CustomEncoder {
     public typealias CodableValue = Date
 
-    public static func decode(from decoder: Decoder) throws -> CodableValue {
+    public static func decode(from decoder: any Decoder) throws -> CodableValue {
         let container = try decoder.singleValueContainer()
         let value = try container.decode(String.self)
         guard let date = Date(iso8601: value) else {
@@ -34,7 +34,7 @@ public struct ISO8601DateCoder: CustomDecoder, CustomEncoder {
         return date
     }
 
-    public static func encode(value: CodableValue, to encoder: Encoder) throws {
+    public static func encode(value: CodableValue, to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(value.iso8601)
     }
@@ -48,7 +48,7 @@ public struct ISO8601DateCoder: CustomDecoder, CustomEncoder {
 public struct HTTPHeaderDateCoder: CustomDecoder, CustomEncoder {
     public typealias CodableValue = Date
 
-    public static func decode(from decoder: Decoder) throws -> CodableValue {
+    public static func decode(from decoder: any Decoder) throws -> CodableValue {
         let container = try decoder.singleValueContainer()
         let value = try container.decode(String.self)
         guard let date = Date(httpHeader: value) else {
@@ -57,7 +57,7 @@ public struct HTTPHeaderDateCoder: CustomDecoder, CustomEncoder {
         return date
     }
 
-    public static func encode(value: CodableValue, to encoder: Encoder) throws {
+    public static func encode(value: CodableValue, to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(value.httpHeader)
     }
@@ -71,13 +71,13 @@ public struct HTTPHeaderDateCoder: CustomDecoder, CustomEncoder {
 public struct UnixEpochDateCoder: CustomDecoder, CustomEncoder {
     public typealias CodableValue = Date
 
-    public static func decode(from decoder: Decoder) throws -> CodableValue {
+    public static func decode(from decoder: any Decoder) throws -> CodableValue {
         let container = try decoder.singleValueContainer()
         let value = try container.decode(Double.self)
         return Date(timeIntervalSince1970: value)
     }
 
-    public static func encode(value: CodableValue, to encoder: Encoder) throws {
+    public static func encode(value: CodableValue, to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(value.timeIntervalSince1970)
     }

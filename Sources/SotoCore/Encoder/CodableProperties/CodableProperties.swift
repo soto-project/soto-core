@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 // This code takes inspiration from https://github.com/GottaGetSwifty/CodableWrappers
-import JMESPath
+public import JMESPath
 
 /// base protocol for encoder/decoder objects
 public protocol CustomCoder {
@@ -23,7 +23,7 @@ public protocol CustomCoder {
 /// Protocol for object that will encode a value
 public protocol CustomEncoder: CustomCoder {
     /// encode CodableValue with supplied encoder
-    static func encode(value: CodableValue, to encoder: Encoder) throws
+    static func encode(value: CodableValue, to encoder: any Encoder) throws
     /// return value as a String. Used by query string and header values
     static func string(from: CodableValue) -> String?
 }
@@ -34,7 +34,7 @@ extension CustomEncoder {
 
 /// Protocol for object that will decode a value
 public protocol CustomDecoder: CustomCoder {
-    static func decode(from decoder: Decoder) throws -> CodableValue
+    static func decode(from decoder: any Decoder) throws -> CodableValue
 }
 
 /// Property wrapper that applies a custom encoder and decoder to its wrapped value
@@ -53,14 +53,14 @@ public protocol CustomDecoder: CustomCoder {
 
 /// add decode functionality if propertyWrapper conforms to `Decodable` and Coder conforms to `CustomDecoder`
 extension CustomCoding: Decodable where Coder: CustomDecoder {
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         self.value = try Coder.decode(from: decoder)
     }
 }
 
 /// add encoder functionality if propertyWrapper conforms to `Encodable` and Coder conforms to `CustomEncoder`
 extension CustomCoding: Encodable where Coder: CustomEncoder {
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         try Coder.encode(value: self.value, to: encoder)
     }
 }
@@ -88,14 +88,14 @@ extension CustomCoding: JMESPropertyWrapper {
 
 /// add decode functionality if propertyWrapper conforms to `Decodable` and Coder conforms to `CustomDecoder`
 extension OptionalCustomCoding: Decodable where Coder: CustomDecoder {
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         self.value = try Coder.decode(from: decoder)
     }
 }
 
 /// add encoder functionality if propertyWrapper conforms to `Encodable` and Coder conforms to `CustomEncoder`
 extension OptionalCustomCoding: Encodable where Coder: CustomEncoder {
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         guard let value = self.value else { return }
         try Coder.encode(value: value, to: encoder)
     }

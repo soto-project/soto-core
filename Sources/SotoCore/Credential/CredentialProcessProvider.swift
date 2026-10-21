@@ -32,7 +32,7 @@ public struct CredentialProcessProvider: CredentialProvider {
 
     public var description: String { "CredentialProcessProvider" }
 
-    public func getCredential(logger: Logger) async throws -> Credential {
+    public func getCredential(logger: Logger) async throws -> any Credential {
         guard !command.isEmpty else {
             throw CredentialProcessError.commandEmpty
         }

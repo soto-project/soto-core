@@ -19,7 +19,7 @@ import NIOPosix
 import SotoSignerV4
 
 final class ConfigFileCredentialProvider: CredentialProviderSelector {
-    private let getProviderTask: Task<CredentialProvider, Error>
+    private let getProviderTask: Task<any CredentialProvider, any Error>
     init(
         credentialsFilePath: String,
         configFilePath: String,
@@ -41,7 +41,7 @@ final class ConfigFileCredentialProvider: CredentialProviderSelector {
         }
     }
 
-    func getCredentialProviderTask() async throws -> CredentialProvider {
+    func getCredentialProviderTask() async throws -> any CredentialProvider {
         try await self.getProviderTask.value
     }
 
@@ -66,7 +66,7 @@ final class ConfigFileCredentialProvider: CredentialProviderSelector {
         endpoint: String?,
         retryPolicy: RetryPolicyFactory,
         threadPool: NIOThreadPool = .singleton
-    ) async throws -> CredentialProvider {
+    ) async throws -> any CredentialProvider {
         let sharedCredentials = try await ConfigFileLoader.loadSharedCredentials(
             credentialsFilePath: credentialsFilePath,
             configFilePath: configFilePath,
@@ -95,7 +95,7 @@ final class ConfigFileCredentialProvider: CredentialProviderSelector {
         context: CredentialProviderFactory.Context,
         endpoint: String?,
         retryPolicy: RetryPolicyFactory
-    ) throws -> CredentialProvider {
+    ) throws -> any CredentialProvider {
         switch sharedCredentials {
         case .staticCredential(let staticCredential):
             return staticCredential
@@ -122,12 +122,12 @@ final class ConfigFileCredentialProvider: CredentialProviderSelector {
 /// the caller asked to resolve. Without this, an error from a source profile, SSO source, or
 /// STS AssumeRole call does not mention the profile that initiated the lookup.
 struct ProfileScopedCredentialProvider: CredentialProvider {
-    let inner: CredentialProvider
+    let inner: any CredentialProvider
     let profile: String
 
     var description: String { "\(inner) (profile: \(profile))" }
 
-    func getCredential(logger: Logger) async throws -> Credential {
+    func getCredential(logger: Logger) async throws -> any Credential {
         do {
             return try await self.inner.getCredential(logger: logger)
         } catch {

@@ -15,9 +15,9 @@
 import NIOCore
 
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 /// Services object protocol. Contains a client to communicate with AWS and configuration for defining how to communicate.
@@ -55,7 +55,7 @@ extension AWSService {
     /// - Returns: New version of the service
     public func with(
         region: Region? = nil,
-        middleware: AWSMiddlewareProtocol? = nil,
+        middleware: any AWSMiddlewareProtocol? = nil,
         timeout: TimeAmount? = nil,
         byteBufferAllocator: ByteBufferAllocator? = nil,
         options: AWSServiceConfig.Options? = nil

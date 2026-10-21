@@ -140,7 +140,7 @@ class MetaDataCredentialProviderTests: XCTestCase {
         XCTAssertEqual(InstanceMetaDataClient.Host, "http://169.254.169.254")
     }
 
-    func testEC2RotatingCredentialProviderShutdown() {
+    func testEC2RotatingCredentialProviderShutdown() async throws {
         let testServer = AWSTestServer(serviceProtocol: .json)
         defer { XCTAssertNoThrow(try testServer.stop()) }
         let customEC2: CredentialProviderFactory = .custom { context in
@@ -150,6 +150,6 @@ class MetaDataCredentialProviderTests: XCTestCase {
 
         let client = createAWSClient(credentialProvider: customEC2)
         XCTAssertNoThrow(try testServer.ec2MetadataServer(version: .v2))
-        XCTAssertNoThrow(try client.syncShutdown())
+        try await client.shutdown()
     }
 }

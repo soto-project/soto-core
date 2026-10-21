@@ -16,15 +16,15 @@ import AsyncHTTPClient
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
-import NIOPosix
-import SotoSignerV4
+public import NIOPosix
+public import SotoSignerV4
 
 /// Provides AWS credentials
 public protocol CredentialProvider: Sendable, CustomStringConvertible {
     /// Return credential
     /// - Parameters:
     ///   - logger: Logger to use
-    func getCredential(logger: Logger) async throws -> Credential
+    func getCredential(logger: Logger) async throws -> any Credential
 
     /// Shutdown credential provider
     func shutdown() async throws
@@ -44,20 +44,20 @@ public struct CredentialProviderFactory: Sendable {
     /// The initialization context for a `ContextProvider`
     public struct Context: Sendable {
         /// The `AWSClient`s internal `HTTPClient`
-        public let httpClient: AWSHTTPClient
+        public let httpClient: any AWSHTTPClient
         /// The `Logger` attached to the AWSClient
         public let logger: Logger
         /// AWSClient options
         public let options: AWSClient.Options
     }
 
-    private let cb: @Sendable (Context) -> CredentialProvider
+    private let cb: @Sendable (Context) -> any CredentialProvider
 
-    private init(cb: @escaping @Sendable (Context) -> CredentialProvider) {
+    private init(cb: @escaping @Sendable (Context) -> any CredentialProvider) {
         self.cb = cb
     }
 
-    internal func createProvider(context: Context) -> CredentialProvider {
+    internal func createProvider(context: Context) -> any CredentialProvider {
         self.cb(context)
     }
 }
@@ -81,7 +81,7 @@ extension CredentialProviderFactory {
     }
 
     /// Create a custom `CredentialProvider`
-    public static func custom(_ factory: @escaping @Sendable (Context) -> CredentialProvider) -> CredentialProviderFactory {
+    public static func custom(_ factory: @escaping @Sendable (Context) -> any CredentialProvider) -> CredentialProviderFactory {
         Self(cb: factory)
     }
 
@@ -105,7 +105,7 @@ extension CredentialProviderFactory {
         retryPolicy: RetryPolicyFactory = .default,
         threadPool: NIOThreadPool = .singleton
     ) -> CredentialProviderFactory {
-        Self { context -> CredentialProvider in
+        Self { context -> any CredentialProvider in
             StaticCredential.fromEnvironment()
                 ?? STSAssumeRoleCredentialProvider.fromEnvironment(
                     context: context,

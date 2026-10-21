@@ -13,9 +13,9 @@
 //===----------------------------------------------------------------------===//
 
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 /// The wrapper class for encoding Codable classes to XMLElements
@@ -28,7 +28,7 @@ public struct XMLEncoder {
         /// Encode the `Data` as a custom value encoded by the given closure.
         ///
         /// If the closure fails to encode a value into the given encoder, the encoder will encode an empty automatic container in its place.
-        case custom((Data, Encoder) throws -> XML.Element)
+        case custom((Data, any Encoder) throws -> XML.Element)
     }
 
     /// The strategy to use for non-JSON-conforming floating-point values (IEEE 754 infinity and NaN).
@@ -110,7 +110,7 @@ class _XMLEncoder: Encoder {
     fileprivate let options: XMLEncoder._Options
 
     /// the path to the current point in encoding
-    var codingPath: [CodingKey]
+    var codingPath: [any CodingKey]
 
     /// contextual user-provided information for use during encoding
     var userInfo: [CodingUserInfoKey: Any] { self.options.userInfo }
@@ -123,7 +123,7 @@ class _XMLEncoder: Encoder {
 
     // MARK: - Initialization
 
-    fileprivate init(options: XMLEncoder._Options, codingPath: [CodingKey] = []) {
+    fileprivate init(options: XMLEncoder._Options, codingPath: [any CodingKey] = []) {
         self.storage = _XMLEncoderStorage()
         self.options = options
         self.codingPath = codingPath
@@ -140,7 +140,7 @@ class _XMLEncoder: Encoder {
     struct KEC<Key: CodingKey>: KeyedEncodingContainerProtocol {
         let encoder: _XMLEncoder
         let element: XML.Element
-        var codingPath: [CodingKey] { self.encoder.codingPath }
+        var codingPath: [any CodingKey] { self.encoder.codingPath }
 
         init(_ element: XML.Element, referencing encoder: _XMLEncoder) {
             self.element = element
@@ -244,23 +244,23 @@ class _XMLEncoder: Encoder {
             return KeyedEncodingContainer(container)
         }
 
-        func nestedUnkeyedContainer(forKey key: Key) -> UnkeyedEncodingContainer {
+        func nestedUnkeyedContainer(forKey key: Key) -> any UnkeyedEncodingContainer {
             self.encoder.codingPath.append(key)
             defer { self.encoder.codingPath.removeLast() }
 
             return UKEC(self.element, referencing: self.encoder)
         }
 
-        func superEncoder() -> Encoder {
+        func superEncoder() -> any Encoder {
             _XMLReferencingEncoder(referencing: self.encoder, key: _XMLKey.super, wrapping: self.element)
         }
 
-        func superEncoder(forKey key: Key) -> Encoder {
+        func superEncoder(forKey key: Key) -> any Encoder {
             _XMLReferencingEncoder(referencing: self.encoder, key: key, wrapping: self.element)
         }
     }
 
-    func unkeyedContainer() -> UnkeyedEncodingContainer {
+    func unkeyedContainer() -> any UnkeyedEncodingContainer {
         self.storage.push(container: self.element!)
         return UKEC(self.element!, referencing: self)
     }
@@ -268,7 +268,7 @@ class _XMLEncoder: Encoder {
     struct UKEC: UnkeyedEncodingContainer {
         let encoder: _XMLEncoder
         let element: XML.Element
-        var codingPath: [CodingKey] { self.encoder.codingPath }
+        var codingPath: [any CodingKey] { self.encoder.codingPath }
         var count: Int
         let key: String
 
@@ -392,18 +392,18 @@ class _XMLEncoder: Encoder {
             return KeyedEncodingContainer(container)
         }
 
-        mutating func nestedUnkeyedContainer() -> UnkeyedEncodingContainer {
+        mutating func nestedUnkeyedContainer() -> any UnkeyedEncodingContainer {
             self.count += 1
 
             return UKEC(self.element, referencing: self.encoder)
         }
 
-        func superEncoder() -> Encoder {
+        func superEncoder() -> any Encoder {
             _XMLReferencingEncoder(referencing: self.encoder, key: _XMLKey.super, wrapping: self.element)
         }
     }
 
-    func singleValueContainer() -> SingleValueEncodingContainer {
+    func singleValueContainer() -> any SingleValueEncodingContainer {
         self
     }
 }
@@ -561,7 +561,7 @@ extension _XMLEncoder {
         }
     }
 
-    func box(_ value: Encodable) throws -> XML.Element? {
+    func box(_ value: some Encodable) throws -> XML.Element? {
         let type = Swift.type(of: value)
 
         if type == Data.self {
@@ -591,7 +591,7 @@ private class _XMLReferencingEncoder: _XMLEncoder {
     // MARK: - Initialization
 
     /// Initializes `self` by referencing the given array container in the given encoder.
-    fileprivate init(referencing encoder: _XMLEncoder, key: CodingKey, wrapping element: XML.Element) {
+    fileprivate init(referencing encoder: _XMLEncoder, key: any CodingKey, wrapping element: XML.Element) {
         self.encoder = encoder
         self.reference = element
         super.init(options: encoder.options, codingPath: encoder.codingPath)
@@ -653,7 +653,7 @@ extension EncodingError {
     /// - parameter value: The value that was invalid to encode.
     /// - parameter path: The path of `CodingKey`s taken to encode this value.
     /// - returns: An `EncodingError` with the appropriate path and debug description.
-    fileprivate static func _invalidFloatingPointValue<T: FloatingPoint>(_ value: T, at codingPath: [CodingKey]) -> EncodingError {
+    fileprivate static func _invalidFloatingPointValue<T: FloatingPoint>(_ value: T, at codingPath: [any CodingKey]) -> EncodingError {
         let valueDescription: String
         if value == T.infinity {
             valueDescription = "\(T.self).infinity"

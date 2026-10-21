@@ -47,13 +47,13 @@ extension AWSClient {
     public struct Waiter<Input: Sendable, Output: Sendable>: Sendable {
         /// An acceptor checks the result of a call and can change the waiter state based on that result
         public struct Acceptor: Sendable {
-            public init(state: AWSClient.WaiterState, matcher: AWSWaiterMatcher) {
+            public init(state: AWSClient.WaiterState, matcher: any AWSWaiterMatcher) {
                 self.state = state
                 self.matcher = matcher
             }
 
             let state: WaiterState
-            let matcher: AWSWaiterMatcher
+            let matcher: any AWSWaiterMatcher
         }
 
         public typealias WaiterCommand = @Sendable (Input, Logger) async throws -> Output
@@ -129,7 +129,7 @@ extension AWSClient {
         var attempt = 0
         while true {
             attempt += 1
-            let result: Result<Output, Error>
+            let result: Result<Output, any Error>
             do {
                 result = try await .success(waiter.command(input, logger))
             } catch {

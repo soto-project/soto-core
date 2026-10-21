@@ -16,9 +16,9 @@ import NIOConcurrencyHelpers
 import SotoSignerV4
 
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 /// Request container used during Codable `encode(to:)` that allows for encoding data into

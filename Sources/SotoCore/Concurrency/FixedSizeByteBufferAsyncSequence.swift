@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIOCore
+public import NIOCore
 
 /// An AsyncSequence that returns fixed size ByteBuffers from an AsyncSequence of ByteBuffers
 public struct FixedSizeByteBufferAsyncSequence<Base: AsyncSequence>: AsyncSequence where Base.Element == ByteBuffer {

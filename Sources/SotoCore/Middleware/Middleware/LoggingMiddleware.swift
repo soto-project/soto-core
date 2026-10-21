@@ -16,9 +16,9 @@ import Logging
 import NIOHTTP1
 
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 /// Middleware that outputs the contents of requests being sent to AWS and the contents of the responses received.

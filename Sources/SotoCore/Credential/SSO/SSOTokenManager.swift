@@ -40,12 +40,12 @@ import Foundation
 #endif
 
 struct SSOTokenManager {
-    private let httpClient: AWSHTTPClient
+    private let httpClient: any AWSHTTPClient
 
     /// Refresh window: start refreshing when token expires in less than 15 minutes (same as botocore)
     let refreshWindow: TimeInterval = 15 * 60
 
-    init(httpClient: AWSHTTPClient) {
+    init(httpClient: any AWSHTTPClient) {
         self.httpClient = httpClient
     }
 

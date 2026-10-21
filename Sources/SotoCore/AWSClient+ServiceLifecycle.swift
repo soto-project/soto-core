@@ -14,7 +14,7 @@
 
 #if ServiceLifecycleSupport
 
-import ServiceLifecycle
+public import ServiceLifecycle
 
 extension AWSClient: Service {
     public func run() async throws {

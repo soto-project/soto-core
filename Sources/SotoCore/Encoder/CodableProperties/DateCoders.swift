@@ -12,7 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-// TODO: FoundationEssentials (DateFormatter)
 #if canImport(FoundationEssentials)
 public import FoundationEssentials
 #else

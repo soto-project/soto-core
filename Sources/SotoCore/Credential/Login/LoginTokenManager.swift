@@ -16,8 +16,9 @@
 
 import Crypto
 import NIOCore
-import NIOFoundationCompat
+import NIOFoundationEssentialsCompat
 import NIOPosix
+@_spi(SotoInternal) import SotoSignerV4
 import _NIOFileSystem
 
 #if canImport(FoundationEssentials)
@@ -58,7 +59,7 @@ struct LoginTokenManager {
         let trimmedSession = loginSession.trimmingCharacters(in: .whitespaces)
         let sessionData = Data(trimmedSession.utf8)
         let hash = SHA256.hash(data: sessionData)
-        let hashString = hash.compactMap { String(format: "%02x", $0) }.joined()
+        let hashString = hash.hexDigest()
 
         return "\(baseDir)/\(hashString).json"
     }

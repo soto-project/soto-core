@@ -17,8 +17,9 @@
 import Crypto
 import Logging
 import NIOCore
-import NIOFoundationCompat
+import NIOFoundationEssentialsCompat
 import NIOPosix
+@_spi(SotoInternal) import SotoSignerV4
 import _NIOFileSystem
 
 #if canImport(Glibc)
@@ -65,7 +66,7 @@ struct SSOTokenManager {
         let cacheKey = config.sessionName ?? config.ssoStartUrl
         let keyData = Data(cacheKey.utf8)
         let hash = Insecure.SHA1.hash(data: keyData)
-        let hashString = hash.compactMap { String(format: "%02x", $0) }.joined()
+        let hashString = hash.hexDigest()
 
         return "\(baseDir)/\(hashString).json"
     }

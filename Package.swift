@@ -109,7 +109,7 @@ let package = Package(
                 .byName(name: "SotoXML"),
                 .product(name: "Logging", package: "swift-log"),
                 .product(name: "NIO", package: "swift-nio"),
-                .product(name: "NIOFoundationCompat", package: "swift-nio"),
+                .product(name: "NIOFoundationEssentialsCompat", package: "swift-nio"),
                 .product(name: "NIOHTTP1", package: "swift-nio"),
                 .product(name: "NIOPosix", package: "swift-nio"),
                 .product(name: "NIOTestUtils", package: "swift-nio"),

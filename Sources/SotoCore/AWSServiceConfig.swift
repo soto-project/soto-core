@@ -43,7 +43,7 @@ public final class AWSServiceConfig {
     /// XML namespace to be applied to all request objects
     public let xmlNamespace: String?
     /// Middleware code specific to the service used to edit requests before they sent and responses before they are decoded
-    public let middleware: any AWSMiddlewareProtocol?
+    public let middleware: (any AWSMiddlewareProtocol)?
     /// timeout value for HTTP requests
     public let timeout: TimeAmount
     /// ByteBuffer allocator used by service

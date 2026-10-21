@@ -17,7 +17,7 @@
 import INIParser
 import Logging
 import NIOCore
-import NIOFoundationCompat
+import NIOFoundationEssentialsCompat
 import NIOPosix
 public import SotoSignerV4
 import _NIOFileSystem

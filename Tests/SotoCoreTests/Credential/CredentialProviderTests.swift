@@ -24,12 +24,14 @@ import XCTest
 
 final class CredentialProviderTests: XCTestCase {
     func testCredentialProvider() async throws {
-        let provider = StaticCredential(accessKeyId: "abc", secretAccessKey: "123", sessionToken: "xyz")
+        let provider = StaticCredentialProvider(accessKeyId: "abc", secretAccessKey: "123", sessionToken: "xyz")
 
         let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
         let credential = try await provider.getCredential(logger: TestEnvironment.logger)
-        XCTAssertEqual(credential as? StaticCredential, provider)
+        XCTAssertEqual(credential.accessKeyId, "abc")
+        XCTAssertEqual(credential.secretAccessKey, "123")
+        XCTAssertEqual(credential.sessionToken, "xyz")
     }
 
     // make sure getCredential in client CredentialProvider doesnt get called more than once
@@ -41,7 +43,7 @@ final class CredentialProviderTests: XCTestCase {
 
             func getCredential(logger: Logger) async throws -> Credential {
                 self.credentialProviderCalled.wrappingIncrement(ordering: .sequentiallyConsistent)
-                return StaticCredential(accessKeyId: "ACCESSKEYID", secretAccessKey: "SECRETACCESSKET")
+                return Credential(accessKeyId: "ACCESSKEYID", secretAccessKey: "SECRETACCESSKET")
             }
         }
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
@@ -63,7 +65,7 @@ final class CredentialProviderTests: XCTestCase {
             func getCredential(logger: Logger) async throws -> Credential {
                 try await Task.sleep(nanoseconds: 5_000_000_000)
                 XCTFail("Should not get here")
-                return StaticCredential(accessKeyId: "ACCESSKEYID", secretAccessKey: "SECRETACCESSKET")
+                return Credential(accessKeyId: "ACCESSKEYID", secretAccessKey: "SECRETACCESSKET")
             }
         }
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
@@ -135,7 +137,7 @@ final class CredentialProviderTests: XCTestCase {
             init() {}
 
             func getCredential(logger: Logger) async throws -> Credential {
-                StaticCredential(accessKeyId: "", secretAccessKey: "")
+                Credential(accessKeyId: "", secretAccessKey: "")
             }
 
             func shutdown() async throws {

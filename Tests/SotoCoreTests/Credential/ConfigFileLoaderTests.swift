@@ -62,9 +62,9 @@ class ConfigFileLoadersTests: XCTestCase {
             )
 
             switch sharedCredentials {
-            case .staticCredential(let credentials):
-                XCTAssertEqual(credentials.accessKeyId, accessKey)
-                XCTAssertEqual(credentials.secretAccessKey, secretKey)
+            case .staticCredential(let accessKeyId, let secretAccessKey, _):
+                XCTAssertEqual(accessKeyId, accessKey)
+                XCTAssertEqual(secretAccessKey, secretKey)
             default:
                 XCTFail("Expected static credentials")
             }

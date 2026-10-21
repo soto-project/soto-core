@@ -13,12 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 /// Empty credentials
-public struct EmptyCredential: CredentialProvider, Credential {
-    public var accessKeyId: String { "" }
-    public var secretAccessKey: String { "" }
-    public var sessionToken: String? { nil }
-
-    public func getCredential(logger: Logger) async throws -> any Credential {
-        self
+public struct EmptyCredentialProvider: CredentialProvider {
+    public func getCredential(logger: Logger) async throws -> Credential {
+        .empty
     }
 }

@@ -429,7 +429,7 @@ extension AWSClient {
             let middlewareContext = AWSMiddlewareContext(
                 operation: operationName,
                 serviceConfig: config,
-                credential: StaticCredential(
+                credential: Credential(
                     accessKeyId: credential.accessKeyId,
                     secretAccessKey: credential.secretAccessKey,
                     sessionToken: credential.sessionToken
@@ -473,7 +473,7 @@ extension AWSClient {
     /// - Parameters:
     ///   - logger: optional logger to use
     /// - Returns: Credential
-    public func getCredential(logger: Logger = AWSClient.loggingDisabled) async throws -> any Credential {
+    public func getCredential(logger: Logger = AWSClient.loggingDisabled) async throws -> Credential {
         try await self.credentialProvider.getCredential(logger: logger)
     }
 

@@ -207,7 +207,7 @@ struct CredentialProcessProviderTests {
         #expect(credential.accessKeyId == "AKID-CREDENTIAL-PROCESS")
         #expect(credential.secretAccessKey == "SECRET-CREDENTIAL-PROCESS")
         #expect(credential.sessionToken == "TOKEN-CREDENTIAL-PROCESS")
-        #expect(!(credential is ExpiringCredential))
+        #expect(credential.expiration == Date.distantFuture)
     }
 
     @Test("Successful execution returns expiring credentials when Expiration present")
@@ -218,8 +218,8 @@ struct CredentialProcessProviderTests {
         #expect(credential.accessKeyId == "AKID-CREDENTIAL-PROCESS")
         #expect(credential.secretAccessKey == "SECRET-CREDENTIAL-PROCESS")
         #expect(credential.sessionToken == "TOKEN-CREDENTIAL-PROCESS")
-        let expiring = try #require(credential as? ExpiringCredential)
-        #expect(expiring.expiration > Date())
+        #expect(credential.expiration < Date.distantFuture)
+        #expect(credential.expiration > Date())
     }
 
     @Test("Missing SessionToken results in nil sessionToken")
@@ -354,8 +354,8 @@ struct CredentialProcessProviderTests {
         let credential = try await provider.getCredential(logger: logger)
 
         #expect(credential.accessKeyId == "AKID-CREDENTIAL-PROCESS")
-        let expiring = try #require(credential as? ExpiringCredential)
-        #expect(expiring.expiration > Date())
+        #expect(credential.expiration < Date.distantFuture)
+        #expect(credential.expiration > Date())
     }
 }
 #endif

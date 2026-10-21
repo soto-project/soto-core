@@ -117,7 +117,7 @@ class AWSRequestTests {
         )
 
         let signer = AWSSigner(
-            credentials: StaticCredential(accessKeyId: "foo", secretAccessKey: "bar"),
+            credentials: Credential(accessKeyId: "foo", secretAccessKey: "bar"),
             name: config.signingName,
             region: config.region.rawValue
         )
@@ -141,7 +141,7 @@ class AWSRequestTests {
         )
 
         let signer = AWSSigner(
-            credentials: StaticCredential(accessKeyId: "", secretAccessKey: ""),
+            credentials: Credential(accessKeyId: "", secretAccessKey: ""),
             name: config.signingName,
             region: config.region.rawValue
         )
@@ -155,7 +155,7 @@ class AWSRequestTests {
         let config = createServiceConfig()
 
         let signer = AWSSigner(
-            credentials: StaticCredential(accessKeyId: "foo", secretAccessKey: "bar"),
+            credentials: Credential(accessKeyId: "foo", secretAccessKey: "bar"),
             name: config.signingName,
             region: config.region.rawValue
         )
@@ -685,7 +685,7 @@ class AWSRequestTests {
         }
         let config = createServiceConfig(service: "s3", signingName: "s3", serviceProtocol: .restxml, options: .s3DisableChunkedUploads)
         let signer = AWSSigner(
-            credentials: StaticCredential(accessKeyId: "foo", secretAccessKey: "bar"),
+            credentials: Credential(accessKeyId: "foo", secretAccessKey: "bar"),
             name: config.signingName,
             region: config.region.rawValue
         )

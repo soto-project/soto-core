@@ -15,6 +15,7 @@
 public import AsyncHTTPClient
 import Atomics
 import Dispatch
+public import HTTPTypes
 import Logging
 import Metrics
 import NIOConcurrencyHelpers
@@ -488,23 +489,18 @@ extension AWSClient {
     /// - returns:
     ///     A signed URL
     public func signURL(
-        url: URL,
-        httpMethod: HTTPMethod,
-        headers: HTTPHeaders = HTTPHeaders(),
+        request: inout HTTPRequest,
         expires: TimeAmount,
         serviceConfig: AWSServiceConfig,
         logger: Logger = AWSClient.loggingDisabled
-    ) async throws -> URL {
+    ) async throws {
         let logger = logger.attachingRequestId(
             Self.globalRequestID.wrappingIncrementThenLoad(ordering: .relaxed),
             operation: "signHeaders",
             service: serviceConfig.serviceIdentifier
         )
         let signer = try await self.createSigner(serviceConfig: serviceConfig, logger: logger)
-        guard let cleanURL = signer.processURL(url: url) else {
-            throw AWSClient.ClientError.invalidURL
-        }
-        return signer.signURL(url: cleanURL, method: httpMethod, headers: headers, expires: expires)
+        signer.signURL(request: &request, expires: expires)
     }
 
     /// Generate signed headers
@@ -518,22 +514,17 @@ extension AWSClient {
     /// - returns:
     ///     A set of signed headers that include the original headers supplied
     public func signHeaders(
-        url: URL,
-        httpMethod: HTTPMethod,
-        headers: HTTPHeaders = HTTPHeaders(),
+        request: inout HTTPRequest,
         body: AWSHTTPBody,
         serviceConfig: AWSServiceConfig,
         logger: Logger = AWSClient.loggingDisabled
-    ) async throws -> HTTPHeaders {
+    ) async throws {
         let logger = logger.attachingRequestId(
             Self.globalRequestID.wrappingIncrementThenLoad(ordering: .relaxed),
             operation: "signHeaders",
             service: serviceConfig.serviceIdentifier
         )
         let signer = try await self.createSigner(serviceConfig: serviceConfig, logger: logger)
-        guard let cleanURL = signer.processURL(url: url) else {
-            throw AWSClient.ClientError.invalidURL
-        }
         let bodyData: AWSSigner.BodyData?
         switch body.storage {
         case .byteBuffer(let buffer):
@@ -541,7 +532,7 @@ extension AWSClient {
         case .asyncSequence:
             bodyData = nil
         }
-        return signer.signHeaders(url: cleanURL, method: httpMethod, headers: headers, body: bodyData)
+        signer.signHeaders(request: &request, body: bodyData)
     }
 
     func createSigner(serviceConfig: AWSServiceConfig, logger: Logger) async throws -> AWSSigner {

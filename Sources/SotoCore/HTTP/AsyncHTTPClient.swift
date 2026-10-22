@@ -48,7 +48,7 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
             )
         }
         let http1RequestHead = try HTTPRequestHead(request.request)
-        var httpRequest = HTTPClientRequest(url: http1RequestHead.uri)
+        var httpRequest = HTTPClientRequest(url: request.request.url!.absoluteString)
         httpRequest.method = http1RequestHead.method
         httpRequest.headers = http1RequestHead.headers
         httpRequest.body = requestBody

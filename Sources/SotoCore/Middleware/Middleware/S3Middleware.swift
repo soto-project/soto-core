@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Crypto
+import HTTPTypes
 import SotoSignerV4
 internal import SotoXML
 
@@ -77,15 +78,16 @@ public struct S3Middleware: AWSMiddlewareProtocol {
         context: AWSMiddlewareContext,
         next: AWSMiddlewareNextHandler
     ) async throws -> AWSHTTPResponse {
-        if request.url.path.hasPrefix("/arn:") {
-            return try await handleARNBucket(request, context: context, next: next)
+        let url = request.request.url!
+        if url.path.hasPrefix("/arn:") {
+            return try await handleARNBucket(request, url: url, context: context, next: next)
         }
         /// split path into components. Drop first as it is an empty string
-        let paths = request.url.path.split(separator: "/", maxSplits: 2, omittingEmptySubsequences: false).dropFirst()
-        guard let bucket = paths.first, bucket != "", var host = request.url.host else { return try await next(request, context) }
+        let paths = url.path.split(separator: "/", maxSplits: 2, omittingEmptySubsequences: false).dropFirst()
+        guard let bucket = paths.first, bucket != "", var host = url.host else { return try await next(request, context) }
         let path = paths.dropFirst().first.flatMap { String($0) } ?? ""
 
-        if let port = request.url.port {
+        if let port = url.port {
             host = "\(host):\(port)"
         }
         var urlPath: String
@@ -97,6 +99,7 @@ public struct S3Middleware: AWSMiddlewareProtocol {
         if bucket.hasSuffix("--x-s3"),
             let response = try await handleS3ExpressBucketEndpoint(
                 request: request,
+                url: url,
                 bucket: bucket,
                 path: path,
                 context: context,
@@ -133,7 +136,8 @@ public struct S3Middleware: AWSMiddlewareProtocol {
                 urlHost = host
             }
         }
-        let request = try Self.updateRequestURL(request, host: urlHost, path: urlPath)
+        var request = request
+        request.request.url = try Self.updateRequestURL(url, host: urlHost, path: urlPath)
         return try await next(request, context)
     }
 
@@ -145,10 +149,11 @@ public struct S3Middleware: AWSMiddlewareProtocol {
     /// - Returns: returns response from next handler
     func handleARNBucket(
         _ request: AWSHTTPRequest,
+        url: URL,
         context: AWSMiddlewareContext,
         next: AWSMiddlewareNextHandler
     ) async throws -> AWSHTTPResponse {
-        guard let arn = ARN(string: request.url.path.dropFirst()),
+        guard let arn = ARN(string: url.path.dropFirst()),
             let resourceType = arn.resourceType,
             let accountId = arn.accountId
         else {
@@ -166,7 +171,9 @@ public struct S3Middleware: AWSMiddlewareProtocol {
         let service = String(arn.service)
         let serviceIdentifier = service != "s3" ? service : "s3-accesspoint"
         let urlHost = "\(bucket)-\(accountId).\(serviceIdentifier).\(region).\(context.serviceConfig.region.partition.dnsSuffix)"
-        let request = try Self.updateRequestURL(request, host: urlHost, path: path)
+
+        var request = request
+        request.request.url = try Self.updateRequestURL(url, host: urlHost, path: path)
 
         var context = context
         context.serviceConfig = AWSServiceConfig(
@@ -195,6 +202,7 @@ public struct S3Middleware: AWSMiddlewareProtocol {
     /// - Returns: returns response from next handler
     func handleS3ExpressBucketEndpoint(
         request: AWSHTTPRequest,
+        url: URL,
         bucket: Substring,
         path: String,
         context: AWSMiddlewareContext,
@@ -213,7 +221,8 @@ public struct S3Middleware: AWSMiddlewareProtocol {
         } else {
             urlHost = "\(bucket).s3express-\(zone).\(context.serviceConfig.region).\(context.serviceConfig.region.partition.dnsSuffix)"
         }
-        let request = try Self.updateRequestURL(request, host: urlHost, path: path)
+        var request = request
+        request.request.url = try Self.updateRequestURL(url, host: urlHost, path: path)
         var context = context
         context.serviceConfig = AWSServiceConfig(
             region: context.serviceConfig.region,
@@ -239,24 +248,22 @@ public struct S3Middleware: AWSMiddlewareProtocol {
     ///   - host: new host name
     ///   - path: new path (without forward slash prefix)
     /// - Returns: new request
-    static func updateRequestURL(_ request: AWSHTTPRequest, host: some StringProtocol, path: String) throws -> AWSHTTPRequest {
+    static func updateRequestURL(_ url: URL, host: some StringProtocol, path: String) throws -> URL {
         var path = path
         // add trailing "/" back if it was present, no need to check for single slash path here
-        if request.url.pathWithSlash.hasSuffix("/"), path.count > 0 {
+        if url.pathWithSlash.hasSuffix("/") == true, path.count > 0 {
             path += "/"
         }
         // add percent encoding back into path as converting from URL to String has removed it
         let percentEncodedUrlPath = Self.urlEncodePath(path)
-        var urlString = "\(request.url.scheme ?? "https")://\(host)/\(percentEncodedUrlPath)"
-        if let query = request.url.query {
+        var urlString = "\(url.scheme ?? "https")://\(host)/\(percentEncodedUrlPath)"
+        if let query = url.query {
             urlString += "?\(query)"
         }
-        var request = request
         guard let url = URL(string: urlString) else {
             throw AWSClient.ClientError.invalidURL
         }
-        request.url = url
-        return request
+        return url
     }
 
     /// percent encode path value.
@@ -288,11 +295,11 @@ public struct S3Middleware: AWSMiddlewareProtocol {
     }
 
     func expect100Continue(request: inout AWSHTTPRequest) {
-        if request.method == .PUT,
+        if request.request.method == .put,
             let length = request.body.length,
             length > 128 * 1024
         {
-            request.headers.replaceOrAdd(name: "Expect", value: "100-continue")
+            request.request.headerFields[.expect] = "100-continue"
         }
     }
 
@@ -314,7 +321,7 @@ public struct S3Middleware: AWSMiddlewareProtocol {
     }
 
     func fixupRawError(error: AWSRawError, context: AWSMiddlewareContext) -> any Error {
-        if error.context.responseCode == .notFound {
+        if error.context.response.status == .notFound {
             if let errorType = context.serviceConfig.errorType,
                 let notFoundError = errorType.init(errorCode: "NotFound", context: error.context)
             {

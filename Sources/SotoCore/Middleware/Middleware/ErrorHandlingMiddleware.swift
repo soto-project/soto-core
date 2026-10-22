@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HTTPTypes
 import Logging
 import NIOHTTP1
 import SotoSignerV4
@@ -42,8 +43,7 @@ struct ErrorHandlingMiddleware: AWSMiddlewareProtocol {
             // else return "Unhandled error message" with rawBody attached
             let context = AWSErrorContext(
                 message: "Unhandled Error",
-                responseCode: response.status,
-                headers: response.headers
+                response: response.response
             )
             return AWSRawError(rawBody: nil, context: context)
         }
@@ -57,8 +57,7 @@ struct ErrorHandlingMiddleware: AWSMiddlewareProtocol {
             // else return "Unhandled error message" with rawBody attached
             let context = AWSErrorContext(
                 message: "Unhandled Error",
-                responseCode: response.status,
-                headers: response.headers
+                response: response.response
             )
             let responseBody: String?
             switch response.body.storage {

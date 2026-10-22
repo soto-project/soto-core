@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HTTPTypes
 import Tracing
 
 /// Middleware for adding tracing to AWS calls.
@@ -37,7 +38,7 @@ public struct AWSTracingMiddleware: AWSMiddlewareProtocol {
             }
             let response = try await next(request, context)
 
-            span.attributes["aws.request_id"] = response.headers["x-amz-request-id"].first ?? response.headers["x-amz-requestid"].first
+            span.attributes["aws.request_id"] = response.headerFields[.xAmzRequestID] ?? response.headerFields[.xAmzRequestIDv2]
 
             return response
         }

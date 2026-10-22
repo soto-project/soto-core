@@ -14,6 +14,7 @@
 
 // Login Credential Provider - Main Provider
 
+import HTTPTypes
 import INIParser
 import Logging
 import NIOCore
@@ -126,22 +127,12 @@ public struct LoginCredentialProvider: CredentialProvider {
         )
 
         // Create HTTP request using AWSHTTPClient
-        var headers = HTTPHeaders()
-        headers.add(name: "Content-Type", value: "application/json")
-        headers.add(name: "DPoP", value: dpopHeader)
-        // Extract host from endpoint (remove protocol if present)
-        let host =
-            configuration.endpoint
-            .replacing("https://", with: "")
-            .replacing("http://", with: "")
-
-        headers.add(name: "Host", value: host)
-        headers.add(name: "Content-Length", value: "\(bodyData.count)")
-
+        let headers: HTTPFields = [
+            .contentType: "application/json",
+            .dPoP: dpopHeader,
+        ]
         let request = AWSHTTPRequest(
-            url: url,
-            method: .POST,
-            headers: headers,
+            request: HTTPRequest(method: .post, url: url, headerFields: headers),
             body: .init(bytes: bodyData)
         )
 
@@ -152,7 +143,7 @@ public struct LoginCredentialProvider: CredentialProvider {
             logger: logger
         )
 
-        guard (200...299).contains(response.status.code) else {
+        guard (200...299).contains(response.response.status.code) else {
             // Try to parse error response per spec
             let body = try? await response.body.collect(upTo: 1024 * 10)
             if let body,
@@ -172,12 +163,12 @@ public struct LoginCredentialProvider: CredentialProvider {
                     )
                 default:
                     throw AWSLoginCredentialError.httpRequestFailed(
-                        "HTTP status: \(response.status.code), error: \(errorResponse.error), message: \(errorResponse.message)"
+                        "HTTP status: \(response.response.status.code), error: \(errorResponse.error), message: \(errorResponse.message)"
                     )
                 }
             }
 
-            throw AWSLoginCredentialError.httpRequestFailed("HTTP status: \(response.status.code)")
+            throw AWSLoginCredentialError.httpRequestFailed("HTTP status: \(response.response.status.code)")
         }
 
         // Collect response body

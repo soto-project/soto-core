@@ -32,6 +32,12 @@ public struct AWSHTTPResponse: Sendable {
     /// response body
     public var body: AWSHTTPBody
 
+    /// Response status code
+    public var status: HTTPResponse.Status { self.response.status }
+
+    /// Response headers
+    public var headerFields: HTTPFields { self.response.headerFields }
+
     /// Initialize AWSResponse
     public init(response: HTTPResponse, body: AWSHTTPBody = .init()) {
         self.response = response

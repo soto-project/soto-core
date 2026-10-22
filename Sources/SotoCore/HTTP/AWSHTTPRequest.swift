@@ -31,7 +31,7 @@ public struct AWSHTTPRequest: Sendable {
     /// request body
     public var body: AWSHTTPBody
 
-    public init(request: HTTPRequest, body: AWSHTTPBody) {
+    public init(request: HTTPRequest, body: AWSHTTPBody = .init()) {
         self.request = request
         self.body = body
     }
@@ -342,26 +342,4 @@ extension OptionalCustomCoding: AWSRequestEncodableString where Coder: CustomEnc
         guard let value = self.wrappedValue else { return nil }
         return Coder.string(from: value)
     }
-}
-
-extension HTTPField.Name {
-    @inlinable
-    static var xAmzTarget: Self {
-        .init("X-Amz-Target")!
-    }
-    @inlinable
-    static var xAmzDecodedContentLength: Self {
-        .init("X-Amz-Decoded-Content-Length")!
-    }
-
-    @inlinable
-    static var xAmzSdkChecksumAlgorithm: Self {
-        .init("X-Amz-Sdk-Checksum-Algorithm")!
-    }
-
-    @inlinable
-    static var xAmznErrorType: Self {
-        .init("X-Amzn-Errortype")!
-    }
-
 }

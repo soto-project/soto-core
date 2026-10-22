@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+import HTTPTypes
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
@@ -42,7 +43,7 @@ protocol MetadataClient: CredentialProvider {
 
 enum MetaDataClientError: Error {
     case failedToDecode(underlyingError: any Error)
-    case unexpectedTokenResponseStatus(status: HTTPResponseStatus)
+    case unexpectedTokenResponseStatus(status: HTTPResponse.Status)
     case couldNotReadTokenFromResponse
     case couldNotGetInstanceRoleName
     case couldNotGetInstanceMetaData
@@ -69,8 +70,7 @@ extension MetadataClient {
 }
 
 struct MetadataHTTPResponse {
-    public var status: HTTPResponseStatus
-    public var headers: HTTPHeaders
+    public var response: HTTPResponse
     public var body: ByteBuffer?
 }
 
@@ -126,9 +126,11 @@ struct ECSMetaDataClient: MetadataClient {
 
     private func request(url: String, timeout: TimeAmount, logger: Logger) async throws -> MetadataHTTPResponse {
         try Task.checkCancellation()
-        let request = AWSHTTPRequest(url: URL(string: url)!, method: .GET, headers: [:], body: .init())
+        let request = AWSHTTPRequest(
+            request: HTTPRequest(method: .get, url: URL(string: url)!)
+        )
         let response = try await httpClient.execute(request: request, timeout: timeout, logger: logger)
-        return try await .init(status: response.status, headers: response.headers, body: response.body.collect(upTo: .max))
+        return try await .init(response: response.response, body: response.body.collect(upTo: .max))
     }
 }
 
@@ -141,8 +143,8 @@ struct InstanceMetaDataClient: MetadataClient {
     static let Host = "http://169.254.169.254"
     static let CredentialUri = "/latest/meta-data/iam/security-credentials/"
     static let TokenUri = "/latest/api/token"
-    static let TokenTimeToLiveHeader = (name: "X-aws-ec2-metadata-token-ttl-seconds", value: "21600")
-    static let TokenHeaderName = "X-aws-ec2-metadata-token"
+    static let TokenTimeToLiveHeader = [HTTPField.Name("X-aws-ec2-metadata-token-ttl-seconds"): "21600"]
+    static let TokenHeaderName = HTTPField.Name("X-aws-ec2-metadata-token")!
 
     struct InstanceMetaData: MetadataCredential & Decodable {
         let accessKeyId: String
@@ -189,70 +191,62 @@ struct InstanceMetaDataClient: MetadataClient {
     }
 
     func getMetaData(logger: Logger) async throws -> InstanceMetaData {
-        let headers: HTTPHeaders
+        let headers: HTTPFields
         do {
             let token = try await getToken(logger: logger)
             logger.trace("Found IMDSv2 token")
-            headers = HTTPHeaders([(Self.TokenHeaderName, token)])
+            headers = [Self.TokenHeaderName: token]
         } catch {
             // If we didn't find a session key then assume we are running IMDSv1.
             // (we could be running from a Docker container and the hop count for the PUT
             // request is still set to 1)
             logger.trace("Did not find IMDSv2 token, use IMDSv1")
-            headers = HTTPHeaders()
+            headers = [:]
         }
         // next we need to request the rolename
         let response = try await self.request(
-            url: self.credentialURL,
-            method: .GET,
-            headers: headers,
+            HTTPRequest(method: .get, url: self.credentialURL, headerFields: headers),
             logger: logger
         )
         // the rolename is in the body
-        guard response.status == .ok else {
+        guard response.response.status == .ok else {
             throw MetaDataClientError.unexpectedTokenResponseStatus(status: response.status)
         }
-        guard var body = response.body, let roleName = body.readString(length: body.readableBytes) else {
+        var body = try await response.body.collect(upTo: 4096)
+        guard let roleName = body.readString(length: body.readableBytes) else {
             throw MetaDataClientError.couldNotGetInstanceRoleName
         }
         // request credentials with the rolename
         let url = self.credentialURL.appendingPathComponent(roleName)
-        let credentialResponse = try await self.request(url: url, headers: headers, logger: logger)
+        let credentialResponse = try await self.request(HTTPRequest(method: .get, url: url, headerFields: headers), logger: logger)
 
         // decode the repsonse payload into the metadata object
-        guard let body = credentialResponse.body else {
-            throw MetaDataClientError.missingMetaData
-        }
+        body = try await credentialResponse.body.collect(upTo: 4096)
 
         return try Self.createJSONDecoder().decode(InstanceMetaData.self, from: body)
     }
 
     func getToken(logger: Logger) async throws -> String {
         let response = try await request(
-            url: self.tokenURL,
-            method: .PUT,
-            headers: HTTPHeaders([Self.TokenTimeToLiveHeader]),
+            HTTPRequest(method: .put, url: self.tokenURL, headerFields: [HTTPField.Name("X-aws-ec2-metadata-token-ttl-seconds")!: "21600"]),
             logger: logger
         )
         guard response.status == .ok else {
             throw MetaDataClientError.unexpectedTokenResponseStatus(status: response.status)
         }
-
-        guard var body = response.body, let token = body.readString(length: body.readableBytes) else {
+        var body = try await response.body.collect(upTo: 4096)
+        guard let token = body.readString(length: body.readableBytes) else {
             throw MetaDataClientError.couldNotReadTokenFromResponse
         }
         return token
     }
 
     private func request(
-        url: URL,
-        method: HTTPMethod = .GET,
-        headers: HTTPHeaders = .init(),
+        _ request: HTTPRequest,
         logger: Logger
-    ) async throws -> MetadataHTTPResponse {
+    ) async throws -> AWSHTTPResponse {
         try Task.checkCancellation()
-        let request = AWSHTTPRequest(url: url, method: method, headers: headers, body: .init())
-        let response = try await httpClient.execute(request: request, timeout: TimeAmount.seconds(2), logger: logger)
-        return try await .init(status: response.status, headers: response.headers, body: response.body.collect(upTo: .max))
+        let request = AWSHTTPRequest(request: request, body: .init())
+        return try await httpClient.execute(request: request, timeout: TimeAmount.seconds(2), logger: logger)
     }
 }

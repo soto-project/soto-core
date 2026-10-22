@@ -14,7 +14,7 @@
 
 // SSO Credential Provider - Main Provider
 
-public import HTTPTypes
+import HTTPTypes
 import INIParser
 import Logging
 import NIOCore
@@ -305,9 +305,4 @@ extension CredentialProviderFactory {
             return RotatingCredentialProvider(context: context, provider: provider)
         }
     }
-}
-
-extension HTTPField.Name {
-    @inlinable
-    static var xAmzSSOBearerToken: Self { .init("x-amz-sso_bearer_token")! }
 }

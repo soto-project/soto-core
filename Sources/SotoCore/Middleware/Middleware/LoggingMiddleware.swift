@@ -52,8 +52,8 @@ public struct AWSLoggingMiddleware: AWSMiddlewareProtocol {
         self.log(
             """
             Request:
-              \(request.request.method) \(request.request.url?.absoluteString ?? "")\(context.operation)
-              Headers: \(self.getHeadersOutput(request.request.headerFields))
+              \(request.method) \(request.request.url?.absoluteString ?? "")\(context.operation)
+              Headers: \(self.getHeadersOutput(request.headers))
             \(self.outputBody ? "  Body: \(self.getBodyOutput(request.body))" : "")
             """
         )
@@ -61,8 +61,8 @@ public struct AWSLoggingMiddleware: AWSMiddlewareProtocol {
         self.log(
             """
             Response:
-              Status : \(response.response.status.code)
-              Headers: \(self.getHeadersOutput(response.response.headerFields)))
+              Status : \(response.status.code)
+              Headers: \(self.getHeadersOutput(response.headers)))
             \(self.outputBody ? "  Body: \(self.getBodyOutput(response.body))" : "")
             """
         )

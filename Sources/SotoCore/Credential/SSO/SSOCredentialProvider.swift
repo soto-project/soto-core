@@ -263,9 +263,9 @@ public struct SSOCredentialProvider: CredentialProvider {
         )
         let response = try await httpClient.execute(request: request, timeout: .seconds(30), logger: logger)
 
-        guard (200...299).contains(response.response.status.code) else {
+        guard (200...299).contains(response.status.code) else {
             throw AWSSSOCredentialError.getRoleCredentialsFailed(
-                "HTTP \(response.response.status.code): Failed to get SSO credentials"
+                "HTTP \(response.status.code): Failed to get SSO credentials"
             )
         }
 

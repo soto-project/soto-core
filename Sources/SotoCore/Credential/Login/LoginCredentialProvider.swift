@@ -143,7 +143,7 @@ public struct LoginCredentialProvider: CredentialProvider {
             logger: logger
         )
 
-        guard (200...299).contains(response.response.status.code) else {
+        guard (200...299).contains(response.status.code) else {
             // Try to parse error response per spec
             let body = try? await response.body.collect(upTo: 1024 * 10)
             if let body,
@@ -163,12 +163,12 @@ public struct LoginCredentialProvider: CredentialProvider {
                     )
                 default:
                     throw AWSLoginCredentialError.httpRequestFailed(
-                        "HTTP status: \(response.response.status.code), error: \(errorResponse.error), message: \(errorResponse.message)"
+                        "HTTP status: \(response.status.code), error: \(errorResponse.error), message: \(errorResponse.message)"
                     )
                 }
             }
 
-            throw AWSLoginCredentialError.httpRequestFailed("HTTP status: \(response.response.status.code)")
+            throw AWSLoginCredentialError.httpRequestFailed("HTTP status: \(response.status.code)")
         }
 
         // Collect response body

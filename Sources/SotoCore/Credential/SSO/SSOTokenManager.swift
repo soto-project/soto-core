@@ -213,9 +213,9 @@ struct SSOTokenManager {
         // Execute request (no signing - uses OAUTH client credentials)
         let response = try await httpClient.execute(request: request, timeout: .seconds(30), logger: logger)
 
-        guard (200...299).contains(response.response.status.code) else {
+        guard (200...299).contains(response.status.code) else {
             throw AWSSSOCredentialError.tokenRefreshFailed(
-                "Failed to refresh SSO token: HTTP \(response.response.status.code)"
+                "Failed to refresh SSO token: HTTP \(response.status.code)"
             )
         }
 

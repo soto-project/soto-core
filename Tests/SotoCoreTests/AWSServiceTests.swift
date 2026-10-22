@@ -180,7 +180,7 @@ class AWSServiceTests: XCTestCase {
         let response = try await service2.config.middleware!.handle(request, context: context) { request, _ in
             .init(response: HTTPResponse(status: .ok, headerFields: request.headers), body: request.body)
         }
-        XCTAssertEqual(response.headerFields[HTTPField.Name("Test")!], "testWithMiddleware")
+        XCTAssertEqual(response.headers[HTTPField.Name("Test")!], "testWithMiddleware")
     }
 
     func testWithRegion() {

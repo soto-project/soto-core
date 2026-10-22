@@ -37,10 +37,12 @@ public struct AWSHTTPRequest: Sendable {
     }
 
     /// HTTP Request method
-    var method: HTTPRequest.Method { self.request.method }
+    @inlinable
+    public var method: HTTPRequest.Method { self.request.method }
 
     /// HTTP Request headers
-    var headers: HTTPFields { self.request.headerFields }
+    @inlinable
+    public var headers: HTTPFields { self.request.headerFields }
 
     /// Create signed headers for request
     mutating func signHeaders(signer: AWSSigner, serviceConfig: AWSServiceConfig) {

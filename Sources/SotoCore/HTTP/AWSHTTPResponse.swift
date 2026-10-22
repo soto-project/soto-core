@@ -33,12 +33,15 @@ public struct AWSHTTPResponse: Sendable {
     public var body: AWSHTTPBody
 
     /// Response status code
+    @inlinable
     public var status: HTTPResponse.Status { self.response.status }
 
     /// Response headers
-    public var headerFields: HTTPFields { self.response.headerFields }
+    @inlinable
+    public var headers: HTTPFields { self.response.headerFields }
 
     /// Initialize AWSResponse
+    @inlinable
     public init(response: HTTPResponse, body: AWSHTTPBody = .init()) {
         self.response = response
         self.body = body

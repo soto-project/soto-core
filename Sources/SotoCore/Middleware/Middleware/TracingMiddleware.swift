@@ -38,7 +38,7 @@ public struct AWSTracingMiddleware: AWSMiddlewareProtocol {
             }
             let response = try await next(request, context)
 
-            span.attributes["aws.request_id"] = response.headerFields[.xAmzRequestID] ?? response.headerFields[.xAmzRequestIDv2]
+            span.attributes["aws.request_id"] = response.headers[.xAmzRequestID] ?? response.headers[.xAmzRequestIDv2]
 
             return response
         }

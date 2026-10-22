@@ -70,8 +70,14 @@ extension MetadataClient {
 }
 
 struct MetadataHTTPResponse {
-    public var response: HTTPResponse
-    public var body: ByteBuffer?
+    var response: HTTPResponse
+    var body: ByteBuffer
+
+    @inlinable
+    var status: HTTPResponse.Status { self.response.status }
+
+    @inlinable
+    var headers: HTTPFields { self.response.headerFields }
 }
 
 struct ECSMetaDataClient: MetadataClient {
@@ -118,10 +124,7 @@ struct ECSMetaDataClient: MetadataClient {
 
     func getMetaData(logger: Logger) async throws -> ECSMetaData {
         let response = try await request(url: endpointURL, timeout: .seconds(2), logger: logger)
-        guard let body = response.body else {
-            throw MetaDataClientError.missingMetaData
-        }
-        return try Self.createJSONDecoder().decode(MetaData.self, from: body)
+        return try Self.createJSONDecoder().decode(MetaData.self, from: response.body)
     }
 
     private func request(url: String, timeout: TimeAmount, logger: Logger) async throws -> MetadataHTTPResponse {
@@ -209,21 +212,15 @@ struct InstanceMetaDataClient: MetadataClient {
             logger: logger
         )
         // the rolename is in the body
-        guard response.response.status == .ok else {
+        guard response.status == .ok else {
             throw MetaDataClientError.unexpectedTokenResponseStatus(status: response.status)
         }
-        var body = try await response.body.collect(upTo: 4096)
-        guard let roleName = body.readString(length: body.readableBytes) else {
-            throw MetaDataClientError.couldNotGetInstanceRoleName
-        }
+        let roleName = String(buffer: response.body)
         // request credentials with the rolename
         let url = self.credentialURL.appendingPathComponent(roleName)
         let credentialResponse = try await self.request(HTTPRequest(method: .get, url: url, headerFields: headers), logger: logger)
 
-        // decode the repsonse payload into the metadata object
-        body = try await credentialResponse.body.collect(upTo: 4096)
-
-        return try Self.createJSONDecoder().decode(InstanceMetaData.self, from: body)
+        return try Self.createJSONDecoder().decode(InstanceMetaData.self, from: credentialResponse.body)
     }
 
     func getToken(logger: Logger) async throws -> String {
@@ -234,19 +231,16 @@ struct InstanceMetaDataClient: MetadataClient {
         guard response.status == .ok else {
             throw MetaDataClientError.unexpectedTokenResponseStatus(status: response.status)
         }
-        var body = try await response.body.collect(upTo: 4096)
-        guard let token = body.readString(length: body.readableBytes) else {
-            throw MetaDataClientError.couldNotReadTokenFromResponse
-        }
-        return token
+        return String(buffer: response.body)
     }
 
     private func request(
         _ request: HTTPRequest,
         logger: Logger
-    ) async throws -> AWSHTTPResponse {
+    ) async throws -> MetadataHTTPResponse {
         try Task.checkCancellation()
         let request = AWSHTTPRequest(request: request, body: .init())
-        return try await httpClient.execute(request: request, timeout: TimeAmount.seconds(2), logger: logger)
+        let response = try await httpClient.execute(request: request, timeout: TimeAmount.seconds(2), logger: logger)
+        return try await MetadataHTTPResponse(response: response.response, body: response.body.collect(upTo: 1_000_000))
     }
 }

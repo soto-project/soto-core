@@ -14,7 +14,6 @@
 
 import HTTPTypes
 import Logging
-import NIOHTTP1
 import SotoSignerV4
 
 /// Middleware that throws errors for non 2xx responses from AWS

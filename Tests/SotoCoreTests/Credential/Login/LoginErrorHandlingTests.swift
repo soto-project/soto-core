@@ -17,7 +17,6 @@
 import Crypto
 import Logging
 import NIOCore
-import NIOHTTP1
 import SotoCore
 @_spi(SotoInternal) import SotoSignerV4
 import Testing

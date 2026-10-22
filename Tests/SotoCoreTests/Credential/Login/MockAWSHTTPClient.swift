@@ -17,7 +17,6 @@
 import HTTPTypes
 import Logging
 import NIOCore
-import NIOHTTP1
 import SotoCore
 
 #if canImport(FoundationEssentials)

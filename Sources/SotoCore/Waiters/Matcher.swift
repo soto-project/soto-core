@@ -15,7 +15,6 @@
 import HTTPTypes
 import JMESPath
 import NIOCore
-import NIOHTTP1
 
 /// Protocol for matchers used in waiters.
 ///

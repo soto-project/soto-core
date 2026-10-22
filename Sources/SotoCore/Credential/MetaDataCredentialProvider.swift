@@ -18,7 +18,6 @@ import Logging
 import NIOConcurrencyHelpers
 import NIOCore
 import NIOFoundationEssentialsCompat
-import NIOHTTP1
 import SotoSignerV4
 
 #if canImport(FoundationEssentials)

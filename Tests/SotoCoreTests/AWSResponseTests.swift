@@ -16,7 +16,6 @@ import Foundation
 import HTTPTypes
 import NIOCore
 import NIOFoundationEssentialsCompat
-import NIOHTTP1
 import SotoTestUtils
 import SotoXML
 import Testing

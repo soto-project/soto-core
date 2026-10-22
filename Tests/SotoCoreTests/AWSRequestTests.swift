@@ -14,7 +14,6 @@
 
 import HTTPTypes
 import NIOCore
-import NIOHTTP1
 import SotoSignerV4
 import SotoTestUtils
 import SotoXML

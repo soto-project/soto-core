@@ -20,7 +20,6 @@ import Logging
 import Metrics
 import NIOConcurrencyHelpers
 import NIOCore
-import NIOHTTP1
 import NIOTransportServices
 import SotoSignerV4
 

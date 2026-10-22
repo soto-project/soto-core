@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 import Logging
-import NIOHTTP1
 import SotoSignerV4
 
 /// Middleware that performs retries of the next middleware whenever it throws errors based on a retry policy

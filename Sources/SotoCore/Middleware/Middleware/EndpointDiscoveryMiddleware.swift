@@ -14,7 +14,6 @@
 
 import HTTPTypes
 import Logging
-import NIOHTTP1
 import SotoSignerV4
 
 #if canImport(FoundationEssentials)

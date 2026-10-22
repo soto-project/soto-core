@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 import Logging
-import NIOHTTP1
 import SotoSignerV4
 
 /// Middleware that SigV4 signs an HTTP request

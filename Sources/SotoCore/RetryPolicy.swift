@@ -15,7 +15,6 @@
 import AsyncHTTPClient
 import HTTPTypes
 import NIOCore
-import NIOHTTP1
 import NIOPosix  // Needed for NIOConnectionError
 
 #if canImport(FoundationEssentials)

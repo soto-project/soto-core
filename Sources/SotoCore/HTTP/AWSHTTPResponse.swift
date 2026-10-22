@@ -17,7 +17,6 @@ public import HTTPTypes
 import Logging
 import NIOCore
 import NIOFoundationEssentialsCompat
-import NIOHTTP1
 internal import SotoXML
 
 #if canImport(FoundationEssentials)

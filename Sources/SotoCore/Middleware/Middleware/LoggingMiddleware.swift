@@ -14,7 +14,6 @@
 
 public import HTTPTypes
 import Logging
-import NIOHTTP1
 
 #if canImport(FoundationEssentials)
 public import FoundationEssentials

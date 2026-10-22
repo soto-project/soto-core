@@ -210,6 +210,8 @@ package struct AWSURLComponentSet: OptionSet {
     static package var queryGrammar: AWSURLComponentSet { .init(rawValue: 1 << 3) }
     /// Standard URI query item allowed characters
     static package var queryItem: AWSURLComponentSet { .init(rawValue: 1 << 4) }
+    /// Percent. Include this if string has already been percent encoded
+    static package var percent: AWSURLComponentSet { .init(rawValue: 1 << 5) }
     /// Standard URI path allowed characters
     static package var path: AWSURLComponentSet { [.pathComponent, .forwardSlash] }
     /// S3 path allowed characters (based on allowed characters for S3 bucket)
@@ -272,6 +274,8 @@ extension UTF8.CodeUnit {
             return 0b00010000
         case UInt8(ascii: "@"):
             return 0b00010001
+        case UInt8(ascii: "%"):
+            return 0b00100000
         case UInt8(ascii: "0")...UInt8(ascii: "9"):
             return 0b00110101
         case UInt8(ascii: "A")...UInt8(ascii: "Z"):

@@ -203,7 +203,6 @@ public struct AWSSigner: Sendable {
         date: Date = Date()
     ) {
         guard let url = request.url else { return }
-
         if algorithm.base == .sigV4a {
             request.headerFields[.xAmzRegionSet] = self.region
         }
@@ -233,6 +232,7 @@ public struct AWSSigner: Sendable {
         query = query.split(separator: "&")
             .sorted()
             .joined(separator: "&")
+            .addingAWSPercentEncoding(forURLComponent: [.query, .percent])
 
         // update unsignedURL in the signingData so when the canonical request is constructed it includes all the signing query items
         signingData.unsignedURL = URL(string: url.absoluteString.split(separator: "?")[0] + "?" + query)!  // NEED TO DEAL WITH SITUATION WHERE THIS FAILS
@@ -541,10 +541,6 @@ public struct AWSSigner: Sendable {
 extension StringProtocol {
     func s3PathEncode() -> String {
         self.addingAWSPercentEncoding(forURLComponent: .s3Path)
-    }
-
-    func queryEncode() -> String {
-        self.addingAWSPercentEncoding(forURLComponent: .query)
     }
 
     func uriEncode() -> String {

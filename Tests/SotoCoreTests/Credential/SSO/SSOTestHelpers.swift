@@ -15,6 +15,7 @@
 // Shared test helpers for SSO Credential Provider tests
 
 import Crypto
+import HTTPTypes
 import Logging
 import NIOCore
 import NIOHTTP1
@@ -110,7 +111,7 @@ extension SSOCredentialProviderTests {
         accessKeyId: String = "AKIATEST123",
         secretAccessKey: String = "testsecret",
         sessionToken: String = "testsession"
-    ) -> (HTTPResponseStatus, Data) {
+    ) -> (HTTPResponse.Status, Data) {
         let json = """
             {
                 "roleCredentials": {
@@ -128,7 +129,7 @@ extension SSOCredentialProviderTests {
     func makeCreateTokenResponse(
         accessToken: String = "refreshed-access-token",
         refreshToken: String = "new-refresh-token"
-    ) -> (HTTPResponseStatus, Data) {
+    ) -> (HTTPResponse.Status, Data) {
         let json = """
             {
                 "accessToken": "\(accessToken)",

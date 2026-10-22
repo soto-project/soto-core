@@ -41,7 +41,7 @@ class PayloadTests: XCTestCase {
             async let responseTask: Void = client.execute(
                 operation: "test",
                 path: "/",
-                httpMethod: .POST,
+                httpMethod: .post,
                 serviceConfig: config,
                 input: input,
                 logger: TestEnvironment.logger
@@ -93,7 +93,7 @@ class PayloadTests: XCTestCase {
             async let responseTask: Output = client.execute(
                 operation: "test",
                 path: "/",
-                httpMethod: .POST,
+                httpMethod: .post,
                 serviceConfig: config,
                 logger: TestEnvironment.logger
             )

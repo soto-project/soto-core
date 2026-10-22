@@ -16,43 +16,68 @@ public import HTTPTypes
 
 extension HTTPField.Name {
     @inlinable
-    static var xAmzTarget: Self {
+    package static var xAmzTarget: Self {
         .init("X-Amz-Target")!
     }
 
     @inlinable
-    static var xAmzRequestID: Self {
+    package static var xAmzRequestID: Self {
         .init("x-amz-request-id")!
     }
 
     @inlinable
-    static var xAmzRequestIDv2: Self {
+    package static var xAmzRequestIDv2: Self {
         .init("x-amz-requestid")!
     }
 
     @inlinable
-    static var xAmzDecodedContentLength: Self {
+    package static var xAmzDecodedContentLength: Self {
         .init("X-Amz-Decoded-Content-Length")!
     }
 
     @inlinable
-    static var xAmzSdkChecksumAlgorithm: Self {
+    package static var xAmzSdkChecksumAlgorithm: Self {
         .init("X-Amz-Sdk-Checksum-Algorithm")!
     }
 
     @inlinable
-    static var xAmznErrorType: Self {
+    package static var xAmznErrorType: Self {
         .init("X-Amzn-Errortype")!
     }
 
     @inlinable
-    static var xAmzSSOBearerToken: Self {
+    package static var xAmzSSOBearerToken: Self {
         .init("x-amz-sso_bearer_token")!
     }
 
     @inlinable
-    static var dPoP: Self {
+    package static var dPoP: Self {
         .init("DPoP")!
+    }
+
+    @inlinable
+    package static var contentMD5: Self {
+        .init("Content-MD5")!
+    }
+
+    @inlinable
+    package static var xAmzChecksumSHA1: Self {
+        .init("x-amz-checksum-sha1")!
+    }
+
+    @inlinable
+    package static var xAmzChecksumCRC32: Self {
+        .init("x-amz-checksum-crc32")!
+    }
+
+    @inlinable
+    package static var xAmzChecksumCRC32C: Self {
+        .init("x-amz-checksum-crc32c")!
+    }
+
+    @inlinable
+    package static var xAmzChecksumSHA256: Self {
+        .init("x-amz-checksum-sha256")!
     }
 
 }

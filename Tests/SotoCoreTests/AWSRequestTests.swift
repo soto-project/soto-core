@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HTTPTypes
 import NIOCore
 import NIOHTTP1
 import SotoSignerV4
@@ -56,8 +57,8 @@ class AWSRequestTests {
         #expect(config.region == .euwest1)
 
         var request: AWSHTTPRequest?
-        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "test", path: "/", method: .GET, configuration: config) }
-        #expect(request?.url.absoluteString == "https://service.aws.amazon.com/")
+        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "test", path: "/", method: .get, configuration: config) }
+        #expect(request?.request.url?.absoluteString == "https://service.aws.amazon.com/")
     }
 
     @Test func testCreateAwsRequestWithKeywordInHeader() {
@@ -76,9 +77,9 @@ class AWSRequestTests {
         let request = KeywordRequest(repeat: "Repeat")
         var awsRequest: AWSHTTPRequest?
         #expect(throws: Never.self) {
-            awsRequest = try AWSHTTPRequest(operation: "Keyword", path: "/", method: .POST, input: request, configuration: config)
+            awsRequest = try AWSHTTPRequest(operation: "Keyword", path: "/", method: .post, input: request, configuration: config)
         }
-        #expect(awsRequest?.headers["repeat"].first == "Repeat")
+        #expect(awsRequest?.headers[HTTPField.Name("repeat")!] == "Repeat")
     }
 
     @Test func testCreateAwsRequestWithKeywordInQuery() {
@@ -98,9 +99,9 @@ class AWSRequestTests {
         let request = KeywordRequest(throw: "KeywordRequest")
         var awsRequest: AWSHTTPRequest?
         #expect(throws: Never.self) {
-            awsRequest = try AWSHTTPRequest(operation: "Keyword", path: "/", method: .POST, input: request, configuration: config)
+            awsRequest = try AWSHTTPRequest(operation: "Keyword", path: "/", method: .post, input: request, configuration: config)
         }
-        #expect(awsRequest?.url == URL(string: "https://s3.ca-central-1.amazonaws.com/?throw=KeywordRequest")!)
+        #expect(awsRequest?.request.url == URL(string: "https://s3.ca-central-1.amazonaws.com/?throw=KeywordRequest")!)
     }
 
     @Test func testCreateNIORequest() throws {
@@ -111,7 +112,7 @@ class AWSRequestTests {
         var awsRequest: AWSHTTPRequest = try AWSHTTPRequest(
             operation: "PutRecord",
             path: "/",
-            method: .POST,
+            method: .post,
             input: input2,
             configuration: config
         )
@@ -123,9 +124,9 @@ class AWSRequestTests {
         )
 
         awsRequest.signHeaders(signer: signer, serviceConfig: config)
-        #expect(awsRequest.method == HTTPMethod.POST)
-        #expect(awsRequest.headers["Host"].first == "kinesis.us-east-1.amazonaws.com")
-        #expect(awsRequest.headers["Content-Type"].first == "application/x-amz-json-1.1")
+        #expect(awsRequest.method == .post)
+        #expect(awsRequest.request.authority == "kinesis.us-east-1.amazonaws.com")
+        #expect(awsRequest.headers[.contentType] == "application/x-amz-json-1.1")
     }
 
     @Test func testUnsignedClient() throws {
@@ -135,7 +136,7 @@ class AWSRequestTests {
         var awsRequest: AWSHTTPRequest = try AWSHTTPRequest(
             operation: "CopyObject",
             path: "/",
-            method: .PUT,
+            method: .put,
             input: input,
             configuration: config
         )
@@ -147,7 +148,7 @@ class AWSRequestTests {
         )
 
         awsRequest.signHeaders(signer: signer, serviceConfig: config)
-        #expect(awsRequest.headers["Authorization"].first == nil)
+        #expect(awsRequest.headers[.authorization] == nil)
     }
 
     @Test func testSignedClient() throws {
@@ -160,7 +161,7 @@ class AWSRequestTests {
             region: config.region.rawValue
         )
 
-        for httpMethod in [HTTPMethod.GET, .HEAD, .PUT, .DELETE, .POST, .PATCH] {
+        for httpMethod in [HTTPRequest.Method.get, .head, .put, .delete, .post, .patch] {
             var awsRequest: AWSHTTPRequest = try AWSHTTPRequest(
                 operation: "Test",
                 path: "/",
@@ -170,7 +171,7 @@ class AWSRequestTests {
             )
 
             awsRequest.signHeaders(signer: signer, serviceConfig: config)
-            #expect(awsRequest.headers["Authorization"].first != nil)
+            #expect(awsRequest.headers[.authorization] != nil)
         }
     }
 
@@ -192,42 +193,42 @@ class AWSRequestTests {
         let config = createServiceConfig(serviceProtocol: .json(version: "1.1"))
         var request: AWSHTTPRequest?
         #expect(throws: Never.self) {
-            request = try AWSHTTPRequest(operation: "test", path: "/", method: .POST, input: object, configuration: config)
+            request = try AWSHTTPRequest(operation: "test", path: "/", method: .post, input: object, configuration: config)
         }
-        #expect(request?.headers["content-type"].first == "application/x-amz-json-1.1")
+        #expect(request?.headers[.contentType] == "application/x-amz-json-1.1")
 
         let config2 = createServiceConfig(serviceProtocol: .restjson)
         var request2: AWSHTTPRequest?
         #expect(throws: Never.self) {
-            request2 = try AWSHTTPRequest(operation: "test", path: "/", method: .POST, input: object, configuration: config2)
+            request2 = try AWSHTTPRequest(operation: "test", path: "/", method: .post, input: object, configuration: config2)
         }
-        #expect(request2?.headers["content-type"].first == "application/json")
+        #expect(request2?.headers[.contentType] == "application/json")
         var rawRequest2: AWSHTTPRequest?
         #expect(throws: Never.self) {
-            rawRequest2 = try AWSHTTPRequest(operation: "test", path: "/", method: .POST, input: object2, configuration: config2)
+            rawRequest2 = try AWSHTTPRequest(operation: "test", path: "/", method: .post, input: object2, configuration: config2)
         }
-        #expect(rawRequest2?.headers["content-type"].first == "binary/octet-stream")
+        #expect(rawRequest2?.headers[.contentType] == "binary/octet-stream")
 
         let config3 = createServiceConfig(serviceProtocol: .query)
         var request3: AWSHTTPRequest?
         #expect(throws: Never.self) {
-            request3 = try AWSHTTPRequest(operation: "test", path: "/", method: .POST, input: object, configuration: config3)
+            request3 = try AWSHTTPRequest(operation: "test", path: "/", method: .post, input: object, configuration: config3)
         }
-        #expect(request3?.headers["content-type"].first == "application/x-www-form-urlencoded; charset=utf-8")
+        #expect(request3?.headers[.contentType] == "application/x-www-form-urlencoded; charset=utf-8")
 
         let config4 = createServiceConfig(serviceProtocol: .ec2)
         var request4: AWSHTTPRequest?
         #expect(throws: Never.self) {
-            request4 = try AWSHTTPRequest(operation: "test", path: "/", method: .POST, input: object, configuration: config4)
+            request4 = try AWSHTTPRequest(operation: "test", path: "/", method: .post, input: object, configuration: config4)
         }
-        #expect(request4?.headers["content-type"].first == "application/x-www-form-urlencoded; charset=utf-8")
+        #expect(request4?.headers[.contentType] == "application/x-www-form-urlencoded; charset=utf-8")
 
         let config5 = createServiceConfig(serviceProtocol: .restxml)
         var request5: AWSHTTPRequest?
         #expect(throws: Never.self) {
-            request5 = try AWSHTTPRequest(operation: "test", path: "/", method: .POST, input: object, configuration: config5)
+            request5 = try AWSHTTPRequest(operation: "test", path: "/", method: .post, input: object, configuration: config5)
         }
-        #expect(request5?.headers["content-type"].first == "application/octet-stream")
+        #expect(request5?.headers[.contentType] == "application/octet-stream")
     }
 
     @Test func testHeaderEncoding() {
@@ -244,8 +245,8 @@ class AWSRequestTests {
         let input = Input(h: "TestHeader")
         let config = createServiceConfig()
         var request: AWSHTTPRequest?
-        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config) }
-        #expect(request?.headers["header-member"].first == "TestHeader")
+        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config) }
+        #expect(request?.headers[HTTPField.Name("header-member")!] == "TestHeader")
     }
 
     @Test func testHeaderDateEncoding() {
@@ -269,9 +270,9 @@ class AWSRequestTests {
         )
         let config = createServiceConfig()
         var request: AWSHTTPRequest?
-        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config) }
-        #expect(request?.headers["date"].first == "Mon, 12 Jan 1970 13:46:40 GMT")
-        #expect(request?.headers["iso8601-date"].first == "1970-01-12T13:46:40.000Z")
+        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config) }
+        #expect(request?.headers[.date] == "Mon, 12 Jan 1970 13:46:40 GMT")
+        #expect(request?.headers[HTTPField.Name("iso8601-date")!] == "1970-01-12T13:46:40.000Z")
     }
 
     @Test func testQueryEncoding() {
@@ -292,8 +293,8 @@ class AWSRequestTests {
         let input = Input(p: "hmmm", q: "=3+5897^sdfjh&", r: nil)
         let config = createServiceConfig(region: .useast1)
         var request: AWSHTTPRequest?
-        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config) }
-        #expect(request?.url.absoluteString == "https://test.us-east-1.amazonaws.com/?puery=hmmm&query=%3D3%2B5897%5Esdfjh%26")
+        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config) }
+        #expect(request?.request.url?.absoluteString == "https://test.us-east-1.amazonaws.com/?puery=hmmm&query=%3D3%2B5897%5Esdfjh%26")
     }
 
     @Test func testQueryEncodedArray() {
@@ -311,8 +312,8 @@ class AWSRequestTests {
         let config = createServiceConfig(region: .useast1)
 
         var request: AWSHTTPRequest?
-        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config) }
-        #expect(request?.url.absoluteString == "https://test.us-east-1.amazonaws.com/?query=%3D3%2B5897%5Esdfjh%26&query=test")
+        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config) }
+        #expect(request?.request.url?.absoluteString == "https://test.us-east-1.amazonaws.com/?query=%3D3%2B5897%5Esdfjh%26&query=test")
     }
 
     @Test func testQueryEncodedDictionary() {
@@ -329,8 +330,8 @@ class AWSRequestTests {
         let input = Input(q: ["one": 1, "two": 2])
         let config = createServiceConfig(region: .useast2, service: "myservice")
         var request: AWSHTTPRequest?
-        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config) }
-        #expect(request?.url.absoluteString == "https://myservice.us-east-2.amazonaws.com/?one=1&two=2")
+        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config) }
+        #expect(request?.request.url?.absoluteString == "https://myservice.us-east-2.amazonaws.com/?one=1&two=2")
     }
 
     @Test func testQueryDate() {
@@ -347,8 +348,8 @@ class AWSRequestTests {
         let input = Input(d: Date(timeIntervalSince1970: 1_000_000))
         let config = createServiceConfig(region: .useast2, service: "myservice")
         var request: AWSHTTPRequest?
-        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config) }
-        #expect(request?.url.absoluteString == "https://myservice.us-east-2.amazonaws.com/?d=1000000")
+        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config) }
+        #expect(request?.request.url?.absoluteString == "https://myservice.us-east-2.amazonaws.com/?d=1000000")
     }
 
     @Test func testQueryInPath() {
@@ -366,15 +367,15 @@ class AWSRequestTests {
         let config = createServiceConfig(region: .useast1)
         var request: AWSHTTPRequest?
         #expect(throws: Never.self) {
-            request = try AWSHTTPRequest(operation: "Test", path: "/?test=true", method: .GET, input: input, configuration: config)
+            request = try AWSHTTPRequest(operation: "Test", path: "/?test=true", method: .get, input: input, configuration: config)
         }
-        #expect(request?.url.absoluteString == "https://test.us-east-1.amazonaws.com/?query=path&test=true")
+        #expect(request?.request.url?.absoluteString == "https://test.us-east-1.amazonaws.com/?query=path&test=true")
     }
 
     @Test func testQueryProtocolEmptyRequest() {
         let config = createServiceConfig(region: .useast2, service: "myservice", serviceProtocol: .query)
         var request: AWSHTTPRequest?
-        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, configuration: config) }
+        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, configuration: config) }
         #expect(request?.body.asString() == "Action=Test&Version=01-01-2001")
     }
 
@@ -393,9 +394,9 @@ class AWSRequestTests {
         let config = createServiceConfig(region: .cacentral1, service: "s3")
         var request: AWSHTTPRequest?
         #expect(throws: Never.self) {
-            request = try AWSHTTPRequest(operation: "Test", path: "/{key}", method: .GET, input: input, configuration: config)
+            request = try AWSHTTPRequest(operation: "Test", path: "/{key}", method: .get, input: input, configuration: config)
         }
-        #expect(request?.url.absoluteString == "https://s3.ca-central-1.amazonaws.com/MyKey")
+        #expect(request?.request.url?.absoluteString == "https://s3.ca-central-1.amazonaws.com/MyKey")
     }
 
     @Test func testCreateWithXMLNamespace() throws {
@@ -407,7 +408,7 @@ class AWSRequestTests {
         let xmlConfig = createServiceConfig(serviceProtocol: .restxml)
         var request: AWSHTTPRequest?
         #expect(throws: Never.self) {
-            request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: xmlConfig)
+            request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: xmlConfig)
         }
         guard case .byteBuffer(let buffer) = request?.body.storage else {
             Issue.record("Shouldn't get here")
@@ -425,7 +426,7 @@ class AWSRequestTests {
         let xmlConfig = createServiceConfig(serviceProtocol: .restxml, xmlNamespace: "https://test.amazonaws.com/doc/2020-03-11/")
         var request: AWSHTTPRequest?
         #expect(throws: Never.self) {
-            request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: xmlConfig)
+            request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: xmlConfig)
         }
         guard case .byteBuffer(let buffer) = request?.body.storage else {
             Issue.record("Shouldn't get here")
@@ -445,7 +446,7 @@ class AWSRequestTests {
         }
         let input = J(dataContainer: DataContainer(data: Data("test data".utf8)))
         let jsonConfig = createServiceConfig(serviceProtocol: .json(version: "1.1"))
-        #expect(throws: Never.self) { try AWSHTTPRequest(operation: "PutRecord", path: "/", method: .POST, input: input, configuration: jsonConfig) }
+        #expect(throws: Never.self) { try AWSHTTPRequest(operation: "PutRecord", path: "/", method: .post, input: input, configuration: jsonConfig) }
     }
 
     @Test func testEC2ClientRequest() {
@@ -455,7 +456,7 @@ class AWSRequestTests {
         let input = Input(array: ["entry1", "entry2"])
         let config = createServiceConfig(serviceProtocol: .ec2, apiVersion: "2013-12-02")
         var request: AWSHTTPRequest?
-        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config) }
+        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config) }
         #expect(request?.body.asString() == "Action=Test&Array.1=entry1&Array.2=entry2&Version=2013-12-02")
     }
 
@@ -474,13 +475,13 @@ class AWSRequestTests {
         let config = createServiceConfig(endpoint: "https://test.com")
         var request: AWSHTTPRequest?
         #expect(throws: Never.self) {
-            request = try AWSHTTPRequest(operation: "Test", path: "/{path+}", method: .GET, input: input, configuration: config)
+            request = try AWSHTTPRequest(operation: "Test", path: "/{path+}", method: .get, input: input, configuration: config)
         }
-        #expect(request?.url.absoluteString == "https://test.com/Test%20me/once%2B%3F")
+        #expect(request?.request.url?.absoluteString == "https://test.com/Test%20me/once%2B%3F")
         #expect(throws: Never.self) {
-            request = try AWSHTTPRequest(operation: "Test", path: "/{path}", method: .GET, input: input, configuration: config)
+            request = try AWSHTTPRequest(operation: "Test", path: "/{path}", method: .get, input: input, configuration: config)
         }
-        #expect(request?.url.absoluteString == "https://test.com/Test%20me%2Fonce%2B%3F")
+        #expect(request?.request.url?.absoluteString == "https://test.com/Test%20me%2Fonce%2B%3F")
     }
 
     @Test func testSortedArrayQuery() {
@@ -497,8 +498,8 @@ class AWSRequestTests {
         let input = Input(items: ["orange", "apple"])
         let config = createServiceConfig(endpoint: "https://test.com")
         var request: AWSHTTPRequest?
-        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config) }
-        #expect(request?.url == URL(string: "https://test.com/?item=apple&item=orange")!)
+        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config) }
+        #expect(request?.request.url == URL(string: "https://test.com/?item=apple&item=orange")!)
     }
 
     @Test func testCustomEncoderInQuery() {
@@ -519,8 +520,8 @@ class AWSRequestTests {
         let input = Input(date: Date(timeIntervalSince1970: 10_000_000), values: [1])
         let config = createServiceConfig(endpoint: "https://test.com")
         var request: AWSHTTPRequest?
-        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config) }
-        #expect(request?.url.absoluteString == "https://test.com/?date=Sun%2C%2026%20Apr%201970%2017%3A46%3A40%20GMT")
+        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config) }
+        #expect(request?.request.url?.absoluteString == "https://test.com/?date=Sun%2C%2026%20Apr%201970%2017%3A46%3A40%20GMT")
     }
 
     /// JSON POST request require a body even if there is no data to POST
@@ -528,9 +529,9 @@ class AWSRequestTests {
         struct Input: AWSEncodableShape {}
         let input = Input()
         let config = createServiceConfig(serviceProtocol: .json(version: "1.0"), endpoint: "https://test.com")
-        let request = try AWSHTTPRequest(operation: "Test", path: "/", method: .POST, input: input, configuration: config)
+        let request = try AWSHTTPRequest(operation: "Test", path: "/", method: .post, input: input, configuration: config)
         #expect(request.body.asString() == "{}")
-        #expect(request.headers["content-type"].first == "application/x-amz-json-1.0")
+        #expect(request.headers[.contentType] == "application/x-amz-json-1.0")
     }
 
     /// JSON GET, HEAD, DELETE requests should not output a body if it is empty ie `{}`
@@ -538,15 +539,15 @@ class AWSRequestTests {
         struct Input: AWSEncodableShape {}
         let input = Input()
         let config = createServiceConfig(serviceProtocol: .json(version: "1.0"), endpoint: "https://test.com")
-        let request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config)
+        let request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config)
         #expect(request.body.asString() == "")
-        #expect(request.headers["content-type"].first == nil)
-        let request2 = try AWSHTTPRequest(operation: "Test", path: "/", method: .HEAD, input: input, configuration: config)
+        #expect(request.headers[.contentType] == nil)
+        let request2 = try AWSHTTPRequest(operation: "Test", path: "/", method: .head, input: input, configuration: config)
         #expect(request2.body.asString() == "")
-        #expect(request2.headers["content-type"].first == nil)
-        let request3 = try AWSHTTPRequest(operation: "Test", path: "/", method: .DELETE, input: input, configuration: config)
+        #expect(request2.headers[.contentType] == nil)
+        let request3 = try AWSHTTPRequest(operation: "Test", path: "/", method: .delete, input: input, configuration: config)
         #expect(request3.body.asString() == "")
-        #expect(request3.headers["content-type"].first == nil)
+        #expect(request3.headers[.contentType] == nil)
     }
 
     /// Test host prefix
@@ -557,12 +558,12 @@ class AWSRequestTests {
         let request = try AWSHTTPRequest(
             operation: "Test",
             path: "/",
-            method: .POST,
+            method: .post,
             input: input,
             hostPrefix: "foo.",
             configuration: config
         )
-        #expect(request.url.absoluteString == "https://foo.test.com/")
+        #expect(request.request.url?.absoluteString == "https://foo.test.com/")
     }
 
     /// Test host prefix
@@ -582,13 +583,13 @@ class AWSRequestTests {
         let request = try AWSHTTPRequest(
             operation: "Test",
             path: "/",
-            method: .POST,
+            method: .post,
             input: input,
             hostPrefix: "{AccountId}.",
             configuration: config
         )
 
-        #expect(request.url.absoluteString == "https://12345678.test.com/")
+        #expect(request.request.url?.absoluteString == "https://12345678.test.com/")
     }
 
     @Test func testJSONPayload() throws {
@@ -608,7 +609,7 @@ class AWSRequestTests {
         let request = try AWSHTTPRequest(
             operation: "Test",
             path: "/",
-            method: .POST,
+            method: .post,
             input: input,
             configuration: config
         )
@@ -633,7 +634,7 @@ class AWSRequestTests {
         let request = try AWSHTTPRequest(
             operation: "Test",
             path: "/",
-            method: .POST,
+            method: .post,
             input: input,
             configuration: config
         )
@@ -661,13 +662,13 @@ class AWSRequestTests {
         let request = try AWSHTTPRequest(
             operation: "Test",
             path: "/",
-            method: .POST,
+            method: .post,
             input: input,
             configuration: config
         )
 
         #expect(request.body.asString() == #"{"number":12345678}"#)
-        #expect(request.headers["content-type"].first == "image/jpeg")
+        #expect(request.headers[.contentType] == "image/jpeg")
     }
 
     /// Test disable S3 chunked upload flag works
@@ -694,11 +695,11 @@ class AWSRequestTests {
         let input = Input(payload: stream, member: "test")
         var optionalAWSRequest: AWSHTTPRequest?
         #expect(throws: Never.self) {
-            optionalAWSRequest = try AWSHTTPRequest(operation: "Test", path: "/", method: .POST, input: input, configuration: config)
+            optionalAWSRequest = try AWSHTTPRequest(operation: "Test", path: "/", method: .post, input: input, configuration: config)
         }
         var awsRequest = try #require(optionalAWSRequest)
         awsRequest.signHeaders(signer: signer, serviceConfig: config)
-        #expect(awsRequest.headers["x-amz-decoded-content-length"].first == nil)
+        #expect(awsRequest.headers[.xAmzDecodedContentLength] == nil)
     }
 
     @Test func testRequiredMD5Checksum() {
@@ -709,8 +710,8 @@ class AWSRequestTests {
         let input = Input(q: ["one", "two", "three", "four"])
         let config = createServiceConfig(region: .useast2, service: "myservice")
         var request: AWSHTTPRequest?
-        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config) }
-        #expect(request?.headers["Content-MD5"].first == "3W1MVcXgkODdv+m6VeZqdQ==")
+        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config) }
+        #expect(request?.headers[.contentMD5] == "3W1MVcXgkODdv+m6VeZqdQ==")
     }
 
     @Test func testMD5ChecksumHeader() {
@@ -721,15 +722,15 @@ class AWSRequestTests {
         let input = Input(q: ["one", "two", "three", "four"])
         let config = createServiceConfig(region: .useast2, service: "myservice", options: .calculateMD5)
         var request: AWSHTTPRequest?
-        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config) }
-        #expect(request?.headers["Content-MD5"].first == "3W1MVcXgkODdv+m6VeZqdQ==")
+        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config) }
+        #expect(request?.headers[.contentMD5] == "3W1MVcXgkODdv+m6VeZqdQ==")
 
         let config2 = createServiceConfig(region: .useast2, service: "myservice")
         var request2: AWSHTTPRequest?
         #expect(throws: Never.self) {
-            request2 = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config2)
+            request2 = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config2)
         }
-        #expect(request2?.headers["Content-MD5"].first == nil)
+        #expect(request2?.headers[.contentMD5] == nil)
     }
 
     @Test func testMD5ChecksumSetAlready() {
@@ -751,8 +752,8 @@ class AWSRequestTests {
         let input = Input(checksum: "Set already", q: ["one": 1, "two": 2])
         let config = createServiceConfig(region: .useast2, service: "myservice")
         var request: AWSHTTPRequest?
-        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config) }
-        #expect(request?.headers["Content-MD5"].first == "Set already")
+        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config) }
+        #expect(request?.headers[.contentMD5] == "Set already")
     }
 
     @Test func testSHA1Checksum() {
@@ -774,8 +775,8 @@ class AWSRequestTests {
         let input = Input(q: ["one", "two", "three", "four"], checksum: "SHA1")
         let config = createServiceConfig(region: .useast2, service: "myservice", serviceProtocol: .restxml)
         var request: AWSHTTPRequest?
-        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config) }
-        #expect(request?.headers["x-amz-checksum-sha1"].first == "wVl5w+ffNcoxzbahfTthTZsuivs=")
+        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config) }
+        #expect(request?.headers[.xAmzChecksumSHA1] == "wVl5w+ffNcoxzbahfTthTZsuivs=")
     }
 
     @Test func testCRC32Checksum() {
@@ -797,8 +798,8 @@ class AWSRequestTests {
         let input = Input(q: ["one", "two", "three", "four"], checksum: "CRC32")
         let config = createServiceConfig(region: .useast2, service: "myservice", serviceProtocol: .restxml)
         var request: AWSHTTPRequest?
-        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config) }
-        #expect(request?.headers["x-amz-checksum-crc32"].first == "BNgzYg==")
+        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config) }
+        #expect(request?.headers[.xAmzChecksumCRC32] == "BNgzYg==")
     }
 
     @Test func testCRC32CChecksum() {
@@ -820,8 +821,8 @@ class AWSRequestTests {
         let input = Input(q: ["one", "two", "three", "four"], checksum: "CRC32C")
         let config = createServiceConfig(region: .useast2, service: "myservice", serviceProtocol: .restxml)
         var request: AWSHTTPRequest?
-        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config) }
-        #expect(request?.headers["x-amz-checksum-crc32c"].first == "CJR8DA==")
+        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config) }
+        #expect(request?.headers[.xAmzChecksumCRC32C] == "CJR8DA==")
     }
 
     @Test func testSHA256Checksum() {
@@ -843,8 +844,8 @@ class AWSRequestTests {
         let input = Input(q: ["one", "two", "three", "four"], checksum: "SHA256")
         let config = createServiceConfig(region: .useast2, service: "myservice", serviceProtocol: .restxml)
         var request: AWSHTTPRequest?
-        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config) }
-        #expect(request?.headers["x-amz-checksum-sha256"].first == "QTQclc9fXffjuWqvYJnh/EUMgSdZcp1uOoUeq4SmiFY=")
+        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config) }
+        #expect(request?.headers[.xAmzChecksumSHA256] == "QTQclc9fXffjuWqvYJnh/EUMgSdZcp1uOoUeq4SmiFY=")
     }
 
     @Test func testHeaderPrefix() {
@@ -861,9 +862,9 @@ class AWSRequestTests {
         let input = Input(content: ["one": "first", "two": "second"])
         let config = createServiceConfig(region: .useast2, service: "myservice", serviceProtocol: .restxml)
         var request: AWSHTTPRequest?
-        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: input, configuration: config) }
-        #expect(request?.headers["x-aws-metadata-one"].first == "first")
-        #expect(request?.headers["x-aws-metadata-two"].first == "second")
+        #expect(throws: Never.self) { request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: input, configuration: config) }
+        #expect(request?.headers[HTTPField.Name("x-aws-metadata-one")!] == "first")
+        #expect(request?.headers[HTTPField.Name("x-aws-metadata-two")!] == "second")
     }
 
     @Test func testDocument() throws {
@@ -871,20 +872,20 @@ class AWSRequestTests {
             let doc: AWSDocument
         }
         let config = createServiceConfig(region: .useast2, service: "myservice", serviceProtocol: .restjson)
-        var request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: Input(doc: "Hello"), configuration: config)
+        var request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: Input(doc: "Hello"), configuration: config)
         #expect(request.body.asString() == #"{"doc":"Hello"}"#)
-        request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: Input(doc: .integer(4)), configuration: config)
+        request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: Input(doc: .integer(4)), configuration: config)
         #expect(request.body.asString() == #"{"doc":4}"#)
-        request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: Input(doc: .double(5.25)), configuration: config)
+        request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: Input(doc: .double(5.25)), configuration: config)
         #expect(request.body.asString() == #"{"doc":5.25}"#)
-        request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: Input(doc: .double(5.25)), configuration: config)
+        request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: Input(doc: .double(5.25)), configuration: config)
         #expect(request.body.asString() == #"{"doc":5.25}"#)
-        request = try AWSHTTPRequest(operation: "Test", path: "/", method: .GET, input: Input(doc: false), configuration: config)
+        request = try AWSHTTPRequest(operation: "Test", path: "/", method: .get, input: Input(doc: false), configuration: config)
         #expect(request.body.asString() == #"{"doc":false}"#)
         request = try AWSHTTPRequest(
             operation: "Test",
             path: "/",
-            method: .GET,
+            method: .get,
             input: Input(doc: .array([.string("Hello"), .string("World")])),
             configuration: config
         )
@@ -892,7 +893,7 @@ class AWSRequestTests {
         request = try AWSHTTPRequest(
             operation: "Test",
             path: "/",
-            method: .GET,
+            method: .get,
             input: Input(doc: .map(["first": .integer(1), "second": 2])),
             configuration: config
         )

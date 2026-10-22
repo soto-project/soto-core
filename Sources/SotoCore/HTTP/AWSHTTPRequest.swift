@@ -36,6 +36,12 @@ public struct AWSHTTPRequest: Sendable {
         self.body = body
     }
 
+    /// HTTP Request method
+    var method: HTTPRequest.Method { self.request.method }
+
+    /// HTTP Request headers
+    var headers: HTTPFields { self.request.headerFields }
+
     /// Create signed headers for request
     mutating func signHeaders(signer: AWSSigner, serviceConfig: AWSServiceConfig) {
         guard !signer.credentials.isEmpty() else { return }

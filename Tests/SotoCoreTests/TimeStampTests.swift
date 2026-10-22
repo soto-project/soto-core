@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import HTTPTypes
 import NIOHTTP1
 import SotoTestUtils
 import SotoXML
@@ -45,7 +46,7 @@ class TimeStampTests {
                 let date: Date
             }
             let byteBuffer = ByteBuffer(string: "{\"date\": 234876345}")
-            let response = AWSHTTPResponse(status: .ok, headers: [:], body: .init(buffer: byteBuffer))
+            let response = AWSHTTPResponse(response: HTTPResponse(status: .ok), body: .init(buffer: byteBuffer))
             let a: A = try response.generateOutputShape(operation: "TestOperation", serviceProtocol: .json(version: "1.1"))
             #expect(a.date.timeIntervalSince1970 == 234_876_345)
         } catch {
@@ -60,7 +61,7 @@ class TimeStampTests {
         let a = A(date: Date(timeIntervalSince1970: 23_984_978_378))
         var request: AWSHTTPRequest?
         #expect(throws: Never.self) {
-            request = try AWSHTTPRequest(operation: "test", path: "/", method: .GET, input: a, configuration: createServiceConfig())
+            request = try AWSHTTPRequest(operation: "test", path: "/", method: .get, input: a, configuration: createServiceConfig())
         }
         #expect(request?.body.asString() == "{\"date\":23984978378}")
     }
@@ -72,7 +73,7 @@ class TimeStampTests {
                 let date2: Date
             }
             let byteBuffer = ByteBuffer(string: "<A><date>2017-01-01T00:01:00.000Z</date><date2>2017-01-01T00:02:00Z</date2></A>")
-            let response = AWSHTTPResponse(status: .ok, headers: [:], body: .init(buffer: byteBuffer))
+            let response = AWSHTTPResponse(response: HTTPResponse(status: .ok), body: .init(buffer: byteBuffer))
             let a: A = try response.generateOutputShape(operation: "TestOperation", serviceProtocol: .restxml)
             #expect(self.dateFormatter.string(from: a.date) == "2017-01-01T00:01:00.000Z")
             #expect(self.dateFormatter.string(from: a.date2) == "2017-01-01T00:02:00.000Z")
@@ -91,7 +92,7 @@ class TimeStampTests {
             request = try AWSHTTPRequest(
                 operation: "test",
                 path: "/",
-                method: .GET,
+                method: .get,
                 input: a,
                 configuration: createServiceConfig(serviceProtocol: .restxml)
             )
@@ -109,7 +110,7 @@ class TimeStampTests {
             request = try AWSHTTPRequest(
                 operation: "test",
                 path: "/",
-                method: .GET,
+                method: .get,
                 input: a,
                 configuration: createServiceConfig(serviceProtocol: .query)
             )
@@ -126,7 +127,7 @@ class TimeStampTests {
                     self.date = try response.decodeHeader(Date.self, key: "Date")
                 }
             }
-            let response = AWSHTTPResponse(status: .ok, headers: ["Date": "Tue, 15 Nov 1994 12:45:27 GMT"])
+            let response = AWSHTTPResponse(response: HTTPResponse(status: .ok, headerFields: [.date: "Tue, 15 Nov 1994 12:45:27 GMT"]))
             let a: A = try response.generateOutputShape(operation: "TestOperation", serviceProtocol: .restxml)
             #expect(self.dateFormatter.string(from: a.date) == "1994-11-15T12:45:27.000Z")
         } catch {
@@ -140,7 +141,7 @@ class TimeStampTests {
                 @CustomCoding<ISO8601DateCoder> var date: Date
             }
             let byteBuffer = ByteBuffer(string: "<A><date>2017-01-01T00:01:00.000Z</date></A>")
-            let response = AWSHTTPResponse(status: .ok, headers: [:], body: .init(buffer: byteBuffer))
+            let response = AWSHTTPResponse(response: HTTPResponse(status: .ok), body: .init(buffer: byteBuffer))
             let a: A = try response.generateOutputShape(operation: "TestOperation", serviceProtocol: .restxml)
             #expect(self.dateFormatter.string(from: a.date) == "2017-01-01T00:01:00.000Z")
         } catch {
@@ -154,7 +155,7 @@ class TimeStampTests {
                 @CustomCoding<ISO8601DateCoder> var date: Date
             }
             let byteBuffer = ByteBuffer(string: "<A><date>2017-01-01T00:01:00Z</date></A>")
-            let response = AWSHTTPResponse(status: .ok, headers: [:], body: .init(buffer: byteBuffer))
+            let response = AWSHTTPResponse(response: HTTPResponse(status: .ok), body: .init(buffer: byteBuffer))
             let a: A = try response.generateOutputShape(operation: "TestOperation", serviceProtocol: .restxml)
             #expect(self.dateFormatter.string(from: a.date) == "2017-01-01T00:01:00.000Z")
         } catch {
@@ -169,7 +170,7 @@ class TimeStampTests {
             }
             let xml = "<A><date>Tue, 15 Nov 1994 12:45:26 GMT</date></A>"
             let byteBuffer = ByteBuffer(string: xml)
-            let response = AWSHTTPResponse(status: .ok, headers: [:], body: .init(buffer: byteBuffer))
+            let response = AWSHTTPResponse(response: HTTPResponse(status: .ok), body: .init(buffer: byteBuffer))
             let a: A = try response.generateOutputShape(operation: "TestOperation", serviceProtocol: .restxml)
             #expect(self.dateFormatter.string(from: a.date) == "1994-11-15T12:45:26.000Z")
         } catch {
@@ -184,7 +185,7 @@ class TimeStampTests {
             }
             let xml = "<A><date>1221382800</date></A>"
             let byteBuffer = ByteBuffer(string: xml)
-            let response = AWSHTTPResponse(status: .ok, headers: [:], body: .init(buffer: byteBuffer))
+            let response = AWSHTTPResponse(response: HTTPResponse(status: .ok), body: .init(buffer: byteBuffer))
             let a: A = try response.generateOutputShape(operation: "TestOperation", serviceProtocol: .restxml)
             #expect(self.dateFormatter.string(from: a.date) == "2008-09-14T09:00:00.000Z")
         } catch {
@@ -200,7 +201,7 @@ class TimeStampTests {
         let request = try AWSHTTPRequest(
             operation: "test",
             path: "/",
-            method: .GET,
+            method: .get,
             input: a,
             configuration: createServiceConfig(serviceProtocol: .restxml)
         )
@@ -213,7 +214,7 @@ class TimeStampTests {
             @CustomCoding<HTTPHeaderDateCoder> var date: Date
         }
         let a = A(date: dateFormatter.date(from: "2019-05-01T00:00:00.001Z")!)
-        let request = try AWSHTTPRequest(operation: "test", path: "/", method: .GET, input: a, configuration: createServiceConfig())
+        let request = try AWSHTTPRequest(operation: "test", path: "/", method: .get, input: a, configuration: createServiceConfig())
 
         #expect(request.body.asString() == "{\"date\":\"Wed, 01 May 2019 00:00:00 GMT\"}")
     }
@@ -223,7 +224,7 @@ class TimeStampTests {
             @CustomCoding<UnixEpochDateCoder> var date: Date
         }
         let a = A(date: Date(timeIntervalSince1970: 23_983_978_378))
-        let request = try AWSHTTPRequest(operation: "test", path: "/", method: .GET, input: a, configuration: createServiceConfig())
+        let request = try AWSHTTPRequest(operation: "test", path: "/", method: .get, input: a, configuration: createServiceConfig())
 
         #expect(request.body.asString() == "{\"date\":23983978378}")
     }

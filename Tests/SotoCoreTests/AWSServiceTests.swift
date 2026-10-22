@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HTTPTypes
 import SotoTestUtils
 import XCTest
 
@@ -161,7 +162,7 @@ class AWSServiceTests: XCTestCase {
                 next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse
             ) async throws -> AWSHTTPResponse {
                 var request = request
-                request.headers.add(name: "Test", value: "testWithMiddleware")
+                request.request.headerFields[values: HTTPField.Name("Test")!].append("testWithMiddleware")
                 return try await next(request, context)
             }
         }
@@ -169,7 +170,7 @@ class AWSServiceTests: XCTestCase {
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let service = TestService(client: client, config: createServiceConfig())
         let service2 = service.with(middleware: TestMiddleware())
-        let request = AWSHTTPRequest(url: URL(string: "http://testurl.com")!, method: .GET, headers: [:], body: .init())
+        let request = AWSHTTPRequest(request: HTTPRequest(method: .get, url: URL(string: "http://testurl.com")!), body: .init())
         let context = AWSMiddlewareContext(
             operation: "TestURL",
             serviceConfig: service2.config,
@@ -177,9 +178,9 @@ class AWSServiceTests: XCTestCase {
             logger: TestEnvironment.logger
         )
         let response = try await service2.config.middleware!.handle(request, context: context) { request, _ in
-            .init(status: .ok, headers: request.headers, body: request.body)
+            .init(response: HTTPResponse(status: .ok, headerFields: request.headers), body: request.body)
         }
-        XCTAssertEqual(response.headers["Test"].first, "testWithMiddleware")
+        XCTAssertEqual(response.headerFields[HTTPField.Name("Test")!], "testWithMiddleware")
     }
 
     func testWithRegion() {
@@ -197,9 +198,10 @@ class AWSServiceTests: XCTestCase {
         let serviceConfig = createServiceConfig()
         let service = TestService(client: client, config: serviceConfig)
         let url = URL(string: "https://test.amazonaws.com?test2=true&space=sp%20ace&percent=addi+tion")!
-        let signedURL = try await service.signURL(url: url, httpMethod: .GET, expires: .minutes(15))
+        var request = HTTPRequest(method: .get, url: url)
+        try await service.signURL(request: &request, expires: .minutes(15))
         // remove signed query params
-        let query = try XCTUnwrap(signedURL.query)
+        let query = try XCTUnwrap(request.url?.query)
         let queryItems =
             query
             .split(separator: "&")
@@ -217,13 +219,12 @@ class AWSServiceTests: XCTestCase {
         let serviceConfig = createServiceConfig()
         let service = TestService(client: client, config: serviceConfig)
         let url = URL(string: "https://test.amazonaws.com?test2=true&space=sp%20ace&percent=addi+tion")!
-        let headers = try await service.signHeaders(
-            url: url,
-            httpMethod: .GET,
-            headers: ["Content-Type": "application/json"],
+        var request = HTTPRequest(method: .get, url: url, headerFields: [.contentType: "application/json"])
+        try await service.signHeaders(
+            request: &request,
             body: .init(string: "Test payload")
         )
         // remove signed query params
-        XCTAssertNotNil(headers["Authorization"].first)
+        XCTAssertNotNil(request.headerFields[.authorization])
     }
 }

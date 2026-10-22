@@ -38,8 +38,8 @@ class LoggingTests: XCTestCase {
             endpoint: server.address
         )
 
-        async let responseTask: Void = client.execute(operation: "test1", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
-        async let response2Task: Void = client.execute(operation: "test2", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
+        async let responseTask: Void = client.execute(operation: "test1", path: "/", httpMethod: .get, serviceConfig: config, logger: logger)
+        async let response2Task: Void = client.execute(operation: "test2", path: "/", httpMethod: .get, serviceConfig: config, logger: logger)
 
         var count = 0
         XCTAssertNoThrow(
@@ -84,7 +84,7 @@ class LoggingTests: XCTestCase {
         async let responseTask: Void = client.execute(
             operation: "TestOperation",
             path: "/",
-            httpMethod: .GET,
+            httpMethod: .get,
             serviceConfig: config,
             logger: traceLogger
         )
@@ -125,7 +125,7 @@ class LoggingTests: XCTestCase {
             endpoint: server.address
         )
 
-        async let responseTask: Void = client.execute(operation: "test", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
+        async let responseTask: Void = client.execute(operation: "test", path: "/", httpMethod: .get, serviceConfig: config, logger: logger)
 
         XCTAssertNoThrow(
             try server.processRaw { _ in
@@ -154,7 +154,7 @@ class LoggingTests: XCTestCase {
             endpoint: server.address
         )
 
-        async let responseTask: Void = client.execute(operation: "test1", path: "/", httpMethod: .GET, serviceConfig: config, logger: logger)
+        async let responseTask: Void = client.execute(operation: "test1", path: "/", httpMethod: .get, serviceConfig: config, logger: logger)
 
         var count = 0
         XCTAssertNoThrow(
@@ -185,7 +185,7 @@ class LoggingTests: XCTestCase {
             try await client.execute(
                 operation: "Test",
                 path: "/",
-                httpMethod: .GET,
+                httpMethod: .get,
                 serviceConfig: serviceConfig,
                 logger: logger
             )
@@ -215,7 +215,7 @@ class LoggingTests: XCTestCase {
         async let responseTask: Void = client.execute(
             operation: "TestOperation",
             path: "/",
-            httpMethod: .GET,
+            httpMethod: .get,
             serviceConfig: config,
             logger: traceLogger
         )
@@ -256,7 +256,7 @@ class LoggingTests: XCTestCase {
         async let responseTask: Output = client.execute(
             operation: "TestOperation",
             path: "/",
-            httpMethod: .GET,
+            httpMethod: .get,
             serviceConfig: config,
             logger: traceLogger
         )

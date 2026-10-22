@@ -45,7 +45,7 @@ struct TracingTests {
         async let response: Void = client.execute(
             operation: "TestOperation",
             path: "/",
-            httpMethod: .POST,
+            httpMethod: .post,
             serviceConfig: config,
             logger: TestEnvironment.logger
         )

@@ -67,7 +67,7 @@ final class PaginateTests: XCTestCase, @unchecked Sendable {
         try await self.client.execute(
             operation: "TestOperation",
             path: "/",
-            httpMethod: .POST,
+            httpMethod: .post,
             serviceConfig: self.config,
             input: input,
             logger: logger
@@ -88,7 +88,7 @@ final class PaginateTests: XCTestCase, @unchecked Sendable {
         try await self.client.execute(
             operation: "TestOperation",
             path: "/",
-            httpMethod: .POST,
+            httpMethod: .post,
             serviceConfig: self.config,
             input: input,
             logger: logger

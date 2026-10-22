@@ -45,8 +45,8 @@ final class SSOCredentialProviderTests: Sendable {
     func parseModernSSOConfig() async throws {
         try await withSSOEnvironment(cacheKey: "my-sso") { env in
             let mockHTTPClient = MockAWSHTTPClient { request in
-                #expect(request.headers["x-amz-sso_bearer_token"].first == "test-access-token")
-                let urlString = request.url.absoluteString
+                #expect(request.headers[.xAmzSSOBearerToken] == "test-access-token")
+                let urlString = try #require(request.request.url?.absoluteString)
                 #expect(urlString.contains("role_name=TestRole"))
                 #expect(urlString.contains("account_id=123456789012"))
                 #expect(urlString.contains("portal.sso.us-west-2.amazonaws.com"))
@@ -76,7 +76,7 @@ final class SSOCredentialProviderTests: Sendable {
         let startUrl = "https://test.awsapps.com/start"
         try await withSSOEnvironment(cacheKey: startUrl, accessToken: "legacy-access-token") { env in
             let mockHTTPClient = MockAWSHTTPClient { request in
-                #expect(request.headers["x-amz-sso_bearer_token"].first == "legacy-access-token")
+                #expect(request.headers[.xAmzSSOBearerToken] == "legacy-access-token")
                 return self.makeRoleCredentialsResponse(accessKeyId: "AKIALEGACY", secretAccessKey: "legacysecret", sessionToken: "legacysession")
             }
 
@@ -107,11 +107,11 @@ final class SSOCredentialProviderTests: Sendable {
 
         try await withSSOEnvironment(cacheKey: "my-sso", accessToken: "config-test-token", configContent: configContent) { env in
             let mockHTTPClient = MockAWSHTTPClient { request in
-                let urlString = request.url.absoluteString
+                let urlString = try #require(request.request.url?.absoluteString)
                 #expect(urlString.contains("portal.sso.us-west-2.amazonaws.com"))
                 #expect(urlString.contains("role_name=DevRole"))
                 #expect(urlString.contains("account_id=111122223333"))
-                #expect(request.headers["x-amz-sso_bearer_token"].first == "config-test-token")
+                #expect(request.headers[.xAmzSSOBearerToken] == "config-test-token")
                 return self.makeRoleCredentialsResponse(accessKeyId: "AKIACONFIG")
             }
 
@@ -137,7 +137,7 @@ final class SSOCredentialProviderTests: Sendable {
             configContent: configContent
         ) { env in
             let mockHTTPClient = MockAWSHTTPClient { request in
-                let urlString = request.url.absoluteString
+                let urlString = try #require(request.request.url?.absoluteString)
                 #expect(urlString.contains("portal.sso.eu-central-1.amazonaws.com"))
                 #expect(urlString.contains("role_name=LegacyRole"))
                 #expect(urlString.contains("account_id=444455556666"))
@@ -165,7 +165,8 @@ final class SSOCredentialProviderTests: Sendable {
             configContent: configContent
         ) { env in
             let mockHTTPClient = MockAWSHTTPClient { request in
-                #expect(request.url.absoluteString.contains("role_name=DefaultRole"))
+                let urlString = try #require(request.request.url?.absoluteString)
+                #expect(urlString.contains("role_name=DefaultRole"))
                 return self.makeRoleCredentialsResponse(accessKeyId: "AKIADEFAULT")
             }
 
@@ -320,7 +321,8 @@ final class SSOCredentialProviderTests: Sendable {
         ) { env in
             let requestCounter = RequestCounter()
             let mockHTTPClient = MockAWSHTTPClient { request in
-                await requestCounter.record(request.url.absoluteString)
+                let urlString = try #require(request.request.url?.absoluteString)
+                await requestCounter.record(urlString)
                 return self.makeRoleCredentialsResponse(accessKeyId: "AKIAVALID")
             }
 

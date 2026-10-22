@@ -254,7 +254,7 @@ public struct SSOCredentialProvider: CredentialProvider {
 
         let headers: HTTPFields = [
             .accept: "application/json",
-            .xAmzSSOBearerToken: endpoint,
+            .xAmzSSOBearerToken: accessToken,
         ]
 
         let request = AWSHTTPRequest(

@@ -538,7 +538,7 @@ public struct AWSSigner: Sendable {
     }
 }
 
-extension String {
+extension StringProtocol {
     func s3PathEncode() -> String {
         self.addingAWSPercentEncoding(forURLComponent: .s3Path)
     }

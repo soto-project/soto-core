@@ -109,7 +109,7 @@ class MiddlewareTests: XCTestCase {
         )
         try await self.testMiddleware(middleware) { request, _ in
             XCTAssertEqual(request.headers[testAdd], "testValue")
-            XCTAssertEqual(request.headers[.userAgent], "Soto/7.0,testEditHeaderMiddleware")
+            XCTAssertEqual(request.headers[.userAgent], "Soto/8.0, testEditHeaderMiddleware")
         }
     }
 

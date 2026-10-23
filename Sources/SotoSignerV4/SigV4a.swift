@@ -24,7 +24,7 @@ package struct SigV4aKeyPair {
 
     package let key: P256.Signing.PrivateKey
 
-    package init(credential: some Credential) {
+    package init(credential: Credential) {
         let secretBuffer = Self.makeSecretBuffer(credential: credential)
         let secretKey = SymmetricKey(data: secretBuffer)
 
@@ -65,7 +65,7 @@ package struct SigV4aKeyPair {
 
     private static var KEY_DERIVATION_COUNTER_RANGE: ClosedRange<UInt8> { 1...254 }
 
-    static func makeFixedInputBuffer(credential: some Credential, counter: UInt8) -> [UInt8] {
+    static func makeFixedInputBuffer(credential: Credential, counter: UInt8) -> [UInt8] {
         guard Self.KEY_DERIVATION_COUNTER_RANGE.contains(counter) else {
             fatalError("counter must be in range: \(Self.KEY_DERIVATION_COUNTER_RANGE)")
         }
@@ -84,7 +84,7 @@ package struct SigV4aKeyPair {
 
     private static let SECRET_BUFFER_PREFIX = "AWS4A"
 
-    static func makeSecretBuffer(credential: some Credential) -> [UInt8] {
+    static func makeSecretBuffer(credential: Credential) -> [UInt8] {
         var result = [UInt8]()
         result.reserveCapacity(credential.secretAccessKey.utf8.count + self.SECRET_BUFFER_PREFIX.utf8.count)
         result.append(contentsOf: self.SECRET_BUFFER_PREFIX.utf8)

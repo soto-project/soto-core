@@ -173,7 +173,7 @@ class AWSServiceTests: XCTestCase {
         let context = AWSMiddlewareContext(
             operation: "TestURL",
             serviceConfig: service2.config,
-            credential: EmptyCredential().getStaticCredential(),
+            credential: .empty,
             logger: TestEnvironment.logger
         )
         let response = try await service2.config.middleware!.handle(request, context: context) { request, _ in

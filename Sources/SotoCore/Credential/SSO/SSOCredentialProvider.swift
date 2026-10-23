@@ -75,7 +75,7 @@ public struct SSOCredentialProvider: CredentialProvider {
         self.threadPool = .singleton
     }
 
-    public func getCredential(logger: Logger) async throws -> any Credential {
+    public func getCredential(logger: Logger) async throws -> Credential {
         let profile = profileName ?? "default"
         let config = try await getConfiguration()
         let tokenManager = SSOTokenManager(httpClient: httpClient)
@@ -105,7 +105,7 @@ public struct SSOCredentialProvider: CredentialProvider {
 
         // Return expiring credential
         let expirationDate = Date(timeIntervalSince1970: TimeInterval(credentials.expiration / 1000))
-        return RotatingCredential(
+        return Credential(
             accessKeyId: credentials.accessKeyId,
             secretAccessKey: credentials.secretAccessKey,
             sessionToken: credentials.sessionToken,

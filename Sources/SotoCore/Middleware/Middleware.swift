@@ -18,7 +18,7 @@ import Logging
 public struct AWSMiddlewareContext: Sendable {
     public var operation: String
     public var serviceConfig: AWSServiceConfig
-    public var credential: StaticCredential
+    public var credential: Credential
     public var logger: Logger
 }
 

@@ -30,7 +30,7 @@ public import Foundation
 /// `getCredential` is called again. If current credentials have not expired (within a threshold) they are returned otherwise we wait on new
 /// credentials being provided.
 public final class RotatingCredentialProvider: CredentialProvider {
-    let expiringCredential: ExpiringValue<any Credential>
+    let expiringCredential: ExpiringValue<Credential>
     let validCredentialThreshold: TimeInterval
     public let provider: any CredentialProvider
 
@@ -81,7 +81,7 @@ public final class RotatingCredentialProvider: CredentialProvider {
         try await self.provider.shutdown()
     }
 
-    public func getCredential(logger: Logger) async throws -> any Credential {
+    public func getCredential(logger: Logger) async throws -> Credential {
         try await self.expiringCredential.getValue {
             try await Self.getCredentialAndExpiration(
                 provider: self.provider,
@@ -95,7 +95,7 @@ public final class RotatingCredentialProvider: CredentialProvider {
         provider: any CredentialProvider,
         validCredentialThreshold: TimeInterval,
         logger: Logger
-    ) async throws -> (any Credential, Date) {
+    ) async throws -> (Credential, Date) {
         logger.debug(
             "Refeshing AWS credentials",
             metadata: ["aws-credential-provider": .string("\(self)(\(provider.description))")]
@@ -106,14 +106,10 @@ public final class RotatingCredentialProvider: CredentialProvider {
             "AWS credentials ready",
             metadata: ["aws-credential-provider": .string("\(self)(\(provider.description))")]
         )
-        if let expiringCredential = credential as? any ExpiringCredential {
-            return (
-                expiringCredential,
-                expiringCredential.expiration.addingTimeInterval(-validCredentialThreshold)
-            )
-        } else {
-            return (credential, Date.distantFuture)
-        }
+        return (
+            credential,
+            credential.expiration.addingTimeInterval(-validCredentialThreshold)
+        )
     }
 }
 

@@ -45,7 +45,7 @@ enum ConfigFileLoader {
 
     /// Specific type of credentials loaded from disk
     enum SharedCredentials {
-        case staticCredential(credential: StaticCredential)
+        case staticCredential(accessKeyId: String, secretAccessKey: String, sessionToken: String? = nil)
         case assumeRole(roleArn: String, sessionName: String, region: Region?, sourceCredentialProvider: CredentialProviderFactory)
         #if os(macOS) || os(Linux)
         case credentialProcess(command: String)
@@ -303,8 +303,7 @@ enum ConfigFileLoader {
         guard let secretAccessKey = credentials.secretAccessKey else {
             throw ConfigFileError.missingSecretAccessKey
         }
-        let credential = StaticCredential(accessKeyId: accessKey, secretAccessKey: secretAccessKey, sessionToken: credentials.sessionToken)
-        return .staticCredential(credential: credential)
+        return .staticCredential(accessKeyId: accessKey, secretAccessKey: secretAccessKey, sessionToken: credentials.sessionToken)
     }
 
     /// Returns true if the given profile's section in the AWS config file declares SSO

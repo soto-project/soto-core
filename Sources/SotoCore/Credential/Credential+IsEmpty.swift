@@ -19,7 +19,7 @@ extension Credential {
         self.accessKeyId.isEmpty || self.secretAccessKey.isEmpty
     }
 
-    func getStaticCredential() -> StaticCredential {
+    func getStaticCredential() -> Credential {
         .init(accessKeyId: accessKeyId, secretAccessKey: secretAccessKey, sessionToken: sessionToken)
     }
 }

@@ -56,7 +56,7 @@ public struct AWSSigner: Sendable {
     }
 
     /// Security credentials for accessing AWS services
-    public let credentials: any Credential
+    public let credentials: Credential
     /// Service signing name. In general this is the same as the service name
     public let name: String
     /// AWS region you are working in
@@ -67,7 +67,7 @@ public struct AWSSigner: Sendable {
     static let hashedEmptyBody = SHA256.hash(data: [UInt8]()).hexDigest()
 
     /// Initialise the Signer class with AWS credentials
-    public init(credentials: any Credential, name: String, region: String) {
+    public init(credentials: Credential, name: String, region: String) {
         self.credentials = credentials
         self.name = name
         self.region = region
@@ -75,7 +75,7 @@ public struct AWSSigner: Sendable {
     }
 
     /// Initialise the Signer class with AWS credentials
-    public init(credentials: any Credential, name: String, region: String, algorithm: Algorithm) {
+    public init(credentials: Credential, name: String, region: String, algorithm: Algorithm) {
         self.credentials = credentials
         self.name = name
         self.region = region

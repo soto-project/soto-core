@@ -30,7 +30,7 @@ import Foundation
 
 class RotatingCredentialProviderTests: XCTestCase {
     final class RotatingCredentialTestClient: CredentialProvider {
-        typealias TestCallback = @Sendable () async throws -> ExpiringCredential
+        typealias TestCallback = @Sendable () async throws -> Credential
         let callback: TestCallback
 
         init(_ callback: @escaping TestCallback) {
@@ -51,7 +51,7 @@ class RotatingCredentialProviderTests: XCTestCase {
         let client = RotatingCredentialTestClient {
             try await Task.sleep(nanoseconds: 5_000_000_000)
             XCTFail("Should not get here")
-            return TestExpiringCredential(
+            return Credential(
                 accessKeyId: "abc123",
                 secretAccessKey: "abc123",
                 sessionToken: "abc123",
@@ -73,7 +73,7 @@ class RotatingCredentialProviderTests: XCTestCase {
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(group))
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
 
-        let cred = TestExpiringCredential(
+        let cred = Credential(
             accessKeyId: "abc123",
             secretAccessKey: "abc123",
             sessionToken: "abc123",
@@ -94,7 +94,7 @@ class RotatingCredentialProviderTests: XCTestCase {
         XCTAssertEqual(returned.accessKeyId, cred.accessKeyId)
         XCTAssertEqual(returned.secretAccessKey, cred.secretAccessKey)
         XCTAssertEqual(returned.sessionToken, cred.sessionToken)
-        XCTAssertEqual((returned as? TestExpiringCredential)?.expiration, cred.expiration)
+        XCTAssertEqual(returned.expiration, cred.expiration)
 
         // get credentials a second time, callback must not be hit
         returned = try await provider.getCredential(logger: Logger(label: "soto"))
@@ -102,7 +102,7 @@ class RotatingCredentialProviderTests: XCTestCase {
         XCTAssertEqual(returned.accessKeyId, cred.accessKeyId)
         XCTAssertEqual(returned.secretAccessKey, cred.secretAccessKey)
         XCTAssertEqual(returned.sessionToken, cred.sessionToken)
-        XCTAssertEqual((returned as? TestExpiringCredential)?.expiration, cred.expiration)
+        XCTAssertEqual(returned.expiration, cred.expiration)
 
         // ensure callback was only hit once
         XCTAssertEqual(count.load(ordering: .sequentiallyConsistent), 1)
@@ -115,13 +115,13 @@ class RotatingCredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
 
         let creds = [
-            TestExpiringCredential(
+            Credential(
                 accessKeyId: "abc123",
                 secretAccessKey: "abc123",
                 sessionToken: "abc123",
                 expiration: Date(timeIntervalSinceNow: 10)
             ),
-            TestExpiringCredential(
+            Credential(
                 accessKeyId: "def456",
                 secretAccessKey: "def456",
                 sessionToken: "def456",
@@ -144,7 +144,7 @@ class RotatingCredentialProviderTests: XCTestCase {
         XCTAssertEqual(returned.accessKeyId, creds[0].accessKeyId)
         XCTAssertEqual(returned.secretAccessKey, creds[0].secretAccessKey)
         XCTAssertEqual(returned.sessionToken, creds[0].sessionToken)
-        XCTAssertEqual((returned as? TestExpiringCredential)?.expiration, creds[0].expiration)
+        XCTAssertEqual(returned.expiration, creds[0].expiration)
 
         // get credentials a second time, callback must not be hit
         returned = try await provider.getCredential(logger: Logger(label: "soto"))
@@ -152,7 +152,7 @@ class RotatingCredentialProviderTests: XCTestCase {
         XCTAssertEqual(returned.accessKeyId, creds[1].accessKeyId)
         XCTAssertEqual(returned.secretAccessKey, creds[1].secretAccessKey)
         XCTAssertEqual(returned.sessionToken, creds[1].sessionToken)
-        XCTAssertEqual((returned as? TestExpiringCredential)?.expiration, creds[1].expiration)
+        XCTAssertEqual(returned.expiration, creds[1].expiration)
 
         // ensure callback was hit twice as we
         XCTAssertEqual(count.load(ordering: .sequentiallyConsistent), 2)
@@ -164,7 +164,7 @@ class RotatingCredentialProviderTests: XCTestCase {
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(group))
         defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
 
-        let cred = TestExpiringCredential(
+        let cred = Credential(
             accessKeyId: "abc123",
             secretAccessKey: "abc123",
             sessionToken: "abc123",
@@ -189,7 +189,7 @@ class RotatingCredentialProviderTests: XCTestCase {
                     XCTAssertEqual(credential.accessKeyId, cred.accessKeyId)
                     XCTAssertEqual(credential.secretAccessKey, cred.secretAccessKey)
                     XCTAssertEqual(credential.sessionToken, cred.sessionToken)
-                    XCTAssertEqual((credential as? TestExpiringCredential)?.expiration, cred.expiration)
+                    XCTAssertEqual(credential.expiration, cred.expiration)
                     count2.wrappingIncrement(ordering: .sequentiallyConsistent)
                 }
                 try await group.waitForAll()
@@ -212,7 +212,7 @@ class RotatingCredentialProviderTests: XCTestCase {
         let count = ManagedAtomic(0)
         let client = RotatingCredentialTestClient {
             let currentCount = count.loadThenWrappingIncrement(ordering: .sequentiallyConsistent)
-            return TestExpiringCredential(
+            return Credential(
                 accessKeyId: "abc123",
                 secretAccessKey: "abc123",
                 sessionToken: "abc123",
@@ -228,20 +228,5 @@ class RotatingCredentialProviderTests: XCTestCase {
             await Task.yield()
         }
         XCTAssertEqual(count.load(ordering: .sequentiallyConsistent), 2)
-    }
-}
-
-/// Provide AWS credentials directly
-struct TestExpiringCredential: ExpiringCredential {
-    let accessKeyId: String
-    let secretAccessKey: String
-    let sessionToken: String?
-    let expiration: Date
-
-    init(accessKeyId: String, secretAccessKey: String, sessionToken: String? = nil, expiration: Date = Date.distantFuture) {
-        self.accessKeyId = accessKeyId
-        self.secretAccessKey = secretAccessKey
-        self.sessionToken = sessionToken
-        self.expiration = expiration
     }
 }

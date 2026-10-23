@@ -12,22 +12,35 @@
 //
 //===----------------------------------------------------------------------===//
 
-/// Protocol for providing credential details for accessing AWS services
-public protocol Credential: Sendable {
-    var accessKeyId: String { get }
-    var secretAccessKey: String { get }
-    var sessionToken: String? { get }
-}
+#if canImport(FoundationEssentials)
+public import FoundationEssentials
+#else
+public import Foundation
+#endif
 
-/// basic version of Credential where you supply the credentials
-public struct StaticCredential: Credential, Equatable {
-    public let accessKeyId: String
-    public let secretAccessKey: String
-    public let sessionToken: String?
+/// Basic credential details for accessing AWS services
+public struct Credential: Equatable, Sendable {
+    public var accessKeyId: String
+    public var secretAccessKey: String
+    public var sessionToken: String?
+    public var expiration: Date
 
-    public init(accessKeyId: String, secretAccessKey: String, sessionToken: String? = nil) {
+    public init(accessKeyId: String, secretAccessKey: String, sessionToken: String? = nil, expiration: Date = .distantFuture) {
         self.accessKeyId = accessKeyId
         self.secretAccessKey = secretAccessKey
         self.sessionToken = sessionToken
+        self.expiration = expiration
     }
+
+    /// Will credential expire within a certain time
+    public func isExpiring(within interval: TimeInterval) -> Bool {
+        self.expiration.timeIntervalSinceNow < interval
+    }
+
+    /// Has credential expired
+    public var isExpired: Bool {
+        self.isExpiring(within: 0)
+    }
+
+    public static var empty: Credential { .init(accessKeyId: "", secretAccessKey: "") }
 }

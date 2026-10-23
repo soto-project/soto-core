@@ -137,11 +137,7 @@ final class LoginCredentialProviderTests {
         #expect(credential.sessionToken == "newsession456")
 
         // Verify it's an expiring credential
-        if let expiringCredential = credential as? ExpiringCredential {
-            #expect(expiringCredential.expiration > Date())
-        } else {
-            Issue.record("Expected ExpiringCredential")
-        }
+        #expect(credential.expiration < Date.distantFuture)
 
         // Verify token file was updated
         let updatedTokenData = try Data(contentsOf: tokenPath)

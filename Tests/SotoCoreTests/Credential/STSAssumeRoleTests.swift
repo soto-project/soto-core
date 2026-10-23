@@ -54,10 +54,9 @@ class STSAssumeRoleTests: XCTestCase {
             }
         )
         let credential = try await credentialTask
-        let stsCredentials = credential as? STSCredentials
-        XCTAssertEqual(stsCredentials?.accessKeyId, credentials.accessKeyId)
-        XCTAssertEqual(stsCredentials?.secretAccessKey, credentials.secretAccessKey)
-        XCTAssertEqual(stsCredentials?.sessionToken, credentials.sessionToken)
+        XCTAssertEqual(credential.accessKeyId, credentials.accessKeyId)
+        XCTAssertEqual(credential.secretAccessKey, credentials.secretAccessKey)
+        XCTAssertEqual(credential.sessionToken, credentials.sessionToken)
     }
 
     func testSTSAssumeRoleEnvironmentVariables() async throws {
@@ -102,8 +101,7 @@ class STSAssumeRoleTests: XCTestCase {
                 }
             )
             let credential = try await credentialTask
-            let stsCredentials = try XCTUnwrap(credential as? STSCredentials)
-            XCTAssertEqual(stsCredentials.sessionToken, "WebIdentityToken=TestThis")
+            XCTAssertEqual(credential.sessionToken, "WebIdentityToken=TestThis")
         } teardown: {
             _ = try? await fileSystem.removeItem(at: .init("temp_webidentity_token"))
         }

@@ -24,7 +24,7 @@ public protocol CredentialProvider: Sendable, CustomStringConvertible {
     /// Return credential
     /// - Parameters:
     ///   - logger: Logger to use
-    func getCredential(logger: Logger) async throws -> any Credential
+    func getCredential(logger: Logger) async throws -> Credential
 
     /// Shutdown credential provider
     func shutdown() async throws
@@ -106,7 +106,7 @@ extension CredentialProviderFactory {
         threadPool: NIOThreadPool = .singleton
     ) -> CredentialProviderFactory {
         Self { context -> any CredentialProvider in
-            StaticCredential.fromEnvironment()
+            StaticCredentialProvider.fromEnvironment()
                 ?? STSAssumeRoleCredentialProvider.fromEnvironment(
                     context: context,
                     endpoint: endpoint,
@@ -120,7 +120,7 @@ extension CredentialProviderFactory {
     /// Return static credentials.
     public static func `static`(accessKeyId: String, secretAccessKey: String, sessionToken: String? = nil) -> CredentialProviderFactory {
         Self { _ in
-            StaticCredential(
+            StaticCredentialProvider(
                 accessKeyId: accessKeyId,
                 secretAccessKey: secretAccessKey,
                 sessionToken: sessionToken
@@ -192,7 +192,7 @@ extension CredentialProviderFactory {
     /// Don't supply any credentials
     public static var empty: CredentialProviderFactory {
         Self { _ in
-            EmptyCredential()
+            EmptyCredentialProvider()
         }
     }
 

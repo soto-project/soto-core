@@ -38,7 +38,7 @@ public struct CredentialProcessProvider: CredentialProvider {
 
     public var description: String { "CredentialProcessProvider" }
 
-    public func getCredential(logger: Logger) async throws -> any Credential {
+    public func getCredential(logger: Logger) async throws -> Credential {
         guard !command.isEmpty else {
             throw CredentialProcessError.commandEmpty
         }
@@ -66,14 +66,14 @@ public struct CredentialProcessProvider: CredentialProvider {
             guard let date = Date(iso8601: expirationString) else {
                 throw CredentialProcessError.invalidExpiration
             }
-            return RotatingCredential(
+            return Credential(
                 accessKeyId: decoded.accessKeyId,
                 secretAccessKey: decoded.secretAccessKey,
                 sessionToken: decoded.sessionToken,
                 expiration: date
             )
         } else {
-            return StaticCredential(
+            return Credential(
                 accessKeyId: decoded.accessKeyId,
                 secretAccessKey: decoded.secretAccessKey,
                 sessionToken: decoded.sessionToken

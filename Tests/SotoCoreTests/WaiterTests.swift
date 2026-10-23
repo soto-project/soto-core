@@ -176,11 +176,12 @@ class WaiterTests: XCTestCase {
         try await responseTask
     }
 
-    func testJMESPathWaiterWithEnum() async throws {
-        enum YesNo: String, AWSDecodableShape & Encodable & CustomStringConvertible {
-            case yes = "YES"
-            case no = "NO"
-            var description: String { self.rawValue }
+    func testJMESPathWaiterWithRawRepresentable() async throws {
+        struct YesNo: RawRepresentable, Sendable, Codable {
+            let rawValue: Int
+
+            static var yes: Self { .init(rawValue: 1) }
+            static var no: Self { .init(rawValue: 0) }
         }
         struct EnumOutput: AWSDecodableShape & Encodable {
             let e: YesNo
@@ -198,7 +199,7 @@ class WaiterTests: XCTestCase {
         }
         let waiter = AWSClient.Waiter(
             acceptors: [
-                .init(state: .success, matcher: try! JMESPathMatcher("e", expected: "YES"))
+                .init(state: .success, matcher: try! JMESPathMatcher("e", expected: 1))
             ],
             minDelayTime: .milliseconds(2),
             command: operation

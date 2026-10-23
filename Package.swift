@@ -55,6 +55,7 @@ let package = Package(
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.30.0"),
         .package(url: "https://github.com/jmespath/jmespath.swift.git", from: "1.1.1"),
         .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.12.0"),
+        .package(url: "https://github.com/swiftlang/swift-subprocess", from: "1.0.0"),
     ],
     targets: [
         .target(
@@ -75,6 +76,7 @@ let package = Package(
                 .product(name: "NIOTransportServices", package: "swift-nio-transport-services"),
                 .product(name: "NIOFoundationEssentialsCompat", package: "swift-nio"),
                 .product(name: "JMESPath", package: "jmespath.swift"),
+                .product(name: "Subprocess", package: "swift-subprocess", condition: .when(platforms: [.macOS, .linux])),
                 .product(name: "Tracing", package: "swift-distributed-tracing"),
                 .product(
                     name: "ServiceLifecycle",

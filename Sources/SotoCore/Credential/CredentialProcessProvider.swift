@@ -14,9 +14,15 @@
 
 #if os(macOS) || os(Linux)
 
-import Foundation
 import Logging
 import SotoSignerV4
+import Subprocess
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// Obtains AWS credentials by executing an external process specified via `credential_process`.
 ///
@@ -76,33 +82,16 @@ public struct CredentialProcessProvider: CredentialProvider {
     }
 
     private func executeProcess() async throws -> Data {
-        try await withCheckedThrowingContinuation { continuation in
-            let process = Process()
-            process.executableURL = URL(fileURLWithPath: "/bin/sh")
-            process.arguments = ["-c", command]
-
-            let pipe = Pipe()
-            process.standardOutput = pipe
-            process.standardError = nil
-
-            do {
-                try process.run()
-            } catch {
-                continuation.resume(throwing: CredentialProcessError.failedToDecodeOutput)
-                return
+        let result = try await Subprocess.run(.path("/bin/sh"), arguments: ["-c", command], output: .string(limit: 4096))
+        switch result.terminationStatus {
+        case .exited(let code):
+            if code != .zero {
+                throw CredentialProcessError.processExitedWithError(code)
             }
-
-            process.waitUntilExit()
-
-            let status = process.terminationStatus
-            guard status == 0 else {
-                continuation.resume(throwing: CredentialProcessError.processExitedWithError(status))
-                return
-            }
-
-            let data = pipe.fileHandleForReading.readDataToEndOfFile()
-            continuation.resume(returning: data)
+        case .signaled(let code):
+            throw CredentialProcessError.processExitedDueToSignal(code)
         }
+        return Data(result.standardOutput.utf8)
     }
 
 }
@@ -128,6 +117,7 @@ private struct CredentialProcessOutput: Decodable, Sendable {
 public struct CredentialProcessError: Error, Equatable, CustomStringConvertible {
     enum Internal: Equatable {
         case commandEmpty
+        case processExitedDueToSignal(Int32)
         case processExitedWithError(Int32)
         case invalidVersion(Int)
         case failedToDecodeOutput
@@ -138,6 +128,7 @@ public struct CredentialProcessError: Error, Equatable, CustomStringConvertible 
 
     public static var commandEmpty: Self { .init(value: .commandEmpty) }
     public static func processExitedWithError(_ code: Int32) -> Self { .init(value: .processExitedWithError(code)) }
+    public static func processExitedDueToSignal(_ code: Int32) -> Self { .init(value: .processExitedDueToSignal(code)) }
     public static func invalidVersion(_ version: Int) -> Self { .init(value: .invalidVersion(version)) }
     public static var failedToDecodeOutput: Self { .init(value: .failedToDecodeOutput) }
     public static var invalidExpiration: Self { .init(value: .invalidExpiration) }
@@ -148,6 +139,8 @@ public struct CredentialProcessError: Error, Equatable, CustomStringConvertible 
             "credential_process command is empty"
         case .processExitedWithError(let code):
             "credential_process exited with code \(code)"
+        case .processExitedDueToSignal(let code):
+            "credential_process exited with signal \(code)"
         case .invalidVersion(let v):
             "credential_process returned unsupported Version \(v) (expected 1)"
         case .failedToDecodeOutput:

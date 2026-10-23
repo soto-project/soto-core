@@ -39,9 +39,9 @@ extension CloudFrontSigner {
 
     // MARK: - Private
 
-    private func signedURLCanned(url: String, expires: TimeAmount, date: Date) throws -> String {
+    private func signedURLCanned(url: String, expires: Duration, date: Date) throws -> String {
         // 1. Compute expiration epoch
-        let epoch = Int(date.timeIntervalSince1970) + Int(expires.nanoseconds / 1_000_000_000)
+        let epoch = Int(date.timeIntervalSince1970) + Int(expires.components.seconds)
 
         // 2. Construct canned policy JSON
         let policy = cannedPolicyStatement(resource: url, expiresEpoch: epoch)
@@ -68,11 +68,11 @@ extension CloudFrontSigner {
 
     private func signedURLCustom(url: String, policy: CustomPolicy, date: Date) throws -> String {
         // 1. Compute expiration epoch
-        let expiresEpoch = Int(date.timeIntervalSince1970) + Int(policy.expires.nanoseconds / 1_000_000_000)
+        let expiresEpoch = Int(date.timeIntervalSince1970) + Int(policy.expires.components.seconds)
 
         // 2. Optionally compute activeFrom epoch
-        let activeFromEpoch: Int? = policy.activeFrom.map {
-            Int(date.timeIntervalSince1970) + Int($0.nanoseconds / 1_000_000_000)
+        let activeFromEpoch = policy.activeFrom.map {
+            Int(date.timeIntervalSince1970) + Int($0.components.seconds)
         }
 
         // 3. Construct custom policy JSON (use policy.resource, not url)

@@ -103,11 +103,17 @@ public struct AWSSigner: Sendable {
     /// to be signed by either of these functions. It sorts the query params and ensures they are properly percent encoded
     public func processURL(url: URL) -> URL? {
         guard var urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return nil }
-        var query = urlComponents.percentEncodedQuery ?? ""
-        query = query.split(separator: "&")
-            .sorted()
+        let query = urlComponents.percentEncodedQueryItems?
+            .sorted {
+                if $0.name < $1.name { return true }
+                if $0.name > $1.name { return false }
+                guard let value1 = $0.value, let value2 = $1.value else { return false }
+                return value1 < value2
+            }
+            .map { item in
+                item.value.map { "\(item.name)=\($0.addingAWSPercentEncoding(forURLComponent: [.uriEncode, .percent]))" } ?? "\(item.name)="
+            }
             .joined(separator: "&")
-            .addingAWSPercentEncoding(forURLComponent: [.query, .percent])
         urlComponents.percentEncodedQuery = query
         // S3 requires "+" encoded in the URL
         if self.name == "s3" {

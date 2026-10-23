@@ -191,7 +191,7 @@ final class AWSSignerTests {
         let url4 = URL(string: "https://test.s3.amazonaws.com?test=hello&item=orange&item=apple")!
         #expect(signer.processURL(url: url4) == URL(string: "https://test.s3.amazonaws.com?item=apple&item=orange&test=hello"))
         let url5 = URL(string: "https://test.s3.amazonaws.com?item&item=apple")!
-        #expect(signer.processURL(url: url5) == URL(string: "https://test.s3.amazonaws.com?item&item=apple"))
+        #expect(signer.processURL(url: url5) == URL(string: "https://test.s3.amazonaws.com?item=&item=apple"))
     }
 
     @Test func testSignS3PutWithHeaderURL() {

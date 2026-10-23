@@ -38,7 +38,8 @@ class ConfigFileCredentialProviderTests: XCTestCase {
 
     func testCredentialProviderStatic() async throws {
         let credentials = ConfigFileLoader.SharedCredentials.staticCredential(
-            credential: StaticCredential(accessKeyId: "foo", secretAccessKey: "bar")
+            accessKeyId: "foo",
+            secretAccessKey: "bar"
         )
         let (context, httpClient) = self.makeContext()
 
@@ -48,8 +49,8 @@ class ConfigFileCredentialProviderTests: XCTestCase {
             endpoint: nil,
             retryPolicy: .default
         )
-        XCTAssertEqual((provider as? StaticCredential)?.accessKeyId, "foo")
-        XCTAssertEqual((provider as? StaticCredential)?.secretAccessKey, "bar")
+        XCTAssertEqual((provider as? StaticCredentialProvider)?.credential.accessKeyId, "foo")
+        XCTAssertEqual((provider as? StaticCredentialProvider)?.credential.secretAccessKey, "bar")
 
         try await provider.shutdown()
         try await httpClient.shutdown()

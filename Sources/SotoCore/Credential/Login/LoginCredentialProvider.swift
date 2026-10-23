@@ -66,7 +66,7 @@ public struct LoginCredentialProvider: CredentialProvider {
         self.threadPool = .singleton
     }
 
-    public func getCredential(logger: Logger) async throws -> any Credential {
+    public func getCredential(logger: Logger) async throws -> Credential {
         let configuration = try await getConfiguration()
 
         // Construct token path
@@ -91,7 +91,7 @@ public struct LoginCredentialProvider: CredentialProvider {
             }
 
             logger.trace("Returning cached credentials")
-            return RotatingCredential(
+            return Credential(
                 accessKeyId: accessKeyId,
                 secretAccessKey: secretAccessKey,
                 sessionToken: sessionToken,
@@ -214,7 +214,7 @@ public struct LoginCredentialProvider: CredentialProvider {
         }
 
         // Return expiring credential regardless of whether disk save succeeded
-        return RotatingCredential(
+        return Credential(
             accessKeyId: tokenResponse.accessToken.accessKeyId,
             secretAccessKey: tokenResponse.accessToken.secretAccessKey,
             sessionToken: tokenResponse.accessToken.sessionToken,

@@ -34,13 +34,13 @@ import Testing
 }
 
 final class AWSSignerTests {
-    let credentials: Credential = StaticCredential(accessKeyId: "MYACCESSKEY", secretAccessKey: "MYSECRETACCESSKEY")
-    let credentialsWithSessionKey: Credential = StaticCredential(
+    let credentials: Credential = Credential(accessKeyId: "MYACCESSKEY", secretAccessKey: "MYSECRETACCESSKEY")
+    let credentialsWithSessionKey: Credential = Credential(
         accessKeyId: "MYACCESSKEY",
         secretAccessKey: "MYSECRETACCESSKEY",
         sessionToken: "MYSESSIONTOKEN"
     )
-    let awsSampleCredentials: Credential = StaticCredential(
+    let awsSampleCredentials: Credential = Credential(
         accessKeyId: "AKIAIOSFODNN7EXAMPLE",
         secretAccessKey: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
     )

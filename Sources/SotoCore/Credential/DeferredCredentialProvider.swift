@@ -22,7 +22,7 @@ import NIOCore
 /// is only needed to be called once. After the wrapped `CredentialProvider` has generated a credential this is
 /// returned instead of calling the wrapped `CredentialProvider's` `getCredentials` again.
 public final class DeferredCredentialProvider: CredentialProvider {
-    private let getCredentialTask: Task<any Credential, any Error>
+    private let getCredentialTask: Task<Credential, any Error>
     private let provider: any CredentialProvider
 
     /// Create `DeferredCredentialProvider`.
@@ -50,7 +50,7 @@ public final class DeferredCredentialProvider: CredentialProvider {
     /// Return credentials
     /// - Parameter logger: Logger
     /// - Returns: Credentials
-    public func getCredential(logger: Logger) async throws -> any Credential {
+    public func getCredential(logger: Logger) async throws -> Credential {
         try await withTaskCancellationHandler {
             try await self.getCredentialTask.value
         } onCancel: {

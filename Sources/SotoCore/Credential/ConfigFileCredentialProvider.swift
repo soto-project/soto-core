@@ -97,8 +97,8 @@ final class ConfigFileCredentialProvider: CredentialProviderSelector {
         retryPolicy: RetryPolicyFactory
     ) throws -> any CredentialProvider {
         switch sharedCredentials {
-        case .staticCredential(let staticCredential):
-            return staticCredential
+        case .staticCredential(let accessKeyID, let secretAccessKey, let sessionToken):
+            return StaticCredentialProvider(accessKeyId: accessKeyID, secretAccessKey: secretAccessKey, sessionToken: sessionToken)
         case .assumeRole(let roleArn, let sessionName, let region, let sourceCredentialProvider):
             let region = region ?? .useast1
             return STSAssumeRoleCredentialProvider(
@@ -127,7 +127,7 @@ struct ProfileScopedCredentialProvider: CredentialProvider {
 
     var description: String { "\(inner) (profile: \(profile))" }
 
-    func getCredential(logger: Logger) async throws -> any Credential {
+    func getCredential(logger: Logger) async throws -> Credential {
         do {
             return try await self.inner.getCredential(logger: logger)
         } catch {

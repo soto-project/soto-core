@@ -108,7 +108,7 @@ struct STSAssumeRoleWithWebIdentityResponse: AWSDecodableShape {
     }
 }
 
-struct STSCredentials: AWSDecodableShape, ExpiringCredential {
+struct STSCredentials: AWSDecodableShape {
     /// The access key ID that identifies the temporary security credentials.
     let accessKeyId: String
     /// The date on which the current credentials expire.
@@ -212,7 +212,7 @@ struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
         )
     }
 
-    func getCredential(logger: Logger) async throws -> any Credential {
+    func getCredential(logger: Logger) async throws -> Credential {
         let credentials: STSCredentials?
         switch self.request {
         case .assumeRole(let arn, let sessioName):
@@ -234,7 +234,12 @@ struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
         guard let credentials else {
             throw CredentialProviderError.noProvider
         }
-        return credentials
+        return Credential(
+            accessKeyId: credentials.accessKeyId,
+            secretAccessKey: credentials.secretAccessKey,
+            sessionToken: credentials.sessionToken,
+            expiration: credentials.expiration
+        )
     }
 
     func assumeRole(_ input: STSAssumeRoleRequest, logger: Logger) async throws -> STSAssumeRoleResponse {

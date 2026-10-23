@@ -26,17 +26,18 @@ import FoundationEssentials
 import Foundation
 #endif
 
-/// protocol to get Credentials from the Client. With this the AWSClient requests the credentials for request signing from ecs and ec2.
-protocol MetaDataClient: CredentialProvider {
-    associatedtype MetaData: ExpiringCredential & Decodable
-
-    func getMetaData(logger: Logger) async throws -> MetaData
+protocol MetadataCredential {
+    var accessKeyId: String { get }
+    var secretAccessKey: String { get }
+    var sessionToken: String? { get }
+    var expiration: Date { get }
 }
 
-extension MetaDataClient {
-    func getCredential(logger: Logger) async throws -> any Credential {
-        try await self.getMetaData(logger: logger)
-    }
+/// protocol to get Credentials from the Client. With this the AWSClient requests the credentials for request signing from ecs and ec2.
+protocol MetadataClient: CredentialProvider {
+    associatedtype MetaData: MetadataCredential & Decodable
+
+    func getMetaData(logger: Logger) async throws -> MetaData
 }
 
 enum MetaDataClientError: Error {
@@ -48,12 +49,22 @@ enum MetaDataClientError: Error {
     case missingMetaData
 }
 
-extension MetaDataClient {
+extension MetadataClient {
     static func createJSONDecoder() -> JSONDecoder {
         let decoder = JSONDecoder()
         // set JSON decoding strategy for dates
         decoder.dateDecodingStrategy = .iso8601
         return decoder
+    }
+
+    func getCredential(logger: Logger) async throws -> Credential {
+        let metadata = try await getMetaData(logger: logger)
+        return .init(
+            accessKeyId: metadata.accessKeyId,
+            secretAccessKey: metadata.secretAccessKey,
+            sessionToken: metadata.sessionToken,
+            expiration: metadata.expiration
+        )
     }
 }
 
@@ -63,13 +74,13 @@ struct MetadataHTTPResponse {
     public var body: ByteBuffer?
 }
 
-struct ECSMetaDataClient: MetaDataClient {
+struct ECSMetaDataClient: MetadataClient {
     typealias MetaData = ECSMetaData
 
     static let Host = "http://169.254.170.2"
     static let RelativeURIEnvironmentName = "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"
 
-    struct ECSMetaData: ExpiringCredential, Decodable {
+    struct ECSMetaData: MetadataCredential & Decodable {
         let accessKeyId: String
         let secretAccessKey: String
         let token: String
@@ -124,7 +135,7 @@ struct ECSMetaDataClient: MetaDataClient {
 // MARK: InstanceMetaDataServiceProvider
 
 /// Provide AWS credentials for EC2 instances
-struct InstanceMetaDataClient: MetaDataClient {
+struct InstanceMetaDataClient: MetadataClient {
     typealias MetaData = InstanceMetaData
 
     static let Host = "http://169.254.169.254"
@@ -133,7 +144,7 @@ struct InstanceMetaDataClient: MetaDataClient {
     static let TokenTimeToLiveHeader = (name: "X-aws-ec2-metadata-token-ttl-seconds", value: "21600")
     static let TokenHeaderName = "X-aws-ec2-metadata-token"
 
-    struct InstanceMetaData: ExpiringCredential, Decodable {
+    struct InstanceMetaData: MetadataCredential & Decodable {
         let accessKeyId: String
         let secretAccessKey: String
         let token: String

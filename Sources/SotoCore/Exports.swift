@@ -13,8 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 #if swift(>=5.8)
-@_exported @_documentation(visibility: internal) import protocol SotoSignerV4.Credential
-@_exported @_documentation(visibility: internal) import struct SotoSignerV4.StaticCredential
+@_exported @_documentation(visibility: internal) import struct SotoSignerV4.Credential
 
 @_exported @_documentation(visibility: internal) import struct Logging.Logger
 

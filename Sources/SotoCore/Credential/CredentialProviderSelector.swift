@@ -24,7 +24,7 @@ protocol CredentialProviderSelector: CredentialProvider, AnyObject {
 }
 
 extension CredentialProviderSelector {
-    func getCredential(logger: Logger) async throws -> any Credential {
+    func getCredential(logger: Logger) async throws -> Credential {
         try await withTaskCancellationHandler {
             let provider = try await getCredentialProviderTask()
             return try await provider.getCredential(logger: logger)

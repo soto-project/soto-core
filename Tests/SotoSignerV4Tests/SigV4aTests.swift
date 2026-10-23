@@ -46,7 +46,7 @@ final class SigV4aTests {
 
         let expectedPrivateKeyHex = "7fd3bd010c0d9c292141c2b77bfbde1042c92e6836fff749d1269ec890fca1bd"
 
-        let credential = StaticCredential(accessKeyId: accessKey, secretAccessKey: secretAccessKey)
+        let credential = Credential(accessKeyId: accessKey, secretAccessKey: secretAccessKey)
 
         let result = SigV4aKeyPair(credential: credential)
         #expect(result.key.rawRepresentation.hexDigest() == expectedPrivateKeyHex)
@@ -62,7 +62,7 @@ final class SigV4aTests {
 
         let expectedPrivateKeyHex = "bc0fd68955922f2cccd5c27f8aa04394a467ef1076d889b66569c6d2e764faf3"
 
-        let credential = StaticCredential(accessKeyId: accessKey, secretAccessKey: secretAccessKey)
+        let credential = Credential(accessKeyId: accessKey, secretAccessKey: secretAccessKey)
 
         let result = SigV4aKeyPair(credential: credential)
         #expect(result.key.rawRepresentation.hexDigest() == expectedPrivateKeyHex)

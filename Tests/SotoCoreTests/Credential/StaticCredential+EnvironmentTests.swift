@@ -56,7 +56,7 @@ class StaticCredential_EnvironmentTests: XCTestCase {
             Environment.unset(name: "AWS_SESSION_TOKEN")
         }
 
-        let staticCredentials = StaticCredential.fromEnvironment()
+        let staticCredentials = StaticCredentialProvider.fromEnvironment()
         let cred = try await staticCredentials?.getCredential(logger: .init(label: #function))
 
         XCTAssertEqual(cred?.accessKeyId, accessKeyId)
@@ -75,7 +75,7 @@ class StaticCredential_EnvironmentTests: XCTestCase {
             Environment.unset(name: "AWS_SECRET_ACCESS_KEY")
         }
 
-        let cred = StaticCredential.fromEnvironment()
+        let cred = StaticCredentialProvider.fromEnvironment()
 
         XCTAssertNil(cred)
     }
@@ -91,7 +91,7 @@ class StaticCredential_EnvironmentTests: XCTestCase {
             Environment.unset(name: "AWS_SECRET_ACCESS_KEY")
         }
 
-        let cred = StaticCredential.fromEnvironment()
+        let cred = StaticCredentialProvider.fromEnvironment()
 
         XCTAssertNil(cred)
     }
@@ -107,7 +107,7 @@ class StaticCredential_EnvironmentTests: XCTestCase {
             Environment.unset(name: "AWS_SECRET_ACCESS_KEY")
         }
 
-        let staticCredentials = StaticCredential.fromEnvironment()
+        let staticCredentials = StaticCredentialProvider.fromEnvironment()
         let cred = try await staticCredentials?.getCredential(logger: .init(label: #function))
 
         XCTAssertEqual(cred?.accessKeyId, accessKeyId)

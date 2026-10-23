@@ -18,7 +18,7 @@ import SotoSignerV4
 
 let awsSignerV4Suite = BenchmarkSuite(name: "AWSSignerV4", settings: Iterations(1000), WarmupIterations(2)) { suite in
     let string = "testing, testing, 1,2,1,2"
-    let credentials: Credential = StaticCredential(accessKeyId: "MYACCESSKEY", secretAccessKey: "MYSECRETACCESSKEY")
+    let credentials: Credential = Credential(accessKeyId: "MYACCESSKEY", secretAccessKey: "MYSECRETACCESSKEY")
     let signer = AWSSigner(credentials: credentials, name: "s3", region: "eu-west-1")
 
     suite.benchmark("sign-headers") {

@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Crypto
-public import NIOCore
+import NIOCore
 import _CryptoExtras
 
 #if canImport(FoundationEssentials)
@@ -38,16 +38,16 @@ public struct CloudFrontSigner: Sendable {
         /// Resource URL pattern (can include wildcards like `*`)
         public let resource: String
         /// How long before access expires (duration from `date`)
-        public let expires: TimeAmount
+        public let expires: Duration
         /// Optional: content not accessible until this duration after `date`
-        public let activeFrom: TimeAmount?
+        public let activeFrom: Duration?
         /// Optional IP address or CIDR range restriction
         public let ipAddress: String?
 
         public init(
             resource: String,
-            expires: TimeAmount,
-            activeFrom: TimeAmount? = nil,
+            expires: Duration,
+            activeFrom: Duration? = nil,
             ipAddress: String? = nil
         ) {
             self.resource = resource
@@ -60,14 +60,14 @@ public struct CloudFrontSigner: Sendable {
     /// The signing policy to use for URL or cookie generation.
     public struct Policy: Sendable {
         enum _Policy: Sendable {
-            case canned(expires: TimeAmount)
+            case canned(expires: Duration)
             case custom(CustomPolicy)
         }
 
         let _wrapped: _Policy
 
         /// A canned policy that restricts access to a single resource with an expiration.
-        public static func canned(expires: TimeAmount) -> Policy {
+        public static func canned(expires: Duration) -> Policy {
             Policy(_wrapped: .canned(expires: expires))
         }
 

@@ -16,9 +16,9 @@ public import HTTPTypes
 import NIOCore
 
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 /// Services object protocol. Contains a client to communicate with AWS and configuration for defining how to communicate.
@@ -83,12 +83,12 @@ extension AWSService {
     /// - returns:
     ///     A signed URL
     public func signURL(
-        request: inout HTTPRequest,
+        request: HTTPRequest,
         expires: TimeAmount,
         logger: Logger = AWSClient.loggingDisabled
-    ) async throws {
+    ) async throws -> URL {
         try await self.client.signURL(
-            request: &request,
+            request: request,
             expires: expires,
             serviceConfig: self.config,
             logger: logger

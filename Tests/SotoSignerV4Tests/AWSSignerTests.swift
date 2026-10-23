@@ -121,43 +121,43 @@ final class AWSSignerTests {
 
     @Test func testSignS3GetURL() {
         let signer = AWSSigner(credentials: credentials, name: "s3", region: "us-east-1")
-        var request = HTTPRequest(method: .get, url: URL(string: "https://s3.us-east-1.amazonaws.com/")!)
-        signer.signURL(
-            request: &request,
+        let request = HTTPRequest(method: .get, url: URL(string: "https://s3.us-east-1.amazonaws.com/")!)
+        let url = signer.signURL(
+            request: request,
             expires: .hours(24),
             date: Date(timeIntervalSinceReferenceDate: 100_000)
         )
         #expect(
-            request.url?.absoluteString
+            url?.absoluteString
                 == "https://s3.us-east-1.amazonaws.com/?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=MYACCESSKEY%2F20010102%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20010102T034640Z&X-Amz-Expires=86400&X-Amz-SignedHeaders=host&X-Amz-Signature=27957103c8bfdff3560372b1d85976ed29c944f34295eca2d4fdac7fc02c375a"
         )
     }
 
     @Test func testSignS3GetWithQueryURL() {
         let signer = AWSSigner(credentials: credentials, name: "s3", region: "us-east-1")
-        var request = HTTPRequest(method: .get, url: URL(string: "https://s3.us-east-1.amazonaws.com/testFile?versionId=1")!)
-        signer.signURL(
-            request: &request,
+        let request = HTTPRequest(method: .get, url: URL(string: "https://s3.us-east-1.amazonaws.com/testFile?versionId=1")!)
+        let url = signer.signURL(
+            request: request,
             expires: .hours(24),
             date: Date(timeIntervalSinceReferenceDate: 100_000)
         )
         #expect(
-            request.url?.absoluteString
+            url?.absoluteString
                 == "https://s3.us-east-1.amazonaws.com/testFile?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=MYACCESSKEY%2F20010102%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20010102T034640Z&X-Amz-Expires=86400&X-Amz-SignedHeaders=host&versionId=1&X-Amz-Signature=22678dbcdbbc468c306757c8abd021e093e588e4eba7d0d0da9b92717bbcc1b0"
         )
     }
 
     @Test func testSignS3PutURL() {
         let signer = AWSSigner(credentials: credentialsWithSessionKey, name: "s3", region: "eu-west-1")
-        var request = HTTPRequest(method: .put, url: URL(string: "https://test-bucket.s3.amazonaws.com/test-put.txt")!)
-        signer.signURL(
-            request: &request,
+        let request = HTTPRequest(method: .put, url: URL(string: "https://test-bucket.s3.amazonaws.com/test-put.txt")!)
+        let url = signer.signURL(
+            request: request,
             body: .string("Testing signed URLs"),
             expires: .hours(24),
             date: Date(timeIntervalSinceReferenceDate: 100_000)
         )
         #expect(
-            request.url?.absoluteString
+            url?.absoluteString
                 == "https://test-bucket.s3.amazonaws.com/test-put.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=MYACCESSKEY%2F20010102%2Feu-west-1%2Fs3%2Faws4_request&X-Amz-Date=20010102T034640Z&X-Amz-Expires=86400&X-Amz-Security-Token=MYSESSIONTOKEN&X-Amz-SignedHeaders=host&X-Amz-Signature=969dfbc450089f34f5b430611b18def1701c72c9e7e1608142051a898094227e"
         )
     }
@@ -191,23 +191,23 @@ final class AWSSignerTests {
         let url4 = URL(string: "https://test.s3.amazonaws.com?test=hello&item=orange&item=apple")!
         #expect(signer.processURL(url: url4) == URL(string: "https://test.s3.amazonaws.com?item=apple&item=orange&test=hello"))
         let url5 = URL(string: "https://test.s3.amazonaws.com?item&item=apple")!
-        #expect(signer.processURL(url: url5) == URL(string: "https://test.s3.amazonaws.com?item=&item=apple"))
+        #expect(signer.processURL(url: url5) == URL(string: "https://test.s3.amazonaws.com?item&item=apple"))
     }
 
     @Test func testSignS3PutWithHeaderURL() {
         let signer = AWSSigner(credentials: credentialsWithSessionKey, name: "s3", region: "eu-west-1")
-        var request = HTTPRequest(
+        let request = HTTPRequest(
             method: .put,
             url: URL(string: "https://test-bucket.s3.amazonaws.com/test-put.txt")!,
             headerFields: [.init("x-amz-acl")!: "public-read"]
         )
-        signer.signURL(
-            request: &request,
+        let url = signer.signURL(
+            request: request,
             expires: .hours(24),
             date: Date(timeIntervalSinceReferenceDate: 100_000)
         )
         #expect(
-            request.url?.absoluteString
+            url?.absoluteString
                 == "https://test-bucket.s3.amazonaws.com/test-put.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=MYACCESSKEY%2F20010102%2Feu-west-1%2Fs3%2Faws4_request&X-Amz-Date=20010102T034640Z&X-Amz-Expires=86400&X-Amz-Security-Token=MYSESSIONTOKEN&X-Amz-SignedHeaders=host%3Bx-amz-acl&X-Amz-Signature=a849c034af312e8424b3b0dd425e3e21ce7a61641f4b6a84c203b115447309c8"
         )
     }

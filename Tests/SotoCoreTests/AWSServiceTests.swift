@@ -198,10 +198,10 @@ class AWSServiceTests: XCTestCase {
         let serviceConfig = createServiceConfig()
         let service = TestService(client: client, config: serviceConfig)
         let url = URL(string: "https://test.amazonaws.com?test2=true&space=sp%20ace&percent=addi+tion")!
-        var request = HTTPRequest(method: .get, url: url)
-        try await service.signURL(request: &request, expires: .minutes(15))
+        let request = HTTPRequest(method: .get, url: url)
+        let signedURL = try await service.signURL(request: request, expires: .minutes(15))
         // remove signed query params
-        let query = try XCTUnwrap(request.url?.query)
+        let query = try XCTUnwrap(signedURL.query)
         let queryItems =
             query
             .split(separator: "&")

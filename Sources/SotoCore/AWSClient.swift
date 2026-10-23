@@ -24,9 +24,9 @@ import NIOTransportServices
 import SotoSignerV4
 
 #if canImport(FoundationEssentials)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 /// Client managing communication with AWS services
@@ -488,18 +488,19 @@ extension AWSClient {
     /// - returns:
     ///     A signed URL
     public func signURL(
-        request: inout HTTPRequest,
+        request: HTTPRequest,
         expires: TimeAmount,
         serviceConfig: AWSServiceConfig,
         logger: Logger = AWSClient.loggingDisabled
-    ) async throws {
+    ) async throws -> URL {
         let logger = logger.attachingRequestId(
             Self.globalRequestID.wrappingIncrementThenLoad(ordering: .relaxed),
             operation: "signHeaders",
             service: serviceConfig.serviceIdentifier
         )
         let signer = try await self.createSigner(serviceConfig: serviceConfig, logger: logger)
-        signer.signURL(request: &request, expires: expires)
+        guard let url = signer.signURL(request: request, expires: expires) else { throw AWSClient.ClientError.invalidURL }
+        return url
     }
 
     /// Generate signed headers
@@ -524,6 +525,10 @@ extension AWSClient {
             service: serviceConfig.serviceIdentifier
         )
         let signer = try await self.createSigner(serviceConfig: serviceConfig, logger: logger)
+        guard let url = request.url, let cleanURL = signer.processURL(url: url) else {
+            throw AWSClient.ClientError.invalidURL
+        }
+        request.url = cleanURL
         let bodyData: AWSSigner.BodyData?
         switch body.storage {
         case .byteBuffer(let buffer):

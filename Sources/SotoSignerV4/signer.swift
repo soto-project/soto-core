@@ -97,38 +97,34 @@ public struct AWSSigner: Sendable {
         case s3chunked
     }
 
-    /// Process URL before signing
+    /// Process URL before signing headers
     ///
-    /// `signURL` and `signHeaders` make assumptions about the URLs they are provided, this function cleans up a URL so it is ready
+    /// `signHeaders` makes assumptions about the URLs they are provided, this function cleans up a URL so it is ready
     /// to be signed by either of these functions. It sorts the query params and ensures they are properly percent encoded
     public func processURL(url: URL) -> URL? {
         guard var urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return nil }
-        let urlQueryString = urlComponents.queryItems?
-            .sorted {
-                if $0.name < $1.name { return true }
-                if $0.name > $1.name { return false }
-                guard let value1 = $0.value, let value2 = $1.value else { return false }
-                return value1 < value2
-            }
-            .map { item in item.value.map { "\(item.name)=\($0.uriEncode())" } ?? "\(item.name)=" }
+        var query = urlComponents.percentEncodedQuery ?? ""
+        query = query.split(separator: "&")
+            .sorted()
             .joined(separator: "&")
-        urlComponents.percentEncodedQuery = urlQueryString
+            .addingAWSPercentEncoding(forURLComponent: [.query, .percent])
+        urlComponents.percentEncodedQuery = query
         // S3 requires "+" encoded in the URL
         if self.name == "s3" {
-            urlComponents.percentEncodedPath = urlComponents.path.s3PathEncode()
+            urlComponents.percentEncodedPath = urlComponents.percentEncodedPath.addingAWSPercentEncoding(forURLComponent: [.s3Path, .percent])
         }
         return urlComponents.url
     }
 
     /// Generate signed headers, for an HTTP request using the AWS sigV4 algorithm.
+    ///
+    /// The supplied HTTP request is updated with the additional headers.
+    ///
     /// - Parameters:
-    ///   - url: Request URL
-    ///   - method: Request HTTP method
-    ///   - headers: Request headers
+    ///   - request: HTTP request
     ///   - body: Request body
     ///   - omitSecurityToken: Should we include security token in the query parameters
     ///   - date: Date that URL is valid from, defaults to now
-    /// - Returns: Request headers with added "authorization" header that contains request signature
     public func signHeaders(
         request: inout HTTPRequest,
         body: BodyData? = nil,
@@ -186,30 +182,35 @@ public struct AWSSigner: Sendable {
     }
 
     /// Generate a signed URL, for a HTTP request
+    ///
+    /// If you are signing a URL using sigV4a then you should supply a `X-Amz-Region-Set` header
+    /// including the regions you want to use.
+    ///
     /// - Parameters:
-    ///   - url: Request URL
-    ///   - method: Request HTTP method
-    ///   - headers: Request headers
+    ///   - request: HTTP request
     ///   - body: Request body
     ///   - expires: How long before the signed URL expires
     ///   - omitSecurityToken: Should we include security token in the query parameters
     ///   - date: Date that URL is valid from, defaults to now
     /// - Returns: Signed URL
     public func signURL(
-        request: inout HTTPRequest,
+        request: HTTPRequest,
         body: BodyData? = nil,
         expires: TimeAmount,
         omitSecurityToken: Bool = false,
         date: Date = Date()
-    ) {
-        guard let url = request.url else { return }
-        if algorithm.base == .sigV4a {
-            request.headerFields[.xAmzRegionSet] = self.region
+    ) -> URL? {
+        guard let scheme = request.scheme, let authority = request.authority, let path = request.path else { return nil }
+        guard var urlComponents = URLComponents(string: "\(scheme)://\(authority)\(path)") else { return nil }
+        // Percent encode path
+        if self.name == "s3" {
+            urlComponents.percentEncodedPath = urlComponents.percentEncodedPath.addingAWSPercentEncoding(forURLComponent: [.s3Path, .percent])
         }
+        let url = urlComponents.url!
         // Create signing data
         var signingData = AWSSigner.SigningData(url: url, request: request, body: body, date: Self.timestamp(date), signer: self)
         // Construct query string. Start with original query strings and append all the signing info.
-        var query = url.query ?? ""
+        var query = urlComponents.query ?? ""
         if query.count > 0 {
             query += "&"
         }
@@ -233,17 +234,16 @@ public struct AWSSigner: Sendable {
             .sorted()
             .joined(separator: "&")
             .addingAWSPercentEncoding(forURLComponent: [.query, .percent])
-
+        urlComponents.percentEncodedQuery = query
         // update unsignedURL in the signingData so when the canonical request is constructed it includes all the signing query items
-        signingData.unsignedURL = URL(string: url.absoluteString.split(separator: "?")[0] + "?" + query)!  // NEED TO DEAL WITH SITUATION WHERE THIS FAILS
+        signingData.unsignedURL = urlComponents.url!  // NEED TO DEAL WITH SITUATION WHERE THIS FAILS
         query += "&X-Amz-Signature=\(self.signature(signingData: signingData, algorithm: algorithm))"
         if omitSecurityToken, let sessionToken = credentials.sessionToken {
             query += "&X-Amz-Security-Token=\(sessionToken.uriEncode())"
         }
+        urlComponents.percentEncodedQuery = query
 
-        // Add signature to query items and build a new Request
-        let signedURL = URL(string: url.absoluteString.split(separator: "?")[0] + "?" + query)!
-        request.url = signedURL
+        return urlComponents.url!
     }
 
     /// Temporary structure passed from calls to `startSigningChunks` and

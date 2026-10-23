@@ -24,21 +24,21 @@ public protocol AWSWaiterMatcher: Sendable {
 }
 
 /// Match whether the value indicated by JMESPath matches an expected value
-public struct JMESPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatcher {
+public struct JMESPathMatcher<Value: Sendable & Equatable>: AWSWaiterMatcher {
     let expression: JMESExpression
-    let expected: String
+    let expected: Value
 
     public init(_ path: String, expected: Value) throws {
         self.expression = try JMESExpression.compile(path)
-        self.expected = expected.description
+        self.expected = expected
     }
 
     public func match(result: Result<Any, any Error>) -> Bool {
         switch result {
         case .success(let output):
             do {
-                if let searchResult = try expression.search(object: output, as: (any CustomStringConvertible).self) {
-                    return self.expected == searchResult.description
+                if let searchResult = try expression.search(object: output, as: Value.self) {
+                    return self.expected == searchResult
                 } else {
                     return false
                 }
@@ -52,21 +52,21 @@ public struct JMESPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatcher 
 }
 
 /// Match whether any of the values indicated by JMESPath matches an expected value
-public struct JMESAnyPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatcher {
+public struct JMESAnyPathMatcher<Value: Sendable & Equatable>: AWSWaiterMatcher {
     let expression: JMESExpression
-    let expected: String
+    let expected: Value
 
     public init(_ path: String, expected: Value) throws {
         self.expression = try JMESExpression.compile(path)
-        self.expected = expected.description
+        self.expected = expected
     }
 
     public func match(result: Result<Any, any Error>) -> Bool {
         switch result {
         case .success(let output):
             do {
-                if let searchResult = try expression.search(object: output, as: [any CustomStringConvertible].self) {
-                    return searchResult.first { self.expected == $0.description } != nil
+                if let searchResult = try expression.search(object: output, as: [Value].self) {
+                    return searchResult.first { self.expected == $0 } != nil
                 } else {
                     return false
                 }
@@ -80,21 +80,21 @@ public struct JMESAnyPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatch
 }
 
 /// Match whether all of the values indicated by JMESPath matches an expected value
-public struct JMESAllPathMatcher<Value: CustomStringConvertible>: AWSWaiterMatcher {
+public struct JMESAllPathMatcher<Value: Sendable & Equatable>: AWSWaiterMatcher {
     let expression: JMESExpression
-    let expected: String
+    let expected: Value
 
     public init(_ path: String, expected: Value) throws {
         self.expression = try JMESExpression.compile(path)
-        self.expected = expected.description
+        self.expected = expected
     }
 
     public func match(result: Result<Any, any Error>) -> Bool {
         switch result {
         case .success(let output):
             do {
-                if let searchResult = try expression.search(object: output, as: [any CustomStringConvertible].self) {
-                    return searchResult.first { self.expected != $0.description } == nil
+                if let searchResult = try expression.search(object: output, as: [Value].self) {
+                    return searchResult.first { self.expected != $0 } == nil
                 } else {
                     return false
                 }

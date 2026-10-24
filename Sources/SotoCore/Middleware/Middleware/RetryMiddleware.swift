@@ -17,9 +17,9 @@ import NIOHTTP1
 import SotoSignerV4
 
 /// Middleware that performs retries of the next middleware whenever it throws errors based on a retry policy
-struct RetryMiddleware: AWSMiddlewareProtocol {
+struct RetryMiddleware<Policy: RetryPolicy>: AWSMiddlewareProtocol {
     @usableFromInline
-    let retryPolicy: any RetryPolicy
+    let retryPolicy: Policy
 
     @inlinable
     func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse {

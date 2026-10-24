@@ -601,7 +601,7 @@ class AWSClientTests: XCTestCase {
             let httpClient = AsyncHTTPClient.HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
             defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
             let config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: serverAddress)
-            let client = createAWSClient(credentialProvider: .empty, retryPolicy: .init(retryPolicy: retryPolicy), httpClient: httpClient)
+            let client = createAWSClient(credentialProvider: .empty, retryPolicy: retryPolicy, httpClient: httpClient)
             defer { XCTAssertNoThrow(try client.syncShutdown()) }
             async let responseTask: Void = client.execute(
                 operation: "test",

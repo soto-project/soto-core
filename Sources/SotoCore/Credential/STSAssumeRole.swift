@@ -165,7 +165,7 @@ struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
         roleSessionName: String,
         credentialProvider: CredentialProviderFactory,
         region: Region,
-        retryPolicy: RetryPolicyFactory,
+        retryPolicy: any RetryPolicy,
         httpClient: any AWSHTTPClient,
         endpoint: String? = nil
     ) {
@@ -188,7 +188,7 @@ struct STSAssumeRoleCredentialProvider: CredentialProviderWithClient {
         roleSessionName: String,
         webIdentityTokenFile: String,
         region: Region,
-        retryPolicy: RetryPolicyFactory,
+        retryPolicy: any RetryPolicy,
         httpClient: any AWSHTTPClient,
         endpoint: String? = nil,
         threadPool: NIOThreadPool = .singleton
@@ -270,7 +270,7 @@ extension STSAssumeRoleCredentialProvider {
     static func fromEnvironment(
         context: CredentialProviderFactory.Context,
         endpoint: String? = nil,
-        retryPolicy: RetryPolicyFactory,
+        retryPolicy: any RetryPolicy,
         threadPool: NIOThreadPool = .singleton
     ) -> Self? {
         guard let roleArn = Environment["AWS_ROLE_ARN"],

@@ -26,7 +26,7 @@ final class ConfigFileCredentialProvider: CredentialProviderSelector {
         profile: String? = nil,
         context: CredentialProviderFactory.Context,
         endpoint: String? = nil,
-        retryPolicy: RetryPolicyFactory
+        retryPolicy: any RetryPolicy
     ) {
         self.getProviderTask = Task {
             let profile = profile ?? Environment["AWS_PROFILE"] ?? ConfigFileLoader.defaultProfile
@@ -64,7 +64,7 @@ final class ConfigFileCredentialProvider: CredentialProviderSelector {
         for profile: String,
         context: CredentialProviderFactory.Context,
         endpoint: String?,
-        retryPolicy: RetryPolicyFactory,
+        retryPolicy: any RetryPolicy,
         threadPool: NIOThreadPool = .singleton
     ) async throws -> any CredentialProvider {
         let sharedCredentials = try await ConfigFileLoader.loadSharedCredentials(
@@ -94,7 +94,7 @@ final class ConfigFileCredentialProvider: CredentialProviderSelector {
         from sharedCredentials: ConfigFileLoader.SharedCredentials,
         context: CredentialProviderFactory.Context,
         endpoint: String?,
-        retryPolicy: RetryPolicyFactory
+        retryPolicy: any RetryPolicy
     ) throws -> any CredentialProvider {
         switch sharedCredentials {
         case .staticCredential(let accessKeyID, let secretAccessKey, let sessionToken):

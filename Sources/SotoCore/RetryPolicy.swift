@@ -126,7 +126,7 @@ public struct JitterRetry: StandardRetryPolicy {
 
     func calculateRetryWaitTime(attempt: Int) -> Duration {
         let exp = exp2(Double(attempt))
-        return self.base * Double.random(in: (exp * 2)..<exp)
+        return self.base * Double.random(in: (exp / 2)..<exp)
     }
 }
 

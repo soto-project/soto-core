@@ -14,6 +14,12 @@
 
 #if os(macOS) || os(Linux)
 
+#if canImport(System)
+import System
+#else
+import SystemPackage
+#endif
+
 import Logging
 import SotoSignerV4
 import Subprocess

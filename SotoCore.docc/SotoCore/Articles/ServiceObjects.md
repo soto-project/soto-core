@@ -14,7 +14,7 @@ public init(
     region: SotoCore.Region? = nil,
     partition: AWSPartition = .aws,
     endpoint: String? = nil,
-    timeout: TimeAmount? = nil,
+    timeout: Duration? = nil,
     byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
     options: AWSServiceConfig.Options = []
 )

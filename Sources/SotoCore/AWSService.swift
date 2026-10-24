@@ -58,7 +58,7 @@ extension AWSService {
     public func with(
         region: Region? = nil,
         middleware: (any AWSMiddlewareProtocol)? = nil,
-        timeout: TimeAmount? = nil,
+        timeout: Duration? = nil,
         byteBufferAllocator: ByteBufferAllocator? = nil,
         options: AWSServiceConfig.Options? = nil
     ) -> Self {

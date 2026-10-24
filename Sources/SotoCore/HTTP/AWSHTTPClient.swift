@@ -13,14 +13,14 @@
 //===----------------------------------------------------------------------===//
 
 public import Logging
-public import NIOCore
+import NIOCore
 
 /// Protocol for HTTP clients that work with Soto
 public protocol AWSHTTPClient: Sendable {
     /// Execute an HTTP request
     func execute(
         request: AWSHTTPRequest,
-        timeout: TimeAmount,
+        timeout: Duration,
         logger: Logger
     ) async throws -> AWSHTTPResponse
     /// Shutdown client if Soto created it

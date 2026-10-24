@@ -102,7 +102,7 @@ extension CredentialProviderFactory {
     ///     - threadPool: Thread Pool used for file loading
     public static func environment(
         endpoint: String? = nil,
-        retryPolicy: RetryPolicy = .default,
+        retryPolicy: any RetryPolicy = .default,
         threadPool: NIOThreadPool = .singleton
     ) -> CredentialProviderFactory {
         Self { context -> any CredentialProvider in
@@ -161,7 +161,7 @@ extension CredentialProviderFactory {
         credentialsFilePath: String? = nil,
         configFilePath: String? = nil,
         profile: String? = nil,
-        retryPolicy: RetryPolicy = .default
+        retryPolicy: any RetryPolicy = .default
     ) -> CredentialProviderFactory {
         Self { context in
             let provider = ConfigFileCredentialProvider(

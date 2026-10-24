@@ -14,8 +14,8 @@
 
 public import AsyncHTTPClient
 import HTTPTypes
-import Logging
-import NIOCore
+public import Logging
+public import NIOCore
 import NIOHTTP1
 
 #if canImport(FoundationEssentials)

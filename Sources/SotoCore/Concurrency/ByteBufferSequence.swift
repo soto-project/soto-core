@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIOCore
+public import NIOCore
 import NIOPosix
 
 /// Provide ByteBuffer as an AsyncSequence of equal size blocks

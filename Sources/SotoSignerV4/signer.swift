@@ -202,7 +202,7 @@ public struct AWSSigner: Sendable {
     public func signURL(
         request: HTTPRequest,
         body: BodyData? = nil,
-        expires: TimeAmount,
+        expires: Duration,
         omitSecurityToken: Bool = false,
         date: Date = Date()
     ) -> URL? {
@@ -230,7 +230,7 @@ public struct AWSSigner: Sendable {
         }
 
         query += "&X-Amz-Date=\(signingData.datetime)"
-        query += "&X-Amz-Expires=\(expires.nanoseconds / 1_000_000_000)"
+        query += "&X-Amz-Expires=\(expires.components.seconds)"
         query += "&X-Amz-SignedHeaders=\(signingData.signedHeaders.uriEncode())"
         if !omitSecurityToken, let sessionToken = credentials.sessionToken {
             query += "&X-Amz-Security-Token=\(sessionToken.uriEncode())"

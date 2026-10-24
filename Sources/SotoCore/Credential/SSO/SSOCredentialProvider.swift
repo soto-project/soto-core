@@ -16,7 +16,7 @@
 
 import HTTPTypes
 import INIParser
-import Logging
+public import Logging
 import NIOCore
 import NIOFoundationEssentialsCompat
 import NIOPosix

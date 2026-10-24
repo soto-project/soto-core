@@ -13,7 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 public import HTTPTypes
-import NIOCore
+public import Logging
+public import NIOCore
 
 #if canImport(FoundationEssentials)
 public import FoundationEssentials
@@ -84,7 +85,7 @@ extension AWSService {
     ///     A signed URL
     public func signURL(
         request: HTTPRequest,
-        expires: TimeAmount,
+        expires: Duration,
         logger: Logger = AWSClient.loggingDisabled
     ) async throws -> URL {
         try await self.client.signURL(

@@ -12,7 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HTTPTypes
 import NIOCore
+import NIOHTTP1
 import SotoTestUtils
 import XCTest
 

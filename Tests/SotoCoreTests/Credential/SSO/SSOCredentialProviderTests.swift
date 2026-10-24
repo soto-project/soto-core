@@ -21,6 +21,7 @@
 // On Swift 6.0 it returns Void, so we use the closure-based validation pattern instead:
 //   await #expect { ... } throws: { error in (error as? AWSSSOCredentialError)?.code == "expectedCode" }
 
+import HTTPTypes
 import Logging
 import NIOCore
 import Testing

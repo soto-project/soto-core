@@ -14,6 +14,8 @@
 
 import AsyncHTTPClient
 import HTTPTypes
+import Logging
+import NIOCore
 import NIOPosix
 import _NIOFileSystem
 

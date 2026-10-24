@@ -15,6 +15,7 @@
 // Test proper error handling for expired tokens
 
 import Crypto
+import HTTPTypes
 import Logging
 import NIOCore
 import SotoCore

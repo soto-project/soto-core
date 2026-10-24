@@ -12,10 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HTTPTypes
 import InMemoryLogging
 import Logging
 import NIOConcurrencyHelpers
+import NIOCore
 import NIOFoundationEssentialsCompat
+import NIOHTTP1
 import SotoTestUtils
 import XCTest
 

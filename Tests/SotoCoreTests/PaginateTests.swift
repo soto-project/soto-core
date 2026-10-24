@@ -14,6 +14,8 @@
 
 import AsyncHTTPClient
 import Atomics
+import HTTPTypes
+import Logging
 import NIOCore
 import NIOPosix
 import SotoTestUtils

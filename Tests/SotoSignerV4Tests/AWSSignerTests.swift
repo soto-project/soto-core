@@ -124,7 +124,7 @@ final class AWSSignerTests {
         let request = HTTPRequest(method: .get, url: URL(string: "https://s3.us-east-1.amazonaws.com/")!)
         let url = signer.signURL(
             request: request,
-            expires: .hours(24),
+            expires: .seconds(24 * 60 * 60),
             date: Date(timeIntervalSinceReferenceDate: 100_000)
         )
         #expect(
@@ -138,7 +138,7 @@ final class AWSSignerTests {
         let request = HTTPRequest(method: .get, url: URL(string: "https://s3.us-east-1.amazonaws.com/testFile?versionId=1")!)
         let url = signer.signURL(
             request: request,
-            expires: .hours(24),
+            expires: .seconds(24 * 60 * 60),
             date: Date(timeIntervalSinceReferenceDate: 100_000)
         )
         #expect(
@@ -153,7 +153,7 @@ final class AWSSignerTests {
         let url = signer.signURL(
             request: request,
             body: .string("Testing signed URLs"),
-            expires: .hours(24),
+            expires: .seconds(24 * 60 * 60),
             date: Date(timeIntervalSinceReferenceDate: 100_000)
         )
         #expect(
@@ -203,7 +203,7 @@ final class AWSSignerTests {
         )
         let url = signer.signURL(
             request: request,
-            expires: .hours(24),
+            expires: .seconds(24 * 60 * 60),
             date: Date(timeIntervalSinceReferenceDate: 100_000)
         )
         #expect(

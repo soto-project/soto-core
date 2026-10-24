@@ -13,6 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+import HTTPTypes
+import Logging
 import NIOCore
 import SotoCore
 import SotoTestUtils

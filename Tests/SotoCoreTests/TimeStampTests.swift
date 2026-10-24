@@ -14,6 +14,7 @@
 
 import Foundation
 import HTTPTypes
+import NIOCore
 import SotoTestUtils
 import SotoXML
 import Testing

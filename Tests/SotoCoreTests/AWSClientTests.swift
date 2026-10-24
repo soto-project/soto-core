@@ -14,10 +14,12 @@
 
 import AsyncHTTPClient
 import Atomics
+import HTTPTypes
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
 import NIOFoundationEssentialsCompat
+import NIOHTTP1
 import NIOPosix
 import SotoTestUtils
 import XCTest

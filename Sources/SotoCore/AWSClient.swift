@@ -16,7 +16,7 @@ public import AsyncHTTPClient
 import Atomics
 import Dispatch
 public import HTTPTypes
-import Logging
+public import Logging
 import Metrics
 import NIOConcurrencyHelpers
 import NIOCore
@@ -489,7 +489,7 @@ extension AWSClient {
     ///     A signed URL
     public func signURL(
         request: HTTPRequest,
-        expires: TimeAmount,
+        expires: Duration,
         serviceConfig: AWSServiceConfig,
         logger: Logger = AWSClient.loggingDisabled
     ) async throws -> URL {

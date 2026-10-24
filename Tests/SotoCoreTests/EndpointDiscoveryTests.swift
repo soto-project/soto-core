@@ -13,7 +13,10 @@
 //===----------------------------------------------------------------------===//
 
 import Atomics
+import HTTPTypes
+import Logging
 import NIOCore
+import NIOHTTP1
 import SotoCore
 import SotoTestUtils
 import XCTest

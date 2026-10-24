@@ -12,9 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Logging
+public import Logging
 import NIOCore
-import SotoSignerV4
+public import SotoSignerV4
 
 /// Credential provider that always fails
 public struct NullCredentialProvider: CredentialProvider {

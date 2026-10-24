@@ -13,7 +13,9 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import HTTPTypes
 import InMemoryTracing
+import NIOHTTP1
 import NIOPosix
 import SotoCore
 import SotoTestUtils

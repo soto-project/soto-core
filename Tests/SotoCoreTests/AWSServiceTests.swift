@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import HTTPTypes
+import NIOCore
 import SotoTestUtils
 import XCTest
 
@@ -199,7 +200,7 @@ class AWSServiceTests: XCTestCase {
         let service = TestService(client: client, config: serviceConfig)
         let url = URL(string: "https://test.amazonaws.com?test2=true&space=sp%20ace&percent=addi+tion")!
         let request = HTTPRequest(method: .get, url: url)
-        let signedURL = try await service.signURL(request: request, expires: .minutes(15))
+        let signedURL = try await service.signURL(request: request, expires: .seconds(15 * 60))
         // remove signed query params
         let query = try XCTUnwrap(signedURL.query)
         let queryItems =

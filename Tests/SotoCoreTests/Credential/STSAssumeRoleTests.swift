@@ -14,6 +14,7 @@
 
 import AsyncHTTPClient
 import NIOCore
+import NIOHTTP1
 import NIOPosix
 import SotoTestUtils
 import SotoXML

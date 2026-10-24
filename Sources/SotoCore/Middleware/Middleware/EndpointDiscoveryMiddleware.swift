@@ -13,8 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import HTTPTypes
-import Logging
-import SotoSignerV4
+public import Logging
 
 #if canImport(FoundationEssentials)
 import FoundationEssentials

@@ -13,7 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 public import HTTPTypes
-import Logging
+public import Logging
+import NIOCore
 
 #if canImport(FoundationEssentials)
 public import FoundationEssentials

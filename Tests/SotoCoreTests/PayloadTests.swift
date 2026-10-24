@@ -23,7 +23,7 @@ class PayloadTests: XCTestCase {
         struct DataPayload: AWSEncodableShape {
             var _payload: AWSHTTPBody { self.data }
             let data: AWSHTTPBody
-            func encode(to encoder: Encoder) throws {
+            func encode(to encoder: any Encoder) throws {
                 try self.data.encode(to: encoder)
             }
 
@@ -78,7 +78,7 @@ class PayloadTests: XCTestCase {
             static let _options: AWSShapeOptions = .rawPayload
             let payload: AWSHTTPBody
 
-            init(from decoder: Decoder) throws {
+            init(from decoder: any Decoder) throws {
                 let container = try decoder.singleValueContainer()
                 self.payload = try container.decode(AWSHTTPBody.self)
             }

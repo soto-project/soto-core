@@ -157,7 +157,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
 
         let provider = factory.createProvider(context: .init(httpClient: httpClient, logger: TestEnvironment.logger, options: .init()))
 
-        let credential: Credential = try await provider.getCredential(logger: TestEnvironment.logger)
+        let credential = try await provider.getCredential(logger: TestEnvironment.logger)
         XCTAssertEqual(credential.accessKeyId, "AWSACCESSKEYID")
         XCTAssertEqual(credential.secretAccessKey, "AWSSECRETACCESSKEY")
     }
@@ -185,7 +185,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
 
         let provider = factory.createProvider(context: .init(httpClient: httpClient, logger: TestEnvironment.logger, options: .init()))
 
-        let credential: Credential = try await provider.getCredential(logger: TestEnvironment.logger)
+        let credential = try await provider.getCredential(logger: TestEnvironment.logger)
         XCTAssertEqual(credential.accessKeyId, "TESTPROFILE-AWSACCESSKEYID")
         XCTAssertEqual(credential.secretAccessKey, "TESTPROFILE-AWSSECRETACCESSKEY")
     }
@@ -313,7 +313,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
 
         // Here we use `.custom` provider factory, since we need to inject the testServer endpoint
         let client = createAWSClient(
-            credentialProvider: .custom { context -> CredentialProvider in
+            credentialProvider: .custom { context -> any CredentialProvider in
                 ConfigFileCredentialProvider(
                     credentialsFilePath: credentialsFilePath,
                     configFilePath: configFilePath,
@@ -328,7 +328,7 @@ class ConfigFileCredentialProviderTests: XCTestCase {
         defer { XCTAssertNoThrow(try client.syncShutdown()) }
 
         // Retrieve credentials
-        async let futureCredentials: Credential = client.credentialProvider.getCredential(
+        async let futureCredentials = client.credentialProvider.getCredential(
             logger: TestEnvironment.logger
         )
 

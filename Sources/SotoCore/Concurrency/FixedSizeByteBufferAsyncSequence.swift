@@ -38,7 +38,7 @@ public struct FixedSizeByteBufferAsyncSequence<Base: AsyncSequence>: AsyncSequen
             if let currentByteBuffer = self.currentByteBuffer {
                 byteBuffer = currentByteBuffer
             } else {
-                if let firstByteBuffer = try await iterator.next() {
+                if let firstByteBuffer = try await iterator.next(isolation: #isolation) {
                     byteBuffer = firstByteBuffer
                 } else {
                     return nil
@@ -48,7 +48,7 @@ public struct FixedSizeByteBufferAsyncSequence<Base: AsyncSequence>: AsyncSequen
 
             // while current byte buffer does not contain enough bytes read from source sequence
             while byteBuffer.readableBytes < self.chunkSize {
-                if var nextByteBuffer = try await iterator.next() {
+                if var nextByteBuffer = try await iterator.next(isolation: #isolation) {
                     // if next byte buffer has enough bytes to create a chunk
                     if var slice = nextByteBuffer.readSlice(length: self.chunkSize - byteBuffer.readableBytes) {
                         byteBuffer.writeBuffer(&slice)

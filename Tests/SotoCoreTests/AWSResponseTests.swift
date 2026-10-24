@@ -14,6 +14,7 @@
 
 import Foundation
 import NIOCore
+import NIOFoundationEssentialsCompat
 import NIOHTTP1
 import SotoTestUtils
 import SotoXML
@@ -25,7 +26,7 @@ class AWSResponseTests {
     @Test func testHeaderResponseDecoding() async throws {
         struct Output: AWSDecodableShape {
             let h: String
-            public init(from decoder: Decoder) throws {
+            public init(from decoder: any Decoder) throws {
                 let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
                 self.h = try response.decodeHeader(String.self, key: "header-member")
             }
@@ -54,7 +55,7 @@ class AWSResponseTests {
             let integer: Int
             let bool: Bool
 
-            public init(from decoder: Decoder) throws {
+            public init(from decoder: any Decoder) throws {
                 let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
                 self.string = try response.decodeHeader(String.self, key: "string")
                 self.string2 = try response.decodeHeader(String.self, key: "string2")
@@ -92,7 +93,7 @@ class AWSResponseTests {
         struct Output: AWSDecodableShape {
             let test: TestEnum
 
-            public init(from decoder: Decoder) throws {
+            public init(from decoder: any Decoder) throws {
                 let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
                 self.test = try response.decodeHeader(TestEnum.self, key: "testEnum")
             }
@@ -112,7 +113,7 @@ class AWSResponseTests {
     @Test func testStatusCodeResponseDecoding() async throws {
         struct Output: AWSDecodableShape {
             let status: Int
-            public init(from decoder: Decoder) throws {
+            public init(from decoder: any Decoder) throws {
                 let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
                 self.status = response.decodeStatus()
             }
@@ -156,7 +157,7 @@ class AWSResponseTests {
             let name: String
             let contentType: String
 
-            init(from decoder: Decoder) throws {
+            init(from decoder: any Decoder) throws {
                 let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
                 self.contentType = try response.decodeHeader(String.self, key: "content-type")
                 self.name = try .init(from: decoder)
@@ -179,7 +180,7 @@ class AWSResponseTests {
             static let _options: AWSShapeOptions = .rawPayload
             let body: AWSHTTPBody
 
-            init(from decoder: Decoder) throws {
+            init(from decoder: any Decoder) throws {
                 let container = try decoder.singleValueContainer()
                 self.body = try container.decode(AWSHTTPBody.self)
             }
@@ -222,7 +223,7 @@ class AWSResponseTests {
         struct Output: AWSDecodableShape {
             let output2: Output2
 
-            init(from decoder: Decoder) throws {
+            init(from decoder: any Decoder) throws {
                 self.output2 = try .init(from: decoder)
             }
         }
@@ -241,7 +242,7 @@ class AWSResponseTests {
         struct Output: AWSDecodableShape {
             static let _options: AWSShapeOptions = .rawPayload
             let body: AWSHTTPBody
-            init(from decoder: Decoder) throws {
+            init(from decoder: any Decoder) throws {
                 let container = try decoder.singleValueContainer()
                 self.body = try container.decode(AWSHTTPBody.self)
             }
@@ -405,7 +406,7 @@ class AWSResponseTests {
         struct Output: AWSDecodableShape {
             let content: [String: String]?
 
-            public init(from decoder: Decoder) throws {
+            public init(from decoder: any Decoder) throws {
                 let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
                 self.content = try response.decodeHeaderIfPresent([String: String].self, key: "prefix-")
             }
@@ -425,7 +426,7 @@ class AWSResponseTests {
             let content: [String: String]?
             let body: String
 
-            public init(from decoder: Decoder) throws {
+            public init(from decoder: any Decoder) throws {
                 let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
                 let container = try decoder.container(keyedBy: CodingKeys.self)
                 self.content = try response.decodeHeaderIfPresent([String: String].self, key: "prefix-")
@@ -484,7 +485,7 @@ class AWSResponseTests {
         struct PayloadEvent: AWSDecodableShape {
             let payload: AWSEventPayload
 
-            init(from decoder: Decoder) throws {
+            init(from decoder: any Decoder) throws {
                 let container = try decoder.singleValueContainer()
                 self.payload = try container.decode(AWSEventPayload.self)
             }
@@ -494,7 +495,7 @@ class AWSResponseTests {
             let test: String
             let test2: String?
 
-            init(from decoder: Decoder) throws {
+            init(from decoder: any Decoder) throws {
                 let response = decoder.userInfo[.awsEvent]! as! EventDecodingContainer
                 self.test = try response.decodeHeader(key: "test")
                 self.test2 = try response.decodeHeaderIfPresent(key: "test2")
@@ -517,7 +518,7 @@ class AWSResponseTests {
         /// Exception event with codable payload.
         case header(HeaderEvent)
 
-        public init(from decoder: Decoder) throws {
+        public init(from decoder: any Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             guard container.allKeys.count == 1, let key = container.allKeys.first else {
                 let context = DecodingError.Context(
@@ -706,7 +707,7 @@ class AWSResponseTests {
         let error: Code
         let context: AWSErrorContext?
 
-        static let errorCodeMap: [String: AWSErrorShape.Type] = ["MessageRejected": MessageRejected.self]
+        static let errorCodeMap: [String: any AWSErrorShape.Type] = ["MessageRejected": MessageRejected.self]
 
         init?(errorCode: String, context: AWSErrorContext) {
             guard let error = Code(rawValue: errorCode) else { return nil }

@@ -64,7 +64,7 @@ class AWSRequestTests {
         struct KeywordRequest: AWSEncodableShape {
             let `repeat`: String
 
-            func encode(to encoder: Encoder) throws {
+            func encode(to encoder: any Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
                 requestContainer.encodeHeader(self.repeat, key: "repeat")
@@ -85,7 +85,7 @@ class AWSRequestTests {
         struct KeywordRequest: AWSEncodableShape {
             let `throw`: String
 
-            func encode(to encoder: Encoder) throws {
+            func encode(to encoder: any Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
                 requestContainer.encodeQuery(self.throw, key: "throw")
@@ -182,7 +182,7 @@ class AWSRequestTests {
             var _payload: any AWSEncodableShape { self.payload }
             let payload: AWSHTTPBody
 
-            func encode(to encoder: Encoder) throws {
+            func encode(to encoder: any Encoder) throws {
                 try self.payload.encode(to: encoder)
             }
         }
@@ -233,7 +233,7 @@ class AWSRequestTests {
     @Test func testHeaderEncoding() {
         struct Input: AWSEncodableShape {
             let h: String
-            func encode(to encoder: Encoder) throws {
+            func encode(to encoder: any Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
                 requestContainer.encodeHeader(self.h, key: "header-member")
@@ -254,7 +254,7 @@ class AWSRequestTests {
             @OptionalCustomCoding<ISO8601DateCoder>
             var iso8601Date: Date?
 
-            func encode(to encoder: Encoder) throws {
+            func encode(to encoder: any Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
                 requestContainer.encodeHeader(self.httpDate, key: "date")
@@ -279,7 +279,7 @@ class AWSRequestTests {
             let p: String?
             let q: String
             let r: String?
-            func encode(to encoder: Encoder) throws {
+            func encode(to encoder: any Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
                 requestContainer.encodeQuery(self.p, key: "puery")
@@ -299,7 +299,7 @@ class AWSRequestTests {
     @Test func testQueryEncodedArray() {
         struct Input: AWSEncodableShape {
             let q: [String]?
-            func encode(to encoder: Encoder) throws {
+            func encode(to encoder: any Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
                 requestContainer.encodeQuery(self.q, key: "query")
@@ -318,7 +318,7 @@ class AWSRequestTests {
     @Test func testQueryEncodedDictionary() {
         struct Input: AWSEncodableShape {
             let q: [String: Int]?
-            func encode(to encoder: Encoder) throws {
+            func encode(to encoder: any Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
                 requestContainer.encodeQuery(self.q)
@@ -336,7 +336,7 @@ class AWSRequestTests {
     @Test func testQueryDate() {
         struct Input: AWSEncodableShape {
             let d: Date?
-            func encode(to encoder: Encoder) throws {
+            func encode(to encoder: any Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
                 requestContainer.encodeQuery(self.d, key: "d")
@@ -354,7 +354,7 @@ class AWSRequestTests {
     @Test func testQueryInPath() {
         struct Input: AWSEncodableShape {
             let q: String
-            func encode(to encoder: Encoder) throws {
+            func encode(to encoder: any Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
                 requestContainer.encodeQuery(self.q, key: "query")
@@ -381,7 +381,7 @@ class AWSRequestTests {
     @Test func testURIEncoding() {
         struct Input: AWSEncodableShape {
             let u: String
-            func encode(to encoder: Encoder) throws {
+            func encode(to encoder: any Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
                 requestContainer.encodePath(self.u, key: "key")
@@ -462,7 +462,7 @@ class AWSRequestTests {
     @Test func testPercentEncodePath() {
         struct Input: AWSEncodableShape {
             let path: String
-            func encode(to encoder: Encoder) throws {
+            func encode(to encoder: any Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
                 requestContainer.encodePath(self.path, key: "path")
@@ -486,7 +486,7 @@ class AWSRequestTests {
     @Test func testSortedArrayQuery() {
         struct Input: AWSEncodableShape {
             let items: [String]
-            func encode(to encoder: Encoder) throws {
+            func encode(to encoder: any Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
                 requestContainer.encodeQuery(self.items, key: "item")
@@ -507,7 +507,7 @@ class AWSRequestTests {
             var date: Date?
             @CustomCoding<StandardArrayCoder>
             var values: [Int]
-            func encode(to encoder: Encoder) throws {
+            func encode(to encoder: any Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
                 requestContainer.encodeQuery(self._date, key: "date")
@@ -569,7 +569,7 @@ class AWSRequestTests {
     @Test func testHostPrefixLabel() throws {
         struct Input: AWSEncodableShape {
             let accountId: String
-            func encode(to encoder: Encoder) throws {
+            func encode(to encoder: any Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
                 requestContainer.encodeHostPrefix(self.accountId, key: "AccountId")
@@ -599,7 +599,7 @@ class AWSRequestTests {
             var _payload: Payload { self.payload }
             let payload: Payload
 
-            func encode(to encoder: Encoder) throws {
+            func encode(to encoder: any Encoder) throws {
                 try self.payload.encode(to: encoder)
             }
         }
@@ -624,7 +624,7 @@ class AWSRequestTests {
             static let _xmlRootNodeName: String? = "Payload"
             let payload: Payload
 
-            func encode(to encoder: Encoder) throws {
+            func encode(to encoder: any Encoder) throws {
                 try self.payload.encode(to: encoder)
             }
         }
@@ -650,7 +650,7 @@ class AWSRequestTests {
             let payload: Payload
             let contentType: String
 
-            func encode(to encoder: Encoder) throws {
+            func encode(to encoder: any Encoder) throws {
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
                 requestContainer.encodeHeader(self.contentType, key: "content-type")
                 try self.payload.encode(to: encoder)
@@ -737,7 +737,7 @@ class AWSRequestTests {
             static let _options: AWSShapeOptions = .checksumRequired
             let checksum: String?
             let q: [String: Int]
-            func encode(to encoder: Encoder) throws {
+            func encode(to encoder: any Encoder) throws {
                 var container = encoder.container(keyedBy: CodingKeys.self)
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
                 requestContainer.encodeHeader(self.checksum, key: "Content-MD5")
@@ -760,7 +760,7 @@ class AWSRequestTests {
             static let _options: AWSShapeOptions = .checksumHeader
             let q: [String]
             let checksum: String
-            func encode(to encoder: Encoder) throws {
+            func encode(to encoder: any Encoder) throws {
                 var container = encoder.container(keyedBy: CodingKeys.self)
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
                 requestContainer.encodeHeader(self.checksum, key: "x-amz-sdk-checksum-algorithm")
@@ -783,7 +783,7 @@ class AWSRequestTests {
             static let _options: AWSShapeOptions = .checksumHeader
             let q: [String]
             let checksum: String
-            func encode(to encoder: Encoder) throws {
+            func encode(to encoder: any Encoder) throws {
                 var container = encoder.container(keyedBy: CodingKeys.self)
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
                 requestContainer.encodeHeader(self.checksum, key: "x-amz-sdk-checksum-algorithm")
@@ -806,7 +806,7 @@ class AWSRequestTests {
             static let _options: AWSShapeOptions = .checksumHeader
             let q: [String]
             let checksum: String
-            func encode(to encoder: Encoder) throws {
+            func encode(to encoder: any Encoder) throws {
                 var container = encoder.container(keyedBy: CodingKeys.self)
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
                 requestContainer.encodeHeader(self.checksum, key: "x-amz-sdk-checksum-algorithm")
@@ -829,7 +829,7 @@ class AWSRequestTests {
             static let _options: AWSShapeOptions = .checksumHeader
             let q: [String]
             let checksum: String
-            func encode(to encoder: Encoder) throws {
+            func encode(to encoder: any Encoder) throws {
                 var container = encoder.container(keyedBy: CodingKeys.self)
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
                 requestContainer.encodeHeader(self.checksum, key: "x-amz-sdk-checksum-algorithm")
@@ -850,7 +850,7 @@ class AWSRequestTests {
     @Test func testHeaderPrefix() {
         struct Input: AWSEncodableShape {
             let content: [String: String]
-            func encode(to encoder: Encoder) throws {
+            func encode(to encoder: any Encoder) throws {
                 _ = encoder.container(keyedBy: CodingKeys.self)
                 let requestContainer = encoder.userInfo[.awsRequest]! as! RequestEncodingContainer
                 requestContainer.encodeHeader(self.content, key: "x-aws-metadata-")

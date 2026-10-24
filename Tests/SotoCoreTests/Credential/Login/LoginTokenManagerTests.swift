@@ -74,7 +74,7 @@ final class LoginTokenManagerTests {
         // Should use SHA256 hash
         let sessionData = Data("test-session".utf8)
         let hash = SHA256.hash(data: sessionData)
-        let hashString = hash.compactMap { String(format: "%02x", $0) }.joined()
+        let hashString = hash.hexDigest()
 
         #expect(path.contains(".aws/login/cache"))
         #expect(path.contains("\(hashString).json"))

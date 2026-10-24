@@ -530,12 +530,12 @@ class XMLCoderTests {
         struct Test: Codable {
             var t: Test2?
 
-            init(from decoder: Decoder) throws {
+            init(from decoder: any Decoder) throws {
                 let container = try decoder.singleValueContainer()
                 self.t = try container.decode(Test2.self)
             }
 
-            func encode(to encoder: Encoder) throws {
+            func encode(to encoder: any Encoder) throws {
                 var container = encoder.singleValueContainer()
                 try container.encode(self.t)
             }
@@ -551,7 +551,7 @@ class XMLCoderTests {
         struct Test: Encodable {
             var t: Test2?
 
-            func encode(to encoder: Encoder) throws {
+            func encode(to encoder: any Encoder) throws {
                 var container = encoder.singleValueContainer()
                 try container.encode(self.t)
             }

@@ -19,15 +19,16 @@ let swiftSettings: [SwiftSetting] = [
     .enableUpcomingFeature("ExistentialAny"),
     .enableUpcomingFeature("MemberImportVisibility"),
     .enableUpcomingFeature("InternalImportsByDefault"),
+    .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
 ]
 
 let package = Package(
     name: "soto-core",
     platforms: [
-        .macOS(.v13),
-        .iOS(.v16),
-        .tvOS(.v16),
-        .watchOS(.v9),
+        .macOS(.v15),
+        .iOS(.v18),
+        .tvOS(.v18),
+        .watchOS(.v11),
     ],
     products: [
         .library(name: "SotoCore", targets: ["SotoCore"]),
@@ -142,13 +143,15 @@ let package = Package(
             ],
             resources: [
                 .copy("Resources/credential-process-test-helper.sh")
-            ]
+            ],
+            swiftSettings: swiftSettings
         ),
         .testTarget(
             name: "SotoSignerV4Tests",
             dependencies: [
                 .byName(name: "SotoSignerV4")
-            ]
+            ],
+            swiftSettings: swiftSettings
         ),
         .testTarget(
             name: "SotoSignerCloudFrontTests",
@@ -157,20 +160,23 @@ let package = Package(
                 .product(name: "Crypto", package: "swift-crypto"),
                 .product(name: "_CryptoExtras", package: "swift-crypto"),
                 .product(name: "NIOCore", package: "swift-nio"),
-            ]
+            ],
+            swiftSettings: swiftSettings
         ),
         .testTarget(
             name: "SotoXMLTests",
             dependencies: [
                 .byName(name: "SotoXML"),
                 .byName(name: "SotoCore"),
-            ]
+            ],
+            swiftSettings: swiftSettings
         ),
         .testTarget(
             name: "INIParserTests",
             dependencies: [
                 .byName(name: "INIParser")
-            ]
+            ],
+            swiftSettings: swiftSettings
         ),
     ]
 )

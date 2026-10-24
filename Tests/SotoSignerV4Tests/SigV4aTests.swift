@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Crypto
 import SotoSignerV4
 @_spi(SotoInternal) import SotoSignerV4
 import Testing

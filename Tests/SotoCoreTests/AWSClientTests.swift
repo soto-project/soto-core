@@ -17,6 +17,7 @@ import Atomics
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
+import NIOFoundationEssentialsCompat
 import NIOHTTP1
 import NIOPosix
 import SotoTestUtils
@@ -280,7 +281,7 @@ class AWSClientTests: XCTestCase {
         struct Input: AWSEncodableShape {
             static var _options: AWSShapeOptions { [.allowStreaming] }
             let payload: AWSHTTPBody
-            func encode(to encoder: Encoder) throws {
+            func encode(to encoder: any Encoder) throws {
                 try self.payload.encode(to: encoder)
             }
 
@@ -353,7 +354,7 @@ class AWSClientTests: XCTestCase {
         struct Input: AWSEncodableShape {
             static var _options: AWSShapeOptions { [.allowStreaming] }
             let payload: AWSHTTPBody
-            func encode(to encoder: Encoder) throws {
+            func encode(to encoder: any Encoder) throws {
                 try self.payload.encode(to: encoder)
             }
 
@@ -410,7 +411,7 @@ class AWSClientTests: XCTestCase {
         struct Input: AWSEncodableShape {
             static let _options: AWSShapeOptions = [.allowStreaming, .allowChunkedStreaming, .rawPayload]
             let payload: AWSHTTPBody
-            func encode(to encoder: Encoder) throws {
+            func encode(to encoder: any Encoder) throws {
                 try self.payload.encode(to: encoder)
             }
         }
@@ -584,7 +585,7 @@ class AWSClientTests: XCTestCase {
 
             init() {}
 
-            func getRetryWaitTime(error: Error, attempt: Int) -> RetryStatus? {
+            func getRetryWaitTime(error: any Error, attempt: Int) -> RetryStatus? {
                 self.attempt.store(attempt, ordering: .relaxed)
                 if attempt < Self.maxRetries { return .retry(wait: .milliseconds(100)) }
                 return .dontRetry
@@ -702,7 +703,7 @@ class AWSClientTests: XCTestCase {
             let payload: AWSHTTPBody
             let test: String
 
-            public init(from decoder: Decoder) throws {
+            public init(from decoder: any Decoder) throws {
                 let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
                 let container = try decoder.singleValueContainer()
                 self.payload = try container.decode(AWSHTTPBody.self)

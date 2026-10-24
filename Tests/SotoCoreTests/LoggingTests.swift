@@ -15,6 +15,7 @@
 import InMemoryLogging
 import Logging
 import NIOConcurrencyHelpers
+import NIOFoundationEssentialsCompat
 import SotoTestUtils
 import XCTest
 

@@ -40,7 +40,7 @@ import Foundation
 
 public func createAWSClient(
     credentialProvider: CredentialProviderFactory = .default,
-    retryPolicy: RetryPolicyFactory = .noRetry,
+    retryPolicy: any RetryPolicy = .noRetry,
     middlewares: AWSMiddlewareProtocol = TestEnvironment.middlewares,
     options: AWSClient.Options = .init(),
     httpClient: AWSHTTPClient = HTTPClient.shared,

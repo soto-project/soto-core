@@ -13,9 +13,9 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import HTTPTypes
 import NIOCore
 import NIOFoundationEssentialsCompat
-import NIOHTTP1
 import SotoTestUtils
 import SotoXML
 import Testing
@@ -32,8 +32,7 @@ class AWSResponseTests {
             }
         }
         let response = AWSHTTPResponse(
-            status: .ok,
-            headers: ["header-member": "test-header"]
+            response: HTTPResponse(status: .ok, headerFields: [HTTPField.Name("header-member")!: "test-header"])
         )
 
         // XML
@@ -65,14 +64,16 @@ class AWSResponseTests {
             }
         }
         let response = AWSHTTPResponse(
-            status: .ok,
-            headers: [
-                "string": "test-header",
-                "string2": "23",
-                "double": "3.14",
-                "integer": "901",
-                "bool": "false",
-            ]
+            response: HTTPResponse(
+                status: .ok,
+                headerFields: [
+                    HTTPField.Name("string")!: "test-header",
+                    HTTPField.Name("string2")!: "23",
+                    HTTPField.Name("double")!: "3.14",
+                    HTTPField.Name("integer")!: "901",
+                    HTTPField.Name("bool")!: "false",
+                ]
+            )
         )
 
         // JSON        var awsJSONResponse: response
@@ -99,10 +100,12 @@ class AWSResponseTests {
             }
         }
         let response = AWSHTTPResponse(
-            status: .ok,
-            headers: [
-                "testEnum": "hello"
-            ]
+            response: HTTPResponse(
+                status: .ok,
+                headerFields: [
+                    HTTPField.Name("testEnum")!: "hello"
+                ]
+            )
         )
 
         var jsonResult: Output?
@@ -118,10 +121,7 @@ class AWSResponseTests {
                 self.status = response.decodeStatus()
             }
         }
-        let response = AWSHTTPResponse(
-            status: .ok,
-            headers: HTTPHeaders()
-        )
+        let response = AWSHTTPResponse(response: HTTPResponse(status: .ok))
 
         // XML
         var xmlResult: Output?
@@ -142,8 +142,7 @@ class AWSResponseTests {
         }
         let responseBody = "<Output><name>hello</name></Output>"
         let response = AWSHTTPResponse(
-            status: .ok,
-            headers: HTTPHeaders(),
+            response: HTTPResponse(status: .ok),
             body: .init(string: responseBody)
         )
 
@@ -164,8 +163,7 @@ class AWSResponseTests {
             }
         }
         let response = AWSHTTPResponse(
-            status: .ok,
-            headers: ["Content-Type": "application/xml"],
+            response: HTTPResponse(status: .ok, headerFields: [.contentType: "application/xml"]),
             body: .init(string: "<name>hello</name>")
         )
 
@@ -187,8 +185,7 @@ class AWSResponseTests {
         }
         let byteBuffer = ByteBuffer(string: "{\"name\":\"hello\"}")
         let response = AWSHTTPResponse(
-            status: .ok,
-            headers: HTTPHeaders(),
+            response: HTTPResponse(status: .ok),
             body: .init(asyncSequence: byteBuffer.asyncSequence(chunkSize: 32), length: nil)
         )
 
@@ -206,8 +203,7 @@ class AWSResponseTests {
             let name: String
         }
         let response = AWSHTTPResponse(
-            status: .ok,
-            headers: HTTPHeaders(),
+            response: HTTPResponse(status: .ok),
             body: .init(string: "{\"name\":\"hello\"}")
         )
 
@@ -228,8 +224,7 @@ class AWSResponseTests {
             }
         }
         let response = AWSHTTPResponse(
-            status: .ok,
-            headers: HTTPHeaders(),
+            response: HTTPResponse(status: .ok),
             body: .init(string: "{\"name\":\"hello\"}")
         )
 
@@ -249,8 +244,7 @@ class AWSResponseTests {
         }
         let byteBuffer = ByteBuffer(string: "{\"name\":\"hello\"}")
         let response = AWSHTTPResponse(
-            status: .ok,
-            headers: ["Content-Type": "application/json"],
+            response: HTTPResponse(status: .ok, headerFields: [.contentType: "application/json"]),
             body: .init(asyncSequence: byteBuffer.asyncSequence(chunkSize: 32), length: nil)
         )
 
@@ -265,8 +259,7 @@ class AWSResponseTests {
 
     @Test func testJSONError() async throws {
         let response = AWSHTTPResponse(
-            status: .notFound,
-            headers: HTTPHeaders(),
+            response: HTTPResponse(status: .notFound),
             body: .init(string: "{\"__type\":\"ResourceNotFoundException\", \"message\": \"Donald Where's Your Troosers?\"}")
         )
         let service = createServiceConfig(serviceProtocol: .json(version: "1.1"), errorType: ServiceErrorType.self)
@@ -274,26 +267,24 @@ class AWSResponseTests {
         let error = response.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? ServiceErrorType
         #expect(error == ServiceErrorType.resourceNotFoundException)
         #expect(error?.message == "Donald Where's Your Troosers?")
-        #expect(error?.context?.responseCode == .notFound)
+        #expect(error?.context?.response.status == .notFound)
     }
 
     @Test func testJSONErrorWithoutMessage() async throws {
         let response = AWSHTTPResponse(
-            status: .notFound,
-            headers: HTTPHeaders(),
+            response: HTTPResponse(status: .notFound),
             body: .init(string: "{\"__type\":\"ResourceNotFoundException\"}")
         )
         let service = createServiceConfig(serviceProtocol: .json(version: "1.1"), errorType: ServiceErrorType.self)
 
         let error = response.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? ServiceErrorType
         #expect(error == ServiceErrorType.resourceNotFoundException)
-        #expect(error?.context?.responseCode == .notFound)
+        #expect(error?.context?.response.status == .notFound)
     }
 
     @Test func testJSONErrorV2() async throws {
         let response = AWSHTTPResponse(
-            status: .notFound,
-            headers: HTTPHeaders(),
+            response: HTTPResponse(status: .notFound),
             body: .init(
                 buffer: ByteBuffer(
                     string:
@@ -306,14 +297,13 @@ class AWSResponseTests {
         let error = response.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? ServiceErrorType
         #expect(error == ServiceErrorType.resourceNotFoundException)
         #expect(error?.message == "Donald Where's Your Troosers?")
-        #expect(error?.context?.responseCode == .notFound)
+        #expect(error?.context?.response.status == .notFound)
         #expect(error?.context?.additionalFields["fault"] == "client")
     }
 
     @Test func testRestJSONError() async throws {
         let response = AWSHTTPResponse(
-            status: .notFound,
-            headers: ["x-amzn-errortype": "ResourceNotFoundException"],
+            response: HTTPResponse(status: .notFound, headerFields: [.xAmznErrorType: "ResourceNotFoundException"]),
             body: .init(string: #"{"message": "Donald Where's Your Troosers?", "Fault": "Client"}"#)
         )
         let service = createServiceConfig(serviceProtocol: .restjson, errorType: ServiceErrorType.self)
@@ -321,15 +311,14 @@ class AWSResponseTests {
         let error = response.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? ServiceErrorType
         #expect(error == ServiceErrorType.resourceNotFoundException)
         #expect(error?.message == "Donald Where's Your Troosers?")
-        #expect(error?.context?.responseCode == .notFound)
+        #expect(error?.context?.response.status == .notFound)
         #expect(error?.context?.additionalFields["Fault"] == "Client")
     }
 
     @Test func testRestJSONErrorV2() async throws {
         // Capitalized "Message"
         let response = AWSHTTPResponse(
-            status: .notFound,
-            headers: ["x-amzn-errortype": "ResourceNotFoundException"],
+            response: HTTPResponse(status: .notFound, headerFields: [.xAmznErrorType: "ResourceNotFoundException"]),
             body: .init(string: #"{"Message": "Donald Where's Your Troosers?"}"#)
         )
         let service = createServiceConfig(serviceProtocol: .restjson, errorType: ServiceErrorType.self)
@@ -337,13 +326,12 @@ class AWSResponseTests {
         let error = response.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? ServiceErrorType
         #expect(error == ServiceErrorType.resourceNotFoundException)
         #expect(error?.message == "Donald Where's Your Troosers?")
-        #expect(error?.context?.responseCode == .notFound)
+        #expect(error?.context?.response.status == .notFound)
     }
 
     @Test func testXMLError() async throws {
         let response = AWSHTTPResponse(
-            status: .notFound,
-            headers: HTTPHeaders(),
+            response: HTTPResponse(status: .notFound),
             body: .init(string: "<Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message><fault>client</fault></Error>")
         )
         let service = createServiceConfig(serviceProtocol: .restxml, errorType: ServiceErrorType.self)
@@ -351,14 +339,13 @@ class AWSResponseTests {
         let error = response.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? ServiceErrorType
         #expect(error == ServiceErrorType.noSuchKey)
         #expect(error?.message == "It doesn't exist")
-        #expect(error?.context?.responseCode == .notFound)
+        #expect(error?.context?.response.status == .notFound)
         #expect(error?.context?.additionalFields["fault"] == "client")
     }
 
     @Test func testQueryError() async throws {
         let response = AWSHTTPResponse(
-            status: .notFound,
-            headers: HTTPHeaders(),
+            response: HTTPResponse(status: .notFound),
             body: .init(
                 string:
                     "<ErrorResponse><Error><Code>MessageRejected</Code><Message>Don't like it</Message><fault>client</fault></Error></ErrorResponse>"
@@ -369,7 +356,7 @@ class AWSResponseTests {
         let error = response.generateError(serviceConfig: queryService, logger: TestEnvironment.logger) as? ServiceErrorType
         #expect(error == ServiceErrorType.messageRejected)
         #expect(error?.message == "Don't like it")
-        #expect(error?.context?.responseCode == .notFound)
+        #expect(error?.context?.response.status == .notFound)
         #expect(error?.context?.additionalFields["fault"] == "client")
         let contextError = try #require(error?.context?.extendedError as? ServiceErrorType.MessageRejected)
         #expect(contextError.fault == "client")
@@ -377,8 +364,7 @@ class AWSResponseTests {
 
     @Test func testEC2Error() async throws {
         let response = AWSHTTPResponse(
-            status: .notFound,
-            headers: HTTPHeaders(),
+            response: HTTPResponse(status: .notFound),
             body: .init(string: "<Errors><Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message><fault>client</fault></Error></Errors>")
         )
         let service = createServiceConfig(serviceProtocol: .ec2)
@@ -386,14 +372,13 @@ class AWSResponseTests {
         let error = response.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? AWSResponseError
         #expect(error?.errorCode == "NoSuchKey")
         #expect(error?.message == "It doesn't exist")
-        #expect(error?.context?.responseCode == .notFound)
+        #expect(error?.context?.response.status == .notFound)
         #expect(error?.context?.additionalFields["fault"] == "client")
     }
 
     @Test func testAdditionalErrorFields() async throws {
         let response = AWSHTTPResponse(
-            status: .notFound,
-            headers: HTTPHeaders(),
+            response: HTTPResponse(status: .notFound),
             body: .init(string: "<Errors><Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message><fault>client</fault></Error></Errors>")
         )
         let service = createServiceConfig(serviceProtocol: .restxml)
@@ -412,8 +397,7 @@ class AWSResponseTests {
             }
         }
         let response = AWSHTTPResponse(
-            status: .ok,
-            headers: ["prefix-one": "first", "prefix-two": "second"]
+            response: HTTPResponse(status: .ok, headerFields: [HTTPField.Name("prefix-one")!: "first", HTTPField.Name("prefix-two")!: "second"]),
         )
         var output: Output?
         #expect(throws: Never.self) { output = try response.generateOutputShape(operation: "Test", serviceProtocol: .restxml) }
@@ -438,8 +422,7 @@ class AWSResponseTests {
             }
         }
         let response = AWSHTTPResponse(
-            status: .ok,
-            headers: ["prefix-one": "first", "prefix-two": "second"],
+            response: HTTPResponse(status: .ok, headerFields: [HTTPField.Name("prefix-one")!: "first", HTTPField.Name("prefix-two")!: "second"]),
             body: .init(string: "<Output><body>Hello</body></Output>")
         )
         var output: Output?
@@ -671,22 +654,22 @@ class AWSResponseTests {
         struct Output: AWSDecodableShape {
             let doc: AWSDocument
         }
-        var output: Output = try AWSHTTPResponse(status: .ok, headers: HTTPHeaders(), body: .init(string: #"{"doc":"hello"}"#))
+        var output: Output = try AWSHTTPResponse(response: HTTPResponse(status: .ok), body: .init(string: #"{"doc":"hello"}"#))
             .generateOutputShape(operation: "Test", serviceProtocol: .json(version: "1.1"))
         #expect(output.doc == "hello")
-        output = try AWSHTTPResponse(status: .ok, headers: HTTPHeaders(), body: .init(string: #"{"doc":867}"#))
+        output = try AWSHTTPResponse(response: HTTPResponse(status: .ok), body: .init(string: #"{"doc":867}"#))
             .generateOutputShape(operation: "Test", serviceProtocol: .json(version: "1.1"))
         #expect(output.doc == 867)
-        output = try AWSHTTPResponse(status: .ok, headers: HTTPHeaders(), body: .init(string: #"{"doc":867.5}"#))
+        output = try AWSHTTPResponse(response: HTTPResponse(status: .ok), body: .init(string: #"{"doc":867.5}"#))
             .generateOutputShape(operation: "Test", serviceProtocol: .json(version: "1.1"))
         #expect(output.doc == 867.5)
-        output = try AWSHTTPResponse(status: .ok, headers: HTTPHeaders(), body: .init(string: #"{"doc":true}"#))
+        output = try AWSHTTPResponse(response: HTTPResponse(status: .ok), body: .init(string: #"{"doc":true}"#))
             .generateOutputShape(operation: "Test", serviceProtocol: .json(version: "1.1"))
         #expect(output.doc == true)
-        output = try AWSHTTPResponse(status: .ok, headers: HTTPHeaders(), body: .init(string: #"{"doc":["hello", "world"]}"#))
+        output = try AWSHTTPResponse(response: HTTPResponse(status: .ok), body: .init(string: #"{"doc":["hello", "world"]}"#))
             .generateOutputShape(operation: "Test", serviceProtocol: .json(version: "1.1"))
         #expect(output.doc == ["hello", "world"])
-        output = try AWSHTTPResponse(status: .ok, headers: HTTPHeaders(), body: .init(string: #"{"doc":{"hello":"world"}}"#))
+        output = try AWSHTTPResponse(response: HTTPResponse(status: .ok), body: .init(string: #"{"doc":{"hello":"world"}}"#))
             .generateOutputShape(operation: "Test", serviceProtocol: .json(version: "1.1"))
         #expect(output.doc == ["hello": "world"])
     }

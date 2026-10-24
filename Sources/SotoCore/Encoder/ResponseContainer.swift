@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+public import HTTPTypes
 import NIOConcurrencyHelpers
 
 #if canImport(FoundationEssentials)
@@ -78,44 +79,44 @@ public struct ResponseDecodingContainer: Sendable {
         _ type: Value.Type = Value.self,
         key header: String
     ) throws -> Value? where Value.RawValue == String {
-        guard let headerValue = response.headers[header].first else { return nil }
+        guard let header = HTTPField.Name(header), let headerValue = response.headers[header] else { return nil }
         if let result = Value(rawValue: headerValue) {
             return result
         } else {
-            throw HeaderDecodingError.typeMismatch(header, expectedType: "\(Value.self)")
+            throw HeaderDecodingError.typeMismatch(header.rawName, expectedType: "\(Value.self)")
         }
     }
 
     /// Decode header if present to type conforming to LosslessStringConvertible
     @inlinable
     public func decodeHeaderIfPresent<Value: LosslessStringConvertible>(_ type: Value.Type = Value.self, key header: String) throws -> Value? {
-        guard let headerValue = response.headers[header].first else { return nil }
+        guard let header = HTTPField.Name(header), let headerValue = response.headers[header] else { return nil }
         if let result = Value(headerValue) {
             return result
         } else {
-            throw HeaderDecodingError.typeMismatch(header, expectedType: "\(Value.self)")
+            throw HeaderDecodingError.typeMismatch(header.rawName, expectedType: "\(Value.self)")
         }
     }
 
     /// Decode header if present to Date. Assumes the date format is HTTP date time
     @inlinable
     public func decodeHeaderIfPresent(_ type: Date.Type = Date.self, key header: String) throws -> Date? {
-        guard let headerValue = response.headers[header].first else { return nil }
+        guard let header = HTTPField.Name(header), let headerValue = response.headers[header] else { return nil }
         if let result = Date(httpHeader: headerValue) {
             return result
         } else {
-            throw HeaderDecodingError.typeMismatch(header, expectedType: "Date")
+            throw HeaderDecodingError.typeMismatch(header.rawName, expectedType: "Date")
         }
     }
 
     /// Decode headers with prefix to Dictionary.
     @inlinable
     public func decodeHeaderIfPresent(_ type: [String: String].Type = [String: String].self, key header: String) throws -> [String: String]? {
-        let headers = self.response.headers.compactMap { $0.name.hasPrefix(header) ? $0 : nil }
+        let headers = self.response.headers.compactMap { $0.name.rawName.hasPrefix(header) ? $0 : nil }
         if headers.count == 0 {
             return nil
         }
-        return [String: String](headers.map { (key: String($0.name.dropFirst(header.count)), value: $0.value) }) { first, _ in first }
+        return [String: String](headers.map { (key: String($0.name.rawName.dropFirst(header.count)), value: $0.value) }) { first, _ in first }
     }
 }
 

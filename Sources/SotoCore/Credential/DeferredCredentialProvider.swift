@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Logging
+public import Logging
 import NIOConcurrencyHelpers
 import NIOCore
 

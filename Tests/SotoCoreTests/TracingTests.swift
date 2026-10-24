@@ -13,7 +13,9 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import HTTPTypes
 import InMemoryTracing
+import NIOHTTP1
 import NIOPosix
 import SotoCore
 import SotoTestUtils
@@ -45,7 +47,7 @@ struct TracingTests {
         async let response: Void = client.execute(
             operation: "TestOperation",
             path: "/",
-            httpMethod: .POST,
+            httpMethod: .post,
             serviceConfig: config,
             logger: TestEnvironment.logger
         )

@@ -12,8 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Logging
-import NIOHTTP1
+public import HTTPTypes
+public import Logging
+import NIOCore
 
 #if canImport(FoundationEssentials)
 public import FoundationEssentials
@@ -51,7 +52,7 @@ public struct AWSLoggingMiddleware: AWSMiddlewareProtocol {
         self.log(
             """
             Request:
-              \(request.method) \(request.url)\(context.operation)
+              \(request.method) \(request.request.url?.absoluteString ?? "")\(context.operation)
               Headers: \(self.getHeadersOutput(request.headers))
             \(self.outputBody ? "  Body: \(self.getBodyOutput(request.body))" : "")
             """
@@ -81,7 +82,7 @@ public struct AWSLoggingMiddleware: AWSMiddlewareProtocol {
     }
 
     @usableFromInline
-    func getHeadersOutput(_ headers: HTTPHeaders) -> String {
+    func getHeadersOutput(_ headers: HTTPFields) -> String {
         if headers.count == 0 {
             return "[]"
         }

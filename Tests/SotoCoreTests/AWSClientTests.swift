@@ -14,6 +14,7 @@
 
 import AsyncHTTPClient
 import Atomics
+import HTTPTypes
 import Logging
 import NIOConcurrencyHelpers
 import NIOCore
@@ -67,7 +68,7 @@ class AWSClientTests: XCTestCase {
             async let responseTask: AWSTestServer.HTTPBinResponse = client.execute(
                 operation: "test",
                 path: "/",
-                httpMethod: .POST,
+                httpMethod: .post,
                 serviceConfig: config,
                 input: Input(content: "test"),
                 logger: TestEnvironment.logger
@@ -81,7 +82,7 @@ class AWSClientTests: XCTestCase {
             XCTAssertEqual(httpHeaders["content-length"].first, "18")
             XCTAssertEqual(httpHeaders["content-type"].first, "application/x-amz-json-1.1")
             XCTAssertNotNil(httpHeaders["x-amz-date"].first)
-            XCTAssertEqual(httpHeaders["user-agent"].first, "Soto/7.0")
+            XCTAssertEqual(httpHeaders["user-agent"].first, "Soto/8.0")
             XCTAssertEqual(httpHeaders["host"].first, "localhost:\(awsServer.serverPort)")
             XCTAssert(httpHeaders["authorization"].first?.hasPrefix("AWS4-HMAC-SHA256") == true)
         } teardown: {
@@ -107,7 +108,7 @@ class AWSClientTests: XCTestCase {
             async let responseTask: AWSTestServer.HTTPBinResponse = client.execute(
                 operation: "test",
                 path: "/",
-                httpMethod: .POST,
+                httpMethod: .post,
                 serviceConfig: config,
                 input: Input(content: "test"),
                 logger: TestEnvironment.logger
@@ -137,7 +138,7 @@ class AWSClientTests: XCTestCase {
             async let responseTask: Void = client.execute(
                 operation: "test",
                 path: "/",
-                httpMethod: .POST,
+                httpMethod: .post,
                 serviceConfig: config,
                 logger: TestEnvironment.logger
             )
@@ -175,7 +176,7 @@ class AWSClientTests: XCTestCase {
             async let responseTask: Void = client.execute(
                 operation: "test",
                 path: "/",
-                httpMethod: .POST,
+                httpMethod: .post,
                 serviceConfig: config,
                 input: input,
                 logger: TestEnvironment.logger
@@ -213,7 +214,7 @@ class AWSClientTests: XCTestCase {
             async let response: Output = client.execute(
                 operation: "test",
                 path: "/",
-                httpMethod: .POST,
+                httpMethod: .post,
                 serviceConfig: config,
                 logger: TestEnvironment.logger
             )
@@ -255,7 +256,7 @@ class AWSClientTests: XCTestCase {
             async let response: Output = client.execute(
                 operation: "test",
                 path: "/",
-                httpMethod: .POST,
+                httpMethod: .post,
                 serviceConfig: config,
                 input: input,
                 logger: TestEnvironment.logger
@@ -296,7 +297,7 @@ class AWSClientTests: XCTestCase {
         async let responseTask: Void = client.execute(
             operation: "test",
             path: "/",
-            httpMethod: .POST,
+            httpMethod: .post,
             serviceConfig: config,
             input: input,
             logger: TestEnvironment.logger
@@ -375,7 +376,7 @@ class AWSClientTests: XCTestCase {
         async let responseTask: Void = client.execute(
             operation: "test",
             path: "/",
-            httpMethod: .POST,
+            httpMethod: .post,
             serviceConfig: config,
             input: input,
             logger: TestEnvironment.logger
@@ -438,7 +439,7 @@ class AWSClientTests: XCTestCase {
             async let responseTask: Void = client.execute(
                 operation: "test",
                 path: "/",
-                httpMethod: .POST,
+                httpMethod: .post,
                 serviceConfig: config,
                 input: input,
                 logger: TestEnvironment.logger
@@ -474,7 +475,7 @@ class AWSClientTests: XCTestCase {
             async let responseTask: Void = client.execute(
                 operation: "test",
                 path: "/",
-                httpMethod: .POST,
+                httpMethod: .post,
                 serviceConfig: config,
                 logger: TestEnvironment.logger
             )
@@ -507,7 +508,7 @@ class AWSClientTests: XCTestCase {
             async let responseTask: Void = client.execute(
                 operation: "test",
                 path: "/",
-                httpMethod: .POST,
+                httpMethod: .post,
                 serviceConfig: config,
                 logger: TestEnvironment.logger
             )
@@ -552,7 +553,7 @@ class AWSClientTests: XCTestCase {
             async let responseTask: Output = client.execute(
                 operation: "test",
                 path: "/",
-                httpMethod: .POST,
+                httpMethod: .post,
                 serviceConfig: config,
                 logger: TestEnvironment.logger
             )
@@ -606,7 +607,7 @@ class AWSClientTests: XCTestCase {
             async let responseTask: Void = client.execute(
                 operation: "test",
                 path: "/",
-                httpMethod: .POST,
+                httpMethod: .post,
                 serviceConfig: config,
                 logger: TestEnvironment.logger
             )
@@ -646,7 +647,7 @@ class AWSClientTests: XCTestCase {
             async let responseTask: Output = client.execute(
                 operation: "test",
                 path: "/",
-                httpMethod: .POST,
+                httpMethod: .post,
                 serviceConfig: config,
                 logger: TestEnvironment.logger
             )
@@ -681,7 +682,7 @@ class AWSClientTests: XCTestCase {
             async let responseTask: Void = client.execute(
                 operation: "test",
                 path: "/",
-                httpMethod: .POST,
+                httpMethod: .post,
                 serviceConfig: config,
                 logger: TestEnvironment.logger
             )
@@ -729,7 +730,7 @@ class AWSClientTests: XCTestCase {
             async let responseTask: Output = client.execute(
                 operation: "test",
                 path: "/",
-                httpMethod: .GET,
+                httpMethod: .get,
                 serviceConfig: config,
                 input: Input(),
                 logger: TestEnvironment.logger

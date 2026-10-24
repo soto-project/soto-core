@@ -12,7 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIOCore
+public import HTTPTypes
+public import Logging
+public import NIOCore
 
 #if canImport(FoundationEssentials)
 public import FoundationEssentials
@@ -82,16 +84,12 @@ extension AWSService {
     /// - returns:
     ///     A signed URL
     public func signURL(
-        url: URL,
-        httpMethod: HTTPMethod,
-        headers: HTTPHeaders = HTTPHeaders(),
-        expires: TimeAmount,
+        request: HTTPRequest,
+        expires: Duration,
         logger: Logger = AWSClient.loggingDisabled
     ) async throws -> URL {
         try await self.client.signURL(
-            url: url,
-            httpMethod: httpMethod,
-            headers: headers,
+            request: request,
             expires: expires,
             serviceConfig: self.config,
             logger: logger
@@ -108,12 +106,10 @@ extension AWSService {
     /// - returns:
     ///     A series of signed headers including the original headers provided to the function
     public func signHeaders(
-        url: URL,
-        httpMethod: HTTPMethod,
-        headers: HTTPHeaders = HTTPHeaders(),
+        request: inout HTTPRequest,
         body: AWSHTTPBody = .init(),
         logger: Logger = AWSClient.loggingDisabled
-    ) async throws -> HTTPHeaders {
-        try await self.client.signHeaders(url: url, httpMethod: httpMethod, headers: headers, body: body, serviceConfig: self.config, logger: logger)
+    ) async throws {
+        try await self.client.signHeaders(request: &request, body: body, serviceConfig: self.config, logger: logger)
     }
 }

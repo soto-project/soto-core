@@ -14,9 +14,9 @@
 
 // Mock AWS HTTP Client for testing
 
+import HTTPTypes
 import Logging
 import NIOCore
-import NIOHTTP1
 import SotoCore
 
 #if canImport(FoundationEssentials)
@@ -26,9 +26,9 @@ import Foundation
 #endif
 
 final class MockAWSHTTPClient: AWSHTTPClient {
-    private let requestHandler: @Sendable (AWSHTTPRequest) async throws -> (HTTPResponseStatus, Data)
+    private let requestHandler: @Sendable (AWSHTTPRequest) async throws -> (HTTPResponse.Status, Data)
 
-    public init(requestHandler: @escaping (@Sendable (AWSHTTPRequest) async throws -> (HTTPResponseStatus, Data)) = { _ in (.ok, Data()) }) {
+    public init(requestHandler: @escaping (@Sendable (AWSHTTPRequest) async throws -> (HTTPResponse.Status, Data)) = { _ in (.ok, Data()) }) {
         self.requestHandler = requestHandler
     }
     func execute(
@@ -40,8 +40,7 @@ final class MockAWSHTTPClient: AWSHTTPClient {
         let (status, data) = try await requestHandler(request)
 
         return AWSHTTPResponse(
-            status: status,
-            headers: HTTPHeaders(),
+            response: HTTPResponse(status: status),
             body: AWSHTTPBody(bytes: data)
         )
     }

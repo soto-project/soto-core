@@ -20,8 +20,8 @@ import System
 import SystemPackage
 #endif
 
-import Logging
-import SotoSignerV4
+public import Logging
+public import SotoSignerV4
 import Subprocess
 
 #if canImport(System)

@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Logging
-import SotoSignerV4
+public import Logging
+public import SotoSignerV4
 
 public struct StaticCredentialProvider: CredentialProvider {
     public var credential: Credential

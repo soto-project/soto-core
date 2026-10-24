@@ -15,9 +15,9 @@
 // Test proper error handling for expired tokens
 
 import Crypto
+import HTTPTypes
 import Logging
 import NIOCore
-import NIOHTTP1
 import SotoCore
 @_spi(SotoInternal) import SotoSignerV4
 import Testing

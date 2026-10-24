@@ -15,10 +15,10 @@
 // SSO Token Manager Tests (cache, refresh, path construction)
 
 import Crypto
+import HTTPTypes
 import Logging
 import NIOCore
 import NIOFoundationEssentialsCompat
-import NIOHTTP1
 @_spi(SotoInternal) import SotoSignerV4
 import Testing
 
@@ -108,11 +108,12 @@ extension SSOCredentialProviderTests {
         ) { env in
             let requestCounter = RequestCounter()
             let mockHTTPClient = MockAWSHTTPClient { request in
-                await requestCounter.record(request.url.absoluteString)
+                let url = request.request.url?.absoluteString ?? ""
+                await requestCounter.record(url)
 
-                if request.url.absoluteString.contains("oidc.") {
-                    #expect(request.method == .POST)
-                    #expect(request.headers["Content-Type"].first == "application/json")
+                if url.contains("oidc.") {
+                    #expect(request.method == .post)
+                    #expect(request.headers[.contentType] == "application/json")
 
                     struct CreateTokenRequest: Decodable {
                         let grantType: String
@@ -127,7 +128,7 @@ extension SSOCredentialProviderTests {
 
                     return self.makeCreateTokenResponse()
                 } else {
-                    #expect(request.headers["x-amz-sso_bearer_token"].first == "refreshed-access-token")
+                    #expect(request.headers[.xAmzSSOBearerToken] == "refreshed-access-token")
                     return self.makeRoleCredentialsResponse(
                         accessKeyId: "AKIAREFRESHED",
                         secretAccessKey: "refreshedsecret",

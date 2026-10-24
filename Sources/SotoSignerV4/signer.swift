@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Crypto
+public import HTTPTypes
 
 #if canImport(FoundationEssentials)
 public import FoundationEssentials
@@ -96,64 +97,65 @@ public struct AWSSigner: Sendable {
         case s3chunked
     }
 
-    /// Process URL before signing
+    /// Process URL before signing headers
     ///
-    /// `signURL` and `signHeaders` make assumptions about the URLs they are provided, this function cleans up a URL so it is ready
+    /// `signHeaders` makes assumptions about the URLs they are provided, this function cleans up a URL so it is ready
     /// to be signed by either of these functions. It sorts the query params and ensures they are properly percent encoded
     public func processURL(url: URL) -> URL? {
         guard var urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return nil }
-        let urlQueryString = urlComponents.queryItems?
+        let query = urlComponents.percentEncodedQueryItems?
             .sorted {
                 if $0.name < $1.name { return true }
                 if $0.name > $1.name { return false }
                 guard let value1 = $0.value, let value2 = $1.value else { return false }
                 return value1 < value2
             }
-            .map { item in item.value.map { "\(item.name)=\($0.uriEncode())" } ?? "\(item.name)=" }
+            .map { item in
+                item.value.map { "\(item.name)=\($0.addingAWSPercentEncoding(forURLComponent: [.uriEncode, .percent]))" } ?? "\(item.name)="
+            }
             .joined(separator: "&")
-        urlComponents.percentEncodedQuery = urlQueryString
+        urlComponents.percentEncodedQuery = query
         // S3 requires "+" encoded in the URL
         if self.name == "s3" {
-            urlComponents.percentEncodedPath = urlComponents.path.s3PathEncode()
+            urlComponents.percentEncodedPath = urlComponents.percentEncodedPath.addingAWSPercentEncoding(forURLComponent: [.s3Path, .percent])
         }
         return urlComponents.url
     }
 
     /// Generate signed headers, for an HTTP request using the AWS sigV4 algorithm.
+    ///
+    /// The supplied HTTP request is updated with the additional headers.
+    ///
     /// - Parameters:
-    ///   - url: Request URL
-    ///   - method: Request HTTP method
-    ///   - headers: Request headers
+    ///   - request: HTTP request
     ///   - body: Request body
     ///   - omitSecurityToken: Should we include security token in the query parameters
     ///   - date: Date that URL is valid from, defaults to now
-    /// - Returns: Request headers with added "authorization" header that contains request signature
     public func signHeaders(
-        url: URL,
-        method: HTTPMethod = .GET,
-        headers: HTTPHeaders = HTTPHeaders(),
+        request: inout HTTPRequest,
         body: BodyData? = nil,
         omitSecurityToken: Bool = false,
         date: Date = Date()
-    ) -> HTTPHeaders {
+    ) {
+        guard let url = request.url else { return }
+
+        request.authority = Self.hostname(from: url)
+
         let bodyHash = AWSSigner.hashedPayload(body)
         let dateString = Self.timestamp(date)
-        var headers = headers
         // add date, host, sha256 and if available security token headers
-        headers.replaceOrAdd(name: "host", value: Self.hostname(from: url))
-        headers.replaceOrAdd(name: "x-amz-date", value: dateString)
-        headers.replaceOrAdd(name: "x-amz-content-sha256", value: bodyHash)
+        request.headerFields[.xAmzDate] = dateString
+        request.headerFields[.xAmzContentSha256] = bodyHash
         if algorithm.base == .sigV4a {
-            headers.replaceOrAdd(name: "x-amz-region-set", value: self.region)
+            request.headerFields[.xAmzRegionSet] = self.region
         }
         if !omitSecurityToken, let sessionToken = credentials.sessionToken {
-            headers.replaceOrAdd(name: "x-amz-security-token", value: sessionToken)
+            request.headerFields[.xAmzSecurityToken] = sessionToken
         }
         // construct signing data. Do this after adding the headers as it uses data from the headers
         let signingData = AWSSigner.SigningData(
             url: url,
-            method: method,
-            headers: headers,
+            request: request,
             body: body,
             bodyHash: bodyHash,
             date: dateString,
@@ -178,43 +180,43 @@ public struct AWSSigner: Sendable {
             """
 
         // add Authorization header
-        headers.replaceOrAdd(name: "authorization", value: authorization)
+        request.headerFields[.authorization] = authorization
         // now we have signed the request we can add the security token if required
         if omitSecurityToken, let sessionToken = credentials.sessionToken {
-            headers.replaceOrAdd(name: "x-amz-security-token", value: sessionToken)
+            request.headerFields[.xAmzSecurityToken] = sessionToken
         }
-
-        return headers
     }
 
     /// Generate a signed URL, for a HTTP request
+    ///
+    /// If you are signing a URL using sigV4a then you should supply a `X-Amz-Region-Set` header
+    /// including the regions you want to use.
+    ///
     /// - Parameters:
-    ///   - url: Request URL
-    ///   - method: Request HTTP method
-    ///   - headers: Request headers
+    ///   - request: HTTP request
     ///   - body: Request body
     ///   - expires: How long before the signed URL expires
     ///   - omitSecurityToken: Should we include security token in the query parameters
     ///   - date: Date that URL is valid from, defaults to now
     /// - Returns: Signed URL
     public func signURL(
-        url: URL,
-        method: HTTPMethod = .GET,
-        headers: HTTPHeaders = HTTPHeaders(),
+        request: HTTPRequest,
         body: BodyData? = nil,
-        expires: TimeAmount,
+        expires: Duration,
         omitSecurityToken: Bool = false,
         date: Date = Date()
-    ) -> URL {
-        var headers = headers
-        headers.replaceOrAdd(name: "host", value: Self.hostname(from: url))
-        if algorithm.base == .sigV4a {
-            headers.replaceOrAdd(name: "X-Amz-Region-Set", value: self.region)
+    ) -> URL? {
+        guard let scheme = request.scheme, let authority = request.authority, let path = request.path else { return nil }
+        guard var urlComponents = URLComponents(string: "\(scheme)://\(authority)\(path)") else { return nil }
+        // Percent encode path
+        if self.name == "s3" {
+            urlComponents.percentEncodedPath = urlComponents.percentEncodedPath.addingAWSPercentEncoding(forURLComponent: [.s3Path, .percent])
         }
+        let url = urlComponents.url!
         // Create signing data
-        var signingData = AWSSigner.SigningData(url: url, method: method, headers: headers, body: body, date: Self.timestamp(date), signer: self)
+        var signingData = AWSSigner.SigningData(url: url, request: request, body: body, date: Self.timestamp(date), signer: self)
         // Construct query string. Start with original query strings and append all the signing info.
-        var query = url.query ?? ""
+        var query = urlComponents.query ?? ""
         if query.count > 0 {
             query += "&"
         }
@@ -228,7 +230,7 @@ public struct AWSSigner: Sendable {
         }
 
         query += "&X-Amz-Date=\(signingData.datetime)"
-        query += "&X-Amz-Expires=\(expires.nanoseconds / 1_000_000_000)"
+        query += "&X-Amz-Expires=\(expires.components.seconds)"
         query += "&X-Amz-SignedHeaders=\(signingData.signedHeaders.uriEncode())"
         if !omitSecurityToken, let sessionToken = credentials.sessionToken {
             query += "&X-Amz-Security-Token=\(sessionToken.uriEncode())"
@@ -237,18 +239,17 @@ public struct AWSSigner: Sendable {
         query = query.split(separator: "&")
             .sorted()
             .joined(separator: "&")
-
+            .addingAWSPercentEncoding(forURLComponent: [.query, .percent])
+        urlComponents.percentEncodedQuery = query
         // update unsignedURL in the signingData so when the canonical request is constructed it includes all the signing query items
-        signingData.unsignedURL = URL(string: url.absoluteString.split(separator: "?")[0] + "?" + query)!  // NEED TO DEAL WITH SITUATION WHERE THIS FAILS
+        signingData.unsignedURL = urlComponents.url!  // NEED TO DEAL WITH SITUATION WHERE THIS FAILS
         query += "&X-Amz-Signature=\(self.signature(signingData: signingData, algorithm: algorithm))"
         if omitSecurityToken, let sessionToken = credentials.sessionToken {
             query += "&X-Amz-Security-Token=\(sessionToken.uriEncode())"
         }
+        urlComponents.percentEncodedQuery = query
 
-        // Add signature to query items and build a new Request
-        let signedURL = URL(string: url.absoluteString.split(separator: "?")[0] + "?" + query)!
-
-        return signedURL
+        return urlComponents.url!
     }
 
     /// Temporary structure passed from calls to `startSigningChunks` and
@@ -271,12 +272,10 @@ public struct AWSSigner: Sendable {
     ///   - date: date to use for signing
     /// - Returns: Tuple of updated headers and signing data to use in first call to `signChunk`
     public func startSigningChunks(
-        url: URL,
-        method: HTTPMethod = .GET,
-        headers: HTTPHeaders = HTTPHeaders(),
+        request: inout HTTPRequest,
         date: Date = Date()
-    ) -> (headers: HTTPHeaders, signingData: ChunkedSigningData) {
-        self.startSigningChunks(url: url, method: method, headers: headers, date: date, algorithm: .sigV4)
+    ) -> ChunkedSigningData? {
+        self.startSigningChunks(request: &request, date: date, algorithm: .sigV4)
     }
 
     /// Start the process of signing a s3 chunked upload.
@@ -291,27 +290,26 @@ public struct AWSSigner: Sendable {
     ///   - algorithm: Signing algorithm (sigV4 or sigV4a)
     /// - Returns: Tuple of updated headers and signing data to use in first call to `signChunk`
     public func startSigningChunks(
-        url: URL,
-        method: HTTPMethod = .GET,
-        headers: HTTPHeaders = HTTPHeaders(),
+        request: inout HTTPRequest,
         date: Date = Date(),
         algorithm: Algorithm
-    ) -> (headers: HTTPHeaders, signingData: ChunkedSigningData) {
+    ) -> ChunkedSigningData? {
+        guard let url = request.url else { return nil }
+
+        request.authority = Self.hostname(from: url)
         let bodyHash = AWSSigner.hashedPayload(.s3chunked)
         let dateString = AWSSigner.timestamp(date)
-        var headers = headers
         // add date, host, sha256 and if available security token headers
-        headers.add(name: "host", value: Self.hostname(from: url))
-        headers.add(name: "x-amz-date", value: dateString)
-        headers.add(name: "x-amz-content-sha256", value: bodyHash)
+        request.headerFields[.xAmzDate] = dateString
+        request.headerFields[.xAmzContentSha256] = bodyHash
         if let sessionToken = credentials.sessionToken {
-            headers.add(name: "x-amz-security-token", value: sessionToken)
+            request.headerFields[.xAmzSecurityToken] = sessionToken
         }
         // remove content-length header
-        headers.remove(name: "content-length")
+        request.headerFields[.contentLength] = nil
 
         // construct signing data. Do this after adding the headers as it uses data from the headers
-        let signingData = AWSSigner.SigningData(url: url, method: method, headers: headers, bodyHash: bodyHash, date: dateString, signer: self)
+        let signingData = AWSSigner.SigningData(url: url, request: request, bodyHash: bodyHash, date: dateString, signer: self)
         let signingKey = self.signingKey(date: signingData.date)
         let signature = self.signature(signingData: signingData, algorithm: algorithm)
         let chunkedSigningData = ChunkedSigningData(signature: signature, datetime: signingData.datetime, signingKey: signingKey)
@@ -322,9 +320,9 @@ public struct AWSSigner: Sendable {
             + "SignedHeaders=\(signingData.signedHeaders), " + "Signature=\(signature)"
 
         // add Authorization header
-        headers.add(name: "authorization", value: authorization)
+        request.headerFields[.authorization] = authorization
 
-        return (headers: headers, signingData: chunkedSigningData)
+        return chunkedSigningData
     }
 
     /// Generate the signature for a chunk in a s3 chunked upload
@@ -341,10 +339,11 @@ public struct AWSSigner: Sendable {
     /// structure used to store data used throughout the signing process
     struct SigningData {
         let url: URL
-        let method: HTTPMethod
+        let method: HTTPRequest.Method
+        let authority: String?
         let hashedPayload: String
         let datetime: String
-        let headersToSign: [String: String]
+        let headersToSign: HTTPFields
         let signedHeaders: String
         var unsignedURL: URL
 
@@ -352,17 +351,17 @@ public struct AWSSigner: Sendable {
 
         init(
             url: URL,
-            method: HTTPMethod = .GET,
-            headers: HTTPHeaders = HTTPHeaders(),
+            request: HTTPRequest,
             body: BodyData? = nil,
             bodyHash: String? = nil,
             date: String,
             signer: AWSSigner
         ) {
             self.url = url
-            self.method = method
+            self.method = request.method
             self.datetime = date
             self.unsignedURL = self.url
+            self.authority = request.authority
 
             if let hash = bodyHash {
                 self.hashedPayload = hash
@@ -379,24 +378,16 @@ public struct AWSSigner: Sendable {
             // Any x-amz-* headers that you plan to include in your request must also be added. For example, if
             // you are using temporary security credentials, you need to include x-amz-security-token in your request.
             // You must add this header in the list of CanonicalHeaders.
-            let headersNotToSign: Set<String> = [
-                "authorization",
-                "content-length",
-                "expect",
-                "user-agent",
+            let headersNotToSign: Set<HTTPField.Name> = [
+                .authorization,
+                .contentLength,
+                .expect,
+                .userAgent,
             ]
-            var headersToSign: [String: String] = [:]
-            var signedHeadersArray: [String] = []
-            for header in headers {
-                let lowercasedHeaderName = header.name.lowercased()
-                if headersNotToSign.contains(lowercasedHeaderName) {
-                    continue
-                }
-                headersToSign[lowercasedHeaderName] = header.value
-                signedHeadersArray.append(lowercasedHeaderName)
-            }
+            var headersToSign = request.headerFields.filter({ !headersNotToSign.contains($0.name) })
+            headersToSign[._host] = request.authority
             self.headersToSign = headersToSign
-            self.signedHeaders = signedHeadersArray.sorted().joined(separator: ";")
+            self.signedHeaders = self.headersToSign.lazy.map { $0.name.canonicalName }.sorted().joined(separator: ";")
         }
     }
 
@@ -451,7 +442,8 @@ public struct AWSSigner: Sendable {
     /// Stage 1 Create the canonical request as in https://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
     func canonicalRequest(signingData: SigningData) -> String {
         let canonicalHeaders = signingData.headersToSign
-            .map { (key: $0.key.lowercased(), value: $0.value) }
+            .lazy
+            .map { (key: $0.name.canonicalName, value: $0.value) }
             .sorted { $0.key < $1.key }
             .map { "\($0.key):\($0.value._trimming(while: \.isWhitespace).removeSequentialWhitespace())" }
             .joined(separator: "\n")
@@ -552,13 +544,9 @@ public struct AWSSigner: Sendable {
     }
 }
 
-extension String {
+extension StringProtocol {
     func s3PathEncode() -> String {
         self.addingAWSPercentEncoding(forURLComponent: .s3Path)
-    }
-
-    func queryEncode() -> String {
-        self.addingAWSPercentEncoding(forURLComponent: .query)
     }
 
     func uriEncode() -> String {
@@ -613,5 +601,34 @@ extension StringProtocol {
         guard try self.last.map(predicate) == true else { return self[startIndex...] }
         guard let endIndex = try self.lastIndex(where: predicate) else { return self[self.startIndex..<self.startIndex] }
         return self[startIndex..<endIndex]
+    }
+}
+
+extension HTTPField.Name {
+    /// HTTPFields shouldn't really include a host field as that is
+    /// stored in the HTTPRequest authority
+    @inlinable
+    static var _host: Self {
+        .init("Host")!
+    }
+
+    @inlinable
+    static var xAmzDate: Self {
+        .init("X-Amz-Date")!
+    }
+
+    @inlinable
+    static var xAmzContentSha256: Self {
+        .init("X-Amz-Content-Sha256")!
+    }
+
+    @inlinable
+    static var xAmzRegionSet: Self {
+        .init("X-Amz-Region-Set")!
+    }
+
+    @inlinable
+    static var xAmzSecurityToken: Self {
+        .init("X-Amz-Security-Token")!
     }
 }

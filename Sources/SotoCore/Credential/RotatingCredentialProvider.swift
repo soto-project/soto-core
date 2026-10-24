@@ -12,10 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Logging
+public import Logging
 import NIOConcurrencyHelpers
 import NIOCore
-import SotoSignerV4
+public import SotoSignerV4
 
 #if canImport(FoundationEssentials)
 public import FoundationEssentials

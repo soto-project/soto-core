@@ -13,7 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
-import Logging
+public import Logging
+public import NIOCore
 import SotoCore
 import XCTest
 

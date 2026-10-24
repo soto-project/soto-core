@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Dispatch
-import NIOCore
+public import Logging
+public import NIOCore
 
 #if canImport(Glibc)
 import Glibc

@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 import Logging
-import NIOHTTP1
 import SotoSignerV4
 
 /// Middleware that performs retries of the next middleware whenever it throws errors based on a retry policy
@@ -38,10 +37,10 @@ struct RetryMiddleware<Policy: RetryPolicy>: AWSMiddlewareProtocol {
                     context.logger.trace(
                         "Retrying request",
                         metadata: [
-                            "aws-retry-time": "\(Double(retryTime.nanoseconds) / 1_000_000_000)"
+                            "aws-retry-time": "\(retryTime.components.seconds)"
                         ]
                     )
-                    try await Task.sleep(nanoseconds: UInt64(retryTime.nanoseconds))
+                    try await Task.sleep(for: retryTime)
                 } else {
                     throw error
                 }

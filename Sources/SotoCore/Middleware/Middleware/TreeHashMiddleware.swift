@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Crypto
+public import HTTPTypes
 @_spi(SotoInternal) import SotoSignerV4
 
 let MEGA_BYTE = 1024 * 1024
@@ -24,19 +25,19 @@ let MEGA_BYTE = 1024 * 1024
 public struct TreeHashMiddleware: AWSMiddlewareProtocol {
     public func handle(_ request: AWSHTTPRequest, context: AWSMiddlewareContext, next: AWSMiddlewareNextHandler) async throws -> AWSHTTPResponse {
         var request = request
-        if request.headers[self.treeHashHeader].first == nil {
+        if request.request.headerFields[self.treeHashHeader] == nil {
             if case .byteBuffer(let buffer) = request.body.storage {
                 let treeHash = try computeTreeHash(buffer).hexDigest()
-                request.headers.replaceOrAdd(name: self.treeHashHeader, value: treeHash)
+                request.request.headerFields[self.treeHashHeader] = treeHash
             }
         }
         return try await next(request, context)
     }
 
-    let treeHashHeader: String
+    let treeHashHeader: HTTPField.Name
 
     /// - Parameter header: name of header to place tree hash in
-    public init(header: String) {
+    public init(header: HTTPField.Name) {
         self.treeHashHeader = header
     }
 

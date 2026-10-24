@@ -15,10 +15,10 @@
 // Login Credential Provider Tests
 
 import Crypto
+import HTTPTypes
 import Logging
 import NIOCore
 import NIOFoundationEssentialsCompat
-import NIOHTTP1
 @_spi(SotoInternal) import SotoSignerV4
 import Testing
 
@@ -85,10 +85,10 @@ final class LoginCredentialProviderTests {
         // Setup mock HTTP client and response
         let mockHTTPClient = MockAWSHTTPClient { request in
             // Verify request
-            #expect(request.method == .POST)
-            #expect(request.headers["Content-Type"].first == "application/json")
-            #expect(request.headers["DPoP"].first != nil)
-            #expect(request.headers["Host"].first == "us-east-1.signin.aws.amazon.com")
+            #expect(request.method == .post)
+            #expect(request.headers[.contentType] == "application/json")
+            #expect(request.headers[.dPoP] != nil)
+            #expect(request.request.authority == "us-east-1.signin.aws.amazon.com")
 
             // Verify request body
             let bodyBuffer = try await request.body.collect(upTo: 1024 * 1024)

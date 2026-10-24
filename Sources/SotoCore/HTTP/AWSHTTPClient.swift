@@ -12,6 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
+public import Logging
+public import NIOCore
+
 /// Protocol for HTTP clients that work with Soto
 public protocol AWSHTTPClient: Sendable {
     /// Execute an HTTP request

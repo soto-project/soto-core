@@ -13,7 +13,10 @@
 //===----------------------------------------------------------------------===//
 
 import Atomics
+import HTTPTypes
+import Logging
 import NIOCore
+import NIOHTTP1
 import SotoCore
 import SotoTestUtils
 import XCTest
@@ -65,7 +68,7 @@ final class EndpointDiscoveryTests: XCTestCase {
             try await self.client.execute(
                 operation: "Test",
                 path: "/test",
-                httpMethod: .GET,
+                httpMethod: .get,
                 serviceConfig: self.config.with(
                     middleware: EndpointDiscoveryMiddleware(storage: self.endpointStorage, discover: self.getEndpoints, required: true)
                 ),
@@ -84,7 +87,7 @@ final class EndpointDiscoveryTests: XCTestCase {
             try await self.client.execute(
                 operation: "Test",
                 path: "/test",
-                httpMethod: .GET,
+                httpMethod: .get,
                 serviceConfig: self.config.with(
                     middleware: EndpointDiscoveryMiddleware(storage: self.endpointStorage, discover: self.getEndpointsDontCache, required: true)
                 ),
@@ -96,7 +99,7 @@ final class EndpointDiscoveryTests: XCTestCase {
             try await self.client.execute(
                 operation: "Test",
                 path: "/test",
-                httpMethod: .GET,
+                httpMethod: .get,
                 serviceConfig: self.config.with(
                     middleware: EndpointDiscoveryMiddleware(storage: self.endpointStorage, discover: self.getEndpoints, required: false)
                 ),

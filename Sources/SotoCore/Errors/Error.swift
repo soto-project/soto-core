@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIOHTTP1
+public import HTTPTypes
 
 /// Standard Error type returned by Soto.
 ///
@@ -44,21 +44,18 @@ public protocol AWSServiceErrorType: AWSErrorType {
 /// Additional information about error
 public struct AWSErrorContext {
     public let message: String
-    public let responseCode: HTTPResponseStatus
-    public let headers: HTTPHeaders
+    public let response: HTTPResponse
     public let additionalFields: [String: String]
     public let extendedError: (any AWSErrorShape)?
 
     internal init(
         message: String,
-        responseCode: HTTPResponseStatus,
-        headers: HTTPHeaders = [:],
+        response: HTTPResponse,
         additionalFields: [String: String] = [:],
         extendedError: (any AWSErrorShape)? = nil
     ) {
         self.message = message
-        self.responseCode = responseCode
-        self.headers = headers
+        self.response = response
         self.additionalFields = additionalFields
         self.extendedError = extendedError
     }
@@ -97,7 +94,7 @@ public struct AWSRawError: Error, CustomStringConvertible {
     }
 
     public var description: String {
-        "Unhandled error, code: \(self.context.responseCode)\(self.rawBody.map { ", body: \($0)" } ?? "")"
+        "Unhandled error, code: \(self.context.response.status)\(self.rawBody.map { ", body: \($0)" } ?? "")"
     }
 }
 

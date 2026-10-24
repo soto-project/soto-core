@@ -14,8 +14,9 @@
 
 // Login Credential Provider - Main Provider
 
+import HTTPTypes
 import INIParser
-import Logging
+public import Logging
 import NIOCore
 import NIOFoundationEssentialsCompat
 import NIOPosix
@@ -126,22 +127,12 @@ public struct LoginCredentialProvider: CredentialProvider {
         )
 
         // Create HTTP request using AWSHTTPClient
-        var headers = HTTPHeaders()
-        headers.add(name: "Content-Type", value: "application/json")
-        headers.add(name: "DPoP", value: dpopHeader)
-        // Extract host from endpoint (remove protocol if present)
-        let host =
-            configuration.endpoint
-            .replacing("https://", with: "")
-            .replacing("http://", with: "")
-
-        headers.add(name: "Host", value: host)
-        headers.add(name: "Content-Length", value: "\(bodyData.count)")
-
+        let headers: HTTPFields = [
+            .contentType: "application/json",
+            .dPoP: dpopHeader,
+        ]
         let request = AWSHTTPRequest(
-            url: url,
-            method: .POST,
-            headers: headers,
+            request: HTTPRequest(method: .post, url: url, headerFields: headers),
             body: .init(bytes: bodyData)
         )
 

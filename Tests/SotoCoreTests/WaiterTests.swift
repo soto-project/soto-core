@@ -13,6 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 import AsyncHTTPClient
+import HTTPTypes
+import Logging
 import NIOCore
 import SotoCore
 import SotoTestUtils
@@ -42,7 +44,7 @@ class WaiterTests: XCTestCase {
             try await self.client.execute(
                 operation: "Basic",
                 path: "/",
-                httpMethod: .POST,
+                httpMethod: .post,
                 serviceConfig: self.config,
                 input: input,
                 logger: logger
@@ -68,7 +70,7 @@ class WaiterTests: XCTestCase {
             try await self.client.execute(
                 operation: "Basic",
                 path: "/",
-                httpMethod: .POST,
+                httpMethod: .post,
                 serviceConfig: self.config,
                 input: input,
                 logger: logger
@@ -90,7 +92,7 @@ class WaiterTests: XCTestCase {
             try await self.client.execute(
                 operation: "Basic",
                 path: "/",
-                httpMethod: .POST,
+                httpMethod: .post,
                 serviceConfig: self.config,
                 input: input,
                 logger: logger
@@ -145,7 +147,7 @@ class WaiterTests: XCTestCase {
             try await service.client.execute(
                 operation: "Basic",
                 path: "/",
-                httpMethod: .POST,
+                httpMethod: .post,
                 serviceConfig: service.config,
                 input: input,
                 logger: logger
@@ -191,7 +193,7 @@ class WaiterTests: XCTestCase {
             try await service.client.execute(
                 operation: "Basic",
                 path: "/",
-                httpMethod: .POST,
+                httpMethod: .post,
                 serviceConfig: service.config,
                 input: input,
                 logger: logger
@@ -290,7 +292,7 @@ class WaiterTests: XCTestCase {
         let service = TestService(client: self.client, config: config)
 
         @Sendable func arrayOperation(input: Input, logger: Logger) async throws -> ArrayOutput {
-            try await service.client.execute(operation: "Basic", path: "/", httpMethod: .POST, serviceConfig: config, input: input, logger: logger)
+            try await service.client.execute(operation: "Basic", path: "/", httpMethod: .post, serviceConfig: config, input: input, logger: logger)
         }
 
         let waiter = AWSClient.Waiter(

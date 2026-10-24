@@ -12,9 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Logging
-import NIOCore
-import NIOHTTP1
+public import NIOCore
 
 #if canImport(FoundationEssentials)
 import FoundationEssentials

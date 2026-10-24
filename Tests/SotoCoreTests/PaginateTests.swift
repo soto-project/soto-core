@@ -14,6 +14,8 @@
 
 import AsyncHTTPClient
 import Atomics
+import HTTPTypes
+import Logging
 import NIOCore
 import NIOPosix
 import SotoTestUtils
@@ -67,7 +69,7 @@ final class PaginateTests: XCTestCase, @unchecked Sendable {
         try await self.client.execute(
             operation: "TestOperation",
             path: "/",
-            httpMethod: .POST,
+            httpMethod: .post,
             serviceConfig: self.config,
             input: input,
             logger: logger
@@ -88,7 +90,7 @@ final class PaginateTests: XCTestCase, @unchecked Sendable {
         try await self.client.execute(
             operation: "TestOperation",
             path: "/",
-            httpMethod: .POST,
+            httpMethod: .post,
             serviceConfig: self.config,
             input: input,
             logger: logger

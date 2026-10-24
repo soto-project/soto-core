@@ -12,14 +12,14 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIOHTTP1
+public import HTTPTypes
 
 /// Middleware for editing header values sent to AWS service.
 public struct AWSEditHeadersMiddleware: AWSMiddlewareProtocol {
     public enum HeaderEdit {
-        case add(name: String, value: String)
-        case replace(name: String, value: String)
-        case remove(name: String)
+        case add(name: HTTPField.Name, value: String)
+        case replace(name: HTTPField.Name, value: String)
+        case remove(name: HTTPField.Name)
     }
 
     @usableFromInline
@@ -39,11 +39,11 @@ public struct AWSEditHeadersMiddleware: AWSMiddlewareProtocol {
         for edit in self.edits {
             switch edit {
             case .add(let name, let value):
-                request.headers.add(name: name, value: value)
+                request.request.headerFields[values: name].append(value)
             case .replace(let name, let value):
-                request.headers.replaceOrAdd(name: name, value: value)
+                request.request.headerFields[name] = value
             case .remove(let name):
-                request.headers.remove(name: name)
+                request.request.headerFields[name] = nil
             }
         }
         return try await next(request, context)

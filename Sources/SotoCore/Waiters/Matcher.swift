@@ -12,9 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
+import HTTPTypes
 import JMESPath
 import NIOCore
-import NIOHTTP1
 
 /// Protocol for matchers used in waiters.
 ///
@@ -133,13 +133,13 @@ public struct AWSErrorStatusMatcher: AWSWaiterMatcher {
         case .success:
             return false
         case .failure(let error as any AWSErrorType):
-            if let code = error.context?.responseCode.code {
+            if let code = error.context?.response.status.code {
                 return code == self.expectedStatus
             } else {
                 return false
             }
         case .failure(let error as AWSRawError):
-            return error.context.responseCode.code == self.expectedStatus
+            return error.context.response.status.code == self.expectedStatus
         case .failure:
             return false
         }

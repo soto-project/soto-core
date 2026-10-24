@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Logging
+public import Logging
 
 /// Context object sent to `AWSMiddlewareProtocol` `handle` functions
 public struct AWSMiddlewareContext: Sendable {

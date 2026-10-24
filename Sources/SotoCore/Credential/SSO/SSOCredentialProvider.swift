@@ -14,8 +14,9 @@
 
 // SSO Credential Provider - Main Provider
 
+import HTTPTypes
 import INIParser
-import Logging
+public import Logging
 import NIOCore
 import NIOFoundationEssentialsCompat
 import NIOPosix
@@ -251,18 +252,15 @@ public struct SSOCredentialProvider: CredentialProvider {
             throw AWSSSOCredentialError.getRoleCredentialsFailed("Failed to construct SSO GetRoleCredentials URL")
         }
 
-        var headers = HTTPHeaders()
-        headers.add(name: "x-amz-sso_bearer_token", value: accessToken)
-        headers.add(name: "Accept", value: "application/json")
-        headers.add(name: "Host", value: endpoint)
+        let headers: HTTPFields = [
+            .accept: "application/json",
+            .xAmzSSOBearerToken: accessToken,
+        ]
 
         let request = AWSHTTPRequest(
-            url: url,
-            method: .GET,
-            headers: headers,
+            request: HTTPRequest(method: .get, url: url, headerFields: headers),
             body: .init()
         )
-
         let response = try await httpClient.execute(request: request, timeout: .seconds(30), logger: logger)
 
         guard (200...299).contains(response.status.code) else {

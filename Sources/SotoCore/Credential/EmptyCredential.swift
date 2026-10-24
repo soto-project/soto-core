@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+public import Logging
+
 /// Empty credentials
 public struct EmptyCredentialProvider: CredentialProvider {
     public func getCredential(logger: Logger) async throws -> Credential {

@@ -85,7 +85,7 @@ final class AWSSignerTests {
         )
         signer.signHeaders(
             request: &request,
-            body: .string("Action=ListTopics&Version=2010-03-31"),
+            body: "Action=ListTopics&Version=2010-03-31".utf8,
             date: Date(timeIntervalSinceReferenceDate: 200)
         )
         #expect(
@@ -220,11 +220,11 @@ final class AWSSignerTests {
 
         let signer = AWSSigner(credentials: credentials, name: "sns", region: "eu-west-1")
         var request = HTTPRequest(method: .post, url: URL(string: "https://sns.eu-west-1.amazonaws.com/")!)
-        signer.signHeaders(request: &request, body: .string(string), date: Date(timeIntervalSinceReferenceDate: 0))
+        signer.signHeaders(request: &request, body: string.utf8, date: Date(timeIntervalSinceReferenceDate: 0))
         let authorization1 = request.headerFields[.authorization]
-        signer.signHeaders(request: &request, body: .data(data), date: Date(timeIntervalSinceReferenceDate: 0))
+        signer.signHeaders(request: &request, body: data, date: Date(timeIntervalSinceReferenceDate: 0))
         let authorization2 = request.headerFields[.authorization]
-        signer.signHeaders(request: &request, body: .byteBuffer(buffer), date: Date(timeIntervalSinceReferenceDate: 0))
+        signer.signHeaders(request: &request, body: buffer.readableBytesView, date: Date(timeIntervalSinceReferenceDate: 0))
         let authorization3 = request.headerFields[.authorization]
 
         #expect(authorization1 != nil)

@@ -529,14 +529,14 @@ extension AWSClient {
             throw AWSClient.ClientError.invalidURL
         }
         request.url = cleanURL
-        let bodyData: AWSSigner.BodyData?
+        let bodyBuffer: ByteBuffer
         switch body.storage {
         case .byteBuffer(let buffer):
-            bodyData = .byteBuffer(buffer)
+            bodyBuffer = buffer
         case .asyncSequence:
-            bodyData = nil
+            bodyBuffer = ByteBuffer()
         }
-        signer.signHeaders(request: &request, body: bodyData)
+        signer.signHeaders(request: &request, body: bodyBuffer.readableBytesSpan)
     }
 
     func createSigner(serviceConfig: AWSServiceConfig, logger: Logger) async throws -> AWSSigner {

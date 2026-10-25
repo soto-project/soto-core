@@ -48,10 +48,9 @@ public struct AWSHTTPRequest: Sendable {
     mutating func signHeaders(signer: AWSSigner, serviceConfig: AWSServiceConfig) {
         guard !signer.credentials.isEmpty() else { return }
         let payload = self.body
-        let bodyDataForSigning: AWSSigner.BodyData?
         switch payload.storage {
         case .byteBuffer(let buffer):
-            bodyDataForSigning = .byteBuffer(buffer)
+            signer.signHeaders(request: &request, body: buffer.readableBytesSpan, date: Date.now)
         case .asyncSequence(let sequence, let length):
             if signer.name == "s3", !serviceConfig.options.contains(.s3DisableChunkedUploads) {
                 assert(length != nil, "S3 stream requires size")
@@ -68,10 +67,10 @@ public struct AWSHTTPRequest: Sendable {
                 self.body = payload
                 return
             } else {
-                bodyDataForSigning = .unsignedPayload
+                signer.signHeaders(request: &self.request, payload: .unsignedPayload, date: Date())
             }
         }
-        signer.signHeaders(request: &self.request, body: bodyDataForSigning, date: Date())
+
     }
 }
 

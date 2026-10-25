@@ -20,6 +20,7 @@ let swiftSettings: [SwiftSetting] = [
     .enableUpcomingFeature("MemberImportVisibility"),
     .enableUpcomingFeature("InternalImportsByDefault"),
     .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+    .enableExperimentalFeature("Lifetimes"),
 ]
 
 let package = Package(

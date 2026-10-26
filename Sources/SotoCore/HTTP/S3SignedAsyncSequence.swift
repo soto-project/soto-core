@@ -49,12 +49,12 @@ struct S3SignedAsyncSequence<Base: AsyncSequence & Sendable>: AsyncSequence, Sen
             switch self.state {
             case .writeHeader:
                 if let buffer = try await self.baseIterator.next() {
-                    self.signingData = self.signer.signChunk(body: .byteBuffer(buffer), signingData: self.signingData)
+                    self.signingData = self.signer.signChunk(body: buffer.readableBytesSpan, signingData: self.signingData)
                     let header = "\(String(buffer.readableBytes, radix: 16));chunk-signature=\(self.signingData.signature)\r\n"
                     self.state = .writeBody(buffer)
                     return ByteBuffer(string: header)
                 } else {
-                    self.signingData = self.signer.signChunk(body: .byteBuffer(ByteBuffer()), signingData: self.signingData)
+                    self.signingData = self.signer.signLastChunk(signingData: self.signingData)
                     let header = "\(String(0, radix: 16));chunk-signature=\(self.signingData.signature)\r\n\r\n"
                     self.state = .end
                     return ByteBuffer(string: header)

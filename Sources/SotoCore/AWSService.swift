@@ -76,9 +76,7 @@ extension AWSService {
 
     /// Generate a signed URL
     /// - parameters:
-    ///     - url: URL to sign
-    ///     - httpMethod: HTTP method to use (.GET, .PUT, .PUSH etc)
-    ///     - headers: Headers that are to be used with this URL. Be sure to include these headers when you used the returned URL
+    ///     - request: HTTPRequest to generate signed URL for
     ///     - expires: How long before the signed URL expires
     ///     - logger: Logger to output to
     /// - returns:
@@ -98,16 +96,12 @@ extension AWSService {
 
     /// Generate signed headers
     /// - parameters:
-    ///     - url: URL to sign
-    ///     - httpMethod: HTTP method to use (.GET, .PUT, .PUSH etc)
-    ///     - headers: Headers that are to be used with this URL. Be sure to include these headers when you used the returned URL
+    ///     - request: HTTPRequest to sign.
     ///     - body: body payload to sign as well. While it is unnecessary to provide the body for S3 other services require it
     ///     - logger: Logger to output to
-    /// - returns:
-    ///     A series of signed headers including the original headers provided to the function
     public func signHeaders(
         request: inout HTTPRequest,
-        body: AWSHTTPBody = .init(),
+        body: AWSHTTPBody? = nil,
         logger: Logger = AWSClient.loggingDisabled
     ) async throws {
         try await self.client.signHeaders(request: &request, body: body, serviceConfig: self.config, logger: logger)

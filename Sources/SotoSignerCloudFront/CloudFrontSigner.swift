@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 import Crypto
-import NIOCore
 import _CryptoExtras
 
 #if canImport(FoundationEssentials)
@@ -28,6 +27,7 @@ public struct CloudFrontSigner: Sendable {
     // MARK: - Nested Types
 
     /// The hash algorithm used for signing
+    @nonexhaustive
     public enum HashAlgorithm: String, Sendable {
         case sha1 = "SHA1"
         case sha256 = "SHA256"

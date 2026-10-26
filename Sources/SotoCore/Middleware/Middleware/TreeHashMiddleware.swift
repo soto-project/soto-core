@@ -14,6 +14,7 @@
 
 import Crypto
 public import HTTPTypes
+import NIOCore
 @_spi(SotoInternal) import SotoSignerV4
 
 let MEGA_BYTE = 1024 * 1024

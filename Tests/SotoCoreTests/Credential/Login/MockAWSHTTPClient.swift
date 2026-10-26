@@ -33,7 +33,7 @@ final class MockAWSHTTPClient: AWSHTTPClient {
     }
     func execute(
         request: AWSHTTPRequest,
-        timeout: TimeAmount,
+        timeout: Duration,
         logger: Logger
     ) async throws -> AWSHTTPResponse {
 

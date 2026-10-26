@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import NIOCore
-
 #if canImport(FoundationEssentials)
 public import FoundationEssentials
 #else

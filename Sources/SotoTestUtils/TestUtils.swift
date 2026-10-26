@@ -14,7 +14,7 @@
 
 import AsyncHTTPClient
 public import Logging
-public import NIOCore
+import NIOCore
 import SotoCore
 import XCTest
 
@@ -73,7 +73,7 @@ public func createServiceConfig(
     errorType: AWSErrorType.Type? = nil,
     xmlNamespace: String? = nil,
     middlewares: AWSMiddlewareProtocol? = nil,
-    timeout: TimeAmount? = nil,
+    timeout: Duration? = nil,
     options: AWSServiceConfig.Options = []
 ) -> AWSServiceConfig {
     AWSServiceConfig(

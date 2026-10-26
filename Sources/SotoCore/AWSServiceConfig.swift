@@ -45,7 +45,7 @@ public final class AWSServiceConfig {
     /// Middleware code specific to the service used to edit requests before they sent and responses before they are decoded
     public let middleware: (any AWSMiddlewareProtocol)?
     /// timeout value for HTTP requests
-    public let timeout: TimeAmount
+    public let timeout: Duration
     /// ByteBuffer allocator used by service
     public let byteBufferAllocator: ByteBufferAllocator
     /// options
@@ -96,7 +96,7 @@ public final class AWSServiceConfig {
         errorType: (any AWSErrorType.Type)? = nil,
         xmlNamespace: String? = nil,
         middleware: (any AWSMiddlewareProtocol)? = nil,
-        timeout: TimeAmount? = nil,
+        timeout: Duration? = nil,
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         options: Options = []
     ) {
@@ -205,7 +205,7 @@ public final class AWSServiceConfig {
         let region: Region?
         let endpoint: String?
         let middleware: (any AWSMiddlewareProtocol)?
-        let timeout: TimeAmount?
+        let timeout: Duration?
         let byteBufferAllocator: ByteBufferAllocator?
         let options: Options?
 
@@ -213,7 +213,7 @@ public final class AWSServiceConfig {
             region: Region? = nil,
             endpoint: String? = nil,
             middleware: (any AWSMiddlewareProtocol)? = nil,
-            timeout: TimeAmount? = nil,
+            timeout: Duration? = nil,
             byteBufferAllocator: ByteBufferAllocator? = nil,
             options: AWSServiceConfig.Options? = nil
         ) {
@@ -237,7 +237,7 @@ public final class AWSServiceConfig {
     public func with(
         region: Region? = nil,
         middleware: (any AWSMiddlewareProtocol)? = nil,
-        timeout: TimeAmount? = nil,
+        timeout: Duration? = nil,
         byteBufferAllocator: ByteBufferAllocator? = nil,
         options: AWSServiceConfig.Options? = nil
     ) -> AWSServiceConfig {

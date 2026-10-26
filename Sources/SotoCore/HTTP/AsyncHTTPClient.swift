@@ -15,7 +15,7 @@
 public import AsyncHTTPClient
 import HTTPTypes
 public import Logging
-public import NIOCore
+import NIOCore
 import NIOHTTP1
 
 #if canImport(FoundationEssentials)
@@ -33,7 +33,7 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
     /// - Returns: EventLoopFuture that will be fulfilled with request response
     public func execute(
         request: AWSHTTPRequest,
-        timeout: TimeAmount,
+        timeout: Duration,
         logger: Logger
     ) async throws -> AWSHTTPResponse {
         let requestBody: HTTPClientRequest.Body?
@@ -54,7 +54,7 @@ extension AsyncHTTPClient.HTTPClient: AWSHTTPClient {
         httpRequest.body = requestBody
 
         do {
-            let response = try await self.execute(httpRequest, timeout: timeout, logger: logger)
+            let response = try await self.execute(httpRequest, timeout: TimeAmount(timeout), logger: logger)
             let responseHead = HTTPResponseHead(version: response.version, status: response.status, headers: response.headers)
             return try AWSHTTPResponse(
                 response: HTTPResponse(responseHead),

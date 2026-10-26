@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 public import Logging
-public import NIOCore
+import NIOCore
 
 #if canImport(Glibc)
 import Glibc
@@ -66,8 +66,8 @@ extension AWSClient {
         ///   - command: API call
         public init(
             acceptors: [AWSClient.Waiter<Input, Output>.Acceptor],
-            minDelayTime: TimeAmount = .seconds(2),
-            maxDelayTime: TimeAmount = .seconds(120),
+            minDelayTime: Duration = .seconds(2),
+            maxDelayTime: Duration = .seconds(120),
             command: @escaping WaiterCommand
         ) {
             self.acceptors = acceptors
@@ -77,8 +77,8 @@ extension AWSClient {
         }
 
         let acceptors: [Acceptor]
-        let minDelayTime: TimeAmount
-        let maxDelayTime: TimeAmount
+        let minDelayTime: Duration
+        let maxDelayTime: Duration
         let command: WaiterCommand
 
         /// Calculate delay until next API call. This calculation comes from the AWS Smithy documentation
@@ -88,10 +88,10 @@ extension AWSClient {
         ///   - attempt: Attempt number (assumes this starts at 1)
         ///   - remainingTime: Remaining time available
         /// - Returns: Calculate retry time
-        func calculateRetryWaitTime(attempt: Int, remainingTime: TimeAmount) -> TimeAmount {
+        func calculateRetryWaitTime(attempt: Int, remainingTime: Duration) -> Duration {
             assert(attempt >= 1, "Attempt number cannot be less than 1")
-            let minDelay = Double(self.minDelayTime.nanoseconds) / 1_000_000_000
-            let maxDelay = Double(self.maxDelayTime.nanoseconds) / 1_000_000_000
+            let minDelay = self.minDelayTime / Duration.seconds(1)
+            let maxDelay = self.maxDelayTime / Duration.seconds(1)
             let attemptCeiling = (log(maxDelay / minDelay) / log(2)) + 1
 
             let calculatedMaxDelay: Double
@@ -101,7 +101,7 @@ extension AWSClient {
                 calculatedMaxDelay = minDelay * Double(1 << (attempt - 1))
             }
             let delay = Double.random(in: minDelay...calculatedMaxDelay)
-            let timeDelay = TimeAmount.nanoseconds(Int64(delay * 1_000_000_000))
+            let timeDelay = Duration.seconds(delay)
             if remainingTime - timeDelay < self.minDelayTime {
                 return remainingTime - self.minDelayTime
             }
@@ -120,11 +120,11 @@ extension AWSClient {
     public func waitUntil<Input, Output>(
         _ input: Input,
         waiter: Waiter<Input, Output>,
-        maxWaitTime: TimeAmount? = nil,
+        maxWaitTime: Duration? = nil,
         logger: Logger = AWSClient.loggingDisabled
     ) async throws {
         let maxWaitTime = maxWaitTime ?? waiter.maxDelayTime
-        let deadline: NIODeadline = .now() + maxWaitTime
+        let deadline: ContinuousClock.Instant = .now.advanced(by: maxWaitTime)
 
         var attempt = 0
         while true {
@@ -162,12 +162,12 @@ extension AWSClient {
                     throw ClientError.waiterFailed
                 }
             case .retry:
-                let wait = waiter.calculateRetryWaitTime(attempt: attempt, remainingTime: deadline - .now())
+                let wait = waiter.calculateRetryWaitTime(attempt: attempt, remainingTime: ContinuousClock.now.duration(to: deadline))
                 if wait < .seconds(0) {
                     throw ClientError.waiterTimeout
                 } else {
-                    logger.trace("Wait \(wait.nanoseconds / 1_000_000)ms")
-                    try await Task.sleep(nanoseconds: UInt64(wait.nanoseconds))
+                    logger.trace("Wait \(wait)")
+                    try await Task.sleep(for: wait)
                 }
             }
         }

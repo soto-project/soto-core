@@ -126,7 +126,7 @@ struct ECSMetaDataClient: MetadataClient {
         return try Self.createJSONDecoder().decode(MetaData.self, from: response.body)
     }
 
-    private func request(url: String, timeout: TimeAmount, logger: Logger) async throws -> MetadataHTTPResponse {
+    private func request(url: String, timeout: Duration, logger: Logger) async throws -> MetadataHTTPResponse {
         try Task.checkCancellation()
         let request = AWSHTTPRequest(
             request: HTTPRequest(method: .get, url: URL(string: url)!)
@@ -239,7 +239,7 @@ struct InstanceMetaDataClient: MetadataClient {
     ) async throws -> MetadataHTTPResponse {
         try Task.checkCancellation()
         let request = AWSHTTPRequest(request: request, body: .init())
-        let response = try await httpClient.execute(request: request, timeout: TimeAmount.seconds(2), logger: logger)
+        let response = try await httpClient.execute(request: request, timeout: .seconds(2), logger: logger)
         return try await MetadataHTTPResponse(response: response.response, body: response.body.collect(upTo: 1_000_000))
     }
 }

@@ -26,35 +26,30 @@ public struct AWSSigner: Sendable {
 
     /// The algorithm used to create the hash of the canonical request
     @nonexhaustive
-    public enum Algorithm: Sendable {
-        case sigV4
-        case sigV4a
+    public enum Algorithm: String, Sendable {
+        case sigV4 = "AWS4-HMAC-SHA256"
+        case sigV4a = "AWS4-ECDSA-P256-SHA256"
 
-        var name: String {
-            switch self {
-            case .sigV4:
-                "AWS4-HMAC-SHA256"
-            case .sigV4a:
-                "AWS4-ECDSA-P256-SHA256"
-            }
-        }
+        var name: String { self.rawValue }
     }
 
     @nonexhaustive
     public enum Payload: Sendable {
+        /// No payload
+        case empty
         /// Don't use body when signing request
         case unsignedPayload
-        /// Internally used when S3 streamed payloads
-        case s3chunked
 
         var hashedPayload: String {
             switch self {
+            case .empty:
+                Self.hashedEmptyBody
             case .unsignedPayload:
                 "UNSIGNED-PAYLOAD"
-            case .s3chunked:
-                "STREAMING-AWS4-HMAC-SHA256-PAYLOAD"
             }
         }
+
+        static let hashedEmptyBody = SHA256.hash(data: [UInt8]()).hexDigest()
     }
 
     /// Security credentials for accessing AWS services
@@ -65,8 +60,6 @@ public struct AWSSigner: Sendable {
     public let region: String
     /// Signing algorithm
     public let algorithm: Algorithm
-
-    static let hashedEmptyBody = SHA256.hash(data: [UInt8]()).hexDigest()
 
     /// Initialise the Signer class with AWS credentials
     public init(credentials: Credential, name: String, region: String) {
@@ -82,20 +75,6 @@ public struct AWSSigner: Sendable {
         self.name = name
         self.region = region
         self.algorithm = algorithm
-    }
-
-    /// Enum for holding request payload
-    public enum BodyData {
-        /// String
-        case string(String)
-        /// Data
-        case data(Data)
-        /// SwiftNIO ByteBuffer
-        case byteBuffer(ByteBuffer)
-        /// Don't use body when signing request
-        case unsignedPayload
-        /// Internally used when S3 streamed payloads
-        case s3chunked
     }
 
     /// Process URL before signing headers
@@ -129,24 +108,7 @@ public struct AWSSigner: Sendable {
     ///
     /// - Parameters:
     ///   - request: HTTP request
-    ///   - body: Request body
-    ///   - omitSecurityToken: Should we include security token in the query parameters
-    ///   - date: Date that URL is valid from, defaults to now
-    public func signHeaders(
-        request: inout HTTPRequest,
-        omitSecurityToken: Bool = false,
-        date: Date = Date()
-    ) {
-        signHeaders(request: &request, hashedPayload: Self.hashedEmptyBody, omitSecurityToken: omitSecurityToken, date: date)
-    }
-
-    /// Generate signed headers, for an HTTP request using the AWS sigV4 algorithm.
-    ///
-    /// The supplied HTTP request is updated with the additional headers.
-    ///
-    /// - Parameters:
-    ///   - request: HTTP request
-    ///   - body: Request body
+    ///   - body: Request body bytes
     ///   - omitSecurityToken: Should we include security token in the query parameters
     ///   - date: Date that URL is valid from, defaults to now
     public func signHeaders(
@@ -165,17 +127,16 @@ public struct AWSSigner: Sendable {
     ///
     /// - Parameters:
     ///   - request: HTTP request
-    ///   - body: Request body
+    ///   - payload: Empty payload or unsigned payload
     ///   - omitSecurityToken: Should we include security token in the query parameters
     ///   - date: Date that URL is valid from, defaults to now
     public func signHeaders(
         request: inout HTTPRequest,
-        payload: Payload,
+        payload: Payload = .empty,
         omitSecurityToken: Bool = false,
         date: Date = Date()
     ) {
-        let hashedPayload = payload.hashedPayload
-        return signHeaders(request: &request, hashedPayload: hashedPayload, omitSecurityToken: omitSecurityToken, date: date)
+        signHeaders(request: &request, hashedPayload: payload.hashedPayload, omitSecurityToken: omitSecurityToken, date: date)
     }
 
     /// Generate signed headers, for an HTTP request using the AWS sigV4 algorithm.
@@ -248,14 +209,35 @@ public struct AWSSigner: Sendable {
     ///
     /// - Parameters:
     ///   - request: HTTP request
-    ///   - body: Request body
     ///   - expires: How long before the signed URL expires
     ///   - omitSecurityToken: Should we include security token in the query parameters
     ///   - date: Date that URL is valid from, defaults to now
     /// - Returns: Signed URL
     public func signURL(
         request: HTTPRequest,
-        body: BodyData? = nil,
+        expires: Duration,
+        omitSecurityToken: Bool = false,
+        date: Date = Date()
+    ) -> URL? {
+        let hashedPayload = Payload.unsignedPayload.hashedPayload
+        return signURL(request: request, hashedPayload: hashedPayload, expires: expires, omitSecurityToken: omitSecurityToken, date: date)
+    }
+
+    /// Generate a signed URL, for a HTTP request
+    ///
+    /// If you are signing a URL using sigV4a then you should supply a `X-Amz-Region-Set` header
+    /// including the regions you want to use.
+    ///
+    /// - Parameters:
+    ///   - request: HTTP request
+    ///   - body: Request body
+    ///   - expires: How long before the signed URL expires
+    ///   - omitSecurityToken: Should we include security token in the query parameters
+    ///   - date: Date that URL is valid from, defaults to now
+    /// - Returns: Signed URL
+    func signURL(
+        request: HTTPRequest,
+        hashedPayload: String,
         expires: Duration,
         omitSecurityToken: Bool = false,
         date: Date = Date()
@@ -267,7 +249,6 @@ public struct AWSSigner: Sendable {
             urlComponents.percentEncodedPath = urlComponents.percentEncodedPath.addingAWSPercentEncoding(forURLComponent: [.s3Path, .percent])
         }
         let url = urlComponents.url!
-        let hashedPayload = Self.hashedPayload(body)
         // Create signing data
         var signingData = AWSSigner.SigningData(url: url, request: request, hashedPayload: hashedPayload, date: Self.timestamp(date), signer: self)
         // Construct query string. Start with original query strings and append all the signing info.
@@ -352,7 +333,7 @@ public struct AWSSigner: Sendable {
         guard let url = request.url else { return nil }
 
         request.authority = Self.hostname(from: url)
-        let bodyHash = AWSSigner.hashedPayload(.s3chunked)
+        let bodyHash = "STREAMING-AWS4-HMAC-SHA256-PAYLOAD"
         let dateString = AWSSigner.timestamp(date)
         // add date, host, sha256 and if available security token headers
         request.headerFields[.xAmzDate] = dateString
@@ -385,8 +366,27 @@ public struct AWSSigner: Sendable {
     ///   - body: Body of chunk
     ///   - signingData: Signing data returned from previous `signChunk` or `startSigningChunk` if this is the first call
     /// - Returns: signing data that includes the signature and other data that is required for signing the next chunk
-    public func signChunk(body: BodyData, signingData: ChunkedSigningData) -> ChunkedSigningData {
-        let stringToSign = self.chunkStringToSign(body: body, previousSignature: signingData.signature, datetime: signingData.datetime)
+    public func signChunk(body: RawSpan, signingData: ChunkedSigningData) -> ChunkedSigningData {
+        let stringToSign = self.chunkStringToSign(
+            hashedPayload: SHA256.hash(bytes: body).hexDigest(),
+            previousSignature: signingData.signature,
+            datetime: signingData.datetime
+        )
+        let signature = HMAC<SHA256>.authenticationCode(for: [UInt8](stringToSign.utf8), using: signingData.signingKey).hexDigest()
+        return ChunkedSigningData(signature: signature, datetime: signingData.datetime, signingKey: signingData.signingKey)
+    }
+
+    /// Generate the signature for a chunk in a s3 chunked upload
+    /// - Parameters:
+    ///   - body: Body of chunk
+    ///   - signingData: Signing data returned from previous `signChunk` or `startSigningChunk` if this is the first call
+    /// - Returns: signing data that includes the signature and other data that is required for signing the next chunk
+    public func signLastChunk(signingData: ChunkedSigningData) -> ChunkedSigningData {
+        let stringToSign = self.chunkStringToSign(
+            hashedPayload: Payload.hashedEmptyBody,
+            previousSignature: signingData.signature,
+            datetime: signingData.datetime
+        )
         let signature = HMAC<SHA256>.authenticationCode(for: [UInt8](stringToSign.utf8), using: signingData.signingKey).hexDigest()
         return ChunkedSigningData(signature: signature, datetime: signingData.datetime, signingKey: signingData.signingKey)
     }
@@ -521,16 +521,16 @@ public struct AWSSigner: Sendable {
     }
 
     /// chunked upload string to sign
-    func chunkStringToSign(body: BodyData, previousSignature: String, datetime: String) -> String {
+    func chunkStringToSign(hashedPayload: String, previousSignature: String, datetime: String) -> String {
         let date = String(datetime.prefix(8))
         let stringToSign =
             "AWS4-HMAC-SHA256-PAYLOAD\n" + "\(datetime)\n" + "\(date)/\(region)/\(name)/aws4_request\n" + "\(previousSignature)\n"
-            + "\(Self.hashedEmptyBody)\n" + Self.hashedPayload(body)
+            + "\(Payload.hashedEmptyBody)\n" + hashedPayload
         return stringToSign
     }
 
     /// Create a SHA256 hash of the Requests body
-    static func hashedPayload(_ payload: BodyData?) -> String {
+    /*static func hashedPayload(_ payload: BodyData?) -> String {
         guard let payload else { return self.hashedEmptyBody }
         let hash: String?
         switch payload {
@@ -553,7 +553,7 @@ public struct AWSSigner: Sendable {
         } else {
             return self.hashedEmptyBody
         }
-    }
+    }*/
 
     #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS) || os(visionOS)
     private static let timeStampDateFormatter: DateFormatter = {

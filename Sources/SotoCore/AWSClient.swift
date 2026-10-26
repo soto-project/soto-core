@@ -479,9 +479,7 @@ extension AWSClient {
 
     /// Generate a signed URL
     /// - parameters:
-    ///     - url: URL to sign
-    ///     - httpMethod: HTTP method to use (.GET, .PUT, .PUSH etc)
-    ///     - headers: Headers that are to be used with this URL. Be sure to include these headers when you used the returned URL
+    ///     - request: HTTPRequest to generate signed URL for.
     ///     - expires: How long before the signed URL expires
     ///     - serviceConfig: additional AWS service configuration used to sign the url
     ///     - logger: Logger to output to
@@ -505,17 +503,13 @@ extension AWSClient {
 
     /// Generate signed headers
     /// - parameters:
-    ///     - url: URL to sign
-    ///     - httpMethod: HTTP method to use (.GET, .PUT, .PUSH etc)
-    ///     - headers: Headers that are to be used with this URL.
-    ///     - body: Payload to sign as well. While it is unnecessary to provide the body for S3 other services may require it
+    ///     - request: HTTPRequest to sign.
+    ///     - body: Body to sign as well. While it is unnecessary to provide the body for S3 other services may require it
     ///     - serviceConfig: additional AWS service configuration used to sign the url
     ///     - logger: Logger to output to
-    /// - returns:
-    ///     A set of signed headers that include the original headers supplied
     public func signHeaders(
         request: inout HTTPRequest,
-        body: AWSHTTPBody,
+        body: AWSHTTPBody?,
         serviceConfig: AWSServiceConfig,
         logger: Logger = AWSClient.loggingDisabled
     ) async throws {
@@ -529,14 +523,16 @@ extension AWSClient {
             throw AWSClient.ClientError.invalidURL
         }
         request.url = cleanURL
-        let bodyBuffer: ByteBuffer
-        switch body.storage {
-        case .byteBuffer(let buffer):
-            bodyBuffer = buffer
-        case .asyncSequence:
-            bodyBuffer = ByteBuffer()
+        if let body {
+            switch body.storage {
+            case .byteBuffer(let buffer):
+                signer.signHeaders(request: &request, body: buffer.readableBytesSpan)
+            case .asyncSequence:
+                signer.signHeaders(request: &request, payload: .unsignedPayload)
+            }
+        } else {
+            signer.signHeaders(request: &request, payload: .unsignedPayload)
         }
-        signer.signHeaders(request: &request, body: bodyBuffer.readableBytesSpan)
     }
 
     func createSigner(serviceConfig: AWSServiceConfig, logger: Logger) async throws -> AWSSigner {

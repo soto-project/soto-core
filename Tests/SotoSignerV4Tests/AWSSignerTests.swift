@@ -12,9 +12,10 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Crypto
 import Foundation
 import HTTPTypes
-import NIOCore
+@_spi(SotoInternal) import SotoSignerV4
 import Testing
 
 @testable import SotoSignerV4
@@ -76,6 +77,7 @@ final class AWSSignerTests {
         )
     }
 
+    @available(anyAppleOS 26, *)
     @Test func testSignPutHeaders() {
         let signer = AWSSigner(credentials: credentials, name: "sns", region: "eu-west-1")
         var request = HTTPRequest(
@@ -85,7 +87,7 @@ final class AWSSignerTests {
         )
         signer.signHeaders(
             request: &request,
-            body: "Action=ListTopics&Version=2010-03-31".utf8,
+            body: "Action=ListTopics&Version=2010-03-31".utf8.span.bytes,
             date: Date(timeIntervalSinceReferenceDate: 200)
         )
         #expect(
@@ -152,7 +154,6 @@ final class AWSSignerTests {
         let request = HTTPRequest(method: .put, url: URL(string: "https://test-bucket.s3.amazonaws.com/test-put.txt")!)
         let url = signer.signURL(
             request: request,
-            body: .string("Testing signed URLs"),
             expires: .seconds(24 * 60 * 60),
             date: Date(timeIntervalSinceReferenceDate: 100_000)
         )
@@ -212,33 +213,14 @@ final class AWSSignerTests {
         )
     }
 
-    @Test func testBodyData() {
-        let string = "testing, testing, 1,2,1,2"
-        let data = string.data(using: .utf8)!
-        var buffer = ByteBufferAllocator().buffer(capacity: data.count)
-        buffer.writeBytes(data)
-
-        let signer = AWSSigner(credentials: credentials, name: "sns", region: "eu-west-1")
-        var request = HTTPRequest(method: .post, url: URL(string: "https://sns.eu-west-1.amazonaws.com/")!)
-        signer.signHeaders(request: &request, body: string.utf8, date: Date(timeIntervalSinceReferenceDate: 0))
-        let authorization1 = request.headerFields[.authorization]
-        signer.signHeaders(request: &request, body: data, date: Date(timeIntervalSinceReferenceDate: 0))
-        let authorization2 = request.headerFields[.authorization]
-        signer.signHeaders(request: &request, body: buffer.readableBytesView, date: Date(timeIntervalSinceReferenceDate: 0))
-        let authorization3 = request.headerFields[.authorization]
-
-        #expect(authorization1 != nil)
-        #expect(authorization1 == authorization2)
-        #expect(authorization2 == authorization3)
-    }
-
     @Test func testCanonicalRequest() throws {
         let url = URL(string: "https://test.com/test?hello=true&item=apple")!
         let signer = AWSSigner(credentials: credentials, name: "sns", region: "eu-west-1")
+        let body = Data("{}".utf8)
         let signingData = AWSSigner.SigningData(
             url: url,
             request: HTTPRequest(method: .post, url: url, headerFields: [.contentType: "application/json"]),
-            body: .string("{}"),
+            hashedPayload: SHA256.hash(bytes: body.bytes).hexDigest(),
             date: Date(timeIntervalSince1970: 234_873).formatted(.iso8601),
             signer: signer
         )
@@ -259,10 +241,11 @@ final class AWSSignerTests {
     @Test func testCanonicalRequestSequentialSpace() throws {
         let url = URL(string: "https://test.com/test")!
         let signer = AWSSigner(credentials: credentials, name: "sns", region: "eu-west-1")
+        let body = Data("{}".utf8)
         let signingData = AWSSigner.SigningData(
             url: url,
             request: HTTPRequest(method: .post, url: url, headerFields: [.contentType: "application/json", .init("header")!: "my  header"]),
-            body: .string("{}"),
+            hashedPayload: SHA256.hash(bytes: body.bytes).hexDigest(),
             date: Date(timeIntervalSince1970: 234_873).formatted(.iso8601),
             signer: signer
         )
@@ -317,9 +300,10 @@ final class AWSSignerTests {
             url: URL(string: "https://examplebucket.s3.amazonaws.com/test$file.text")!,
             headerFields: [.date: "Fri, 24 May 2013 00:00:00 GMT", .init("x-amz-storage-class")!: "REDUCED_REDUNDANCY"]
         )
+        let body = Data("Welcome to Amazon S3.".utf8)
         signer.signHeaders(
             request: &request,
-            body: .string("Welcome to Amazon S3."),
+            body: body.bytes,
             date: self.awsSampleDate
         )
         #expect(

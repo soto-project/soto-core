@@ -77,7 +77,7 @@ final class AWSSignerTests {
         )
     }
 
-    @available(anyAppleOS 26, *)
+    @available(macOS 26, iOS 26, tvOS 26, watchOS 26, visionOS 26, *)
     @Test func testSignPutHeaders() {
         let signer = AWSSigner(credentials: credentials, name: "sns", region: "eu-west-1")
         var request = HTTPRequest(

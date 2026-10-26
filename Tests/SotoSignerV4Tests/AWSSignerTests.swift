@@ -220,7 +220,7 @@ final class AWSSignerTests {
         let signingData = AWSSigner.SigningData(
             url: url,
             request: HTTPRequest(method: .post, url: url, headerFields: [.contentType: "application/json"]),
-            hashedPayload: SHA256.hash(bytes: body.bytes).hexDigest(),
+            hashedPayload: SHA256.hash(data: body).hexDigest(),
             date: Date(timeIntervalSince1970: 234_873).formatted(.iso8601),
             signer: signer
         )
@@ -245,7 +245,7 @@ final class AWSSignerTests {
         let signingData = AWSSigner.SigningData(
             url: url,
             request: HTTPRequest(method: .post, url: url, headerFields: [.contentType: "application/json", .init("header")!: "my  header"]),
-            hashedPayload: SHA256.hash(bytes: body.bytes).hexDigest(),
+            hashedPayload: SHA256.hash(data: body).hexDigest(),
             date: Date(timeIntervalSince1970: 234_873).formatted(.iso8601),
             signer: signer
         )

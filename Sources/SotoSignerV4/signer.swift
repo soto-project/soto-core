@@ -535,12 +535,9 @@ public struct AWSSigner: Sendable {
         SHA256.hash(bytes: bytes).hexDigest()
         #else
         bytes.withUnsafeBytes { bytes in
-            if let baseAddress = bytes.baseAddress {
-                let data = Data(bytes: baseAddress, count: bytes.count)
-                return SHA256.hash(data: data).hexDigest()
-            } else {
-                return Payload.hashedEmptyBody
-            }
+            var sha256 = SHA256()
+            sha256.update(bufferPointer: bytes)
+            return sha256.finalize().hexDigest()
         }
         #endif
     }

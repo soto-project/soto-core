@@ -21,6 +21,7 @@ let swiftSettings: [SwiftSetting] = [
     .enableUpcomingFeature("InternalImportsByDefault"),
     .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
     .enableExperimentalFeature("Lifetimes"),
+    .enableExperimentalFeature("AnyAppleOSAvailability"),
 ]
 
 let package = Package(

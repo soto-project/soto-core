@@ -117,7 +117,7 @@ public struct AWSSigner: Sendable {
         omitSecurityToken: Bool = false,
         date: Date = Date()
     ) {
-        let hashedPayload = SHA256.hash(bytes: body).hexDigest()
+        let hashedPayload = Self.sha256(bytes: body)
         return signHeaders(request: &request, hashedPayload: hashedPayload, omitSecurityToken: omitSecurityToken, date: date)
     }
 
@@ -368,7 +368,7 @@ public struct AWSSigner: Sendable {
     /// - Returns: signing data that includes the signature and other data that is required for signing the next chunk
     public func signChunk(body: RawSpan, signingData: ChunkedSigningData) -> ChunkedSigningData {
         let stringToSign = self.chunkStringToSign(
-            hashedPayload: SHA256.hash(bytes: body).hexDigest(),
+            hashedPayload: Self.sha256(bytes: body),
             previousSignature: signingData.signature,
             datetime: signingData.datetime
         )
@@ -529,31 +529,17 @@ public struct AWSSigner: Sendable {
         return stringToSign
     }
 
-    /// Create a SHA256 hash of the Requests body
-    /*static func hashedPayload(_ payload: BodyData?) -> String {
-        guard let payload else { return self.hashedEmptyBody }
-        let hash: String?
-        switch payload {
-        case .string(let string):
-            hash = SHA256.hash(data: [UInt8](string.utf8)).hexDigest()
-        case .data(let data):
-            hash = SHA256.hash(data: data).hexDigest()
-        case .byteBuffer(let byteBuffer):
-            let byteBufferView = byteBuffer.readableBytesView
-            hash = byteBufferView.withContiguousStorageIfAvailable { bytes in
-                SHA256.hash(data: bytes).hexDigest()
-            }
-        case .unsignedPayload:
-            return "UNSIGNED-PAYLOAD"
-        case .s3chunked:
-            return "STREAMING-AWS4-HMAC-SHA256-PAYLOAD"
+    static func sha256(bytes: RawSpan) -> String {
+        // SHA256.hash(bytes:) is only available with Swift 6.4 SDK on Apple platforms
+        #if swift(>=6.4) || os(linux) || os(Android)
+        SHA256.hash(bytes: bytes).hexDigest()
+        #else
+        bytes.withUnsafeBytes { bytes in
+            let data = Data(bytes: bytes.baseAddress!, count: bytes.count)
+            return SHA256.hash(data: data).hexDigest()
         }
-        if let hash {
-            return hash
-        } else {
-            return self.hashedEmptyBody
-        }
-    }*/
+        #endif
+    }
 
     #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS) || os(visionOS)
     private static let timeStampDateFormatter: DateFormatter = {

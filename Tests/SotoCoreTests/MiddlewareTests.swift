@@ -17,7 +17,7 @@ import NIOCore
 import SotoTestUtils
 import XCTest
 
-@testable import SotoCore
+@testable @_spi(SotoInternal) import SotoCore
 
 class MiddlewareTests: XCTestCase {
     struct CatchRequestError: Error {
@@ -171,12 +171,13 @@ class MiddlewareTests: XCTestCase {
                 context: AWSMiddlewareContext,
                 next: (AWSHTTPRequest, AWSMiddlewareContext) async throws -> AWSHTTPResponse
             ) async throws -> AWSHTTPResponse {
-                throw AWSRawError(rawBody: nil, context: .init(message: "NotFound", response: HTTPResponse(status: .notFound)))
+                throw AWSRawResponseError(response: AWSHTTPResponse(response: .init(status: .notFound)))
             }
         }
         let client = createAWSClient(credentialProvider: .empty)
         let config = createServiceConfig(
             region: .useast1,
+            serviceProtocol: .restxml,
             endpoint: "https://test.us-east-1.amazonaws.com",
             errorType: S3TestErrorType.self,
             middlewares: AWSMiddlewareStack {
@@ -187,7 +188,7 @@ class MiddlewareTests: XCTestCase {
         do {
             _ = try await client.execute(operation: "test", path: "/", httpMethod: .post, serviceConfig: config, logger: TestEnvironment.logger)
             XCTFail("Should not get here")
-        } catch let error as S3TestErrorType where error == .notFound {
+        } catch let error as S3TestErrorType where error.error == .notFound {
         } catch {
             XCTFail("Throwing wrong error: \(error)")
         }
@@ -292,37 +293,32 @@ class MiddlewareTests: XCTestCase {
         )
     }
 
-    struct S3TestErrorType: AWSErrorType, Equatable {
-        enum Code: String {
-            case notFound = "NotFound"
+    struct S3TestErrorType: AWSErrorType, Decodable, Equatable {
+        enum ErrorContents {
+            case notFound
         }
 
-        private let error: Code
-        let context: AWSErrorContext?
+        let error: ErrorContents
+        let message: String?
+        let response: HTTPResponse?
 
-        /// initialize S3
-        init?(errorCode: String, context: AWSErrorContext) {
-            guard let error = Code(rawValue: errorCode) else { return nil }
-            self.error = error
-            self.context = context
+        init(from decoder: any Decoder) throws {
+            let singleValueContainer = try decoder.singleValueContainer()
+            let errorCode = try singleValueContainer.decode(AWSErrorCode.self)
+            switch errorCode.code {
+            case "NotFound":
+                self.error = .notFound
+            default:
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unrecognised error code"))
+            }
+            self.message = try singleValueContainer.decode(AWSErrorMessage.self).message
+            self.response = (decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer).response.response
         }
 
-        internal init(_ error: Code) {
-            self.error = error
-            self.context = nil
-        }
-
-        /// return error code string
-        var errorCode: String { self.error.rawValue }
-
-        static var notFound: Self { .init(.notFound) }
-
-        var description: String {
-            "\(self.error.rawValue): \(self.message ?? "")"
-        }
-
-        static func == (lhs: S3TestErrorType, rhs: S3TestErrorType) -> Bool {
-            lhs.error == rhs.error
+        var errorCode: String {
+            switch self.error {
+            case .notFound: "NotFound"
+            }
         }
     }
 }

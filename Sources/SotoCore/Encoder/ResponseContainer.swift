@@ -36,8 +36,7 @@ public struct HeaderDecodingError: Error {
 /// the full response and not only its body
 @_spi(SotoInternal)
 public struct ResponseDecodingContainer: Sendable {
-    @usableFromInline
-    let response: AWSHTTPResponse
+    public let response: AWSHTTPResponse
 
     /// Decode header to type conforming to RawRepresentable
     @inlinable

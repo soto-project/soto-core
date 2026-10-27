@@ -70,7 +70,7 @@ public func createServiceConfig(
     serviceEndpoints: [String: String] = [:],
     partitionEndpoints: [AWSPartition: (endpoint: String, region: Region)] = [:],
     variantEndpoints: [EndpointVariantType: AWSServiceConfig.EndpointVariant] = [:],
-    errorType: any (AWSErrorType & Decodable).Type? = nil,
+    errorType: (any (AWSErrorType & Decodable).Type)? = nil,
     xmlNamespace: String? = nil,
     middlewares: AWSMiddlewareProtocol? = nil,
     timeout: Duration? = nil,

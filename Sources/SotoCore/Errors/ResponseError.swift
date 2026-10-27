@@ -19,7 +19,7 @@ public struct AWSResponseError: AWSErrorType, Decodable {
     public let message: String?
     public let response: HTTPResponse?
 
-    init(errorCode: String, message: String? = nil, response: HTTPResponse? = nil) {
+    public init(errorCode: String, message: String? = nil, response: HTTPResponse? = nil) {
         self.errorCode = errorCode
         self.message = message
         self.response = response

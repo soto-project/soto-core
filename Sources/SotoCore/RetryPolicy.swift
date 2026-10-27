@@ -66,14 +66,14 @@ extension StandardRetryPolicy {
 
         switch error {
         case let error as any AWSErrorType:
-            if let context = error.context {
+            if let response = error.response {
                 // if response has a "Retry-After" header then use that
-                if let retryAfterString = context.response.headerFields[.retryAfter], let retryAfter = Int64(retryAfterString) {
+                if let retryAfterString = response.headerFields[.retryAfter], let retryAfter = Int64(retryAfterString) {
                     return .retry(wait: .seconds(retryAfter))
                 }
                 // server error or too many requests
-                if (500...).contains(context.response.status.code) || context.response.status == .tooManyRequests
-                    || error.errorCode == AWSClientError.throttling.errorCode
+                if (500...).contains(response.status.code) || response.status == .tooManyRequests
+                    || error.errorCode == AWSResponseError.throttling.errorCode
                 {
                     return .retry(wait: calculateRetryWaitTime(attempt: attempt))
                 }

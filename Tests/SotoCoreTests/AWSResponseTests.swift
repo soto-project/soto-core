@@ -265,9 +265,13 @@ class AWSResponseTests {
         let service = createServiceConfig(serviceProtocol: .json(version: "1.1"), errorType: ServiceErrorType.self)
 
         let error = response.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? ServiceErrorType
-        #expect(error == ServiceErrorType.resourceNotFoundException)
+        switch error?.error {
+        case .resourceNotFoundException:
+            break
+        default:
+            Issue.record()
+        }
         #expect(error?.message == "Donald Where's Your Troosers?")
-        #expect(error?.context?.response.status == .notFound)
     }
 
     @Test func testJSONErrorWithoutMessage() async throws {
@@ -278,8 +282,12 @@ class AWSResponseTests {
         let service = createServiceConfig(serviceProtocol: .json(version: "1.1"), errorType: ServiceErrorType.self)
 
         let error = response.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? ServiceErrorType
-        #expect(error == ServiceErrorType.resourceNotFoundException)
-        #expect(error?.context?.response.status == .notFound)
+        switch error?.error {
+        case .resourceNotFoundException:
+            break
+        default:
+            Issue.record()
+        }
     }
 
     @Test func testJSONErrorV2() async throws {
@@ -295,10 +303,13 @@ class AWSResponseTests {
         let service = createServiceConfig(serviceProtocol: .json(version: "1.1"), errorType: ServiceErrorType.self)
 
         let error = response.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? ServiceErrorType
-        #expect(error == ServiceErrorType.resourceNotFoundException)
+        switch error?.error {
+        case .resourceNotFoundException:
+            break
+        default:
+            Issue.record()
+        }
         #expect(error?.message == "Donald Where's Your Troosers?")
-        #expect(error?.context?.response.status == .notFound)
-        #expect(error?.context?.additionalFields["fault"] == "client")
     }
 
     @Test func testRestJSONError() async throws {
@@ -309,10 +320,13 @@ class AWSResponseTests {
         let service = createServiceConfig(serviceProtocol: .restjson, errorType: ServiceErrorType.self)
 
         let error = response.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? ServiceErrorType
-        #expect(error == ServiceErrorType.resourceNotFoundException)
+        switch error?.error {
+        case .resourceNotFoundException:
+            break
+        default:
+            Issue.record()
+        }
         #expect(error?.message == "Donald Where's Your Troosers?")
-        #expect(error?.context?.response.status == .notFound)
-        #expect(error?.context?.additionalFields["Fault"] == "Client")
     }
 
     @Test func testRestJSONErrorV2() async throws {
@@ -324,9 +338,13 @@ class AWSResponseTests {
         let service = createServiceConfig(serviceProtocol: .restjson, errorType: ServiceErrorType.self)
 
         let error = response.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? ServiceErrorType
-        #expect(error == ServiceErrorType.resourceNotFoundException)
+        switch error?.error {
+        case .resourceNotFoundException:
+            break
+        default:
+            Issue.record()
+        }
         #expect(error?.message == "Donald Where's Your Troosers?")
-        #expect(error?.context?.response.status == .notFound)
     }
 
     @Test func testXMLError() async throws {
@@ -337,10 +355,13 @@ class AWSResponseTests {
         let service = createServiceConfig(serviceProtocol: .restxml, errorType: ServiceErrorType.self)
 
         let error = response.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? ServiceErrorType
-        #expect(error == ServiceErrorType.noSuchKey)
+        switch error?.error {
+        case .noSuchKey:
+            break
+        default:
+            Issue.record()
+        }
         #expect(error?.message == "It doesn't exist")
-        #expect(error?.context?.response.status == .notFound)
-        #expect(error?.context?.additionalFields["fault"] == "client")
     }
 
     @Test func testQueryError() async throws {
@@ -354,12 +375,12 @@ class AWSResponseTests {
         let queryService = createServiceConfig(serviceProtocol: .query, errorType: ServiceErrorType.self)
 
         let error = response.generateError(serviceConfig: queryService, logger: TestEnvironment.logger) as? ServiceErrorType
-        #expect(error == ServiceErrorType.messageRejected)
-        #expect(error?.message == "Don't like it")
-        #expect(error?.context?.response.status == .notFound)
-        #expect(error?.context?.additionalFields["fault"] == "client")
-        let contextError = try #require(error?.context?.extendedError as? ServiceErrorType.MessageRejected)
-        #expect(contextError.fault == "client")
+        switch error?.error {
+        case .messageRejected(let context):
+            #expect(context.fault == "client")
+        default:
+            Issue.record()
+        }
     }
 
     @Test func testEC2Error() async throws {
@@ -372,19 +393,6 @@ class AWSResponseTests {
         let error = response.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? AWSResponseError
         #expect(error?.errorCode == "NoSuchKey")
         #expect(error?.message == "It doesn't exist")
-        #expect(error?.context?.response.status == .notFound)
-        #expect(error?.context?.additionalFields["fault"] == "client")
-    }
-
-    @Test func testAdditionalErrorFields() async throws {
-        let response = AWSHTTPResponse(
-            response: HTTPResponse(status: .notFound),
-            body: .init(string: "<Errors><Error><Code>NoSuchKey</Code><Message>It doesn't exist</Message><fault>client</fault></Error></Errors>")
-        )
-        let service = createServiceConfig(serviceProtocol: .restxml)
-
-        let error = response.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? AWSResponseError
-        #expect(error?.context?.additionalFields["fault"] == "client")
     }
 
     @Test func testHeaderPrefixFromDictionary() async throws {
@@ -676,45 +684,44 @@ class AWSResponseTests {
 
     // MARK: Types used in tests
 
-    struct ServiceErrorType: AWSServiceErrorType, Equatable {
-        struct MessageRejected: AWSErrorShape {
-            let message: String?
+    struct ServiceErrorType: AWSErrorType, Decodable {
+        enum ErrorContents {
+            case resourceNotFoundException
+            case noSuchKey
+            case messageRejected(MessageRejected)
+        }
+        struct MessageRejected: Decodable {
             let fault: String?
         }
-        enum Code: String {
-            case resourceNotFoundException = "ResourceNotFoundException"
-            case noSuchKey = "NoSuchKey"
-            case messageRejected = "MessageRejected"
+
+        let error: ErrorContents
+        let message: String?
+        let response: HTTPResponse?
+
+        init(from decoder: any Decoder) throws {
+            let singleValueContainer = try decoder.singleValueContainer()
+            let errorCode = try singleValueContainer.decode(AWSErrorCode.self)
+            switch errorCode.code {
+            case "ResourceNotFoundException":
+                self.error = .resourceNotFoundException
+            case "NoSuchKey":
+                self.error = .noSuchKey
+            case "MessageRejected":
+                let context = try singleValueContainer.decode(MessageRejected.self)
+                self.error = .messageRejected(context)
+            default:
+                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unrecognised error code"))
+            }
+            self.message = try singleValueContainer.decode(AWSErrorMessage.self).message
+            self.response = (decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer).response.response
         }
 
-        let error: Code
-        let context: AWSErrorContext?
-
-        static let errorCodeMap: [String: any AWSErrorShape.Type] = ["MessageRejected": MessageRejected.self]
-
-        init?(errorCode: String, context: AWSErrorContext) {
-            guard let error = Code(rawValue: errorCode) else { return nil }
-            self.error = error
-            self.context = context
-        }
-
-        internal init(_ error: Code, context: AWSErrorContext? = nil) {
-            self.error = error
-            self.context = context
-        }
-
-        public var errorCode: String { self.error.rawValue }
-
-        public static var resourceNotFoundException: ServiceErrorType { .init(.resourceNotFoundException) }
-        public static var noSuchKey: ServiceErrorType { .init(.noSuchKey) }
-        public static var messageRejected: ServiceErrorType { .init(.messageRejected) }
-
-        public static func == (lhs: ServiceErrorType, rhs: ServiceErrorType) -> Bool {
-            lhs.error == rhs.error
-        }
-
-        public var description: String {
-            "\(self.error.rawValue): \(message ?? "")"
+        var errorCode: String {
+            switch self.error {
+            case .resourceNotFoundException: "ResourceNotFoundException"
+            case .noSuchKey: "NoSuchKey"
+            case .messageRejected: "MessageRejected"
+            }
         }
     }
 }

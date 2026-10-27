@@ -133,13 +133,13 @@ public struct AWSErrorStatusMatcher: AWSWaiterMatcher {
         case .success:
             return false
         case .failure(let error as any AWSErrorType):
-            if let code = error.context?.response.status.code {
+            if let code = error.response?.status.code {
                 return code == self.expectedStatus
             } else {
                 return false
             }
-        case .failure(let error as AWSRawError):
-            return error.context.response.status.code == self.expectedStatus
+        case .failure(let error as AWSRawResponseError):
+            return error.response.status.code == self.expectedStatus
         case .failure:
             return false
         }

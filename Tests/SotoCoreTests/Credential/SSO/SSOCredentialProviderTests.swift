@@ -24,6 +24,7 @@
 import HTTPTypes
 import Logging
 import NIOCore
+import SotoTestUtils
 import Testing
 
 @testable import SotoCore
@@ -286,7 +287,7 @@ final class SSOCredentialProviderTests: Sendable {
     func getRoleCredentialsHTTPError() async throws {
         let startUrl = "https://test.awsapps.com/start"
         try await withSSOEnvironment(cacheKey: startUrl) { env in
-            let mockHTTPClient = MockAWSHTTPClient { _ in (.forbidden, Data()) }
+            let mockHTTPClient = MockAWSHTTPClient { _ in .init(response: .init(status: .forbidden)) }
             let provider = SSOCredentialProvider(configuration: self.makeLegacyConfig(), httpClient: mockHTTPClient)
 
             await #expect {
@@ -302,7 +303,7 @@ final class SSOCredentialProviderTests: Sendable {
     func invalidGetRoleCredentialsResponse() async throws {
         let startUrl = "https://test.awsapps.com/start"
         try await withSSOEnvironment(cacheKey: startUrl) { env in
-            let mockHTTPClient = MockAWSHTTPClient { _ in (.ok, "invalid json".data(using: .utf8)!) }
+            let mockHTTPClient = MockAWSHTTPClient { _ in .init(response: .init(status: .ok), body: .init(string: "invalid json")) }
             let provider = SSOCredentialProvider(configuration: self.makeLegacyConfig(), httpClient: mockHTTPClient)
 
             await #expect(throws: DecodingError.self) {

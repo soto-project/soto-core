@@ -36,20 +36,20 @@ class LoggingTests: XCTestCase {
             httpClient: MockAWSHTTPClient(),
             logger: logger
         )
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
+        try await withClient(client) {
+            let config = createServiceConfig(
+                serviceProtocol: .json(version: "1.1")
+            )
 
-        let config = createServiceConfig(
-            serviceProtocol: .json(version: "1.1")
-        )
+            _ = try await client.execute(operation: "test1", path: "/", httpMethod: .get, serviceConfig: config, logger: logger)
+            _ = try await client.execute(operation: "test2", path: "/", httpMethod: .get, serviceConfig: config, logger: logger)
 
-        _ = try await client.execute(operation: "test1", path: "/", httpMethod: .get, serviceConfig: config, logger: logger)
-        _ = try await client.execute(operation: "test2", path: "/", httpMethod: .get, serviceConfig: config, logger: logger)
-
-        let requestId1 = inMemoryLogging.entries.first { $0.metadata["aws-operation"] == "test1" }?.metadata["aws-request-id"]
-        let requestId2 = inMemoryLogging.entries.first { $0.metadata["aws-operation"] == "test2" }?.metadata["aws-request-id"]
-        XCTAssertNotNil(requestId1)
-        XCTAssertNotNil(requestId2)
-        XCTAssertNotEqual(requestId1, requestId2)
+            let requestId1 = inMemoryLogging.entries.first { $0.metadata["aws-operation"] == "test1" }?.metadata["aws-request-id"]
+            let requestId2 = inMemoryLogging.entries.first { $0.metadata["aws-operation"] == "test2" }?.metadata["aws-request-id"]
+            XCTAssertNotNil(requestId1)
+            XCTAssertNotNil(requestId2)
+            XCTAssertNotEqual(requestId1, requestId2)
+        }
     }
 
     func testAWSRequestResponse() async throws {
@@ -61,29 +61,30 @@ class LoggingTests: XCTestCase {
             httpClient: MockAWSHTTPClient(),
             logger: logger
         )
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let config = createServiceConfig(
             service: "test-service",
             serviceProtocol: .json(version: "1.1")
         )
 
-        _ = try await client.execute(
-            operation: "TestOperation",
-            path: "/",
-            httpMethod: .get,
-            serviceConfig: config,
-            logger: logger
-        )
-        let requestEntry = inMemoryLogging.entries.first(where: { $0.message == "AWS Request" })
-        XCTAssertNotNil(requestEntry)
-        XCTAssertEqual(requestEntry?.level, .debug)
-        XCTAssertEqual(requestEntry?.metadata["aws-operation"], "TestOperation")
-        XCTAssertEqual(requestEntry?.metadata["aws-service"], "test-service")
-        let responseEntry = inMemoryLogging.entries.first { $0.message == "AWS Response" }
-        XCTAssertNotNil(responseEntry)
-        XCTAssertEqual(responseEntry?.level, .trace)
-        XCTAssertEqual(responseEntry?.metadata["aws-operation"], "TestOperation")
-        XCTAssertEqual(responseEntry?.metadata["aws-service"], "test-service")
+        try await withClient(client) {
+            _ = try await client.execute(
+                operation: "TestOperation",
+                path: "/",
+                httpMethod: .get,
+                serviceConfig: config,
+                logger: logger
+            )
+            let requestEntry = inMemoryLogging.entries.first(where: { $0.message == "AWS Request" })
+            XCTAssertNotNil(requestEntry)
+            XCTAssertEqual(requestEntry?.level, .debug)
+            XCTAssertEqual(requestEntry?.metadata["aws-operation"], "TestOperation")
+            XCTAssertEqual(requestEntry?.metadata["aws-service"], "test-service")
+            let responseEntry = inMemoryLogging.entries.first { $0.message == "AWS Response" }
+            XCTAssertNotNil(responseEntry)
+            XCTAssertEqual(responseEntry?.level, .trace)
+            XCTAssertEqual(responseEntry?.metadata["aws-operation"], "TestOperation")
+            XCTAssertEqual(responseEntry?.metadata["aws-service"], "test-service")
+        }
     }
 
     func testAWSError() async throws {
@@ -99,15 +100,16 @@ class LoggingTests: XCTestCase {
             httpClient: mockHTTPClient,
             logger: logger
         )
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
-        let config = createServiceConfig(
-            serviceProtocol: .json(version: "1.1")
-        )
+        try await withClient(client) {
+            let config = createServiceConfig(
+                serviceProtocol: .json(version: "1.1")
+            )
 
-        _ = try? await client.execute(operation: "test", path: "/", httpMethod: .get, serviceConfig: config, logger: logger)
+            _ = try? await client.execute(operation: "test", path: "/", httpMethod: .get, serviceConfig: config, logger: logger)
 
-        XCTAssertEqual(inMemoryLogging.entries.first { $0.metadata["aws-error-code"] == "AccessDenied" }?.message, "AWS Error")
-        XCTAssertEqual(inMemoryLogging.entries.first { $0.metadata["aws-error-code"] == "AccessDenied" }?.level, .info)
+            XCTAssertEqual(inMemoryLogging.entries.first { $0.metadata["aws-error-code"] == "AccessDenied" }?.message, "AWS Error")
+            XCTAssertEqual(inMemoryLogging.entries.first { $0.metadata["aws-error-code"] == "AccessDenied" }?.level, .info)
+        }
     }
 
     func testRetryRequest() async throws {
@@ -129,15 +131,16 @@ class LoggingTests: XCTestCase {
             httpClient: mockHTTPClient,
             logger: logger
         )
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
-        let config = createServiceConfig(
-            serviceProtocol: .json(version: "1.1")
-        )
+        try await withClient(client) {
+            let config = createServiceConfig(
+                serviceProtocol: .json(version: "1.1")
+            )
 
-        _ = try await client.execute(operation: "test1", path: "/", httpMethod: .get, serviceConfig: config, logger: logger)
+            _ = try await client.execute(operation: "test1", path: "/", httpMethod: .get, serviceConfig: config, logger: logger)
 
-        XCTAssertEqual(inMemoryLogging.entries.first { $0.metadata["aws-retry-time"] != nil }?.message, "Retrying request")
-        XCTAssertEqual(inMemoryLogging.entries.first { $0.metadata["aws-retry-time"] != nil }?.level, .trace)
+            XCTAssertEqual(inMemoryLogging.entries.first { $0.metadata["aws-retry-time"] != nil }?.message, "Retrying request")
+            XCTAssertEqual(inMemoryLogging.entries.first { $0.metadata["aws-retry-time"] != nil }?.level, .trace)
+        }
     }
 
     func testNoCredentialProvider() async throws {
@@ -145,18 +148,19 @@ class LoggingTests: XCTestCase {
         var logger = Logger(label: "LoggingTests", factory: { _ in inMemoryLogging })
         logger.logLevel = .trace
         let client = createAWSClient(credentialProvider: .selector(.custom { _ in NullCredentialProvider() }))
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let serviceConfig = createServiceConfig()
-        do {
-            try await client.execute(
-                operation: "Test",
-                path: "/",
-                httpMethod: .get,
-                serviceConfig: serviceConfig,
-                logger: logger
-            )
-        } catch {}
-        XCTAssertNotNil(inMemoryLogging.entries.first { $0.metadata["aws-error-message"] != "No credential provider found." })
+        try await withClient(client) {
+            do {
+                try await client.execute(
+                    operation: "Test",
+                    path: "/",
+                    httpMethod: .get,
+                    serviceConfig: serviceConfig,
+                    logger: logger
+                )
+            } catch {}
+            XCTAssertNotNil(inMemoryLogging.entries.first { $0.metadata["aws-error-message"] != "No credential provider found." })
+        }
     }
 
     func testRequestLogLevel() async throws {
@@ -169,21 +173,22 @@ class LoggingTests: XCTestCase {
             httpClient: MockAWSHTTPClient(),
             logger: logger
         )
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
         let config = createServiceConfig(
             service: "test-service",
             serviceProtocol: .json(version: "1.1")
         )
 
-        _ = try await client.execute(
-            operation: "TestOperation",
-            path: "/",
-            httpMethod: .get,
-            serviceConfig: config,
-            logger: logger
-        )
-        let requestEntry = try XCTUnwrap(inMemoryLogging.entries.first { $0.message == "AWS Request" })
-        XCTAssertEqual(requestEntry.level, .trace)
+        try await withClient(client) {
+            _ = try await client.execute(
+                operation: "TestOperation",
+                path: "/",
+                httpMethod: .get,
+                serviceConfig: config,
+                logger: logger
+            )
+            let requestEntry = try XCTUnwrap(inMemoryLogging.entries.first { $0.message == "AWS Request" })
+            XCTAssertEqual(requestEntry.level, .trace)
+        }
     }
 
     func testLoggingMiddleware() async throws {
@@ -205,21 +210,22 @@ class LoggingTests: XCTestCase {
             httpClient: mockHTTPClient,
             logger: logger
         )
-        defer { XCTAssertNoThrow(try client.syncShutdown()) }
 
         let config = createServiceConfig(
             service: "test-service",
             serviceProtocol: .json(version: "1.1")
         )
 
-        let _: Output = try await client.execute(
-            operation: "TestOperation",
-            path: "/",
-            httpMethod: .get,
-            serviceConfig: config,
-            logger: traceLogger
-        )
-        XCTAssertNotNil(inMemoryLogging.entries.first { $0.message.description.hasPrefix("Request") })
-        XCTAssertNotNil(inMemoryLogging.entries.first { $0.message.description.hasPrefix("Response") })
+        try await withClient(client) {
+            let _: Output = try await client.execute(
+                operation: "TestOperation",
+                path: "/",
+                httpMethod: .get,
+                serviceConfig: config,
+                logger: traceLogger
+            )
+            XCTAssertNotNil(inMemoryLogging.entries.first { $0.message.description.hasPrefix("Request") })
+            XCTAssertNotNil(inMemoryLogging.entries.first { $0.message.description.hasPrefix("Response") })
+        }
     }
 }

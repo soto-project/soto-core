@@ -127,14 +127,13 @@ struct EndpointDiscoveryTests {
             }
         }
         let client = AWSClient(credentialProvider: .empty, httpClient: httpClient)
-        defer {
-            #expect(throws: Never.self) { try client.syncShutdown() }
-        }
-        let service = Service(client: client).with(middleware: TestEnvironment.middlewares)
+        try await withClient(client) {
+            let service = Service(client: client).with(middleware: TestEnvironment.middlewares)
 
-        _ = try await service.test(.init(), logger: TestEnvironment.logger)
-        _ = try await service.test(.init(), logger: TestEnvironment.logger)
-        #expect(endpointCalledCount.load(ordering: .relaxed) == 1)
+            _ = try await service.test(.init(), logger: TestEnvironment.logger)
+            _ = try await service.test(.init(), logger: TestEnvironment.logger)
+            #expect(endpointCalledCount.load(ordering: .relaxed) == 1)
+        }
     }
 
     @Test func testConcurrentEndpointDiscovery() async throws {
@@ -158,17 +157,17 @@ struct EndpointDiscoveryTests {
             }
         }
         let client = AWSClient(credentialProvider: .empty, httpClient: httpClient)
-        defer {
-            #expect(throws: Never.self) { try client.syncShutdown() }
+
+        try await withClient(client) {
+            let service = Service(client: client).with(middleware: TestEnvironment.middlewares)
+
+            async let response1 = service.test(.init(), logger: TestEnvironment.logger)
+            async let response2 = service.test(.init(), logger: TestEnvironment.logger)
+
+            try await response1
+            try await response2
+            #expect(endpointCalledCount.load(ordering: .relaxed) == 1)
         }
-        let service = Service(client: client).with(middleware: TestEnvironment.middlewares)
-
-        async let response1 = service.test(.init(), logger: TestEnvironment.logger)
-        async let response2 = service.test(.init(), logger: TestEnvironment.logger)
-
-        try await response1
-        try await response2
-        #expect(endpointCalledCount.load(ordering: .relaxed) == 1)
     }
 
     @Test func testDontCacheEndpoint() async throws {
@@ -192,14 +191,13 @@ struct EndpointDiscoveryTests {
             }
         }
         let client = AWSClient(credentialProvider: .empty, httpClient: httpClient)
-        defer {
-            #expect(throws: Never.self) { try client.syncShutdown() }
-        }
-        let service = Service(client: client).with(middleware: TestEnvironment.middlewares)
+        try await withClient(client) {
+            let service = Service(client: client).with(middleware: TestEnvironment.middlewares)
 
-        _ = try await service.test(.init(), logger: TestEnvironment.logger)
-        _ = try await service.test(.init(), logger: TestEnvironment.logger)
-        #expect(endpointCalledCount.load(ordering: .relaxed) == 2)
+            _ = try await service.test(.init(), logger: TestEnvironment.logger)
+            _ = try await service.test(.init(), logger: TestEnvironment.logger)
+            #expect(endpointCalledCount.load(ordering: .relaxed) == 2)
+        }
     }
 
     @Test func testNotRequiredEndpointDiscovery() async throws {
@@ -221,11 +219,9 @@ struct EndpointDiscoveryTests {
             }
         }
         let client = AWSClient(credentialProvider: .empty, httpClient: httpClient)
-        defer {
-            #expect(throws: Never.self) { try client.syncShutdown() }
+        try await withClient(client) {
+            let service = Service(client: client).with(middleware: TestEnvironment.middlewares)
+            _ = try await service.testNotRequired(.init(), logger: TestEnvironment.logger)
         }
-        let service = Service(client: client).with(middleware: TestEnvironment.middlewares)
-
-        _ = try await service.testNotRequired(.init(), logger: TestEnvironment.logger)
     }
 }

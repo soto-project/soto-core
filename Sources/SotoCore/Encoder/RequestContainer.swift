@@ -24,7 +24,6 @@ public import Foundation
 
 /// Request container used during Codable `encode(to:)` that allows for encoding data into
 /// the request that is not part of standard Codable output
-@_spi(SotoInternal)
 public final class RequestEncodingContainer: Sendable {
     struct _Internal {
         @usableFromInline

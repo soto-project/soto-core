@@ -304,15 +304,15 @@ class MiddlewareTests: XCTestCase {
 
         init(from decoder: any Decoder) throws {
             let singleValueContainer = try decoder.singleValueContainer()
-            let errorCode = try singleValueContainer.decode(AWSErrorCode.self)
-            switch errorCode.code {
+            let error = try singleValueContainer.decode(AWSResponseError.self)
+            switch error.errorCode {
             case "NotFound":
                 self.error = .notFound
             default:
                 throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unrecognised error code"))
             }
-            self.message = try singleValueContainer.decode(AWSErrorMessage.self).message
-            self.response = (decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer).response.response
+            self.message = error.message
+            self.response = error.response
         }
 
         var errorCode: String {

@@ -178,66 +178,6 @@ public struct AWSHTTPResponse: Sendable {
         }
         return nil
     }
-
-    struct AWSBaseError: Decodable {
-        let code: String
-        let message: String?
-
-        init(from decoder: any Decoder) throws {
-            let singleValueContainer = try decoder.singleValueContainer()
-            let errorCode = try singleValueContainer.decode(AWSErrorCode.self)
-            self.code = errorCode.code
-            let errorMessage = try singleValueContainer.decode(AWSErrorMessage.self)
-            self.message = errorMessage.message
-        }
-
-        private enum CodingKeys: String, CodingKey {
-            case Message = "Message"
-            case message = "message"
-        }
-    }
-}
-
-public struct AWSErrorCode: Decodable {
-    public let code: String
-
-    public init(from decoder: any Decoder) throws {
-        let serviceProtocol = decoder.userInfo[.awsProtocol]! as! ServiceProtocol
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        switch serviceProtocol {
-        case .restjson, .json:
-            let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
-            let code =
-                try response.decodeHeaderIfPresent(key: HTTPField.Name.xAmznErrorType.canonicalName)
-                ?? container.decodeIfPresent(String.self, forKey: .type)
-                ?? container.decode(String.self, forKey: .code)
-            let filteredCode = code.suffix { $0 != "#" }.prefix { $0 != ":" }
-            self.code = .init(filteredCode)
-
-        case .restxml, .query, .ec2:
-            self.code = try container.decode(String.self, forKey: .Code)
-        }
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case Code = "Code"
-        case type = "__type"
-        case code = "code"
-    }
-}
-
-public struct AWSErrorMessage: Decodable {
-    public let message: String?
-
-    public init(from decoder: any Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.message = try container.decodeIfPresent(String.self, forKey: .Message) ?? container.decodeIfPresent(String.self, forKey: .message)
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case Message = "Message"
-        case message = "message"
-    }
 }
 
 extension XML.Document {

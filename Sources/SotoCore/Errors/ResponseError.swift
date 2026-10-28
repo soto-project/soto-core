@@ -12,25 +12,19 @@
 //
 //===----------------------------------------------------------------------===//
 
+public import Algorithms
 public import HTTPTypes
 
-public struct AWSResponseError: AWSErrorType, Decodable {
+public struct AWSResponseError: AWSErrorType {
     public let errorCode: String
     public let message: String?
     public let response: HTTPResponse?
 
+    @inlinable
     public init(errorCode: String, message: String? = nil, response: HTTPResponse? = nil) {
         self.errorCode = errorCode
         self.message = message
         self.response = response
-    }
-
-    public init(from decoder: any Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        let responseContainer = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
-        self.errorCode = try container.decode(AWSErrorCode.self).code
-        self.message = try container.decode(AWSErrorMessage.self).message
-        self.response = responseContainer.response.response
     }
 
     /// Access has been denied.
@@ -73,6 +67,39 @@ public struct AWSResponseError: AWSErrorType, Decodable {
     public static var internalFailure: AWSResponseError { .init(errorCode: "InternalFailure") }
     /// The request has failed due to a temporary failure of the server.
     public static var serviceUnavailable: AWSResponseError { .init(errorCode: "ServiceUnavailable") }
+}
+
+extension AWSResponseError: Decodable {
+    @inlinable
+    public init(from decoder: any Decoder) throws {
+        let responseContainer = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
+        let serviceProtocol = decoder.userInfo[.awsProtocol]! as! ServiceProtocol
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        switch serviceProtocol {
+        case .restjson, .json:
+            let response = decoder.userInfo[.awsResponse]! as! ResponseDecodingContainer
+            let code =
+                try response.decodeHeaderIfPresent(key: HTTPField.Name.xAmznErrorType.canonicalName)
+                ?? container.decodeIfPresent(String.self, forKey: .type)
+                ?? container.decode(String.self, forKey: .code)
+            let errorCode = code.suffix { $0 != "#" }.prefix { $0 != ":" }
+            self.errorCode = .init(errorCode)
+
+        case .restxml, .query, .ec2:
+            self.errorCode = try container.decode(String.self, forKey: .Code)
+        }
+        self.message = try container.decodeIfPresent(String.self, forKey: .Message) ?? container.decodeIfPresent(String.self, forKey: .message)
+        self.response = responseContainer.response.response
+    }
+
+    @usableFromInline
+    internal enum CodingKeys: String, CodingKey {
+        case Code = "Code"
+        case type = "__type"
+        case code = "code"
+        case Message = "Message"
+        case message = "message"
+    }
 }
 
 extension AWSResponseError: Equatable {

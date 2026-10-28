@@ -91,7 +91,7 @@ class LoggingTests: XCTestCase {
         var logger = Logger(label: "LoggingTests", factory: { _ in inMemoryLogging })
         logger.logLevel = .trace
         let mockHTTPClient = MockAWSHTTPClient { request in
-            MockAWSHTTPClient.awsError(status: .unauthorized, code: "AccessDenied")
+            MockAWSHTTPClient.HTTPError(status: .unauthorized, code: "AccessDenied").response(for: .json(version: "1.1"))
         }
         let client = AWSClient(
             credentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar"),

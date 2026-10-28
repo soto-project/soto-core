@@ -46,7 +46,7 @@ package struct MockAWSHTTPClient: AWSHTTPClient {
             self.message = message
         }
 
-        func response(for serviceProtocol: ServiceProtocol) -> AWSHTTPResponse {
+        package func response(for serviceProtocol: ServiceProtocol) -> AWSHTTPResponse {
             switch serviceProtocol {
             case .json:
                 if let message {
@@ -142,13 +142,5 @@ package struct MockAWSHTTPClient: AWSHTTPClient {
             responseHead.headerFields[.transferEncoding] = "chunked"
         }
         return AWSHTTPResponse(response: responseHead, body: response.body)
-    }
-
-    package static func awsError(status: HTTPResponse.Status, code: String, message: String? = nil) -> AWSHTTPResponse {
-        if let message {
-            AWSHTTPResponse(response: .init(status: status), body: .init(string: "{\"code\":\"\(code)\", \"message\": \"\(message)\"}"))
-        } else {
-            AWSHTTPResponse(response: .init(status: status), body: .init(string: "{\"code\":\"\(code)\"}"))
-        }
     }
 }

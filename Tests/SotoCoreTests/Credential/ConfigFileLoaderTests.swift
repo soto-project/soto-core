@@ -180,7 +180,7 @@ struct ConfigFileLoadersTests {
             } catch let error as ConfigFileLoader.ConfigFileError where error == .missingAccessKeyId {
                 // Pass
             } catch {
-                Issue.record("Expected ConfigFileLoader.ConfigFileError.missingAccessKeyId, got \(error.localizedDescription)")
+                Issue.record("Expected ConfigFileLoader.ConfigFileError.missingAccessKeyId, got \(error)")
             }
         } teardown: {
             try? FileManager.default.removeItem(atPath: credentialsPath)
@@ -209,7 +209,7 @@ struct ConfigFileLoadersTests {
             } catch let error as ConfigFileLoader.ConfigFileError where error == .missingSecretAccessKey {
                 // Pass
             } catch {
-                Issue.record("Expected ConfigFileLoader.ConfigFileError.missingSecretAccessKey, got \(error.localizedDescription)")
+                Issue.record("Expected ConfigFileLoader.ConfigFileError.missingSecretAccessKey, got \(error)")
             }
         } teardown: {
             try? FileManager.default.removeItem(atPath: credentialsPath)
@@ -243,7 +243,7 @@ struct ConfigFileLoadersTests {
             } catch let error as ConfigFileLoader.ConfigFileError where error == .missingAccessKeyId {
                 // Pass
             } catch {
-                Issue.record("Expected ConfigFileLoader.ConfigFileError.missingAccessKeyId, got \(error.localizedDescription)")
+                Issue.record("Expected ConfigFileLoader.ConfigFileError.missingAccessKeyId, got \(error)")
             }
         } teardown: {
             try? FileManager.default.removeItem(atPath: credentialsPath)
@@ -277,7 +277,7 @@ struct ConfigFileLoadersTests {
             } catch let error as ConfigFileLoader.ConfigFileError where error == .missingSecretAccessKey {
                 // Pass
             } catch {
-                Issue.record("Expected ConfigFileLoader.ConfigFileError.missingSecretAccessKey, got \(error.localizedDescription)")
+                Issue.record("Expected ConfigFileLoader.ConfigFileError.missingSecretAccessKey, got \(error)")
             }
         } teardown: {
             try? FileManager.default.removeItem(atPath: credentialsPath)
@@ -407,7 +407,7 @@ struct ConfigFileLoadersTests {
             } catch let error as CredentialProviderError where error == .noProvider {
                 // pass
             } catch {
-                Issue.record("Expected CredentialProviderError.noProvider, got \(error.localizedDescription)")
+                Issue.record("Expected CredentialProviderError.noProvider, got \(error)")
             }
         } teardown: {
             try? await httpClient.shutdown()
@@ -437,7 +437,7 @@ struct ConfigFileLoadersTests {
             } catch let error as CredentialProviderError where error == .noProvider {
                 // pass
             } catch {
-                Issue.record("Expected CredentialProviderError.noProvider, got \(error.localizedDescription)")
+                Issue.record("Expected CredentialProviderError.noProvider, got \(error)")
             }
         } teardown: {
             try? FileManager.default.removeItem(atPath: configPath)
@@ -464,7 +464,7 @@ struct ConfigFileLoadersTests {
             } catch let error as ConfigFileLoader.ConfigFileError where error == .invalidINIFile {
                 // pass
             } catch {
-                Issue.record("Expected ConfigFileError.invalidINIFile, got \(error.localizedDescription)")
+                Issue.record("Expected ConfigFileError.invalidINIFile, got \(error)")
             }
         } teardown: {
             try? FileManager.default.removeItem(atPath: credentialsPath)
@@ -496,7 +496,7 @@ struct ConfigFileLoadersTests {
             } catch let error as ConfigFileLoader.ConfigFileError where error == .invalidINIFile {
                 // pass
             } catch {
-                Issue.record("Expected ConfigFileError.invalidINIFile, got \(error.localizedDescription)")
+                Issue.record("Expected ConfigFileError.invalidINIFile, got \(error)")
             }
         } teardown: {
             try? FileManager.default.removeItem(atPath: credentialsPath)
@@ -524,7 +524,7 @@ struct ConfigFileLoadersTests {
             } catch let error as ConfigFileLoader.ConfigFileError where error == .invalidINIFile {
                 // pass
             } catch {
-                Issue.record("Expected ConfigFileError.invalidINIFile, got \(error.localizedDescription)")
+                Issue.record("Expected ConfigFileError.invalidINIFile, got \(error)")
             }
         } teardown: {
             try? FileManager.default.removeItem(atPath: configPath)
@@ -599,7 +599,7 @@ struct ConfigFileLoadersTests {
             } catch let error as ConfigFileLoader.ConfigFileError where error == .invalidINIFile {
                 // Pass
             } catch {
-                Issue.record("Expected ConfigFileLoader.ConfigFileError.invalidINIFile, got \(error.localizedDescription)")
+                Issue.record("Expected ConfigFileLoader.ConfigFileError.invalidINIFile, got \(error)")
             }
         } teardown: {
             try? FileManager.default.removeItem(atPath: credentialsPath)
@@ -691,7 +691,7 @@ struct ConfigFileLoadersTests {
             _ = try ConfigFileLoader.parseProfileConfig(from: try! INIParser(content), for: "bar")
         } catch let error as ConfigFileLoader.ConfigFileError where error == .missingProfile {
         } catch {
-            Issue.record("Expected missingProfile error, got \(error.localizedDescription)")
+            Issue.record("Expected missingProfile error, got \(error)")
         }
     }
 
@@ -782,7 +782,7 @@ struct ConfigFileLoadersTests {
             _ = try ConfigFileLoader.parseCredentials(from: try! INIParser(content), for: "user1", sourceProfile: nil)
         } catch let error as ConfigFileLoader.ConfigFileError where error == .missingProfile {
         } catch {
-            Issue.record("Expected missingProfile error, got \(error.localizedDescription)")
+            Issue.record("Expected missingProfile error, got \(error)")
         }
     }
 
@@ -797,7 +797,7 @@ struct ConfigFileLoadersTests {
             _ = try ConfigFileLoader.parseCredentials(from: try! INIParser(content), for: "foo", sourceProfile: ConfigFileLoader.defaultProfile)
         } catch let error as ConfigFileLoader.ConfigFileError where error == .missingProfile {
         } catch {
-            Issue.record("Expected missingProfile error, got \(error.localizedDescription)")
+            Issue.record("Expected missingProfile error, got \(error)")
         }
     }
 
@@ -812,7 +812,7 @@ struct ConfigFileLoadersTests {
         } catch let error as ConfigFileLoader.ConfigFileError where error == .missingAccessKeyId {
             // pass
         } catch {
-            Issue.record("Expected missingProfile error, got \(error.localizedDescription)")
+            Issue.record("Expected missingProfile error, got \(error)")
         }
     }
 
@@ -827,7 +827,7 @@ struct ConfigFileLoadersTests {
         } catch let error as ConfigFileLoader.ConfigFileError where error == .missingSecretAccessKey {
             // pass
         } catch {
-            Issue.record("Expected missingProfile error, got \(error.localizedDescription)")
+            Issue.record("Expected missingProfile error, got \(error)")
         }
     }
 
@@ -845,7 +845,7 @@ struct ConfigFileLoadersTests {
         } catch let error as ConfigFileLoader.ConfigFileError where error == .missingAccessKeyId {
             // pass
         } catch {
-            Issue.record("Expected missingProfile error, got \(error.localizedDescription)")
+            Issue.record("Expected missingProfile error, got \(error)")
         }
     }
 
@@ -863,7 +863,7 @@ struct ConfigFileLoadersTests {
         } catch let error as ConfigFileLoader.ConfigFileError where error == .missingSecretAccessKey {
             // pass
         } catch {
-            Issue.record("Expected missingProfile error, got \(error.localizedDescription)")
+            Issue.record("Expected missingProfile error, got \(error)")
         }
     }
 

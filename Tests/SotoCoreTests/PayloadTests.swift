@@ -21,7 +21,7 @@ import XCTest
 @testable import SotoCore
 
 class PayloadTests: XCTestCase {
-    func testRequestPayload(_ payload: AWSHTTPBody, expectedResult: String) async {
+    func testRequestPayload(_ payload: AWSHTTPBody, expectedResult: String) async throws {
         struct DataPayload: AWSEncodableShape {
             var _payload: AWSHTTPBody { self.data }
             let data: AWSHTTPBody
@@ -32,50 +32,45 @@ class PayloadTests: XCTestCase {
             private enum CodingKeys: CodingKey {}
         }
 
-        do {
-            let awsServer = AWSTestServer(serviceProtocol: .json)
-            let config = createServiceConfig(endpoint: awsServer.address)
-            let client = createAWSClient(credentialProvider: .empty)
-            defer {
-                XCTAssertNoThrow(try client.syncShutdown())
-            }
-            let input = DataPayload(data: payload)
-            async let responseTask: Void = client.execute(
-                operation: "test",
-                path: "/",
-                httpMethod: .post,
-                serviceConfig: config,
-                input: input,
-                logger: TestEnvironment.logger
-            )
-
-            try awsServer.processRaw { request in
-                XCTAssertEqual(request.body.getString(at: 0, length: request.body.readableBytes), expectedResult)
-                return .result(.ok)
-            }
-
-            try await responseTask
-            try awsServer.stop()
-        } catch {
-            XCTFail("Unexpected error: \(error)")
+        let mockHTTPClient = MockAWSHTTPClient { request in
+            let body = try await request.body.collect(upTo: .max)
+            XCTAssertEqual(String(buffer: body), expectedResult)
+            return .init(response: .init(status: .ok))
         }
+        let client = AWSClient(
+            credentialProvider: .empty,
+            httpClient: mockHTTPClient
+        )
+        defer {
+            XCTAssertNoThrow(try client.syncShutdown())
+        }
+        let config = createServiceConfig()
+        let input = DataPayload(data: payload)
+        _ = try await client.execute(
+            operation: "test",
+            path: "/",
+            httpMethod: .post,
+            serviceConfig: config,
+            input: input,
+            logger: TestEnvironment.logger
+        )
     }
 
-    func testDataRequestPayload() async {
-        await self.testRequestPayload(.init(bytes: Data("testDataPayload".utf8)), expectedResult: "testDataPayload")
+    func testDataRequestPayload() async throws {
+        try await self.testRequestPayload(.init(bytes: Data("testDataPayload".utf8)), expectedResult: "testDataPayload")
     }
 
-    func testStringRequestPayload() async {
-        await self.testRequestPayload(.init(string: "testStringPayload"), expectedResult: "testStringPayload")
+    func testStringRequestPayload() async throws {
+        try await self.testRequestPayload(.init(string: "testStringPayload"), expectedResult: "testStringPayload")
     }
 
-    func testByteBufferRequestPayload() async {
+    func testByteBufferRequestPayload() async throws {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: 32)
         byteBuffer.writeString("testByteBufferPayload")
-        await self.testRequestPayload(.init(buffer: byteBuffer), expectedResult: "testByteBufferPayload")
+        try await self.testRequestPayload(.init(buffer: byteBuffer), expectedResult: "testByteBufferPayload")
     }
 
-    func testResponsePayload() async {
+    func testResponsePayload() async throws {
         struct Output: AWSDecodableShape {
             static let _options: AWSShapeOptions = .rawPayload
             let payload: AWSHTTPBody
@@ -85,36 +80,27 @@ class PayloadTests: XCTestCase {
                 self.payload = try container.decode(AWSHTTPBody.self)
             }
         }
-        do {
-            let awsServer = AWSTestServer(serviceProtocol: .json)
-            let config = createServiceConfig(endpoint: awsServer.address)
-            let client = createAWSClient(credentialProvider: .empty)
-            defer {
-                XCTAssertNoThrow(try client.syncShutdown())
-            }
-            async let responseTask: Output = client.execute(
-                operation: "test",
-                path: "/",
-                httpMethod: .post,
-                serviceConfig: config,
-                logger: TestEnvironment.logger
-            )
-
-            try awsServer.processRaw { _ in
-                var byteBuffer = ByteBufferAllocator().buffer(capacity: 0)
-                byteBuffer.writeString("testResponsePayload")
-                let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: byteBuffer)
-                return .result(response)
-            }
-
-            let output = try await responseTask
-
-            let responsePayload = try await String(buffer: output.payload.collect(upTo: .max))
-            XCTAssertEqual(responsePayload, "testResponsePayload")
-            // XCTAssertEqual(output.i, 547)
-            try awsServer.stop()
-        } catch {
-            XCTFail("Unexpected error: \(error)")
+        let mockHTTPClient = MockAWSHTTPClient { request in
+            let body = ByteBuffer(string: "testResponsePayload")
+            return .init(response: .init(status: .ok), body: .init(buffer: body))
         }
+        let client = AWSClient(
+            credentialProvider: .empty,
+            httpClient: mockHTTPClient
+        )
+        defer {
+            XCTAssertNoThrow(try client.syncShutdown())
+        }
+        let config = createServiceConfig()
+        let output: Output = try await client.execute(
+            operation: "test",
+            path: "/",
+            httpMethod: .post,
+            serviceConfig: config,
+            logger: TestEnvironment.logger
+        )
+
+        let responsePayload = try await String(buffer: output.payload.collect(upTo: .max))
+        XCTAssertEqual(responsePayload, "testResponsePayload")
     }
 }

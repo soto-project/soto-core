@@ -34,7 +34,6 @@ public struct HeaderDecodingError: Error {
 
 /// Response container used during Codable `init(from:)` that allows for extracting data from
 /// the full response and not only its body
-@_spi(SotoInternal)
 public struct ResponseDecodingContainer: Sendable {
     public let response: AWSHTTPResponse
 

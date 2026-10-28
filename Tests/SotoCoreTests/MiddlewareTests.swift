@@ -58,9 +58,15 @@ class MiddlewareTests {
             credentialProvider: .empty,
             httpClient: mockHTTPClient
         )
-        defer { #expect(throws: Never.self) { try client.syncShutdown() } }
-
-        _ = try await client.execute(operation: "test", path: uri, httpMethod: .post, serviceConfig: serviceConfig, logger: TestEnvironment.logger)
+        try await withClient(client) {
+            _ = try await client.execute(
+                operation: "test",
+                path: uri,
+                httpMethod: .post,
+                serviceConfig: serviceConfig,
+                logger: TestEnvironment.logger
+            )
+        }
     }
 
     @Test func testMiddlewareAppliedOnce() async throws {

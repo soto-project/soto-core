@@ -171,17 +171,17 @@ struct PaginateTests {
             credentialProvider: .empty,
             httpClient: mockHTTPClient
         )
-        defer { #expect(throws: Never.self) { try client.syncShutdown() } }
+        try await withClient(client) {
+            let service = PaginateService(client: client, serviceConfig: createServiceConfig())
+            let finalArray = try await service.counterPaginator(input).reduce([]) {
+                $0 + $1.array
+            }
 
-        let service = PaginateService(client: client, serviceConfig: createServiceConfig())
-        let finalArray = try await service.counterPaginator(input).reduce([]) {
-            $0 + $1.array
-        }
-
-        // verify contents of array
-        #expect(finalArray.count == arraySize)
-        for i in 0..<finalArray.count {
-            #expect(finalArray[i] == i)
+            // verify contents of array
+            #expect(finalArray.count == arraySize)
+            for i in 0..<finalArray.count {
+                #expect(finalArray[i] == i)
+            }
         }
     }
 
@@ -193,16 +193,16 @@ struct PaginateTests {
             credentialProvider: .empty,
             httpClient: mockHTTPClient
         )
-        defer { #expect(throws: Never.self) { try client.syncShutdown() } }
+        try await withClient(client) {
+            let service = PaginateService(client: client, serviceConfig: createServiceConfig())
 
-        let service = PaginateService(client: client, serviceConfig: createServiceConfig())
-
-        let paginator = service.stringListPaginator(input)
-        let finalArray = try await paginator.reduce([]) { $0 + $1.array }
-        // verify contents of array
-        #expect(finalArray.count == self.stringList.count)
-        for i in 0..<finalArray.count {
-            #expect(finalArray[i] == self.stringList[i])
+            let paginator = service.stringListPaginator(input)
+            let finalArray = try await paginator.reduce([]) { $0 + $1.array }
+            // verify contents of array
+            #expect(finalArray.count == self.stringList.count)
+            for i in 0..<finalArray.count {
+                #expect(finalArray[i] == self.stringList[i])
+            }
         }
     }
 
@@ -216,15 +216,15 @@ struct PaginateTests {
             credentialProvider: .empty,
             httpClient: mockHTTPClient
         )
-        defer { #expect(throws: Never.self) { try client.syncShutdown() } }
+        try await withClient(client) {
+            let service = PaginateService(client: client, serviceConfig: createServiceConfig())
 
-        let service = PaginateService(client: client, serviceConfig: createServiceConfig())
-
-        let paginator = service.stringListPaginator(input)
-        do {
-            _ = try await paginator.reduce([]) { $0 + $1.array }
-        } catch {
-            #expect((error as? AWSResponseError)?.errorCode == "BadRequest")
+            let paginator = service.stringListPaginator(input)
+            do {
+                _ = try await paginator.reduce([]) { $0 + $1.array }
+            } catch {
+                #expect((error as? AWSResponseError)?.errorCode == "BadRequest")
+            }
         }
     }
 
@@ -243,15 +243,15 @@ struct PaginateTests {
             credentialProvider: .empty,
             httpClient: mockHTTPClient
         )
-        defer { #expect(throws: Never.self) { try client.syncShutdown() } }
+        try await withClient(client) {
+            let service = PaginateService(client: client, serviceConfig: createServiceConfig())
 
-        let service = PaginateService(client: client, serviceConfig: createServiceConfig())
-
-        let paginator = service.stringListPaginator(input)
-        do {
-            _ = try await paginator.reduce([]) { $0 + $1.array }
-        } catch {
-            #expect((error as? AWSResponseError)?.errorCode == "BadRequest")
+            let paginator = service.stringListPaginator(input)
+            do {
+                _ = try await paginator.reduce([]) { $0 + $1.array }
+            } catch {
+                #expect((error as? AWSResponseError)?.errorCode == "BadRequest")
+            }
         }
     }
 }

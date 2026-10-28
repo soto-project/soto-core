@@ -12,15 +12,16 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 import HTTPTypes
 import NIOCore
 import NIOHTTP1
 import SotoTestUtils
-import XCTest
+import Testing
 
 @testable import SotoCore
 
-class PayloadTests: XCTestCase {
+struct PayloadTests {
     func testRequestPayload(_ payload: AWSHTTPBody, expectedResult: String) async throws {
         struct DataPayload: AWSEncodableShape {
             var _payload: AWSHTTPBody { self.data }
@@ -34,43 +35,42 @@ class PayloadTests: XCTestCase {
 
         let mockHTTPClient = MockAWSHTTPClient { request in
             let body = try await request.body.collect(upTo: .max)
-            XCTAssertEqual(String(buffer: body), expectedResult)
+            #expect(String(buffer: body) == expectedResult)
             return .init(response: .init(status: .ok))
         }
         let client = AWSClient(
             credentialProvider: .empty,
             httpClient: mockHTTPClient
         )
-        defer {
-            XCTAssertNoThrow(try client.syncShutdown())
+        try await withClient(client) {
+            let config = createServiceConfig()
+            let input = DataPayload(data: payload)
+            _ = try await client.execute(
+                operation: "test",
+                path: "/",
+                httpMethod: .post,
+                serviceConfig: config,
+                input: input,
+                logger: TestEnvironment.logger
+            )
         }
-        let config = createServiceConfig()
-        let input = DataPayload(data: payload)
-        _ = try await client.execute(
-            operation: "test",
-            path: "/",
-            httpMethod: .post,
-            serviceConfig: config,
-            input: input,
-            logger: TestEnvironment.logger
-        )
     }
 
-    func testDataRequestPayload() async throws {
+    @Test func testDataRequestPayload() async throws {
         try await self.testRequestPayload(.init(bytes: Data("testDataPayload".utf8)), expectedResult: "testDataPayload")
     }
 
-    func testStringRequestPayload() async throws {
+    @Test func testStringRequestPayload() async throws {
         try await self.testRequestPayload(.init(string: "testStringPayload"), expectedResult: "testStringPayload")
     }
 
-    func testByteBufferRequestPayload() async throws {
+    @Test func testByteBufferRequestPayload() async throws {
         var byteBuffer = ByteBufferAllocator().buffer(capacity: 32)
         byteBuffer.writeString("testByteBufferPayload")
         try await self.testRequestPayload(.init(buffer: byteBuffer), expectedResult: "testByteBufferPayload")
     }
 
-    func testResponsePayload() async throws {
+    @Test func testResponsePayload() async throws {
         struct Output: AWSDecodableShape {
             static let _options: AWSShapeOptions = .rawPayload
             let payload: AWSHTTPBody
@@ -88,19 +88,18 @@ class PayloadTests: XCTestCase {
             credentialProvider: .empty,
             httpClient: mockHTTPClient
         )
-        defer {
-            XCTAssertNoThrow(try client.syncShutdown())
-        }
-        let config = createServiceConfig()
-        let output: Output = try await client.execute(
-            operation: "test",
-            path: "/",
-            httpMethod: .post,
-            serviceConfig: config,
-            logger: TestEnvironment.logger
-        )
+        try await withClient(client) {
+            let config = createServiceConfig()
+            let output: Output = try await client.execute(
+                operation: "test",
+                path: "/",
+                httpMethod: .post,
+                serviceConfig: config,
+                logger: TestEnvironment.logger
+            )
 
-        let responsePayload = try await String(buffer: output.payload.collect(upTo: .max))
-        XCTAssertEqual(responsePayload, "testResponsePayload")
+            let responsePayload = try await String(buffer: output.payload.collect(upTo: .max))
+            #expect(responsePayload == "testResponsePayload")
+        }
     }
 }

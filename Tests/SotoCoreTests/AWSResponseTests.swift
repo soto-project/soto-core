@@ -290,6 +290,22 @@ class AWSResponseTests {
         }
     }
 
+    @Test func testUnrecognisedJSONError() async throws {
+        let response = AWSHTTPResponse(
+            response: HTTPResponse(status: .notFound),
+            body: .init(string: "{\"__type\":\"InvalidResourceException\", \"message\": \"Donald Where's Your Troosers?\"}")
+        )
+        let service = createServiceConfig(serviceProtocol: .json(version: "1.1"), errorType: ServiceErrorType.self)
+
+        let error = response.generateError(serviceConfig: service, logger: TestEnvironment.logger) as? AWSResponseError
+        switch error?.errorCode {
+        case "InvalidResourceException":
+            break
+        default:
+            Issue.record()
+        }
+    }
+
     @Test func testJSONErrorV2() async throws {
         let response = AWSHTTPResponse(
             response: HTTPResponse(status: .notFound),

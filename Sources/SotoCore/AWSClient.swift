@@ -301,6 +301,7 @@ extension AWSClient {
         path: String,
         httpMethod: HTTPRequest.Method,
         serviceConfig: AWSServiceConfig,
+        hostPrefix: String? = nil,
         logger: Logger = AWSClient.loggingDisabled
     ) async throws {
         try await self.execute(
@@ -310,6 +311,7 @@ extension AWSClient {
                     operation: operationName,
                     path: path,
                     method: httpMethod,
+                    hostPrefix: hostPrefix,
                     configuration: serviceConfig
                 )
             },
@@ -334,6 +336,7 @@ extension AWSClient {
         path: String,
         httpMethod: HTTPRequest.Method,
         serviceConfig: AWSServiceConfig,
+        hostPrefix: String? = nil,
         logger: Logger = AWSClient.loggingDisabled
     ) async throws -> Output {
         try await self.execute(
@@ -343,6 +346,7 @@ extension AWSClient {
                     operation: operationName,
                     path: path,
                     method: httpMethod,
+                    hostPrefix: hostPrefix,
                     configuration: serviceConfig
                 )
             },

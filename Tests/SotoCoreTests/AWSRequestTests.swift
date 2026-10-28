@@ -565,6 +565,20 @@ class AWSRequestTests {
         #expect(request.request.url?.absoluteString == "https://foo.test.com/")
     }
 
+    /// Test host prefix without input
+    @Test func testHostPrefixWithoutInput() throws {
+        struct Input: AWSEncodableShape {}
+        let config = createServiceConfig(serviceProtocol: .json(version: "1.0"), endpoint: "https://test.com")
+        let request = try AWSHTTPRequest(
+            operation: "Test",
+            path: "/",
+            method: .post,
+            hostPrefix: "foo.",
+            configuration: config
+        )
+        #expect(request.request.url?.absoluteString == "https://foo.test.com/")
+    }
+
     /// Test host prefix
     @Test func testHostPrefixLabel() throws {
         struct Input: AWSEncodableShape {

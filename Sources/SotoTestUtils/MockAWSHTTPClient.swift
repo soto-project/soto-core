@@ -38,6 +38,29 @@ package final class MockAWSHTTPClient: AWSHTTPClient {
         timeout: Duration,
         logger: Logger
     ) async throws -> AWSHTTPResponse {
-        try await requestHandler(request)
+        let response: AWSHTTPResponse
+        do {
+            response = try await requestHandler(request)
+        } catch {
+            response = .init(
+                response: .init(status: .internalServerError),
+                body: .init(string: "{\"__type\":\"Internal Failure\", \"message\": \"\(error)\"}")
+            )
+        }
+        var responseHead = response.response
+        if let length = response.body.length {
+            responseHead.headerFields[.contentLength] = String(length)
+        } else if responseHead.headerFields[.contentLength] == nil {
+            responseHead.headerFields[.transferEncoding] = "chunked"
+        }
+        return AWSHTTPResponse(response: responseHead, body: response.body)
+    }
+
+    package static func awsError(status: HTTPResponse.Status, code: String, message: String? = nil) -> AWSHTTPResponse {
+        if let message {
+            AWSHTTPResponse(response: .init(status: status), body: .init(string: "{\"__type\":\"\(code)\", \"message\": \"\(message)\"}"))
+        } else {
+            AWSHTTPResponse(response: .init(status: status), body: .init(string: "{\"__type\":\"\(code)\"}"))
+        }
     }
 }

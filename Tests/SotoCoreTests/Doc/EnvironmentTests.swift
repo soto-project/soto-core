@@ -12,14 +12,15 @@
 //
 //===----------------------------------------------------------------------===//
 
-import XCTest
+import Testing
 
 @testable import SotoCore
 
-class EnvironmentTests: XCTestCase {
+struct EnvironmentTests {
+    @Test
     func testGetPathFromEnvironment() {
         let path = Environment["PATH"]
-        XCTAssertNotNil(path)
-        XCTAssertNotEqual(path, "")
+        #expect(path != nil)
+        #expect(path != "")
     }
 }

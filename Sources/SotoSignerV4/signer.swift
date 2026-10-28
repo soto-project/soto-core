@@ -647,22 +647,22 @@ extension HTTPField.Name {
     }
 
     @inlinable
-    static var xAmzDate: Self {
+    package static var xAmzDate: Self {
         .init("X-Amz-Date")!
     }
 
     @inlinable
-    static var xAmzContentSha256: Self {
+    package static var xAmzContentSha256: Self {
         .init("X-Amz-Content-Sha256")!
     }
 
     @inlinable
-    static var xAmzRegionSet: Self {
+    package static var xAmzRegionSet: Self {
         .init("X-Amz-Region-Set")!
     }
 
     @inlinable
-    static var xAmzSecurityToken: Self {
+    package static var xAmzSecurityToken: Self {
         .init("X-Amz-Security-Token")!
     }
 }

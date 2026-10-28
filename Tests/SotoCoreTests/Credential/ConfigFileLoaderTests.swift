@@ -17,7 +17,7 @@ import INIParser
 import NIOCore
 import NIOPosix
 import SotoTestUtils
-import XCTest
+import Testing
 
 @testable import SotoCore
 
@@ -27,7 +27,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
-class ConfigFileLoadersTests: XCTestCase {
+struct ConfigFileLoadersTests {
     // MARK: - File Loading
 
     func makeContext() throws -> (CredentialProviderFactory.Context, HTTPClient) {
@@ -41,7 +41,7 @@ class ConfigFileLoadersTests: XCTestCase {
         return filepath
     }
 
-    func testLoadFileJustCredentials() async throws {
+    @Test func testLoadFileJustCredentials() async throws {
         let accessKey = "AKIAIOSFODNN7EXAMPLE"
         let secretKey = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
         let profile = ConfigFileLoader.defaultProfile
@@ -63,10 +63,10 @@ class ConfigFileLoadersTests: XCTestCase {
 
             switch sharedCredentials {
             case .staticCredential(let accessKeyId, let secretAccessKey, _):
-                XCTAssertEqual(accessKeyId, accessKey)
-                XCTAssertEqual(secretAccessKey, secretKey)
+                #expect(accessKeyId == accessKey)
+                #expect(secretAccessKey == secretKey)
             default:
-                XCTFail("Expected static credentials")
+                Issue.record("Expected static credentials")
             }
         } teardown: {
             try? FileManager.default.removeItem(atPath: credentialsPath)
@@ -74,7 +74,7 @@ class ConfigFileLoadersTests: XCTestCase {
         }
     }
 
-    func testLoadFileCredentialsAndConfig() async throws {
+    @Test func testLoadFileCredentialsAndConfig() async throws {
         let accessKey = "AKIAIOSFODNN7EXAMPLE"
         let secretKey = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
         let profile = "marketingadmin"
@@ -109,13 +109,13 @@ class ConfigFileLoadersTests: XCTestCase {
             switch sharedCredentials {
             case .assumeRole(let aRoleArn, let aSessionName, let region, let sourceCredentialProvider):
                 let credentials = try await sourceCredentialProvider.createProvider(context: context).getCredential(logger: context.logger)
-                XCTAssertEqual(credentials.accessKeyId, accessKey)
-                XCTAssertEqual(credentials.secretAccessKey, secretKey)
-                XCTAssertEqual(aRoleArn, roleArn)
-                XCTAssertEqual(aSessionName, sessionName)
-                XCTAssertEqual(region, .uswest1)
+                #expect(credentials.accessKeyId == accessKey)
+                #expect(credentials.secretAccessKey == secretKey)
+                #expect(aRoleArn == roleArn)
+                #expect(aSessionName == sessionName)
+                #expect(region == .uswest1)
             default:
-                XCTFail("Expected STS Assume Role")
+                Issue.record("Expected STS Assume Role")
             }
         } teardown: {
             try? FileManager.default.removeItem(atPath: credentialsPath)
@@ -124,7 +124,7 @@ class ConfigFileLoadersTests: XCTestCase {
         }
     }
 
-    func testLoadFileConfigNotFound() async throws {
+    @Test func testLoadFileConfigNotFound() async throws {
         let profile = "marketingadmin"
         let roleArn = "arn:aws:iam::123456789012:role/marketingadminrole"
         let credentialsFile = """
@@ -146,12 +146,12 @@ class ConfigFileLoadersTests: XCTestCase {
             switch sharedCredentials {
             case .assumeRole(let aRoleArn, _, _, let source):
                 let credentialProvider = source.createProvider(context: context)
-                XCTAssertEqual(aRoleArn, roleArn)
-                let rotatingCredentials: RotatingCredentialProvider = try XCTUnwrap(credentialProvider as? RotatingCredentialProvider)
-                XCTAssert(rotatingCredentials.provider is InstanceMetaDataClient)
+                #expect(aRoleArn == roleArn)
+                let rotatingCredentials: RotatingCredentialProvider = try #require(credentialProvider as? RotatingCredentialProvider)
+                #expect(rotatingCredentials.provider is InstanceMetaDataClient)
                 try await credentialProvider.shutdown()
             default:
-                XCTFail("Expected credential source")
+                Issue.record("Expected credential source")
             }
         } teardown: {
             try? FileManager.default.removeItem(atPath: credentialsPath)
@@ -159,7 +159,7 @@ class ConfigFileLoadersTests: XCTestCase {
         }
     }
 
-    func testLoadFileMissingAccessKey() async throws {
+    @Test func testLoadFileMissingAccessKey() async throws {
         let secretKey = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
         let profile = ConfigFileLoader.defaultProfile
         let credentialsFile = """
@@ -180,7 +180,7 @@ class ConfigFileLoadersTests: XCTestCase {
             } catch let error as ConfigFileLoader.ConfigFileError where error == .missingAccessKeyId {
                 // Pass
             } catch {
-                XCTFail("Expected ConfigFileLoader.ConfigFileError.missingAccessKeyId, got \(error.localizedDescription)")
+                Issue.record("Expected ConfigFileLoader.ConfigFileError.missingAccessKeyId, got \(error.localizedDescription)")
             }
         } teardown: {
             try? FileManager.default.removeItem(atPath: credentialsPath)
@@ -188,7 +188,7 @@ class ConfigFileLoadersTests: XCTestCase {
         }
     }
 
-    func testLoadFileMissingSecretKey() async throws {
+    @Test func testLoadFileMissingSecretKey() async throws {
         let accessKey = "AKIAIOSFODNN7EXAMPLE"
         let profile = ConfigFileLoader.defaultProfile
         let credentialsFile = """
@@ -209,7 +209,7 @@ class ConfigFileLoadersTests: XCTestCase {
             } catch let error as ConfigFileLoader.ConfigFileError where error == .missingSecretAccessKey {
                 // Pass
             } catch {
-                XCTFail("Expected ConfigFileLoader.ConfigFileError.missingSecretAccessKey, got \(error.localizedDescription)")
+                Issue.record("Expected ConfigFileLoader.ConfigFileError.missingSecretAccessKey, got \(error.localizedDescription)")
             }
         } teardown: {
             try? FileManager.default.removeItem(atPath: credentialsPath)
@@ -217,7 +217,7 @@ class ConfigFileLoadersTests: XCTestCase {
         }
     }
 
-    func testLoadFileMissingSourceAccessKey() async throws {
+    @Test func testLoadFileMissingSourceAccessKey() async throws {
         let secretKey = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
         let profile = "marketingadmin"
         let sourceProfile = ConfigFileLoader.defaultProfile
@@ -243,7 +243,7 @@ class ConfigFileLoadersTests: XCTestCase {
             } catch let error as ConfigFileLoader.ConfigFileError where error == .missingAccessKeyId {
                 // Pass
             } catch {
-                XCTFail("Expected ConfigFileLoader.ConfigFileError.missingAccessKeyId, got \(error.localizedDescription)")
+                Issue.record("Expected ConfigFileLoader.ConfigFileError.missingAccessKeyId, got \(error.localizedDescription)")
             }
         } teardown: {
             try? FileManager.default.removeItem(atPath: credentialsPath)
@@ -251,7 +251,7 @@ class ConfigFileLoadersTests: XCTestCase {
         }
     }
 
-    func testLoadFileMissingSourceSecretKey() async throws {
+    @Test func testLoadFileMissingSourceSecretKey() async throws {
         let accessKey = "AKIAIOSFODNN7EXAMPLE"
         let profile = "marketingadmin"
         let sourceProfile = ConfigFileLoader.defaultProfile
@@ -277,7 +277,7 @@ class ConfigFileLoadersTests: XCTestCase {
             } catch let error as ConfigFileLoader.ConfigFileError where error == .missingSecretAccessKey {
                 // Pass
             } catch {
-                XCTFail("Expected ConfigFileLoader.ConfigFileError.missingSecretAccessKey, got \(error.localizedDescription)")
+                Issue.record("Expected ConfigFileLoader.ConfigFileError.missingSecretAccessKey, got \(error.localizedDescription)")
             }
         } teardown: {
             try? FileManager.default.removeItem(atPath: credentialsPath)
@@ -285,7 +285,7 @@ class ConfigFileLoadersTests: XCTestCase {
         }
     }
 
-    func testLoadFileSSOSourceProfile() async throws {
+    @Test func testLoadFileSSOSourceProfile() async throws {
         // Assume-role profile lives only in ~/.aws/config and points at an SSO source profile.
         // This is the standard layout written by `aws configure sso` for multi-account setups.
         let profile = "dev"
@@ -321,17 +321,17 @@ class ConfigFileLoadersTests: XCTestCase {
 
             switch shared {
             case .assumeRole(let aRoleArn, _, let region, let sourceFactory):
-                XCTAssertEqual(aRoleArn, roleArn)
-                XCTAssertEqual(region, .uswest2)
+                #expect(aRoleArn == roleArn)
+                #expect(region == .uswest2)
                 let sourceProvider = sourceFactory.createProvider(context: context)
-                let rotating = try XCTUnwrap(sourceProvider as? RotatingCredentialProvider)
-                XCTAssert(
+                let rotating = try #require(sourceProvider as? RotatingCredentialProvider)
+                #expect(
                     rotating.provider is SSOCredentialProvider,
                     "Expected SSOCredentialProvider as the source, got \(type(of: rotating.provider))"
                 )
                 try await sourceProvider.shutdown()
             default:
-                XCTFail("Expected .assumeRole with an SSO source provider")
+                Issue.record("Expected .assumeRole with an SSO source provider")
             }
         } teardown: {
             try? FileManager.default.removeItem(atPath: credentialsPath)
@@ -340,7 +340,7 @@ class ConfigFileLoadersTests: XCTestCase {
         }
     }
 
-    func testLoadFileMissingCredentialsButConfigHasSSOSource() async throws {
+    @Test func testLoadFileMissingCredentialsButConfigHasSSOSource() async throws {
         // Many SSO-only setups have no ~/.aws/credentials file at all. As long as the config
         // file fully describes the assume-role chain (and its SSO source), credential loading
         // should still succeed instead of falling through to .noProvider.
@@ -375,13 +375,13 @@ class ConfigFileLoadersTests: XCTestCase {
 
             switch shared {
             case .assumeRole(let aRoleArn, _, _, let sourceFactory):
-                XCTAssertEqual(aRoleArn, roleArn)
+                #expect(aRoleArn == roleArn)
                 let sourceProvider = sourceFactory.createProvider(context: context)
-                let rotating = try XCTUnwrap(sourceProvider as? RotatingCredentialProvider)
-                XCTAssert(rotating.provider is SSOCredentialProvider)
+                let rotating = try #require(sourceProvider as? RotatingCredentialProvider)
+                #expect(rotating.provider is SSOCredentialProvider)
                 try await sourceProvider.shutdown()
             default:
-                XCTFail("Expected .assumeRole with an SSO source provider")
+                Issue.record("Expected .assumeRole with an SSO source provider")
             }
         } teardown: {
             try? FileManager.default.removeItem(atPath: configPath)
@@ -389,7 +389,7 @@ class ConfigFileLoadersTests: XCTestCase {
         }
     }
 
-    func testLoadFileBothFilesMissing() async throws {
+    @Test func testLoadFileBothFilesMissing() async throws {
         // Neither file exists at all — provider must still report `.noProvider` so the
         // credential chain can move on to the next provider.
         let credentialsPath = "missing-credentials-\(UUID().uuidString)"
@@ -403,18 +403,18 @@ class ConfigFileLoadersTests: XCTestCase {
                     configFilePath: configPath,
                     profile: ConfigFileLoader.defaultProfile
                 )
-                XCTFail("Expected CredentialProviderError.noProvider")
+                Issue.record("Expected CredentialProviderError.noProvider")
             } catch let error as CredentialProviderError where error == .noProvider {
                 // pass
             } catch {
-                XCTFail("Expected CredentialProviderError.noProvider, got \(error.localizedDescription)")
+                Issue.record("Expected CredentialProviderError.noProvider, got \(error.localizedDescription)")
             }
         } teardown: {
             try? await httpClient.shutdown()
         }
     }
 
-    func testLoadFileMissingCredentialsAndConfigHasNoRoleArn() async throws {
+    @Test func testLoadFileMissingCredentialsAndConfigHasNoRoleArn() async throws {
         // Credentials file is unavailable and the config file exists but doesn't supply a
         // `role_arn` for the requested profile. The provider must signal `.noProvider` so the
         // credential chain can move on (e.g. to the standalone `.sso()` step).
@@ -433,11 +433,11 @@ class ConfigFileLoadersTests: XCTestCase {
                     configFilePath: configPath,
                     profile: "dev"
                 )
-                XCTFail("Expected CredentialProviderError.noProvider")
+                Issue.record("Expected CredentialProviderError.noProvider")
             } catch let error as CredentialProviderError where error == .noProvider {
                 // pass
             } catch {
-                XCTFail("Expected CredentialProviderError.noProvider, got \(error.localizedDescription)")
+                Issue.record("Expected CredentialProviderError.noProvider, got \(error.localizedDescription)")
             }
         } teardown: {
             try? FileManager.default.removeItem(atPath: configPath)
@@ -445,7 +445,7 @@ class ConfigFileLoadersTests: XCTestCase {
         }
     }
 
-    func testLoadFileMalformedCredentialsFileSurfacesError() async throws {
+    @Test func testLoadFileMalformedCredentialsFileSurfacesError() async throws {
         // A credentials file that exists but cannot be parsed must surface `.invalidINIFile`
         // rather than being silently treated as "no credentials file". Only ENOENT should
         // degrade to a soft miss.
@@ -460,11 +460,11 @@ class ConfigFileLoadersTests: XCTestCase {
                     configFilePath: configPath,
                     profile: ConfigFileLoader.defaultProfile
                 )
-                XCTFail("Expected ConfigFileError.invalidINIFile")
+                Issue.record("Expected ConfigFileError.invalidINIFile")
             } catch let error as ConfigFileLoader.ConfigFileError where error == .invalidINIFile {
                 // pass
             } catch {
-                XCTFail("Expected ConfigFileError.invalidINIFile, got \(error.localizedDescription)")
+                Issue.record("Expected ConfigFileError.invalidINIFile, got \(error.localizedDescription)")
             }
         } teardown: {
             try? FileManager.default.removeItem(atPath: credentialsPath)
@@ -472,7 +472,7 @@ class ConfigFileLoadersTests: XCTestCase {
         }
     }
 
-    func testLoadFileMalformedConfigFileSurfacesError() async throws {
+    @Test func testLoadFileMalformedConfigFileSurfacesError() async throws {
         // Same contract for the config file: a parseable credentials file alongside a
         // malformed config file must propagate the parse error rather than silently
         // proceeding with the credentials file alone.
@@ -492,11 +492,11 @@ class ConfigFileLoadersTests: XCTestCase {
                     configFilePath: configPath,
                     profile: ConfigFileLoader.defaultProfile
                 )
-                XCTFail("Expected ConfigFileError.invalidINIFile")
+                Issue.record("Expected ConfigFileError.invalidINIFile")
             } catch let error as ConfigFileLoader.ConfigFileError where error == .invalidINIFile {
                 // pass
             } catch {
-                XCTFail("Expected ConfigFileError.invalidINIFile, got \(error.localizedDescription)")
+                Issue.record("Expected ConfigFileError.invalidINIFile, got \(error.localizedDescription)")
             }
         } teardown: {
             try? FileManager.default.removeItem(atPath: credentialsPath)
@@ -505,7 +505,7 @@ class ConfigFileLoadersTests: XCTestCase {
         }
     }
 
-    func testLoadFileMissingCredentialsWithMalformedConfigSurfacesError() async throws {
+    @Test func testLoadFileMissingCredentialsWithMalformedConfigSurfacesError() async throws {
         // A missing credentials file is fine on its own, but if the config file that we'd
         // fall back to is malformed, we must surface the parse error rather than reporting
         // `.noProvider` (which would hide the real problem from the user).
@@ -520,11 +520,11 @@ class ConfigFileLoadersTests: XCTestCase {
                     configFilePath: configPath,
                     profile: ConfigFileLoader.defaultProfile
                 )
-                XCTFail("Expected ConfigFileError.invalidINIFile")
+                Issue.record("Expected ConfigFileError.invalidINIFile")
             } catch let error as ConfigFileLoader.ConfigFileError where error == .invalidINIFile {
                 // pass
             } catch {
-                XCTFail("Expected ConfigFileError.invalidINIFile, got \(error.localizedDescription)")
+                Issue.record("Expected ConfigFileError.invalidINIFile, got \(error.localizedDescription)")
             }
         } teardown: {
             try? FileManager.default.removeItem(atPath: configPath)
@@ -532,7 +532,7 @@ class ConfigFileLoadersTests: XCTestCase {
         }
     }
 
-    func testLoadFileSSOSourceProfileLegacyFormat() async throws {
+    @Test func testLoadFileSSOSourceProfileLegacyFormat() async throws {
         // Same scenario, but the source profile uses the legacy SSO format (direct sso_start_url
         // rather than an sso_session reference). Both should be detected.
         let profile = "dev"
@@ -565,11 +565,11 @@ class ConfigFileLoadersTests: XCTestCase {
             switch shared {
             case .assumeRole(_, _, _, let sourceFactory):
                 let sourceProvider = sourceFactory.createProvider(context: context)
-                let rotating = try XCTUnwrap(sourceProvider as? RotatingCredentialProvider)
-                XCTAssert(rotating.provider is SSOCredentialProvider)
+                let rotating = try #require(sourceProvider as? RotatingCredentialProvider)
+                #expect(rotating.provider is SSOCredentialProvider)
                 try await sourceProvider.shutdown()
             default:
-                XCTFail("Expected .assumeRole with an SSO source provider")
+                Issue.record("Expected .assumeRole with an SSO source provider")
             }
         } teardown: {
             try? FileManager.default.removeItem(atPath: credentialsPath)
@@ -578,7 +578,7 @@ class ConfigFileLoadersTests: XCTestCase {
         }
     }
 
-    func testLoadFileRoleArnOnly() async throws {
+    @Test func testLoadFileRoleArnOnly() async throws {
         let profile = "marketingadmin"
         let roleArn = "arn:aws:iam::123456789012:role/marketingadminrole"
         let credentialsFile = """
@@ -599,7 +599,7 @@ class ConfigFileLoadersTests: XCTestCase {
             } catch let error as ConfigFileLoader.ConfigFileError where error == .invalidINIFile {
                 // Pass
             } catch {
-                XCTFail("Expected ConfigFileLoader.ConfigFileError.invalidINIFile, got \(error.localizedDescription)")
+                Issue.record("Expected ConfigFileLoader.ConfigFileError.invalidINIFile, got \(error.localizedDescription)")
             }
         } teardown: {
             try? FileManager.default.removeItem(atPath: credentialsPath)
@@ -609,7 +609,7 @@ class ConfigFileLoadersTests: XCTestCase {
 
     // MARK: - Config File parsing
 
-    func testConfigFileDefault() throws {
+    @Test func testConfigFileDefault() throws {
         let profile = ConfigFileLoader.defaultProfile
         let sourceProfile = "user1"
         let roleArn = "arn:aws:iam::123456789012:role/marketingadminrole"
@@ -623,12 +623,12 @@ class ConfigFileLoadersTests: XCTestCase {
         byteBuffer.writeString(content)
 
         let config = try ConfigFileLoader.parseProfileConfig(from: try! INIParser(content), for: ConfigFileLoader.defaultProfile)
-        XCTAssertEqual(config?.roleArn, roleArn)
-        XCTAssertEqual(config?.sourceProfile, sourceProfile)
-        XCTAssertEqual(config?.region, .uswest2)
+        #expect(config?.roleArn == roleArn)
+        #expect(config?.sourceProfile == sourceProfile)
+        #expect(config?.region == .uswest2)
     }
 
-    func testConfigFileNamedProfile() throws {
+    @Test func testConfigFileNamedProfile() throws {
         let content = """
             [default]
             region=us-west-2
@@ -642,13 +642,13 @@ class ConfigFileLoadersTests: XCTestCase {
             """
 
         let config = try ConfigFileLoader.parseProfileConfig(from: try! INIParser(content), for: "marketingadmin")
-        XCTAssertEqual(config?.roleArn, "arn:aws:iam::123456789012:role/marketingadminrole")
-        XCTAssertEqual(config?.sourceProfile, "user1")
-        XCTAssertEqual(config?.roleSessionName, "foo@example.com")
-        XCTAssertEqual(config?.region, .uswest1)
+        #expect(config?.roleArn == "arn:aws:iam::123456789012:role/marketingadminrole")
+        #expect(config?.sourceProfile == "user1")
+        #expect(config?.roleSessionName == "foo@example.com")
+        #expect(config?.region == .uswest1)
     }
 
-    func testConfigFileCredentialSourceEc2() throws {
+    @Test func testConfigFileCredentialSourceEc2() throws {
         let content = """
             [profile marketingadmin]
             role_arn = arn:aws:iam::123456789012:role/marketingadminrole
@@ -656,10 +656,10 @@ class ConfigFileLoadersTests: XCTestCase {
             """
 
         let config = try ConfigFileLoader.parseProfileConfig(from: try! INIParser(content), for: "marketingadmin")
-        XCTAssertEqual(config?.credentialSource, .ec2Instance)
+        #expect(config?.credentialSource == .ec2Instance)
     }
 
-    func testConfigFileCredentialSourceEcs() throws {
+    @Test func testConfigFileCredentialSourceEcs() throws {
         let content = """
             [profile marketingadmin]
             role_arn = arn:aws:iam::123456789012:role/marketingadminrole
@@ -667,10 +667,10 @@ class ConfigFileLoadersTests: XCTestCase {
             """
 
         let config = try ConfigFileLoader.parseProfileConfig(from: try! INIParser(content), for: "marketingadmin")
-        XCTAssertEqual(config?.credentialSource, .ecsContainer)
+        #expect(config?.credentialSource == .ecsContainer)
     }
 
-    func testConfigFileCredentialSourceEnvironment() throws {
+    @Test func testConfigFileCredentialSourceEnvironment() throws {
         let content = """
             [profile marketingadmin]
             role_arn = arn:aws:iam::123456789012:role/marketingadminrole
@@ -678,10 +678,10 @@ class ConfigFileLoadersTests: XCTestCase {
             """
 
         let config = try ConfigFileLoader.parseProfileConfig(from: try! INIParser(content), for: "marketingadmin")
-        XCTAssertEqual(config?.credentialSource, .environment)
+        #expect(config?.credentialSource == .environment)
     }
 
-    func testConfigMissingProfile() {
+    @Test func testConfigMissingProfile() {
         let content = """
             [profile foo]
             bar = foo
@@ -691,13 +691,13 @@ class ConfigFileLoadersTests: XCTestCase {
             _ = try ConfigFileLoader.parseProfileConfig(from: try! INIParser(content), for: "bar")
         } catch let error as ConfigFileLoader.ConfigFileError where error == .missingProfile {
         } catch {
-            XCTFail("Expected missingProfile error, got \(error.localizedDescription)")
+            Issue.record("Expected missingProfile error, got \(error.localizedDescription)")
         }
     }
 
     // MARK: - Credentials File parsing
 
-    func testCredentials() throws {
+    @Test func testCredentials() throws {
         let profile = "profile1"
         let accessKey = "FAKE-ACCESS-KEY123"
         let secretKey = "Asecretreglkjrd"
@@ -710,12 +710,12 @@ class ConfigFileLoadersTests: XCTestCase {
             """
 
         let cred = try ConfigFileLoader.parseCredentials(from: try! INIParser(credential), for: profile, sourceProfile: nil)
-        XCTAssertEqual(cred.accessKey, accessKey)
-        XCTAssertEqual(cred.secretAccessKey, secretKey)
-        XCTAssertEqual(cred.sessionToken, sessionToken)
+        #expect(cred.accessKey == accessKey)
+        #expect(cred.secretAccessKey == secretKey)
+        #expect(cred.sessionToken == sessionToken)
     }
 
-    func testCredentialsMissingSessionToken() throws {
+    @Test func testCredentialsMissingSessionToken() throws {
         let profile = "profile1"
         let accessKey = "FAKE-ACCESS-KEY123"
         let secretKey = "Asecretreglkjrd"
@@ -726,12 +726,12 @@ class ConfigFileLoadersTests: XCTestCase {
             """
 
         let cred = try ConfigFileLoader.parseCredentials(from: try! INIParser(credential), for: profile, sourceProfile: nil)
-        XCTAssertEqual(cred.accessKey, accessKey)
-        XCTAssertEqual(cred.secretAccessKey, secretKey)
-        XCTAssertNil(cred.sessionToken)
+        #expect(cred.accessKey == accessKey)
+        #expect(cred.secretAccessKey == secretKey)
+        #expect(cred.sessionToken == nil)
     }
 
-    func testCredentialsNamedProfile() throws {
+    @Test func testCredentialsNamedProfile() throws {
         let profile = "profile1"
         let defaultAccessKey = "FAKE-ACCESS-KEY123"
         let defaultSecretKey = "Asecretreglkjrd"
@@ -748,11 +748,11 @@ class ConfigFileLoadersTests: XCTestCase {
             """
 
         let config = try ConfigFileLoader.parseCredentials(from: try! INIParser(content), for: profile, sourceProfile: nil)
-        XCTAssertEqual(config.accessKey, profileAccessKey)
-        XCTAssertEqual(config.secretAccessKey, profileSecretKey)
+        #expect(config.accessKey == profileAccessKey)
+        #expect(config.secretAccessKey == profileSecretKey)
     }
 
-    func testCredentialsWithSourceProfile() throws {
+    @Test func testCredentialsWithSourceProfile() throws {
         let content = """
             [default]
             aws_access_key_id=AKIAIOSFODNN7EXAMPLE
@@ -765,13 +765,13 @@ class ConfigFileLoadersTests: XCTestCase {
             """
 
         let config = try ConfigFileLoader.parseCredentials(from: try! INIParser(content), for: "user1", sourceProfile: nil)
-        XCTAssertEqual(config.accessKey, "AKIAIOSFODNN7EXAMPLE")
-        XCTAssertEqual(config.secretAccessKey, "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
-        XCTAssertEqual(config.roleArn, "arn:aws:iam::123456789012:role/marketingadminrole")
-        XCTAssertEqual(config.sourceProfile, ConfigFileLoader.defaultProfile)
+        #expect(config.accessKey == "AKIAIOSFODNN7EXAMPLE")
+        #expect(config.secretAccessKey == "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
+        #expect(config.roleArn == "arn:aws:iam::123456789012:role/marketingadminrole")
+        #expect(config.sourceProfile == ConfigFileLoader.defaultProfile)
     }
 
-    func testCredentialsMissingProfile() {
+    @Test func testCredentialsMissingProfile() {
         let content = """
             [default]
             aws_access_key_id=AKIAIOSFODNN7EXAMPLE
@@ -782,11 +782,11 @@ class ConfigFileLoadersTests: XCTestCase {
             _ = try ConfigFileLoader.parseCredentials(from: try! INIParser(content), for: "user1", sourceProfile: nil)
         } catch let error as ConfigFileLoader.ConfigFileError where error == .missingProfile {
         } catch {
-            XCTFail("Expected missingProfile error, got \(error.localizedDescription)")
+            Issue.record("Expected missingProfile error, got \(error.localizedDescription)")
         }
     }
 
-    func testCredentialsMissingSourceProfile() {
+    @Test func testCredentialsMissingSourceProfile() {
         let content = """
             [foo]
             aws_access_key_id=AKIAIOSFODNN7EXAMPLE
@@ -797,11 +797,11 @@ class ConfigFileLoadersTests: XCTestCase {
             _ = try ConfigFileLoader.parseCredentials(from: try! INIParser(content), for: "foo", sourceProfile: ConfigFileLoader.defaultProfile)
         } catch let error as ConfigFileLoader.ConfigFileError where error == .missingProfile {
         } catch {
-            XCTFail("Expected missingProfile error, got \(error.localizedDescription)")
+            Issue.record("Expected missingProfile error, got \(error.localizedDescription)")
         }
     }
 
-    func testCredentialsMissingAccessKey() {
+    @Test func testCredentialsMissingAccessKey() {
         let content = """
             [foo]
             aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
@@ -812,11 +812,11 @@ class ConfigFileLoadersTests: XCTestCase {
         } catch let error as ConfigFileLoader.ConfigFileError where error == .missingAccessKeyId {
             // pass
         } catch {
-            XCTFail("Expected missingProfile error, got \(error.localizedDescription)")
+            Issue.record("Expected missingProfile error, got \(error.localizedDescription)")
         }
     }
 
-    func testCredentialsMissingSecretAccessKey() {
+    @Test func testCredentialsMissingSecretAccessKey() {
         let content = """
             [foo]
             aws_access_key_id=AKIAIOSFODNN7EXAMPLE
@@ -827,11 +827,11 @@ class ConfigFileLoadersTests: XCTestCase {
         } catch let error as ConfigFileLoader.ConfigFileError where error == .missingSecretAccessKey {
             // pass
         } catch {
-            XCTFail("Expected missingProfile error, got \(error.localizedDescription)")
+            Issue.record("Expected missingProfile error, got \(error.localizedDescription)")
         }
     }
 
-    func testCredentialsMissingAccessKeyFromSourceProfile() {
+    @Test func testCredentialsMissingAccessKeyFromSourceProfile() {
         let content = """
             [foo]
             aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
@@ -845,11 +845,11 @@ class ConfigFileLoadersTests: XCTestCase {
         } catch let error as ConfigFileLoader.ConfigFileError where error == .missingAccessKeyId {
             // pass
         } catch {
-            XCTFail("Expected missingProfile error, got \(error.localizedDescription)")
+            Issue.record("Expected missingProfile error, got \(error.localizedDescription)")
         }
     }
 
-    func testCredentialsMissingSecretAccessKeyFromSourceProfile() {
+    @Test func testCredentialsMissingSecretAccessKeyFromSourceProfile() {
         let content = """
             [foo]
             aws_access_key_id=AKIAIOSFODNN7EXAMPLE
@@ -863,11 +863,11 @@ class ConfigFileLoadersTests: XCTestCase {
         } catch let error as ConfigFileLoader.ConfigFileError where error == .missingSecretAccessKey {
             // pass
         } catch {
-            XCTFail("Expected missingProfile error, got \(error.localizedDescription)")
+            Issue.record("Expected missingProfile error, got \(error.localizedDescription)")
         }
     }
 
-    func testCredentialSourceEc2() throws {
+    @Test func testCredentialSourceEc2() throws {
         let content = """
             [default]
             aws_access_key_id=AKIAIOSFODNN7EXAMPLE
@@ -882,10 +882,10 @@ class ConfigFileLoadersTests: XCTestCase {
             for: "marketingadmin",
             sourceProfile: ConfigFileLoader.defaultProfile
         )
-        XCTAssertEqual(config.credentialSource, .ec2Instance)
+        #expect(config.credentialSource == .ec2Instance)
     }
 
-    func testCredentialSourceEcs() throws {
+    @Test func testCredentialSourceEcs() throws {
         let content = """
             [default]
             aws_access_key_id=AKIAIOSFODNN7EXAMPLE
@@ -900,10 +900,10 @@ class ConfigFileLoadersTests: XCTestCase {
             for: "marketingadmin",
             sourceProfile: ConfigFileLoader.defaultProfile
         )
-        XCTAssertEqual(config.credentialSource, .ecsContainer)
+        #expect(config.credentialSource == .ecsContainer)
     }
 
-    func testCredentialSourceEnvironment() throws {
+    @Test func testCredentialSourceEnvironment() throws {
         let content = """
             [default]
             aws_access_key_id=AKIAIOSFODNN7EXAMPLE
@@ -918,37 +918,37 @@ class ConfigFileLoadersTests: XCTestCase {
             for: "marketingadmin",
             sourceProfile: ConfigFileLoader.defaultProfile
         )
-        XCTAssertEqual(config.credentialSource, .environment)
+        #expect(config.credentialSource == .environment)
     }
 
     // MARK: - Config file path expansion
 
-    func testExpandTildeInFilePath() {
+    @Test func testExpandTildeInFilePath() {
         let expandableFilePath = "~/.aws/credentials"
         let expandedNewPath = ConfigFileLoader.expandTildeInFilePath(expandableFilePath)
 
         #if os(Linux)
-        XCTAssert(!expandedNewPath.hasPrefix("~"))
+        #expect(!expandedNewPath.hasPrefix("~"))
         #else
 
         #if os(macOS)
         // on macOS, we want to be sure the expansion produces the posix $HOME and
         // not the sanboxed home $HOME/Library/Containers/<bundle-id>/Data
         let macOSHomePrefix = "/Users/"
-        XCTAssert(expandedNewPath.starts(with: macOSHomePrefix))
-        XCTAssert(!expandedNewPath.contains("/Library/Containers/"))
+        #expect(expandedNewPath.starts(with: macOSHomePrefix))
+        #expect(!expandedNewPath.contains("/Library/Containers/"))
         #endif
 
         // this doesn't work on linux because of SR-12843
         let expandedNSString = NSString(string: expandableFilePath).expandingTildeInPath
-        XCTAssertEqual(expandedNewPath, expandedNSString)
+        #expect(expandedNewPath == expandedNSString)
         #endif
 
         let unexpandableFilePath = "/.aws/credentials"
         let unexpandedNewPath = ConfigFileLoader.expandTildeInFilePath(unexpandableFilePath)
         let unexpandedNSString = NSString(string: unexpandableFilePath).expandingTildeInPath
 
-        XCTAssertEqual(unexpandedNewPath, unexpandedNSString)
-        XCTAssertEqual(unexpandedNewPath, unexpandableFilePath)
+        #expect(unexpandedNewPath == unexpandedNSString)
+        #expect(unexpandedNewPath == unexpandableFilePath)
     }
 }

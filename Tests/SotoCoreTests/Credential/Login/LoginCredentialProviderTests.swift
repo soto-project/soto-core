@@ -20,6 +20,7 @@ import Logging
 import NIOCore
 import NIOFoundationEssentialsCompat
 @_spi(SotoInternal) import SotoSignerV4
+import SotoTestUtils
 import Testing
 
 @testable import SotoCore
@@ -117,7 +118,7 @@ final class LoginCredentialProviderTests {
                 }
                 """
 
-            return (.ok, responseJSON.data(using: .utf8)!)
+            return .init(response: .init(status: .ok), body: .init(string: responseJSON))
         }
 
         // Create provider
@@ -192,7 +193,7 @@ final class LoginCredentialProviderTests {
 
         // Setup mock HTTP client and response
         let mockHTTPClient = MockAWSHTTPClient { request in
-            (.badRequest, Data())
+            .init(response: .init(status: .badRequest))
         }
 
         // Create provider
@@ -249,7 +250,7 @@ final class LoginCredentialProviderTests {
 
         // Setup mock HTTP client and  mock response with invalid JSON
         let mockHTTPClient = MockAWSHTTPClient { request in
-            (.ok, "invalid json".data(using: .utf8)!)
+            .init(response: .init(status: .ok), body: .init(string: "invalid json"))
         }
 
         // Create provider
@@ -335,7 +336,7 @@ final class LoginCredentialProviderTests {
         // Setup mock HTTP client - - should not make any requests
         let mockHTTPClient = MockAWSHTTPClient { _ in
             Issue.record("Should not make HTTP request for valid cached token")
-            return (.ok, Data())
+            return .init(response: .init(status: .ok))
         }
 
         // Create provider
@@ -565,7 +566,7 @@ final class LoginCredentialProviderTests {
                     "refreshToken": "new-refresh-token-456"
                 }
                 """
-            return (.ok, responseJSON.data(using: .utf8)!)
+            return .init(response: .init(status: .ok), body: .init(string: responseJSON))
         }
 
         let provider = try LoginCredentialProvider.create(

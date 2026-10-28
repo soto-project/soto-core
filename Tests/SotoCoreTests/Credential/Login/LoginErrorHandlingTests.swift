@@ -20,6 +20,7 @@ import Logging
 import NIOCore
 import SotoCore
 @_spi(SotoInternal) import SotoSignerV4
+import SotoTestUtils
 import Testing
 
 @testable import SotoCore
@@ -83,7 +84,7 @@ final class LoginErrorHandlingTests {
             let errorResponse = """
                 {"error":"TOKEN_EXPIRED","message":"The refresh token has expired."}
                 """
-            return (.forbidden, errorResponse.data(using: .utf8)!)
+            return .init(response: .init(status: .forbidden), body: .init(string: errorResponse))
         }
 
         let provider = try LoginCredentialProvider.create(
@@ -145,7 +146,7 @@ final class LoginErrorHandlingTests {
             let errorResponse = """
                 {"error":"USER_CREDENTIALS_CHANGED","message":"User credentials have changed."}
                 """
-            return (.forbidden, errorResponse.data(using: .utf8)!)
+            return .init(response: .init(status: .forbidden), body: .init(string: errorResponse))
         }
 
         let provider = try LoginCredentialProvider.create(
@@ -205,7 +206,7 @@ final class LoginErrorHandlingTests {
             let errorResponse = """
                 {"error":"INSUFFICIENT_PERMISSIONS","message":"Insufficient permissions."}
                 """
-            return (.forbidden, errorResponse.data(using: .utf8)!)
+            return .init(response: .init(status: .forbidden), body: .init(string: errorResponse))
         }
 
         let provider = try LoginCredentialProvider.create(

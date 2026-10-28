@@ -14,28 +14,29 @@
 
 import AsyncHTTPClient
 import Atomics
+import Foundation
 import Logging
 import NIOCore
 import NIOPosix
 import SotoTestUtils
-import XCTest
+import Testing
 
 @testable import SotoCore
 
-final class CredentialProviderTests: XCTestCase {
-    func testCredentialProvider() async throws {
+struct CredentialProviderTests {
+    @Test func testCredentialProvider() async throws {
         let provider = StaticCredentialProvider(accessKeyId: "abc", secretAccessKey: "123", sessionToken: "xyz")
 
         let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
+        defer { #expect(throws: Never.self) { try group.syncShutdownGracefully() } }
         let credential = try await provider.getCredential(logger: TestEnvironment.logger)
-        XCTAssertEqual(credential.accessKeyId, "abc")
-        XCTAssertEqual(credential.secretAccessKey, "123")
-        XCTAssertEqual(credential.sessionToken, "xyz")
+        #expect(credential.accessKeyId == "abc")
+        #expect(credential.secretAccessKey == "123")
+        #expect(credential.sessionToken == "xyz")
     }
 
     // make sure getCredential in client CredentialProvider doesnt get called more than once
-    func testDeferredCredentialProvider() async throws {
+    @Test func testDeferredCredentialProvider() async throws {
         final class MyCredentialProvider: CredentialProvider {
             let credentialProviderCalled = ManagedAtomic(0)
 
@@ -47,31 +48,31 @@ final class CredentialProviderTests: XCTestCase {
             }
         }
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+        defer { #expect(throws: Never.self) { try eventLoopGroup.syncShutdownGracefully() } }
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
-        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
+        defer { #expect(throws: Never.self) { try httpClient.syncShutdown() } }
         let context = CredentialProviderFactory.Context(httpClient: httpClient, logger: TestEnvironment.logger, options: .init())
         let myCredentialProvider = MyCredentialProvider()
         let deferredProvider = DeferredCredentialProvider(context: context, provider: myCredentialProvider)
         _ = try await deferredProvider.getCredential(logger: TestEnvironment.logger)
         _ = try await deferredProvider.getCredential(logger: TestEnvironment.logger)
-        XCTAssertEqual(myCredentialProvider.credentialProviderCalled.load(ordering: .sequentiallyConsistent), 1)
+        #expect(myCredentialProvider.credentialProviderCalled.load(ordering: .sequentiallyConsistent) == 1)
     }
 
     // Verify DeferredCredential provider handlers setup and immediate shutdown
-    func testDeferredCredentialProviderSetupShutdown() async throws {
+    @Test func testDeferredCredentialProviderSetupShutdown() async throws {
         final class MyCredentialProvider: CredentialProvider {
             init() {}
             func getCredential(logger: Logger) async throws -> Credential {
                 try await Task.sleep(nanoseconds: 5_000_000_000)
-                XCTFail("Should not get here")
+                Issue.record("Should not get here")
                 return Credential(accessKeyId: "ACCESSKEYID", secretAccessKey: "SECRETACCESSKET")
             }
         }
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+        defer { #expect(throws: Never.self) { try eventLoopGroup.syncShutdownGracefully() } }
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
-        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
+        defer { #expect(throws: Never.self) { try httpClient.syncShutdown() } }
 
         let context = CredentialProviderFactory.Context(httpClient: httpClient, logger: TestEnvironment.logger, options: .init())
         let myCredentialProvider = MyCredentialProvider()
@@ -79,7 +80,7 @@ final class CredentialProviderTests: XCTestCase {
         try await deferredProvider.shutdown()
     }
 
-    func testConfigFileSuccess() async throws {
+    @Test func testConfigFileSuccess() async throws {
         let credentials = """
             [default]
             aws_access_key_id = AWSACCESSKEYID
@@ -87,24 +88,24 @@ final class CredentialProviderTests: XCTestCase {
             """
         let filename = "credentials"
         let filenameURL = URL(fileURLWithPath: filename)
-        XCTAssertNoThrow(try Data(credentials.utf8).write(to: filenameURL))
-        defer { XCTAssertNoThrow(try FileManager.default.removeItem(at: filenameURL)) }
+        #expect(throws: Never.self) { try Data(credentials.utf8).write(to: filenameURL) }
+        defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: filenameURL) } }
 
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         let eventLoop = eventLoopGroup.next()
-        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+        defer { #expect(throws: Never.self) { try eventLoopGroup.syncShutdownGracefully() } }
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoop))
-        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
+        defer { #expect(throws: Never.self) { try httpClient.syncShutdown() } }
         let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
 
         let provider = factory.createProvider(context: .init(httpClient: httpClient, logger: TestEnvironment.logger, options: .init()))
 
         let credential = try await provider.getCredential(logger: TestEnvironment.logger)
-        XCTAssertEqual(credential.accessKeyId, "AWSACCESSKEYID")
-        XCTAssertEqual(credential.secretAccessKey, "AWSSECRETACCESSKEY")
+        #expect(credential.accessKeyId == "AWSACCESSKEYID")
+        #expect(credential.secretAccessKey == "AWSSECRETACCESSKEY")
     }
 
-    func testConfigFileNotAvailable() async throws {
+    @Test func testConfigFileNotAvailable() async throws {
         let credentialsFilename = "credentials_not_existing"
         let credentialsFilenameURL = URL(fileURLWithPath: credentialsFilename)
 
@@ -113,9 +114,9 @@ final class CredentialProviderTests: XCTestCase {
 
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         let eventLoop = eventLoopGroup.next()
-        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+        defer { #expect(throws: Never.self) { try eventLoopGroup.syncShutdownGracefully() } }
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoop))
-        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
+        defer { #expect(throws: Never.self) { try httpClient.syncShutdown() } }
         let factory = CredentialProviderFactory.configFile(
             credentialsFilePath: credentialsFilenameURL.path,
             configFilePath: configFilenameURL.path,
@@ -125,13 +126,13 @@ final class CredentialProviderTests: XCTestCase {
 
         do {
             _ = try await provider.getCredential(logger: TestEnvironment.logger)
-            XCTFail("Should provide credential")
+            Issue.record("Should provide credential")
         } catch {
-            XCTAssertEqual(error as? CredentialProviderError, .noProvider)
+            #expect(error as? CredentialProviderError == .noProvider)
         }
     }
 
-    func testCredentialSelectorShutdown() async throws {
+    @Test func testCredentialSelectorShutdown() async throws {
         final class TestCredentialProvider: CredentialProvider {
             let hasShutdown = ManagedAtomic(false)
             init() {}
@@ -145,14 +146,14 @@ final class CredentialProviderTests: XCTestCase {
             }
         }
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { XCTAssertNoThrow(try eventLoopGroup.syncShutdownGracefully()) }
+        defer { #expect(throws: Never.self) { try eventLoopGroup.syncShutdownGracefully() } }
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
-        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
+        defer { #expect(throws: Never.self) { try httpClient.syncShutdown() } }
         let context = CredentialProviderFactory.Context(httpClient: httpClient, logger: TestEnvironment.logger, options: .init())
         let testCredentialProvider = TestCredentialProvider()
 
         let deferredProvider = DeferredCredentialProvider(context: context, provider: testCredentialProvider)
         try await deferredProvider.shutdown()
-        XCTAssertEqual(testCredentialProvider.hasShutdown.load(ordering: .sequentiallyConsistent), true)
+        #expect(testCredentialProvider.hasShutdown.load(ordering: .sequentiallyConsistent) == true)
     }
 }

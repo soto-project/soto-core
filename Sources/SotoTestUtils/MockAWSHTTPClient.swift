@@ -25,24 +25,19 @@ import FoundationEssentials
 import Foundation
 #endif
 
-final class MockAWSHTTPClient: AWSHTTPClient {
-    private let requestHandler: @Sendable (AWSHTTPRequest) async throws -> (HTTPResponse.Status, Data)
+package final class MockAWSHTTPClient: AWSHTTPClient {
+    private let requestHandler: @Sendable (AWSHTTPRequest) async throws -> AWSHTTPResponse
 
-    public init(requestHandler: @escaping (@Sendable (AWSHTTPRequest) async throws -> (HTTPResponse.Status, Data)) = { _ in (.ok, Data()) }) {
+    package init(
+        requestHandler: @escaping (@Sendable (AWSHTTPRequest) async throws -> AWSHTTPResponse) = { _ in .init(response: .init(status: .ok)) }
+    ) {
         self.requestHandler = requestHandler
     }
-    func execute(
+    package func execute(
         request: AWSHTTPRequest,
         timeout: Duration,
         logger: Logger
     ) async throws -> AWSHTTPResponse {
-
-        let (status, data) = try await requestHandler(request)
-
-        return AWSHTTPResponse(
-            response: HTTPResponse(status: status),
-            body: AWSHTTPBody(bytes: data)
-        )
+        try await requestHandler(request)
     }
-
 }

@@ -20,6 +20,7 @@ import Logging
 import NIOCore
 import NIOFoundationEssentialsCompat
 @_spi(SotoInternal) import SotoSignerV4
+import SotoTestUtils
 import Testing
 
 @testable import SotoCore
@@ -159,7 +160,7 @@ extension SSOCredentialProviderTests {
     @Test("Token refresh failure throws tokenRefreshFailed error")
     func tokenRefreshFailure() async throws {
         try await withSSOEnvironment(cacheKey: "my-sso", tokenJSON: makeModernTokenJSON()) { env in
-            let mockHTTPClient = MockAWSHTTPClient { _ in (.badRequest, Data()) }
+            let mockHTTPClient = MockAWSHTTPClient { _ in .init(response: .init(status: .badRequest)) }
             let provider = SSOCredentialProvider(configuration: self.makeModernConfig(), httpClient: mockHTTPClient)
 
             await #expect {

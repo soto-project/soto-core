@@ -19,113 +19,108 @@ import Logging
 import NIOCore
 import NIOPosix
 import SotoTestUtils
-import XCTest
+import Synchronization
+import Testing
 
 @testable import SotoCore
 
-final class PaginateTests: XCTestCase, @unchecked Sendable {
-    enum Error: Swift.Error {
-        case didntFindToken
-    }
+struct PaginateTests {
+    struct PaginateService: AWSService {
+        let client: AWSClient
+        let config: AWSServiceConfig
 
-    var awsServer: AWSTestServer!
-    var client: AWSClient!
-    var config: AWSServiceConfig!
-
-    override func setUp() {
-        // create server and client
-        self.awsServer = AWSTestServer(serviceProtocol: .json)
-        self.config = createServiceConfig(serviceProtocol: .json(version: "1.1"), endpoint: self.awsServer.address)
-        self.client = createAWSClient(credentialProvider: .empty, retryPolicy: .noRetry)
-    }
-
-    override func tearDown() {
-        XCTAssertNoThrow(try self.awsServer.stop())
-        XCTAssertNoThrow(try self.client.syncShutdown())
-    }
-
-    // test structures/functions
-    struct CounterInput: AWSEncodableShape, AWSPaginateToken, Decodable {
-        let inputToken: Int?
-        let pageSize: Int
-
-        init(inputToken: Int?, pageSize: Int) {
-            self.inputToken = inputToken
-            self.pageSize = pageSize
+        init(client: AWSClient, serviceConfig: AWSServiceConfig) {
+            self.client = client
+            self.config = serviceConfig
         }
 
-        func usingPaginationToken(_ token: Int) -> CounterInput {
-            .init(inputToken: token, pageSize: self.pageSize)
-        }
-    }
-
-    // conform to Encodable so server can encode these
-    struct CounterOutput: AWSDecodableShape, Encodable {
-        let array: [Int]
-        let outputToken: Int?
-    }
-
-    func counter(_ input: CounterInput, logger: Logger) async throws -> CounterOutput {
-        try await self.client.execute(
-            operation: "TestOperation",
-            path: "/",
-            httpMethod: .post,
-            serviceConfig: self.config,
-            input: input,
-            logger: logger
-        )
-    }
-
-    func asyncCounterPaginator(_ input: CounterInput) -> AWSClient.PaginatorSequence<CounterInput, CounterOutput> {
-        .init(
-            input: input,
-            command: self.counter,
-            inputKey: \CounterInput.inputToken,
-            outputKey: \CounterOutput.outputToken,
-            logger: TestEnvironment.logger
-        )
-    }
-
-    func stringList(_ input: StringListInput, logger: Logger) async throws -> StringListOutput {
-        try await self.client.execute(
-            operation: "TestOperation",
-            path: "/",
-            httpMethod: .post,
-            serviceConfig: self.config,
-            input: input,
-            logger: logger
-        )
-    }
-
-    func asyncStringListPaginator(_ input: StringListInput) -> AWSClient.PaginatorSequence<StringListInput, StringListOutput> {
-        .init(
-            input: input,
-            command: self.stringList,
-            inputKey: \StringListInput.inputToken,
-            outputKey: \StringListOutput.outputToken,
-            logger: TestEnvironment.logger
-        )
-    }
-
-    // test structures/functions
-    struct StringListInput: AWSEncodableShape, AWSPaginateToken, Decodable {
-        let inputToken: String?
-        let pageSize: Int
-
-        init(inputToken: String?, pageSize: Int) {
-            self.inputToken = inputToken
-            self.pageSize = pageSize
+        init(from: PaginateService, patch: AWSServiceConfig.Patch) {
+            self.init(client: from.client, serviceConfig: from.config.with(patch: patch))
         }
 
-        func usingPaginationToken(_ token: String) -> StringListInput {
-            .init(inputToken: token, pageSize: self.pageSize)
-        }
-    }
+        // test structures/functions
+        struct CounterInput: AWSEncodableShape, AWSPaginateToken, Decodable {
+            let inputToken: Int?
+            let pageSize: Int
 
-    // conform to Encodable so server can encode these
-    struct StringListOutput: AWSDecodableShape, Encodable {
-        let array: [String]
-        let outputToken: String?
+            init(inputToken: Int?, pageSize: Int) {
+                self.inputToken = inputToken
+                self.pageSize = pageSize
+            }
+
+            func usingPaginationToken(_ token: Int) -> CounterInput {
+                .init(inputToken: token, pageSize: self.pageSize)
+            }
+        }
+
+        // conform to Encodable so server can encode these
+        struct CounterOutput: AWSDecodableShape, Encodable {
+            let array: [Int]
+            let outputToken: Int?
+        }
+
+        func counter(_ input: CounterInput, logger: Logger) async throws -> CounterOutput {
+            try await self.client.execute(
+                operation: "TestOperation",
+                path: "/",
+                httpMethod: .post,
+                serviceConfig: self.config,
+                input: input,
+                logger: logger
+            )
+        }
+
+        func counterPaginator(_ input: CounterInput) -> AWSClient.PaginatorSequence<CounterInput, CounterOutput> {
+            .init(
+                input: input,
+                command: self.counter,
+                inputKey: \CounterInput.inputToken,
+                outputKey: \CounterOutput.outputToken,
+                logger: TestEnvironment.logger
+            )
+        }
+
+        func stringList(_ input: StringListInput, logger: Logger) async throws -> StringListOutput {
+            try await self.client.execute(
+                operation: "TestOperation",
+                path: "/",
+                httpMethod: .post,
+                serviceConfig: self.config,
+                input: input,
+                logger: logger
+            )
+        }
+
+        func stringListPaginator(_ input: StringListInput) -> AWSClient.PaginatorSequence<StringListInput, StringListOutput> {
+            .init(
+                input: input,
+                command: self.stringList,
+                inputKey: \StringListInput.inputToken,
+                outputKey: \StringListOutput.outputToken,
+                logger: TestEnvironment.logger
+            )
+        }
+
+        // test structures/functions
+        struct StringListInput: AWSEncodableShape, AWSPaginateToken, Decodable {
+            let inputToken: String?
+            let pageSize: Int
+
+            init(inputToken: String?, pageSize: Int) {
+                self.inputToken = inputToken
+                self.pageSize = pageSize
+            }
+
+            func usingPaginationToken(_ token: String) -> StringListInput {
+                .init(inputToken: token, pageSize: self.pageSize)
+            }
+        }
+
+        // conform to Encodable so server can encode these
+        struct StringListOutput: AWSDecodableShape, Encodable {
+            let array: [String]
+            let outputToken: String?
+        }
     }
 
     // create list of unique strings
@@ -134,11 +129,13 @@ final class PaginateTests: XCTestCase, @unchecked Sendable {
             .split(separator: " ").map { String($0) }
     ).map { $0 }
 
-    func stringListServerProcess(_ input: StringListInput) throws -> AWSTestServer.Result<StringListOutput> {
+    func stringListServerProcess(_ input: PaginateService.StringListInput) throws -> PaginateService.StringListOutput {
         // send part of array of numbers based on input startIndex and pageSize
         var startIndex = 0
         if let inputToken = input.inputToken {
-            guard let stringIndex = stringList.firstIndex(of: inputToken) else { throw Error.didntFindToken }
+            guard let stringIndex = stringList.firstIndex(of: inputToken) else {
+                throw MockAWSHTTPClient.HTTPError(status: .notFound, code: "NotFound")
+            }
             startIndex = stringIndex
         }
         let endIndex = min(startIndex + input.pageSize, self.stringList.count)
@@ -147,119 +144,114 @@ final class PaginateTests: XCTestCase, @unchecked Sendable {
             array.append(self.stringList[i])
         }
         var outputToken: String?
-        var continueProcessing = false
         if endIndex < self.stringList.count {
             outputToken = self.stringList[endIndex]
-            continueProcessing = true
         } else {
             outputToken = input.inputToken
         }
-        let output = StringListOutput(array: array, outputToken: outputToken)
-        return .result(output, continueProcessing: continueProcessing)
+        return PaginateService.StringListOutput(array: array, outputToken: outputToken)
     }
 
-    func testAsyncIntegerTokenPaginate() async throws {
-        #if os(iOS)  // iOS async tests are failing in GitHub CI at the moment
-        guard ProcessInfo.processInfo.environment["CI"] == nil else { return }
-        #endif
+    @Test func testIntegerTokenPaginate() async throws {
         // paginate input
-        let input = CounterInput(inputToken: nil, pageSize: 4)
+        let input = PaginateService.CounterInput(inputToken: nil, pageSize: 4)
         let arraySize = 23
 
-        let finalArray = try await withThrowingTaskGroup(of: [Int].self) { group -> [Int] in
-            group.addTask {
-                try await self.asyncCounterPaginator(input).reduce([]) { $0 + $1.array }
+        let mockHTTPClient = MockAWSHTTPClient { (input: PaginateService.CounterInput) in
+            // send part of array of numbers based on input startIndex and pageSize
+            let startIndex = input.inputToken ?? 0
+            let endIndex = min(startIndex + input.pageSize, arraySize)
+            var array: [Int] = []
+            for i in startIndex..<endIndex {
+                array.append(i)
             }
-            try self.awsServer.process { (input: CounterInput) throws -> AWSTestServer.Result<CounterOutput> in
-                // send part of array of numbers based on input startIndex and pageSize
-                let startIndex = input.inputToken ?? 0
-                let endIndex = min(startIndex + input.pageSize, arraySize)
-                var array: [Int] = []
-                for i in startIndex..<endIndex {
-                    array.append(i)
-                }
-                let continueProcessing = (endIndex != arraySize)
-                let output = CounterOutput(array: array, outputToken: endIndex != arraySize ? endIndex : nil)
-                return .result(output, continueProcessing: continueProcessing)
-            }
-            return try await group.next()!
+            return PaginateService.CounterOutput(array: array, outputToken: endIndex != arraySize ? endIndex : nil)
+        }
+        let client = AWSClient(
+            credentialProvider: .empty,
+            httpClient: mockHTTPClient
+        )
+        defer { #expect(throws: Never.self) { try client.syncShutdown() } }
+
+        let service = PaginateService(client: client, serviceConfig: createServiceConfig())
+        let finalArray = try await service.counterPaginator(input).reduce([]) {
+            $0 + $1.array
         }
 
         // verify contents of array
-        XCTAssertEqual(finalArray.count, arraySize)
+        #expect(finalArray.count == arraySize)
         for i in 0..<finalArray.count {
-            XCTAssertEqual(finalArray[i], i)
+            #expect(finalArray[i] == i)
         }
     }
 
-    func testAsyncStringTokenPaginate() async throws {
-        #if os(iOS)  // iOS async tests are failing in GitHub CI at the moment
-        guard ProcessInfo.processInfo.environment["CI"] == nil else { return }
-        #endif
+    @Test func testStringTokenPaginate() async throws {
         // paginate input
-        let input = StringListInput(inputToken: nil, pageSize: 5)
-        let finalArray = try await withThrowingTaskGroup(of: [String].self) { group -> [String] in
-            group.addTask {
-                let paginator = self.asyncStringListPaginator(input)
-                return try await paginator.reduce([]) { $0 + $1.array }
-            }
-            try self.awsServer.process(self.stringListServerProcess)
-            return try await group.next()!
-        }
+        let input = PaginateService.StringListInput(inputToken: nil, pageSize: 5)
+        let mockHTTPClient = MockAWSHTTPClient(shapeHandler: self.stringListServerProcess)
+        let client = AWSClient(
+            credentialProvider: .empty,
+            httpClient: mockHTTPClient
+        )
+        defer { #expect(throws: Never.self) { try client.syncShutdown() } }
+
+        let service = PaginateService(client: client, serviceConfig: createServiceConfig())
+
+        let paginator = service.stringListPaginator(input)
+        let finalArray = try await paginator.reduce([]) { $0 + $1.array }
         // verify contents of array
-        XCTAssertEqual(finalArray.count, self.stringList.count)
+        #expect(finalArray.count == self.stringList.count)
         for i in 0..<finalArray.count {
-            XCTAssertEqual(finalArray[i], self.stringList[i])
+            #expect(finalArray[i] == self.stringList[i])
         }
     }
 
-    func testAsyncPaginateError() async throws {
-        #if os(iOS)  // iOS async tests are failing in GitHub CI at the moment
-        guard ProcessInfo.processInfo.environment["CI"] == nil else { return }
-        #endif
+    @Test func testPaginateError() async throws {
         // paginate input
-        let input = StringListInput(inputToken: nil, pageSize: 5)
+        let input = PaginateService.StringListInput(inputToken: nil, pageSize: 5)
+        let mockHTTPClient = MockAWSHTTPClient { (input: PaginateService.StringListInput) -> PaginateService.StringListOutput in
+            throw MockAWSHTTPClient.HTTPError(status: .badRequest, code: "BadRequest")
+        }
+        let client = AWSClient(
+            credentialProvider: .empty,
+            httpClient: mockHTTPClient
+        )
+        defer { #expect(throws: Never.self) { try client.syncShutdown() } }
+
+        let service = PaginateService(client: client, serviceConfig: createServiceConfig())
+
+        let paginator = service.stringListPaginator(input)
         do {
-            _ = try await withThrowingTaskGroup(of: [String].self) { group -> [String] in
-                group.addTask {
-                    let paginator = self.asyncStringListPaginator(input)
-                    return try await paginator.reduce([]) { $0 + $1.array }
-                }
-                try self.awsServer.process { (_: StringListInput) -> AWSTestServer.Result<StringListOutput> in
-                    .error(.badRequest)
-                }
-                return try await group.next()!
-            }
+            _ = try await paginator.reduce([]) { $0 + $1.array }
         } catch {
-            XCTAssertEqual((error as? AWSResponseError)?.errorCode, "BadRequest")
+            #expect((error as? AWSResponseError)?.errorCode == "BadRequest")
         }
     }
 
-    func testAsyncPaginateErrorAfterFirstRequest() async throws {
-        #if os(iOS)  // iOS async tests are failing in GitHub CI at the moment
-        guard ProcessInfo.processInfo.environment["CI"] == nil else { return }
-        #endif
+    @Test func testPaginateErrorAfterFirstRequest() async throws {
+        let count = Atomic(0)
         // paginate input
-        let input = StringListInput(inputToken: nil, pageSize: 5)
-        do {
-            let count = ManagedAtomic(0)
-
-            _ = try await withThrowingTaskGroup(of: [String].self) { group -> [String] in
-                group.addTask {
-                    let paginator = self.asyncStringListPaginator(input)
-                    return try await paginator.reduce([]) { $0 + $1.array }
-                }
-                try self.awsServer.process { (request: StringListInput) -> AWSTestServer.Result<StringListOutput> in
-                    if count.loadThenWrappingIncrement(by: 1, ordering: .relaxed) > 0 {
-                        return .error(.badRequest, continueProcessing: false)
-                    } else {
-                        return try self.stringListServerProcess(request)
-                    }
-                }
-                return try await group.next()!
+        let input = PaginateService.StringListInput(inputToken: nil, pageSize: 5)
+        let mockHTTPClient = MockAWSHTTPClient { (input: PaginateService.StringListInput) -> PaginateService.StringListOutput in
+            if count.add(1, ordering: .relaxed).oldValue > 0 {
+                throw MockAWSHTTPClient.HTTPError(status: .badRequest, code: "BadRequest")
+            } else {
+                return try self.stringListServerProcess(input)
             }
+        }
+        let client = AWSClient(
+            credentialProvider: .empty,
+            httpClient: mockHTTPClient
+        )
+        defer { #expect(throws: Never.self) { try client.syncShutdown() } }
+
+        let service = PaginateService(client: client, serviceConfig: createServiceConfig())
+
+        let paginator = service.stringListPaginator(input)
+        do {
+            _ = try await paginator.reduce([]) { $0 + $1.array }
         } catch {
-            XCTAssertEqual((error as? AWSResponseError)?.errorCode, "BadRequest")
+            #expect((error as? AWSResponseError)?.errorCode == "BadRequest")
         }
     }
 }

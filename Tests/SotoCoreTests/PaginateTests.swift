@@ -134,7 +134,7 @@ struct PaginateTests {
         var startIndex = 0
         if let inputToken = input.inputToken {
             guard let stringIndex = stringList.firstIndex(of: inputToken) else {
-                throw MockAWSHTTPClient.HTTPError(status: .notFound, code: "NotFound")
+                throw MockAWSHTTPClient.AWSError(status: .notFound, code: "NotFound")
             }
             startIndex = stringIndex
         }
@@ -210,7 +210,7 @@ struct PaginateTests {
         // paginate input
         let input = PaginateService.StringListInput(inputToken: nil, pageSize: 5)
         let mockHTTPClient = MockAWSHTTPClient { (input: PaginateService.StringListInput) -> PaginateService.StringListOutput in
-            throw MockAWSHTTPClient.HTTPError(status: .badRequest, code: "BadRequest")
+            throw MockAWSHTTPClient.AWSError(status: .badRequest, code: "BadRequest")
         }
         let client = AWSClient(
             credentialProvider: .empty,
@@ -234,7 +234,7 @@ struct PaginateTests {
         let input = PaginateService.StringListInput(inputToken: nil, pageSize: 5)
         let mockHTTPClient = MockAWSHTTPClient { (input: PaginateService.StringListInput) -> PaginateService.StringListOutput in
             if count.add(1, ordering: .relaxed).oldValue > 0 {
-                throw MockAWSHTTPClient.HTTPError(status: .badRequest, code: "BadRequest")
+                throw MockAWSHTTPClient.AWSError(status: .badRequest, code: "BadRequest")
             } else {
                 return try self.stringListServerProcess(input)
             }

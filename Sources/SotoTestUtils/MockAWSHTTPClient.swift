@@ -18,6 +18,7 @@ import HTTPTypes
 import Logging
 import NIOCore
 import SotoCore
+import SotoXML
 
 #if canImport(FoundationEssentials)
 import FoundationEssentials
@@ -25,7 +26,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
-package final class MockAWSHTTPClient: AWSHTTPClient {
+package struct MockAWSHTTPClient: AWSHTTPClient {
     private let requestHandler: @Sendable (AWSHTTPRequest) async throws -> AWSHTTPResponse
 
     package init(
@@ -33,6 +34,93 @@ package final class MockAWSHTTPClient: AWSHTTPClient {
     ) {
         self.requestHandler = requestHandler
     }
+
+    package struct HTTPError: Error {
+        let status: HTTPResponse.Status
+        let code: String
+        let message: String?
+
+        package init(status: HTTPResponse.Status, code: String, message: String? = nil) {
+            self.status = status
+            self.code = code
+            self.message = message
+        }
+
+        func response(for serviceProtocol: ServiceProtocol) -> AWSHTTPResponse {
+            switch serviceProtocol {
+            case .json:
+                if let message {
+                    AWSHTTPResponse(
+                        response: .init(status: status),
+                        body: .init(string: "{\"__type\":\"\(self.code)\", \"message\": \"\(message)\"}")
+                    )
+                } else {
+                    AWSHTTPResponse(response: .init(status: status), body: .init(string: "{\"__type\":\"\(self.code)\"}"))
+                }
+            case .restjson:
+                if let message {
+                    AWSHTTPResponse(response: .init(status: status), body: .init(string: "{\"code\":\"\(self.code)\", \"message\": \"\(message)\"}"))
+                } else {
+                    AWSHTTPResponse(response: .init(status: status), body: .init(string: "{\"code\":\"\(self.code)\"}"))
+                }
+            case .restxml:
+                if let message {
+                    AWSHTTPResponse(
+                        response: .init(status: status),
+                        body: .init(string: "<Error><Code>\(self.code)</Code><Message>\(message)</Message></Error>")
+                    )
+                } else {
+                    AWSHTTPResponse(response: .init(status: status), body: .init(string: "<Error><Code>\(self.code)</Code></Error>"))
+                }
+            default:
+                fatalError("Protocol is not supported")
+            }
+        }
+    }
+
+    package init<Input: Decodable & Sendable, Output: Encodable & Sendable>(
+        shapeHandler: @escaping (@Sendable (Input) async throws -> Output),
+        serviceProtocol: ServiceProtocol = .restjson
+    ) {
+        self.requestHandler = { request in
+            let inputData = try await request.body.collect(upTo: .max)
+            let input: Input
+            switch serviceProtocol {
+            case .json, .restjson:
+                input = try JSONDecoder().decode(Input.self, from: inputData)
+            case .restxml:
+                guard let xmlNode = try XML.Document(string: String(buffer: inputData)).rootElement() else {
+                    return HTTPError(status: .internalServerError, code: "InvalidData").response(for: .restxml)
+                }
+                input = try XMLDecoder().decode(Input.self, from: xmlNode)
+            default:
+                fatalError("Protocol is not supported")
+            }
+
+            do {
+                // process
+                let response = try await shapeHandler(input)
+
+                // Convert to Output AWSShape
+                let outputBuffer: ByteBuffer
+
+                switch serviceProtocol {
+                case .json, .restjson:
+                    let outputData = try JSONEncoder().encode(response)
+                    outputBuffer = ByteBuffer(data: outputData)
+                case .restxml:
+                    let outputString = try XMLEncoder().encode(response)?.xmlString ?? ""
+                    outputBuffer = ByteBuffer(string: outputString)
+                default:
+                    fatalError("Protocol is not supported")
+                }
+                return .init(response: .init(status: .ok), body: .init(buffer: outputBuffer))
+            } catch let error as HTTPError {
+                return error.response(for: serviceProtocol)
+            }
+        }
+    }
+
     package func execute(
         request: AWSHTTPRequest,
         timeout: Duration,
@@ -58,9 +146,9 @@ package final class MockAWSHTTPClient: AWSHTTPClient {
 
     package static func awsError(status: HTTPResponse.Status, code: String, message: String? = nil) -> AWSHTTPResponse {
         if let message {
-            AWSHTTPResponse(response: .init(status: status), body: .init(string: "{\"__type\":\"\(code)\", \"message\": \"\(message)\"}"))
+            AWSHTTPResponse(response: .init(status: status), body: .init(string: "{\"code\":\"\(code)\", \"message\": \"\(message)\"}"))
         } else {
-            AWSHTTPResponse(response: .init(status: status), body: .init(string: "{\"__type\":\"\(code)\"}"))
+            AWSHTTPResponse(response: .init(status: status), body: .init(string: "{\"code\":\"\(code)\"}"))
         }
     }
 }

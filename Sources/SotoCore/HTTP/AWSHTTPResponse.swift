@@ -99,9 +99,8 @@ public struct AWSHTTPResponse: Sendable {
     /// extract error code and message from AWSResponse
     func generateError(serviceConfig: AWSServiceConfig, logLevel: Logger.Level = .info, logger: Logger) -> (any AWSErrorType)? {
         do {
-            if let serviceErrorType = serviceConfig.errorType,
-                let serviceError = try self.decodeAWSError(as: serviceErrorType, serviceConfig: serviceConfig)
-            {
+            let errorType = serviceConfig.errorType ?? AWSResponseError.self
+            if let serviceError = try self.decodeAWSError(as: errorType, serviceConfig: serviceConfig) {
                 logger.log(
                     level: logLevel,
                     "AWS Error",

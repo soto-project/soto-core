@@ -710,7 +710,7 @@ class AWSResponseTests {
                 let context = try singleValueContainer.decode(MessageRejected.self)
                 self.error = .messageRejected(context)
             default:
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unrecognised error code"))
+                throw error
             }
             self.message = error.message
             self.response = error.response

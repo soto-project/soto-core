@@ -309,7 +309,7 @@ class MiddlewareTests: XCTestCase {
             case "NotFound":
                 self.error = .notFound
             default:
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Unrecognised error code"))
+                throw error
             }
             self.message = error.message
             self.response = error.response

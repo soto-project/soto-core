@@ -97,21 +97,22 @@ public struct AWSHTTPResponse: Sendable {
     }
 
     /// extract error code and message from AWSResponse
-    func generateError(serviceConfig: AWSServiceConfig, logLevel: Logger.Level = .info, logger: Logger) -> (any Error)? {
-        if let serviceErrorType = serviceConfig.errorType,
-            let serviceError = self.decodeAWSError(as: serviceErrorType, serviceConfig: serviceConfig)
-        {
-            logger.log(
-                level: logLevel,
-                "AWS Error",
-                metadata: [
-                    "aws-error-code": .string(serviceError.errorCode),
-                    "aws-error-message": .string(serviceError.message ?? ""),
-                ]
-            )
-            return serviceError
-        }
-        if let error = self.decodeAWSError(as: AWSResponseError.self, serviceConfig: serviceConfig) {
+    func generateError(serviceConfig: AWSServiceConfig, logLevel: Logger.Level = .info, logger: Logger) -> (any AWSErrorType)? {
+        do {
+            if let serviceErrorType = serviceConfig.errorType,
+                let serviceError = try self.decodeAWSError(as: serviceErrorType, serviceConfig: serviceConfig)
+            {
+                logger.log(
+                    level: logLevel,
+                    "AWS Error",
+                    metadata: [
+                        "aws-error-code": .string(serviceError.errorCode),
+                        "aws-error-message": .string(serviceError.message ?? ""),
+                    ]
+                )
+                return serviceError
+            }
+        } catch let error as AWSResponseError {
             logger.log(
                 level: logLevel,
                 "AWS Error",
@@ -121,12 +122,14 @@ public struct AWSHTTPResponse: Sendable {
                 ]
             )
             return error
+        } catch {
+            return nil
         }
         return nil
     }
 
     /// extract error code and message from AWSResponse
-    fileprivate func decodeAWSError<AWSError: Decodable>(as: AWSError.Type, serviceConfig: AWSServiceConfig) -> AWSError? {
+    fileprivate func decodeAWSError<AWSError: Decodable>(as: AWSError.Type, serviceConfig: AWSServiceConfig) throws -> AWSError? {
         switch self.body.storage {
         case .asyncSequence:
             return nil
@@ -138,11 +141,11 @@ public struct AWSHTTPResponse: Sendable {
                 jsonDecoder.userInfo[.awsErrorMap] = serviceConfig.errorType
                 jsonDecoder.userInfo[.awsResponse] = ResponseDecodingContainer(response: self)
                 jsonDecoder.userInfo[.awsProtocol] = serviceConfig.serviceProtocol
-                return try? jsonDecoder.decode(AWSError.self, from: buffer)
+                return try jsonDecoder.decode(AWSError.self, from: buffer)
 
             case .restxml:
-                let xmlDocument = try? XML.Document(buffer: buffer)
-                guard var element = xmlDocument?.rootElement() else { break }
+                let xmlDocument = try XML.Document(buffer: buffer)
+                guard var element = xmlDocument.rootElement() else { break }
                 if let error = element.elements(forName: "Error").first {
                     element = error
                 }
@@ -150,21 +153,21 @@ public struct AWSHTTPResponse: Sendable {
                 xmlDecoder.userInfo[.awsErrorMap] = serviceConfig.errorType
                 xmlDecoder.userInfo[.awsResponse] = ResponseDecodingContainer(response: self)
                 xmlDecoder.userInfo[.awsProtocol] = serviceConfig.serviceProtocol
-                return try? xmlDecoder.decode(AWSError.self, from: element)
+                return try xmlDecoder.decode(AWSError.self, from: element)
 
             case .query:
-                let xmlDocument = try? XML.Document(buffer: buffer)
-                guard let element = xmlDocument?.rootElement() else { break }
+                let xmlDocument = try XML.Document(buffer: buffer)
+                guard let element = xmlDocument.rootElement() else { break }
                 guard let errorElement = element.elements(forName: "Error").first else { break }
                 var xmlDecoder = XMLDecoder()
                 xmlDecoder.userInfo[.awsErrorMap] = serviceConfig.errorType
                 xmlDecoder.userInfo[.awsResponse] = ResponseDecodingContainer(response: self)
                 xmlDecoder.userInfo[.awsProtocol] = serviceConfig.serviceProtocol
-                return try? xmlDecoder.decode(AWSError.self, from: errorElement)
+                return try xmlDecoder.decode(AWSError.self, from: errorElement)
 
             case .ec2:
-                let xmlDocument = try? XML.Document(buffer: buffer)
-                guard var element = xmlDocument?.rootElement() else { break }
+                let xmlDocument = try XML.Document(buffer: buffer)
+                guard var element = xmlDocument.rootElement() else { break }
                 if let errors = element.elements(forName: "Errors").first {
                     element = errors
                 }
@@ -173,7 +176,7 @@ public struct AWSHTTPResponse: Sendable {
                 xmlDecoder.userInfo[.awsErrorMap] = serviceConfig.errorType
                 xmlDecoder.userInfo[.awsResponse] = ResponseDecodingContainer(response: self)
                 xmlDecoder.userInfo[.awsProtocol] = serviceConfig.serviceProtocol
-                return try? xmlDecoder.decode(AWSError.self, from: errorElement)
+                return try xmlDecoder.decode(AWSError.self, from: errorElement)
             }
         }
         return nil

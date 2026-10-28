@@ -30,13 +30,12 @@ import FoundationEssentials
 import Foundation
 #endif
 
-@Suite(.serialized)
 struct ConfigFileCredentialProviderTests {
     // MARK: - Credential Provider
 
-    func makeContext() -> (CredentialProviderFactory.Context, HTTPClient) {
-        let httpClient = HTTPClient(eventLoopGroupProvider: .singleton)
-        return (.init(httpClient: httpClient, logger: TestEnvironment.logger, options: .init()), httpClient)
+    func makeContext() -> CredentialProviderFactory.Context {
+        let httpClient = MockAWSHTTPClient { _ in fatalError() }
+        return .init(httpClient: httpClient, logger: TestEnvironment.logger, options: .init())
     }
 
     @Test func testCredentialProviderStatic() async throws {
@@ -44,7 +43,7 @@ struct ConfigFileCredentialProviderTests {
             accessKeyId: "foo",
             secretAccessKey: "bar"
         )
-        let (context, httpClient) = self.makeContext()
+        let context = self.makeContext()
 
         let provider = try ConfigFileCredentialProvider.credentialProvider(
             from: credentials,
@@ -56,7 +55,6 @@ struct ConfigFileCredentialProviderTests {
         #expect((provider as? StaticCredentialProvider)?.credential.secretAccessKey == "bar")
 
         try await provider.shutdown()
-        try await httpClient.shutdown()
     }
 
     @Test func testCredentialProviderSTSAssumeRole() async throws {
@@ -66,7 +64,7 @@ struct ConfigFileCredentialProviderTests {
             region: nil,
             sourceCredentialProvider: .static(accessKeyId: "foo", secretAccessKey: "bar")
         )
-        let (context, httpClient) = self.makeContext()
+        let context = self.makeContext()
 
         let provider = try ConfigFileCredentialProvider.credentialProvider(
             from: credentials,
@@ -83,7 +81,6 @@ struct ConfigFileCredentialProviderTests {
         }
 
         try await provider.shutdown()
-        try await httpClient.shutdown()
     }
 
     @Test func testProfileScopedProviderWrapsErrorWithProfileName() async throws {
@@ -120,7 +117,7 @@ struct ConfigFileCredentialProviderTests {
         let credentialsPath = "creds-\(UUID().uuidString)"
         try credentialsFile.write(toFile: credentialsPath, atomically: true, encoding: .utf8)
         defer { try? FileManager.default.removeItem(atPath: credentialsPath) }
-        let (context, httpClient) = self.makeContext()
+        let context = self.makeContext()
 
         let provider = try await ConfigFileCredentialProvider.credentialProvider(
             from: credentialsPath,
@@ -135,7 +132,6 @@ struct ConfigFileCredentialProviderTests {
         #expect(scoped.profile == profile)
 
         try await provider.shutdown()
-        try await httpClient.shutdown()
     }
 
     // MARK: - Config File Credentials Provider
@@ -155,11 +151,7 @@ struct ConfigFileCredentialProviderTests {
             }
         }
 
-        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let eventLoop = eventLoopGroup.next()
-        defer { #expect(throws: Never.self) { try eventLoopGroup.syncShutdownGracefully() } }
-        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoop))
-        defer { #expect(throws: Never.self) { try httpClient.syncShutdown() } }
+        let httpClient = MockAWSHTTPClient { _ in fatalError() }
         let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
 
         let provider = factory.createProvider(context: .init(httpClient: httpClient, logger: TestEnvironment.logger, options: .init()))
@@ -169,34 +161,6 @@ struct ConfigFileCredentialProviderTests {
         #expect(credential.secretAccessKey == "AWSSECRETACCESSKEY")
     }
 
-    @Test func testAWSProfileConfigFile() async throws {
-        let credentials = """
-            [test-profile]
-            aws_access_key_id = TESTPROFILE-AWSACCESSKEYID
-            aws_secret_access_key = TESTPROFILE-AWSSECRETACCESSKEY
-            """
-        Environment.set("test-profile", for: "AWS_PROFILE")
-        defer { Environment.unset(name: "AWS_PROFILE") }
-
-        let filename = #function
-        let filenameURL = URL(fileURLWithPath: filename)
-        #expect(throws: Never.self) { try Data(credentials.utf8).write(to: filenameURL) }
-        defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: filenameURL) } }
-
-        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let eventLoop = eventLoopGroup.next()
-        defer { #expect(throws: Never.self) { try eventLoopGroup.syncShutdownGracefully() } }
-        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoop))
-        defer { #expect(throws: Never.self) { try httpClient.syncShutdown() } }
-        let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
-
-        let provider = factory.createProvider(context: .init(httpClient: httpClient, logger: TestEnvironment.logger, options: .init()))
-
-        let credential = try await provider.getCredential(logger: TestEnvironment.logger)
-        #expect(credential.accessKeyId == "TESTPROFILE-AWSACCESSKEYID")
-        #expect(credential.secretAccessKey == "TESTPROFILE-AWSSECRETACCESSKEY")
-    }
-
     @Test func testConfigFileNotAvailable() async {
         let credentialsFilename = "credentials_\(#function)"
         let credentialsFilenameURL = URL(fileURLWithPath: credentialsFilename)
@@ -204,11 +168,7 @@ struct ConfigFileCredentialProviderTests {
         let configFilename = "config_\(#function)"
         let configFilenameURL = URL(fileURLWithPath: configFilename)
 
-        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let eventLoop = eventLoopGroup.next()
-        defer { #expect(throws: Never.self) { try eventLoopGroup.syncShutdownGracefully() } }
-        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoop))
-        defer { #expect(throws: Never.self) { try httpClient.syncShutdown() } }
+        let httpClient = MockAWSHTTPClient { _ in fatalError() }
 
         let factory = CredentialProviderFactory.configFile(
             credentialsFilePath: credentialsFilenameURL.path,
@@ -222,50 +182,6 @@ struct ConfigFileCredentialProviderTests {
             Issue.record("Should throw error")
         } catch {
             #expect(error as? CredentialProviderError == .noProvider)
-        }
-    }
-
-    @Test func testCredentialProviderSourceEnvironment() async throws {
-        let accessKey = "AKIAIOSFODNN7EXAMPLE"
-        let secretKey = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-        let profile = "marketingadmin"
-        let roleArn = "arn:aws:iam::123456789012:role/marketingadminrole"
-        let credentialsFile = """
-            [\(profile)]
-            role_arn = \(roleArn)
-            credential_source = Environment
-            """
-
-        Environment.set(accessKey, for: "AWS_ACCESS_KEY_ID")
-        Environment.set(secretKey, for: "AWS_SECRET_ACCESS_KEY")
-        defer {
-            Environment.unset(name: accessKey)
-            Environment.unset(name: secretKey)
-        }
-        let filename = #function
-        let filenameURL = URL(fileURLWithPath: filename)
-        #expect(throws: Never.self) { try Data(credentialsFile.utf8).write(to: filenameURL) }
-        let (context, httpClient) = self.makeContext()
-
-        defer {
-            #expect(throws: Never.self) { try FileManager.default.removeItem(at: filenameURL) }
-            #expect(throws: Never.self) { try httpClient.syncShutdown() }
-        }
-
-        let sharedCredentials = try await ConfigFileLoader.loadSharedCredentials(
-            credentialsFilePath: filename,
-            configFilePath: "/dev/null",
-            profile: profile
-        )
-
-        switch sharedCredentials {
-        case .assumeRole(let aRoleArn, _, _, let sourceCredentialProvider):
-            let credentials = try await sourceCredentialProvider.createProvider(context: context).getCredential(logger: context.logger)
-            #expect(credentials.accessKeyId == accessKey)
-            #expect(credentials.secretAccessKey == secretKey)
-            #expect(aRoleArn == roleArn)
-        default:
-            Issue.record("Expected STS Assume Role")
         }
     }
 
@@ -344,5 +260,77 @@ struct ConfigFileCredentialProviderTests {
         // Verify credentials match those returned from STS Assume Role operation
         #expect(credentials.accessKeyId == stsCredentials.accessKeyId)
         #expect(credentials.secretAccessKey == stsCredentials.secretAccessKey)
+    }
+
+    @Suite(.serialized)
+    struct Serialized {
+        @Test func testCredentialProviderSourceEnvironment() async throws {
+            let accessKey = "AKIAIOSFODNN7EXAMPLE"
+            let secretKey = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+            let profile = "marketingadmin"
+            let roleArn = "arn:aws:iam::123456789012:role/marketingadminrole"
+            let credentialsFile = """
+                [\(profile)]
+                role_arn = \(roleArn)
+                credential_source = Environment
+                """
+
+            Environment.set(accessKey, for: "AWS_ACCESS_KEY_ID")
+            Environment.set(secretKey, for: "AWS_SECRET_ACCESS_KEY")
+            defer {
+                Environment.unset(name: accessKey)
+                Environment.unset(name: secretKey)
+            }
+            let filename = #function
+            let filenameURL = URL(fileURLWithPath: filename)
+            #expect(throws: Never.self) { try Data(credentialsFile.utf8).write(to: filenameURL) }
+
+            let httpClient = MockAWSHTTPClient { _ in fatalError() }
+            let context = CredentialProviderFactory.Context(httpClient: httpClient, logger: TestEnvironment.logger, options: .init())
+
+            defer {
+                #expect(throws: Never.self) { try FileManager.default.removeItem(at: filenameURL) }
+            }
+
+            let sharedCredentials = try await ConfigFileLoader.loadSharedCredentials(
+                credentialsFilePath: filename,
+                configFilePath: "/dev/null",
+                profile: profile
+            )
+
+            switch sharedCredentials {
+            case .assumeRole(let aRoleArn, _, _, let sourceCredentialProvider):
+                let credentials = try await sourceCredentialProvider.createProvider(context: context).getCredential(logger: context.logger)
+                #expect(credentials.accessKeyId == accessKey)
+                #expect(credentials.secretAccessKey == secretKey)
+                #expect(aRoleArn == roleArn)
+            default:
+                Issue.record("Expected STS Assume Role")
+            }
+        }
+
+        @Test func testAWSProfileConfigFile() async throws {
+            let credentials = """
+                [test-profile]
+                aws_access_key_id = TESTPROFILE-AWSACCESSKEYID
+                aws_secret_access_key = TESTPROFILE-AWSSECRETACCESSKEY
+                """
+            Environment.set("test-profile", for: "AWS_PROFILE")
+            defer { Environment.unset(name: "AWS_PROFILE") }
+
+            let filename = #function
+            let filenameURL = URL(fileURLWithPath: filename)
+            #expect(throws: Never.self) { try Data(credentials.utf8).write(to: filenameURL) }
+            defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: filenameURL) } }
+
+            let httpClient = MockAWSHTTPClient { _ in fatalError() }
+            let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
+
+            let provider = factory.createProvider(context: .init(httpClient: httpClient, logger: TestEnvironment.logger, options: .init()))
+
+            let credential = try await provider.getCredential(logger: TestEnvironment.logger)
+            #expect(credential.accessKeyId == "TESTPROFILE-AWSACCESSKEYID")
+            #expect(credential.secretAccessKey == "TESTPROFILE-AWSSECRETACCESSKEY")
+        }
     }
 }

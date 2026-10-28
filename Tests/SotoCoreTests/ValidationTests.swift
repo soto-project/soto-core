@@ -22,7 +22,7 @@ class ValidationTests {
         do {
             try shape.validate()
             Issue.record("Validation should fail", sourceLocation: sourceLocation)
-        } catch let error as AWSClientError where error == AWSClientError.validationError {
+        } catch let error as AWSResponseError where error == .validationError {
             print(error.message ?? "")
         } catch {
             Issue.record(error, sourceLocation: sourceLocation)

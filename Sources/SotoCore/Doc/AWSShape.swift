@@ -68,7 +68,7 @@ extension AWSEncodableShape {
 
     /// Return validation error
     public static func validationError(_ message: String) -> any Error {
-        AWSClientError(.validationError, context: .init(message: message, response: HTTPResponse(status: .badRequest)))
+        AWSResponseError(errorCode: AWSResponseError.validationError.errorCode, message: message)
     }
 
     public func validate<T: BinaryInteger>(_ value: T, name: String, parent: String, min: T) throws {

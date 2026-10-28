@@ -18,7 +18,7 @@ import Logging
 import NIOCore
 import NIOPosix
 import SotoTestUtils
-import XCTest
+import Testing
 
 @testable import SotoCore
 
@@ -28,7 +28,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
-class RotatingCredentialProviderTests: XCTestCase {
+struct RotatingCredentialProviderTests {
     final class RotatingCredentialTestClient: CredentialProvider {
         typealias TestCallback = @Sendable () async throws -> Credential
         let callback: TestCallback
@@ -42,15 +42,15 @@ class RotatingCredentialProviderTests: XCTestCase {
         }
     }
 
-    func testSetupShutdown() async throws {
+    @Test func testSetupShutdown() async throws {
         let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
+        defer { #expect(throws: Never.self) { try group.syncShutdownGracefully() } }
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(group))
-        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
+        defer { #expect(throws: Never.self) { try httpClient.syncShutdown() } }
 
         let client = RotatingCredentialTestClient {
             try await Task.sleep(nanoseconds: 5_000_000_000)
-            XCTFail("Should not get here")
+            Issue.record("Should not get here")
             return Credential(
                 accessKeyId: "abc123",
                 secretAccessKey: "abc123",
@@ -67,11 +67,11 @@ class RotatingCredentialProviderTests: XCTestCase {
         try await provider.shutdown()
     }
 
-    func testGetCredentialAndReuseIfStillValid() async throws {
+    @Test func testGetCredentialAndReuseIfStillValid() async throws {
         let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
+        defer { #expect(throws: Never.self) { try group.syncShutdownGracefully() } }
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(group))
-        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
+        defer { #expect(throws: Never.self) { try httpClient.syncShutdown() } }
 
         let cred = Credential(
             accessKeyId: "abc123",
@@ -91,28 +91,28 @@ class RotatingCredentialProviderTests: XCTestCase {
         // get credentials for first time
         var returned = try await provider.getCredential(logger: Logger(label: "soto"))
 
-        XCTAssertEqual(returned.accessKeyId, cred.accessKeyId)
-        XCTAssertEqual(returned.secretAccessKey, cred.secretAccessKey)
-        XCTAssertEqual(returned.sessionToken, cred.sessionToken)
-        XCTAssertEqual(returned.expiration, cred.expiration)
+        #expect(returned.accessKeyId == cred.accessKeyId)
+        #expect(returned.secretAccessKey == cred.secretAccessKey)
+        #expect(returned.sessionToken == cred.sessionToken)
+        #expect(returned.expiration == cred.expiration)
 
         // get credentials a second time, callback must not be hit
         returned = try await provider.getCredential(logger: Logger(label: "soto"))
 
-        XCTAssertEqual(returned.accessKeyId, cred.accessKeyId)
-        XCTAssertEqual(returned.secretAccessKey, cred.secretAccessKey)
-        XCTAssertEqual(returned.sessionToken, cred.sessionToken)
-        XCTAssertEqual(returned.expiration, cred.expiration)
+        #expect(returned.accessKeyId == cred.accessKeyId)
+        #expect(returned.secretAccessKey == cred.secretAccessKey)
+        #expect(returned.sessionToken == cred.sessionToken)
+        #expect(returned.expiration == cred.expiration)
 
         // ensure callback was only hit once
-        XCTAssertEqual(count.load(ordering: .sequentiallyConsistent), 1)
+        #expect(count.load(ordering: .sequentiallyConsistent) == 1)
     }
 
-    func testGetCredentialAndGetNewOnesAsAboutToExpire() async throws {
+    @Test func testGetCredentialAndGetNewOnesAsAboutToExpire() async throws {
         let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
+        defer { #expect(throws: Never.self) { try group.syncShutdownGracefully() } }
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(group))
-        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
+        defer { #expect(throws: Never.self) { try httpClient.syncShutdown() } }
 
         let creds = [
             Credential(
@@ -141,28 +141,28 @@ class RotatingCredentialProviderTests: XCTestCase {
         // get credentials for first time
         var returned = try await provider.getCredential(logger: Logger(label: "soto"))
 
-        XCTAssertEqual(returned.accessKeyId, creds[0].accessKeyId)
-        XCTAssertEqual(returned.secretAccessKey, creds[0].secretAccessKey)
-        XCTAssertEqual(returned.sessionToken, creds[0].sessionToken)
-        XCTAssertEqual(returned.expiration, creds[0].expiration)
+        #expect(returned.accessKeyId == creds[0].accessKeyId)
+        #expect(returned.secretAccessKey == creds[0].secretAccessKey)
+        #expect(returned.sessionToken == creds[0].sessionToken)
+        #expect(returned.expiration == creds[0].expiration)
 
         // get credentials a second time, callback must not be hit
         returned = try await provider.getCredential(logger: Logger(label: "soto"))
 
-        XCTAssertEqual(returned.accessKeyId, creds[1].accessKeyId)
-        XCTAssertEqual(returned.secretAccessKey, creds[1].secretAccessKey)
-        XCTAssertEqual(returned.sessionToken, creds[1].sessionToken)
-        XCTAssertEqual(returned.expiration, creds[1].expiration)
+        #expect(returned.accessKeyId == creds[1].accessKeyId)
+        #expect(returned.secretAccessKey == creds[1].secretAccessKey)
+        #expect(returned.sessionToken == creds[1].sessionToken)
+        #expect(returned.expiration == creds[1].expiration)
 
         // ensure callback was hit twice as we
-        XCTAssertEqual(count.load(ordering: .sequentiallyConsistent), 2)
+        #expect(count.load(ordering: .sequentiallyConsistent) == 2)
     }
 
-    func testGetCredentialHighlyConcurrent() async throws {
+    @Test func testGetCredentialHighlyConcurrent() async throws {
         let group = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
-        defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
+        defer { #expect(throws: Never.self) { try group.syncShutdownGracefully() } }
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(group))
-        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
+        defer { #expect(throws: Never.self) { try httpClient.syncShutdown() } }
 
         let cred = Credential(
             accessKeyId: "abc123",
@@ -186,27 +186,27 @@ class RotatingCredentialProviderTests: XCTestCase {
                 group.addTask {
                     let credential = try await provider.getCredential(logger: TestEnvironment.logger)
                     // this should be executed after the promise is fulfilled.
-                    XCTAssertEqual(credential.accessKeyId, cred.accessKeyId)
-                    XCTAssertEqual(credential.secretAccessKey, cred.secretAccessKey)
-                    XCTAssertEqual(credential.sessionToken, cred.sessionToken)
-                    XCTAssertEqual(credential.expiration, cred.expiration)
+                    #expect(credential.accessKeyId == cred.accessKeyId)
+                    #expect(credential.secretAccessKey == cred.secretAccessKey)
+                    #expect(credential.sessionToken == cred.sessionToken)
+                    #expect(credential.expiration == cred.expiration)
                     count2.wrappingIncrement(ordering: .sequentiallyConsistent)
                 }
                 try await group.waitForAll()
             }
         }
         // ensure callback was only hit once
-        XCTAssertEqual(count.load(ordering: .sequentiallyConsistent), 1)
-        XCTAssertEqual(count2.load(ordering: .sequentiallyConsistent), iterations)
+        #expect(count.load(ordering: .sequentiallyConsistent) == 1)
+        #expect(count2.load(ordering: .sequentiallyConsistent) == iterations)
     }
 
     /// Test that even though we are at the point where the token has almost expired
     /// we only kick off one token renew
-    func testAlwaysGetNewTokenIfTokenLifetimeForUseIsShorterThanLifetime() async throws {
+    @Test func testAlwaysGetNewTokenIfTokenLifetimeForUseIsShorterThanLifetime() async throws {
         let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { XCTAssertNoThrow(try group.syncShutdownGracefully()) }
+        defer { #expect(throws: Never.self) { try group.syncShutdownGracefully() } }
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(group))
-        defer { XCTAssertNoThrow(try httpClient.syncShutdown()) }
+        defer { #expect(throws: Never.self) { try httpClient.syncShutdown() } }
 
         let iterations = 50
         let count = ManagedAtomic(0)
@@ -227,6 +227,6 @@ class RotatingCredentialProviderTests: XCTestCase {
             await Task.yield()
             await Task.yield()
         }
-        XCTAssertEqual(count.load(ordering: .sequentiallyConsistent), 2)
+        #expect(count.load(ordering: .sequentiallyConsistent) == 2)
     }
 }

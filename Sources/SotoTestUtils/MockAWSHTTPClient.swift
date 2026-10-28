@@ -35,7 +35,7 @@ package struct MockAWSHTTPClient: AWSHTTPClient {
         self.requestHandler = requestHandler
     }
 
-    package struct HTTPError: Error {
+    package struct AWSError: Error {
         let status: HTTPResponse.Status
         let code: String
         let message: String?
@@ -90,7 +90,7 @@ package struct MockAWSHTTPClient: AWSHTTPClient {
                 input = try JSONDecoder().decode(Input.self, from: inputData)
             case .restxml:
                 guard let xmlNode = try XML.Document(string: String(buffer: inputData)).rootElement() else {
-                    return HTTPError(status: .internalServerError, code: "InvalidData").response(for: .restxml)
+                    return AWSError(status: .internalServerError, code: "InvalidData").response(for: .restxml)
                 }
                 input = try XMLDecoder().decode(Input.self, from: xmlNode)
             default:
@@ -115,7 +115,7 @@ package struct MockAWSHTTPClient: AWSHTTPClient {
                     fatalError("Protocol is not supported")
                 }
                 return .init(response: .init(status: .ok), body: .init(buffer: outputBuffer))
-            } catch let error as HTTPError {
+            } catch let error as AWSError {
                 return error.response(for: serviceProtocol)
             }
         }

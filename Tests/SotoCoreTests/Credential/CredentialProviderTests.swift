@@ -27,8 +27,6 @@ struct CredentialProviderTests {
     @Test func testCredentialProvider() async throws {
         let provider = StaticCredentialProvider(accessKeyId: "abc", secretAccessKey: "123", sessionToken: "xyz")
 
-        let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { #expect(throws: Never.self) { try group.syncShutdownGracefully() } }
         let credential = try await provider.getCredential(logger: TestEnvironment.logger)
         #expect(credential.accessKeyId == "abc")
         #expect(credential.secretAccessKey == "123")
@@ -47,10 +45,7 @@ struct CredentialProviderTests {
                 return Credential(accessKeyId: "ACCESSKEYID", secretAccessKey: "SECRETACCESSKET")
             }
         }
-        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { #expect(throws: Never.self) { try eventLoopGroup.syncShutdownGracefully() } }
-        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
-        defer { #expect(throws: Never.self) { try httpClient.syncShutdown() } }
+        let httpClient = HTTPClient.shared
         let context = CredentialProviderFactory.Context(httpClient: httpClient, logger: TestEnvironment.logger, options: .init())
         let myCredentialProvider = MyCredentialProvider()
         let deferredProvider = DeferredCredentialProvider(context: context, provider: myCredentialProvider)
@@ -69,11 +64,7 @@ struct CredentialProviderTests {
                 return Credential(accessKeyId: "ACCESSKEYID", secretAccessKey: "SECRETACCESSKET")
             }
         }
-        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { #expect(throws: Never.self) { try eventLoopGroup.syncShutdownGracefully() } }
-        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
-        defer { #expect(throws: Never.self) { try httpClient.syncShutdown() } }
-
+        let httpClient = HTTPClient.shared
         let context = CredentialProviderFactory.Context(httpClient: httpClient, logger: TestEnvironment.logger, options: .init())
         let myCredentialProvider = MyCredentialProvider()
         let deferredProvider = DeferredCredentialProvider(context: context, provider: myCredentialProvider)
@@ -91,11 +82,7 @@ struct CredentialProviderTests {
         #expect(throws: Never.self) { try Data(credentials.utf8).write(to: filenameURL) }
         defer { #expect(throws: Never.self) { try FileManager.default.removeItem(at: filenameURL) } }
 
-        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let eventLoop = eventLoopGroup.next()
-        defer { #expect(throws: Never.self) { try eventLoopGroup.syncShutdownGracefully() } }
-        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoop))
-        defer { #expect(throws: Never.self) { try httpClient.syncShutdown() } }
+        let httpClient = HTTPClient.shared
         let factory = CredentialProviderFactory.configFile(credentialsFilePath: filenameURL.path)
 
         let provider = factory.createProvider(context: .init(httpClient: httpClient, logger: TestEnvironment.logger, options: .init()))
@@ -112,11 +99,7 @@ struct CredentialProviderTests {
         let configFilename = "config_not_existing"
         let configFilenameURL = URL(fileURLWithPath: configFilename)
 
-        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let eventLoop = eventLoopGroup.next()
-        defer { #expect(throws: Never.self) { try eventLoopGroup.syncShutdownGracefully() } }
-        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoop))
-        defer { #expect(throws: Never.self) { try httpClient.syncShutdown() } }
+        let httpClient = HTTPClient.shared
         let factory = CredentialProviderFactory.configFile(
             credentialsFilePath: credentialsFilenameURL.path,
             configFilePath: configFilenameURL.path,
@@ -145,10 +128,7 @@ struct CredentialProviderTests {
                 self.hasShutdown.store(true, ordering: .sequentiallyConsistent)
             }
         }
-        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { #expect(throws: Never.self) { try eventLoopGroup.syncShutdownGracefully() } }
-        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
-        defer { #expect(throws: Never.self) { try httpClient.syncShutdown() } }
+        let httpClient = HTTPClient.shared
         let context = CredentialProviderFactory.Context(httpClient: httpClient, logger: TestEnvironment.logger, options: .init())
         let testCredentialProvider = TestCredentialProvider()
 

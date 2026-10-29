@@ -16,7 +16,6 @@ import AsyncHTTPClient
 public import Logging
 import NIOCore
 import SotoCore
-import XCTest
 
 #if canImport(FoundationEssentials)
 import FoundationEssentials
